@@ -1,19 +1,20 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type mqlK8sPodInternal struct {
-	lock       sync.Mutex
-	runtimeObj runtime.Object
-	metaObj    metav1.Object
+	lock sync.Mutex
+	obj  *corev1.Pod
 }
 
 func (k *mqlK8s) pods() ([]interface{}, error) {
@@ -50,8 +51,12 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlK8sPod).runtimeObj = resource
-		r.(*mqlK8sPod).metaObj = obj
+
+		p, ok := resource.(*corev1.Pod)
+		if !ok {
+			return nil, errors.New("not a k8s pod")
+		}
+		r.(*mqlK8sPod).obj = p
 		return r, nil
 	})
 }
@@ -65,27 +70,27 @@ func (k *mqlK8sPod) id() (string, error) {
 // }
 
 func (k *mqlK8sPod) initContainers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, InitContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sPod) ephemeralContainers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, EphemeralContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, EphemeralContainerType)
 }
 
 func (k *mqlK8sPod) containers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, ContainerContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
 
 func (k *mqlK8sPod) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sPod) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetLabels()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
 func (k *mqlK8sPod) node() (*mqlK8sNode, error) {
-	podSpec, err := resources.GetPodSpec(k.runtimeObj)
+	podSpec, err := resources.GetPodSpec(k.obj)
 	if err != nil {
 		return nil, err
 	}

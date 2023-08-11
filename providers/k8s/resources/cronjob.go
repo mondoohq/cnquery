@@ -1,19 +1,20 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type mqlK8sCronjobInternal struct {
-	lock       sync.Mutex
-	runtimeObj runtime.Object
-	metaObj    metav1.Object
+	lock sync.Mutex
+	obj  *batchv1.CronJob
 }
 
 func (k *mqlK8s) cronjobs() ([]interface{}, error) {
@@ -49,8 +50,12 @@ func (k *mqlK8s) cronjobs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlK8sCronjob).runtimeObj = resource
-		r.(*mqlK8sCronjob).metaObj = obj
+
+		cj, ok := resource.(*batchv1.CronJob)
+		if !ok {
+			return nil, errors.New("not a k8s cronjob")
+		}
+		r.(*mqlK8sCronjob).obj = cj
 		return r, nil
 	})
 }
@@ -64,17 +69,17 @@ func (k *mqlK8sCronjob) id() (string, error) {
 // }
 
 func (k *mqlK8sCronjob) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sCronjob) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetLabels()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
 func (k *mqlK8sCronjob) initContainers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, InitContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sCronjob) containers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, ContainerContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }
