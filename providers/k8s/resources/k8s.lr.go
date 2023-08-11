@@ -54,6 +54,10 @@ func init() {
 			// to override args, implement: initK8sJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sJob,
 		},
+		"k8s.cronjob": {
+			// to override args, implement: initK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sCronjob,
+		},
 		"k8s.container": {
 			// to override args, implement: initK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sContainer,
@@ -160,6 +164,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.jobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetJobs()).ToDataRes(types.Array(types.Resource("k8s.job")))
+	},
+	"k8s.cronjobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetCronjobs()).ToDataRes(types.Array(types.Resource("k8s.cronjob")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -464,6 +471,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.job.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sJob).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
+	"k8s.cronjob.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetId()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.cronjob.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.cronjob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetName()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.cronjob.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.cronjob.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.cronjob.podSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetPodSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.cronjob.initContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetInitContainers()).ToDataRes(types.Array(types.Resource("k8s.initContainer")))
+	},
+	"k8s.cronjob.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sCronjob).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
+	},
 	"k8s.container.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetUid()).ToDataRes(types.String)
 	},
@@ -661,6 +707,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Jobs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Cronjobs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1103,6 +1153,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sJob).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.cronjob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sCronjob).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.cronjob.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.cronjob.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sCronjob).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlK8sContainer).__id, ok = v.Value.(string)
 			return
@@ -1349,6 +1455,7 @@ type mqlK8s struct {
 	Statefulsets plugin.TValue[[]interface{}]
 	Replicasets plugin.TValue[[]interface{}]
 	Jobs plugin.TValue[[]interface{}]
+	Cronjobs plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -1524,6 +1631,22 @@ func (c *mqlK8s) GetJobs() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.jobs()
+	})
+}
+
+func (c *mqlK8s) GetCronjobs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Cronjobs, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "cronjobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cronjobs()
 	})
 }
 
@@ -2612,6 +2735,143 @@ func (c *mqlK8sJob) GetContainers() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.job", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlK8sCronjob for the k8s.cronjob resource
+type mqlK8sCronjob struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sCronjobInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	PodSpec plugin.TValue[interface{}]
+	InitContainers plugin.TValue[[]interface{}]
+	Containers plugin.TValue[[]interface{}]
+}
+
+// createK8sCronjob creates a new instance of this resource
+func createK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sCronjob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.cronjob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sCronjob) MqlName() string {
+	return "k8s.cronjob"
+}
+
+func (c *mqlK8sCronjob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sCronjob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sCronjob) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sCronjob) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sCronjob) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sCronjob) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sCronjob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sCronjob) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sCronjob) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sCronjob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sCronjob) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sCronjob) GetPodSpec() *plugin.TValue[interface{}] {
+	return &c.PodSpec
+}
+
+func (c *mqlK8sCronjob) GetInitContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "initContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.initContainers()
+	})
+}
+
+func (c *mqlK8sCronjob) GetContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.cronjob", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}

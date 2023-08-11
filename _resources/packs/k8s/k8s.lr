@@ -8,8 +8,6 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
 
 // Kubernetes cluster
 k8s {
-  // Cluster CronJobs
-  cronjobs() []k8s.cronjob
   // Cluster Secrets
   secrets() []k8s.secret
   // Cluster Version
@@ -46,36 +44,6 @@ private k8s.kubelet {
   process core.process
   // Combination of config file parameters and cli parameters
   configuration dict
-}
-
-// Kubernetes CronJob
-private k8s.cronjob @defaults("namespace name created") {
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Resource Version
-  resourceVersion string
-  // Kubernetes Labels
-  labels() map[string]string
-  // Kubernetes Annotations
-  annotations() map[string]string
-  // Kubernetes Object Name
-  name string
-  // Kubernetes Object Namespace
-  namespace string
-  // Kubernetes Object Type
-  kind string
-  // Kubernetes Object Creation Timestamp
-  created time
-  // Full resource manifest
-  manifest dict
-  // PodSpec is a description of a pod
-  podSpec dict
-  // Init containers
-  initContainers() []k8s.initContainer
-  // Contained Containers
-  containers() []k8s.container
 }
 
 // Kubernetes Secret
