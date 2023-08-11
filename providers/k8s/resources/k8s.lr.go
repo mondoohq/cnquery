@@ -46,6 +46,10 @@ func init() {
 			// to override args, implement: initK8sStatefulset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sStatefulset,
 		},
+		"k8s.replicaset": {
+			// to override args, implement: initK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sReplicaset,
+		},
 		"k8s.container": {
 			// to override args, implement: initK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sContainer,
@@ -146,6 +150,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.statefulsets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetStatefulsets()).ToDataRes(types.Array(types.Resource("k8s.statefulset")))
+	},
+	"k8s.replicasets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetReplicasets()).ToDataRes(types.Array(types.Resource("k8s.replicaset")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -372,6 +379,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.statefulset.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sStatefulset).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
+	"k8s.replicaset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetId()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.replicaset.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.replicaset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetName()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.replicaset.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.replicaset.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.replicaset.podSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetPodSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.replicaset.initContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetInitContainers()).ToDataRes(types.Array(types.Resource("k8s.initContainer")))
+	},
+	"k8s.replicaset.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sReplicaset).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
+	},
 	"k8s.container.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetUid()).ToDataRes(types.String)
 	},
@@ -561,6 +607,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.statefulsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Statefulsets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicasets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Replicasets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -891,6 +941,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sStatefulset).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.replicaset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sReplicaset).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.replicaset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.replicaset.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sReplicaset).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlK8sContainer).__id, ok = v.Value.(string)
 			return
@@ -1135,6 +1241,7 @@ type mqlK8s struct {
 	Deployments plugin.TValue[[]interface{}]
 	Daemonsets plugin.TValue[[]interface{}]
 	Statefulsets plugin.TValue[[]interface{}]
+	Replicasets plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -1278,6 +1385,22 @@ func (c *mqlK8s) GetStatefulsets() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.statefulsets()
+	})
+}
+
+func (c *mqlK8s) GetReplicasets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Replicasets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "replicasets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.replicasets()
 	})
 }
 
@@ -2092,6 +2215,143 @@ func (c *mqlK8sStatefulset) GetContainers() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.statefulset", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlK8sReplicaset for the k8s.replicaset resource
+type mqlK8sReplicaset struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sReplicasetInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	PodSpec plugin.TValue[interface{}]
+	InitContainers plugin.TValue[[]interface{}]
+	Containers plugin.TValue[[]interface{}]
+}
+
+// createK8sReplicaset creates a new instance of this resource
+func createK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sReplicaset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.replicaset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sReplicaset) MqlName() string {
+	return "k8s.replicaset"
+}
+
+func (c *mqlK8sReplicaset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sReplicaset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sReplicaset) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sReplicaset) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sReplicaset) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sReplicaset) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sReplicaset) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sReplicaset) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sReplicaset) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sReplicaset) GetPodSpec() *plugin.TValue[interface{}] {
+	return &c.PodSpec
+}
+
+func (c *mqlK8sReplicaset) GetInitContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "initContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.initContainers()
+	})
+}
+
+func (c *mqlK8sReplicaset) GetContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.replicaset", c.__id, "containers")
 			if err != nil {
 				return nil, err
 			}
