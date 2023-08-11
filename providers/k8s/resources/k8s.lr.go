@@ -206,6 +206,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"k8s.serverVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetServerVersion()).ToDataRes(types.Dict)
+	},
 	"k8s.apiResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetApiResources()).ToDataRes(types.Array(types.Resource("k8s.apiresource")))
 	},
@@ -1212,6 +1215,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlK8s).__id, ok = v.Value.(string)
 			return
 		},
+	"k8s.serverVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ServerVersion, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.apiResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).ApiResources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -2681,6 +2688,7 @@ type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlK8sInternal
+	ServerVersion plugin.TValue[interface{}]
 	ApiResources plugin.TValue[[]interface{}]
 	Namespaces plugin.TValue[[]interface{}]
 	Nodes plugin.TValue[[]interface{}]
@@ -2734,6 +2742,12 @@ func (c *mqlK8s) MqlName() string {
 
 func (c *mqlK8s) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlK8s) GetServerVersion() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ServerVersion, func() (interface{}, error) {
+		return c.serverVersion()
+	})
 }
 
 func (c *mqlK8s) GetApiResources() *plugin.TValue[[]interface{}] {
