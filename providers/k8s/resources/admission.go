@@ -16,7 +16,7 @@ type mqlK8sAdmissionrequestInternal struct {
 	obj  *admissionv1.AdmissionRequest
 }
 
-func (k *mqlK8sAdmissionreview) request() (interface{}, error) {
+func (k *mqlK8sAdmissionreview) request() (*mqlK8sAdmissionrequest, error) {
 	kt, err := k8sProvider(k.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
@@ -72,17 +72,22 @@ func (k *mqlK8sAdmissionreview) request() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.(*mqlK8sAdmissionrequest).obj = aRequest
+	admReqRes := r.(*mqlK8sAdmissionrequest)
+	admReqRes.obj = aRequest
 
-	return r, nil
+	return admReqRes, nil
 }
 
-func (k *mqlK8sAdmissionrequest) userInfo() (interface{}, error) {
+func (k *mqlK8sAdmissionrequest) userInfo() (*mqlK8sUserinfo, error) {
 	userInfo := k.obj.UserInfo
-	return CreateResource(k.MqlRuntime, "k8s.userinfo", map[string]*llx.RawData{
+	r, err := CreateResource(k.MqlRuntime, "k8s.userinfo", map[string]*llx.RawData{
 		"username": llx.StringData(userInfo.Username),
 		"uid":      llx.StringData(userInfo.UID),
 	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlK8sUserinfo), nil
 }
 
 func (k *mqlK8sAdmissionrequest) id() (string, error) {
