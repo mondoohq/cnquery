@@ -25,6 +25,8 @@ k8s {
   jobs() []k8s.job
   // Cluster CronJobs
   cronjobs() []k8s.cronjob
+  // Cluster Secrets
+  secrets() []k8s.secret
 }
 
 // Kubernetes API Resources
@@ -403,4 +405,32 @@ private k8s.ephemeralContainer @defaults("name") {
   env dict
   // envFrom settings
   envFrom dict
+}
+
+// Kubernetes Secret
+private k8s.secret @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secret type
+  type string
+  // Secret certificates
+  certificates() []certificate
 }
