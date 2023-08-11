@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/packages"
 	"go.mondoo.com/cnquery/utils/multierr"
@@ -24,19 +25,19 @@ func (x *mqlPackage) id() (string, error) {
 	return x.Format.Data + "://" + x.Name.Data + "/" + x.Version.Data + "/" + x.Arch.Data, nil
 }
 
-func (x *mqlPackage) init(args map[string]interface{}) (map[string]interface{}, *mqlPackage, error) {
+func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// we only look up the package, if we have been supplied by its name and nothing else
 	raw, ok := args["name"]
 	if !ok || len(args) != 1 {
 		return args, nil, nil
 	}
-	name := raw.(string)
+	name := raw.Value.(string)
 
-	raw, err := CreateResource(x.MqlRuntime, "packages", nil)
+	pkgs, err := CreateResource(runtime, "packages", nil)
 	if err != nil {
 		return nil, nil, multierr.Wrap(err, "cannot get list of packages")
 	}
-	packages := raw.(*mqlPackages)
+	packages := pkgs.(*mqlPackages)
 
 	list := packages.GetList()
 	if list.Error != nil {
