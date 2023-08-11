@@ -1,4 +1,4 @@
-package os
+package resources
 
 import (
 	"go.mondoo.com/cnquery/resources/packs/core"

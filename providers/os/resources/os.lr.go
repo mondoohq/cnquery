@@ -314,6 +314,50 @@ func init() {
 			// to override args, implement: initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRegistrykeyProperty,
 		},
+		"windows": {
+			// to override args, implement: initWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindows,
+		},
+		"windows.hotfix": {
+			// to override args, implement: initWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsHotfix,
+		},
+		"windows.feature": {
+			// to override args, implement: initWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsFeature,
+		},
+		"windows.firewall": {
+			// to override args, implement: initWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsFirewall,
+		},
+		"windows.firewall.profile": {
+			// to override args, implement: initWindowsFirewallProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsFirewallProfile,
+		},
+		"windows.firewall.rule": {
+			// to override args, implement: initWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsFirewallRule,
+		},
+		"windows.bitlocker": {
+			// to override args, implement: initWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlocker,
+		},
+		"windows.bitlocker.volume": {
+			// to override args, implement: initWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerVolume,
+		},
+		"windows.security": {
+			// to override args, implement: initWindowsSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSecurity,
+		},
+		"windows.security.product": {
+			// to override args, implement: initWindowsSecurityProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSecurityProduct,
+		},
+		"windows.security.health": {
+			// to override args, implement: initWindowsSecurityHealth(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSecurityHealth,
+		},
 	}
 }
 
@@ -1395,6 +1439,231 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"registrykey.property.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetValue()).ToDataRes(types.String)
+	},
+	"windows.computerInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetComputerInfo()).ToDataRes(types.Dict)
+	},
+	"windows.hotfixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetHotfixes()).ToDataRes(types.Array(types.Resource("windows.hotfix")))
+	},
+	"windows.features": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindows).GetFeatures()).ToDataRes(types.Array(types.Resource("windows.feature")))
+	},
+	"windows.hotfix.hotfixId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotfix).GetHotfixId()).ToDataRes(types.String)
+	},
+	"windows.hotfix.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotfix).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.hotfix.caption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotfix).GetCaption()).ToDataRes(types.String)
+	},
+	"windows.hotfix.installedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotfix).GetInstalledOn()).ToDataRes(types.Time)
+	},
+	"windows.hotfix.installedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsHotfix).GetInstalledBy()).ToDataRes(types.String)
+	},
+	"windows.feature.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetPath()).ToDataRes(types.String)
+	},
+	"windows.feature.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetName()).ToDataRes(types.String)
+	},
+	"windows.feature.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.feature.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.feature.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"windows.feature.installState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFeature).GetInstallState()).ToDataRes(types.Int)
+	},
+	"windows.firewall.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewall).GetSettings()).ToDataRes(types.Dict)
+	},
+	"windows.firewall.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewall).GetProfiles()).ToDataRes(types.Array(types.Resource("windows.firewall.profile")))
+	},
+	"windows.firewall.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewall).GetRules()).ToDataRes(types.Array(types.Resource("windows.firewall.rule")))
+	},
+	"windows.firewall.profile.instanceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetInstanceID()).ToDataRes(types.String)
+	},
+	"windows.firewall.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetName()).ToDataRes(types.String)
+	},
+	"windows.firewall.profile.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetEnabled()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.defaultInboundAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetDefaultInboundAction()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.defaultOutboundAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetDefaultOutboundAction()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowInboundRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowInboundRules()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowLocalFirewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowLocalFirewallRules()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowLocalIPsecRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowLocalIPsecRules()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowUserApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowUserApps()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowUserPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowUserPorts()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.allowUnicastResponseToMulticast": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetAllowUnicastResponseToMulticast()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.notifyOnListen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetNotifyOnListen()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.enableStealthModeForIPsec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetEnableStealthModeForIPsec()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.logMaxSizeKilobytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetLogMaxSizeKilobytes()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.logAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetLogAllowed()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.logBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetLogBlocked()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.logIgnored": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetLogIgnored()).ToDataRes(types.Int)
+	},
+	"windows.firewall.profile.logFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallProfile).GetLogFileName()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.instanceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetInstanceID()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetDisplayName()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetDescription()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.displayGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetDisplayGroup()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetEnabled()).ToDataRes(types.Int)
+	},
+	"windows.firewall.rule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetDirection()).ToDataRes(types.Int)
+	},
+	"windows.firewall.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetAction()).ToDataRes(types.Int)
+	},
+	"windows.firewall.rule.edgeTraversalPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetEdgeTraversalPolicy()).ToDataRes(types.Int)
+	},
+	"windows.firewall.rule.looseSourceMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetLooseSourceMapping()).ToDataRes(types.Bool)
+	},
+	"windows.firewall.rule.localOnlyMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetLocalOnlyMapping()).ToDataRes(types.Bool)
+	},
+	"windows.firewall.rule.primaryStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetPrimaryStatus()).ToDataRes(types.Int)
+	},
+	"windows.firewall.rule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetStatus()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.enforcementStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetEnforcementStatus()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.policyStoreSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetPolicyStoreSource()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetPolicyStoreSourceType()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
+	},
+	"windows.bitlocker.volume.deviceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetDeviceID()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.volume.driveLetter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetDriveLetter()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.volume.conversionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetConversionStatus()).ToDataRes(types.Dict)
+	},
+	"windows.bitlocker.volume.encryptionMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetEncryptionMethod()).ToDataRes(types.Dict)
+	},
+	"windows.bitlocker.volume.lockStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetLockStatus()).ToDataRes(types.Int)
+	},
+	"windows.bitlocker.volume.persistentVolumeID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetPersistentVolumeID()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.volume.protectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetProtectionStatus()).ToDataRes(types.Dict)
+	},
+	"windows.bitlocker.volume.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetVersion()).ToDataRes(types.Dict)
+	},
+	"windows.security.products": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurity).GetProducts()).ToDataRes(types.Array(types.Resource("windows.security.product")))
+	},
+	"windows.security.product.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetType()).ToDataRes(types.String)
+	},
+	"windows.security.product.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetGuid()).ToDataRes(types.String)
+	},
+	"windows.security.product.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetName()).ToDataRes(types.String)
+	},
+	"windows.security.product.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetState()).ToDataRes(types.Int)
+	},
+	"windows.security.product.productState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetProductState()).ToDataRes(types.String)
+	},
+	"windows.security.product.signatureState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetSignatureState()).ToDataRes(types.String)
+	},
+	"windows.security.product.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityProduct).GetTimestamp()).ToDataRes(types.Time)
+	},
+	"windows.security.health.firewall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetFirewall()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.autoUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetAutoUpdate()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.antiVirus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetAntiVirus()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.antiSpyware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetAntiSpyware()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.internetSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetInternetSettings()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.uac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetUac()).ToDataRes(types.Dict)
+	},
+	"windows.security.health.securityCenterService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSecurityHealth).GetSecurityCenterService()).ToDataRes(types.Dict)
 	},
 }
 
@@ -3058,6 +3327,350 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"registrykey.property.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykeyProperty).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindows).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.computerInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).ComputerInfo, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.hotfixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).Hotfixes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindows).Features, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.hotfix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsHotfix).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.hotfix.hotfixId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotfix).HotfixId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.hotfix.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotfix).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.hotfix.caption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotfix).Caption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.hotfix.installedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotfix).InstalledOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.hotfix.installedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsHotfix).InstalledBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.feature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsFeature).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.feature.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.feature.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.feature.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.feature.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.feature.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.feature.installState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFeature).InstallState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsFirewall).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.firewall.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewall).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewall).Profiles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewall).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsFirewallProfile).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.firewall.profile.instanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).InstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.defaultInboundAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).DefaultInboundAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.defaultOutboundAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).DefaultOutboundAction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowInboundRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowInboundRules, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowLocalFirewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowLocalFirewallRules, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowLocalIPsecRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowLocalIPsecRules, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowUserApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowUserApps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowUserPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowUserPorts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.allowUnicastResponseToMulticast": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).AllowUnicastResponseToMulticast, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.notifyOnListen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).NotifyOnListen, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.enableStealthModeForIPsec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).EnableStealthModeForIPsec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.logMaxSizeKilobytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).LogMaxSizeKilobytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.logAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).LogAllowed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.logBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).LogBlocked, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.logIgnored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).LogIgnored, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.profile.logFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallProfile).LogFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsFirewallRule).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.firewall.rule.instanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).InstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.displayGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).DisplayGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Enabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Direction, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Action, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.edgeTraversalPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).EdgeTraversalPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.looseSourceMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).LooseSourceMapping, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.localOnlyMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).LocalOnlyMapping, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.primaryStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).PrimaryStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.enforcementStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).EnforcementStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.policyStoreSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).PolicyStoreSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).PolicyStoreSourceType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlocker).Volumes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsBitlockerVolume).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.bitlocker.volume.deviceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).DeviceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.driveLetter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).DriveLetter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.conversionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).ConversionStatus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.encryptionMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).EncryptionMethod, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.lockStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).LockStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.persistentVolumeID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).PersistentVolumeID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.protectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).ProtectionStatus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).Version, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsSecurity).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.security.products": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurity).Products, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsSecurityProduct).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.security.product.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).Guid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).State, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.productState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).ProductState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.signatureState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).SignatureState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.security.product.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityProduct).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlWindowsSecurityHealth).__id, ok = v.Value.(string)
+			return
+		},
+	"windows.security.health.firewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).Firewall, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.autoUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).AutoUpdate, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.antiVirus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).AntiVirus, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.antiSpyware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).AntiSpyware, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.internetSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).InternetSettings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.uac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).Uac, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"windows.security.health.securityCenterService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSecurityHealth).SecurityCenterService, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -9054,4 +9667,884 @@ func (c *mqlRegistrykeyProperty) GetValue() *plugin.TValue[string] {
 
 		return c.value(vargExists.Data)
 	})
+}
+
+// mqlWindows for the windows resource
+type mqlWindows struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsInternal it will be used here
+	ComputerInfo plugin.TValue[interface{}]
+	Hotfixes plugin.TValue[[]interface{}]
+	Features plugin.TValue[[]interface{}]
+}
+
+// createWindows creates a new instance of this resource
+func createWindows(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindows{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindows) MqlName() string {
+	return "windows"
+}
+
+func (c *mqlWindows) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindows) GetComputerInfo() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ComputerInfo, func() (interface{}, error) {
+		return c.computerInfo()
+	})
+}
+
+func (c *mqlWindows) GetHotfixes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Hotfixes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "hotfixes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.hotfixes()
+	})
+}
+
+func (c *mqlWindows) GetFeatures() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Features, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows", c.__id, "features")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.features()
+	})
+}
+
+// mqlWindowsHotfix for the windows.hotfix resource
+type mqlWindowsHotfix struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsHotfixInternal it will be used here
+	HotfixId plugin.TValue[string]
+	Description plugin.TValue[string]
+	Caption plugin.TValue[string]
+	InstalledOn plugin.TValue[*time.Time]
+	InstalledBy plugin.TValue[string]
+}
+
+// createWindowsHotfix creates a new instance of this resource
+func createWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsHotfix{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.hotfix", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsHotfix) MqlName() string {
+	return "windows.hotfix"
+}
+
+func (c *mqlWindowsHotfix) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsHotfix) GetHotfixId() *plugin.TValue[string] {
+	return &c.HotfixId
+}
+
+func (c *mqlWindowsHotfix) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsHotfix) GetCaption() *plugin.TValue[string] {
+	return &c.Caption
+}
+
+func (c *mqlWindowsHotfix) GetInstalledOn() *plugin.TValue[*time.Time] {
+	return &c.InstalledOn
+}
+
+func (c *mqlWindowsHotfix) GetInstalledBy() *plugin.TValue[string] {
+	return &c.InstalledBy
+}
+
+// mqlWindowsFeature for the windows.feature resource
+type mqlWindowsFeature struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsFeatureInternal it will be used here
+	Path plugin.TValue[string]
+	Name plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Installed plugin.TValue[bool]
+	InstallState plugin.TValue[int64]
+}
+
+// createWindowsFeature creates a new instance of this resource
+func createWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsFeature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.feature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsFeature) MqlName() string {
+	return "windows.feature"
+}
+
+func (c *mqlWindowsFeature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsFeature) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsFeature) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsFeature) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsFeature) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsFeature) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlWindowsFeature) GetInstallState() *plugin.TValue[int64] {
+	return &c.InstallState
+}
+
+// mqlWindowsFirewall for the windows.firewall resource
+type mqlWindowsFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsFirewallInternal it will be used here
+	Settings plugin.TValue[interface{}]
+	Profiles plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]interface{}]
+}
+
+// createWindowsFirewall creates a new instance of this resource
+func createWindowsFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.firewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsFirewall) MqlName() string {
+	return "windows.firewall"
+}
+
+func (c *mqlWindowsFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsFirewall) GetSettings() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
+		return c.settings()
+	})
+}
+
+func (c *mqlWindowsFirewall) GetProfiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Profiles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.firewall", c.__id, "profiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.profiles()
+	})
+}
+
+func (c *mqlWindowsFirewall) GetRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.firewall", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlWindowsFirewallProfile for the windows.firewall.profile resource
+type mqlWindowsFirewallProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsFirewallProfileInternal it will be used here
+	InstanceID plugin.TValue[string]
+	Name plugin.TValue[string]
+	Enabled plugin.TValue[int64]
+	DefaultInboundAction plugin.TValue[int64]
+	DefaultOutboundAction plugin.TValue[int64]
+	AllowInboundRules plugin.TValue[int64]
+	AllowLocalFirewallRules plugin.TValue[int64]
+	AllowLocalIPsecRules plugin.TValue[int64]
+	AllowUserApps plugin.TValue[int64]
+	AllowUserPorts plugin.TValue[int64]
+	AllowUnicastResponseToMulticast plugin.TValue[int64]
+	NotifyOnListen plugin.TValue[int64]
+	EnableStealthModeForIPsec plugin.TValue[int64]
+	LogMaxSizeKilobytes plugin.TValue[int64]
+	LogAllowed plugin.TValue[int64]
+	LogBlocked plugin.TValue[int64]
+	LogIgnored plugin.TValue[int64]
+	LogFileName plugin.TValue[string]
+}
+
+// createWindowsFirewallProfile creates a new instance of this resource
+func createWindowsFirewallProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsFirewallProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.firewall.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsFirewallProfile) MqlName() string {
+	return "windows.firewall.profile"
+}
+
+func (c *mqlWindowsFirewallProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsFirewallProfile) GetInstanceID() *plugin.TValue[string] {
+	return &c.InstanceID
+}
+
+func (c *mqlWindowsFirewallProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsFirewallProfile) GetEnabled() *plugin.TValue[int64] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsFirewallProfile) GetDefaultInboundAction() *plugin.TValue[int64] {
+	return &c.DefaultInboundAction
+}
+
+func (c *mqlWindowsFirewallProfile) GetDefaultOutboundAction() *plugin.TValue[int64] {
+	return &c.DefaultOutboundAction
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowInboundRules() *plugin.TValue[int64] {
+	return &c.AllowInboundRules
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowLocalFirewallRules() *plugin.TValue[int64] {
+	return &c.AllowLocalFirewallRules
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowLocalIPsecRules() *plugin.TValue[int64] {
+	return &c.AllowLocalIPsecRules
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowUserApps() *plugin.TValue[int64] {
+	return &c.AllowUserApps
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowUserPorts() *plugin.TValue[int64] {
+	return &c.AllowUserPorts
+}
+
+func (c *mqlWindowsFirewallProfile) GetAllowUnicastResponseToMulticast() *plugin.TValue[int64] {
+	return &c.AllowUnicastResponseToMulticast
+}
+
+func (c *mqlWindowsFirewallProfile) GetNotifyOnListen() *plugin.TValue[int64] {
+	return &c.NotifyOnListen
+}
+
+func (c *mqlWindowsFirewallProfile) GetEnableStealthModeForIPsec() *plugin.TValue[int64] {
+	return &c.EnableStealthModeForIPsec
+}
+
+func (c *mqlWindowsFirewallProfile) GetLogMaxSizeKilobytes() *plugin.TValue[int64] {
+	return &c.LogMaxSizeKilobytes
+}
+
+func (c *mqlWindowsFirewallProfile) GetLogAllowed() *plugin.TValue[int64] {
+	return &c.LogAllowed
+}
+
+func (c *mqlWindowsFirewallProfile) GetLogBlocked() *plugin.TValue[int64] {
+	return &c.LogBlocked
+}
+
+func (c *mqlWindowsFirewallProfile) GetLogIgnored() *plugin.TValue[int64] {
+	return &c.LogIgnored
+}
+
+func (c *mqlWindowsFirewallProfile) GetLogFileName() *plugin.TValue[string] {
+	return &c.LogFileName
+}
+
+// mqlWindowsFirewallRule for the windows.firewall.rule resource
+type mqlWindowsFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsFirewallRuleInternal it will be used here
+	InstanceID plugin.TValue[string]
+	Name plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	DisplayGroup plugin.TValue[string]
+	Enabled plugin.TValue[int64]
+	Direction plugin.TValue[int64]
+	Action plugin.TValue[int64]
+	EdgeTraversalPolicy plugin.TValue[int64]
+	LooseSourceMapping plugin.TValue[bool]
+	LocalOnlyMapping plugin.TValue[bool]
+	PrimaryStatus plugin.TValue[int64]
+	Status plugin.TValue[string]
+	EnforcementStatus plugin.TValue[string]
+	PolicyStoreSource plugin.TValue[string]
+	PolicyStoreSourceType plugin.TValue[int64]
+}
+
+// createWindowsFirewallRule creates a new instance of this resource
+func createWindowsFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.firewall.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsFirewallRule) MqlName() string {
+	return "windows.firewall.rule"
+}
+
+func (c *mqlWindowsFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsFirewallRule) GetInstanceID() *plugin.TValue[string] {
+	return &c.InstanceID
+}
+
+func (c *mqlWindowsFirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsFirewallRule) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlWindowsFirewallRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlWindowsFirewallRule) GetDisplayGroup() *plugin.TValue[string] {
+	return &c.DisplayGroup
+}
+
+func (c *mqlWindowsFirewallRule) GetEnabled() *plugin.TValue[int64] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsFirewallRule) GetDirection() *plugin.TValue[int64] {
+	return &c.Direction
+}
+
+func (c *mqlWindowsFirewallRule) GetAction() *plugin.TValue[int64] {
+	return &c.Action
+}
+
+func (c *mqlWindowsFirewallRule) GetEdgeTraversalPolicy() *plugin.TValue[int64] {
+	return &c.EdgeTraversalPolicy
+}
+
+func (c *mqlWindowsFirewallRule) GetLooseSourceMapping() *plugin.TValue[bool] {
+	return &c.LooseSourceMapping
+}
+
+func (c *mqlWindowsFirewallRule) GetLocalOnlyMapping() *plugin.TValue[bool] {
+	return &c.LocalOnlyMapping
+}
+
+func (c *mqlWindowsFirewallRule) GetPrimaryStatus() *plugin.TValue[int64] {
+	return &c.PrimaryStatus
+}
+
+func (c *mqlWindowsFirewallRule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlWindowsFirewallRule) GetEnforcementStatus() *plugin.TValue[string] {
+	return &c.EnforcementStatus
+}
+
+func (c *mqlWindowsFirewallRule) GetPolicyStoreSource() *plugin.TValue[string] {
+	return &c.PolicyStoreSource
+}
+
+func (c *mqlWindowsFirewallRule) GetPolicyStoreSourceType() *plugin.TValue[int64] {
+	return &c.PolicyStoreSourceType
+}
+
+// mqlWindowsBitlocker for the windows.bitlocker resource
+type mqlWindowsBitlocker struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsBitlockerInternal it will be used here
+	Volumes plugin.TValue[[]interface{}]
+}
+
+// createWindowsBitlocker creates a new instance of this resource
+func createWindowsBitlocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlocker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlocker) MqlName() string {
+	return "windows.bitlocker"
+}
+
+func (c *mqlWindowsBitlocker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Volumes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+// mqlWindowsBitlockerVolume for the windows.bitlocker.volume resource
+type mqlWindowsBitlockerVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsBitlockerVolumeInternal it will be used here
+	DeviceID plugin.TValue[string]
+	DriveLetter plugin.TValue[string]
+	ConversionStatus plugin.TValue[interface{}]
+	EncryptionMethod plugin.TValue[interface{}]
+	LockStatus plugin.TValue[int64]
+	PersistentVolumeID plugin.TValue[string]
+	ProtectionStatus plugin.TValue[interface{}]
+	Version plugin.TValue[interface{}]
+}
+
+// createWindowsBitlockerVolume creates a new instance of this resource
+func createWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerVolume) MqlName() string {
+	return "windows.bitlocker.volume"
+}
+
+func (c *mqlWindowsBitlockerVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerVolume) GetDeviceID() *plugin.TValue[string] {
+	return &c.DeviceID
+}
+
+func (c *mqlWindowsBitlockerVolume) GetDriveLetter() *plugin.TValue[string] {
+	return &c.DriveLetter
+}
+
+func (c *mqlWindowsBitlockerVolume) GetConversionStatus() *plugin.TValue[interface{}] {
+	return &c.ConversionStatus
+}
+
+func (c *mqlWindowsBitlockerVolume) GetEncryptionMethod() *plugin.TValue[interface{}] {
+	return &c.EncryptionMethod
+}
+
+func (c *mqlWindowsBitlockerVolume) GetLockStatus() *plugin.TValue[int64] {
+	return &c.LockStatus
+}
+
+func (c *mqlWindowsBitlockerVolume) GetPersistentVolumeID() *plugin.TValue[string] {
+	return &c.PersistentVolumeID
+}
+
+func (c *mqlWindowsBitlockerVolume) GetProtectionStatus() *plugin.TValue[interface{}] {
+	return &c.ProtectionStatus
+}
+
+func (c *mqlWindowsBitlockerVolume) GetVersion() *plugin.TValue[interface{}] {
+	return &c.Version
+}
+
+// mqlWindowsSecurity for the windows.security resource
+type mqlWindowsSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsSecurityInternal it will be used here
+	Products plugin.TValue[[]interface{}]
+}
+
+// createWindowsSecurity creates a new instance of this resource
+func createWindowsSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.security", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSecurity) MqlName() string {
+	return "windows.security"
+}
+
+func (c *mqlWindowsSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSecurity) GetProducts() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Products, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.security", c.__id, "products")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.products()
+	})
+}
+
+// mqlWindowsSecurityProduct for the windows.security.product resource
+type mqlWindowsSecurityProduct struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsSecurityProductInternal it will be used here
+	Type plugin.TValue[string]
+	Guid plugin.TValue[string]
+	Name plugin.TValue[string]
+	State plugin.TValue[int64]
+	ProductState plugin.TValue[string]
+	SignatureState plugin.TValue[string]
+	Timestamp plugin.TValue[*time.Time]
+}
+
+// createWindowsSecurityProduct creates a new instance of this resource
+func createWindowsSecurityProduct(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSecurityProduct{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.security.product", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSecurityProduct) MqlName() string {
+	return "windows.security.product"
+}
+
+func (c *mqlWindowsSecurityProduct) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSecurityProduct) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlWindowsSecurityProduct) GetGuid() *plugin.TValue[string] {
+	return &c.Guid
+}
+
+func (c *mqlWindowsSecurityProduct) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSecurityProduct) GetState() *plugin.TValue[int64] {
+	return &c.State
+}
+
+func (c *mqlWindowsSecurityProduct) GetProductState() *plugin.TValue[string] {
+	return &c.ProductState
+}
+
+func (c *mqlWindowsSecurityProduct) GetSignatureState() *plugin.TValue[string] {
+	return &c.SignatureState
+}
+
+func (c *mqlWindowsSecurityProduct) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
+// mqlWindowsSecurityHealth for the windows.security.health resource
+type mqlWindowsSecurityHealth struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlWindowsSecurityHealthInternal it will be used here
+	Firewall plugin.TValue[interface{}]
+	AutoUpdate plugin.TValue[interface{}]
+	AntiVirus plugin.TValue[interface{}]
+	AntiSpyware plugin.TValue[interface{}]
+	InternetSettings plugin.TValue[interface{}]
+	Uac plugin.TValue[interface{}]
+	SecurityCenterService plugin.TValue[interface{}]
+}
+
+// createWindowsSecurityHealth creates a new instance of this resource
+func createWindowsSecurityHealth(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSecurityHealth{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.security.health", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSecurityHealth) MqlName() string {
+	return "windows.security.health"
+}
+
+func (c *mqlWindowsSecurityHealth) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSecurityHealth) GetFirewall() *plugin.TValue[interface{}] {
+	return &c.Firewall
+}
+
+func (c *mqlWindowsSecurityHealth) GetAutoUpdate() *plugin.TValue[interface{}] {
+	return &c.AutoUpdate
+}
+
+func (c *mqlWindowsSecurityHealth) GetAntiVirus() *plugin.TValue[interface{}] {
+	return &c.AntiVirus
+}
+
+func (c *mqlWindowsSecurityHealth) GetAntiSpyware() *plugin.TValue[interface{}] {
+	return &c.AntiSpyware
+}
+
+func (c *mqlWindowsSecurityHealth) GetInternetSettings() *plugin.TValue[interface{}] {
+	return &c.InternetSettings
+}
+
+func (c *mqlWindowsSecurityHealth) GetUac() *plugin.TValue[interface{}] {
+	return &c.Uac
+}
+
+func (c *mqlWindowsSecurityHealth) GetSecurityCenterService() *plugin.TValue[interface{}] {
+	return &c.SecurityCenterService
 }

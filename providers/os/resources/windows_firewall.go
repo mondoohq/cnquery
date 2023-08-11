@@ -1,4 +1,4 @@
-package os
+package resources
 
 import (
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"

@@ -142,24 +142,14 @@ func (hf PowershellWinHotFix) InstalledOnTime() *time.Time {
 	return powershell.PSJsonTimestamp(hf.InstalledOn.Value)
 }
 
-func ParseWindowsHotfixes(input io.Reader) ([]PowershellWinHotFix, error) {
-	data, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-
+func ParseWindowsHotfixes(data []byte) ([]PowershellWinHotFix, error) {
 	// for empty result set do not get the '{}', therefore lets abort here
 	if len(data) == 0 {
 		return []PowershellWinHotFix{}, nil
 	}
 
 	var powershellWinHotFixPkgs []PowershellWinHotFix
-	err = json.Unmarshal(data, &powershellWinHotFixPkgs)
-	if err != nil {
-		return nil, err
-	}
-
-	return powershellWinHotFixPkgs, nil
+	return powershellWinHotFixPkgs, json.Unmarshal(data, &powershellWinHotFixPkgs)
 }
 
 func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {

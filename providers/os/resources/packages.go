@@ -102,7 +102,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 		availableMap[a.Name+"/"+a.Arch] = a
 	}
 
-	// create MQL package os for each package
+	// create MQL package resources for each package
 	pkgs := make([]interface{}, len(osPkgs))
 	for i, osPkg := range osPkgs {
 		// check if we found a newer version
