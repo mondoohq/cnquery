@@ -34,6 +34,10 @@ func init() {
 			// to override args, implement: initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sPod,
 		},
+		"k8s.deployment": {
+			// to override args, implement: initK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sDeployment,
+		},
 		"k8s.container": {
 			// to override args, implement: initK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sContainer,
@@ -125,6 +129,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.deployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetDeployments()).ToDataRes(types.Array(types.Resource("k8s.deployment")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -233,6 +240,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
+	},
+	"k8s.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetId()).ToDataRes(types.String)
+	},
+	"k8s.deployment.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.deployment.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.deployment.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.deployment.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.deployment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetName()).ToDataRes(types.String)
+	},
+	"k8s.deployment.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.deployment.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.deployment.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.deployment.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.deployment.podSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetPodSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.deployment.initContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetInitContainers()).ToDataRes(types.Array(types.Resource("k8s.initContainer")))
+	},
+	"k8s.deployment.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sDeployment).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
 	},
 	"k8s.container.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetUid()).ToDataRes(types.String)
@@ -413,6 +459,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8s).Pods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.deployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Deployments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlK8sApiresource).__id, ok = v.Value.(string)
 			return
@@ -571,6 +621,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sPod).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sDeployment).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.deployment.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sDeployment).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -814,6 +920,7 @@ type mqlK8s struct {
 	Namespaces plugin.TValue[[]interface{}]
 	Nodes plugin.TValue[[]interface{}]
 	Pods plugin.TValue[[]interface{}]
+	Deployments plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -909,6 +1016,22 @@ func (c *mqlK8s) GetPods() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.pods()
+	})
+}
+
+func (c *mqlK8s) GetDeployments() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Deployments, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "deployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deployments()
 	})
 }
 
@@ -1321,6 +1444,143 @@ func (c *mqlK8sPod) GetNode() *plugin.TValue[*mqlK8sNode] {
 		}
 
 		return c.node()
+	})
+}
+
+// mqlK8sDeployment for the k8s.deployment resource
+type mqlK8sDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sDeploymentInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	PodSpec plugin.TValue[interface{}]
+	InitContainers plugin.TValue[[]interface{}]
+	Containers plugin.TValue[[]interface{}]
+}
+
+// createK8sDeployment creates a new instance of this resource
+func createK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sDeployment) MqlName() string {
+	return "k8s.deployment"
+}
+
+func (c *mqlK8sDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sDeployment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sDeployment) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sDeployment) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sDeployment) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sDeployment) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sDeployment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sDeployment) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sDeployment) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sDeployment) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sDeployment) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sDeployment) GetPodSpec() *plugin.TValue[interface{}] {
+	return &c.PodSpec
+}
+
+func (c *mqlK8sDeployment) GetInitContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "initContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.initContainers()
+	})
+}
+
+func (c *mqlK8sDeployment) GetContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.deployment", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
 	})
 }
 
