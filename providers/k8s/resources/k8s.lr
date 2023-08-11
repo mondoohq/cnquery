@@ -5,10 +5,32 @@ option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
 
 // Kubernetes cluster
 k8s {
+  // Available Resource Types
+  apiResources() []k8s.apiresource
   // Cluster Nodes
   nodes() []k8s.node
   // Cluster Pods
   pods() []k8s.pod
+}
+
+// Kubernetes API Resources
+private k8s.apiresource @defaults("name kind") {
+  // plural name of the resource
+  name string
+  // singular name of the resource
+  singularName string
+  // indicates if a resource is namespaced or not
+  namespaced bool
+  // preferred group of the resource
+  group string
+  // preferred version of the resource
+  version string
+  // Kubernetes Object Type
+  kind string
+  // List of suggested short names of the resource
+  shortNames []string
+  // List of the grouped resources
+  categories []string
 }
 
 // Kubernetes node

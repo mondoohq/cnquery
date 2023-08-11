@@ -18,6 +18,10 @@ func init() {
 			// to override args, implement: initK8s(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8s,
 		},
+		"k8s.apiresource": {
+			// to override args, implement: initK8sApiresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sApiresource,
+		},
 		"k8s.node": {
 			Init: initK8sNode,
 			Create: createK8sNode,
@@ -106,11 +110,38 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"k8s.apiResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetApiResources()).ToDataRes(types.Array(types.Resource("k8s.apiresource")))
+	},
 	"k8s.nodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetNodes()).ToDataRes(types.Array(types.Resource("k8s.node")))
 	},
 	"k8s.pods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
+	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
+	},
+	"k8s.apiresource.singularName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetSingularName()).ToDataRes(types.String)
+	},
+	"k8s.apiresource.namespaced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetNamespaced()).ToDataRes(types.Bool)
+	},
+	"k8s.apiresource.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetGroup()).ToDataRes(types.String)
+	},
+	"k8s.apiresource.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetVersion()).ToDataRes(types.String)
+	},
+	"k8s.apiresource.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.apiresource.shortNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetShortNames()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.apiresource.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sApiresource).GetCategories()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.node.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetId()).ToDataRes(types.String)
@@ -344,12 +375,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlK8s).__id, ok = v.Value.(string)
 			return
 		},
+	"k8s.apiResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).ApiResources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Pods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sApiresource).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.apiresource.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.singularName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).SingularName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.namespaced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Namespaced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.shortNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).ShortNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.apiresource.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sApiresource).Categories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -689,6 +760,7 @@ type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlK8sInternal
+	ApiResources plugin.TValue[[]interface{}]
 	Nodes plugin.TValue[[]interface{}]
 	Pods plugin.TValue[[]interface{}]
 }
@@ -725,6 +797,22 @@ func (c *mqlK8s) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlK8s) GetApiResources() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ApiResources, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "apiResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.apiResources()
+	})
+}
+
 func (c *mqlK8s) GetNodes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Nodes, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -755,6 +843,90 @@ func (c *mqlK8s) GetPods() *plugin.TValue[[]interface{}] {
 
 		return c.pods()
 	})
+}
+
+// mqlK8sApiresource for the k8s.apiresource resource
+type mqlK8sApiresource struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sApiresourceInternal it will be used here
+	Name plugin.TValue[string]
+	SingularName plugin.TValue[string]
+	Namespaced plugin.TValue[bool]
+	Group plugin.TValue[string]
+	Version plugin.TValue[string]
+	Kind plugin.TValue[string]
+	ShortNames plugin.TValue[[]interface{}]
+	Categories plugin.TValue[[]interface{}]
+}
+
+// createK8sApiresource creates a new instance of this resource
+func createK8sApiresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sApiresource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.apiresource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sApiresource) MqlName() string {
+	return "k8s.apiresource"
+}
+
+func (c *mqlK8sApiresource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sApiresource) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sApiresource) GetSingularName() *plugin.TValue[string] {
+	return &c.SingularName
+}
+
+func (c *mqlK8sApiresource) GetNamespaced() *plugin.TValue[bool] {
+	return &c.Namespaced
+}
+
+func (c *mqlK8sApiresource) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlK8sApiresource) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlK8sApiresource) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sApiresource) GetShortNames() *plugin.TValue[[]interface{}] {
+	return &c.ShortNames
+}
+
+func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]interface{}] {
+	return &c.Categories
 }
 
 // mqlK8sNode for the k8s.node resource
