@@ -9,8 +9,6 @@ k8s {
   serverVersion() dict
   // Kubernetes PodSecurityPolicy's
   podSecurityPolicies() []k8s.podsecuritypolicy
-  // Kubernetes Services
-  services() []k8s.service
   // Kubernetes Network Policies
   networkPolicies() []k8s.networkpolicy
   // Kubernetes Service Accounts
@@ -60,32 +58,6 @@ private k8s.podsecuritypolicy {
   // Full resource manifest
   manifest dict
   // Policy Spec
-  spec dict
-}
-
-// Kubernetes Service
-private k8s.service @defaults("namespace name created") {
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Resource Version
-  resourceVersion string
-  // Kubernetes Labels
-  labels() map[string]string
-  // Kubernetes Annotations
-  annotations() map[string]string
-  // Kubernetes Object Name
-  name string
-  // Kubernetes Object Namespace
-  namespace string
-  // Kubernetes Object Type
-  kind string
-  // Kubernetes Object Creation Timestamp
-  created time
-  // Full resource manifest
-  manifest dict
-  // Service Spec
   spec dict
 }
 
