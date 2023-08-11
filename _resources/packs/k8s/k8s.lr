@@ -5,8 +5,6 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
 
 // Kubernetes cluster
 k8s {
-  // Cluster Namespaces
-  namespaces() []k8s.namespace
   // Cluster Deployments
   deployments() []k8s.deployment
   // Cluster DaemonSets
@@ -55,20 +53,6 @@ private k8s.kubelet {
   process core.process
   // Combination of config file parameters and cli parameters
   configuration dict
-}
-
-// Kubernetes Namespace
-private k8s.namespace @defaults("name created") {
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Object Name
-  name string
-  // Kubernetes Object Creation Timestamp
-  created time
-  // Full resource manifest
-  manifest dict
 }
 
 // Kubernetes Deployment
