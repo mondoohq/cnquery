@@ -236,30 +236,6 @@ windows.security.health {
   securityCenterService dict
 }
 
-// Container Image
-container.image {
-  // Fully-qualified reference name
-  name string
-  // Identifier of type-specific portion of the image reference
-  identifier string
-  // Identifier Type `tag` or `digest`
-  identifierType string
-  // Repository used for Container Image
-  repository() container.repository
-}
-
-// Container registry repository
-container.repository {
-  // Container Registry Repository Name
-  name string
-  // URL Scheme
-  scheme string
-  // Container Registry Repository URL
-  fullName string
-  // Container Registry URL
-  registry string
-}
-
 // Equinix Metal project
 equinix.metal.project {
   id string
