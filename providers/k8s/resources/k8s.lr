@@ -5,6 +5,8 @@ option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
 
 // Kubernetes cluster
 k8s {
+  // Cluster Version
+  serverVersion() dict
   // Available Resource Types
   apiResources() []k8s.apiresource
   // Cluster Namespaces
