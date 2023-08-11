@@ -45,6 +45,8 @@ k8s {
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes PodSecurityPolicy's
   podSecurityPolicies() []k8s.podsecuritypolicy
+  // Kubernetes Network Policies
+  networkPolicies() []k8s.networkpolicy
 }
 
 // Kubernetes API Resources
@@ -756,5 +758,31 @@ private k8s.podsecuritypolicy {
   // Full resource manifest
   manifest dict
   // Policy Spec
+  spec dict
+}
+
+// Kubernetes Network Policy
+private k8s.networkpolicy @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Network Policy Spec
   spec dict
 }

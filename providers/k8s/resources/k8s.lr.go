@@ -134,6 +134,10 @@ func init() {
 			// to override args, implement: initK8sPodsecuritypolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sPodsecuritypolicy,
 		},
+		"k8s.networkpolicy": {
+			// to override args, implement: initK8sNetworkpolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNetworkpolicy,
+		},
 	}
 }
 
@@ -261,6 +265,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.podSecurityPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetPodSecurityPolicies()).ToDataRes(types.Array(types.Resource("k8s.podsecuritypolicy")))
+	},
+	"k8s.networkPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetNetworkPolicies()).ToDataRes(types.Array(types.Resource("k8s.networkpolicy")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1156,6 +1163,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.podsecuritypolicy.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sPodsecuritypolicy).GetSpec()).ToDataRes(types.Dict)
 	},
+	"k8s.networkpolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetId()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.networkpolicy.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.networkpolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetName()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.networkpolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.networkpolicy.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.networkpolicy.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNetworkpolicy).GetSpec()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1250,6 +1290,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.podSecurityPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).PodSecurityPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.networkPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).NetworkPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2560,6 +2604,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sPodsecuritypolicy).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.networkpolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sNetworkpolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.networkpolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.networkpolicy.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNetworkpolicy).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2609,6 +2701,7 @@ type mqlK8s struct {
 	Roles plugin.TValue[[]interface{}]
 	Rolebindings plugin.TValue[[]interface{}]
 	PodSecurityPolicies plugin.TValue[[]interface{}]
+	NetworkPolicies plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -2960,6 +3053,22 @@ func (c *mqlK8s) GetPodSecurityPolicies() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.podSecurityPolicies()
+	})
+}
+
+func (c *mqlK8s) GetNetworkPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.NetworkPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "networkPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.networkPolicies()
 	})
 }
 
@@ -6038,5 +6147,108 @@ func (c *mqlK8sPodsecuritypolicy) GetManifest() *plugin.TValue[interface{}] {
 }
 
 func (c *mqlK8sPodsecuritypolicy) GetSpec() *plugin.TValue[interface{}] {
+	return &c.Spec
+}
+
+// mqlK8sNetworkpolicy for the k8s.networkpolicy resource
+type mqlK8sNetworkpolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sNetworkpolicyInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Spec plugin.TValue[interface{}]
+}
+
+// createK8sNetworkpolicy creates a new instance of this resource
+func createK8sNetworkpolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNetworkpolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.networkpolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNetworkpolicy) MqlName() string {
+	return "k8s.networkpolicy"
+}
+
+func (c *mqlK8sNetworkpolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNetworkpolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sNetworkpolicy) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sNetworkpolicy) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sNetworkpolicy) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sNetworkpolicy) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sNetworkpolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sNetworkpolicy) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sNetworkpolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sNetworkpolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sNetworkpolicy) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sNetworkpolicy) GetSpec() *plugin.TValue[interface{}] {
 	return &c.Spec
 }
