@@ -1,19 +1,20 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type mqlK8sReplicasetInternal struct {
-	lock       sync.Mutex
-	runtimeObj runtime.Object
-	metaObj    metav1.Object
+	lock sync.Mutex
+	obj  *appsv1.ReplicaSet
 }
 
 func (k *mqlK8s) replicasets() ([]interface{}, error) {
@@ -49,8 +50,12 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlK8sReplicaset).runtimeObj = resource
-		r.(*mqlK8sReplicaset).metaObj = obj
+
+		rs, ok := resource.(*appsv1.ReplicaSet)
+		if !ok {
+			return nil, errors.New("not a k8s replicaset")
+		}
+		r.(*mqlK8sReplicaset).obj = rs
 		return r, nil
 	})
 }
@@ -64,17 +69,17 @@ func (k *mqlK8sReplicaset) id() (string, error) {
 // }
 
 func (k *mqlK8sReplicaset) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sReplicaset) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetLabels()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
 func (k *mqlK8sReplicaset) initContainers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, InitContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sReplicaset) containers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, ContainerContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

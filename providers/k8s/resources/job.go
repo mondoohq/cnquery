@@ -1,19 +1,20 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type mqlK8sJobInternal struct {
-	lock       sync.Mutex
-	runtimeObj runtime.Object
-	metaObj    metav1.Object
+	lock sync.Mutex
+	obj  *batchv1.Job
 }
 
 func (k *mqlK8s) jobs() ([]interface{}, error) {
@@ -49,8 +50,12 @@ func (k *mqlK8s) jobs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r.(*mqlK8sJob).runtimeObj = resource
-		r.(*mqlK8sJob).metaObj = obj
+
+		j, ok := resource.(*batchv1.Job)
+		if !ok {
+			return nil, errors.New("not a k8s job")
+		}
+		r.(*mqlK8sJob).obj = j
 		return r, nil
 	})
 }
@@ -64,17 +69,17 @@ func (k *mqlK8sJob) id() (string, error) {
 // }
 
 func (k *mqlK8sJob) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sJob) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetLabels()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
 
 func (k *mqlK8sJob) initContainers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, InitContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)
 }
 
 func (k *mqlK8sJob) containers() ([]interface{}, error) {
-	return getContainers(k.runtimeObj, k.metaObj, k.MqlRuntime, ContainerContainerType)
+	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, ContainerContainerType)
 }

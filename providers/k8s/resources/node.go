@@ -8,13 +8,14 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/utils/multierr"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type mqlK8sNodeInternal struct {
-	lock    sync.Mutex
-	metaObj metav1.Object
+	lock sync.Mutex
+	obj  *corev1.Node
 }
 
 func initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -61,7 +62,11 @@ func (k *mqlK8s) nodes() ([]interface{}, error) {
 			return nil, err
 		}
 
-		r.(*mqlK8sNode).metaObj = obj
+		n, ok := resource.(*corev1.Node)
+		if !ok {
+			return nil, errors.New("not a k8s node")
+		}
+		r.(*mqlK8sNode).obj = n
 		k.mqlK8sInternal.nodesByName[obj.GetName()] = r.(*mqlK8sNode)
 
 		return r, nil
@@ -73,9 +78,9 @@ func (k *mqlK8sNode) id() (string, error) {
 }
 
 func (k *mqlK8sNode) annotations() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetAnnotations()), nil
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
 }
 
 func (k *mqlK8sNode) labels() (map[string]interface{}, error) {
-	return convert.MapToInterfaceMap(k.metaObj.GetLabels()), nil
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }
