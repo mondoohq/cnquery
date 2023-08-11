@@ -110,6 +110,10 @@ func init() {
 			// to override args, implement: initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sIngress,
 		},
+		"k8s.serviceaccount": {
+			// to override args, implement: initK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sServiceaccount,
+		},
 	}
 }
 
@@ -219,6 +223,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ingresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetIngresses()).ToDataRes(types.Array(types.Resource("k8s.ingress")))
+	},
+	"k8s.serviceaccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetServiceaccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -910,6 +917,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.ingress.tls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetTls()).ToDataRes(types.Array(types.Resource("k8s.ingresstls")))
 	},
+	"k8s.serviceaccount.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetId()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.serviceaccount.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.serviceaccount.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetName()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.serviceaccount.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.serviceaccount.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.serviceaccount.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetSecrets()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.serviceaccount.imagePullSecrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetImagePullSecrets()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sServiceaccount).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -980,6 +1026,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.ingresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Ingresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Serviceaccounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1994,6 +2044,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sIngress).Tls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sServiceaccount).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.serviceaccount.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.imagePullSecrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).ImagePullSecrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sServiceaccount).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2037,6 +2143,7 @@ type mqlK8s struct {
 	Configmaps plugin.TValue[[]interface{}]
 	Services plugin.TValue[[]interface{}]
 	Ingresses plugin.TValue[[]interface{}]
+	Serviceaccounts plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -2292,6 +2399,22 @@ func (c *mqlK8s) GetIngresses() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.ingresses()
+	})
+}
+
+func (c *mqlK8s) GetServiceaccounts() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Serviceaccounts, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "serviceaccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.serviceaccounts()
 	})
 }
 
@@ -4743,4 +4866,117 @@ func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]interface{}] {
 
 func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]interface{}] {
 	return &c.Tls
+}
+
+// mqlK8sServiceaccount for the k8s.serviceaccount resource
+type mqlK8sServiceaccount struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sServiceaccountInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Secrets plugin.TValue[[]interface{}]
+	ImagePullSecrets plugin.TValue[[]interface{}]
+	AutomountServiceAccountToken plugin.TValue[bool]
+}
+
+// createK8sServiceaccount creates a new instance of this resource
+func createK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sServiceaccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.serviceaccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sServiceaccount) MqlName() string {
+	return "k8s.serviceaccount"
+}
+
+func (c *mqlK8sServiceaccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sServiceaccount) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sServiceaccount) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sServiceaccount) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sServiceaccount) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sServiceaccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sServiceaccount) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sServiceaccount) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sServiceaccount) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sServiceaccount) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sServiceaccount) GetSecrets() *plugin.TValue[[]interface{}] {
+	return &c.Secrets
+}
+
+func (c *mqlK8sServiceaccount) GetImagePullSecrets() *plugin.TValue[[]interface{}] {
+	return &c.ImagePullSecrets
+}
+
+func (c *mqlK8sServiceaccount) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
+	return &c.AutomountServiceAccountToken
 }

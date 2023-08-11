@@ -14,8 +14,6 @@ k8s {
   podSecurityPolicies() []k8s.podsecuritypolicy
   // Kubernetes Network Policies
   networkPolicies() []k8s.networkpolicy
-  // Kubernetes Service Accounts
-  serviceaccounts() []k8s.serviceaccount
   // Kubernetes RBAC Cluster Roles
   clusterroles() []k8s.rbac.clusterrole
   // Kubernetes RBAC Roles
@@ -86,36 +84,6 @@ private k8s.networkpolicy @defaults("namespace name created") {
   manifest dict
   // Network Policy Spec
   spec dict
-}
-
-// Kubernetes Service Account
-private k8s.serviceaccount @defaults("namespace name created") {
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Resource Version
-  resourceVersion string
-  // Kubernetes Labels
-  labels() map[string]string
-  // Kubernetes Annotations
-  annotations() map[string]string
-  // Kubernetes Object Name
-  name string
-  // Kubernetes Object Namespace
-  namespace string
-  // Kubernetes Object Type
-  kind string
-  // Kubernetes Object Creation Timestamp
-  created time
-  // Full resource manifest
-  manifest dict
-  // Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount
-  secrets []dict
-  // ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
-  imagePullSecrets []dict
-  // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
-  automountServiceAccountToken bool
 }
 
 // Kubernetes ClusterRole

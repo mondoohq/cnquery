@@ -33,6 +33,8 @@ k8s {
   services() []k8s.service
   // Kubernetes Ingresses
   ingresses() []k8s.ingress
+  // Kubernetes Service Accounts
+  serviceaccounts() []k8s.serviceaccount
 }
 
 // Kubernetes API Resources
@@ -585,4 +587,34 @@ private k8s.ingress @defaults("namespace name created") {
   rules []k8s.ingressrule
   // Ingress TLS data
   tls []k8s.ingresstls
+}
+
+// Kubernetes Service Account
+private k8s.serviceaccount @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount
+  secrets []dict
+  // ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+  imagePullSecrets []dict
+  // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
+  automountServiceAccountToken bool
 }
