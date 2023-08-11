@@ -171,7 +171,7 @@ func init() {
 			Create: createGroups,
 		},
 		"package": {
-			// to override args, implement: initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initPackage,
 			Create: createPackage,
 		},
 		"packages": {
