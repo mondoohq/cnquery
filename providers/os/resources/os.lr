@@ -953,3 +953,29 @@ yum.repo {
   // Indicates if this repository is used as package source
   enabled() bool
 }
+
+// Container Image
+container.image {
+  // Image reference
+  reference string
+  // Fully-qualified reference name
+  name string
+  // Identifier of type-specific portion of the image reference
+  identifier string
+  // Identifier Type `tag` or `digest`
+  identifierType string
+  // Repository used for Container Image
+  repository() container.repository
+}
+
+// Container registry repository
+container.repository {
+  // Container Registry Repository Name
+  name string
+  // URL Scheme
+  scheme string
+  // Container Registry Repository URL
+  fullName string
+  // Container Registry URL
+  registry string
+}

@@ -306,6 +306,14 @@ func init() {
 			Init: initYumRepo,
 			Create: createYumRepo,
 		},
+		"container.image": {
+			Init: initContainerImage,
+			Create: createContainerImage,
+		},
+		"container.repository": {
+			// to override args, implement: initContainerRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createContainerRepository,
+		},
 	}
 }
 
@@ -1363,6 +1371,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"yum.repo.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlYumRepo).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"container.image.reference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerImage).GetReference()).ToDataRes(types.String)
+	},
+	"container.image.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerImage).GetName()).ToDataRes(types.String)
+	},
+	"container.image.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerImage).GetIdentifier()).ToDataRes(types.String)
+	},
+	"container.image.identifierType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerImage).GetIdentifierType()).ToDataRes(types.String)
+	},
+	"container.image.repository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerImage).GetRepository()).ToDataRes(types.Resource("container.repository"))
+	},
+	"container.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerRepository).GetName()).ToDataRes(types.String)
+	},
+	"container.repository.scheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerRepository).GetScheme()).ToDataRes(types.String)
+	},
+	"container.repository.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerRepository).GetFullName()).ToDataRes(types.String)
+	},
+	"container.repository.registry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContainerRepository).GetRegistry()).ToDataRes(types.String)
 	},
 }
 
@@ -2986,6 +3021,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"yum.repo.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlYumRepo).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"container.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlContainerImage).__id, ok = v.Value.(string)
+			return
+		},
+	"container.image.reference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerImage).Reference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.image.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerImage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.image.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerImage).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.image.identifierType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerImage).IdentifierType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.image.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerImage).Repository, ok = plugin.RawToTValue[*mqlContainerRepository](v.Value, v.Error)
+		return
+	},
+	"container.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlContainerRepository).__id, ok = v.Value.(string)
+			return
+		},
+	"container.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.repository.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerRepository).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.repository.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerRepository).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"container.repository.registry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContainerRepository).Registry, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -8743,4 +8822,149 @@ func (c *mqlYumRepo) GetEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
 		return c.enabled()
 	})
+}
+
+// mqlContainerImage for the container.image resource
+type mqlContainerImage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlContainerImageInternal it will be used here
+	Reference plugin.TValue[string]
+	Name plugin.TValue[string]
+	Identifier plugin.TValue[string]
+	IdentifierType plugin.TValue[string]
+	Repository plugin.TValue[*mqlContainerRepository]
+}
+
+// createContainerImage creates a new instance of this resource
+func createContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainerImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("container.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainerImage) MqlName() string {
+	return "container.image"
+}
+
+func (c *mqlContainerImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainerImage) GetReference() *plugin.TValue[string] {
+	return &c.Reference
+}
+
+func (c *mqlContainerImage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlContainerImage) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlContainerImage) GetIdentifierType() *plugin.TValue[string] {
+	return &c.IdentifierType
+}
+
+func (c *mqlContainerImage) GetRepository() *plugin.TValue[*mqlContainerRepository] {
+	return plugin.GetOrCompute[*mqlContainerRepository](&c.Repository, func() (*mqlContainerRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("container.image", c.__id, "repository")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlContainerRepository), nil
+			}
+		}
+
+		return c.repository()
+	})
+}
+
+// mqlContainerRepository for the container.repository resource
+type mqlContainerRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlContainerRepositoryInternal it will be used here
+	Name plugin.TValue[string]
+	Scheme plugin.TValue[string]
+	FullName plugin.TValue[string]
+	Registry plugin.TValue[string]
+}
+
+// createContainerRepository creates a new instance of this resource
+func createContainerRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlContainerRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("container.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlContainerRepository) MqlName() string {
+	return "container.repository"
+}
+
+func (c *mqlContainerRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlContainerRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlContainerRepository) GetScheme() *plugin.TValue[string] {
+	return &c.Scheme
+}
+
+func (c *mqlContainerRepository) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlContainerRepository) GetRegistry() *plugin.TValue[string] {
+	return &c.Registry
 }
