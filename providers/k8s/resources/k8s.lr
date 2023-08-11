@@ -15,6 +15,8 @@ k8s {
   pods() []k8s.pod
   // Cluster Deployments
   deployments() []k8s.deployment
+  // Cluster DaemonSets
+  daemonsets() []k8s.daemonset
 }
 
 // Kubernetes API Resources
@@ -107,6 +109,36 @@ private k8s.pod @defaults("namespace name created"){
 
 // Kubernetes Deployment
 private k8s.deployment @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // PodSpec is a description of a pod
+  podSpec dict
+  // Init containers
+  initContainers() []k8s.initContainer
+  // Contained Containers
+  containers() []k8s.container
+}
+
+// Kubernetes DaemonSet
+private k8s.daemonset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
