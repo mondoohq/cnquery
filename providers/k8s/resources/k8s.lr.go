@@ -118,6 +118,10 @@ func init() {
 			// to override args, implement: initK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sRbacClusterrole,
 		},
+		"k8s.rbac.role": {
+			// to override args, implement: initK8sRbacRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sRbacRole,
+		},
 	}
 }
 
@@ -233,6 +237,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.clusterroles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetClusterroles()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrole")))
+	},
+	"k8s.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetRoles()).ToDataRes(types.Array(types.Resource("k8s.rbac.role")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -996,6 +1003,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacClusterrole).GetAggregationRule()).ToDataRes(types.Dict)
 	},
+	"k8s.rbac.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetId()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.role.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetName()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.rbac.role.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.rbac.role.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.rbac.role.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRole).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1074,6 +1114,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.clusterroles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Clusterroles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2192,6 +2236,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sRbacRole).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.rbac.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.role.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2237,6 +2329,7 @@ type mqlK8s struct {
 	Ingresses plugin.TValue[[]interface{}]
 	Serviceaccounts plugin.TValue[[]interface{}]
 	Clusterroles plugin.TValue[[]interface{}]
+	Roles plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -2524,6 +2617,22 @@ func (c *mqlK8s) GetClusterroles() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.clusterroles()
+	})
+}
+
+func (c *mqlK8s) GetRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roles()
 	})
 }
 
@@ -5191,4 +5300,107 @@ func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]interface{}] {
 
 func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[interface{}] {
 	return &c.AggregationRule
+}
+
+// mqlK8sRbacRole for the k8s.rbac.role resource
+type mqlK8sRbacRole struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sRbacRoleInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Rules plugin.TValue[[]interface{}]
+}
+
+// createK8sRbacRole creates a new instance of this resource
+func createK8sRbacRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sRbacRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.rbac.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sRbacRole) MqlName() string {
+	return "k8s.rbac.role"
+}
+
+func (c *mqlK8sRbacRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sRbacRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sRbacRole) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sRbacRole) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sRbacRole) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sRbacRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sRbacRole) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sRbacRole) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sRbacRole) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]interface{}] {
+	return &c.Rules
 }

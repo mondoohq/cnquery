@@ -37,6 +37,8 @@ k8s {
   serviceaccounts() []k8s.serviceaccount
   // Kubernetes RBAC Cluster Roles
   clusterroles() []k8s.rbac.clusterrole
+  // Kubernetes RBAC Roles
+  roles() []k8s.rbac.role
 }
 
 // Kubernetes API Resources
@@ -645,4 +647,30 @@ private k8s.rbac.clusterrole @defaults("name created") {
   rules []dict
   // Cluster Role Aggregation Rule
   aggregationRule dict
+}
+
+// Kubernetes Role
+private k8s.rbac.role @defaults("name namespace") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
 }
