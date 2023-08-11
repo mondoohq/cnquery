@@ -114,6 +114,10 @@ func init() {
 			// to override args, implement: initK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sServiceaccount,
 		},
+		"k8s.rbac.clusterrole": {
+			// to override args, implement: initK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sRbacClusterrole,
+		},
 	}
 }
 
@@ -226,6 +230,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.serviceaccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetServiceaccounts()).ToDataRes(types.Array(types.Resource("k8s.serviceaccount")))
+	},
+	"k8s.clusterroles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetClusterroles()).ToDataRes(types.Array(types.Resource("k8s.rbac.clusterrole")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -956,6 +963,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.serviceaccount.automountServiceAccountToken": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sServiceaccount).GetAutomountServiceAccountToken()).ToDataRes(types.Bool)
 	},
+	"k8s.rbac.clusterrole.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetId()).ToDataRes(types.String)
+	},
+	"k8s.rbac.clusterrole.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.rbac.clusterrole.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.rbac.clusterrole.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.clusterrole.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.clusterrole.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetName()).ToDataRes(types.String)
+	},
+	"k8s.rbac.clusterrole.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.rbac.clusterrole.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.rbac.clusterrole.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.rbac.clusterrole.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacClusterrole).GetAggregationRule()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1030,6 +1070,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.serviceaccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Serviceaccounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.clusterroles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Clusterroles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2100,6 +2144,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sServiceaccount).AutomountServiceAccountToken, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.clusterrole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sRbacClusterrole).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.rbac.clusterrole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.clusterrole.aggregationRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacClusterrole).AggregationRule, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2144,6 +2236,7 @@ type mqlK8s struct {
 	Services plugin.TValue[[]interface{}]
 	Ingresses plugin.TValue[[]interface{}]
 	Serviceaccounts plugin.TValue[[]interface{}]
+	Clusterroles plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -2415,6 +2508,22 @@ func (c *mqlK8s) GetServiceaccounts() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.serviceaccounts()
+	})
+}
+
+func (c *mqlK8s) GetClusterroles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Clusterroles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "clusterroles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.clusterroles()
 	})
 }
 
@@ -4979,4 +5088,107 @@ func (c *mqlK8sServiceaccount) GetImagePullSecrets() *plugin.TValue[[]interface{
 
 func (c *mqlK8sServiceaccount) GetAutomountServiceAccountToken() *plugin.TValue[bool] {
 	return &c.AutomountServiceAccountToken
+}
+
+// mqlK8sRbacClusterrole for the k8s.rbac.clusterrole resource
+type mqlK8sRbacClusterrole struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sRbacClusterroleInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Rules plugin.TValue[[]interface{}]
+	AggregationRule plugin.TValue[interface{}]
+}
+
+// createK8sRbacClusterrole creates a new instance of this resource
+func createK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sRbacClusterrole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.rbac.clusterrole", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sRbacClusterrole) MqlName() string {
+	return "k8s.rbac.clusterrole"
+}
+
+func (c *mqlK8sRbacClusterrole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sRbacClusterrole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sRbacClusterrole) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sRbacClusterrole) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sRbacClusterrole) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sRbacClusterrole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sRbacClusterrole) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sRbacClusterrole) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sRbacClusterrole) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]interface{}] {
+	return &c.Rules
+}
+
+func (c *mqlK8sRbacClusterrole) GetAggregationRule() *plugin.TValue[interface{}] {
+	return &c.AggregationRule
 }

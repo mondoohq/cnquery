@@ -35,6 +35,8 @@ k8s {
   ingresses() []k8s.ingress
   // Kubernetes Service Accounts
   serviceaccounts() []k8s.serviceaccount
+  // Kubernetes RBAC Cluster Roles
+  clusterroles() []k8s.rbac.clusterrole
 }
 
 // Kubernetes API Resources
@@ -617,4 +619,30 @@ private k8s.serviceaccount @defaults("namespace name created") {
   imagePullSecrets []dict
   // AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted
   automountServiceAccountToken bool
+}
+
+// Kubernetes ClusterRole
+private k8s.rbac.clusterrole @defaults("name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Cluster Role Rules
+  rules []dict
+  // Cluster Role Aggregation Rule
+  aggregationRule dict
 }
