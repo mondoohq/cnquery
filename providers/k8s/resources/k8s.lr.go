@@ -70,6 +70,10 @@ func init() {
 			// to override args, implement: initK8sEphemeralContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sEphemeralContainer,
 		},
+		"k8s.secret": {
+			// to override args, implement: initK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sSecret,
+		},
 	}
 }
 
@@ -167,6 +171,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.cronjobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetCronjobs()).ToDataRes(types.Array(types.Resource("k8s.cronjob")))
+	},
+	"k8s.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetSecrets()).ToDataRes(types.Array(types.Resource("k8s.secret")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -657,6 +664,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetEnvFrom()).ToDataRes(types.Dict)
 	},
+	"k8s.secret.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetId()).ToDataRes(types.String)
+	},
+	"k8s.secret.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.secret.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.secret.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.secret.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.secret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetName()).ToDataRes(types.String)
+	},
+	"k8s.secret.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.secret.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.secret.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.secret.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.secret.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetType()).ToDataRes(types.String)
+	},
+	"k8s.secret.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sSecret).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -711,6 +754,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.cronjobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Cronjobs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Secrets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1417,6 +1464,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sSecret).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.secret.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.secret.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sSecret).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1456,6 +1555,7 @@ type mqlK8s struct {
 	Replicasets plugin.TValue[[]interface{}]
 	Jobs plugin.TValue[[]interface{}]
 	Cronjobs plugin.TValue[[]interface{}]
+	Secrets plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -1647,6 +1747,22 @@ func (c *mqlK8s) GetCronjobs() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.cronjobs()
+	})
+}
+
+func (c *mqlK8s) GetSecrets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Secrets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.secrets()
 	})
 }
 
@@ -3295,4 +3411,124 @@ func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[interface{}] {
 
 func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[interface{}] {
 	return &c.EnvFrom
+}
+
+// mqlK8sSecret for the k8s.secret resource
+type mqlK8sSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sSecretInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Type plugin.TValue[string]
+	Certificates plugin.TValue[[]interface{}]
+}
+
+// createK8sSecret creates a new instance of this resource
+func createK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sSecret) MqlName() string {
+	return "k8s.secret"
+}
+
+func (c *mqlK8sSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sSecret) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sSecret) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sSecret) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sSecret) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sSecret) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sSecret) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sSecret) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sSecret) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sSecret) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sSecret) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlK8sSecret) GetCertificates() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Certificates, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.secret", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.certificates()
+	})
 }
