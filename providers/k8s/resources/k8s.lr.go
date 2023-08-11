@@ -142,6 +142,18 @@ func init() {
 			// to override args, implement: initK8sCustomresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sCustomresource,
 		},
+		"k8s.admissionreview": {
+			// to override args, implement: initK8sAdmissionreview(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sAdmissionreview,
+		},
+		"k8s.admissionrequest": {
+			// to override args, implement: initK8sAdmissionrequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sAdmissionrequest,
+		},
+		"k8s.userinfo": {
+			// to override args, implement: initK8sUserinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sUserinfo,
+		},
 	}
 }
 
@@ -1235,6 +1247,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.customresource.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sCustomresource).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.admissionreview.request": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionreview).GetRequest()).ToDataRes(types.Resource("k8s.admissionrequest"))
+	},
+	"k8s.admissionrequest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetName()).ToDataRes(types.String)
+	},
+	"k8s.admissionrequest.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.admissionrequest.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetOperation()).ToDataRes(types.String)
+	},
+	"k8s.admissionrequest.userInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetUserInfo()).ToDataRes(types.Resource("k8s.userinfo"))
+	},
+	"k8s.admissionrequest.object": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetObject()).ToDataRes(types.Dict)
+	},
+	"k8s.admissionrequest.oldObject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sAdmissionrequest).GetOldObject()).ToDataRes(types.Dict)
+	},
+	"k8s.userinfo.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUserinfo).GetUsername()).ToDataRes(types.String)
+	},
+	"k8s.userinfo.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sUserinfo).GetUid()).ToDataRes(types.String)
 	},
 }
 
@@ -2742,6 +2781,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.customresource.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sCustomresource).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionreview.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sAdmissionreview).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.admissionreview.request": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionreview).Request, ok = plugin.RawToTValue[*mqlK8sAdmissionrequest](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sAdmissionrequest).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.admissionrequest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.userInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).UserInfo, ok = plugin.RawToTValue[*mqlK8sUserinfo](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.object": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).Object, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.admissionrequest.oldObject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sAdmissionrequest).OldObject, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.userinfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sUserinfo).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.userinfo.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUserinfo).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.userinfo.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sUserinfo).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -6465,4 +6552,205 @@ func (c *mqlK8sCustomresource) GetCreated() *plugin.TValue[*time.Time] {
 
 func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[interface{}] {
 	return &c.Manifest
+}
+
+// mqlK8sAdmissionreview for the k8s.admissionreview resource
+type mqlK8sAdmissionreview struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sAdmissionreviewInternal it will be used here
+	Request plugin.TValue[*mqlK8sAdmissionrequest]
+}
+
+// createK8sAdmissionreview creates a new instance of this resource
+func createK8sAdmissionreview(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionreview{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admissionreview", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionreview) MqlName() string {
+	return "k8s.admissionreview"
+}
+
+func (c *mqlK8sAdmissionreview) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionreview) GetRequest() *plugin.TValue[*mqlK8sAdmissionrequest] {
+	return plugin.GetOrCompute[*mqlK8sAdmissionrequest](&c.Request, func() (*mqlK8sAdmissionrequest, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admissionreview", c.__id, "request")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sAdmissionrequest), nil
+			}
+		}
+
+		return c.request()
+	})
+}
+
+// mqlK8sAdmissionrequest for the k8s.admissionrequest resource
+type mqlK8sAdmissionrequest struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sAdmissionrequestInternal
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Operation plugin.TValue[string]
+	UserInfo plugin.TValue[*mqlK8sUserinfo]
+	Object plugin.TValue[interface{}]
+	OldObject plugin.TValue[interface{}]
+}
+
+// createK8sAdmissionrequest creates a new instance of this resource
+func createK8sAdmissionrequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sAdmissionrequest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.admissionrequest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sAdmissionrequest) MqlName() string {
+	return "k8s.admissionrequest"
+}
+
+func (c *mqlK8sAdmissionrequest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sAdmissionrequest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sAdmissionrequest) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sAdmissionrequest) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlK8sAdmissionrequest) GetUserInfo() *plugin.TValue[*mqlK8sUserinfo] {
+	return plugin.GetOrCompute[*mqlK8sUserinfo](&c.UserInfo, func() (*mqlK8sUserinfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.admissionrequest", c.__id, "userInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sUserinfo), nil
+			}
+		}
+
+		return c.userInfo()
+	})
+}
+
+func (c *mqlK8sAdmissionrequest) GetObject() *plugin.TValue[interface{}] {
+	return &c.Object
+}
+
+func (c *mqlK8sAdmissionrequest) GetOldObject() *plugin.TValue[interface{}] {
+	return &c.OldObject
+}
+
+// mqlK8sUserinfo for the k8s.userinfo resource
+type mqlK8sUserinfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sUserinfoInternal it will be used here
+	Username plugin.TValue[string]
+	Uid plugin.TValue[string]
+}
+
+// createK8sUserinfo creates a new instance of this resource
+func createK8sUserinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sUserinfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.userinfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sUserinfo) MqlName() string {
+	return "k8s.userinfo"
+}
+
+func (c *mqlK8sUserinfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sUserinfo) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlK8sUserinfo) GetUid() *plugin.TValue[string] {
+	return &c.Uid
 }

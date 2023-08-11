@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
@@ -230,4 +231,8 @@ func (t *ApiConnection) Nodes() ([]v1.Node, error) {
 		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Node"))
 	}
 	return list.Items, err
+}
+
+func (t *ApiConnection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
+	return []admissionv1.AdmissionReview{}, nil
 }

@@ -3,6 +3,7 @@ package shared
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
@@ -47,7 +48,7 @@ type Connection interface {
 	// DaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
 	// DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error)
 	// Secret(namespace, name string) (*v1.Secret, error)
-	// AdmissionReviews() ([]admissionv1.AdmissionReview, error)
+	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
 	// Ingress(namespace, name string) (*networkingv1.Ingress, error)
 	// Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error)
 }
