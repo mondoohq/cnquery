@@ -3,9 +3,9 @@ package resources
 import (
 	"sync"
 
-	"go.mondoo.com/cnquery/_motor/providers/k8s/resources"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

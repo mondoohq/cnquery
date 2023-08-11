@@ -193,6 +193,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.container.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetImage()).ToDataRes(types.String)
 	},
+	"k8s.container.containerImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
+	},
 	"k8s.container.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sContainer).GetCommand()).ToDataRes(types.Array(types.String))
 	},
@@ -244,6 +247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.initContainer.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetImage()).ToDataRes(types.String)
 	},
+	"k8s.initContainer.containerImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
+	},
 	"k8s.initContainer.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sInitContainer).GetCommand()).ToDataRes(types.Array(types.String))
 	},
@@ -288,6 +294,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.ephemeralContainer.image": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetImage()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.containerImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetContainerImage()).ToDataRes(types.Resource("container.image"))
 	},
 	"k8s.ephemeralContainer.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sEphemeralContainer).GetCommand()).ToDataRes(types.Array(types.String))
@@ -463,6 +472,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.container.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
+		return
+	},
 	"k8s.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -535,6 +548,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sInitContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.initContainer.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
+		return
+	},
 	"k8s.initContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sInitContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -597,6 +614,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.ephemeralContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sEphemeralContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.containerImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).ContainerImage, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"k8s.ephemeralContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1004,6 +1025,7 @@ type mqlK8sContainer struct {
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
 	Image plugin.TValue[string]
+	ContainerImage plugin.TValue[plugin.Resource]
 	Command plugin.TValue[[]interface{}]
 	Args plugin.TValue[[]interface{}]
 	Resources plugin.TValue[interface{}]
@@ -1072,6 +1094,22 @@ func (c *mqlK8sContainer) GetImage() *plugin.TValue[string] {
 	return &c.Image
 }
 
+func (c *mqlK8sContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.container", c.__id, "containerImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		return c.containerImage()
+	})
+}
+
 func (c *mqlK8sContainer) GetCommand() *plugin.TValue[[]interface{}] {
 	return &c.Command
 }
@@ -1133,6 +1171,7 @@ type mqlK8sInitContainer struct {
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
 	Image plugin.TValue[string]
+	ContainerImage plugin.TValue[plugin.Resource]
 	Command plugin.TValue[[]interface{}]
 	Args plugin.TValue[[]interface{}]
 	Resources plugin.TValue[interface{}]
@@ -1199,6 +1238,22 @@ func (c *mqlK8sInitContainer) GetImage() *plugin.TValue[string] {
 	return &c.Image
 }
 
+func (c *mqlK8sInitContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.initContainer", c.__id, "containerImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		return c.containerImage()
+	})
+}
+
 func (c *mqlK8sInitContainer) GetCommand() *plugin.TValue[[]interface{}] {
 	return &c.Command
 }
@@ -1252,6 +1307,7 @@ type mqlK8sEphemeralContainer struct {
 	Name plugin.TValue[string]
 	ImageName plugin.TValue[string]
 	Image plugin.TValue[string]
+	ContainerImage plugin.TValue[plugin.Resource]
 	Command plugin.TValue[[]interface{}]
 	Args plugin.TValue[[]interface{}]
 	VolumeMounts plugin.TValue[[]interface{}]
@@ -1315,6 +1371,22 @@ func (c *mqlK8sEphemeralContainer) GetImageName() *plugin.TValue[string] {
 
 func (c *mqlK8sEphemeralContainer) GetImage() *plugin.TValue[string] {
 	return &c.Image
+}
+
+func (c *mqlK8sEphemeralContainer) GetContainerImage() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.ContainerImage, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ephemeralContainer", c.__id, "containerImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		return c.containerImage()
+	})
 }
 
 func (c *mqlK8sEphemeralContainer) GetCommand() *plugin.TValue[[]interface{}] {

@@ -133,40 +133,55 @@ func (k *mqlK8sEphemeralContainer) id() (string, error) {
 	return k.Uid.Data, nil
 }
 
-func (k *mqlK8sEphemeralContainer) containerImage() (interface{}, error) {
+func (k *mqlK8sEphemeralContainer) containerImage() (plugin.Resource, error) {
 	if k.ImageName.Error != nil {
 		return nil, k.ImageName.Error
 	}
 
-	// TODO
-	return nil, nil
-	// return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
+	c, err := k.MqlRuntime.CreateSharedResource("container.image", map[string]*llx.RawData{
+		"reference": llx.StringData(k.ImageName.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (k *mqlK8sInitContainer) id() (string, error) {
 	return k.Uid.Data, nil
 }
 
-func (k *mqlK8sInitContainer) containerImage() (interface{}, error) {
+func (k *mqlK8sInitContainer) containerImage() (plugin.Resource, error) {
 	if k.ImageName.Error != nil {
 		return nil, k.ImageName.Error
 	}
 
-	// TODO
-	return nil, nil
-	// return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
+	c, err := k.MqlRuntime.CreateSharedResource("container.image", map[string]*llx.RawData{
+		"reference": llx.StringData(k.ImageName.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (k *mqlK8sContainer) id() (string, error) {
 	return k.Uid.Data, nil
 }
 
-func (k *mqlK8sContainer) containerImage() (interface{}, error) {
+func (k *mqlK8sContainer) containerImage() (plugin.Resource, error) {
 	if k.ImageName.Error != nil {
 		return nil, k.ImageName.Error
 	}
 
-	// TODO
-	return nil, nil
-	// return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
+	c, err := k.MqlRuntime.CreateSharedResource("container.image", map[string]*llx.RawData{
+		"reference": llx.StringData(k.ImageName.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }

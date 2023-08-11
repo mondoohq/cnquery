@@ -157,7 +157,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case "local":
+	// TODO: how are we going to handle this?
+	case "local", "k8s":
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID, asset)
 
