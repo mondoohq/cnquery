@@ -22,6 +22,10 @@ func init() {
 			// to override args, implement: initK8sApiresource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sApiresource,
 		},
+		"k8s.namespace": {
+			// to override args, implement: initK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sNamespace,
+		},
 		"k8s.node": {
 			Init: initK8sNode,
 			Create: createK8sNode,
@@ -113,6 +117,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.apiResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetApiResources()).ToDataRes(types.Array(types.Resource("k8s.apiresource")))
 	},
+	"k8s.namespaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetNamespaces()).ToDataRes(types.Array(types.Resource("k8s.namespace")))
+	},
 	"k8s.nodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetNodes()).ToDataRes(types.Array(types.Resource("k8s.node")))
 	},
@@ -142,6 +149,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.apiresource.categories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.namespace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetId()).ToDataRes(types.String)
+	},
+	"k8s.namespace.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.namespace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetName()).ToDataRes(types.String)
+	},
+	"k8s.namespace.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.namespace.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetManifest()).ToDataRes(types.Dict)
 	},
 	"k8s.node.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetId()).ToDataRes(types.String)
@@ -379,6 +401,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8s).ApiResources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.namespaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Namespaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"k8s.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -421,6 +447,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.apiresource.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sApiresource).Categories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sNamespace).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.namespace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -761,6 +811,7 @@ type mqlK8s struct {
 	__id string
 	mqlK8sInternal
 	ApiResources plugin.TValue[[]interface{}]
+	Namespaces plugin.TValue[[]interface{}]
 	Nodes plugin.TValue[[]interface{}]
 	Pods plugin.TValue[[]interface{}]
 }
@@ -810,6 +861,22 @@ func (c *mqlK8s) GetApiResources() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.apiResources()
+	})
+}
+
+func (c *mqlK8s) GetNamespaces() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Namespaces, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "namespaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.namespaces()
 	})
 }
 
@@ -927,6 +994,75 @@ func (c *mqlK8sApiresource) GetShortNames() *plugin.TValue[[]interface{}] {
 
 func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]interface{}] {
 	return &c.Categories
+}
+
+// mqlK8sNamespace for the k8s.namespace resource
+type mqlK8sNamespace struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sNamespaceInternal it will be used here
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	Name plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+}
+
+// createK8sNamespace creates a new instance of this resource
+func createK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sNamespace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.namespace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sNamespace) MqlName() string {
+	return "k8s.namespace"
+}
+
+func (c *mqlK8sNamespace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sNamespace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sNamespace) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sNamespace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sNamespace) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sNamespace) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
 }
 
 // mqlK8sNode for the k8s.node resource

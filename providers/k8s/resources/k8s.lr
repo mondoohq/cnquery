@@ -7,6 +7,8 @@ option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
 k8s {
   // Available Resource Types
   apiResources() []k8s.apiresource
+  // Cluster Namespaces
+  namespaces() []k8s.namespace
   // Cluster Nodes
   nodes() []k8s.node
   // Cluster Pods
@@ -31,6 +33,20 @@ private k8s.apiresource @defaults("name kind") {
   shortNames []string
   // List of the grouped resources
   categories []string
+}
+
+// Kubernetes Namespace
+private k8s.namespace @defaults("name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
 }
 
 // Kubernetes node
