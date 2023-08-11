@@ -43,6 +43,8 @@ k8s {
   roles() []k8s.rbac.role
   // Kubernetes RBAC Role Bindings
   rolebindings() []k8s.rbac.rolebinding
+  // Kubernetes PodSecurityPolicy's
+  podSecurityPolicies() []k8s.podsecuritypolicy
 }
 
 // Kubernetes API Resources
@@ -731,4 +733,28 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   subjects []dict
   // RoleRef can only reference a ClusterRole in the global namespace
   roleRef dict
+}
+
+// Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
+private k8s.podsecuritypolicy {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Policy Spec
+  spec dict
 }
