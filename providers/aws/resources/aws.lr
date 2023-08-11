@@ -9,4 +9,20 @@ aws @defaults("account.id") {
 aws.account @defaults("id") {
   // Account ID
   id() string
+  // Account Aliases
+  aliases() []string
+  // Information about the associated organization if any
+  organization() aws.organization
+}
+
+// AWS Organization resource
+aws.organization {
+  // ARN of the organization
+  arn string
+  // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
+  featureSet string
+  // ID of the organization's master account
+  masterAccountId string
+  // Email owner of the organization's master account
+  masterAccountEmail string
 }

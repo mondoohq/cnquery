@@ -21,6 +21,10 @@ func init() {
 			// to override args, implement: initAwsAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAccount,
 		},
+		"aws.organization": {
+			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsOrganization,
+		},
 	}
 }
 
@@ -92,6 +96,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetId()).ToDataRes(types.String)
 	},
+	"aws.account.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetAliases()).ToDataRes(types.Array(types.String))
+	},
+	"aws.account.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetOrganization()).ToDataRes(types.Resource("aws.organization"))
+	},
+	"aws.organization.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetArn()).ToDataRes(types.String)
+	},
+	"aws.organization.featureSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetFeatureSet()).ToDataRes(types.String)
+	},
+	"aws.organization.masterAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetMasterAccountId()).ToDataRes(types.String)
+	},
+	"aws.organization.masterAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOrganization).GetMasterAccountEmail()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -114,6 +136,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.account.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Aliases, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.account.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Organization, ok = plugin.RawToTValue[*mqlAwsOrganization](v.Value, v.Error)
+		return
+	},
+	"aws.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsOrganization).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.organization.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.featureSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).FeatureSet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.masterAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).MasterAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.organization.masterAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOrganization).MasterAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -185,6 +235,8 @@ type mqlAwsAccount struct {
 	__id string
 	// optional: if you define mqlAwsAccountInternal it will be used here
 	Id plugin.TValue[string]
+	Aliases plugin.TValue[[]interface{}]
+	Organization plugin.TValue[*mqlAwsOrganization]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -228,4 +280,85 @@ func (c *mqlAwsAccount) GetId() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
 		return c.id()
 	})
+}
+
+func (c *mqlAwsAccount) GetAliases() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Aliases, func() ([]interface{}, error) {
+		return c.aliases()
+	})
+}
+
+func (c *mqlAwsAccount) GetOrganization() *plugin.TValue[*mqlAwsOrganization] {
+	return plugin.GetOrCompute[*mqlAwsOrganization](&c.Organization, func() (*mqlAwsOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.account", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+// mqlAwsOrganization for the aws.organization resource
+type mqlAwsOrganization struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsOrganizationInternal it will be used here
+	Arn plugin.TValue[string]
+	FeatureSet plugin.TValue[string]
+	MasterAccountId plugin.TValue[string]
+	MasterAccountEmail plugin.TValue[string]
+}
+
+// createAwsOrganization creates a new instance of this resource
+func createAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsOrganization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.organization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsOrganization) MqlName() string {
+	return "aws.organization"
+}
+
+func (c *mqlAwsOrganization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsOrganization) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsOrganization) GetFeatureSet() *plugin.TValue[string] {
+	return &c.FeatureSet
+}
+
+func (c *mqlAwsOrganization) GetMasterAccountId() *plugin.TValue[string] {
+	return &c.MasterAccountId
+}
+
+func (c *mqlAwsOrganization) GetMasterAccountEmail() *plugin.TValue[string] {
+	return &c.MasterAccountEmail
 }
