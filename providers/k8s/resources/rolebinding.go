@@ -1,0 +1,78 @@
+package resources
+
+import (
+	"errors"
+	"sync"
+
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/types"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+type mqlK8sRbacRolebindingInternal struct {
+	lock sync.Mutex
+	obj  *rbacv1.RoleBinding
+}
+
+func (k *mqlK8s) rolebindings() ([]interface{}, error) {
+	return k8sResourceToMql(k.MqlRuntime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
+		ts := obj.GetCreationTimestamp()
+
+		manifest, err := convert.JsonToDict(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		roleBinding, ok := resource.(*rbacv1.RoleBinding)
+		if !ok {
+			return nil, errors.New("not a k8s rolebinding")
+		}
+
+		subjects, err := convert.JsonToDictSlice(roleBinding.Subjects)
+		if err != nil {
+			return nil, err
+		}
+
+		roleRef, err := convert.JsonToDict(roleBinding.RoleRef)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := CreateResource(k.MqlRuntime, "k8s.rbac.rolebinding", map[string]*llx.RawData{
+			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
+			"uid":             llx.StringData(string(obj.GetUID())),
+			"resourceVersion": llx.StringData(obj.GetResourceVersion()),
+			"name":            llx.StringData(obj.GetName()),
+			"namespace":       llx.StringData(obj.GetNamespace()),
+			"kind":            llx.StringData(objT.GetKind()),
+			"created":         llx.TimeData(ts.Time),
+			"manifest":        llx.DictData(manifest),
+			"subjects":        llx.ArrayData(subjects, types.Dict),
+			"roleRef":         llx.DictData(roleRef),
+		})
+		if err != nil {
+			return nil, err
+		}
+		r.(*mqlK8sRbacRolebinding).obj = roleBinding
+		return r, nil
+	})
+}
+
+func (k *mqlK8sRbacRolebinding) id() (string, error) {
+	return k.Id.Data, nil
+}
+
+// func (p *mqlK8sRbacRolebinding) init(args *resources.Args) (*resources.Args, K8sRbacRolebinding, error) {
+// 	return initNamespacedResource[K8sRbacRolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Rolebindings() })
+// }
+
+func (k *mqlK8sRbacRolebinding) annotations() (map[string]interface{}, error) {
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+}
+
+func (k *mqlK8sRbacRolebinding) labels() (map[string]interface{}, error) {
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
+}

@@ -126,6 +126,10 @@ func init() {
 			// to override args, implement: initK8sRbacRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sRbacRole,
 		},
+		"k8s.rbac.rolebinding": {
+			// to override args, implement: initK8sRbacRolebinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sRbacRolebinding,
+		},
 	}
 }
 
@@ -247,6 +251,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetRoles()).ToDataRes(types.Array(types.Resource("k8s.rbac.role")))
+	},
+	"k8s.rolebindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetRolebindings()).ToDataRes(types.Array(types.Resource("k8s.rbac.rolebinding")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -1076,6 +1083,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.rbac.role.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sRbacRole).GetRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"k8s.rbac.rolebinding.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetId()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.rolebinding.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.rbac.rolebinding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetName()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.rbac.rolebinding.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.rbac.rolebinding.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.rbac.rolebinding.subjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetSubjects()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sRbacRolebinding).GetRoleRef()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1162,6 +1205,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rolebindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Rolebindings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2376,6 +2423,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sRbacRole).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.rbac.rolebinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sRbacRolebinding).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.rbac.rolebinding.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.subjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).Subjects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.rbac.rolebinding.roleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sRbacRolebinding).RoleRef, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2423,6 +2522,7 @@ type mqlK8s struct {
 	Clusterroles plugin.TValue[[]interface{}]
 	Clusterrolebindings plugin.TValue[[]interface{}]
 	Roles plugin.TValue[[]interface{}]
+	Rolebindings plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -2742,6 +2842,22 @@ func (c *mqlK8s) GetRoles() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlK8s) GetRolebindings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Rolebindings, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "rolebindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.rolebindings()
 	})
 }
 
@@ -5615,4 +5731,112 @@ func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[interface{}] {
 
 func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]interface{}] {
 	return &c.Rules
+}
+
+// mqlK8sRbacRolebinding for the k8s.rbac.rolebinding resource
+type mqlK8sRbacRolebinding struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sRbacRolebindingInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Subjects plugin.TValue[[]interface{}]
+	RoleRef plugin.TValue[interface{}]
+}
+
+// createK8sRbacRolebinding creates a new instance of this resource
+func createK8sRbacRolebinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sRbacRolebinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.rbac.rolebinding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sRbacRolebinding) MqlName() string {
+	return "k8s.rbac.rolebinding"
+}
+
+func (c *mqlK8sRbacRolebinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sRbacRolebinding) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sRbacRolebinding) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sRbacRolebinding) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sRbacRolebinding) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sRbacRolebinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sRbacRolebinding) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sRbacRolebinding) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sRbacRolebinding) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sRbacRolebinding) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sRbacRolebinding) GetSubjects() *plugin.TValue[[]interface{}] {
+	return &c.Subjects
+}
+
+func (c *mqlK8sRbacRolebinding) GetRoleRef() *plugin.TValue[interface{}] {
+	return &c.RoleRef
 }
