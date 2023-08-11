@@ -76,7 +76,7 @@ private k8s.container @defaults("name") {
   // Deprecated. Use `imageName` instead.
   image string
   // Container image
-  // containerImage() os.container.image
+  containerImage() os.container.image
   // Entrypoint array
   command []string
   // Arguments to the entrypoint
@@ -116,7 +116,7 @@ private k8s.initContainer @defaults("name") {
   // Deprecated. Use `imageName` instead.
   image string
   // Container image
-  // containerImage() os.container.image
+  containerImage() os.container.image
   // Entrypoint array
   command []string
   // Arguments to the entrypoint
@@ -152,7 +152,7 @@ private k8s.ephemeralContainer @defaults("name") {
   // Deprecated. Use `imageName` instead.
   image string
   // Container image
-  // containerImage() os.container.image
+  containerImage() os.container.image
   // Entrypoint array
   command []string
   // Arguments to the entrypoint
