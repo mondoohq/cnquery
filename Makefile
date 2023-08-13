@@ -158,7 +158,8 @@ providers/build: providers/build/core \
 	providers/build/equinix \
 	providers/build/vcd \
 	providers/build/gcp \
-	providers/build/k8s
+	providers/build/k8s \
+	providers/build/azure
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -214,6 +215,9 @@ providers/build/k8s: providers/lr
 providers/build/gcp: providers/lr
 	@$(call buildProvider, providers/gcp)
 
+providers/build/azure: providers/lr
+	@$(call buildProvider, providers/azure)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -252,6 +256,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/vcd)
 	@$(call bundleProvider, providers/gcp)
 	@$(call bundleProvider, providers/k8s)
+	@$(call bundleProvider, providers/azure)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -272,6 +277,7 @@ providers/test:
 	@$(call testGpModProvider, providers/vcd)
 	@$(call testGpModProvider, providers/gcp)
 	@$(call testGpModProvider, providers/k8s)
+	@$(call testGpModProvider, providers/azure)
 
 providers/gomodtidy:
 #	@$(call gomodtidyProvider, providers/core)
@@ -292,6 +298,7 @@ providers/gomodtidy:
 	@$(call gomodtidyProvider, providers/vcd)
 	@$(call gomodtidyProvider, providers/gcp)
 	@$(call gomodtidyProvider, providers/k8s)
+	@$(call gomodtidyProvider, providers/azure)
 
 lr/test:
 	go test ./resources/lr/...
