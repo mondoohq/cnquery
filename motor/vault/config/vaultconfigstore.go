@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"encoding/json"
-	"runtime"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
@@ -18,16 +17,12 @@ import (
 	"go.mondoo.com/cnquery/motor/vault/keyring"
 )
 
-const (
-	VaultConfigStoreName = "mondoo-cli-keyring"
-	VaultConfigStoreKey  = "user-vaults"
-)
-
 func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 	if vCfg == nil {
 		return nil, errors.New("vault configuration cannot be empty")
 	}
 	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("initialize new vault")
+
 	var v vault.Vault
 	switch vCfg.Type {
 	case vault.VaultType_Memory:
@@ -38,14 +33,14 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 		v = hashivault.New(serverUrl, token)
 	case vault.VaultType_EncryptedFile:
 		path := vCfg.Options["path"]
-		keyRingName := vCfg.Options["name"]
+		keyRingName := vCfg.Name
 		password := vCfg.Options["password"]
 		v = keyring.NewEncryptedFile(path, keyRingName, password)
 	case vault.VaultType_KeyRing:
-		keyRingName := vCfg.Options["name"]
+		keyRingName := vCfg.Name
 		v = keyring.New(keyRingName)
 	case vault.VaultType_LinuxKernelKeyring:
-		keyRingName := vCfg.Options["name"]
+		keyRingName := vCfg.Name
 		v = keyring.NewLinuxKernelKeyring(keyRingName)
 	case vault.VaultType_GCPSecretsManager:
 		projectID := vCfg.Options["project-id"]
@@ -80,46 +75,6 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String())
 	}
 	return v, nil
-}
-
-// GetInternalVault returns the local store that is used in cnquery to store
-// Vault configurations eg. Hashicorp Vault access data
-func GetInternalVault() vault.Vault {
-	// on linux we are going to use kernel key management
-	if runtime.GOOS == "linux" {
-		log.Debug().Msg("use linux kernel key management to manage vaults")
-		return keyring.NewLinuxKernelKeyring(VaultConfigStoreName)
-	}
-
-	return keyring.New(VaultConfigStoreName)
-}
-
-// GetConfiguredVault returns a vault instance based on the configured user vaults.
-// It looks up in the internal vault and searches for a configuration for the vaultName
-func GetConfiguredVault(vaultName string) (vault.Vault, error) {
-	v := GetInternalVault()
-
-	ctx := context.Background()
-	secret, err := v.Get(ctx, &vault.SecretID{
-		Key: VaultConfigStoreKey,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	cfgs, err := NewClientVaultConfig(secret)
-	if err != nil {
-		return nil, err
-	}
-
-	// search for the specified vault
-	vCfg, err := cfgs.Get(vaultName)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("found vault config")
-	return New(&vCfg)
 }
 
 // ClientVaultConfig is the structured type where we store the client configuration for

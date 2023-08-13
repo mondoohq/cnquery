@@ -8,6 +8,7 @@ import (
 	"github.com/segmentio/ksuid"
 	asset "go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/config"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )
@@ -251,6 +252,25 @@ func (p *Inventory) ApplyCategory(category asset.AssetCategory) {
 		a := p.Spec.Assets[i]
 		a.Category = category
 	}
+}
+
+func (p *Inventory) GetVault() (vault.Vault, error) {
+	var v vault.Vault
+	t, err := vault.NewVaultType(p.Spec.Vault.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	// instantiate with full vault config
+	v, err = config.New(&vault.VaultConfiguration{
+		Name:    p.Spec.Vault.Name,
+		Type:    t,
+		Options: p.Spec.Vault.Options,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
 }
 
 // isValidCredentialRef ensures an asset credential is defined properly

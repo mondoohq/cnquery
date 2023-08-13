@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/cnquery/motor/inventory/credentialquery"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/motor/vault/config"
 	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/motor/vault/inmemory"
 	"go.mondoo.com/cnquery/motor/vault/multivault"
@@ -135,29 +134,11 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 	// in-memory vault is used as fall-back store embedded credentials
 	im.inmemoryVault = inmemory.New(inmemory.WithSecretMap(secrets))
 	if inventory.Spec.Vault != nil {
-		var v vault.Vault
-		// when the type is not provided but a name was given, then look up in our internal vault configuration
-		if inventory.Spec.Vault.Name != "" && inventory.Spec.Vault.Type == "" {
-			v, err = config.GetConfiguredVault(inventory.Spec.Vault.Name)
-			if err != nil {
-				return err
-			}
-		} else {
-			t, err := vault.NewVaultType(inventory.Spec.Vault.Type)
-			if err != nil {
-				return err
-			}
-
-			// instantiate with full vault config
-			v, err = config.New(&vault.VaultConfiguration{
-				Name:    inventory.Spec.Vault.Name,
-				Type:    t,
-				Options: inventory.Spec.Vault.Options,
-			})
-			if err != nil {
-				return err
-			}
+		v, err := inventory.GetVault()
+		if err != nil {
+			return err
 		}
+
 		im.vault = v
 	}
 
