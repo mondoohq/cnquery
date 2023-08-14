@@ -185,6 +185,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case "vagrant":
 		s.lastConnectionID++
 		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
 		// We need to detect the platform for the connection asset here, because
 		// this platform information will be used to determine the package manager
 		err := s.detect(conn.Asset(), conn)
