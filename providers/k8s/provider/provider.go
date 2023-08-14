@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/providers/k8s/connection/admission"
 	"go.mondoo.com/cnquery/providers/k8s/connection/api"
 	"go.mondoo.com/cnquery/providers/k8s/connection/manifest"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
@@ -122,9 +123,21 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
-	if manifestFile, ok := conf.Options[OPTION_MANIFEST]; ok {
+	if manifestContent, ok := conf.Options[OPTION_IMMEMORY_CONTENT]; ok {
+		s.lastConnectionID++
+		conn, err = manifest.NewConnection(s.lastConnectionID, asset, manifest.WithManifestContent([]byte(manifestContent)))
+		if err != nil {
+			return nil, err
+		}
+	} else if manifestFile, ok := conf.Options[OPTION_MANIFEST]; ok {
 		s.lastConnectionID++
 		conn, err = manifest.NewConnection(s.lastConnectionID, asset, manifest.WithManifestFile(manifestFile))
+		if err != nil {
+			return nil, err
+		}
+	} else if data, ok := conf.Options[OPTION_ADMISSION]; ok {
+		s.lastConnectionID++
+		conn, err = admission.NewConnection(s.lastConnectionID, asset, data)
 		if err != nil {
 			return nil, err
 		}
