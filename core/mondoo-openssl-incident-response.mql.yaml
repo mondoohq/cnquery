@@ -11,7 +11,7 @@ packs:
     filters:
       - asset.family.contains("linux")
     queries:
-      - uid: mondoo-openssl-platform
+      - uid: mondoo-openssl-incident-response-platform
         title: Retrieve platform details
         mql: |
           asset {
@@ -19,10 +19,10 @@ packs:
             version
             arch
           }
-      - uid: mondoo-openssl-installed-version
+      - uid: mondoo-openssl-incident-response-installed-version
         title: Retrieve installed ssl libraries
         mql: packages.where(name == /ssl/)
-      - uid: mondoo-openssl-listening-ports
+      - uid: mondoo-openssl-incident-response-listening-ports
         title: Retrieve listening ports from running systems
         mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
