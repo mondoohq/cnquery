@@ -25,6 +25,42 @@ func init() {
 			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsOrganization,
 		},
+		"aws.vpc": {
+			// to override args, implement: initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpc,
+		},
+		"aws.vpc.routetable": {
+			// to override args, implement: initAwsVpcRoutetable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcRoutetable,
+		},
+		"aws.vpc.flowlog": {
+			// to override args, implement: initAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcFlowlog,
+		},
+		"aws.accessAnalyzer": {
+			// to override args, implement: initAwsAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAccessAnalyzer,
+		},
+		"aws.accessanalyzer.analyzer": {
+			// to override args, implement: initAwsAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAccessanalyzerAnalyzer,
+		},
+		"aws.efs": {
+			// to override args, implement: initAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfs,
+		},
+		"aws.efs.filesystem": {
+			// to override args, implement: initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEfsFilesystem,
+		},
+		"aws.kms": {
+			// to override args, implement: initAwsKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKms,
+		},
+		"aws.kms.key": {
+			// to override args, implement: initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKmsKey,
+		},
 	}
 }
 
@@ -93,6 +129,12 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"aws.vpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAws).GetVpcs()).ToDataRes(types.Array(types.Resource("aws.vpc")))
+	},
+	"aws.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAws).GetRegions()).ToDataRes(types.Array(types.String))
+	},
 	"aws.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetId()).ToDataRes(types.String)
 	},
@@ -114,6 +156,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.organization.masterAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetMasterAccountEmail()).ToDataRes(types.String)
 	},
+	"aws.vpc.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpc.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetState()).ToDataRes(types.String)
+	},
+	"aws.vpc.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetFlowLogs()).ToDataRes(types.Array(types.Resource("aws.vpc.flowlog")))
+	},
+	"aws.vpc.routeTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetRouteTables()).ToDataRes(types.Array(types.Resource("aws.vpc.routetable")))
+	},
+	"aws.vpc.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.routetable.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetable).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.routetable.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetable).GetRoutes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.vpc.flowlog.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetVpc()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.accessanalyzer.analyzer")))
+	},
+	"aws.accessanalyzer.analyzer.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetArn()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetName()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetType()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
+	},
+	"aws.efs.filesystem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetName()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetId()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetArn()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.efs.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.efs.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.kms.keys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKms).GetKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
+	},
+	"aws.kms.key.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.kms.key.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetArn()).ToDataRes(types.String)
+	},
+	"aws.kms.key.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kms.key.keyRotationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetKeyRotationEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.kms.key.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetMetadata()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -130,6 +277,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAws).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.vpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAws).Vpcs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAws).Regions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsAccount).__id, ok = v.Value.(string)
 			return
@@ -166,6 +321,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsOrganization).MasterAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpc).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).FlowLogs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).RouteTables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcRoutetable).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.routetable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.routetable.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetable).Routes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcFlowlog).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.flowlog.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Vpc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsAccessAnalyzer).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.accessAnalyzer.analyzers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessAnalyzer).Analyzers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsAccessanalyzerAnalyzer).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.accessanalyzer.analyzer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEfs).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.efs.filesystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfs).Filesystems, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEfsFilesystem).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.efs.filesystem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsKms).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.kms.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKms).Keys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsKmsKey).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.kms.key.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.keyRotationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).KeyRotationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).Metadata, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -195,6 +526,8 @@ type mqlAws struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsInternal it will be used here
+	Vpcs plugin.TValue[[]interface{}]
+	Regions plugin.TValue[[]interface{}]
 }
 
 // createAws creates a new instance of this resource
@@ -227,6 +560,28 @@ func (c *mqlAws) MqlName() string {
 
 func (c *mqlAws) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAws) GetVpcs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Vpcs, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws", c.__id, "vpcs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.vpcs()
+	})
+}
+
+func (c *mqlAws) GetRegions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Regions, func() ([]interface{}, error) {
+		return c.regions()
+	})
 }
 
 // mqlAwsAccount for the aws.account resource
@@ -361,4 +716,616 @@ func (c *mqlAwsOrganization) GetMasterAccountId() *plugin.TValue[string] {
 
 func (c *mqlAwsOrganization) GetMasterAccountEmail() *plugin.TValue[string] {
 	return &c.MasterAccountEmail
+}
+
+// mqlAwsVpc for the aws.vpc resource
+type mqlAwsVpc struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	State plugin.TValue[string]
+	IsDefault plugin.TValue[bool]
+	Region plugin.TValue[string]
+	FlowLogs plugin.TValue[[]interface{}]
+	RouteTables plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsVpc creates a new instance of this resource
+func createAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpc) MqlName() string {
+	return "aws.vpc"
+}
+
+func (c *mqlAwsVpc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpc) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpc) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpc) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsVpc) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAwsVpc) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpc) GetFlowLogs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.FlowLogs, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "flowLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.flowLogs()
+	})
+}
+
+func (c *mqlAwsVpc) GetRouteTables() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RouteTables, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "routeTables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.routeTables()
+	})
+}
+
+func (c *mqlAwsVpc) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsVpcRoutetable for the aws.vpc.routetable resource
+type mqlAwsVpcRoutetable struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcRoutetableInternal it will be used here
+	Id plugin.TValue[string]
+	Routes plugin.TValue[[]interface{}]
+}
+
+// createAwsVpcRoutetable creates a new instance of this resource
+func createAwsVpcRoutetable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcRoutetable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.routetable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcRoutetable) MqlName() string {
+	return "aws.vpc.routetable"
+}
+
+func (c *mqlAwsVpcRoutetable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcRoutetable) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]interface{}] {
+	return &c.Routes
+}
+
+// mqlAwsVpcFlowlog for the aws.vpc.flowlog resource
+type mqlAwsVpcFlowlog struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcFlowlogInternal it will be used here
+	Id plugin.TValue[string]
+	Vpc plugin.TValue[string]
+	Region plugin.TValue[string]
+	Status plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsVpcFlowlog creates a new instance of this resource
+func createAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcFlowlog{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.flowlog", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcFlowlog) MqlName() string {
+	return "aws.vpc.flowlog"
+}
+
+func (c *mqlAwsVpcFlowlog) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcFlowlog) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcFlowlog) GetVpc() *plugin.TValue[string] {
+	return &c.Vpc
+}
+
+func (c *mqlAwsVpcFlowlog) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpcFlowlog) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsAccessAnalyzer for the aws.accessAnalyzer resource
+type mqlAwsAccessAnalyzer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsAccessAnalyzerInternal it will be used here
+	Analyzers plugin.TValue[[]interface{}]
+}
+
+// createAwsAccessAnalyzer creates a new instance of this resource
+func createAwsAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAccessAnalyzer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.accessAnalyzer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAccessAnalyzer) MqlName() string {
+	return "aws.accessAnalyzer"
+}
+
+func (c *mqlAwsAccessAnalyzer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAccessAnalyzer) GetAnalyzers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Analyzers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.accessAnalyzer", c.__id, "analyzers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.analyzers()
+	})
+}
+
+// mqlAwsAccessanalyzerAnalyzer for the aws.accessanalyzer.analyzer resource
+type mqlAwsAccessanalyzerAnalyzer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsAccessanalyzerAnalyzerInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	Status plugin.TValue[string]
+	Type plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsAccessanalyzerAnalyzer creates a new instance of this resource
+func createAwsAccessanalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAccessanalyzerAnalyzer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.accessanalyzer.analyzer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) MqlName() string {
+	return "aws.accessanalyzer.analyzer"
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsEfs for the aws.efs resource
+type mqlAwsEfs struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEfsInternal it will be used here
+	Filesystems plugin.TValue[[]interface{}]
+}
+
+// createAwsEfs creates a new instance of this resource
+func createAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfs) MqlName() string {
+	return "aws.efs"
+}
+
+func (c *mqlAwsEfs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfs) GetFilesystems() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Filesystems, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs", c.__id, "filesystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.filesystems()
+	})
+}
+
+// mqlAwsEfsFilesystem for the aws.efs.filesystem resource
+type mqlAwsEfsFilesystem struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEfsFilesystemInternal it will be used here
+	Name plugin.TValue[string]
+	Id plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Encrypted plugin.TValue[bool]
+	BackupPolicy plugin.TValue[interface{}]
+	Region plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsEfsFilesystem creates a new instance of this resource
+func createAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEfsFilesystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.efs.filesystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEfsFilesystem) MqlName() string {
+	return "aws.efs.filesystem"
+}
+
+func (c *mqlAwsEfsFilesystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEfsFilesystem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEfsFilesystem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEfsFilesystem) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEfsFilesystem) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.BackupPolicy, func() (interface{}, error) {
+		return c.backupPolicy()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsKms for the aws.kms resource
+type mqlAwsKms struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsKmsInternal it will be used here
+	Keys plugin.TValue[[]interface{}]
+}
+
+// createAwsKms creates a new instance of this resource
+func createAwsKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKms{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kms", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKms) MqlName() string {
+	return "aws.kms"
+}
+
+func (c *mqlAwsKms) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKms) GetKeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Keys, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms", c.__id, "keys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.keys()
+	})
+}
+
+// mqlAwsKmsKey for the aws.kms.key resource
+type mqlAwsKmsKey struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsKmsKeyInternal it will be used here
+	Id plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	KeyRotationEnabled plugin.TValue[bool]
+	Metadata plugin.TValue[interface{}]
+}
+
+// createAwsKmsKey creates a new instance of this resource
+func createAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKmsKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kms.key", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKmsKey) MqlName() string {
+	return "aws.kms.key"
+}
+
+func (c *mqlAwsKmsKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKmsKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsKmsKey) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsKmsKey) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKmsKey) GetKeyRotationEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KeyRotationEnabled, func() (bool, error) {
+		return c.keyRotationEnabled()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Metadata, func() (interface{}, error) {
+		return c.metadata()
+	})
 }

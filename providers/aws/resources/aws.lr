@@ -3,6 +3,10 @@ option go_package = "go.mondoo.com/cnquery/providers/aws/resources"
 
 // AWS Resource
 aws @defaults("account.id") {
+  // List of `aws.vpc` objects representing all VPCs in the account across all enabled regions
+  vpcs() []aws.vpc
+  // List of all enabled regions in the account
+  regions() []string
 }
 
 // AWS Account
@@ -16,7 +20,7 @@ aws.account @defaults("id") {
 }
 
 // AWS Organization resource
-aws.organization {
+aws.organization @defaults("arn") {
   // ARN of the organization
   arn string
   // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
@@ -25,4 +29,114 @@ aws.organization {
   masterAccountId string
   // Email owner of the organization's master account
   masterAccountEmail string
+}
+
+// Amazon Virtual Private Cloud (VPC)
+private aws.vpc @defaults("arn isDefault") {
+  // ARN of the VPC
+  arn string
+  // ID of the VPC
+  id string
+  // State of the VPC (pending or available)
+  state string
+  // Whether the VPC is the default one
+  isDefault bool
+  // Region the VPC exists in
+  region string
+  // A list of flowlogs for the VPC
+  flowLogs() []aws.vpc.flowlog
+  // List of route tables for the VPC
+  routeTables() []aws.vpc.routetable
+  // Tags on the VPC
+  tags map[string]string
+}
+
+// Amazon Virtual Private Cloud (VPC) Route Table
+private aws.vpc.routetable @defaults("id") {
+  // Unique ID of the route table
+  id string
+  // A list of route descriptions
+  routes []dict
+}
+
+// Amazon Virtual Private Cloud (VPC) Flow Log
+private aws.vpc.flowlog @defaults("id region status") {
+  // Unique ID of the flow log
+  id string
+  // VPC the flow log exists in
+  vpc string
+  // Region the flow log exists in
+  region string
+  // Status of the flow log
+  status string
+  // Tags on the flow log
+  tags map[string]string
+}
+
+// AWS IAM Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
+aws.accessAnalyzer {
+  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account 
+  analyzers() []aws.accessanalyzer.analyzer
+}
+
+
+// AWS IAM Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
+private aws.accessanalyzer.analyzer @defaults("arn status") {
+  // ARN for the analyzer
+  arn string
+  // Name for the analyzer
+  name string
+  // Status of the analyzer
+  status string
+  // Type of analyzer (ACCOUNT or ORGANIZATION)
+  type string
+  // Tags for the Analyzer
+  tags map[string]string
+}
+
+// AWS Elastic File System (EFS) Service
+aws.efs {
+  // A list of filesystems managed by the service
+  filesystems() []aws.efs.filesystem
+}
+
+// AWS Elastic File System (EFS) Filesystem
+private aws.efs.filesystem @defaults("name arn") {
+  // Name of the filesystem
+  name string
+  // ID of the filesystem
+  id string
+  // ARN of the filesystem
+  arn string
+  // Denotes whether or not the filesystem id encrypted
+  encrypted bool
+  // KMS key used for encryption of the filesystem
+  // kmsKey() aws.kms.key
+  // Backup policy for the filesystem
+  backupPolicy() dict
+  // Region in which the filesystem exists
+  region string
+  // Tags for the filesystem
+  tags map[string]string
+}
+
+// AWS Key Management Service (KMS)
+aws.kms {
+  // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
+  keys() []aws.kms.key
+}
+
+// AWS Key Management Service (KMS) Key
+private aws.kms.key @defaults("arn") {
+  init(arn string)
+  // Unique identifier for the key
+  id string
+  // ARN of the key
+  arn string
+  // Region the key lives in
+  region string
+  // Bool that specifies whether key rotation is enabled
+  keyRotationEnabled() bool
+  // Metadata for the key
+  metadata() dict
 }

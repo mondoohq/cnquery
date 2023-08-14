@@ -15,8 +15,8 @@ func (a *mqlAwsAccount) id() (string, error) {
 	return "aws.account/" + conn.AccountId(), nil
 }
 
-func (s *mqlAwsAccount) aliases() ([]interface{}, error) {
-	conn := s.MqlRuntime.Connection.(*connection.AwsConnection)
+func (a *mqlAwsAccount) aliases() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Iam("") // no region for iam, use configured region
 
 	res, err := client.ListAccountAliases(context.TODO(), &iam.ListAccountAliasesInput{})
@@ -30,15 +30,15 @@ func (s *mqlAwsAccount) aliases() ([]interface{}, error) {
 	return result, nil
 }
 
-func (s *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
-	conn := s.MqlRuntime.Connection.(*connection.AwsConnection)
+func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	client := conn.Organizations("") // no region for orgs, use configured region
 
 	org, err := client.DescribeOrganization(context.TODO(), &organizations.DescribeOrganizationInput{})
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.MqlRuntime.CreateResource(s.MqlRuntime, "aws.organization",
+	res, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.organization",
 		map[string]*llx.RawData{
 			"arn":                llx.StringData(utils.ToString(org.Organization.Arn)),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
