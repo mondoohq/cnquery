@@ -2,18 +2,25 @@ package provider
 
 import (
 	"errors"
-	"net/url"
 	"strconv"
-	"strings"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/k8s/connection/api"
+	"go.mondoo.com/cnquery/providers/k8s/connection/manifest"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/resources"
+)
+
+const (
+	OPTION_MANIFEST         = "path"
+	OPTION_IMMEMORY_CONTENT = "manifest-content"
+	OPTION_NAMESPACE        = "namespace"
+	OPTION_ADMISSION        = "k8s-admission-review"
+	OPTION_OBJECT_KIND      = "object-kind"
+	OPTION_CONTEXT          = "context"
 )
 
 type Service struct {
@@ -42,51 +49,22 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	conn := &inventory.Config{
 		Discover: parseDiscover(flags),
 		Type:     req.Connector,
+		Options:  map[string]string{},
 	}
 
-	port := 0
-	switch req.Connector {
-	case "local":
-		conn.Type = "local"
-	case "ssh":
-		conn.Type = "ssh"
-		port = 22
-	case "winrm":
-		conn.Type = "winrm"
-		port = 5985
+	if len(req.Args) == 1 {
+		conn.Options[OPTION_MANIFEST] = req.Args[0]
 	}
 
-	user := ""
-	if len(req.Args) != 0 {
-		target := req.Args[0]
-		if !strings.Contains(target, "://") {
-			target = "ssh://" + target
-		}
-
-		x, err := url.Parse(target)
-		if err != nil {
-			return nil, errors.New("incorrect format of target, please use user@host:port")
-		}
-
-		user = x.User.Username()
-		conn.Host = x.Hostname()
-		conn.Path = x.Path
-
-		if sPort := x.Port(); sPort != "" {
-			port, err = strconv.Atoi(x.Port())
-			if err != nil {
-				return nil, errors.New("port '" + x.Port() + "'is incorrectly formatted, must be a number")
-			}
-		}
+	if context, ok := req.Flags["context"]; ok {
+		conn.Options[OPTION_CONTEXT] = context.RawData().Value.(string)
 	}
 
-	if port > 0 {
-		conn.Port = int32(port)
+	if ns, ok := req.Flags["namespaces"]; ok {
+		conn.Options[OPTION_NAMESPACE] = ns.RawData().Value.(string)
 	}
 
-	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
-		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
-	}
+	// TODO: add ns exclude
 
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conn},
@@ -105,16 +83,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	return &res, nil
-}
-
-// LocalAssetReq ist a sample request to connect to the local OS.
-// Useful for test automation.
-var LocalAssetReq = &plugin.ConnectReq{
-	Asset: &inventory.Asset{
-		Connections: []*inventory.Config{{
-			Type: "local",
-		}},
-	},
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -154,20 +122,18 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
-	switch conf.Type {
-	case "k8s":
+	if manifestFile, ok := conf.Options[OPTION_MANIFEST]; ok {
+		s.lastConnectionID++
+		conn, err = manifest.NewConnection(s.lastConnectionID, asset, manifest.WithManifestFile(manifestFile))
+		if err != nil {
+			return nil, err
+		}
+	} else {
 		s.lastConnectionID++
 		conn, err = api.NewConnection(s.lastConnectionID, asset)
 		if err != nil {
 			return nil, err
 		}
-
-	default:
-		return nil, errors.New("cannot find connection type " + conf.Type)
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	var upstream *upstream.UpstreamClient

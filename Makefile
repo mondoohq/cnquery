@@ -207,7 +207,7 @@ providers/build/equinix: providers/lr
 
 providers/build/vcd: providers/lr
 	@$(call buildProvider, providers/vcd)
-	
+
 providers/build/k8s: providers/lr
 	@$(call buildProvider, providers/k8s)
 
@@ -232,6 +232,7 @@ providers/install:
 	@$(call installProvider, providers/equinix)
 	@$(call installProvider, providers/vcd)
 	@$(call installProvider, providers/gcp)
+	@$(call installProvider, providers/k8s)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -250,6 +251,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/equinix)
 	@$(call bundleProvider, providers/vcd)
 	@$(call bundleProvider, providers/gcp)
+	@$(call bundleProvider, providers/k8s)
 
 providers/test:
 	@$(call testProvider, providers/core)

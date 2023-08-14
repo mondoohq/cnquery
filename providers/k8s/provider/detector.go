@@ -11,17 +11,8 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	connName := conn.Name()
 	asset.Id = connName
 	asset.Name = connName
-	v := conn.ServerVersion()
-	asset.Platform = &inventory.Platform{
-		Name:    "k8s-cluster",
-		Build:   v.BuildDate,
-		Version: v.GitVersion,
-		Arch:    v.Platform,
-		Family:  []string{"k8s"},
-		Kind:    "api",
-		Runtime: "k8s-cluster",
-		Title:   "Kubernetes Cluster",
-	}
+
+	asset.Platform = conn.Platform()
 
 	return nil
 }
