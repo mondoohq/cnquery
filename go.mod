@@ -58,7 +58,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0-rc3
-	github.com/pierrec/lz4/v4 v4.1.17
+	github.com/pierrec/lz4/v4 v4.1.18
 	github.com/pkg/sftp v1.13.5
 	github.com/pkg/term v1.2.0-beta.2
 	github.com/rs/zerolog v1.30.0
