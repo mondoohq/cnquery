@@ -134,10 +134,12 @@ providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
 	@$(call installProvider, providers/os)
+	@$(call installProvider, providers/k8s)
 
 providers/bundle:
-	@$(call installProvider, providers/network)
+	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
+	@$(call bundleProvider, providers/k8s)
 
 lr/test:
 	go test ./resources/lr/...

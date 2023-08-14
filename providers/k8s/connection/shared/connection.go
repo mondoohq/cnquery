@@ -4,7 +4,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -30,7 +29,9 @@ type Connection interface {
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 
-	Nodes() ([]v1.Node, error)
+	Platform() *inventory.Platform
+
+	// Nodes() ([]v1.Node, error)
 	// Namespace(name string) (*v1.Namespace, error)
 	// Namespaces() ([]v1.Namespace, error)
 	// Pod(namespace, name string) (*v1.Pod, error)

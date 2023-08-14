@@ -23,11 +23,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-const (
-	Api shared.ConnectionType = "api"
-)
-
-type ApiConnection struct {
+type Connection struct {
 	runtime            string
 	id                 uint32
 	asset              *inventory.Asset
@@ -85,7 +81,7 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 		return nil, errors.Wrap(err, "could not create kubernetes clientset")
 	}
 
-	res := ApiConnection{
+	res := Connection{
 		id:                 id,
 		asset:              asset,
 		d:                  d,
@@ -111,15 +107,15 @@ func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*re
 		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}, CurrentContext: context}).ClientConfig()
 }
 
-func (p *ApiConnection) ID() uint32 {
-	return p.id
+func (c *Connection) ID() uint32 {
+	return c.id
 }
 
-func (p *ApiConnection) ClusterName() (string, error) {
+func (c *Connection) ClusterName() (string, error) {
 	ctx := context.Background()
 
 	// right now we use the name of the first node to identify the cluster
-	result, err := p.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	result, err := c.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -132,8 +128,8 @@ func (p *ApiConnection) ClusterName() (string, error) {
 	return "", fmt.Errorf("cannot determine cluster name")
 }
 
-func (p *ApiConnection) Name() string {
-	opts := p.asset.Connections[0].Options
+func (c *Connection) Name() string {
+	opts := c.asset.Connections[0].Options
 
 	var clusterName string
 	// the name is still a bit unreliable
@@ -145,13 +141,13 @@ func (p *ApiConnection) Name() string {
 		clusterName = ""
 
 		// try to parse context from kubectl config
-		if clusterName == "" && len(p.currentClusterName) > 0 {
-			clusterName = p.currentClusterName
+		if clusterName == "" && len(c.currentClusterName) > 0 {
+			clusterName = c.currentClusterName
 		}
 
 		// fallback to first node name if we could not gather the name from kubeconfig
 		if clusterName == "" {
-			name, err := p.ClusterName()
+			name, err := c.ClusterName()
 			if err == nil {
 				clusterName = name
 				log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
@@ -163,23 +159,37 @@ func (p *ApiConnection) Name() string {
 	return clusterName
 }
 
-func (p *ApiConnection) Type() shared.ConnectionType {
-	return Api
+// func (p *ApiConnection) Type() shared.ConnectionType {
+// 	return ConnType
+// }
+
+func (c *Connection) Asset() *inventory.Asset {
+	return c.asset
 }
 
-func (p *ApiConnection) Asset() *inventory.Asset {
-	return p.asset
+func (c *Connection) ServerVersion() *version.Info {
+	return c.d.ServerVersion
 }
 
-func (t *ApiConnection) ServerVersion() *version.Info {
-	return t.d.ServerVersion
+func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+	return c.d.SupportedResourceTypes()
 }
 
-func (t *ApiConnection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
-	return t.d.SupportedResourceTypes()
+func (c *Connection) Platform() *inventory.Platform {
+	v := c.ServerVersion()
+	return &inventory.Platform{
+		Name:    "k8s-cluster",
+		Build:   v.BuildDate,
+		Version: v.GitVersion,
+		Arch:    v.Platform,
+		Family:  []string{"k8s"},
+		Kind:    "api",
+		Runtime: "k8s-cluster",
+		Title:   "Kubernetes Cluster",
+	}
 }
 
-func (t *ApiConnection) Resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
+func (c *Connection) Resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
 	ctx := context.Background()
 	allNs := false
 	if len(namespace) == 0 {
@@ -187,7 +197,7 @@ func (t *ApiConnection) Resources(kind string, name string, namespace string) (*
 	}
 
 	// discover api and resources that have a list method
-	resTypes, err := t.d.SupportedResourceTypes()
+	resTypes, err := c.d.SupportedResourceTypes()
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +209,7 @@ func (t *ApiConnection) Resources(kind string, name string, namespace string) (*
 	}
 
 	log.Debug().Msgf("fetch all %s resources", kind)
-	objs, err := t.d.GetKindResources(ctx, *resType, namespace, allNs)
+	objs, err := c.d.GetKindResources(ctx, *resType, namespace, allNs)
 	if err != nil {
 		return nil, err
 	}
@@ -220,9 +230,9 @@ func (t *ApiConnection) Resources(kind string, name string, namespace string) (*
 	}, err
 }
 
-func (t *ApiConnection) Nodes() ([]v1.Node, error) {
+func (c *Connection) Nodes() ([]v1.Node, error) {
 	ctx := context.Background()
-	list, err := t.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	list, err := c.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +243,6 @@ func (t *ApiConnection) Nodes() ([]v1.Node, error) {
 	return list.Items, err
 }
 
-func (t *ApiConnection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
+func (c *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
 	return []admissionv1.AdmissionReview{}, nil
 }
