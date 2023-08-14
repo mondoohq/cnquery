@@ -147,6 +147,21 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		PreRun: cmd.Command.PreRun,
 	}
 
+	if connector.MinArgs == connector.MaxArgs {
+		if connector.MinArgs == 0 {
+			res.Args = cobra.NoArgs
+		} else {
+			res.Args = cobra.ExactArgs(int(connector.MinArgs))
+		}
+	} else {
+		if connector.MaxArgs > 0 && connector.MinArgs == 0 {
+			res.Args = cobra.MaximumNArgs(int(connector.MaxArgs))
+		} else if connector.MaxArgs == 0 && connector.MinArgs > 0 {
+			res.Args = cobra.MinimumNArgs(int(connector.MinArgs))
+		} else {
+			res.Args = cobra.RangeArgs(int(connector.MinArgs), int(connector.MaxArgs))
+		}
+	}
 	cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
 		res.Flags().AddFlag(flag)
 	})
