@@ -36,6 +36,10 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "winrm",
 					Short: "a remote system via WinRM",
 				},
+				{
+					Name:  "vagrant",
+					Short: "a Vagrant virtual machine",
+				},
 			},
 		},
 	},

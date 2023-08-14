@@ -59,6 +59,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	case "winrm":
 		conf.Type = "winrm"
 		port = 5985
+	case "vagrant":
+		conn.Type = "vagrant"
+		// create local provider for the next step
+		// we need to determine the ssh config for the provided host
+		// How to error, when no host is provided?
 	}
 
 	user := ""
@@ -92,6 +97,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
+	// private key?
+	/*
+		// load secret
+		credential, err := vault.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, "")
+		if err != nil {
+			return nil, err
+		}
+		cc.AddCredential(credential)
+	*/
 
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
@@ -179,6 +193,14 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case "docker-snapshot":
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
+
+	case "vagrant":
+		s.lastConnectionID++
+		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
+		err := s.detect(conn.Asset(), conn)
+		if err != nil {
+			return nil, err
+		}
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

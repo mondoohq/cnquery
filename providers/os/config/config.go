@@ -118,5 +118,31 @@ var Config = plugin.Provider{
 				},
 			},
 		},
+		{
+			Name:    "vagrant",
+			Use:     "vagrant host",
+			Short:   "a Vagrant host",
+			MinArgs: 1,
+			MaxArgs: 1,
+			Flags: []plugin.Flag{
+				/*
+					// looks like we currently do not have sudo support for vagrant
+					// Should we support it?
+					{
+						Long:    "sudo",
+						Type:    plugin.FlagType_Bool,
+						Default: "false",
+						Desc:    "Elevate privileges with sudo.",
+					},
+				*/
+				{
+					Long:    "id-detector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "User override for platform ID detection mechanism",
+					Option:  plugin.FlagOption_Hidden,
+				},
+			},
+		},
 	},
 }
