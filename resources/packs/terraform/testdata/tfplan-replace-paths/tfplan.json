@@ -1,0 +1,36 @@
+{
+  "format_version": "1.5",
+  "terraform_version": "1.5.0",
+  "resource_changes": [
+    {
+      "address": "",
+      "module_address": "",
+      "mode": "managed",
+      "type": "google_service_account_iam_member",
+      "name": "cloud_deploy_service_account",
+      "provider_name": "registry.terraform.io/hashicorp/google",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": {
+          "condition": [],
+          "etag": "BwYCXPmcVSE=",
+          "id": "",
+          "member": "",
+          "role": "",
+          "service_account_id": ""
+        },
+        "after": {
+          "condition": [],
+          "member": "",
+          "role": "",
+          "service_account_id": ""
+        },
+        "after_unknown": { "condition": [], "etag": true, "id": true },
+        "before_sensitive": { "condition": [] },
+        "after_sensitive": { "condition": [] },
+        "replace_paths": [["member"]]
+      },
+      "action_reason": "replace_because_cannot_update"
+    }
+  ]
+}

@@ -49,11 +49,15 @@ func testTerraformStateQuery(t *testing.T, query string) []*llx.RawResult {
 }
 
 func testTerraformPlanQuery(t *testing.T, query string) []*llx.RawResult {
+	return testTerraformPlanQueryWithPath(t, query, "./testdata/tfplan/plan_gcp_simple.json")
+}
+
+func testTerraformPlanQueryWithPath(t *testing.T, query string, path string) []*llx.RawResult {
 	trans, err := provider.New(&providers.Config{
 		Backend: providers.ProviderType_TERRAFORM,
 		Options: map[string]string{
 			"asset-type": "plan",
-			"path":       "./testdata/tfplan/plan_gcp_simple.json",
+			"path":       path,
 		},
 	})
 	require.NoError(t, err)
