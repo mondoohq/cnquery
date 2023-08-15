@@ -333,3 +333,49 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
   // User associated with the MFA device
   user aws.iam.user
 }
+
+// AWS SageMaker
+aws.sagemaker {
+  // List of SageMaker endpoints
+  endpoints() []aws.sagemaker.endpoint
+  // List of SageMaker notebook instances
+  notebookInstances() []aws.sagemaker.notebookinstance
+}
+
+// AWS SageMaker Notebook Instance
+private aws.sagemaker.notebookinstance @defaults("arn") {
+  // ARN for the notebook instance
+  arn string
+  // Name of the notebook instance
+  name string
+  // Details about the notebook 
+  details() aws.sagemaker.notebookinstance.details
+  // Region where the notebook instance exists
+  region string
+  // Tags for the notebook instance
+  tags map[string]string
+}
+
+// AWS SageMaker Notebook Instance Details
+private aws.sagemaker.notebookinstance.details @defaults("arn") {
+  // ARN for the notebook instance
+  arn string
+  // KMS key used to encrypt data
+  kmsKey() aws.kms.key
+  // Denotes whether SageMaker provides internet access to the instance
+  directInternetAccess string
+}
+
+// AWS SageMaker Endpoint
+private aws.sagemaker.endpoint @defaults("arn") {
+  // ARN for the endpoint
+  arn string
+  // Name of the endpoint
+  name string
+  // Configuration information for the endpoint
+  config() dict
+  // Region where the endpoint exists
+  region string
+  // Tags for the endpoint
+  tags map[string]string
+}
