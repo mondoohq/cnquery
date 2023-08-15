@@ -2,14 +2,20 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
 )
+
+func (m *mqlAwsKms) id() (string, error) {
+	return "aws.kms", nil
+}
 
 func (a *mqlAwsKms) keys() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -111,44 +117,35 @@ func (a *mqlAwsKmsKey) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-// func (p *mqlAwsKmsKey) init(args *resources.Args) (*resources.Args, AwsKmsKey, error) {
-// 	if len(*args) > 2 {
-// 		return args, nil, nil
-// 	}
+func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	r := args["arn"]
+	if r == nil {
+		return nil, nil, errors.New("arn required to fetch aws kms key")
+	}
+	arn, ok := r.Value.(string)
+	if !ok {
+		return args, nil, nil
+	}
 
-// 	if len(*args) == 0 {
-// 		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-// 			(*args)["name"] = ids.name
-// 			(*args)["arn"] = ids.arn
-// 		}
-// 	}
+	obj, err := runtime.CreateResource(runtime, "aws.kms", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	kms := obj.(*mqlAwsKms)
 
-// 	if (*args)["arn"] == nil {
-// 		return nil, nil, errors.New("arn required to fetch aws kms key")
-// 	}
+	rawResources, err := kms.keys()
+	if err != nil {
+		return nil, nil, err
+	}
 
-// 	// load all keys
-// 	obj, err := p.MotorRuntime.CreateResource("aws.kms")
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	aws := obj.(AwsKms)
-
-// 	rawResources, err := aws.Keys()
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	arnVal := (*args)["arn"].(string)
-// 	for i := range rawResources {
-// 		key := rawResources[i].(AwsKmsKey)
-// 		mqlKeyArn, err := key.Arn()
-// 		if err != nil {
-// 			return nil, nil, errors.New("kms key does not exist")
-// 		}
-// 		if mqlKeyArn == arnVal {
-// 			return args, key, nil
-// 		}
-// 	}
-// 	return nil, nil, errors.New("kms key does not exist")
-// }
+	for i := range rawResources {
+		key := rawResources[i].(*mqlAwsKmsKey)
+		if key.Arn.Data == arn {
+			return args, key, nil
+		}
+	}
+	return args, nil, nil
+}

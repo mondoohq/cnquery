@@ -111,7 +111,7 @@ private aws.efs.filesystem @defaults("name arn") {
   // Denotes whether or not the filesystem id encrypted
   encrypted bool
   // KMS key used for encryption of the filesystem
-  // kmsKey() aws.kms.key
+  kmsKey() aws.kms.key
   // Backup policy for the filesystem
   backupPolicy() dict
   // Region in which the filesystem exists
@@ -128,7 +128,6 @@ aws.kms {
 
 // AWS Key Management Service (KMS) Key
 private aws.kms.key @defaults("arn") {
-  init(arn string)
   // Unique identifier for the key
   id string
   // ARN of the key

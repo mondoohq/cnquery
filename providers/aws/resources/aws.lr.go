@@ -58,7 +58,7 @@ func init() {
 			Create: createAwsKms,
 		},
 		"aws.kms.key": {
-			// to override args, implement: initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsKmsKey,
 			Create: createAwsKmsKey,
 		},
 	}
@@ -233,6 +233,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.encrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.efs.filesystem.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicy()).ToDataRes(types.Dict)
@@ -451,6 +454,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.efs.filesystem.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1129,6 +1136,7 @@ type mqlAwsEfsFilesystem struct {
 	Id plugin.TValue[string]
 	Arn plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	BackupPolicy plugin.TValue[interface{}]
 	Region plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
@@ -1187,6 +1195,22 @@ func (c *mqlAwsEfsFilesystem) GetEncrypted() *plugin.TValue[bool] {
 	return &c.Encrypted
 }
 
+func (c *mqlAwsEfsFilesystem) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.efs.filesystem", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.BackupPolicy, func() (interface{}, error) {
 		return c.backupPolicy()
@@ -1220,7 +1244,12 @@ func createAwsKms(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.kms", res.__id)
