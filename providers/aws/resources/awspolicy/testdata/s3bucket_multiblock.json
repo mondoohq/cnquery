@@ -1,0 +1,15 @@
+{
+  "Statement": [{
+      "Effect": "Allow",
+      "Action": "ec2:Describe*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::my-bucket/*"
+      ]
+    }
+  ]
+}

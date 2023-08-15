@@ -1,0 +1,13 @@
+{
+  "Statement": [{
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::my-bucket"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["*"],
+      "Resource": ["arn:aws:s3:::my-bucket/*"]
+    }
+  ]
+}

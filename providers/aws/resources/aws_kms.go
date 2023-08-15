@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
 )
 
-func (m *mqlAwsKms) id() (string, error) {
+func (a *mqlAwsKms) id() (string, error) {
 	return "aws.kms", nil
 }
 

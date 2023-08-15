@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go/transport/http"
@@ -56,10 +57,24 @@ func toString(s *string) string {
 	return *s
 }
 
+func toTime(s *time.Time) time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+	return *s
+}
+
 func strMapToInterface(m map[string]string) map[string]interface{} {
 	res := map[string]interface{}{}
 	for k, v := range m {
 		res[k] = v
 	}
 	return res
+}
+
+func toInt64From32(i *int32) int64 {
+	if i == nil {
+		return int64(0)
+	}
+	return int64(*i)
 }

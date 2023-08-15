@@ -1,0 +1,30 @@
+{
+  "Statement": [{
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::my-brand-new-bucket/*",
+      "Condition": {
+
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::my-brand-new-bucket/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "192.168.0.0/16"
+        }
+      }
+    }
+  ]
+}

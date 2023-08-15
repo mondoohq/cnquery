@@ -139,3 +139,197 @@ private aws.kms.key @defaults("arn") {
   // Metadata for the key
   metadata() dict
 }
+
+
+// AWS service to create and manage permissions for users and groups
+aws.iam {
+  // List of IAM users in the account
+  users() []aws.iam.user
+  // List of IAM roles in the account
+  roles() []aws.iam.role
+  // List of IAM groups in the account
+  groups() []aws.iam.group
+  // List of IAM policies in the account
+  policies() []aws.iam.policy
+  // List of IAM policies attached to a user, role, or group
+  attachedPolicies() []aws.iam.policy
+  // IAM credential report
+  credentialReport() []aws.iam.usercredentialreportentry
+  // IAM account password policy for the account
+  accountPasswordPolicy() dict
+  // IAM account summary
+  accountSummary() map[string]int
+  // List of virtual mfs devices associated with the account
+  virtualMfaDevices() []aws.iam.virtualmfadevice
+  // List of server certificates stored in IAM
+  serverCertificates() []dict
+}
+
+// Entry in AWS IAM credential report
+private aws.iam.usercredentialreportentry @defaults("arn") {
+  init(properties map[string]string)
+  // properties on the IAM user credential report
+  properties map[string]string
+
+  // ARN for the credential report
+  arn() string
+
+  // Denotes if the access key is active
+  accessKey1Active() bool
+  // Time when key was last rotated
+  accessKey1LastRotated() time
+  // Time when key was last used
+  accessKey1LastUsedDate() time
+  // Region in which the key was last used
+  accessKey1LastUsedRegion() string
+  // Service that last used the key
+  accessKey1LastUsedService() string
+
+  // Denotes if the access key is active
+  accessKey2Active() bool
+  // Time when key was last rotated
+  accessKey2LastRotated() time
+  // Time when key was last used
+  accessKey2LastUsedDate() time
+  // Region in which the key was last used
+  accessKey2LastUsedRegion() string
+  // Service that last used the key
+  accessKey2LastUsedService() string
+
+  // Denotes if the cert is active
+  cert1Active() bool
+  // Time when the cert was last rotated
+  cert1LastRotated() time
+
+  // Denotes if the cert is active
+  cert2Active() bool
+  // Time when the cert was last rotated
+  cert2LastRotated() time
+
+  // Denotes if mfa is active in the account
+  mfaActive() bool
+  // Denotes if passwords are enabled 
+  passwordEnabled() bool
+  // Time when the password was last changed
+  passwordLastChanged() time
+  // Time when the password was last used
+  passwordLastUsed() time
+  // Next time when the password should rotate
+  passwordNextRotation() time
+
+  // IAM user
+  user() aws.iam.user
+  // Time when user was created
+  userCreationTime() time
+}
+
+// AWS IAM User
+private aws.iam.user @defaults("arn") {
+  // ARN of the IAM user 
+  arn string
+  // ID of the IAM user
+  id string
+  // Name of the user
+  name string
+  // Time when user was created
+  createDate time
+  // Time when password was last used
+  passwordLastUsed time
+  // Tags for the IAM user
+  tags map[string]string
+  // List of inline policies attached to the user
+  policies() []string
+  // List of managed policies attached to the user
+  attachedPolicies() []aws.iam.policy
+  // List of group ARNs that the user belongs to
+  groups() []string
+  // List of access keys metadata associated with the user
+  accessKeys() []dict
+}
+
+// AWS IAM Policy
+private aws.iam.policy @defaults("arn") {
+  // ARN of the policy
+  arn string
+  // ID of the policy
+  id() string
+  // Name of the policy
+  name() string
+  // Description of the policy
+  description() string
+  // Denotes if the policy can be attached
+  isAttachable() bool
+  // The number of principal entities (users, groups, and roles) that the policy is attached to
+  attachmentCount() int
+  // Time when the policy was created
+  createDate() time
+  // Time when the policy was updated
+  updateDate() time
+  // Scope of the policy
+  scope() string
+  // List of versions for the policy
+  versions() []aws.iam.policyversion
+  // Default version of the policy
+  defaultVersion() aws.iam.policyversion
+
+  // List of users attached to the policy
+  attachedUsers() []aws.iam.user
+  // List of roles attached to the policy
+  attachedRoles() []aws.iam.role
+  // List of groups attached to the policy
+  attachedGroups() []aws.iam.group
+}
+
+// AWS IAM Policy Version
+private aws.iam.policyversion @defaults("arn") {
+  // ARN of the policy version
+  arn string
+  // Version ID
+  versionId string
+  // Denotes if this version is the policy default version
+  isDefaultVersion bool
+  // JSON statements for this policy version
+  document() dict
+  // Time when this policy version was created
+  createDate time
+}
+
+// AWS IAM Role
+private aws.iam.role @defaults("arn") {
+  // ARN of the role
+  arn string
+  // ID of the role
+  id string
+  // Name of the role
+  name string
+  // Description of the role
+  description string
+  // Tags associated with the role
+  tags map[string]string
+  // Time when the role was created
+  createDate time
+}
+
+// AWS IAM Group
+private aws.iam.group @defaults("arn") {
+  // ARN of the group
+  arn string
+  // ID of the group
+  id string
+  // Name of the group
+  name string
+  // Time when the group was created
+  createDate time
+  // List of usernames that belong to the group
+  usernames []string
+}
+
+// AWS IAM Virtual MFA Device
+private aws.iam.virtualmfadevice @defaults("serialNumber") {
+  // Serial number for the MFA device
+  serialNumber string
+  // Time when the MFA device was enabled
+  enableDate time
+  // User associated with the MFA device
+  user aws.iam.user
+}

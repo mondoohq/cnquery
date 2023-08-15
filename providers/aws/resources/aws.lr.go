@@ -3,6 +3,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -60,6 +61,38 @@ func init() {
 		"aws.kms.key": {
 			Init: initAwsKmsKey,
 			Create: createAwsKmsKey,
+		},
+		"aws.iam": {
+			// to override args, implement: initAwsIam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIam,
+		},
+		"aws.iam.usercredentialreportentry": {
+			// to override args, implement: initAwsIamUsercredentialreportentry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamUsercredentialreportentry,
+		},
+		"aws.iam.user": {
+			Init: initAwsIamUser,
+			Create: createAwsIamUser,
+		},
+		"aws.iam.policy": {
+			// to override args, implement: initAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamPolicy,
+		},
+		"aws.iam.policyversion": {
+			// to override args, implement: initAwsIamPolicyversion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamPolicyversion,
+		},
+		"aws.iam.role": {
+			Init: initAwsIamRole,
+			Create: createAwsIamRole,
+		},
+		"aws.iam.group": {
+			Init: initAwsIamGroup,
+			Create: createAwsIamGroup,
+		},
+		"aws.iam.virtualmfadevice": {
+			// to override args, implement: initAwsIamVirtualmfadevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamVirtualmfadevice,
 		},
 	}
 }
@@ -263,6 +296,234 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kms.key.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
+	},
+	"aws.iam.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
+	},
+	"aws.iam.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetGroups()).ToDataRes(types.Array(types.Resource("aws.iam.group")))
+	},
+	"aws.iam.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
+	},
+	"aws.iam.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
+	},
+	"aws.iam.credentialReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetCredentialReport()).ToDataRes(types.Array(types.Resource("aws.iam.usercredentialreportentry")))
+	},
+	"aws.iam.accountPasswordPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetAccountPasswordPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.iam.accountSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetAccountSummary()).ToDataRes(types.Map(types.String, types.Int))
+	},
+	"aws.iam.virtualMfaDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetVirtualMfaDevices()).ToDataRes(types.Array(types.Resource("aws.iam.virtualmfadevice")))
+	},
+	"aws.iam.serverCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetServerCertificates()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.iam.usercredentialreportentry.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.iam.usercredentialreportentry.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.accessKey1Active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1Active()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastRotated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastRotated()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastUsedDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastUsedRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastUsedService()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2Active()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastRotated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2LastRotated()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2LastUsedDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2LastUsedRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2LastUsedService()).ToDataRes(types.String)
+	},
+	"aws.iam.usercredentialreportentry.cert1Active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetCert1Active()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.cert1LastRotated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetCert1LastRotated()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.cert2Active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetCert2Active()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.cert2LastRotated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetCert2LastRotated()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.mfaActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetMfaActive()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.passwordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.iam.usercredentialreportentry.passwordLastChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordLastChanged()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.passwordLastUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordLastUsed()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.passwordNextRotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetPasswordNextRotation()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetUser()).ToDataRes(types.Resource("aws.iam.user"))
+	},
+	"aws.iam.usercredentialreportentry.userCreationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetUserCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.user.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.passwordLastUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetPasswordLastUsed()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.iam.user.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetPolicies()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.user.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
+	},
+	"aws.iam.user.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetGroups()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.user.accessKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.iam.policy.isAttachable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetIsAttachable()).ToDataRes(types.Bool)
+	},
+	"aws.iam.policy.attachmentCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetAttachmentCount()).ToDataRes(types.Int)
+	},
+	"aws.iam.policy.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.policy.updateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetUpdateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.policy.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetScope()).ToDataRes(types.String)
+	},
+	"aws.iam.policy.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetVersions()).ToDataRes(types.Array(types.Resource("aws.iam.policyversion")))
+	},
+	"aws.iam.policy.defaultVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetDefaultVersion()).ToDataRes(types.Resource("aws.iam.policyversion"))
+	},
+	"aws.iam.policy.attachedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetAttachedUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
+	},
+	"aws.iam.policy.attachedRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetAttachedRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
+	},
+	"aws.iam.policy.attachedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetAttachedGroups()).ToDataRes(types.Array(types.Resource("aws.iam.group")))
+	},
+	"aws.iam.policyversion.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.policyversion.versionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetVersionId()).ToDataRes(types.String)
+	},
+	"aws.iam.policyversion.isDefaultVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetIsDefaultVersion()).ToDataRes(types.Bool)
+	},
+	"aws.iam.policyversion.document": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetDocument()).ToDataRes(types.Dict)
+	},
+	"aws.iam.policyversion.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicyversion).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.role.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.role.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.iam.role.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.iam.role.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.group.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.group.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.group.usernames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamGroup).GetUsernames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamVirtualmfadevice).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"aws.iam.virtualmfadevice.enableDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamVirtualmfadevice).GetEnableDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.virtualmfadevice.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamVirtualmfadevice).GetUser()).ToDataRes(types.Resource("aws.iam.user"))
 	},
 }
 
@@ -502,6 +763,342 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.kms.key.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).Metadata, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIam).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).Roles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).AttachedPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.credentialReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).CredentialReport, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accountPasswordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).AccountPasswordPolicy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accountSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).AccountSummary, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.virtualMfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).VirtualMfaDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).ServerCertificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamUsercredentialreportentry).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.usercredentialreportentry.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Properties, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastRotated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastRotated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastUsedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastUsedRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1LastUsedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastRotated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2LastRotated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2LastUsedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2LastUsedRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2LastUsedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.cert1Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Cert1Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.cert1LastRotated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Cert1LastRotated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.cert2Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Cert2Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.cert2LastRotated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).Cert2LastRotated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.mfaActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).MfaActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.passwordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).PasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.passwordLastChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).PasswordLastChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.passwordLastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).PasswordLastUsed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.passwordNextRotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).PasswordNextRotation, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).User, ok = plugin.RawToTValue[*mqlAwsIamUser](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.userCreationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).UserCreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamUser).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.user.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.passwordLastUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).PasswordLastUsed, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.attachedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).AttachedPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.policy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.isAttachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).IsAttachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.attachmentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).AttachmentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.updateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).UpdateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).Versions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.defaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).DefaultVersion, ok = plugin.RawToTValue[*mqlAwsIamPolicyversion](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.attachedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).AttachedUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.attachedRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).AttachedRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.attachedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).AttachedGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamPolicyversion).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.policyversion.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.versionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).VersionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.isDefaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).IsDefaultVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).Document, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policyversion.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicyversion).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamRole).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.role.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.group.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.group.usernames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamGroup).Usernames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamVirtualmfadevice).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamVirtualmfadevice).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.virtualmfadevice.enableDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamVirtualmfadevice).EnableDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.virtualmfadevice.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamVirtualmfadevice).User, ok = plugin.RawToTValue[*mqlAwsIamUser](v.Value, v.Error)
 		return
 	},
 }
@@ -1357,4 +1954,976 @@ func (c *mqlAwsKmsKey) GetMetadata() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Metadata, func() (interface{}, error) {
 		return c.metadata()
 	})
+}
+
+// mqlAwsIam for the aws.iam resource
+type mqlAwsIam struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamInternal it will be used here
+	Users plugin.TValue[[]interface{}]
+	Roles plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]interface{}]
+	Policies plugin.TValue[[]interface{}]
+	AttachedPolicies plugin.TValue[[]interface{}]
+	CredentialReport plugin.TValue[[]interface{}]
+	AccountPasswordPolicy plugin.TValue[interface{}]
+	AccountSummary plugin.TValue[map[string]interface{}]
+	VirtualMfaDevices plugin.TValue[[]interface{}]
+	ServerCertificates plugin.TValue[[]interface{}]
+}
+
+// createAwsIam creates a new instance of this resource
+func createAwsIam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIam) MqlName() string {
+	return "aws.iam"
+}
+
+func (c *mqlAwsIam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIam) GetUsers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlAwsIam) GetRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Roles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+func (c *mqlAwsIam) GetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+func (c *mqlAwsIam) GetPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsIam) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AttachedPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "attachedPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.attachedPolicies()
+	})
+}
+
+func (c *mqlAwsIam) GetCredentialReport() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.CredentialReport, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "credentialReport")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.credentialReport()
+	})
+}
+
+func (c *mqlAwsIam) GetAccountPasswordPolicy() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.AccountPasswordPolicy, func() (interface{}, error) {
+		return c.accountPasswordPolicy()
+	})
+}
+
+func (c *mqlAwsIam) GetAccountSummary() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.AccountSummary, func() (map[string]interface{}, error) {
+		return c.accountSummary()
+	})
+}
+
+func (c *mqlAwsIam) GetVirtualMfaDevices() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.VirtualMfaDevices, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "virtualMfaDevices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.virtualMfaDevices()
+	})
+}
+
+func (c *mqlAwsIam) GetServerCertificates() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ServerCertificates, func() ([]interface{}, error) {
+		return c.serverCertificates()
+	})
+}
+
+// mqlAwsIamUsercredentialreportentry for the aws.iam.usercredentialreportentry resource
+type mqlAwsIamUsercredentialreportentry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamUsercredentialreportentryInternal it will be used here
+	Properties plugin.TValue[map[string]interface{}]
+	Arn plugin.TValue[string]
+	AccessKey1Active plugin.TValue[bool]
+	AccessKey1LastRotated plugin.TValue[*time.Time]
+	AccessKey1LastUsedDate plugin.TValue[*time.Time]
+	AccessKey1LastUsedRegion plugin.TValue[string]
+	AccessKey1LastUsedService plugin.TValue[string]
+	AccessKey2Active plugin.TValue[bool]
+	AccessKey2LastRotated plugin.TValue[*time.Time]
+	AccessKey2LastUsedDate plugin.TValue[*time.Time]
+	AccessKey2LastUsedRegion plugin.TValue[string]
+	AccessKey2LastUsedService plugin.TValue[string]
+	Cert1Active plugin.TValue[bool]
+	Cert1LastRotated plugin.TValue[*time.Time]
+	Cert2Active plugin.TValue[bool]
+	Cert2LastRotated plugin.TValue[*time.Time]
+	MfaActive plugin.TValue[bool]
+	PasswordEnabled plugin.TValue[bool]
+	PasswordLastChanged plugin.TValue[*time.Time]
+	PasswordLastUsed plugin.TValue[*time.Time]
+	PasswordNextRotation plugin.TValue[*time.Time]
+	User plugin.TValue[*mqlAwsIamUser]
+	UserCreationTime plugin.TValue[*time.Time]
+}
+
+// createAwsIamUsercredentialreportentry creates a new instance of this resource
+func createAwsIamUsercredentialreportentry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUsercredentialreportentry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.usercredentialreportentry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) MqlName() string {
+	return "aws.iam.usercredentialreportentry"
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetProperties() *plugin.TValue[map[string]interface{}] {
+	return &c.Properties
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1Active() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccessKey1Active, func() (bool, error) {
+		return c.accessKey1Active()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastRotated() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey1LastRotated, func() (*time.Time, error) {
+		return c.accessKey1LastRotated()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey1LastUsedDate, func() (*time.Time, error) {
+		return c.accessKey1LastUsedDate()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessKey1LastUsedRegion, func() (string, error) {
+		return c.accessKey1LastUsedRegion()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessKey1LastUsedService, func() (string, error) {
+		return c.accessKey1LastUsedService()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2Active() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccessKey2Active, func() (bool, error) {
+		return c.accessKey2Active()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastRotated() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey2LastRotated, func() (*time.Time, error) {
+		return c.accessKey2LastRotated()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey2LastUsedDate, func() (*time.Time, error) {
+		return c.accessKey2LastUsedDate()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessKey2LastUsedRegion, func() (string, error) {
+		return c.accessKey2LastUsedRegion()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2LastUsedService() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AccessKey2LastUsedService, func() (string, error) {
+		return c.accessKey2LastUsedService()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetCert1Active() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Cert1Active, func() (bool, error) {
+		return c.cert1Active()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetCert1LastRotated() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Cert1LastRotated, func() (*time.Time, error) {
+		return c.cert1LastRotated()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetCert2Active() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Cert2Active, func() (bool, error) {
+		return c.cert2Active()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetCert2LastRotated() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Cert2LastRotated, func() (*time.Time, error) {
+		return c.cert2LastRotated()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetMfaActive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MfaActive, func() (bool, error) {
+		return c.mfaActive()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetPasswordEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordEnabled, func() (bool, error) {
+		return c.passwordEnabled()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetPasswordLastChanged() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.PasswordLastChanged, func() (*time.Time, error) {
+		return c.passwordLastChanged()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetPasswordLastUsed() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.PasswordLastUsed, func() (*time.Time, error) {
+		return c.passwordLastUsed()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetPasswordNextRotation() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.PasswordNextRotation, func() (*time.Time, error) {
+		return c.passwordNextRotation()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetUser() *plugin.TValue[*mqlAwsIamUser] {
+	return plugin.GetOrCompute[*mqlAwsIamUser](&c.User, func() (*mqlAwsIamUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.usercredentialreportentry", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetUserCreationTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UserCreationTime, func() (*time.Time, error) {
+		return c.userCreationTime()
+	})
+}
+
+// mqlAwsIamUser for the aws.iam.user resource
+type mqlAwsIamUser struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamUserInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	CreateDate plugin.TValue[*time.Time]
+	PasswordLastUsed plugin.TValue[*time.Time]
+	Tags plugin.TValue[map[string]interface{}]
+	Policies plugin.TValue[[]interface{}]
+	AttachedPolicies plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]interface{}]
+	AccessKeys plugin.TValue[[]interface{}]
+}
+
+// createAwsIamUser creates a new instance of this resource
+func createAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUser) MqlName() string {
+	return "aws.iam.user"
+}
+
+func (c *mqlAwsIamUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUser) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamUser) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+func (c *mqlAwsIamUser) GetPasswordLastUsed() *plugin.TValue[*time.Time] {
+	return &c.PasswordLastUsed
+}
+
+func (c *mqlAwsIamUser) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsIamUser) GetPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Policies, func() ([]interface{}, error) {
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsIamUser) GetAttachedPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AttachedPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "attachedPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.attachedPolicies()
+	})
+}
+
+func (c *mqlAwsIamUser) GetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+		return c.groups()
+	})
+}
+
+func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AccessKeys, func() ([]interface{}, error) {
+		return c.accessKeys()
+	})
+}
+
+// mqlAwsIamPolicy for the aws.iam.policy resource
+type mqlAwsIamPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamPolicyInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsAttachable plugin.TValue[bool]
+	AttachmentCount plugin.TValue[int64]
+	CreateDate plugin.TValue[*time.Time]
+	UpdateDate plugin.TValue[*time.Time]
+	Scope plugin.TValue[string]
+	Versions plugin.TValue[[]interface{}]
+	DefaultVersion plugin.TValue[*mqlAwsIamPolicyversion]
+	AttachedUsers plugin.TValue[[]interface{}]
+	AttachedRoles plugin.TValue[[]interface{}]
+	AttachedGroups plugin.TValue[[]interface{}]
+}
+
+// createAwsIamPolicy creates a new instance of this resource
+func createAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamPolicy) MqlName() string {
+	return "aws.iam.policy"
+}
+
+func (c *mqlAwsIamPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamPolicy) GetId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
+		return c.id()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetIsAttachable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsAttachable, func() (bool, error) {
+		return c.isAttachable()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetAttachmentCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AttachmentCount, func() (int64, error) {
+		return c.attachmentCount()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetCreateDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreateDate, func() (*time.Time, error) {
+		return c.createDate()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetUpdateDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdateDate, func() (*time.Time, error) {
+		return c.updateDate()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetScope() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Scope, func() (string, error) {
+		return c.scope()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetVersions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Versions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetDefaultVersion() *plugin.TValue[*mqlAwsIamPolicyversion] {
+	return plugin.GetOrCompute[*mqlAwsIamPolicyversion](&c.DefaultVersion, func() (*mqlAwsIamPolicyversion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "defaultVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamPolicyversion), nil
+			}
+		}
+
+		return c.defaultVersion()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetAttachedUsers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AttachedUsers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.attachedUsers()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetAttachedRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AttachedRoles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.attachedRoles()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetAttachedGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AttachedGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.policy", c.__id, "attachedGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.attachedGroups()
+	})
+}
+
+// mqlAwsIamPolicyversion for the aws.iam.policyversion resource
+type mqlAwsIamPolicyversion struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamPolicyversionInternal it will be used here
+	Arn plugin.TValue[string]
+	VersionId plugin.TValue[string]
+	IsDefaultVersion plugin.TValue[bool]
+	Document plugin.TValue[interface{}]
+	CreateDate plugin.TValue[*time.Time]
+}
+
+// createAwsIamPolicyversion creates a new instance of this resource
+func createAwsIamPolicyversion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamPolicyversion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.policyversion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamPolicyversion) MqlName() string {
+	return "aws.iam.policyversion"
+}
+
+func (c *mqlAwsIamPolicyversion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamPolicyversion) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamPolicyversion) GetVersionId() *plugin.TValue[string] {
+	return &c.VersionId
+}
+
+func (c *mqlAwsIamPolicyversion) GetIsDefaultVersion() *plugin.TValue[bool] {
+	return &c.IsDefaultVersion
+}
+
+func (c *mqlAwsIamPolicyversion) GetDocument() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Document, func() (interface{}, error) {
+		return c.document()
+	})
+}
+
+func (c *mqlAwsIamPolicyversion) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+// mqlAwsIamRole for the aws.iam.role resource
+type mqlAwsIamRole struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamRoleInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	CreateDate plugin.TValue[*time.Time]
+}
+
+// createAwsIamRole creates a new instance of this resource
+func createAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamRole) MqlName() string {
+	return "aws.iam.role"
+}
+
+func (c *mqlAwsIamRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamRole) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsIamRole) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+// mqlAwsIamGroup for the aws.iam.group resource
+type mqlAwsIamGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamGroupInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	CreateDate plugin.TValue[*time.Time]
+	Usernames plugin.TValue[[]interface{}]
+}
+
+// createAwsIamGroup creates a new instance of this resource
+func createAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamGroup) MqlName() string {
+	return "aws.iam.group"
+}
+
+func (c *mqlAwsIamGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamGroup) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+func (c *mqlAwsIamGroup) GetUsernames() *plugin.TValue[[]interface{}] {
+	return &c.Usernames
+}
+
+// mqlAwsIamVirtualmfadevice for the aws.iam.virtualmfadevice resource
+type mqlAwsIamVirtualmfadevice struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamVirtualmfadeviceInternal it will be used here
+	SerialNumber plugin.TValue[string]
+	EnableDate plugin.TValue[*time.Time]
+	User plugin.TValue[*mqlAwsIamUser]
+}
+
+// createAwsIamVirtualmfadevice creates a new instance of this resource
+func createAwsIamVirtualmfadevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamVirtualmfadevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.virtualmfadevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamVirtualmfadevice) MqlName() string {
+	return "aws.iam.virtualmfadevice"
+}
+
+func (c *mqlAwsIamVirtualmfadevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamVirtualmfadevice) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlAwsIamVirtualmfadevice) GetEnableDate() *plugin.TValue[*time.Time] {
+	return &c.EnableDate
+}
+
+func (c *mqlAwsIamVirtualmfadevice) GetUser() *plugin.TValue[*mqlAwsIamUser] {
+	return &c.User
 }

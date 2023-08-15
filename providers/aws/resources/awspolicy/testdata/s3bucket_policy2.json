@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowSESPuts-1234567890",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "ses.amazonaws.com"
+    },
+    "Action": "s3:PutObject",
+    "Resource": "arn:aws:s3:::ses-tmp-inbox/*",
+    "Condition": {
+      "StringEquals": {
+        "aws:Referer": "1234567890"
+      }
+    }
+  }]
+}

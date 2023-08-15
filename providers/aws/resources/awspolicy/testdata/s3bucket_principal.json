@@ -1,0 +1,73 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal" : { "AWS" : "*" },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "123456789012" },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { 
+        "AWS": [
+          "arn:aws:iam::123456789012:root",
+          "999999999999"
+        ]
+      },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { 
+        "AWS": [
+          "arn:aws:iam::123456789012:user/user-name-1", 
+          "arn:aws:iam::123456789012:user/UserName2"
+        ]
+      },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { "Federated": "cognito-identity.amazonaws.com" },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": { "Federated": "www.amazon.com" },
+      "Action": "s3:Get*",
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ecs.amazonaws.com",
+          "elasticloadbalancing.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
