@@ -84,7 +84,7 @@ func (t *mqlTerraformPlan) GetResourceChanges() ([]interface{}, error) {
 			}
 		}
 
-		var replacePaths map[string]interface{}
+		var replacePaths []interface{}
 		if rc.Change.ReplacePaths != nil {
 			if err := json.Unmarshal(rc.Change.ReplacePaths, &replacePaths); err != nil {
 				return nil, err

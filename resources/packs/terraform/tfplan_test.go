@@ -46,3 +46,20 @@ func TestTerraformPlanParsing(t *testing.T) {
 
 	assert.Equal(t, 1, len(pc.RootModule.Resources))
 }
+
+func TestTerraformPlanParsingReplacePaths(t *testing.T) {
+	path := "./testdata/tfplan-replace-paths/tfplan.json"
+	query := "terraform.plan.resourceChanges"
+	res := testTerraformPlanQueryWithPath(t, query, path)
+	require.NotEmpty(t, res)
+	assert.Empty(t, res[0].Result().Error)
+
+	query = "terraform.plan.resourceChanges[0].change.replacePaths"
+	res = testTerraformPlanQueryWithPath(t, query, path)
+	require.NotEmpty(t, res)
+	resArrayInterface, ok := res[0].Data.Value.([]interface{})
+	require.True(t, ok)
+	resArrayStrings, ok := resArrayInterface[0].([]interface{})
+	require.True(t, ok)
+	assert.Equal(t, "member", resArrayStrings[0].(string))
+}
