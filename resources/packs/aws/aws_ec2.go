@@ -322,7 +322,7 @@ func (s *mqlAwsEc2) getSecurityGroups(provider *aws_provider.Provider) []*jobpoo
 							}
 						}
 						mqlSecurityGroupIpPermission, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup.ippermission",
-							"id", core.ToString(group.GroupId)+"-"+strconv.Itoa(p),
+							"id", core.ToString(group.GroupId)+"-"+strconv.Itoa(p)+"-egress",
 							"fromPort", core.ToInt64From32(permission.FromPort),
 							"toPort", core.ToInt64From32(permission.ToPort),
 							"ipProtocol", core.ToString(permission.IpProtocol),
