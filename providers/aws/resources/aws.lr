@@ -379,3 +379,31 @@ private aws.sagemaker.endpoint @defaults("arn") {
   // Tags for the endpoint
   tags map[string]string
 }
+
+// AWS Simple Notification Service (SNS)
+aws.sns {
+  // List of SNS topics
+  topics() []aws.sns.topic
+}
+
+// AWS Simple Notification Service (SNS) Topic
+private aws.sns.topic @defaults("arn") {
+  // SNS topic ARN
+  arn string
+  // Region where the SNS topic exists
+  region string
+  // List of subscriptions associated with the topic ARN
+  subscriptions() []aws.sns.subscription 
+  // Attributes for the SNS topic, including KMS ID if any
+  attributes() dict
+  // Tags for the topic
+  tags() map[string]string
+}
+
+// AWS Simple Notification Service (SNS) Subscription
+private aws.sns.subscription @defaults("arn") {
+  // ARN of the subscription
+  arn string
+  // Protocol value for the subscription
+  protocol string
+}

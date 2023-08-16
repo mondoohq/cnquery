@@ -110,6 +110,18 @@ func init() {
 			// to override args, implement: initAwsSagemakerEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSagemakerEndpoint,
 		},
+		"aws.sns": {
+			// to override args, implement: initAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSns,
+		},
+		"aws.sns.topic": {
+			// to override args, implement: initAwsSnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSnsTopic,
+		},
+		"aws.sns.subscription": {
+			// to override args, implement: initAwsSnsSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSnsSubscription,
+		},
 	}
 }
 
@@ -585,6 +597,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sns.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSns).GetTopics()).ToDataRes(types.Array(types.Resource("aws.sns.topic")))
+	},
+	"aws.sns.topic.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sns.topic.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.sns.topic.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetSubscriptions()).ToDataRes(types.Array(types.Resource("aws.sns.subscription")))
+	},
+	"aws.sns.topic.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetAttributes()).ToDataRes(types.Dict)
+	},
+	"aws.sns.topic.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsTopic).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.sns.subscription.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsSubscription).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sns.subscription.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSnsSubscription).GetProtocol()).ToDataRes(types.String)
 	},
 }
 
@@ -1236,6 +1272,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.sagemaker.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerEndpoint).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSns).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sns.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSns).Topics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSnsTopic).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sns.topic.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).Subscriptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).Attributes, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sns.topic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsTopic).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.sns.subscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsSnsSubscription).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.sns.subscription.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsSubscription).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sns.subscription.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSnsSubscription).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -3364,4 +3444,204 @@ func (c *mqlAwsSagemakerEndpoint) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsSagemakerEndpoint) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+// mqlAwsSns for the aws.sns resource
+type mqlAwsSns struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsSnsInternal it will be used here
+	Topics plugin.TValue[[]interface{}]
+}
+
+// createAwsSns creates a new instance of this resource
+func createAwsSns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSns{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sns", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSns) MqlName() string {
+	return "aws.sns"
+}
+
+func (c *mqlAwsSns) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSns) GetTopics() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Topics, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns", c.__id, "topics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.topics()
+	})
+}
+
+// mqlAwsSnsTopic for the aws.sns.topic resource
+type mqlAwsSnsTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsSnsTopicInternal it will be used here
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	Subscriptions plugin.TValue[[]interface{}]
+	Attributes plugin.TValue[interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsSnsTopic creates a new instance of this resource
+func createAwsSnsTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSnsTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sns.topic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSnsTopic) MqlName() string {
+	return "aws.sns.topic"
+}
+
+func (c *mqlAwsSnsTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSnsTopic) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSnsTopic) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSnsTopic) GetSubscriptions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Subscriptions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sns.topic", c.__id, "subscriptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.subscriptions()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetAttributes() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Attributes, func() (interface{}, error) {
+		return c.attributes()
+	})
+}
+
+func (c *mqlAwsSnsTopic) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsSnsSubscription for the aws.sns.subscription resource
+type mqlAwsSnsSubscription struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsSnsSubscriptionInternal it will be used here
+	Arn plugin.TValue[string]
+	Protocol plugin.TValue[string]
+}
+
+// createAwsSnsSubscription creates a new instance of this resource
+func createAwsSnsSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSnsSubscription{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sns.subscription", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSnsSubscription) MqlName() string {
+	return "aws.sns.subscription"
+}
+
+func (c *mqlAwsSnsSubscription) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSnsSubscription) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSnsSubscription) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
 }
