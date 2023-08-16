@@ -62,7 +62,7 @@ func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command)
 	preRunRoot := &cobra.Command{
 		Use: "root",
 		Run: func(cmd *cobra.Command, args []string) {
-			autoUpdate, _ = cmd.Flags().GetBool("auto-update")
+			autoUpdate = viper.GetBool("auto_update")
 			for _, arg := range args {
 				for j := range commands {
 					if arg == commands[j].Command.Use {
@@ -80,8 +80,8 @@ func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command)
 		},
 	}
 
-	preRunRoot.PersistentFlags().Bool("auto-update", true, "Enable automatic provider installation and update")
-	viper.BindPFlag("auto_update", rootCmd.PersistentFlags().Lookup("auto-update"))
+	preRunRoot.Flags().Bool("auto-update", true, "Enable automatic provider installation and update")
+	viper.BindPFlag("auto_update", preRunRoot.Flags().Lookup("auto-update"))
 	config.Init(preRunRoot)
 
 	err := preRunRoot.Execute()
