@@ -18,6 +18,8 @@ import (
 	// network "go.mondoo.com/cnquery/providers/network/provider"
 	// osconf "go.mondoo.com/cnquery/providers/os/config"
 	// os "go.mondoo.com/cnquery/providers/os/provider"
+	// gcpconf "go.mondoo.com/cnquery/providers/gcp/config"
+	// gcp "go.mondoo.com/cnquery/providers/gcp/provider"
 )
 
 var BuiltinCoreID = coreconf.Config.ID
@@ -30,6 +32,9 @@ var coreInfo []byte
 
 // //go:embed network/resources/network.resources.json
 // var networkInfo []byte
+
+// //go:embed gcp/resources/gcp.resources.json
+// var gcpInfo []byte
 
 var builtinProviders = map[string]*builtinProvider{
 	coreconf.Config.ID: {
@@ -61,6 +66,16 @@ var builtinProviders = map[string]*builtinProvider{
 	// 		isClosed: false,
 	// 	},
 	// 	Config: &networkconf.Config,
+	// },
+	// gcpconf.Config.ID: {
+	// 	Runtime: &RunningProvider{
+	// 		Name:     gcpconf.Config.Name,
+	// 		ID:       gcpconf.Config.ID,
+	// 		Plugin:   gcp.Init(),
+	// 		Schema:   MustLoadSchema("network", gcpInfo),
+	// 		isClosed: false,
+	// 	},
+	// 	Config: &gcpconf.Config,
 	// },
 }
 

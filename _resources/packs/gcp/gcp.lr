@@ -76,24 +76,6 @@ private gcp.projects {
 
 // Google Cloud Platform Project
 gcp.project @defaults("name") {
-  // Unique, user-assigned id of the project
-  id() string
-  // The unique resource name
-  name() string
-  // Parent ID
-  parentId() string
-  // Deprecated. Use `id` instead.
-  number() string
-  // The project lifecycle state
-  state() string
-  // Deprecated. Use `state` instead.
-  lifecycleState() string
-  // Creation time
-  createTime() time
-  // The labels associated with this project
-  labels() map[string]string
-  // IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
   // List of available and enabled services for project
   services() []gcp.service
   // List of recommendations
@@ -178,16 +160,6 @@ gcp.recommendation {
   lastRefreshTime time
   // State and Metadata about Recommendation
   state dict
-}
-
-// GCP Resource Manager Binding
-private gcp.resourcemanager.binding {
-  // Internal ID
-  id string
-  // Principals requesting access for a Google Cloud resource
-  members []string
-  // Role assigned to the list of members or principals
-  role string
 }
 
 // GCP Compute Engine
