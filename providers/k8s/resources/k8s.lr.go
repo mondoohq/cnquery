@@ -154,6 +154,10 @@ func init() {
 			// to override args, implement: initK8sUserinfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sUserinfo,
 		},
+		"k8s.kubelet": {
+			Init: initK8sKubelet,
+			Create: createK8sKubelet,
+		},
 	}
 }
 
@@ -1274,6 +1278,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.userinfo.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sUserinfo).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.kubelet.configFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sKubelet).GetConfigFile()).ToDataRes(types.Resource("file"))
+	},
+	"k8s.kubelet.process": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sKubelet).GetProcess()).ToDataRes(types.Resource("process"))
+	},
+	"k8s.kubelet.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sKubelet).GetConfiguration()).ToDataRes(types.Dict)
 	},
 }
 
@@ -2829,6 +2842,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.userinfo.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sUserinfo).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.kubelet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sKubelet).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.kubelet.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sKubelet).ConfigFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"k8s.kubelet.process": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sKubelet).Process, ok = plugin.RawToTValue[*mqlProcess](v.Value, v.Error)
+		return
+	},
+	"k8s.kubelet.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sKubelet).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -6748,4 +6777,63 @@ func (c *mqlK8sUserinfo) GetUsername() *plugin.TValue[string] {
 
 func (c *mqlK8sUserinfo) GetUid() *plugin.TValue[string] {
 	return &c.Uid
+}
+
+// mqlK8sKubelet for the k8s.kubelet resource
+type mqlK8sKubelet struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sKubeletInternal it will be used here
+	ConfigFile plugin.TValue[*mqlFile]
+	Process plugin.TValue[*mqlProcess]
+	Configuration plugin.TValue[interface{}]
+}
+
+// createK8sKubelet creates a new instance of this resource
+func createK8sKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sKubelet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.kubelet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sKubelet) MqlName() string {
+	return "k8s.kubelet"
+}
+
+func (c *mqlK8sKubelet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sKubelet) GetConfigFile() *plugin.TValue[*mqlFile] {
+	return &c.ConfigFile
+}
+
+func (c *mqlK8sKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
+	return &c.Process
+}
+
+func (c *mqlK8sKubelet) GetConfiguration() *plugin.TValue[interface{}] {
+	return &c.Configuration
 }

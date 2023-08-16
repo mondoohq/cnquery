@@ -1,4 +1,5 @@
 import "../../os/resources/os.lr"
+import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/providers/k8s"
 option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
@@ -843,4 +844,14 @@ private k8s.userinfo @defaults("username") {
   username string
   // The UID of the user
   uid string
+}
+
+// Kubernetes Kubelet configuration
+private k8s.kubelet {
+  // Kubelet config file
+  configFile file
+  // Kubelet process
+  process process
+  // Combination of config file parameters and cli parameters
+  configuration dict
 }
