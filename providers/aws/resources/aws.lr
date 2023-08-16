@@ -407,3 +407,175 @@ private aws.sns.subscription @defaults("arn") {
   // Protocol value for the subscription
   protocol string
 }
+
+// AWS Elasticsearch Service
+aws.es {
+  // List of Elasticsearch domains
+  domains() []aws.es.domain
+}
+
+// Amazon Elasticsearch Service Domain
+private aws.es.domain @defaults("arn") {
+  // ARN for the Elasticsearch domain
+  arn string
+  // Denotes whether encryption at rest is enabled
+  encryptionAtRestEnabled bool
+  // Denoted whether node to node encryption is enabled
+  nodeToNodeEncryptionEnabled bool
+  // Name of the Elasticsearch domain
+  name string
+  // Endpoint used to submit index and search requests
+  endpoint string
+  // Region where the domain exists
+  region string
+  // Tags for the domain
+  tags map[string]string
+}
+
+// AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
+aws.acm {
+  // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
+  certificates() []aws.acm.certificate
+}
+
+// AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
+private aws.acm.certificate @defaults("arn") {
+  // ARN for the certificate
+  arn string
+  // Time before which the certificate is not valid
+  notBefore time
+  // Time after which the certificate is not valid
+  notAfter time
+  // Time at which the cert was requested
+  createdAt time
+  // FQDN for the certificate
+  domainName string
+  // Status of the certificate (issued, expired, revoked, etc.)
+  status string
+  // Name of entity associated with pubkey in cert
+  subject string
+  // Retrieves an Amazon-issued certificate and its certificate chain
+  // certificate() certificate
+  // Tags associated with the certificate
+  tags map[string]string
+}
+
+// AWS Auto Scaling
+aws.autoscaling {
+  // List of autoscaling groups across the account
+  groups() []aws.autoscaling.group
+}
+
+// AWS Auto Scaling Group
+private aws.autoscaling.group @defaults("arn") {
+  // ARN for the autoscaling group
+  arn string
+  // Name of the group
+  name string
+  // List of load balancer names associated with the group
+  loadBalancerNames []string
+  // Health check type used by the group (ELB or EC2)
+  healthCheckType string
+  // Tags for the asg
+  tags map[string]string
+}
+
+// AWS Elastic Load Balancing
+aws.elb {
+  // List of classic load balancers
+  classicLoadBalancers() []aws.elb.loadbalancer
+  // List of application, gateway, and network load balancers (elbv2)
+  loadBalancers() []aws.elb.loadbalancer
+}
+
+// AWS Elastic Load Balancing Load Balancer
+private aws.elb.loadbalancer @defaults("arn") {
+  // ARN for the load balancer
+  arn string
+  // DNS name for the load balancer
+  dnsName string
+  // List of listener configurations for the load balancer
+  listenerDescriptions() []dict
+  // User specified name for the load balancer
+  name string
+  // Scheme for the lb (internet-facing vs. internal)
+  scheme string
+  // A list of attributes for the load balancer
+  attributes() []dict
+}
+
+// AWS CodeBuild for building and testing code
+aws.codebuild {
+  // List of build projects
+  projects() []aws.codebuild.project
+}
+
+// AWS CodeBuild Project
+private aws.codebuild.project @defaults("arn") {
+  // ARN for the project
+  arn string
+  // Description of the project
+  description string
+  // Name of the project
+  name string
+  // Build environment information about the project
+  environment dict
+  // Region where the project exists
+  region string
+  // Source used for the build project
+  source dict
+  // Tags for the project
+  tags map[string]string
+}
+
+// Amazon GuardDuty for threat detection
+aws.guardduty {
+  // List of GuardDuty detectors
+  detectors() []aws.guardduty.detector
+}
+
+// Amazon GuardDuty Detector
+private aws.guardduty.detector @defaults("id region") {
+  // Unique ID for the detector
+  id string
+  // Region for the detector
+  region string
+  // Status of the detector (ENABLED or DISABLED)
+  status string
+  // Publishing frequency for the detector
+  findingPublishingFrequency string
+  // List of unarchivedFindings found by the detector
+  unarchivedFindings() []dict
+}
+
+// AWS Security Hub
+aws.securityhub {
+  // List of Security Hubs in the account
+  hubs() []aws.securityhub.hub
+}
+
+// AWS Security Hub
+private aws.securityhub.hub @defaults("arn") {
+  // ARN for the Security Hub
+  arn string
+  // Date and time when the hub was enabled
+  subscribedAt string
+}
+
+// AWS Secrets Manager
+aws.secretsmanager {
+  // List of secrets
+  secrets() []aws.secretsmanager.secret
+}
+
+// AWS Secrets Manager Secret
+private aws.secretsmanager.secret @defaults("arn") {
+  // ARN for the secret
+  arn string
+  // Denotes whether rotation is enabled for the secret
+  rotationEnabled bool
+  // Name of the secret
+  name string
+  // Tags for the secret
+  tags map[string]string
+}

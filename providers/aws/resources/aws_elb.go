@@ -1,0 +1,239 @@
+package resources
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
+)
+
+const (
+	elbv1LbArnPattern = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
+)
+
+func (a *mqlAwsElb) id() (string, error) {
+	return "aws.elb", nil
+}
+
+func (a *mqlAwsElb) classicLoadBalancers() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getClassicLoadBalancers(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Elb(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			var marker *string
+			for {
+				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancing.DescribeLoadBalancersInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, lb := range lbs.LoadBalancerDescriptions {
+					jsonListeners, err := convert.JsonToDictSlice(lb.ListenerDescriptions)
+					if err != nil {
+						return nil, err
+					}
+					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+						map[string]*llx.RawData{
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId, toString(lb.LoadBalancerName))),
+							"listenerDescriptions": llx.AnyData(jsonListeners),
+							"dnsName":              llx.StringData(toString(lb.DNSName)),
+							"name":                 llx.StringData(toString(lb.LoadBalancerName)),
+							"scheme":               llx.StringData(toString(lb.Scheme)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlLb)
+				}
+				if lbs.NextMarker == nil {
+					break
+				}
+				marker = lbs.NextMarker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsElbLoadbalancer) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsElb) loadBalancers() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getLoadBalancers(conn), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Elbv2(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			var marker *string
+			for {
+				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, lb := range lbs.LoadBalancers {
+					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+						map[string]*llx.RawData{
+							"arn":     llx.StringData(toString(lb.LoadBalancerArn)),
+							"dnsName": llx.StringData(toString(lb.DNSName)),
+							"name":    llx.StringData(toString(lb.LoadBalancerName)),
+							"scheme":  llx.StringData(string(lb.Scheme)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlLb)
+				}
+				if lbs.NextMarker == nil {
+					break
+				}
+				marker = lbs.NextMarker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func initAwsElbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// if len(*args) == 0 {
+	// 	if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+	// 		(*args)["name"] = ids.name
+	// 		(*args)["arn"] = ids.arn
+	// 	}
+	// }
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
+	}
+
+	obj, err := runtime.CreateResource(runtime, "aws.elb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	elb := obj.(*mqlAwsElb)
+
+	rawResources, err := elb.loadBalancers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for i := range rawResources {
+		lb := rawResources[i].(*mqlAwsElbLoadbalancer)
+		if lb.Arn.Data == arnVal {
+			return args, lb, nil
+		}
+	}
+	return nil, nil, errors.New("elb load balancer does not exist")
+}
+
+func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := a.Arn.Data
+
+	region, err := GetRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+	listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn})
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(listeners.Listeners)
+}
+
+func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := a.Arn.Data
+
+	region, err := GetRegionFromArn(arn)
+	if err != nil {
+		return nil, err
+	}
+	svc := conn.Elbv2(region)
+	ctx := context.Background()
+	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(attributes.Attributes)
+}

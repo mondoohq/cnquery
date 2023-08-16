@@ -1,13 +1,23 @@
 package resources
 
 import (
+	"bytes"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
+	"io"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go/transport/http"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/types"
+	"k8s.io/client-go/util/cert"
 )
 
 func (a *mqlAws) regions() ([]interface{}, error) {
@@ -30,7 +40,7 @@ func Is400AccessDeniedError(err error) bool {
 	return false
 }
 
-func Ec2TagsToMap(tags []types.Tag) map[string]interface{} {
+func Ec2TagsToMap(tags []ec2types.Tag) map[string]interface{} {
 	tagsMap := make(map[string]interface{})
 
 	if len(tags) > 0 {
@@ -78,3 +88,75 @@ func toInt64From32(i *int32) int64 {
 	}
 	return int64(*i)
 }
+
+func GetRegionFromArn(arnVal string) (string, error) {
+	parsedArn, err := arn.Parse(arnVal)
+	if err != nil {
+		return "", err
+	}
+	return parsedArn.Region, nil
+}
+
+func CertificatesToMqlCertificates(runtime *plugin.Runtime, certs []*x509.Certificate) ([]interface{}, error) {
+	res := []interface{}{}
+	// to create certificate resources
+	for i := range certs {
+		cert := certs[i]
+
+		if cert == nil {
+			continue
+		}
+
+		certdata, err := certificates.EncodeCertAsPEM(cert)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := CreateResource(runtime, "certificate", map[string]*llx.RawData{
+			"pem": llx.StringData(string(certdata)),
+			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
+			// we are using the hashes for the id, therefore it is required during creation
+			"fingerprints": llx.MapData(certificates.Fingerprints(cert), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		c := r.(*mqlAwsAcmCertificate)
+		// c.Certificate = plugin.TValue[*x509.Certificate]{
+		// 	Pem:   llx.StringData(cert.Pem),
+		// 	Data:  cert,
+		// 	State: plugin.StateIsSet,
+		// } // TODO: revisit all this cert stuff. can we share resources across providers??
+
+		res = append(res, c)
+	}
+	return res, nil
+}
+
+func ParseCertsFromPEM(r io.Reader) ([]*x509.Certificate, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	certs, err := cert.ParseCertsPEM(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return certs, nil
+}
+
+func EncodeCertAsPEM(cert *x509.Certificate) ([]byte, error) {
+	certBuffer := bytes.Buffer{}
+	if err := pem.Encode(&certBuffer, &pem.Block{Type: CertificateBlockType, Bytes: cert.Raw}); err != nil {
+		return nil, err
+	}
+	return certBuffer.Bytes(), nil
+}
+
+const (
+	// CertificateBlockType is a possible value for pem.Block.Type.
+	CertificateBlockType = "CERTIFICATE"
+)
