@@ -70,7 +70,7 @@ func (e *mqlAwsSecretsmanager) getSecrets(provider *aws_provider.Provider) []*jo
 					mqlSecret, err := e.MotorRuntime.CreateResource("aws.secretsmanager.secret",
 						"arn", core.ToString(secret.ARN),
 						"name", core.ToString(secret.Name),
-						"rotationEnabled", secret.RotationEnabled,
+						"rotationEnabled", core.ToBool(secret.RotationEnabled),
 						"tags", secretTagsToMap(secret.Tags),
 					)
 					if err != nil {
