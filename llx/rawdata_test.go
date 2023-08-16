@@ -24,6 +24,7 @@ func TestRawData_String(t *testing.T) {
 		{RegexData("ex"), "/ex/"},
 		{TimeData(now), now.String()},
 		{TimeDataPtr(nil), "<null>"},
+		{TimeDataPtr(&now), now.String()},
 		{DictData(int64(1)), "1"},
 		{DictData(float64(1.2)), "1.2"},
 		{DictData(string("yo")), "\"yo\""},
