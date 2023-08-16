@@ -34,7 +34,7 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 	}
 
 	// eg. we ignore the following run levels since `service halt status` may shutdown the system
-	ignored := []string{"boot", "boot.local", "functions", "halt", "halt.local", "killall", "rc", "reboot", "shutdown", "single", "skeleton", ".depend.boot", ".depend.start", ".depend.stop" }
+	ignored := []string{"boot", "boot.local", "functions", "halt", "halt.local", "killall", "rc", "reboot", "shutdown", "single", "skeleton", ".depend.boot", ".depend.start", ".depend.stop"}
 	statusServices := []string{}
 	for i := range services {
 		service := services[i]
