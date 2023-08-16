@@ -48,13 +48,6 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	return nil
 }
 
-func flagHasArgs(flag *pflag.Flag) bool {
-	if flag == nil {
-		return false
-	}
-	return flag.NoOptDefVal == ""
-}
-
 func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command) (string, bool) {
 	autoUpdate := true
 	action := ""
