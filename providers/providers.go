@@ -143,7 +143,7 @@ func ListAll() ([]*Provider, error) {
 
 // EnsureProvider find the provider for a given connector either from the list
 // of existing proviers or by downloading and installing it.
-func EnsureProvider(existing Providers, connectorName string) (*Provider, error) {
+func EnsureProvider(existing Providers, connectorName string, autoUpdate bool) (*Provider, error) {
 	provider := existing.ForConnection(connectorName)
 	if provider != nil {
 		return provider, nil
@@ -153,6 +153,10 @@ func EnsureProvider(existing Providers, connectorName string) (*Provider, error)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
 		return nil, nil
+	}
+
+	if !autoUpdate {
+		return nil, errors.New("cannot find installed provider for connection " + connectorName)
 	}
 
 	nu, err := Install(upstream.Name)
