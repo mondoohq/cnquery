@@ -429,9 +429,17 @@ func RegexData(r string) *RawData {
 
 // TimeData creates a rawdata struct from a go time
 func TimeData(t time.Time) *RawData {
+	return TimeDataPtr(&t)
+}
+
+// TimeData creates a rawdata struct from a go time pointer
+func TimeDataPtr(t *time.Time) *RawData {
+	if t == nil {
+		return NilData
+	}
 	return &RawData{
 		Type:  types.Time,
-		Value: &t,
+		Value: t,
 	}
 }
 
