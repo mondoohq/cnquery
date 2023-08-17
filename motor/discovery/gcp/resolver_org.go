@@ -3,11 +3,14 @@ package gcp
 import (
 	"context"
 
+	"errors"
+
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
+	"go.mondoo.com/cnquery/motor/providers/google"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
@@ -29,9 +32,14 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		return resolved, nil
 	}
 
-	provider, err := gcp_provider.New(tc)
+	m, err := resolver.NewMotorConnection(ctx, tc, credsResolver)
 	if err != nil {
 		return nil, err
+	}
+	defer m.Close()
+	provider, ok := m.Provider.(*google.Provider)
+	if !ok {
+		return nil, errors.New("could not create azure provider")
 	}
 	defer provider.Close()
 
