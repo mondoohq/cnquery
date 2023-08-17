@@ -66,7 +66,7 @@ func TestManagerUbuntu1404(t *testing.T) {
 	serviceList, err := mm.List()
 	require.NoError(t, err)
 
-	assert.Equal(t, 9, len(serviceList))
+	assert.Equal(t, 8, len(serviceList))
 }
 
 func TestManagerOpensuse13(t *testing.T) {

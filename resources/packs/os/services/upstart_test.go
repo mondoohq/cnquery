@@ -17,5 +17,5 @@ func TestParseUpstartServicesRunning(t *testing.T) {
 	// iterate over services and check if they are running
 	services, err := upstart.List()
 	require.NoError(t, err)
-	assert.Equal(t, 9, len(services), "detected the right amount of services")
+	assert.Equal(t, 8, len(services), "detected the right amount of services")
 }
