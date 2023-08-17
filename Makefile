@@ -60,18 +60,18 @@ prep/tools:
 
 cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate
 
-define genProvider
+define buildProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
-	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_DIST = "./dist")
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] generate CLI json"
-	go run ${$@_HOME}/gen/main.go ${$@_HOME}
+	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
 	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	go build -o ${$@_BIN} ${$@_HOME}/main.go
+	cd ${$@_HOME} && go build -o ${$@_BIN} ./main.go
 endef
 
 define installProvider
@@ -93,11 +93,27 @@ define bundleProvider
 	$(eval $@_DIST = "${$@_HOME}"/dist)
 	$(eval $@_DST = "${$@_DIST}/${$@_NAME}.tar.xz")
 	echo "--> bundle ${$@_NAME} to ${$@_DST} (this may take a while)"
-	tar -cf ${$@_DST} --owner=0 --group=0 --no-same-owner \
+	tar -cf ${$@_DST} --no-same-owner \
 		--use-compress-program='xz -9v' \
 		-C ${$@_DIST} \
 		${$@_NAME} ${$@_NAME}.json ${$@_NAME}.resources.json
 	ls -lha ${$@_DST}
+endef
+
+define testProvider
+	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_PKGS = $(shell go list ./${$@_HOME}/...))
+	echo "--> test ${$@_NAME} in ${$@_HOME}"
+	gotestsum --junitfile ./report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
+endef
+
+define testGpModProvider
+	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_PKGS = $(shell bash -c "cd ${$@_HOME} && go list ./..."))
+	echo "--> test ${$@_NAME} in ${$@_HOME}"
+	cd ${$@_HOME} && gotestsum --junitfile ../../report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
 endef
 
 .PHONY: providers
@@ -119,13 +135,13 @@ providers/lr:
 providers/build: providers/build/core providers/build/network providers/build/os
 
 providers/build/core: providers/lr
-	@$(call genProvider, providers/core)
+	@$(call buildProvider, providers/core)
 
 providers/build/network: providers/lr
-	@$(call genProvider, providers/network)
+	@$(call buildProvider, providers/network)
 
 providers/build/os: providers/lr
-	@$(call genProvider, providers/os)
+	@$(call buildProvider, providers/os)
 
 providers/install:
 #	@$(call installProvider, providers/core)
@@ -133,8 +149,13 @@ providers/install:
 	@$(call installProvider, providers/os)
 
 providers/bundle:
-	@$(call installProvider, providers/network)
+	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
+
+providers/test:
+	@$(call testProvider, providers/core)
+	@$(call testProvider, providers/network)
+	@$(call testProvider, providers/os)
 
 lr/test:
 	go test ./resources/lr/...
@@ -306,19 +327,18 @@ test: test/go test/lint
 test/go: cnquery/generate test/go/plain
 
 test/go/plain:
-	# TODO /motor/docker/docker_engine cannot be executed inside of docker
-	go test -cover $(shell go list ./... | grep -v '/motor/discovery/docker_engine')
+	go test -cover $(shell go list ./... | grep -v '/providers/')
 
-test/go/plain-ci: prep/tools providers/build
-	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/motor/discovery/docker_engine')
+test/go/plain-ci: prep/tools providers/build providers/test
+	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/')
 
 .PHONY: test/lint/staticcheck
 test/lint/staticcheck:
-	staticcheck $(shell go list ./... | grep -v /ent/ | grep -v /benchmark/)
+	staticcheck $(shell go list ./... | grep -v /providers/slack)
 
 .PHONY: test/lint/govet
 test/lint/govet:
-	go vet $(shell go list ./... | grep -v /ent/ | grep -v /benchmark/)
+	go vet $(shell go list ./... | grep -v /providers/slack)
 
 .PHONY: test/lint/golangci-lint/run
 test/lint/golangci-lint/run: prep/tools
