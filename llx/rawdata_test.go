@@ -11,6 +11,7 @@ import (
 var now = time.Now()
 
 func TestRawData_String(t *testing.T) {
+	strVal := "yo"
 	tests := []struct {
 		data *RawData
 		res  string
@@ -21,6 +22,8 @@ func TestRawData_String(t *testing.T) {
 		{IntData(0), "0"},
 		{FloatData(123), "123"},
 		{StringData("yo"), "\"yo\""},
+		{StringDataPtr(nil), "<null>"},
+		{StringDataPtr(&strVal), "\"yo\""},
 		{RegexData("ex"), "/ex/"},
 		{TimeData(now), now.String()},
 		{TimeDataPtr(nil), "<null>"},
@@ -42,6 +45,8 @@ func TestRawData_String(t *testing.T) {
 }
 
 func TestTruthy(t *testing.T) {
+	strVal := "yo"
+
 	tests := []struct {
 		data *RawData
 		res  bool
@@ -55,6 +60,8 @@ func TestTruthy(t *testing.T) {
 		{FloatData(1.23), true},
 		{StringData(""), false},
 		{StringData("b"), true},
+		{StringDataPtr(nil), false},
+		{StringDataPtr(&strVal), true},
 		{RegexData(""), false},
 		{RegexData("r"), true},
 		{TimeData(time.Time{}), false},
