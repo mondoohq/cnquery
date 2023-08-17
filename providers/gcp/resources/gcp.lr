@@ -21,6 +21,8 @@ gcp.project @defaults("name") {
   labels map[string]string
   // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // List of available and enabled services for project
+  services() []gcp.service
 }
 
 // GCP Resource Manager Binding
@@ -31,4 +33,20 @@ private gcp.resourcemanager.binding {
   members []string
   // Role assigned to the list of members or principals
   role string
+}
+
+// GCP Service
+gcp.service @defaults("name") {
+  // Project ID
+  projectId string
+  // Service name
+  name string
+  // Service parent name
+  parentName string
+  // Service title
+  title string
+  // Service state
+  state string
+  // Checks if the service is enabled
+  enabled() bool
 }

@@ -22,6 +22,10 @@ func init() {
 			// to override args, implement: initGcpResourcemanagerBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpResourcemanagerBinding,
 		},
+		"gcp.service": {
+			Init: initGcpService,
+			Create: createGcpService,
+		},
 	}
 }
 
@@ -117,6 +121,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetServices()).ToDataRes(types.Array(types.Resource("gcp.service")))
+	},
 	"gcp.resourcemanager.binding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerBinding).GetId()).ToDataRes(types.String)
 	},
@@ -125,6 +132,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.resourcemanager.binding.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerBinding).GetRole()).ToDataRes(types.String)
+	},
+	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetName()).ToDataRes(types.String)
+	},
+	"gcp.service.parentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetParentName()).ToDataRes(types.String)
+	},
+	"gcp.service.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetTitle()).ToDataRes(types.String)
+	},
+	"gcp.service.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetState()).ToDataRes(types.String)
+	},
+	"gcp.service.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpService).GetEnabled()).ToDataRes(types.Bool)
 	},
 }
 
@@ -178,6 +203,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProject).IamPolicy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Services, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"gcp.resourcemanager.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpResourcemanagerBinding).__id, ok = v.Value.(string)
 			return
@@ -192,6 +221,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.resourcemanager.binding.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpResourcemanagerBinding).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpService).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.service.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.parentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).ParentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.service.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -232,6 +289,7 @@ type mqlGcpProject struct {
 	CreateTime plugin.TValue[*time.Time]
 	Labels plugin.TValue[map[string]interface{}]
 	IamPolicy plugin.TValue[[]interface{}]
+	Services plugin.TValue[[]interface{}]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -319,6 +377,22 @@ func (c *mqlGcpProject) GetIamPolicy() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlGcpProject) GetServices() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Services, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
 // mqlGcpResourcemanagerBinding for the gcp.resourcemanager.binding resource
 type mqlGcpResourcemanagerBinding struct {
 	MqlRuntime *plugin.Runtime
@@ -371,4 +445,80 @@ func (c *mqlGcpResourcemanagerBinding) GetMembers() *plugin.TValue[[]interface{}
 
 func (c *mqlGcpResourcemanagerBinding) GetRole() *plugin.TValue[string] {
 	return &c.Role
+}
+
+// mqlGcpService for the gcp.service resource
+type mqlGcpService struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Name plugin.TValue[string]
+	ParentName plugin.TValue[string]
+	Title plugin.TValue[string]
+	State plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createGcpService creates a new instance of this resource
+func createGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpService) MqlName() string {
+	return "gcp.service"
+}
+
+func (c *mqlGcpService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpService) GetParentName() *plugin.TValue[string] {
+	return &c.ParentName
+}
+
+func (c *mqlGcpService) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGcpService) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpService) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
 }
