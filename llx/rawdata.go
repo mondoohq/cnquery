@@ -419,6 +419,13 @@ func StringData(s string) *RawData {
 	}
 }
 
+func StringDataPtr(s *string) *RawData {
+	if s == nil {
+		return NilData
+	}
+	return StringData(*s)
+}
+
 // RegexData creates a rawdata struct from a go string
 func RegexData(r string) *RawData {
 	return &RawData{
