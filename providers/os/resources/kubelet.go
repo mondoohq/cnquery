@@ -2,7 +2,7 @@
 // author: Dominik Richter
 // author: Christoph Hartmann
 
-package k8s
+package resources
 
 import (
 	"errors"
@@ -14,28 +14,31 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/types"
 )
 
 const defaultKubeletConfig = "/var/lib/kubelet/config.yaml"
 
-func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet, error) {
-	if len(*args) > 0 {
+func initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
 		return args, nil, nil
 	}
 
-	p, err := k.getKubeletProcess()
+	p, err := getKubeletProcess(runtime)
 	if err != nil {
 		return nil, nil, err
 	}
-	(*args)["process"] = p
+	args["process"] = llx.ResourceData(p, "process")
 
-	kubeletFlags, err := p.Flags()
-	if err != nil {
+	kubeletFlagsData := p.GetFlags()
+	if kubeletFlagsData.Error != nil {
 		return nil, nil, err
 	}
+	kubeletFlags := kubeletFlagsData.Data
 
 	// Check kubelet for "--config" flag and set path to config file accordingly
 	configFilePath := defaultKubeletConfig
@@ -47,54 +50,52 @@ func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet,
 		configFilePath = path
 	}
 
-	provider, ok := k.MotorRuntime.Motor.Provider.(os.OperatingSystemProvider)
+	provider, ok := runtime.Connection.(shared.Connection)
 	if !ok {
 		return nil, nil, fmt.Errorf("error getting operating system provider")
 	}
 	// AKS has no kubelet config file
-	configFileExists, err := afero.Exists(provider.FS(), configFilePath)
+	configFileExists, err := afero.Exists(provider.FileSystem(), configFilePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error when checking whether config file exists: %v", err)
 	}
 
 	if configFileExists {
-		f, err := k.MotorRuntime.CreateResource("file", "path", configFilePath)
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(configFilePath),
+		})
 		if err != nil {
 			return nil, nil, err
 		}
-		mqlFile, ok := f.(core.File)
+		mqlFile, ok := f.(*mqlFile)
 		if !ok {
 			return nil, nil, err
 		}
-		(*args)["configFile"] = mqlFile
+		args["configFile"] = llx.ResourceData(mqlFile, "file")
 	} else {
-		(*args)["configFile"] = nil
+		args["configFile"] = llx.NilData
 	}
 
 	// I cannot re-use "mqlFile" here, as it is not read at this point in time
-	configuration, err := k.createConfiguration(kubeletFlags, configFilePath, provider, configFileExists)
+	configuration, err := createConfiguration(kubeletFlags, configFilePath, provider, configFileExists)
 	if err != nil {
 		return nil, nil, err
 	}
-	(*args)["configuration"] = configuration
+	args["configuration"] = llx.MapData(configuration, types.String)
 
 	return args, nil, nil
-}
-
-func (k *mqlK8sKubelet) id() (string, error) {
-	return "k8s.kubelet", nil
 }
 
 // createConfiguration applies the kubelet defaults to the config and then
 // merges the kubelet flags and the kubelet config file into a single map
 // This map is representing the running state of the kubelet config
-func (k *mqlK8sKubelet) createConfiguration(kubeletFlags map[string]interface{}, configFilePath string, provider os.OperatingSystemProvider, configFileExists bool) (map[string]interface{}, error) {
+func createConfiguration(kubeletFlags map[string]interface{}, configFilePath string, provider shared.Connection, configFileExists bool) (map[string]interface{}, error) {
 	kubeletConfig := kubeletconfigv1beta1.KubeletConfiguration{}
 	SetDefaults_KubeletConfiguration(&kubeletConfig)
 
 	// AKS has no kubelet config file
 	if configFileExists {
-		configFileContent, err := afero.ReadFile(provider.FS(), configFilePath)
+		configFileContent, err := afero.ReadFile(provider.FileSystem(), configFilePath)
 		if err != nil {
 			return nil, fmt.Errorf("error when getting file content: %v", err)
 		}
@@ -104,7 +105,7 @@ func (k *mqlK8sKubelet) createConfiguration(kubeletFlags map[string]interface{},
 		}
 	}
 
-	options, err := core.JsonToDict(kubeletConfig)
+	options, err := convert.JsonToDict(kubeletConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error when converting KubeletConfig into dict: %v", err)
 	}
@@ -122,24 +123,24 @@ func (k *mqlK8sKubelet) createConfiguration(kubeletFlags map[string]interface{},
 	return options, nil
 }
 
-func (k *mqlK8sKubelet) getKubeletProcess() (core.Process, error) {
-	obj, err := k.MotorRuntime.CreateResource("processes")
+func getKubeletProcess(runtime *plugin.Runtime) (*mqlProcess, error) {
+	obj, err := CreateResource(runtime, "processes", nil)
 	if err != nil {
 		return nil, err
 	}
-	processes := obj.(core.Processes)
+	processes := obj.(*mqlProcesses)
 
-	processItems, err := processes.List()
-	if err != nil {
-		return nil, err
+	data := processes.GetList()
+	if data.Error != nil {
+		return nil, data.Error
 	}
-	for _, process := range processItems {
-		mqlProcess := process.(core.Process)
-		exec, err := mqlProcess.Executable()
-		if err != nil {
+	for _, process := range data.Data {
+		mqlProcess := process.(*mqlProcess)
+		exec := mqlProcess.Executable
+		if exec.Error != nil {
 			continue
 		}
-		if strings.HasSuffix(exec, "kubelet") {
+		if strings.HasSuffix(exec.Data, "kubelet") {
 			return mqlProcess, nil
 		}
 	}

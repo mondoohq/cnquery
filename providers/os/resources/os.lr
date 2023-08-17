@@ -15,6 +15,7 @@ alias os.base.packages = packages
 alias os.base.service = service
 alias os.base.services = services
 alias os.unix.sshd = sshd
+alias k8s.kubelet = kubelet
 
 asset {
   vulnerabilityReport() dict
@@ -1002,4 +1003,14 @@ container.repository {
   fullName string
   // Container Registry URL
   registry string
+}
+
+// Kubernetes Kubelet configuration
+kubelet {
+  // Kubelet config file
+  configFile file
+  // Kubelet process
+  process process
+  // Combination of config file parameters and cli parameters
+  configuration dict
 }

@@ -2,13 +2,13 @@
 // author: Dominik Richter
 // author: Christoph Hartmann
 
-package k8s
+package resources
 
 import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 )
 
 // mergeFlagsIntoConfig adds flags to the kubelet config
@@ -55,7 +55,7 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 			}
 			nodeLabels[labelSplit[0]] = labelVal
 		}
-		data, err := core.JsonToDict(nodeLabels)
+		data, err := convert.JsonToDict(nodeLabels)
 		if err != nil {
 			return err
 		}
@@ -100,7 +100,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			urlHeaderSplit := strings.Split(urlHeader, ":")
 			urlHeaders[urlHeaderSplit[0]] = urlHeaderSplit[1]
 		}
-		data, err := core.JsonToDict(urlHeaders)
+		data, err := convert.JsonToDict(urlHeaders)
 		if err != nil {
 			return err
 		}
@@ -204,7 +204,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	}
 	if _, ok := flags["tls-cipher-suites"]; ok {
 		ciphers := strings.Split(flags["tls-cipher-suites"].(string), ",")
-		data, err := core.JsonToDictSlice(ciphers)
+		data, err := convert.JsonToDictSlice(ciphers)
 		if err != nil {
 			return err
 		}
@@ -276,7 +276,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			featureSplit := strings.Split(feature, "=")
 			featureFlags[featureSplit[0]] = featureSplit[1]
 		}
-		data, err := core.JsonToDict(featureFlags)
+		data, err := convert.JsonToDict(featureFlags)
 		if err != nil {
 			return err
 		}
@@ -309,7 +309,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			cpuPolicySplit := strings.Split(cpuPolicy, "=")
 			cpuPolicies[cpuPolicySplit[0]] = cpuPolicySplit[1]
 		}
-		data, err := core.JsonToDict(cpuPolicies)
+		data, err := convert.JsonToDict(cpuPolicies)
 		if err != nil {
 			return err
 		}
@@ -324,7 +324,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			qosReserveSplit := strings.Split(qosReserve, "=")
 			qosReserved[qosReserveSplit[0]] = qosReserveSplit[1]
 		}
-		data, err := core.JsonToDict(qosReserved)
+		data, err := convert.JsonToDict(qosReserved)
 		if err != nil {
 			return err
 		}
@@ -414,7 +414,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			}
 			evictions[m[1]] = m[2]
 		}
-		data, err := core.JsonToDict(evictions)
+		data, err := convert.JsonToDict(evictions)
 		if err != nil {
 			return err
 		}
@@ -429,7 +429,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			}
 			evictions[m[1]] = m[2]
 		}
-		data, err := core.JsonToDict(evictions)
+		data, err := convert.JsonToDict(evictions)
 		if err != nil {
 			return err
 		}
@@ -441,7 +441,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			softPeriodSplit := strings.Split(softPeriod, "=")
 			softPeriods[softPeriodSplit[0]] = softPeriodSplit[1]
 		}
-		data, err := core.JsonToDict(softPeriods)
+		data, err := convert.JsonToDict(softPeriods)
 		if err != nil {
 			return err
 		}
@@ -459,7 +459,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			minReclaimSplit := strings.Split(minReclaim, "=")
 			minReclaims[minReclaimSplit[0]] = minReclaimSplit[1]
 		}
-		data, err := core.JsonToDict(minReclaims)
+		data, err := convert.JsonToDict(minReclaims)
 		if err != nil {
 			return err
 		}
@@ -483,7 +483,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			systemReserveSplit := strings.Split(systemReserve, "=")
 			systemReserved[systemReserveSplit[0]] = systemReserveSplit[1]
 		}
-		data, err := core.JsonToDict(systemReserved)
+		data, err := convert.JsonToDict(systemReserved)
 		if err != nil {
 			return err
 		}
@@ -495,7 +495,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 			kubeReserveSplit := strings.Split(kubeReserve, "=")
 			kubeReserved[kubeReserveSplit[0]] = kubeReserveSplit[1]
 		}
-		data, err := core.JsonToDict(kubeReserved)
+		data, err := convert.JsonToDict(kubeReserved)
 		if err != nil {
 			return err
 		}
@@ -515,7 +515,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	}
 	if _, ok := flags["reserved-memory"]; ok {
 		reservations := strings.Split(flags["reserved-memory"].(string), ",")
-		data, err := core.JsonToDictSlice(reservations)
+		data, err := convert.JsonToDictSlice(reservations)
 		if err != nil {
 			return err
 		}
@@ -526,7 +526,7 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	}
 	if _, ok := flags["register-with-taints"]; ok {
 		taints := strings.Split(flags["register-with-taints"].(string), ",")
-		data, err := core.JsonToDictSlice(taints)
+		data, err := convert.JsonToDictSlice(taints)
 		if err != nil {
 			return err
 		}

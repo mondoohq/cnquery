@@ -326,6 +326,10 @@ func init() {
 			// to override args, implement: initContainerRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createContainerRepository,
 		},
+		"kubelet": {
+			Init: initKubelet,
+			Create: createKubelet,
+		},
 	}
 }
 
@@ -1434,6 +1438,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"container.repository.registry": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContainerRepository).GetRegistry()).ToDataRes(types.String)
+	},
+	"kubelet.configFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetConfigFile()).ToDataRes(types.Resource("file"))
+	},
+	"kubelet.process": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetProcess()).ToDataRes(types.Resource("process"))
+	},
+	"kubelet.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKubelet).GetConfiguration()).ToDataRes(types.Dict)
 	},
 }
 
@@ -3141,6 +3154,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"container.repository.registry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContainerRepository).Registry, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kubelet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlKubelet).__id, ok = v.Value.(string)
+			return
+		},
+	"kubelet.configFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).ConfigFile, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"kubelet.process": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).Process, ok = plugin.RawToTValue[*mqlProcess](v.Value, v.Error)
+		return
+	},
+	"kubelet.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKubelet).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -9282,4 +9311,58 @@ func (c *mqlContainerRepository) GetFullName() *plugin.TValue[string] {
 
 func (c *mqlContainerRepository) GetRegistry() *plugin.TValue[string] {
 	return &c.Registry
+}
+
+// mqlKubelet for the kubelet resource
+type mqlKubelet struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlKubeletInternal it will be used here
+	ConfigFile plugin.TValue[*mqlFile]
+	Process plugin.TValue[*mqlProcess]
+	Configuration plugin.TValue[interface{}]
+}
+
+// createKubelet creates a new instance of this resource
+func createKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKubelet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kubelet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKubelet) MqlName() string {
+	return "kubelet"
+}
+
+func (c *mqlKubelet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKubelet) GetConfigFile() *plugin.TValue[*mqlFile] {
+	return &c.ConfigFile
+}
+
+func (c *mqlKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
+	return &c.Process
+}
+
+func (c *mqlKubelet) GetConfiguration() *plugin.TValue[interface{}] {
+	return &c.Configuration
 }

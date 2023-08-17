@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/pkg/kubelet/apis/config/v1beta1/defaults.go
-package k8s
+package resources
 
 import (
 	"time"

@@ -6,12 +6,3 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
 
-// Kubernetes Kubelet configuration
-private k8s.kubelet {
-  // Kubelet config file
-  configFile core.file
-  // Kubelet process
-  process core.process
-  // Combination of config file parameters and cli parameters
-  configuration dict
-}

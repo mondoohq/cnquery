@@ -17,12 +17,13 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
+
 	// networkconf "go.mondoo.com/cnquery/providers/network/config"
 	// network "go.mondoo.com/cnquery/providers/network/provider"
 	// k8sconf "go.mondoo.com/cnquery/providers/k8s/config"
 	// k8s "go.mondoo.com/cnquery/providers/k8s/provider"
-	// osconf "go.mondoo.com/cnquery/providers/os/config"
-	// os "go.mondoo.com/cnquery/providers/os/provider"
+	osconf "go.mondoo.com/cnquery/providers/os/config"
+	os "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 var BuiltinCoreID = coreconf.Config.ID
@@ -30,8 +31,8 @@ var BuiltinCoreID = coreconf.Config.ID
 //go:embed core/resources/core.resources.json
 var coreInfo []byte
 
-// //go:embed os/resources/os.resources.json
-// var osInfo []byte
+//go:embed os/resources/os.resources.json
+var osInfo []byte
 
 // //go:embed network/resources/network.resources.json
 // var networkInfo []byte
@@ -50,16 +51,16 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: &coreconf.Config,
 	},
-	// osconf.Config.ID: {
-	// 	Runtime: &RunningProvider{
-	// 		Name:     osconf.Config.Name,
-	// 		ID:       osconf.Config.ID,
-	// 		Plugin:   os.Init(),
-	// 		Schema:   MustLoadSchema("os", osInfo),
-	// 		isClosed: false,
-	// 	},
-	// 	Config: &osconf.Config,
-	// },
+	osconf.Config.ID: {
+		Runtime: &RunningProvider{
+			Name:     osconf.Config.Name,
+			ID:       osconf.Config.ID,
+			Plugin:   os.Init(),
+			Schema:   MustLoadSchema("os", osInfo),
+			isClosed: false,
+		},
+		Config: &osconf.Config,
+	},
 	// networkconf.Config.ID: {
 	// 	Runtime: &RunningProvider{
 	// 		Name:     networkconf.Config.Name,
