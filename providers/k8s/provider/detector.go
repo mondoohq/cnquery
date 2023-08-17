@@ -8,9 +8,13 @@ import (
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	// TODO: handle all platforms for all the individual assets somehow
 
-	connName := conn.Name()
-	asset.Id = connName
-	asset.Name = connName
+	assetId, err := conn.AssetId()
+	if err != nil {
+		return err
+	}
+	asset.Id = assetId
+	asset.Name = conn.Name()
+	asset.PlatformIds = []string{assetId}
 
 	asset.Platform = conn.Platform()
 

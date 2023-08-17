@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -189,6 +189,27 @@ func (c *Connection) Platform() *inventory.Platform {
 	}
 }
 
+func (c *Connection) AssetId() (string, error) {
+	// we use "kube-system" namespace uid as identifier for the cluster
+	result, err := c.Resources("namespaces", "kube-system", "")
+	if err != nil {
+		return "", err
+	}
+
+	if len(result.Resources) != 1 {
+		return "", errors.New("could not identify the k8s cluster")
+	}
+
+	resource := result.Resources[0]
+	obj, err := meta.Accessor(resource)
+	if err != nil {
+		return "", err
+	}
+
+	uid := string(obj.GetUID())
+	return shared.NewPlatformId(uid), nil
+}
+
 func (c *Connection) Resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
 	ctx := context.Background()
 	allNs := false
@@ -228,19 +249,6 @@ func (c *Connection) Resources(kind string, name string, namespace string) (*sha
 		Namespace:    namespace,
 		AllNs:        allNs,
 	}, err
-}
-
-func (c *Connection) Nodes() ([]v1.Node, error) {
-	ctx := context.Background()
-	list, err := c.clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	// needed because of https://github.com/kubernetes/client-go/issues/861
-	for i := range list.Items {
-		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Node"))
-	}
-	return list.Items, err
 }
 
 func (c *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {

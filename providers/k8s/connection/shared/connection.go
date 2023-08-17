@@ -28,30 +28,10 @@ type Connection interface {
 	Resources(kind string, name string, namespace string) (*ResourceResult, error)
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
-
 	Platform() *inventory.Platform
+	AssetId() (string, error)
 
-	// Nodes() ([]v1.Node, error)
-	// Namespace(name string) (*v1.Namespace, error)
-	// Namespaces() ([]v1.Namespace, error)
-	// Pod(namespace, name string) (*v1.Pod, error)
-	// Pods(namespace v1.Namespace) ([]*v1.Pod, error)
-	// CronJob(namespace, name string) (*batchv1.CronJob, error)
-	// CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error)
-	// StatefulSet(namespace, name string) (*appsv1.StatefulSet, error)
-	// StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error)
-	// Deployment(namespace, name string) (*appsv1.Deployment, error)
-	// Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error)
-	// Job(namespace, name string) (*batchv1.Job, error)
-	// Jobs(namespace v1.Namespace) ([]*batchv1.Job, error)
-	// ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, error)
-	// ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error)
-	// DaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
-	// DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error)
-	// Secret(namespace, name string) (*v1.Secret, error)
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
-	// Ingress(namespace, name string) (*networkingv1.Ingress, error)
-	// Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error)
 }
 
 type ClusterInfo struct {
@@ -125,4 +105,8 @@ func sliceToPtrSlice[T any](items []T) []*T {
 		ptrItems = append(ptrItems, &items[i])
 	}
 	return ptrItems
+}
+
+func NewPlatformId(assetId string) string {
+	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + assetId
 }

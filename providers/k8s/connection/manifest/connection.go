@@ -1,10 +1,17 @@
 package manifest
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -82,21 +89,6 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	return c, nil
 }
 
-// func (p *manifestProvider) PlatformInfo() *platform.Platform {
-// 	platformData := getPlatformInfo(p.objectKind, p.Runtime())
-// 	if platformData != nil {
-// 		return platformData
-// 	}
-
-// 	return &platform.Platform{
-// 		Name:    "k8s-manifest",
-// 		Title:   "Kubernetes Manifest",
-// 		Kind:    p.Kind(),
-// 		Family:  []string{"k8s"},
-// 		Runtime: p.Runtime(),
-// 	}
-// }
-
 func (p *Connection) ServerVersion() *version.Info {
 	return nil
 }
@@ -108,19 +100,6 @@ func (p *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, erro
 func (p *Connection) ID() uint32 {
 	return p.id
 }
-
-// func (p *manifestProvider) Identifier() (string, error) {
-// 	if p.selectedResourceID != "" {
-// 		return p.selectedResourceID, nil
-// 	}
-
-// 	uid, err := p.ID()
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	return NewPlatformID(uid), nil
-// }
 
 func (p *Connection) Name() string {
 	return p.asset.Name
@@ -134,6 +113,44 @@ func (c *Connection) Platform() *inventory.Platform {
 		Runtime: "k8s-manifest",
 		Title:   "Kubernetes Manifest",
 	}
+}
+
+func (c *Connection) AssetId() (string, error) {
+	// If we are doing an admission control scan, we have 1 resource in the manifest and it has a UID.
+	// Instead of using the file path to generate the ID, use the resource UID. We do this because for
+	// CI/CD scans, the manifest is stored in a random file. This means we can potentially be scanning
+	// the same resource multiple times but it will result in different assets because of the random
+	// file name.
+
+	if len(c.Objects) == 1 {
+		o, err := meta.Accessor(c.Objects[0])
+		if err == nil {
+			if o.GetUID() != "" {
+				return string(o.GetUID()), nil
+			}
+		}
+	}
+
+	h := sha256.New()
+
+	// special handling for embedded content (e.g. piped in via stdin)
+	if len(c.manifestContent) > 0 {
+		h.Write([]byte("stdin"))
+		return hex.EncodeToString(h.Sum(nil)), nil
+	}
+
+	_, err := os.Stat(c.manifestFile)
+	if err != nil {
+		return "", errors.Wrap(err, "could not determine platform identifier for "+c.manifestFile)
+	}
+
+	absPath, err := filepath.Abs(c.manifestFile)
+	if err != nil {
+		return "", errors.Wrap(err, "could not determine platform identifier for "+c.manifestFile)
+	}
+
+	h.Write([]byte(absPath))
+	return shared.NewPlatformId(hex.EncodeToString(h.Sum(nil))), nil
 }
 
 func (p *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {

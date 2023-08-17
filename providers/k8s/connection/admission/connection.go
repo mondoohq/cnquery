@@ -55,21 +55,6 @@ func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Conne
 	return c, nil
 }
 
-// func (p *manifestProvider) PlatformInfo() *platform.Platform {
-// 	platformData := getPlatformInfo(p.objectKind, p.Runtime())
-// 	if platformData != nil {
-// 		return platformData
-// 	}
-
-// 	return &platform.Platform{
-// 		Name:    "k8s-manifest",
-// 		Title:   "Kubernetes Manifest",
-// 		Kind:    p.Kind(),
-// 		Family:  []string{"k8s"},
-// 		Runtime: p.Runtime(),
-// 	}
-// }
-
 func (p *Connection) ServerVersion() *version.Info {
 	return nil
 }
@@ -82,18 +67,14 @@ func (p *Connection) ID() uint32 {
 	return p.id
 }
 
-// func (p *manifestProvider) Identifier() (string, error) {
-// 	if p.selectedResourceID != "" {
-// 		return p.selectedResourceID, nil
-// 	}
+func (c *Connection) AssetId() (string, error) {
+	reviews, err := c.AdmissionReviews()
+	if err != nil {
+		return "", err
+	}
 
-// 	uid, err := p.ID()
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	return NewPlatformID(uid), nil
-// }
+	return shared.NewPlatformId(string(reviews[0].Request.UID)), nil
+}
 
 func (p *Connection) Name() string {
 	return p.asset.Name
