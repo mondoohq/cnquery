@@ -26,6 +26,10 @@ func init() {
 			Init: initGcpService,
 			Create: createGcpService,
 		},
+		"gcp.recommendation": {
+			// to override args, implement: initGcpRecommendation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpRecommendation,
+		},
 	}
 }
 
@@ -124,6 +128,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetServices()).ToDataRes(types.Array(types.Resource("gcp.service")))
 	},
+	"gcp.project.recommendations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetRecommendations()).ToDataRes(types.Array(types.Resource("gcp.recommendation")))
+	},
 	"gcp.resourcemanager.binding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerBinding).GetId()).ToDataRes(types.String)
 	},
@@ -150,6 +157,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.service.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.recommendation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetId()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.zoneName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetZoneName()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetName()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.recommender": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetRecommender()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.primaryImpact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetPrimaryImpact()).ToDataRes(types.Dict)
+	},
+	"gcp.recommendation.additionalImpact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetAdditionalImpact()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.recommendation.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetContent()).ToDataRes(types.Dict)
+	},
+	"gcp.recommendation.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetCategory()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetPriority()).ToDataRes(types.String)
+	},
+	"gcp.recommendation.lastRefreshTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetLastRefreshTime()).ToDataRes(types.Time)
+	},
+	"gcp.recommendation.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpRecommendation).GetState()).ToDataRes(types.Dict)
 	},
 }
 
@@ -207,6 +250,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProject).Services, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.recommendations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Recommendations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"gcp.resourcemanager.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGcpResourcemanagerBinding).__id, ok = v.Value.(string)
 			return
@@ -251,6 +298,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.recommendation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpRecommendation).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.recommendation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.zoneName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).ZoneName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.recommender": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Recommender, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.primaryImpact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).PrimaryImpact, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.additionalImpact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).AdditionalImpact, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Content, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).Priority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.lastRefreshTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).LastRefreshTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.recommendation.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpRecommendation).State, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -290,6 +389,7 @@ type mqlGcpProject struct {
 	Labels plugin.TValue[map[string]interface{}]
 	IamPolicy plugin.TValue[[]interface{}]
 	Services plugin.TValue[[]interface{}]
+	Recommendations plugin.TValue[[]interface{}]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -390,6 +490,22 @@ func (c *mqlGcpProject) GetServices() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.services()
+	})
+}
+
+func (c *mqlGcpProject) GetRecommendations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Recommendations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "recommendations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.recommendations()
 	})
 }
 
@@ -521,4 +637,108 @@ func (c *mqlGcpService) GetEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
 		return c.enabled()
 	})
+}
+
+// mqlGcpRecommendation for the gcp.recommendation resource
+type mqlGcpRecommendation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpRecommendationInternal it will be used here
+	Id plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	ZoneName plugin.TValue[string]
+	Name plugin.TValue[string]
+	Recommender plugin.TValue[string]
+	PrimaryImpact plugin.TValue[interface{}]
+	AdditionalImpact plugin.TValue[[]interface{}]
+	Content plugin.TValue[interface{}]
+	Category plugin.TValue[string]
+	Priority plugin.TValue[string]
+	LastRefreshTime plugin.TValue[*time.Time]
+	State plugin.TValue[interface{}]
+}
+
+// createGcpRecommendation creates a new instance of this resource
+func createGcpRecommendation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpRecommendation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.recommendation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpRecommendation) MqlName() string {
+	return "gcp.recommendation"
+}
+
+func (c *mqlGcpRecommendation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpRecommendation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpRecommendation) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpRecommendation) GetZoneName() *plugin.TValue[string] {
+	return &c.ZoneName
+}
+
+func (c *mqlGcpRecommendation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpRecommendation) GetRecommender() *plugin.TValue[string] {
+	return &c.Recommender
+}
+
+func (c *mqlGcpRecommendation) GetPrimaryImpact() *plugin.TValue[interface{}] {
+	return &c.PrimaryImpact
+}
+
+func (c *mqlGcpRecommendation) GetAdditionalImpact() *plugin.TValue[[]interface{}] {
+	return &c.AdditionalImpact
+}
+
+func (c *mqlGcpRecommendation) GetContent() *plugin.TValue[interface{}] {
+	return &c.Content
+}
+
+func (c *mqlGcpRecommendation) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlGcpRecommendation) GetPriority() *plugin.TValue[string] {
+	return &c.Priority
+}
+
+func (c *mqlGcpRecommendation) GetLastRefreshTime() *plugin.TValue[*time.Time] {
+	return &c.LastRefreshTime
+}
+
+func (c *mqlGcpRecommendation) GetState() *plugin.TValue[interface{}] {
+	return &c.State
 }

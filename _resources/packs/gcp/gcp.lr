@@ -76,10 +76,7 @@ private gcp.projects {
 
 // Google Cloud Platform Project
 gcp.project @defaults("name") {
-  // List of available and enabled services for project
-  services() []gcp.service
-  // List of recommendations
-  recommendations() []gcp.recommendation
+  
   // GCP GKE resources
   gke() gcp.project.gkeService
   // GCP Compute Resources for the Project
@@ -116,50 +113,6 @@ gcp.project @defaults("name") {
   storage() gcp.project.storageService
   // Monitoring resources
   monitoring() gcp.project.monitoringService
-}
-
-// GCP Service
-gcp.service @defaults("name") {
-  // Project ID
-  projectId string
-  // Service name
-  name string
-  // Service parent name
-  parentName string
-  // Service title
-  title string
-  // Service state
-  state string
-  // Checks if the service is enabled
-  enabled() bool
-}
-
-// GCP recommendation along with a suggested action
-gcp.recommendation {
-  // ID of recommendation
-  id string
-  // Project ID
-  projectId string
-  // Zone Name
-  zoneName string
-  // Description of the recommendation
-  name string
-  // Recommender
-  recommender string
-  // The primary impact that this recommendation can have
-  primaryImpact dict
-  // Optional set of additional impact that this recommendation may have
-  additionalImpact []dict
-  // Describing recommended changes to resources
-  content dict
-  // Category of Primary Impact
-  category string
-  // Recommendation's priority
-  priority string
-  // Last time this recommendation was refreshed
-  lastRefreshTime time
-  // State and Metadata about Recommendation
-  state dict
 }
 
 // GCP Compute Engine
