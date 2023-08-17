@@ -435,9 +435,7 @@ func TimeData(t time.Time) *RawData {
 // TimeData creates a rawdata struct from a go time pointer
 func TimeDataPtr(t *time.Time) *RawData {
 	if t == nil {
-		return &RawData{
-			Type: types.Time,
-		}
+		return NilData
 	}
 	return &RawData{
 		Type:  types.Time,
