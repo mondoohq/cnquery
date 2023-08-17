@@ -46,6 +46,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	_, err := resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
 		"ids":      llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),
 		"platform": llx.StringData(asset.Platform.Name),
+		"name":     llx.StringData(asset.Name),
 		"kind":     llx.StringData(asset.Platform.Kind),
 		"runtime":  llx.StringData(asset.Platform.Runtime),
 		"version":  llx.StringData(asset.Platform.Version),
