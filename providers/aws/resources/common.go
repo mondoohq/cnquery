@@ -20,6 +20,18 @@ import (
 	"k8s.io/client-go/util/cert"
 )
 
+const (
+	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
+	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
+	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
+	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
+	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
+	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
+	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
+	imageArnPattern         = "arn:aws:ec2:%s:%s:image/%s"
+	keypairArnPattern       = "arn:aws:ec2:%s:%s:keypair/%s"
+)
+
 func (a *mqlAws) regions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []interface{}{}
@@ -87,6 +99,13 @@ func toInt64From32(i *int32) int64 {
 		return int64(0)
 	}
 	return int64(*i)
+}
+
+func toFloat64(i *float64) float64 {
+	if i == nil {
+		return float64(0)
+	}
+	return *i
 }
 
 func GetRegionFromArn(arnVal string) (string, error) {

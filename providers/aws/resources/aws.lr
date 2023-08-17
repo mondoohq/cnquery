@@ -579,3 +579,251 @@ private aws.secretsmanager.secret @defaults("arn") {
   // Tags for the secret
   tags map[string]string
 }
+
+
+// Amazon Elastic Container Service (ECS)
+aws.ecs {
+  // List of AWS ECS Clusters
+  clusters() []aws.ecs.cluster
+  // List of AWS ECS Containers
+  containers() []aws.ecs.container
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
+}
+
+// Amazon ECS Cluster
+private aws.ecs.cluster {
+  // ARN of the ECS cluster
+  arn string
+  // Name of the ECS cluster
+  name string
+  // Tags of the ECS cluster
+  tags map[string]string
+  // Count of running tasks in the cluster
+  runningTasksCount int
+  // Count of pending tasks in the cluster
+  pendingTasksCount int
+  // Count of container instances registered to the cluster
+  registeredContainerInstancesCount int
+  // Configuration for the cluster
+  configuration dict
+  // Status of the cluster
+  status string
+  // List of AWS ECS Task Definitions
+  tasks() []aws.ecs.task
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
+}
+
+// AWS ECS Container Instance
+private aws.ecs.instance {
+  // True if agent is connected to ECS
+  agentConnected bool
+  // Id for the container instance
+  id string
+  // ARN for the container instance
+  arn string
+  // Capacity Provider associated with the container instance
+  capacityProvider string
+  // If container instance is EC2 instance, this is the EC2 instance resource
+  // ec2Instance() aws.ec2.instance
+  // Region for the container instance
+  region string
+}
+
+// Amazon ECS Task
+private aws.ecs.task {
+  // ARN of the ECS Task
+  arn string
+  // Cluster associated with the ECS Task
+  clusterName string
+  // Connectivity status of the ECS Task
+  connectivity dict
+  // Last reported status for the ECS Task 
+  lastStatus string
+  // Platform Family assigned to the ECS Task
+  platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
+  // User-defined tags associated with the ECS Task
+  tags map[string]string
+  // List of AWS ECS Containers
+  containers []aws.ecs.container
+}
+
+// Amazon ECS Container 
+private aws.ecs.container {
+  // Name of the ECS Container + IP for unique identification
+  name string
+  // ARN of the ECS Container
+  arn string
+  // PublicIP for the ECS Container
+  publicIp string
+  // Image used for the ECS Container
+  image string
+  // Cluster associated with the ECS Container
+  clusterName string
+  // ARN for the task definition associated with the ECS Container
+  taskDefinitionArn string
+  // logDriver setting for the ECS Container
+  logDriver string
+  // Platform Family associated with the ECS Container
+  platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
+  // Status of the ECS Container
+  status string
+  // Region where the ECS Container is located
+  region string
+  // Command used to start the container
+  command []string
+  // ARN for the task used to create the container
+  taskArn string
+  // Runtime id for the container
+  runtimeId string
+  // Name of the ECS Container
+  containerName string
+}
+
+// Amazon EMR
+aws.emr {
+  // List of EMR clusters
+  clusters() []aws.emr.cluster
+}
+
+// Amazon EMR Cluster
+private aws.emr.cluster @defaults("arn") {
+  // ARN for the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // An approximation of the cost of the cluster, represented in m1.small/hours
+  normalizedInstanceHours int
+  // ARN of outpost where cluster is launched
+  outpostArn string
+  // Details about the current status of the cluster
+  status dict
+  // List of master instances for the cluster
+  masterInstances() []dict
+  // EMR cluster ID
+  id string
+  // Tags for the cluster
+  tags map[string]string
+}
+
+// Amazon CloudWatch
+aws.cloudwatch {
+  // List of CloudWatch log groups
+  logGroups() []aws.cloudwatch.loggroup
+  // List of CloudWatch alarms
+  alarms() []aws.cloudwatch.metricsalarm
+  // List of CloudWatch metrics
+  metrics() []aws.cloudwatch.metric
+}
+
+// Amazon CloudWatch Metrics Alarm
+private aws.cloudwatch.metricsalarm @defaults("arn") {
+  // ARN for the metric alarm
+  arn string
+  // Metric name associated with the alarm
+  metricName string
+  // Metric namespace associated with the alarm
+  metricNamespace string
+  // Region where the alarm exists
+  region string
+  // List of alarm actions (SNS topic ARNs) associated with the alarm
+  actions []aws.sns.topic
+  // State of the alarm
+  state string
+  // Description of the reason for the state
+  stateReason string
+  // List of snsTopic ARNs to be triggered for insufficientDataActions
+  insufficientDataActions []aws.sns.topic
+  // List of snsTopic ARNs to be triggered for okActions
+  okActions []aws.sns.topic
+  // Name of the alarm
+  name string
+}
+
+// Amazon CloudWatch Metric
+private aws.cloudwatch.metric @defaults("name region") {
+  // Name of the metric
+  name string
+  // Namespace for the metric
+  namespace string
+  // Region where the metric exists
+  region string
+  // List of CloudWatch metric alarms for the metric
+  alarms() []aws.cloudwatch.metricsalarm
+  // Dimensions that apply to the metric
+  dimensions() []aws.cloudwatch.metricdimension
+  // Statistics for the metric
+  statistics() aws.cloudwatch.metricstatistics 
+}
+
+// Amazon CloudWatch Metric Dimension
+aws.cloudwatch.metricdimension @defaults("name value") {
+  // Name of the dimension
+  name string
+  // Value of the dimension
+  value string
+}
+
+// Amazon CloudWatch Metric Statistics
+aws.cloudwatch.metricstatistics @defaults("name region") {
+  init(namespace string, region string, name string)
+  // Namespace for the metric
+  namespace string
+  // Name for the metric
+  name string
+  // Region for the metrics
+  region string
+  // Label for the statistics
+  label string
+  // Datapoints for the statistic over the last 24 hours in hour intervals
+  datapoints []aws.cloudwatch.metric.datapoint
+}
+
+// Amazon CloudWatch Metric Datapoint
+private aws.cloudwatch.metric.datapoint @defaults("id") {
+  // Unique identifier for the datapoint
+  id string
+  // Timestamp of the metric datapoint
+  timestamp time
+  // Maximum value for the statistic
+  maximum float
+  // Minimum value for the statistic
+  minimum float
+  // Average value for the statistic
+  average float
+  // Sum value for the statistic
+  sum float
+  // Unit of the statistic
+  unit string
+}
+
+// Amazon CloudWatch Log Group
+private aws.cloudwatch.loggroup @defaults("arn") {
+  // ARN of the log group
+  arn string
+  // Name of the log group
+  name string
+  // List of metric filters associated with the log group
+  metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
+  // KMS key used for log encryption
+  kmsKey() aws.kms.key
+  // Region where the loggroup is stored
+  region string
+}
+
+// Amazon CloudWatch Log Group Metrics Filter
+private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
+  // Unique ID for the metric
+  id string
+  // Filter name associated with metric
+  filterName string
+  // Filter pattern associated with the metric
+  filterPattern string
+  // List of CloudWatch metrics
+  metrics []aws.cloudwatch.metric
+}

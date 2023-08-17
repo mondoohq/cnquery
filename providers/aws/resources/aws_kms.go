@@ -125,7 +125,6 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if r == nil {
 		return nil, nil, errors.New("arn required to fetch aws kms key")
 	}
-	log.Info().Msgf("KMS %v", r)
 	arn, ok := r.Value.(string)
 	if !ok {
 		return args, nil, nil
