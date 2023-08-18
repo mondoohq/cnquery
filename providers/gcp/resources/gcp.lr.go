@@ -142,6 +142,30 @@ func init() {
 			// to override args, implement: initGcpProjectComputeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectComputeService,
 		},
+		"gcp.project.computeService.zone": {
+			// to override args, implement: initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceZone,
+		},
+		"gcp.project.computeService.instance": {
+			// to override args, implement: initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstance,
+		},
+		"gcp.project.computeService.serviceaccount": {
+			// to override args, implement: initGcpProjectComputeServiceServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceServiceaccount,
+		},
+		"gcp.project.computeService.attachedDisk": {
+			// to override args, implement: initGcpProjectComputeServiceAttachedDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceAttachedDisk,
+		},
+		"gcp.project.computeService.machineType": {
+			// to override args, implement: initGcpProjectComputeServiceMachineType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceMachineType,
+		},
+		"gcp.project.computeService.disk": {
+			// to override args, implement: initGcpProjectComputeServiceDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceDisk,
+		},
 	}
 }
 
@@ -248,6 +272,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetIam()).ToDataRes(types.Resource("gcp.project.iamService"))
+	},
+	"gcp.project.compute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetCompute()).ToDataRes(types.Resource("gcp.project.computeService"))
 	},
 	"gcp.resourcemanager.binding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpResourcemanagerBinding).GetId()).ToDataRes(types.String)
@@ -960,6 +987,279 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.regions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetRegions()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.region")))
 	},
+	"gcp.project.computeService.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetZones()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.zone")))
+	},
+	"gcp.project.computeService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.instance")))
+	},
+	"gcp.project.computeService.zone.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.zone.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.zone.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.zone.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceZone).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.confidentialInstanceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetConfidentialInstanceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.canIpForward": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetCanIpForward()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.cpuPlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetCpuPlatform()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.enableDisplay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetEnableDisplay()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.guestAccelerators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetGuestAccelerators()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instance.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetFingerprint()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetHostname()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.keyRevocationActionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetKeyRevocationActionType()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.computeService.instance.lastStartTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetLastStartTimestamp()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.lastStopTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetLastStopTimestamp()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.lastSuspendedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetLastSuspendedTimestamp()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.computeService.instance.minCpuPlatform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetMinCpuPlatform()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetPrivateIpv6GoogleAccess()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.reservationAffinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetReservationAffinity()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.resourcePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetResourcePolicies()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.physicalHostResourceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetPhysicalHostResourceStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.scheduling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetScheduling()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.enableIntegrityMonitoring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetEnableIntegrityMonitoring()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetEnableSecureBoot()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.enableVtpm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetEnableVtpm()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.startRestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetStartRestricted()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.sourceMachineImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetSourceMachineImage()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.instance.totalEgressBandwidthTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetTotalEgressBandwidthTier()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.serviceAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetServiceAccounts()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.serviceaccount")))
+	},
+	"gcp.project.computeService.instance.disks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetDisks()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.attachedDisk")))
+	},
+	"gcp.project.computeService.instance.machineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetMachineType()).ToDataRes(types.Resource("gcp.project.computeService.machineType"))
+	},
+	"gcp.project.computeService.instance.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
+	"gcp.project.computeService.serviceaccount.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceServiceaccount).GetEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.serviceaccount.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceServiceaccount).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.attachedDisk.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetArchitecture()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.autoDelete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetAutoDelete()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.attachedDisk.boot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetBoot()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.attachedDisk.deviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetDeviceName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.diskSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetDiskSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.attachedDisk.forceAttach": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetForceAttach()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.attachedDisk.guestOsFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetGuestOsFeatures()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.attachedDisk.index": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetIndex()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.attachedDisk.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetInterface()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.licenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.attachedDisk.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.attachedDisk.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetSource()).ToDataRes(types.Resource("gcp.project.computeService.disk"))
+	},
+	"gcp.project.computeService.attachedDisk.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAttachedDisk).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.machineType.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.machineType.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.machineType.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.machineType.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.machineType.guestCpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetGuestCpus()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.machineType.isSharedCpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetIsSharedCpu()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.machineType.maximumPersistentDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetMaximumPersistentDisks()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.machineType.maximumPersistentDisksSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetMaximumPersistentDisksSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.machineType.memoryMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetMemoryMb()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.machineType.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.machineType.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceMachineType).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
+	"gcp.project.computeService.disk.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetArchitecture()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.guestOsFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetGuestOsFeatures()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.disk.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.computeService.disk.lastAttachTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLastAttachTimestamp()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.disk.lastDetachTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLastDetachTimestamp()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.disk.licenses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLicenses()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.disk.locationHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLocationHint()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.physicalBlockSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetPhysicalBlockSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.disk.provisionedIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetProvisionedIops()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.disk.sizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.computeService.disk.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
+	"gcp.project.computeService.disk.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.disk.diskEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetDiskEncryptionKey()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1026,6 +1326,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.iam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Iam, ok = plugin.RawToTValue[*mqlGcpProjectIamService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.compute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Compute, ok = plugin.RawToTValue[*mqlGcpProjectComputeService](v.Value, v.Error)
 		return
 	},
 	"gcp.resourcemanager.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2100,6 +2404,394 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGcpProjectComputeService).Regions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).Zones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceZone).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.zone.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.zone.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceZone).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.confidentialInstanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ConfidentialInstanceConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.canIpForward": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).CanIpForward, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.cpuPlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).CpuPlatform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.enableDisplay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).EnableDisplay, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.guestAccelerators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).GuestAccelerators, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.keyRevocationActionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).KeyRevocationActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.lastStartTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).LastStartTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.lastStopTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).LastStopTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.lastSuspendedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).LastSuspendedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Metadata, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.minCpuPlatform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).MinCpuPlatform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).NetworkInterfaces, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).PrivateIpv6GoogleAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.reservationAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ReservationAffinity, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.resourcePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ResourcePolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.physicalHostResourceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).PhysicalHostResourceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.scheduling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Scheduling, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.enableIntegrityMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).EnableIntegrityMonitoring, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.enableVtpm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).EnableVtpm, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.startRestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).StartRestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.sourceMachineImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).SourceMachineImage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.totalEgressBandwidthTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).TotalEgressBandwidthTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.serviceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).ServiceAccounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Disks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.machineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).MachineType, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceMachineType](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.serviceaccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceServiceaccount).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.serviceaccount.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceServiceaccount).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.serviceaccount.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceServiceaccount).Scopes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceAttachedDisk).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.attachedDisk.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.autoDelete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).AutoDelete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.boot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Boot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.deviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).DeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.diskSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).DiskSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.forceAttach": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).ForceAttach, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.guestOsFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).GuestOsFeatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.index": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Index, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Licenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Source, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceDisk](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.attachedDisk.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAttachedDisk).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceMachineType).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.machineType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.guestCpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).GuestCpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.isSharedCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).IsSharedCpu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.maximumPersistentDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).MaximumPersistentDisks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.maximumPersistentDisksSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).MaximumPersistentDisksSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.memoryMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).MemoryMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.machineType.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceMachineType).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGcpProjectComputeServiceDisk).__id, ok = v.Value.(string)
+			return
+		},
+	"gcp.project.computeService.disk.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.guestOsFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).GuestOsFeatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.lastAttachTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).LastAttachTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.lastDetachTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).LastDetachTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.licenses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Licenses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.locationHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).LocationHint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.physicalBlockSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).PhysicalBlockSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.provisionedIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).ProvisionedIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.sizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.diskEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).DiskEncryptionKey, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -2142,6 +2834,7 @@ type mqlGcpProject struct {
 	Recommendations plugin.TValue[[]interface{}]
 	Gke plugin.TValue[*mqlGcpProjectGkeService]
 	Iam plugin.TValue[*mqlGcpProjectIamService]
+	Compute plugin.TValue[*mqlGcpProjectComputeService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -2290,6 +2983,22 @@ func (c *mqlGcpProject) GetIam() *plugin.TValue[*mqlGcpProjectIamService] {
 		}
 
 		return c.iam()
+	})
+}
+
+func (c *mqlGcpProject) GetCompute() *plugin.TValue[*mqlGcpProjectComputeService] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeService](&c.Compute, func() (*mqlGcpProjectComputeService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "compute")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeService), nil
+			}
+		}
+
+		return c.compute()
 	})
 }
 
@@ -4888,6 +5597,8 @@ type mqlGcpProjectComputeService struct {
 	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
 	ProjectId plugin.TValue[string]
 	Regions plugin.TValue[[]interface{}]
+	Zones plugin.TValue[[]interface{}]
+	Instances plugin.TValue[[]interface{}]
 }
 
 // createGcpProjectComputeService creates a new instance of this resource
@@ -4945,4 +5656,769 @@ func (c *mqlGcpProjectComputeService) GetRegions() *plugin.TValue[[]interface{}]
 
 		return c.regions()
 	})
+}
+
+func (c *mqlGcpProjectComputeService) GetZones() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Zones, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetInstances() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Instances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlGcpProjectComputeServiceZone for the gcp.project.computeService.zone resource
+type mqlGcpProjectComputeServiceZone struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectComputeServiceZoneInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Status plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceZone creates a new instance of this resource
+func createGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceZone) MqlName() string {
+	return "gcp.project.computeService.zone"
+}
+
+func (c *mqlGcpProjectComputeServiceZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceZone) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceZone) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceZone) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectComputeServiceZone) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+// mqlGcpProjectComputeServiceInstance for the gcp.project.computeService.instance resource
+type mqlGcpProjectComputeServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlGcpProjectComputeServiceInstanceInternal
+	Id plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	ConfidentialInstanceConfig plugin.TValue[interface{}]
+	CanIpForward plugin.TValue[bool]
+	CpuPlatform plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	DeletionProtection plugin.TValue[bool]
+	EnableDisplay plugin.TValue[bool]
+	GuestAccelerators plugin.TValue[[]interface{}]
+	Fingerprint plugin.TValue[string]
+	Hostname plugin.TValue[string]
+	KeyRevocationActionType plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	LastStartTimestamp plugin.TValue[*time.Time]
+	LastStopTimestamp plugin.TValue[*time.Time]
+	LastSuspendedTimestamp plugin.TValue[*time.Time]
+	Metadata plugin.TValue[map[string]interface{}]
+	MinCpuPlatform plugin.TValue[string]
+	NetworkInterfaces plugin.TValue[[]interface{}]
+	PrivateIpv6GoogleAccess plugin.TValue[string]
+	ReservationAffinity plugin.TValue[interface{}]
+	ResourcePolicies plugin.TValue[[]interface{}]
+	PhysicalHostResourceStatus plugin.TValue[string]
+	Scheduling plugin.TValue[interface{}]
+	EnableIntegrityMonitoring plugin.TValue[bool]
+	EnableSecureBoot plugin.TValue[bool]
+	EnableVtpm plugin.TValue[bool]
+	StartRestricted plugin.TValue[bool]
+	Status plugin.TValue[string]
+	StatusMessage plugin.TValue[string]
+	SourceMachineImage plugin.TValue[string]
+	Tags plugin.TValue[[]interface{}]
+	TotalEgressBandwidthTier plugin.TValue[string]
+	ServiceAccounts plugin.TValue[[]interface{}]
+	Disks plugin.TValue[[]interface{}]
+	MachineType plugin.TValue[*mqlGcpProjectComputeServiceMachineType]
+	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+}
+
+// createGcpProjectComputeServiceInstance creates a new instance of this resource
+func createGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) MqlName() string {
+	return "gcp.project.computeService.instance"
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetConfidentialInstanceConfig() *plugin.TValue[interface{}] {
+	return &c.ConfidentialInstanceConfig
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetCanIpForward() *plugin.TValue[bool] {
+	return &c.CanIpForward
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetCpuPlatform() *plugin.TValue[string] {
+	return &c.CpuPlatform
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetEnableDisplay() *plugin.TValue[bool] {
+	return &c.EnableDisplay
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetGuestAccelerators() *plugin.TValue[[]interface{}] {
+	return &c.GuestAccelerators
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetKeyRevocationActionType() *plugin.TValue[string] {
+	return &c.KeyRevocationActionType
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetLastStartTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastStartTimestamp
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetLastStopTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastStopTimestamp
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetLastSuspendedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastSuspendedTimestamp
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetMetadata() *plugin.TValue[map[string]interface{}] {
+	return &c.Metadata
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetMinCpuPlatform() *plugin.TValue[string] {
+	return &c.MinCpuPlatform
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetNetworkInterfaces() *plugin.TValue[[]interface{}] {
+	return &c.NetworkInterfaces
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetPrivateIpv6GoogleAccess() *plugin.TValue[string] {
+	return &c.PrivateIpv6GoogleAccess
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetReservationAffinity() *plugin.TValue[interface{}] {
+	return &c.ReservationAffinity
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetResourcePolicies() *plugin.TValue[[]interface{}] {
+	return &c.ResourcePolicies
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetPhysicalHostResourceStatus() *plugin.TValue[string] {
+	return &c.PhysicalHostResourceStatus
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetScheduling() *plugin.TValue[interface{}] {
+	return &c.Scheduling
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetEnableIntegrityMonitoring() *plugin.TValue[bool] {
+	return &c.EnableIntegrityMonitoring
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetEnableSecureBoot() *plugin.TValue[bool] {
+	return &c.EnableSecureBoot
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetEnableVtpm() *plugin.TValue[bool] {
+	return &c.EnableVtpm
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetStartRestricted() *plugin.TValue[bool] {
+	return &c.StartRestricted
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetSourceMachineImage() *plugin.TValue[string] {
+	return &c.SourceMachineImage
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetTotalEgressBandwidthTier() *plugin.TValue[string] {
+	return &c.TotalEgressBandwidthTier
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetServiceAccounts() *plugin.TValue[[]interface{}] {
+	return &c.ServiceAccounts
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetDisks() *plugin.TValue[[]interface{}] {
+	return &c.Disks
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetMachineType() *plugin.TValue[*mqlGcpProjectComputeServiceMachineType] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceMachineType](&c.MachineType, func() (*mqlGcpProjectComputeServiceMachineType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instance", c.__id, "machineType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceMachineType), nil
+			}
+		}
+
+		return c.machineType()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return &c.Zone
+}
+
+// mqlGcpProjectComputeServiceServiceaccount for the gcp.project.computeService.serviceaccount resource
+type mqlGcpProjectComputeServiceServiceaccount struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectComputeServiceServiceaccountInternal it will be used here
+	Email plugin.TValue[string]
+	Scopes plugin.TValue[[]interface{}]
+}
+
+// createGcpProjectComputeServiceServiceaccount creates a new instance of this resource
+func createGcpProjectComputeServiceServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceServiceaccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.serviceaccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceServiceaccount) MqlName() string {
+	return "gcp.project.computeService.serviceaccount"
+}
+
+func (c *mqlGcpProjectComputeServiceServiceaccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceServiceaccount) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlGcpProjectComputeServiceServiceaccount) GetScopes() *plugin.TValue[[]interface{}] {
+	return &c.Scopes
+}
+
+// mqlGcpProjectComputeServiceAttachedDisk for the gcp.project.computeService.attachedDisk resource
+type mqlGcpProjectComputeServiceAttachedDisk struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlGcpProjectComputeServiceAttachedDiskInternal
+	Id plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	Architecture plugin.TValue[string]
+	AutoDelete plugin.TValue[bool]
+	Boot plugin.TValue[bool]
+	DeviceName plugin.TValue[string]
+	DiskSizeGb plugin.TValue[int64]
+	ForceAttach plugin.TValue[bool]
+	GuestOsFeatures plugin.TValue[[]interface{}]
+	Index plugin.TValue[int64]
+	Interface plugin.TValue[string]
+	Licenses plugin.TValue[[]interface{}]
+	Mode plugin.TValue[string]
+	Source plugin.TValue[*mqlGcpProjectComputeServiceDisk]
+	Type plugin.TValue[string]
+}
+
+// createGcpProjectComputeServiceAttachedDisk creates a new instance of this resource
+func createGcpProjectComputeServiceAttachedDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceAttachedDisk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.attachedDisk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) MqlName() string {
+	return "gcp.project.computeService.attachedDisk"
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetAutoDelete() *plugin.TValue[bool] {
+	return &c.AutoDelete
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetBoot() *plugin.TValue[bool] {
+	return &c.Boot
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetDeviceName() *plugin.TValue[string] {
+	return &c.DeviceName
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetDiskSizeGb() *plugin.TValue[int64] {
+	return &c.DiskSizeGb
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetForceAttach() *plugin.TValue[bool] {
+	return &c.ForceAttach
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetGuestOsFeatures() *plugin.TValue[[]interface{}] {
+	return &c.GuestOsFeatures
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetIndex() *plugin.TValue[int64] {
+	return &c.Index
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetLicenses() *plugin.TValue[[]interface{}] {
+	return &c.Licenses
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetSource() *plugin.TValue[*mqlGcpProjectComputeServiceDisk] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceDisk](&c.Source, func() (*mqlGcpProjectComputeServiceDisk, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.attachedDisk", c.__id, "source")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceDisk), nil
+			}
+		}
+
+		return c.source()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceAttachedDisk) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlGcpProjectComputeServiceMachineType for the gcp.project.computeService.machineType resource
+type mqlGcpProjectComputeServiceMachineType struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectComputeServiceMachineTypeInternal it will be used here
+	Id plugin.TValue[string]
+	ProjectId plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	GuestCpus plugin.TValue[int64]
+	IsSharedCpu plugin.TValue[bool]
+	MaximumPersistentDisks plugin.TValue[int64]
+	MaximumPersistentDisksSizeGb plugin.TValue[int64]
+	MemoryMb plugin.TValue[int64]
+	Created plugin.TValue[*time.Time]
+	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+}
+
+// createGcpProjectComputeServiceMachineType creates a new instance of this resource
+func createGcpProjectComputeServiceMachineType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceMachineType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.machineType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) MqlName() string {
+	return "gcp.project.computeService.machineType"
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetGuestCpus() *plugin.TValue[int64] {
+	return &c.GuestCpus
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetIsSharedCpu() *plugin.TValue[bool] {
+	return &c.IsSharedCpu
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetMaximumPersistentDisks() *plugin.TValue[int64] {
+	return &c.MaximumPersistentDisks
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetMaximumPersistentDisksSizeGb() *plugin.TValue[int64] {
+	return &c.MaximumPersistentDisksSizeGb
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetMemoryMb() *plugin.TValue[int64] {
+	return &c.MemoryMb
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceMachineType) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return &c.Zone
+}
+
+// mqlGcpProjectComputeServiceDisk for the gcp.project.computeService.disk resource
+type mqlGcpProjectComputeServiceDisk struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlGcpProjectComputeServiceDiskInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Architecture plugin.TValue[string]
+	Description plugin.TValue[string]
+	GuestOsFeatures plugin.TValue[[]interface{}]
+	Labels plugin.TValue[map[string]interface{}]
+	LastAttachTimestamp plugin.TValue[*time.Time]
+	LastDetachTimestamp plugin.TValue[*time.Time]
+	Licenses plugin.TValue[[]interface{}]
+	LocationHint plugin.TValue[string]
+	PhysicalBlockSizeBytes plugin.TValue[int64]
+	ProvisionedIops plugin.TValue[int64]
+	SizeGb plugin.TValue[int64]
+	Status plugin.TValue[string]
+	Zone plugin.TValue[*mqlGcpProjectComputeServiceZone]
+	Created plugin.TValue[*time.Time]
+	DiskEncryptionKey plugin.TValue[interface{}]
+}
+
+// createGcpProjectComputeServiceDisk creates a new instance of this resource
+func createGcpProjectComputeServiceDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceDisk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.disk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) MqlName() string {
+	return "gcp.project.computeService.disk"
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetGuestOsFeatures() *plugin.TValue[[]interface{}] {
+	return &c.GuestOsFeatures
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLastAttachTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastAttachTimestamp
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLastDetachTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastDetachTimestamp
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLicenses() *plugin.TValue[[]interface{}] {
+	return &c.Licenses
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLocationHint() *plugin.TValue[string] {
+	return &c.LocationHint
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetPhysicalBlockSizeBytes() *plugin.TValue[int64] {
+	return &c.PhysicalBlockSizeBytes
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetProvisionedIops() *plugin.TValue[int64] {
+	return &c.ProvisionedIops
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSizeGb() *plugin.TValue[int64] {
+	return &c.SizeGb
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return &c.Zone
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetDiskEncryptionKey() *plugin.TValue[interface{}] {
+	return &c.DiskEncryptionKey
 }

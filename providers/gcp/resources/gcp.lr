@@ -29,6 +29,8 @@ gcp.project @defaults("name") {
   gke() gcp.project.gkeService
   // GCP IAM Resources
   iam() gcp.project.iamService
+  // GCP Compute Resources for the Project
+  compute() gcp.project.computeService
 }
 
 // GCP Resource Manager Binding
@@ -626,4 +628,210 @@ private gcp.project.computeService {
   projectId string
   // Project Regions
   regions() []gcp.project.computeService.region
+  // Project Zones
+  zones() []gcp.project.computeService.zone
+  // Google Compute Engine instances in a project
+  instances() []gcp.project.computeService.instance
+}
+
+// GCP Compute Zone
+private gcp.project.computeService.zone @defaults("name") {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Resource Description
+  description string
+  // Status of the zone
+  status string
+  // Creation timestamp
+  created time
+}
+
+// GCP Compute Instances
+private gcp.project.computeService.instance @defaults("name") {
+  // Unique identifier for the resource
+  id string
+  // Project ID
+  projectId string
+  // User-friendly name for this instance
+  name string
+  // User-friendly name for this instance
+  description string
+  // Confidential instance configuration
+  confidentialInstanceConfig dict
+  // Indicates if this instance is allowed to send and receive packets with non-matching destination or source IPs
+  canIpForward bool
+  // The CPU platform used by this instance
+  cpuPlatform string
+  // Creation timestamp
+  created time
+  // Indicates if instance is protected against deletion
+  deletionProtection bool
+  // Indicates if the instance has Display enabled
+  enableDisplay bool
+  // Attached list of accelerator cards
+  guestAccelerators []dict
+  // Instance Fingerprint
+  fingerprint string
+  // Hostname of the instance
+  hostname string
+  // KeyRevocationActionType of the instance
+  keyRevocationActionType string
+  // User-provided labels
+  labels map[string]string
+  // Last start timestamp
+  lastStartTimestamp time
+  // Last stop timestamp
+  lastStopTimestamp time
+  // Last suspended timestamp
+  lastSuspendedTimestamp time
+  // Instance Metadata
+  metadata map[string]string
+  // Minimum CPU platform for the VM instance
+  minCpuPlatform string
+  // Network configurations for this instance
+  networkInterfaces []dict
+  // private IPv6 google access type for the VM
+  privateIpv6GoogleAccess string
+  // Reservations that this instance can consume from
+  reservationAffinity dict
+  // Resource policies applied to this instance
+  resourcePolicies []string
+  // Resource status for physical host
+  physicalHostResourceStatus string
+  // Scheduling options
+  scheduling dict
+  // Indicates if Shielded Instance integrity monitoring is enabled
+  enableIntegrityMonitoring bool
+  // Indicates if Shielded Instance secure boot is enabled
+  enableSecureBoot bool
+  // Indicates if Shielded Instance vTPM is enabled
+  enableVtpm bool
+  // Indicates if VM has been restricted for start because Compute Engine has detected suspicious activity
+  startRestricted bool
+  // Instance status
+  status string
+  // Human-readable explanation of the status
+  statusMessage string
+  // Source machine image
+  sourceMachineImage string
+  // Tags associated with this instance
+  tags []string
+  // Network performance configuration
+  totalEgressBandwidthTier string
+  // Service accounts authorized for this instance
+  serviceAccounts []gcp.project.computeService.serviceaccount
+  // Disks associated with this instance
+  disks []gcp.project.computeService.attachedDisk
+  // Machine type
+  machineType() gcp.project.computeService.machineType
+  // Instance zone
+  zone gcp.project.computeService.zone
+}
+
+// GCP Compute Service Account
+private gcp.project.computeService.serviceaccount @defaults("email") {
+  // Service account email address
+  email string
+  // Service account scopes
+  scopes []string
+}
+
+// GCP Compute Attached Disk
+private gcp.project.computeService.attachedDisk {
+  // Attached Disk ID
+  id string
+  // Project ID
+  projectId string
+  // Architecture of the attached disk
+  architecture string
+  // Indicates if disk will be auto-deleted
+  autoDelete bool
+  // Indicates that this is a boot disk
+  boot bool
+  // Unique device name
+  deviceName string
+  // Size of the disk in GB
+  diskSizeGb int
+  // Indicates whether to force attach the regional disk
+  forceAttach bool
+  // Features to enable on the guest operating
+  guestOsFeatures []string
+  // Index to this disk
+  index int
+  // Disk interface
+  interface string
+  // Publicly visible licenses
+  licenses []string
+  // Mode in which to the disk is attached
+  mode string
+  // Attached Persistent Disk resource
+  source() gcp.project.computeService.disk
+  // Disk Type
+  type string
+}
+
+// GCP Machine Type
+private gcp.project.computeService.machineType @defaults("name") {
+  // Unique identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the resource
+  name string
+  // Resource Description
+  description string
+  // Number of virtual CPUs that are available to the instance
+  guestCpus int
+  // Indicates if the machine has a shared CPU
+  isSharedCpu bool
+  // Maximum persistent disks allowed
+  maximumPersistentDisks int
+  // Maximum total persistent disks size (GB) allowed.
+  maximumPersistentDisksSizeGb int
+  // Physical memory available to the instance (MB)
+  memoryMb int
+  // Creation timestamp
+  created time
+  // The zone where the machine type resides
+  zone gcp.project.computeService.zone
+}
+
+// GCP Compute Persistent Disk
+private gcp.project.computeService.disk @defaults("name") {
+  // Unique identifier for the resource
+  id string
+  // User-friendly name for this disk
+  name string
+  // The architecture of the disk
+  architecture string
+  // Optional description
+  description string
+  // Features to enable on the guest operating
+  guestOsFeatures []string
+  // Labels to apply to this disk
+  labels map[string]string
+  // Last attach timestamp
+  lastAttachTimestamp time
+  // Last detach timestamp
+  lastDetachTimestamp time
+  // Publicly visible licenses
+  licenses []string
+  // An opaque location hint
+  locationHint string
+  // Physical block size of the persistent disk
+  physicalBlockSizeBytes int
+  // Indicates how many IOPS to provision for the disk
+  provisionedIops int
+  // Size, in GB, of the persistent disk
+  sizeGb int
+  // The status of disk creation
+  status string
+  // Disk Zone
+  zone gcp.project.computeService.zone
+  // Creation timestamp
+  created time
+  // Disk encryption key
+  diskEncryptionKey dict
 }
