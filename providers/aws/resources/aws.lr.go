@@ -246,6 +246,54 @@ func init() {
 			// to override args, implement: initAwsCloudwatchLoggroupMetricsfilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudwatchLoggroupMetricsfilter,
 		},
+		"aws.cloudfront": {
+			// to override args, implement: initAwsCloudfront(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfront,
+		},
+		"aws.cloudfront.distribution": {
+			// to override args, implement: initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontDistribution,
+		},
+		"aws.cloudfront.distribution.origin": {
+			// to override args, implement: initAwsCloudfrontDistributionOrigin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontDistributionOrigin,
+		},
+		"aws.cloudfront.function": {
+			// to override args, implement: initAwsCloudfrontFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudfrontFunction,
+		},
+		"aws.cloudtrail": {
+			// to override args, implement: initAwsCloudtrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudtrail,
+		},
+		"aws.cloudtrail.trail": {
+			Init: initAwsCloudtrailTrail,
+			Create: createAwsCloudtrailTrail,
+		},
+		"aws.s3control": {
+			// to override args, implement: initAwsS3control(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3control,
+		},
+		"aws.s3": {
+			// to override args, implement: initAwsS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3,
+		},
+		"aws.s3.bucket": {
+			Init: initAwsS3Bucket,
+			Create: createAwsS3Bucket,
+		},
+		"aws.s3.bucket.grant": {
+			// to override args, implement: initAwsS3BucketGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketGrant,
+		},
+		"aws.s3.bucket.corsrule": {
+			// to override args, implement: initAwsS3BucketCorsrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketCorsrule,
+		},
+		"aws.s3.bucket.policy": {
+			// to override args, implement: initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketPolicy,
+		},
 	}
 }
 
@@ -1180,6 +1228,219 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudwatch.loggroup.metricsfilter.metrics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetMetrics()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.metric")))
+	},
+	"aws.cloudfront.distributions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetDistributions()).ToDataRes(types.Array(types.Resource("aws.cloudfront.distribution")))
+	},
+	"aws.cloudfront.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfront).GetFunctions()).ToDataRes(types.Array(types.Resource("aws.cloudfront.function")))
+	},
+	"aws.cloudfront.distribution.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetOrigins()).ToDataRes(types.Array(types.Resource("aws.cloudfront.distribution.origin")))
+	},
+	"aws.cloudfront.distribution.defaultCacheBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetDefaultCacheBehavior()).ToDataRes(types.Dict)
+	},
+	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetCacheBehaviors()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origin.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origin.connectionAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetConnectionAttempts()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.distribution.origin.connectionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetConnectionTimeout()).ToDataRes(types.Int)
+	},
+	"aws.cloudfront.distribution.origin.originPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginPath()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origin.account": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetAccount()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.function.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudfront.function.stage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetStage()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetComment()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetRuntime()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrail).GetTrails()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail")))
+	},
+	"aws.cloudtrail.trail.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetArn()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetName()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.cloudtrail.trail.isMultiRegionTrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetIsMultiRegionTrail()).ToDataRes(types.Bool)
+	},
+	"aws.cloudtrail.trail.isOrganizationTrail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetIsOrganizationTrail()).ToDataRes(types.Bool)
+	},
+	"aws.cloudtrail.trail.logFileValidationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLogFileValidationEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudtrail.trail.includeGlobalServiceEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetIncludeGlobalServiceEvents()).ToDataRes(types.Bool)
+	},
+	"aws.cloudtrail.trail.s3bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetS3bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.cloudtrail.trail.snsTopicARN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetSnsTopicARN()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetStatus()).ToDataRes(types.Dict)
+	},
+	"aws.cloudtrail.trail.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetCloudWatchLogsRoleArn()).ToDataRes(types.String)
+	},
+	"aws.cloudtrail.trail.eventSelectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetEventSelectors()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cloudtrail.trail.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.buckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3).GetBuckets()).ToDataRes(types.Array(types.Resource("aws.s3.bucket")))
+	},
+	"aws.s3.bucket.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetArn()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetName()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetPolicy()).ToDataRes(types.Resource("aws.s3.bucket.policy"))
+	},
+	"aws.s3.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetAcl()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.grant")))
+	},
+	"aws.s3.bucket.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetOwner()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetPublic()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.cors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetCors()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.corsrule")))
+	},
+	"aws.s3.bucket.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetLocation()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.versioning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetVersioning()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetLogging()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.staticWebsiteHosting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetStaticWebsiteHosting()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.defaultLock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetDefaultLock()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.replication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetReplication()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetExists()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.grant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketGrant).GetName()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.grant.permission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketGrant).GetPermission()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.grant.grantee": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketGrant).GetGrantee()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.s3.bucket.corsrule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetName()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.corsrule.allowedHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetAllowedHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.s3.bucket.corsrule.allowedMethods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetAllowedMethods()).ToDataRes(types.Array(types.String))
+	},
+	"aws.s3.bucket.corsrule.allowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetAllowedOrigins()).ToDataRes(types.Array(types.String))
+	},
+	"aws.s3.bucket.corsrule.exposeHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetExposeHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.s3.bucket.corsrule.maxAgeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketCorsrule).GetMaxAgeSeconds()).ToDataRes(types.Int)
+	},
+	"aws.s3.bucket.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.policy.document": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetDocument()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.policy.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.policy.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetStatements()).ToDataRes(types.Array(types.Dict))
 	},
 }
 
@@ -2579,6 +2840,338 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.cloudwatch.loggroup.metricsfilter.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).Metrics, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudfront).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudfront.distributions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).Distributions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfront).Functions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudfrontDistribution).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudfront.distribution.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Origins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.defaultCacheBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).DefaultCacheBehavior, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudfrontDistributionOrigin).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.connectionAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).ConnectionAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.connectionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).ConnectionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.originPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).OriginPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).Account, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudfrontFunction).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudfront.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.stage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Stage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudtrail).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudtrail.trails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrail).Trails, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsCloudtrailTrail).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.cloudtrail.trail.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.isMultiRegionTrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).IsMultiRegionTrail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.isOrganizationTrail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).IsOrganizationTrail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.logFileValidationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LogFileValidationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.includeGlobalServiceEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).IncludeGlobalServiceEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.s3bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).S3bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.snsTopicARN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).SnsTopicARN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).Status, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).CloudWatchLogsRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.eventSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).EventSelectors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3control.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3control).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountPublicAccessBlock, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3).Buckets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3Bucket).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3.bucket.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Policy, ok = plugin.RawToTValue[*mqlAwsS3BucketPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Acl, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Owner, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.cors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Cors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Versioning, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Logging, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.staticWebsiteHosting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).StaticWebsiteHosting, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.defaultLock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).DefaultLock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.replication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Replication, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Encryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).PublicAccessBlock, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3BucketGrant).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3.bucket.grant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketGrant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.grant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketGrant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.grant.permission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketGrant).Permission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.grant.grantee": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketGrant).Grantee, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3BucketCorsrule).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3.bucket.corsrule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.allowedHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).AllowedHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.allowedMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).AllowedMethods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.allowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).AllowedOrigins, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.exposeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).ExposeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.corsrule.maxAgeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketCorsrule).MaxAgeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsS3BucketPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.s3.bucket.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Document, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -7280,4 +7873,1041 @@ func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetFilterPattern() *plugin.TValu
 
 func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMetrics() *plugin.TValue[[]interface{}] {
 	return &c.Metrics
+}
+
+// mqlAwsCloudfront for the aws.cloudfront resource
+type mqlAwsCloudfront struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudfrontInternal it will be used here
+	Distributions plugin.TValue[[]interface{}]
+	Functions plugin.TValue[[]interface{}]
+}
+
+// createAwsCloudfront creates a new instance of this resource
+func createAwsCloudfront(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfront{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfront) MqlName() string {
+	return "aws.cloudfront"
+}
+
+func (c *mqlAwsCloudfront) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfront) GetDistributions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Distributions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "distributions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.distributions()
+	})
+}
+
+func (c *mqlAwsCloudfront) GetFunctions() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Functions, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudfront", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.functions()
+	})
+}
+
+// mqlAwsCloudfrontDistribution for the aws.cloudfront.distribution resource
+type mqlAwsCloudfrontDistribution struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudfrontDistributionInternal it will be used here
+	Arn plugin.TValue[string]
+	Status plugin.TValue[string]
+	DomainName plugin.TValue[string]
+	Origins plugin.TValue[[]interface{}]
+	DefaultCacheBehavior plugin.TValue[interface{}]
+	CacheBehaviors plugin.TValue[[]interface{}]
+}
+
+// createAwsCloudfrontDistribution creates a new instance of this resource
+func createAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontDistribution{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.distribution", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontDistribution) MqlName() string {
+	return "aws.cloudfront.distribution"
+}
+
+func (c *mqlAwsCloudfrontDistribution) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetOrigins() *plugin.TValue[[]interface{}] {
+	return &c.Origins
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetDefaultCacheBehavior() *plugin.TValue[interface{}] {
+	return &c.DefaultCacheBehavior
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetCacheBehaviors() *plugin.TValue[[]interface{}] {
+	return &c.CacheBehaviors
+}
+
+// mqlAwsCloudfrontDistributionOrigin for the aws.cloudfront.distribution.origin resource
+type mqlAwsCloudfrontDistributionOrigin struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudfrontDistributionOriginInternal it will be used here
+	DomainName plugin.TValue[string]
+	Id plugin.TValue[string]
+	ConnectionAttempts plugin.TValue[int64]
+	ConnectionTimeout plugin.TValue[int64]
+	OriginPath plugin.TValue[string]
+	Account plugin.TValue[string]
+}
+
+// createAwsCloudfrontDistributionOrigin creates a new instance of this resource
+func createAwsCloudfrontDistributionOrigin(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontDistributionOrigin{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.distribution.origin", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) MqlName() string {
+	return "aws.cloudfront.distribution.origin"
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetConnectionAttempts() *plugin.TValue[int64] {
+	return &c.ConnectionAttempts
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetConnectionTimeout() *plugin.TValue[int64] {
+	return &c.ConnectionTimeout
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginPath() *plugin.TValue[string] {
+	return &c.OriginPath
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetAccount() *plugin.TValue[string] {
+	return &c.Account
+}
+
+// mqlAwsCloudfrontFunction for the aws.cloudfront.function resource
+type mqlAwsCloudfrontFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudfrontFunctionInternal it will be used here
+	Name plugin.TValue[string]
+	Status plugin.TValue[string]
+	Arn plugin.TValue[string]
+	LastModifiedTime plugin.TValue[*time.Time]
+	CreatedTime plugin.TValue[*time.Time]
+	Stage plugin.TValue[string]
+	Comment plugin.TValue[string]
+	Runtime plugin.TValue[string]
+}
+
+// createAwsCloudfrontFunction creates a new instance of this resource
+func createAwsCloudfrontFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudfrontFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudfront.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudfrontFunction) MqlName() string {
+	return "aws.cloudfront.function"
+}
+
+func (c *mqlAwsCloudfrontFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudfrontFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudfrontFunction) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCloudfrontFunction) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudfrontFunction) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsCloudfrontFunction) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAwsCloudfrontFunction) GetStage() *plugin.TValue[string] {
+	return &c.Stage
+}
+
+func (c *mqlAwsCloudfrontFunction) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsCloudfrontFunction) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+// mqlAwsCloudtrail for the aws.cloudtrail resource
+type mqlAwsCloudtrail struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudtrailInternal it will be used here
+	Trails plugin.TValue[[]interface{}]
+}
+
+// createAwsCloudtrail creates a new instance of this resource
+func createAwsCloudtrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudtrail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudtrail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudtrail) MqlName() string {
+	return "aws.cloudtrail"
+}
+
+func (c *mqlAwsCloudtrail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudtrail) GetTrails() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Trails, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail", c.__id, "trails")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.trails()
+	})
+}
+
+// mqlAwsCloudtrailTrail for the aws.cloudtrail.trail resource
+type mqlAwsCloudtrailTrail struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsCloudtrailTrailInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+	IsMultiRegionTrail plugin.TValue[bool]
+	IsOrganizationTrail plugin.TValue[bool]
+	LogFileValidationEnabled plugin.TValue[bool]
+	IncludeGlobalServiceEvents plugin.TValue[bool]
+	S3bucket plugin.TValue[*mqlAwsS3Bucket]
+	SnsTopicARN plugin.TValue[string]
+	Status plugin.TValue[interface{}]
+	LogGroup plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	CloudWatchLogsRoleArn plugin.TValue[string]
+	EventSelectors plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
+}
+
+// createAwsCloudtrailTrail creates a new instance of this resource
+func createAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudtrailTrail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudtrail.trail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudtrailTrail) MqlName() string {
+	return "aws.cloudtrail.trail"
+}
+
+func (c *mqlAwsCloudtrailTrail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudtrailTrail) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCloudtrailTrail) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCloudtrailTrail) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.trail", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetIsMultiRegionTrail() *plugin.TValue[bool] {
+	return &c.IsMultiRegionTrail
+}
+
+func (c *mqlAwsCloudtrailTrail) GetIsOrganizationTrail() *plugin.TValue[bool] {
+	return &c.IsOrganizationTrail
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLogFileValidationEnabled() *plugin.TValue[bool] {
+	return &c.LogFileValidationEnabled
+}
+
+func (c *mqlAwsCloudtrailTrail) GetIncludeGlobalServiceEvents() *plugin.TValue[bool] {
+	return &c.IncludeGlobalServiceEvents
+}
+
+func (c *mqlAwsCloudtrailTrail) GetS3bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.trail", c.__id, "s3bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3bucket()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetSnsTopicARN() *plugin.TValue[string] {
+	return &c.SnsTopicARN
+}
+
+func (c *mqlAwsCloudtrailTrail) GetStatus() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Status, func() (interface{}, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudtrail.trail", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetCloudWatchLogsRoleArn() *plugin.TValue[string] {
+	return &c.CloudWatchLogsRoleArn
+}
+
+func (c *mqlAwsCloudtrailTrail) GetEventSelectors() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.EventSelectors, func() ([]interface{}, error) {
+		return c.eventSelectors()
+	})
+}
+
+func (c *mqlAwsCloudtrailTrail) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsS3control for the aws.s3control resource
+type mqlAwsS3control struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3controlInternal it will be used here
+	AccountPublicAccessBlock plugin.TValue[interface{}]
+}
+
+// createAwsS3control creates a new instance of this resource
+func createAwsS3control(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3control{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3control", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3control) MqlName() string {
+	return "aws.s3control"
+}
+
+func (c *mqlAwsS3control) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3control) GetAccountPublicAccessBlock() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.AccountPublicAccessBlock, func() (interface{}, error) {
+		return c.accountPublicAccessBlock()
+	})
+}
+
+// mqlAwsS3 for the aws.s3 resource
+type mqlAwsS3 struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3Internal it will be used here
+	Buckets plugin.TValue[[]interface{}]
+}
+
+// createAwsS3 creates a new instance of this resource
+func createAwsS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3) MqlName() string {
+	return "aws.s3"
+}
+
+func (c *mqlAwsS3) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3) GetBuckets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Buckets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3", c.__id, "buckets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.buckets()
+	})
+}
+
+// mqlAwsS3Bucket for the aws.s3.bucket resource
+type mqlAwsS3Bucket struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3BucketInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	Policy plugin.TValue[*mqlAwsS3BucketPolicy]
+	Tags plugin.TValue[map[string]interface{}]
+	Acl plugin.TValue[[]interface{}]
+	Owner plugin.TValue[map[string]interface{}]
+	Public plugin.TValue[bool]
+	Cors plugin.TValue[[]interface{}]
+	Location plugin.TValue[string]
+	Versioning plugin.TValue[map[string]interface{}]
+	Logging plugin.TValue[map[string]interface{}]
+	StaticWebsiteHosting plugin.TValue[map[string]interface{}]
+	DefaultLock plugin.TValue[string]
+	Replication plugin.TValue[interface{}]
+	Encryption plugin.TValue[interface{}]
+	PublicAccessBlock plugin.TValue[interface{}]
+	Exists plugin.TValue[bool]
+}
+
+// createAwsS3Bucket creates a new instance of this resource
+func createAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3Bucket{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3Bucket) MqlName() string {
+	return "aws.s3.bucket"
+}
+
+func (c *mqlAwsS3Bucket) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3Bucket) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsS3Bucket) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsS3Bucket) GetPolicy() *plugin.TValue[*mqlAwsS3BucketPolicy] {
+	return plugin.GetOrCompute[*mqlAwsS3BucketPolicy](&c.Policy, func() (*mqlAwsS3BucketPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3BucketPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetAcl() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Acl, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.acl()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetOwner() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Owner, func() (map[string]interface{}, error) {
+		return c.owner()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetCors() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Cors, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "cors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cors()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetLocation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Location, func() (string, error) {
+		return c.location()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetVersioning() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Versioning, func() (map[string]interface{}, error) {
+		return c.versioning()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetLogging() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Logging, func() (map[string]interface{}, error) {
+		return c.logging()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetStaticWebsiteHosting() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.StaticWebsiteHosting, func() (map[string]interface{}, error) {
+		return c.staticWebsiteHosting()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetDefaultLock() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultLock, func() (string, error) {
+		return c.defaultLock()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetReplication() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Replication, func() (interface{}, error) {
+		return c.replication()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetEncryption() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Encryption, func() (interface{}, error) {
+		return c.encryption()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.PublicAccessBlock, func() (interface{}, error) {
+		return c.publicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetExists() *plugin.TValue[bool] {
+	return &c.Exists
+}
+
+// mqlAwsS3BucketGrant for the aws.s3.bucket.grant resource
+type mqlAwsS3BucketGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3BucketGrantInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Permission plugin.TValue[string]
+	Grantee plugin.TValue[map[string]interface{}]
+}
+
+// createAwsS3BucketGrant creates a new instance of this resource
+func createAwsS3BucketGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.grant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketGrant) MqlName() string {
+	return "aws.s3.bucket.grant"
+}
+
+func (c *mqlAwsS3BucketGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketGrant) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsS3BucketGrant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsS3BucketGrant) GetPermission() *plugin.TValue[string] {
+	return &c.Permission
+}
+
+func (c *mqlAwsS3BucketGrant) GetGrantee() *plugin.TValue[map[string]interface{}] {
+	return &c.Grantee
+}
+
+// mqlAwsS3BucketCorsrule for the aws.s3.bucket.corsrule resource
+type mqlAwsS3BucketCorsrule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3BucketCorsruleInternal it will be used here
+	Name plugin.TValue[string]
+	AllowedHeaders plugin.TValue[[]interface{}]
+	AllowedMethods plugin.TValue[[]interface{}]
+	AllowedOrigins plugin.TValue[[]interface{}]
+	ExposeHeaders plugin.TValue[[]interface{}]
+	MaxAgeSeconds plugin.TValue[int64]
+}
+
+// createAwsS3BucketCorsrule creates a new instance of this resource
+func createAwsS3BucketCorsrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketCorsrule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.corsrule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketCorsrule) MqlName() string {
+	return "aws.s3.bucket.corsrule"
+}
+
+func (c *mqlAwsS3BucketCorsrule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetAllowedHeaders() *plugin.TValue[[]interface{}] {
+	return &c.AllowedHeaders
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetAllowedMethods() *plugin.TValue[[]interface{}] {
+	return &c.AllowedMethods
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetAllowedOrigins() *plugin.TValue[[]interface{}] {
+	return &c.AllowedOrigins
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetExposeHeaders() *plugin.TValue[[]interface{}] {
+	return &c.ExposeHeaders
+}
+
+func (c *mqlAwsS3BucketCorsrule) GetMaxAgeSeconds() *plugin.TValue[int64] {
+	return &c.MaxAgeSeconds
+}
+
+// mqlAwsS3BucketPolicy for the aws.s3.bucket.policy resource
+type mqlAwsS3BucketPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsS3BucketPolicyInternal it will be used here
+	Name plugin.TValue[string]
+	Document plugin.TValue[string]
+	Version plugin.TValue[string]
+	Id plugin.TValue[string]
+	Statements plugin.TValue[[]interface{}]
+}
+
+// createAwsS3BucketPolicy creates a new instance of this resource
+func createAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketPolicy) MqlName() string {
+	return "aws.s3.bucket.policy"
+}
+
+func (c *mqlAwsS3BucketPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsS3BucketPolicy) GetDocument() *plugin.TValue[string] {
+	return &c.Document
+}
+
+func (c *mqlAwsS3BucketPolicy) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsS3BucketPolicy) GetId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
+		return c.id()
+	})
+}
+
+func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Statements, func() ([]interface{}, error) {
+		return c.statements()
+	})
 }

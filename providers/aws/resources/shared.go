@@ -21,15 +21,18 @@ import (
 )
 
 const (
-	ec2InstanceArnPattern   = "arn:aws:ec2:%s:%s:instance/%s"
-	securityGroupArnPattern = "arn:aws:ec2:%s:%s:security-group/%s"
-	volumeArnPattern        = "arn:aws:ec2:%s:%s:volume/%s"
-	snapshotArnPattern      = "arn:aws:ec2:%s:%s:snapshot/%s"
-	internetGwArnPattern    = "arn:aws:ec2:%s:%s:gateway/%s"
-	vpnConnArnPattern       = "arn:aws:ec2:%s:%s:vpn-connection/%s"
-	networkAclArnPattern    = "arn:aws:ec2:%s:%s:network-acl/%s"
-	imageArnPattern         = "arn:aws:ec2:%s:%s:image/%s"
-	keypairArnPattern       = "arn:aws:ec2:%s:%s:keypair/%s"
+	elbv1LbArnPattern         = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
+	cloudwatchAlarmArnPattern = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
+	ec2InstanceArnPattern     = "arn:aws:ec2:%s:%s:instance/%s"
+	securityGroupArnPattern   = "arn:aws:ec2:%s:%s:security-group/%s"
+	volumeArnPattern          = "arn:aws:ec2:%s:%s:volume/%s"
+	snapshotArnPattern        = "arn:aws:ec2:%s:%s:snapshot/%s"
+	internetGwArnPattern      = "arn:aws:ec2:%s:%s:gateway/%s"
+	vpnConnArnPattern         = "arn:aws:ec2:%s:%s:vpn-connection/%s"
+	networkAclArnPattern      = "arn:aws:ec2:%s:%s:network-acl/%s"
+	imageArnPattern           = "arn:aws:ec2:%s:%s:image/%s"
+	keypairArnPattern         = "arn:aws:ec2:%s:%s:keypair/%s"
+	s3ArnPattern              = "arn:aws:s3:::%s"
 )
 
 func (a *mqlAws) regions() ([]interface{}, error) {
@@ -106,6 +109,14 @@ func toFloat64(i *float64) float64 {
 		return float64(0)
 	}
 	return *i
+}
+
+func toInterfaceArr(a []string) []interface{} {
+	res := []interface{}{}
+	for i := range a {
+		res = append(res, a[i])
+	}
+	return res
 }
 
 func GetRegionFromArn(arnVal string) (string, error) {

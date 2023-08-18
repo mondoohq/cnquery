@@ -827,3 +827,193 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
   // List of CloudWatch metrics
   metrics []aws.cloudwatch.metric
 }
+
+// Amazon CloudFront
+aws.cloudfront {
+  // List of CloudFront distributions
+  distributions() []aws.cloudfront.distribution
+  // List of CloudFront functions
+  functions() []aws.cloudfront.function
+}
+
+// Amazon CloudFront Distribution
+private aws.cloudfront.distribution {
+  // ARN of the CloudFront distribution
+  arn string
+  // Status of the distribution
+  status string
+  // Domain Name of the distribution
+  domainName string
+  // Contains details on the origins of this distribution
+  origins []aws.cloudfront.distribution.origin
+  // Describes the default cache behavior for the distribution
+  defaultCacheBehavior dict
+  // All cache behaviors for the distribution
+  cacheBehaviors []dict
+}
+
+// Amazon CloudFront Distribution Origin
+private aws.cloudfront.distribution.origin {
+  // Domain name for the origin
+  domainName string
+  // Unique id for the origin
+  id string
+  // Number of times CloudFront attempts to connect
+  connectionAttempts int
+  // Number of seconds CloudFront wants when attempting a connection
+  connectionTimeout int
+  // Path that CloudFront appends to original domain
+  originPath string
+  // Account id where the origin exists
+  account string
+}
+
+// Amazon CloudFront Function
+private aws.cloudfront.function {
+  // Name of the CloudFront function
+  name string
+  // Status of the CloudFront function
+  status string
+  // ARN of the CloudFront function
+  arn string
+  // Date and time when function was last updated
+  lastModifiedTime time
+  // Date and time when function was created
+  createdTime time
+  // Stage that the function is in
+  stage string
+  // Comment to describe the function
+  comment string
+  // Runtime environment for the function
+  runtime string
+}
+
+// AWS CloudTrail
+aws.cloudtrail {
+  // List of CloudTrail trails associated with the account
+  trails() []aws.cloudtrail.trail
+}
+
+// AWS CloudTrail Trail
+private aws.cloudtrail.trail @defaults("arn") {
+  // ARN of the trail
+  arn string
+  // Name of the trail
+  name string
+  // KMS key used to encrypt the logs
+  kmsKey() aws.kms.key
+  // Specifies if trail exists only in one region or multiple
+  isMultiRegionTrail bool
+  // Whether trail is organization trail (logs events for mgmt and member accts of org)
+  isOrganizationTrail bool
+  // Whether log file validation is enabled
+  logFileValidationEnabled bool
+  // True if api calls from global services are included
+  includeGlobalServiceEvents bool
+  // S3 bucket where trail files are delivered
+  s3bucket() aws.s3.bucket
+  // ARN of the SNS topic that the trail uses to send notifications
+  snsTopicARN string
+  // JSON list of information about the trail
+  status() dict
+  // Log group to which trail files will be delivered
+  logGroup() aws.cloudwatch.loggroup
+  // Role for logs endpoint to assume when writing to log group
+  cloudWatchLogsRoleArn string
+  // Settings for the trail's configured event selectors
+  eventSelectors() []dict
+  // Region in which the trail was created (home region)
+  region string
+}
+
+// Amazon S3 Bucket Control
+aws.s3control {
+  // Account level public access configuration for S3
+  accountPublicAccessBlock() dict
+}
+
+// Amazon S3 Cloud Object Storage
+aws.s3 {
+  // List of S3 buckets across the account
+  buckets() []aws.s3.bucket
+}
+
+// Amazon S3 Bucket
+private aws.s3.bucket @defaults("arn") {
+  // ARN of the bucket
+  arn string
+  // Name of the bucket
+  name string
+  // Policy associated with the bucket
+  policy() aws.s3.bucket.policy
+  // Tags for the bucket
+  tags() map[string]string
+  // List of access control grants associated with the bucket
+  acl() []aws.s3.bucket.grant
+  // Owner for the bucket
+  owner() map[string]string
+  // Denotes if bucket is public
+  public() bool
+  // List of cors information for the bucket
+  cors() []aws.s3.bucket.corsrule
+  // Location of the bucket
+  location() string
+  // Versioning state and mfa delete status of bucket
+  versioning() map[string]string
+  // Logging status and user perms for bucket logging status
+  logging() map[string]string
+  // Website configuration for a bucket
+  staticWebsiteHosting() map[string]string
+  // Denotes whether bucket is locked by default
+  defaultLock() string
+  // Bucket cross-region replication configuration
+  replication() dict
+  // Bucket encryption configuration
+  encryption() dict
+  // Public access block configuration for the bucket
+  publicAccessBlock() dict
+  // False if the bucket no longer exists (stale reference)
+  exists bool
+}
+
+// Amazon S3 Bucket Grant
+private aws.s3.bucket.grant @defaults("name permission") {
+  // ID of the bucket grant
+  id string
+  // Name for the bucket grant
+  name string
+  // Permission associated with the grant
+  permission string
+  // Grantee associated with the grant
+  grantee map[string]string
+}
+
+// Amazon S3 Bucket CORS Rule
+private aws.s3.bucket.corsrule @defaults("name") {
+  // Name of the rule
+  name string
+  // List of allowed headers
+  allowedHeaders []string
+  // List of allowed methods (GET, POST, PUT, etc.)
+  allowedMethods []string
+  // List of origins from which the bucket can be accessed
+  allowedOrigins []string
+  // List of exposed response headers  
+  exposeHeaders []string
+  // Time in seconds that browser caches preflight response
+  maxAgeSeconds int
+}
+
+// Amazon S3 Bucket Policy
+private aws.s3.bucket.policy @defaults("name version") {
+  // Name for the policy
+  name string
+  // Document for the policy
+  document string
+  // Version of the policy
+  version() string
+  // Unique ID for the policy
+  id() string
+  // List of statements for the policy
+  statements() []dict
+}

@@ -15,10 +15,6 @@ import (
 	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
 )
 
-const (
-	elbv1LbArnPattern = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
-)
-
 func (a *mqlAwsElb) id() (string, error) {
 	return "aws.elb", nil
 }

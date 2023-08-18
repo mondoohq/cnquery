@@ -21,10 +21,6 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-const (
-	cloudwatchAlarmArnPattern = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
-)
-
 func (a *mqlAwsCloudwatch) id() (string, error) {
 	return "aws.cloudwatch", nil
 }
