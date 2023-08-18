@@ -63,7 +63,8 @@ cnquery/generate: clean/proto llx/generate shared/generate providers explorer/ge
 define buildProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
-	$(eval $@_DIST = "./dist")
+	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_DIST_BIN = "./dist/${$@_NAME}")
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
@@ -71,7 +72,7 @@ define buildProvider
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
 	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	cd ${$@_HOME} && go build -o ${$@_BIN} ./main.go
+	cd ${$@_HOME} && go build -o ${$@_DIST_BIN} ./main.go
 endef
 
 define installProvider
