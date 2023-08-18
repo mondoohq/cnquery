@@ -207,7 +207,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		// ensure we have non-empty asset MRNs
 		for i := range assets {
 			cur := assets[i]
-			if cur.Mrn == "" && cur.Id == "" {
+			if cur.Mrn == "" {
 				randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
 				x, err := mrn.NewMRN(randID)
 				if err != nil {
