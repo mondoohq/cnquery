@@ -7,13 +7,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/cnquery/utils/multierr"
-	protobuf "google.golang.org/protobuf/proto"
 )
 
 // Runtimes are associated with one asset and carry all providers
@@ -169,58 +167,16 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	}
 
 	r.features = req.Features
-	conn := asset.Connections[0]
-
-	manager, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{asset},
-		},
-	}, r))
-	if err != nil {
-		return multierr.Wrap(err, "failed to resolve inventory for connection")
-	}
-
-	inventoryAsset := manager.GetAssets()[0]
-
-	creds := manager.GetCredsResolver()
-	if creds != nil {
-		inventoryAsset = protobuf.Clone(inventoryAsset).(*inventory.Asset)
-		req = &plugin.ConnectReq{
-			Features:     req.Features,
-			Asset:        inventoryAsset,
-			HasRecording: req.HasRecording,
-			Upstream:     req.Upstream,
-		}
-
-		for j := range inventoryAsset.Connections {
-			conn := inventoryAsset.Connections[j]
-			for k := range conn.Credentials {
-				credential := conn.Credentials[k]
-				if credential.SecretId == "" {
-					continue
-				}
-
-				resolvedCredential, err := creds.GetCredential(credential)
-				if err != nil {
-					log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
-					return err
-				}
-
-				conn.Credentials[k] = resolvedCredential
-			}
-		}
-	}
-
 	callbacks := providerCallbacks{
 		runtime: r,
 	}
 
+	var err error
 	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
 	if err != nil {
 		return err
 	}
-
-	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.Name, r.Provider.Connection.Id, conn)
+	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.Name, r.Provider.Connection.Id, asset.Connections[0])
 	return nil
 }
 
@@ -228,6 +184,10 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 	provider, _, err := r.lookupResourceProvider(name)
 	if err != nil {
 		return nil, err
+	}
+
+	if provider.Connection == nil {
+		return nil, errors.New("no connection to provider")
 	}
 
 	res, err := provider.Instance.Plugin.GetData(&plugin.DataReq{

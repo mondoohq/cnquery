@@ -44,17 +44,23 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 
 	config.DisplayUsedConfig()
 
-	shellConf := ShellConfig{
-		Features:   config.Features,
-		PlatformID: viper.GetString("platform-id"),
-		Asset:      cliRes.Asset,
-		UpstreamConfig: &upstream.UpstreamConfig{
+	var upstreamConfig *upstream.UpstreamConfig
+	serviceAccount := conf.GetServiceCredential()
+	if serviceAccount != nil {
+		upstreamConfig = &upstream.UpstreamConfig{
 			// AssetMrn: not necessary right now, especially since incognito
 			SpaceMrn:    conf.GetParentMrn(),
 			ApiEndpoint: conf.UpstreamApiEndpoint(),
 			Incognito:   true,
 			Creds:       conf.GetServiceCredential(),
-		},
+		}
+	}
+
+	shellConf := ShellConfig{
+		Features:       config.Features,
+		PlatformID:     viper.GetString("platform-id"),
+		Asset:          cliRes.Asset,
+		UpstreamConfig: upstreamConfig,
 	}
 
 	shellConf.Command, _ = cmd.Flags().GetString("command")
@@ -116,9 +122,14 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
+	resolvedAsset, err := im.ResolveAsset(connectAsset)
+	if err != nil {
+		return err
+	}
+
 	err = runtime.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
-		Asset:    conf.Asset,
+		Asset:    resolvedAsset,
 		Upstream: conf.UpstreamConfig,
 	})
 	if err != nil {

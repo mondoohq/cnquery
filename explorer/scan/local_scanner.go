@@ -9,6 +9,8 @@ import (
 	sync "sync"
 	"time"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
+
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -144,16 +146,27 @@ func preprocessQueryPackFilters(filters []string) []string {
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
+	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.Coordinator.NewRuntime()))
+	if err != nil {
+		return nil, false, errors.New("failed to resolve inventory for connection")
+	}
+	assetList := im.GetAssets()
+
 	var assets []*inventory.Asset
 	var runtimes []*providers.Runtime
-	for i := range job.Inventory.Spec.Assets {
-		asset := job.Inventory.Spec.Assets[i]
+	for i := range assetList {
+		asset := assetList[i]
+		resolvedAsset, err := im.ResolveAsset(asset)
+		if err != nil {
+			return nil, false, err
+		}
+
 		runtime := providers.Coordinator.NewRuntime()
-		runtime.DetectProvider(asset)
+		runtime.DetectProvider(resolvedAsset)
 
 		if err := runtime.Connect(&plugin.ConnectReq{
 			Features: cnquery.GetFeatures(ctx),
-			Asset:    asset,
+			Asset:    resolvedAsset,
 			Upstream: upstream,
 		}); err != nil {
 			return nil, false, err
