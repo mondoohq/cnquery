@@ -7,7 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	computev1 "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/aws/smithy-go/ptr"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -16,6 +20,7 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -209,70 +214,69 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 	return res.(*mqlGcpProjectComputeServiceMachineType), nil
 }
 
-// func (g *mqlGcpProjectComputeService) GetMachineTypes() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// 	// get list of zones first since we need this for all entries
-// 	zones, err := g.Zones()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	// get list of zones first since we need this for all entries
+	zonesData := g.GetZones()
+	if err := zonesData.Error; err != nil {
+		return nil, err
+	}
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	ctx := context.Background()
+	ctx := context.Background()
 
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	var wg sync.WaitGroup
-// 	res := []interface{}{}
-// 	wg.Add(len(zones))
-// 	mux := &sync.Mutex{}
+	var wg sync.WaitGroup
+	res := []interface{}{}
+	wg.Add(len(zonesData.Data))
+	mux := &sync.Mutex{}
 
-// 	for i := range zones {
-// 		z := zones[i].(GcpProjectComputeServiceZone)
-// 		zoneName, err := z.Name()
-// 		if err != nil {
-// 			return nil, err
-// 		}
+	for i := range zonesData.Data {
+		z := zonesData.Data[i].(*mqlGcpProjectComputeServiceZone)
+		if err := z.Name.Error; err != nil {
+			return nil, err
+		}
 
-// 		go func(svc *compute.Service, projectId string, zone GcpProjectComputeServiceZone, zoneName string) {
-// 			req := computeSvc.MachineTypes.List(projectId, zoneName)
-// 			if err := req.Pages(ctx, func(page *compute.MachineTypeList) error {
-// 				for _, machinetype := range page.Items {
-// 					mqlMachineType, err := newMqlMachineType(g.MotorRuntime, machinetype, projectId, zone)
-// 					if err != nil {
-// 						return err
-// 					} else {
-// 						mux.Lock()
-// 						res = append(res, mqlMachineType)
-// 						mux.Unlock()
-// 					}
-// 				}
-// 				return nil
-// 			}); err != nil {
-// 				log.Error().Err(err).Send()
-// 			}
-// 			wg.Done()
-// 		}(computeSvc, projectId, z, zoneName)
-// 	}
-// 	wg.Wait()
-// 	return res, nil
-// }
+		go func(svc *compute.Service, projectId string, zone *mqlGcpProjectComputeServiceZone, zoneName string) {
+			req := computeSvc.MachineTypes.List(projectId, zoneName)
+			if err := req.Pages(ctx, func(page *compute.MachineTypeList) error {
+				for _, machinetype := range page.Items {
+					mqlMachineType, err := newMqlMachineType(g.MqlRuntime, machinetype, projectId, zone)
+					if err != nil {
+						return err
+					} else {
+						mux.Lock()
+						res = append(res, mqlMachineType)
+						mux.Unlock()
+					}
+				}
+				return nil
+			}); err != nil {
+				log.Error().Err(err).Send()
+			}
+			wg.Done()
+		}(computeSvc, projectId, z, z.Name.Data)
+	}
+	wg.Wait()
+	return res, nil
+}
 
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	if err := g.Id.Error; err != nil {
@@ -615,128 +619,121 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 // 	return nil, errors.New("not implemented")
 // }
 
-// func (g *mqlGcpProjectComputeService) GetDisks() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// 	// get list of zones first since we need this for all entries
-// 	zones, err := g.Zones()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	// get list of zones first since we need this for all entries
+	zonesData := g.GetZones()
+	if err := zonesData.Error; err != nil {
+		return nil, err
+	}
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	ctx := context.Background()
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	var wg sync.WaitGroup
-// 	res := []interface{}{}
-// 	wg.Add(len(zones))
-// 	mux := &sync.Mutex{}
+	var wg sync.WaitGroup
+	res := []interface{}{}
+	wg.Add(len(zonesData.Data))
+	mux := &sync.Mutex{}
 
-// 	var result error
-// 	for i := range zones {
-// 		z := zones[i].(GcpProjectComputeServiceZone)
-// 		zoneName, err := z.Name()
-// 		if err != nil {
-// 			return nil, err
-// 		}
+	var result error
+	for i := range zonesData.Data {
+		z := zonesData.Data[i].(*mqlGcpProjectComputeServiceZone)
+		if err := z.Name.Error; err != nil {
+			return nil, err
+		}
 
-// 		go func(svc *compute.Service, project string, zone GcpProjectComputeServiceZone, zoneName string) {
-// 			req := computeSvc.Disks.List(projectId, zoneName)
-// 			if err := req.Pages(ctx, func(page *compute.DiskList) error {
-// 				for _, disk := range page.Items {
-// 					guestOsFeatures := []string{}
-// 					for i := range disk.GuestOsFeatures {
-// 						entry := disk.GuestOsFeatures[i]
-// 						guestOsFeatures = append(guestOsFeatures, entry.Type)
-// 					}
+		go func(svc *compute.Service, project string, zone *mqlGcpProjectComputeServiceZone, zoneName string) {
+			req := computeSvc.Disks.List(projectId, zoneName)
+			if err := req.Pages(ctx, func(page *compute.DiskList) error {
+				for _, disk := range page.Items {
+					guestOsFeatures := []string{}
+					for i := range disk.GuestOsFeatures {
+						entry := disk.GuestOsFeatures[i]
+						guestOsFeatures = append(guestOsFeatures, entry.Type)
+					}
 
-// 					var mqlDiskEnc map[string]interface{}
-// 					if disk.DiskEncryptionKey != nil {
-// 						mqlDiskEnc = map[string]interface{}{
-// 							"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
-// 							"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
-// 							"rawKey":               disk.DiskEncryptionKey.RawKey,
-// 							"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
-// 							"sha256":               disk.DiskEncryptionKey.Sha256,
-// 						}
-// 					}
+					var mqlDiskEnc map[string]interface{}
+					if disk.DiskEncryptionKey != nil {
+						mqlDiskEnc = map[string]interface{}{
+							"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
+							"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
+							"rawKey":               disk.DiskEncryptionKey.RawKey,
+							"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
+							"sha256":               disk.DiskEncryptionKey.Sha256,
+						}
+					}
 
-// 					mqlDisk, err := g.MotorRuntime.CreateResource("gcp.project.computeService.disk",
-// 						"id", strconv.FormatUint(disk.Id, 10),
-// 						"name", disk.Name,
-// 						"architecture", disk.Architecture,
-// 						"description", disk.Description,
-// 						"guestOsFeatures", core.StrSliceToInterface(guestOsFeatures),
-// 						"labels", core.StrMapToInterface(disk.Labels),
-// 						"lastAttachTimestamp", parseTime(disk.LastAttachTimestamp),
-// 						"lastDetachTimestamp", parseTime(disk.LastDetachTimestamp),
-// 						"locationHint", disk.LocationHint,
-// 						"licenses", core.StrSliceToInterface(disk.Licenses),
-// 						"physicalBlockSizeBytes", disk.PhysicalBlockSizeBytes,
-// 						"provisionedIops", disk.ProvisionedIops,
-// 						// TODO: link to resources
-// 						//"region", disk.Region,
-// 						//"replicaZones", core.StrSliceToInterface(disk.ReplicaZones),
-// 						//"resourcePolicies", core.StrSliceToInterface(disk.ResourcePolicies),
-// 						"sizeGb", disk.SizeGb,
-// 						// TODO: link to resources
-// 						//"sourceDiskId", disk.SourceDiskId,
-// 						//"sourceImageId", disk.SourceImageId,
-// 						//"sourceSnapshotId", disk.SourceSnapshotId,
-// 						"status", disk.Status,
-// 						"zone", zone,
-// 						"created", parseTime(disk.CreationTimestamp),
-// 						"diskEncryptionKey", mqlDiskEnc,
-// 					)
-// 					if err != nil {
-// 						return err
-// 					} else {
-// 						mux.Lock()
-// 						res = append(res, mqlDisk)
-// 						mux.Unlock()
-// 					}
-// 				}
-// 				return nil
-// 			}); err != nil {
-// 				log.Error().Err(err).Send()
-// 			}
-// 			wg.Done()
-// 		}(computeSvc, projectId, z, zoneName)
-// 	}
+					mqlDisk, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.disk", map[string]*llx.RawData{
+						"id":                     llx.StringData(strconv.FormatUint(disk.Id, 10)),
+						"name":                   llx.StringData(disk.Name),
+						"architecture":           llx.StringData(disk.Architecture),
+						"description":            llx.StringData(disk.Description),
+						"guestOsFeatures":        llx.ArrayData(convert.SliceAnyToInterface(guestOsFeatures), types.String),
+						"labels":                 llx.MapData(convert.MapToInterfaceMap(disk.Labels), types.String),
+						"lastAttachTimestamp":    llx.TimeDataPtr(parseTime(disk.LastAttachTimestamp)),
+						"lastDetachTimestamp":    llx.TimeDataPtr(parseTime(disk.LastDetachTimestamp)),
+						"locationHint":           llx.StringData(disk.LocationHint),
+						"licenses":               llx.ArrayData(convert.SliceAnyToInterface(disk.Licenses), types.String),
+						"physicalBlockSizeBytes": llx.IntData(disk.PhysicalBlockSizeBytes),
+						"provisionedIops":        llx.IntData(disk.ProvisionedIops),
+						// TODO: link to resources
+						//"region", disk.Region,
+						//"replicaZones", core.StrSliceToInterface(disk.ReplicaZones),
+						//"resourcePolicies", core.StrSliceToInterface(disk.ResourcePolicies),
+						"sizeGb": llx.IntData(disk.SizeGb),
+						// TODO: link to resources
+						//"sourceDiskId", disk.SourceDiskId,
+						//"sourceImageId", disk.SourceImageId,
+						//"sourceSnapshotId", disk.SourceSnapshotId,
+						"status":            llx.StringData(disk.Status),
+						"zone":              llx.ResourceData(zone, "gcp.project.computeService.zone"),
+						"created":           llx.TimeDataPtr(parseTime(disk.CreationTimestamp)),
+						"diskEncryptionKey": llx.DictData(mqlDiskEnc),
+					})
+					if err != nil {
+						return err
+					} else {
+						mux.Lock()
+						res = append(res, mqlDisk)
+						mux.Unlock()
+					}
+				}
+				return nil
+			}); err != nil {
+				log.Error().Err(err).Send()
+			}
+			wg.Done()
+		}(computeSvc, projectId, z, z.Name.Data)
+	}
 
-// 	wg.Wait()
-// 	return res, result
-// }
+	wg.Wait()
+	return res, result
+}
 
-// func (g *mqlGcpProjectComputeServiceFirewall) id() (string, error) {
-// 	id, err := g.Id()
-// 	if err != nil {
-// 		return "", nil
-// 	}
+func (g *mqlGcpProjectComputeServiceFirewall) id() (string, error) {
+	if err := g.Id.Error; err != nil {
+		return "", nil
+	}
 
-// 	return "gcloud.compute.firewall/" + id, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceFirewall) GetNetwork() (interface{}, error) {
-// 	// TODO: implement
-// 	return nil, errors.New("not implemented")
-// }
+	return "gcloud.compute.firewall/" + g.Id.Data, nil
+}
 
 // func (g *mqlGcpProjectComputeServiceFirewall) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceFirewall, error) {
 // 	if len(*args) > 2 {
@@ -779,168 +776,161 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 // 	return nil, nil, &resources.ResourceNotFound{}
 // }
 
-// func (g *mqlGcpProjectComputeService) GetFirewalls() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	ctx := context.Background()
+	ctx := context.Background()
 
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	type mqlFirewall struct {
-// 		IpProtocol string   `json:"ipProtocol"`
-// 		Ports      []string `json:"ports"`
-// 	}
+	type mqlFirewall struct {
+		IpProtocol string   `json:"ipProtocol"`
+		Ports      []string `json:"ports"`
+	}
 
-// 	res := []interface{}{}
-// 	req := computeSvc.Firewalls.List(projectId)
-// 	if err := req.Pages(ctx, func(page *compute.FirewallList) error {
-// 		for _, firewall := range page.Items {
-// 			allowed := make([]mqlFirewall, 0, len(firewall.Allowed))
-// 			for _, a := range firewall.Allowed {
-// 				allowed = append(allowed, mqlFirewall{IpProtocol: a.IPProtocol, Ports: a.Ports})
-// 			}
-// 			allowedDict, err := core.JsonToDictSlice(allowed)
-// 			if err != nil {
-// 				return err
-// 			}
+	res := []interface{}{}
+	req := computeSvc.Firewalls.List(projectId)
+	if err := req.Pages(ctx, func(page *compute.FirewallList) error {
+		for _, firewall := range page.Items {
+			allowed := make([]mqlFirewall, 0, len(firewall.Allowed))
+			for _, a := range firewall.Allowed {
+				allowed = append(allowed, mqlFirewall{IpProtocol: a.IPProtocol, Ports: a.Ports})
+			}
+			allowedDict, err := convert.JsonToDictSlice(allowed)
+			if err != nil {
+				return err
+			}
 
-// 			denied := make([]mqlFirewall, 0, len(firewall.Denied))
-// 			for _, d := range firewall.Denied {
-// 				denied = append(denied, mqlFirewall{IpProtocol: d.IPProtocol, Ports: d.Ports})
-// 			}
-// 			deniedDict, err := core.JsonToDictSlice(denied)
-// 			if err != nil {
-// 				return err
-// 			}
+			denied := make([]mqlFirewall, 0, len(firewall.Denied))
+			for _, d := range firewall.Denied {
+				denied = append(denied, mqlFirewall{IpProtocol: d.IPProtocol, Ports: d.Ports})
+			}
+			deniedDict, err := convert.JsonToDictSlice(denied)
+			if err != nil {
+				return err
+			}
 
-// 			mqlFirewall, err := g.MotorRuntime.CreateResource("gcp.project.computeService.firewall",
-// 				"id", strconv.FormatUint(firewall.Id, 10),
-// 				"projectId", projectId,
-// 				"name", firewall.Name,
-// 				"description", firewall.Description,
-// 				"priority", firewall.Priority,
-// 				"disabled", firewall.Disabled,
-// 				"direction", firewall.Direction,
-// 				"sourceRanges", core.StrSliceToInterface(firewall.SourceRanges),
-// 				"sourceServiceAccounts", core.StrSliceToInterface(firewall.SourceServiceAccounts),
-// 				"sourceTags", core.StrSliceToInterface(firewall.SourceTags),
-// 				"destinationRanges", core.StrSliceToInterface(firewall.DestinationRanges),
-// 				"targetServiceAccounts", core.StrSliceToInterface(firewall.TargetServiceAccounts),
-// 				"created", parseTime(firewall.CreationTimestamp),
-// 				"allowed", allowedDict,
-// 				"denied", deniedDict,
-// 			)
-// 			if err != nil {
-// 				return err
-// 			} else {
-// 				res = append(res, mqlFirewall)
-// 			}
-// 		}
-// 		return nil
-// 	}); err != nil {
-// 		return nil, err
-// 	}
+			mqlFirewall, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewall", map[string]*llx.RawData{
+				"id":                    llx.StringData(strconv.FormatUint(firewall.Id, 10)),
+				"projectId":             llx.StringData(projectId),
+				"name":                  llx.StringData(firewall.Name),
+				"description":           llx.StringData(firewall.Description),
+				"priority":              llx.IntData(firewall.Priority),
+				"disabled":              llx.BoolData(firewall.Disabled),
+				"direction":             llx.StringData(firewall.Direction),
+				"sourceRanges":          llx.ArrayData(convert.SliceAnyToInterface(firewall.SourceRanges), types.String),
+				"sourceServiceAccounts": llx.ArrayData(convert.SliceAnyToInterface(firewall.SourceServiceAccounts), types.String),
+				"sourceTags":            llx.ArrayData(convert.SliceAnyToInterface(firewall.SourceTags), types.String),
+				"destinationRanges":     llx.ArrayData(convert.SliceAnyToInterface(firewall.DestinationRanges), types.String),
+				"targetServiceAccounts": llx.ArrayData(convert.SliceAnyToInterface(firewall.TargetServiceAccounts), types.String),
+				"created":               llx.TimeDataPtr(parseTime(firewall.CreationTimestamp)),
+				"allowed":               llx.DictData(allowedDict),
+				"denied":                llx.DictData(deniedDict),
+			})
+			if err != nil {
+				return err
+			} else {
+				res = append(res, mqlFirewall)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
-// 	return res, nil
-// }
+	return res, nil
+}
 
-// func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
-// 	id, err := g.Id()
-// 	if err != nil {
-// 		return "", nil
-// 	}
+func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
+	if err := g.Id.Error; err != nil {
+		return "", nil
+	}
 
-// 	return "gcloud.compute.snapshot/" + id, nil
-// }
+	return "gcloud.compute.snapshot/" + g.Id.Data, nil
+}
 
-// func (g *mqlGcpProjectComputeServiceSnapshot) GetSourceDisk() (interface{}, error) {
-// 	// TODO: implement
-// 	return nil, errors.New("not implemented")
-// }
+func (g *mqlGcpProjectComputeService) snapshots() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// func (g *mqlGcpProjectComputeService) GetSnapshots() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	ctx := context.Background()
 
-// 	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	res := []interface{}{}
+	req := computeSvc.Snapshots.List(projectId)
+	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
+		for _, snapshot := range page.Items {
+			mqlSnapshpt, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
+				"id":                 llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
+				"name":               llx.StringData(snapshot.Name),
+				"description":        llx.StringData(snapshot.Description),
+				"architecture":       llx.StringData(snapshot.Architecture),
+				"autoCreated":        llx.BoolData(snapshot.AutoCreated),
+				"chainName":          llx.StringData(snapshot.ChainName),
+				"creationSizeBytes":  llx.IntData(snapshot.CreationSizeBytes),
+				"diskSizeGb":         llx.IntData(snapshot.DiskSizeGb),
+				"downloadBytes":      llx.IntData(snapshot.DownloadBytes),
+				"storageBytes":       llx.IntData(snapshot.StorageBytes),
+				"storageBytesStatus": llx.StringData(snapshot.StorageBytesStatus),
+				"snapshotType":       llx.StringData(snapshot.SnapshotType),
+				"licenses":           llx.ArrayData(convert.SliceAnyToInterface(snapshot.Licenses), types.String),
+				"labels":             llx.MapData(convert.MapToInterfaceMap(snapshot.Labels), types.String),
+				"created":            llx.TimeDataPtr(parseTime(snapshot.CreationTimestamp)),
+				"status":             llx.StringData(snapshot.Status),
+			})
+			if err != nil {
+				return err
+			}
 
-// 	res := []interface{}{}
-// 	req := computeSvc.Snapshots.List(projectId)
-// 	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
-// 		for _, snapshot := range page.Items {
-// 			mqlSnapshpt, err := g.MotorRuntime.CreateResource("gcp.project.computeService.snapshot",
-// 				"id", strconv.FormatUint(snapshot.Id, 10),
-// 				"name", snapshot.Name,
-// 				"description", snapshot.Description,
-// 				"architecture", snapshot.Architecture,
-// 				"autoCreated", snapshot.AutoCreated,
-// 				"chainName", snapshot.ChainName,
-// 				"creationSizeBytes", snapshot.CreationSizeBytes,
-// 				"diskSizeGb", snapshot.DiskSizeGb,
-// 				"downloadBytes", snapshot.DownloadBytes,
-// 				"storageBytes", snapshot.StorageBytes,
-// 				"storageBytesStatus", snapshot.StorageBytesStatus,
-// 				"snapshotType", snapshot.SnapshotType,
-// 				"licenses", core.StrSliceToInterface(snapshot.Licenses),
-// 				"labels", core.StrMapToInterface(snapshot.Labels),
-// 				"status", snapshot.Status,
-// 				"created", parseTime(snapshot.CreationTimestamp),
-// 			)
-// 			if err != nil {
-// 				return err
-// 			}
+			res = append(res, mqlSnapshpt)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
-// 			res = append(res, mqlSnapshpt)
-// 		}
-// 		return nil
-// 	}); err != nil {
-// 		return nil, err
-// 	}
+	return res, nil
+}
 
-// 	return res, nil
-// }
+func (g *mqlGcpProjectComputeServiceImage) id() (string, error) {
+	if err := g.Id.Error; err != nil {
+		return "", nil
+	}
 
-// func (g *mqlGcpProjectComputeServiceImage) id() (string, error) {
-// 	id, err := g.Id()
-// 	if err != nil {
-// 		return "", nil
-// 	}
-
-// 	return "gcloud.compute.image/" + id, nil
-// }
+	return "gcloud.compute.image/" + g.Id.Data, nil
+}
 
 // func (g *mqlGcpProjectComputeServiceImage) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceImage, error) {
 // 	if len(*args) > 2 {
@@ -983,64 +973,59 @@ func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 // 	return nil, nil, &resources.ResourceNotFound{}
 // }
 
-// func (g *mqlGcpProjectComputeServiceImage) GetSourceDisk() (interface{}, error) {
-// 	// TODO: implement
-// 	return nil, errors.New("not implemented")
-// }
+func (g *mqlGcpProjectComputeService) images() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// func (g *mqlGcpProjectComputeService) GetImages() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	ctx := context.Background()
 
-// 	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	res := []interface{}{}
+	req := computeSvc.Images.List(projectId)
+	if err := req.Pages(ctx, func(page *compute.ImageList) error {
+		for _, image := range page.Items {
+			mqlImage, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.image", map[string]*llx.RawData{
+				"id":               llx.StringData(strconv.FormatUint(image.Id, 10)),
+				"projectId":        llx.StringData(projectId),
+				"name":             llx.StringData(image.Name),
+				"description":      llx.StringData(image.Description),
+				"architecture":     llx.StringData(image.Architecture),
+				"archiveSizeBytes": llx.IntData(image.ArchiveSizeBytes),
+				"diskSizeGb":       llx.IntData(image.DiskSizeGb),
+				"family":           llx.StringData(image.Family),
+				"licenses":         llx.ArrayData(convert.SliceAnyToInterface(image.Licenses), types.String),
+				"labels":           llx.MapData(convert.MapToInterfaceMap(image.Labels), types.String),
+				"status":           llx.StringData(image.Status),
+				"created":          llx.TimeDataPtr(parseTime(image.CreationTimestamp)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlImage)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
-// 	res := []interface{}{}
-// 	req := computeSvc.Images.List(projectId)
-// 	if err := req.Pages(ctx, func(page *compute.ImageList) error {
-// 		for _, image := range page.Items {
-// 			mqlImage, err := g.MotorRuntime.CreateResource("gcp.project.computeService.image",
-// 				"id", strconv.FormatUint(image.Id, 10),
-// 				"projectId", projectId,
-// 				"name", image.Name,
-// 				"description", image.Description,
-// 				"architecture", image.Architecture,
-// 				"archiveSizeBytes", image.ArchiveSizeBytes,
-// 				"diskSizeGb", image.DiskSizeGb,
-// 				"family", image.Family,
-// 				"licenses", core.StrSliceToInterface(image.Licenses),
-// 				"labels", core.StrMapToInterface(image.Labels),
-// 				"status", image.Status,
-// 				"created", parseTime(image.CreationTimestamp),
-// 			)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			res = append(res, mqlImage)
-// 		}
-// 		return nil
-// 	}); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return res, nil
-// }
+	return res, nil
+}
 
 func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 	if err := g.Id.Error; err != nil {
@@ -1080,113 +1065,112 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]interface{}, error
 	return subnets, nil
 }
 
-// func (g *mqlGcpProjectComputeServiceNetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceNetwork, error) {
-// 	if len(*args) > 2 {
-// 		return args, nil, nil
-// 	}
+func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
 
-// 	// If no args are set, try reading them from the platform ID
-// 	if len(*args) == 0 {
-// 		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-// 			(*args)["name"] = ids.name
-// 			(*args)["projectId"] = ids.project
-// 		}
-// 	}
+	// If no args are set, try reading them from the platform ID
+	// if len(args) == 0 {
+	// 	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+	// 		(*args)["name"] = ids.name
+	// 		(*args)["projectId"] = ids.project
+	// 	}
+	// }
 
-// 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	computeSvc := obj.(GcpProjectComputeService)
-// 	networks, err := computeSvc.Networks()
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{"projectId": args["projectId"]})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	networksData := computeSvc.GetNetworks()
+	if err := networksData.Error; err != nil {
+		return nil, nil, err
+	}
 
-// 	for _, n := range networks {
-// 		network := n.(GcpProjectComputeServiceNetwork)
-// 		name, err := network.Name()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		projectId, err := network.ProjectId()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
+	for _, n := range networksData.Data {
+		network := n.(*mqlGcpProjectComputeServiceNetwork)
+		if err := network.Name.Error; err != nil {
+			return nil, nil, err
+		}
+		if err := network.ProjectId.Error; err != nil {
+			return nil, nil, err
+		}
 
-// 		if name == (*args)["name"] && projectId == (*args)["projectId"] {
-// 			return args, network, nil
-// 		}
-// 	}
-// 	return nil, nil, &resources.ResourceNotFound{}
-// }
+		if network.Name.Data == args["name"].Value.(string) &&
+			network.ProjectId.Data == args["projectId"].Value.(string) {
+			return args, network, nil
+		}
+	}
+	return nil, nil, errors.New("not found")
+}
 
-// func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
 
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
 
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
 
-// 	ctx := context.Background()
+	ctx := context.Background()
 
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-// 	res := []interface{}{}
-// 	req := computeSvc.Networks.List(projectId)
-// 	if err := req.Pages(ctx, func(page *compute.NetworkList) error {
-// 		for _, network := range page.Items {
+	res := []interface{}{}
+	req := computeSvc.Networks.List(projectId)
+	if err := req.Pages(ctx, func(page *compute.NetworkList) error {
+		for _, network := range page.Items {
 
-// 			peerings, err := core.JsonToDictSlice(network.Peerings)
-// 			if err != nil {
-// 				return err
-// 			}
+			peerings, err := convert.JsonToDictSlice(network.Peerings)
+			if err != nil {
+				return err
+			}
 
-// 			var routingMode string
-// 			if network.RoutingConfig != nil {
-// 				routingMode = network.RoutingConfig.RoutingMode
-// 			}
+			var routingMode string
+			if network.RoutingConfig != nil {
+				routingMode = network.RoutingConfig.RoutingMode
+			}
 
-// 			mqlNetwork, err := g.MotorRuntime.CreateResource("gcp.project.computeService.network",
-// 				"id", strconv.FormatUint(network.Id, 10),
-// 				"projectId", projectId,
-// 				"name", network.Name,
-// 				"description", network.Description,
-// 				"autoCreateSubnetworks", network.AutoCreateSubnetworks,
-// 				"enableUlaInternalIpv6", network.EnableUlaInternalIpv6,
-// 				"gatewayIPv4", network.GatewayIPv4,
-// 				"mtu", network.Mtu,
-// 				"networkFirewallPolicyEnforcementOrder", network.NetworkFirewallPolicyEnforcementOrder,
-// 				"created", parseTime(network.CreationTimestamp),
-// 				"peerings", peerings,
-// 				"routingMode", routingMode,
-// 				"mode", networkMode(network),
-// 				"subnetworkUrls", core.StrSliceToInterface(network.Subnetworks),
-// 			)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			res = append(res, mqlNetwork)
-// 		}
-// 		return nil
-// 	}); err != nil {
-// 		return nil, err
-// 	}
+			mqlNetwork, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network", map[string]*llx.RawData{
+				"id":                                    llx.StringData(strconv.FormatUint(network.Id, 10)),
+				"projectId":                             llx.StringData(projectId),
+				"name":                                  llx.StringData(network.Name),
+				"description":                           llx.StringData(network.Description),
+				"autoCreateSubnetworks":                 llx.BoolData(network.AutoCreateSubnetworks),
+				"enableUlaInternalIpv6":                 llx.BoolData(network.EnableUlaInternalIpv6),
+				"gatewayIPv4":                           llx.StringData(network.GatewayIPv4),
+				"mtu":                                   llx.IntData(network.Mtu),
+				"networkFirewallPolicyEnforcementOrder": llx.StringData(network.NetworkFirewallPolicyEnforcementOrder),
+				"created":                               llx.TimeDataPtr(parseTime(network.CreationTimestamp)),
+				"peerings":                              llx.ArrayData(peerings, types.Dict),
+				"routingMode":                           llx.StringData(routingMode),
+				"mode":                                  llx.StringData(networkMode(network)),
+				"subnetworkUrls":                        llx.ArrayData(convert.SliceAnyToInterface(network.Subnetworks), types.String),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlNetwork)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 
-// 	return res, nil
-// }
+	return res, nil
+}
 
 func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 	if err := g.Id.Error; err != nil {
@@ -1196,52 +1180,51 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 	return "gcloud.compute.subnetwork/" + g.Id.Data, nil
 }
 
-// func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceSubnetwork, error) {
-// 	if len(*args) > 3 {
-// 		return args, nil, nil
-// 	}
+func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
 
-// 	// If no args are set, try reading them from the platform ID
-// 	if len(*args) == 0 {
-// 		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-// 			(*args)["name"] = ids.name
-// 			(*args)["region"] = ids.region
-// 			(*args)["projectId"] = ids.project
-// 		}
-// 	}
+	// If no args are set, try reading them from the platform ID
+	// if len(*args) == 0 {
+	// 	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+	// 		(*args)["name"] = ids.name
+	// 		(*args)["region"] = ids.region
+	// 		(*args)["projectId"] = ids.project
+	// 	}
+	// }
 
-// 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	computeSvc := obj.(GcpProjectComputeService)
-// 	subnetworks, err := computeSvc.Subnetworks()
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{"projectId": args["projectId"]})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	subnetworksData := computeSvc.GetSubnetworks()
+	if err := subnetworksData.Error; err != nil {
+		return nil, nil, err
+	}
 
-// 	for _, n := range subnetworks {
-// 		subnetwork := n.(GcpProjectComputeServiceSubnetwork)
-// 		name, err := subnetwork.Name()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		regionUrl, err := subnetwork.RegionUrl()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		region := RegionNameFromRegionUrl(regionUrl)
-// 		projectId, err := subnetwork.ProjectId()
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
+	for _, n := range subnetworksData.Data {
+		subnetwork := n.(*mqlGcpProjectComputeServiceSubnetwork)
+		if err := subnetwork.Name.Error; err != nil {
+			return nil, nil, err
+		}
+		if err := subnetwork.RegionUrl.Error; err != nil {
+			return nil, nil, err
+		}
+		region := RegionNameFromRegionUrl(subnetwork.RegionUrl.Data)
+		if err := subnetwork.ProjectId.Error; err != nil {
+			return nil, nil, err
+		}
 
-// 		if name == (*args)["name"] && projectId == (*args)["projectId"] && region == (*args)["region"] {
-// 			return args, subnetwork, nil
-// 		}
-// 	}
-// 	return nil, nil, &resources.ResourceNotFound{}
-// }
+		if subnetwork.Name.Data == args["name"].Value.(string) &&
+			subnetwork.ProjectId.Data == args["projectId"].Value.(string) &&
+			region == args["region"].Value.(string) {
+			return args, subnetwork, nil
+		}
+	}
+	return nil, nil, errors.New("not found")
+}
 
 func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {
 	if err := g.Id.Error; err != nil {
@@ -1317,672 +1300,655 @@ func newMqlRegion(runtime *plugin.Runtime, r *compute.Region) (interface{}, erro
 	})
 }
 
-// func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *computepb.Subnetwork, region GcpProjectComputeServiceRegion) (interface{}, error) {
-// 	subnetId := strconv.FormatUint(subnetwork.GetId(), 10)
-// 	var mqlLogConfig resources.ResourceType
-// 	var err error
-// 	if subnetwork.LogConfig != nil {
-// 		mqlLogConfig, err = runtime.CreateResource("gcp.project.computeService.subnetwork.logConfig",
-// 			"id", fmt.Sprintf("%s/logConfig", subnetId),
-// 			"aggregationInterval", subnetwork.LogConfig.GetAggregationInterval(),
-// 			"enable", subnetwork.LogConfig.GetEnable(),
-// 			"filterExpression", subnetwork.LogConfig.GetFilterExpr(),
-// 			"flowSampling", float64(subnetwork.LogConfig.GetFlowSampling()),
-// 			"metadata", subnetwork.LogConfig.GetMetadata(),
-// 			"metadataFields", core.StrSliceToInterface(subnetwork.LogConfig.MetadataFields),
-// 		)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-
-// 	args := []interface{}{
-// 		"id", subnetId,
-// 		"projectId", projectId,
-// 		"name", subnetwork.GetName(),
-// 		"description", subnetwork.GetDescription(),
-// 		"enableFlowLogs", subnetwork.GetEnableFlowLogs(),
-// 		"externalIpv6Prefix", subnetwork.GetExternalIpv6Prefix(),
-// 		"fingerprint", subnetwork.GetFingerprint(),
-// 		"gatewayAddress", subnetwork.GetGatewayAddress(),
-// 		"internalIpv6Prefix", subnetwork.GetInternalIpv6Prefix(),
-// 		"ipCidrRange", subnetwork.GetIpCidrRange(),
-// 		"ipv6AccessType", subnetwork.GetIpv6AccessType(),
-// 		"ipv6CidrRange", subnetwork.GetIpv6CidrRange(),
-// 		"logConfig", mqlLogConfig,
-// 		"privateIpGoogleAccess", subnetwork.GetPrivateIpGoogleAccess(),
-// 		"privateIpv6GoogleAccess", subnetwork.GetPrivateIpv6GoogleAccess(),
-// 		"purpose", subnetwork.GetPurpose(),
-// 		"regionUrl", subnetwork.GetRegion(),
-// 		"role", subnetwork.GetRole(),
-// 		"stackType", subnetwork.GetStackType(),
-// 		"state", subnetwork.GetState(),
-// 		"created", parseTime(subnetwork.GetCreationTimestamp()),
-// 	}
-// 	if region != nil {
-// 		args = append(args, "region", region)
-// 	}
-// 	return runtime.CreateResource("gcp.project.computeService.subnetwork", args...)
-// }
-
-// func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ctx := context.Background()
-
-// 	subnetSvc, err := computev1.NewSubnetworksRESTClient(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	res := []interface{}{}
-// 	it := subnetSvc.AggregatedList(ctx, &computepb.AggregatedListSubnetworksRequest{Project: projectId})
-// 	for {
-// 		resp, err := it.Next()
-// 		if err == iterator.Done {
-// 			break
-// 		}
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		subnets := resp.Value.GetSubnetworks()
-// 		for _, subnet := range subnets {
-// 			mqlSubnetwork, err := newMqlSubnetwork(projectId, g.MotorRuntime, subnet, nil)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			res = append(res, mqlSubnetwork)
-// 		}
-// 	}
-// 	return res, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceRouter) id() (string, error) {
-// 	id, err := g.Id()
-// 	if err != nil {
-// 		return "", nil
-// 	}
-
-// 	return "gcloud.compute.router/" + id, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceRouter) GetNetwork() ([]interface{}, error) {
-// 	// TODO: implement
-// 	return nil, errors.New("not implemented")
-// }
-
-// func (g *mqlGcpProjectComputeServiceRouter) GetRegion() ([]interface{}, error) {
-// 	// TODO: implement
-// 	return nil, errors.New("not implemented")
-// }
-
-// func newMqlRouter(projectId string, region GcpProjectComputeServiceRegion, runtime *resources.Runtime, router *compute.Router) (interface{}, error) {
-// 	bgp, err := core.JsonToDict(router.Bgp)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	bgpPeers, err := core.JsonToDictSlice(router.BgpPeers)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	nats, err := core.JsonToDictSlice(router.Nats)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return runtime.CreateResource("gcp.project.computeService.router",
-// 		"id", strconv.FormatUint(router.Id, 10),
-// 		"name", router.Name,
-// 		"description", router.Description,
-// 		"bgp", bgp,
-// 		"bgpPeers", bgpPeers,
-// 		"encryptedInterconnectRouter", router.EncryptedInterconnectRouter,
-// 		"nats", nats,
-// 		"created", parseTime(router.CreationTimestamp),
-// 	)
-// }
-
-// func (g *mqlGcpProjectComputeService) GetRouters() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	regions, err := g.Regions()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ctx := context.Background()
-
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var wg sync.WaitGroup
-// 	res := []interface{}{}
-// 	wg.Add(len(regions))
-// 	mux := &sync.Mutex{}
-
-// 	for i := range regions {
-// 		r := regions[i].(GcpProjectComputeServiceRegion)
-// 		regionName, err := r.Name()
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		go func(svc *compute.Service, project string, region GcpProjectComputeServiceRegion, regionName string) {
-// 			req := computeSvc.Routers.List(projectId, regionName)
-// 			if err := req.Pages(ctx, func(page *compute.RouterList) error {
-// 				for _, router := range page.Items {
-
-// 					mqlRouter, err := newMqlRouter(projectId, region, g.MotorRuntime, router)
-// 					if err != nil {
-// 						return err
-// 					} else {
-// 						mux.Lock()
-// 						res = append(res, mqlRouter)
-// 						mux.Unlock()
-// 					}
-// 				}
-// 				return nil
-// 			}); err != nil {
-// 				log.Error().Err(err).Send()
-// 			}
-// 			wg.Done()
-// 		}(computeSvc, projectId, r, regionName)
-// 	}
-
-// 	wg.Wait()
-// 	return res, nil
-// }
-
-// func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ctx := context.Background()
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	list, err := computeSvc.BackendServices.AggregatedList(projectId).Do()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	res := make([]interface{}, 0, len(list.Items))
-// 	for _, sb := range list.Items {
-// 		for _, b := range sb.BackendServices {
-// 			backendServiceId := strconv.FormatUint(b.Id, 10)
-// 			mqlBackends := make([]interface{}, 0, len(b.Backends))
-// 			for i, backend := range b.Backends {
-// 				mqlBackend, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.backend",
-// 					"id", fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i),
-// 					"balancingMode", backend.BalancingMode,
-// 					"capacityScaler", backend.CapacityScaler,
-// 					"description", backend.Description,
-// 					"failover", backend.Failover,
-// 					"groupUrl", backend.Group,
-// 					"maxConnections", backend.MaxConnections,
-// 					"maxConnectionsPerEndpoint", backend.MaxConnectionsPerEndpoint,
-// 					"maxConnectionsPerInstance", backend.MaxConnectionsPerInstance,
-// 					"maxRate", backend.MaxRate,
-// 					"maxRatePerEndpoint", backend.MaxRatePerEndpoint,
-// 					"maxRatePerInstance", backend.MaxRatePerInstance,
-// 					"maxUtilization", backend.MaxUtilization,
-// 				)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-// 				mqlBackends = append(mqlBackends, mqlBackend)
-// 			}
-
-// 			var cdnPolicy interface{}
-// 			if b.CdnPolicy != nil {
-// 				bypassCacheOnRequestHeaders := make([]interface{}, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
-// 				for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
-// 					mqlH := map[string]interface{}{"headerName": h.HeaderName}
-// 					bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
-// 				}
-
-// 				var mqlCacheKeyPolicy interface{}
-// 				if b.CdnPolicy.CacheKeyPolicy != nil {
-// 					mqlCacheKeyPolicy = map[string]interface{}{
-// 						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
-// 						"includeHttpHeaders":   core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
-// 						"includeNamedCookies":  core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
-// 						"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
-// 						"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
-// 						"queryStringBlacklist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
-// 						"queryStringWhitelist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
-// 					}
-// 				}
-
-// 				mqlNegativeCachingPolicy := make([]interface{}, 0, len(b.CdnPolicy.NegativeCachingPolicy))
-// 				for _, p := range b.CdnPolicy.NegativeCachingPolicy {
-// 					mqlP := map[string]interface{}{
-// 						"code": p.Code,
-// 						"ttl":  p.Ttl,
-// 					}
-// 					mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
-// 				}
-
-// 				cdnPolicy, err = g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.cdnPolicy",
-// 					"id", fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId),
-// 					"bypassCacheOnRequestHeaders", bypassCacheOnRequestHeaders,
-// 					"cacheKeyPolicy", mqlCacheKeyPolicy,
-// 					"cacheMode", b.CdnPolicy.CacheMode,
-// 					"clientTtl", b.CdnPolicy.ClientTtl,
-// 					"defaultTtl", b.CdnPolicy.DefaultTtl,
-// 					"maxTtl", b.CdnPolicy.MaxTtl,
-// 					"negativeCaching", b.CdnPolicy.NegativeCaching,
-// 					"negativeCachingPolicy", mqlNegativeCachingPolicy,
-// 					"requestCoalescing", b.CdnPolicy.RequestCoalescing,
-// 					"serveWhileStale", b.CdnPolicy.ServeWhileStale,
-// 					"signedUrlCacheMaxAgeSec", b.CdnPolicy.SignedUrlCacheMaxAgeSec,
-// 					"signedUrlKeyNames", core.StrSliceToInterface(b.CdnPolicy.SignedUrlKeyNames),
-// 				)
-// 				if err != nil {
-// 					return nil, err
-// 				}
-// 			}
-
-// 			var mqlCircuitBreakers interface{}
-// 			if b.CircuitBreakers != nil {
-// 				mqlCircuitBreakers = map[string]interface{}{
-// 					"maxConnections":           b.CircuitBreakers.MaxConnections,
-// 					"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
-// 					"maxRequests":              b.CircuitBreakers.MaxRequests,
-// 					"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
-// 					"maxRetries":               b.CircuitBreakers.MaxRetries,
-// 				}
-// 			}
-
-// 			var mqlConnectionDraining interface{}
-// 			if b.ConnectionDraining != nil {
-// 				mqlConnectionDraining = map[string]interface{}{
-// 					"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
-// 				}
-// 			}
-
-// 			var mqlConnectionTrackingPolicy interface{}
-// 			if b.ConnectionTrackingPolicy != nil {
-// 				mqlConnectionTrackingPolicy = map[string]interface{}{
-// 					"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
-// 					"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
-// 					"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
-// 					"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
-// 				}
-// 			}
-
-// 			var mqlConsistentHash interface{}
-// 			if b.ConsistentHash != nil {
-// 				mqlConsistentHash = map[string]interface{}{
-// 					"httpCookie": map[string]interface{}{
-// 						"name": b.ConsistentHash.HttpCookie.Name,
-// 						"path": b.ConsistentHash.HttpCookie.Path,
-// 						"ttl":  core.MqlTime(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
-// 					},
-// 					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
-// 					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
-// 				}
-// 			}
-
-// 			var mqlFailoverPolicy interface{}
-// 			if b.FailoverPolicy != nil {
-// 				mqlFailoverPolicy = map[string]interface{}{
-// 					"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
-// 					"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
-// 					"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
-// 				}
-// 			}
-
-// 			var mqlIap interface{}
-// 			if b.Iap != nil {
-// 				mqlIap = map[string]interface{}{
-// 					"enabled":                  b.Iap.Enabled,
-// 					"oauth2ClientId":           b.Iap.Oauth2ClientId,
-// 					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
-// 					"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
-// 				}
-// 			}
-
-// 			mqlLocalityLbPolicy := make([]interface{}, 0, len(b.LocalityLbPolicies))
-// 			for _, p := range b.LocalityLbPolicies {
-// 				var mqlCustomPolicy interface{}
-// 				if p.CustomPolicy != nil {
-// 					mqlCustomPolicy = map[string]interface{}{
-// 						"data": p.CustomPolicy.Data,
-// 						"name": p.CustomPolicy.Name,
-// 					}
-// 				}
-
-// 				var mqlPolicy interface{}
-// 				if p.Policy != nil {
-// 					mqlPolicy = map[string]interface{}{
-// 						"name": p.Policy.Name,
-// 					}
-// 				}
-// 				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]interface{}{
-// 					"customPolicy": mqlCustomPolicy,
-// 					"policy":       mqlPolicy,
-// 				})
-// 			}
-
-// 			var mqlLogConfig interface{}
-// 			if b.LogConfig != nil {
-// 				mqlLogConfig = map[string]interface{}{
-// 					"enable":     b.LogConfig.Enable,
-// 					"sampleRate": b.LogConfig.SampleRate,
-// 				}
-// 			}
-
-// 			var mqlSecuritySettings interface{}
-// 			if b.SecuritySettings != nil {
-// 				mqlSecuritySettings = map[string]interface{}{
-// 					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
-// 					"subjectAltNames": core.StrSliceToInterface(b.SecuritySettings.SubjectAltNames),
-// 				}
-// 			}
-
-// 			var maxStreamDuration interface{}
-// 			if b.MaxStreamDuration != nil {
-// 				maxStreamDuration = core.MqlTime(llx.DurationToTime(b.MaxStreamDuration.Seconds))
-// 			}
-
-// 			mqlB, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService",
-// 				"id", backendServiceId,
-// 				"affinityCookieTtlSec", b.AffinityCookieTtlSec,
-// 				"backends", mqlBackends,
-// 				"cdnPolicy", cdnPolicy,
-// 				"circuitBreakers", mqlCircuitBreakers,
-// 				"compressionMode", b.CompressionMode,
-// 				"connectionDraining", mqlConnectionDraining,
-// 				"connectionTrackingPolicy", mqlConnectionTrackingPolicy,
-// 				"consistentHash", mqlConsistentHash,
-// 				"created", parseTime(b.CreationTimestamp),
-// 				"customRequestHeaders", core.StrSliceToInterface(b.CustomRequestHeaders),
-// 				"customResponseHeaders", core.StrSliceToInterface(b.CustomResponseHeaders),
-// 				"description", b.Description,
-// 				"edgeSecurityPolicy", b.EdgeSecurityPolicy,
-// 				"enableCDN", b.EnableCDN,
-// 				"failoverPolicy", mqlFailoverPolicy,
-// 				"healthChecks", core.StrSliceToInterface(b.HealthChecks),
-// 				"iap", mqlIap,
-// 				"loadBalancingScheme", b.LoadBalancingScheme,
-// 				"localityLbPolicies", mqlLocalityLbPolicy,
-// 				"localityLbPolicy", b.LocalityLbPolicy,
-// 				"logConfig", mqlLogConfig,
-// 				"maxStreamDuration", maxStreamDuration,
-// 				"name", b.Name,
-// 				"networkUrl", b.Network,
-// 				"portName", b.PortName,
-// 				"protocol", b.Protocol,
-// 				"regionUrl", b.Region,
-// 				"securityPolicyUrl", b.SecurityPolicy,
-// 				"securitySettings", mqlSecuritySettings,
-// 				"serviceBindingUrls", core.StrSliceToInterface(b.ServiceBindings),
-// 				"sessionAffinity", b.SessionAffinity,
-// 				"timeoutSec", b.TimeoutSec,
-// 			)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			res = append(res, mqlB)
-// 		}
-// 	}
-// 	return res, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceBackendService) id() (string, error) {
-// 	id, err := g.Id()
-// 	if err != nil {
-// 		return "", nil
-// 	}
-// 	return "gcp.project.computeService.backendService/" + id, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceBackendServiceBackend) id() (string, error) {
-// 	return g.Id()
-// }
-
-// func (g *mqlGcpProjectComputeServiceBackendServiceCdnPolicy) id() (string, error) {
-// 	return g.Id()
-// }
-
-// func networkMode(n *compute.Network) string {
-// 	if n.IPv4Range != "" {
-// 		return "legacy"
-// 	} else if n.AutoCreateSubnetworks {
-// 		return "auto"
-// 	} else {
-// 		return "custom"
-// 	}
-// }
-
-// func (g *mqlGcpProjectComputeService) GetAddresses() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ctx := context.Background()
-// 	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	list, err := computeSvc.Addresses.AggregatedList(projectId).Do()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var mqlAddresses []interface{}
-// 	for _, as := range list.Items {
-// 		for _, a := range as.Addresses {
-// 			mqlA, err := g.MotorRuntime.CreateResource("gcp.project.computeService.address",
-// 				"id", fmt.Sprintf("%d", a.Id),
-// 				"address", a.Address,
-// 				"addressType", a.AddressType,
-// 				"created", parseTime(a.CreationTimestamp),
-// 				"description", a.Description,
-// 				"ipVersion", a.IpVersion,
-// 				"ipv6EndpointType", a.Ipv6EndpointType,
-// 				"name", a.Name,
-// 				"networkUrl", a.Network,
-// 				"networkTier", a.NetworkTier,
-// 				"prefixLength", a.PrefixLength,
-// 				"purpose", a.Purpose,
-// 				"regionUrl", a.Region,
-// 				"status", a.Status,
-// 				"subnetworkUrl", a.Subnetwork,
-// 				"resourceUrls", core.StrSliceToInterface(a.Users),
-// 			)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			mqlAddresses = append(mqlAddresses, mqlA)
-// 		}
-// 	}
-// 	return mqlAddresses, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceAddress) GetNetwork() (interface{}, error) {
-// 	networkUrl, err := g.NetworkUrl()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return getNetworkByUrl(networkUrl, g.MotorRuntime)
-// }
-
-// func (g *mqlGcpProjectComputeServiceAddress) GetSubnetwork() (interface{}, error) {
-// 	subnetUrl, err := g.SubnetworkUrl()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
-// }
-
-// func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
-// 	return g.Id()
-// }
-
-// func (g *mqlGcpProjectComputeService) GetForwardingRules() ([]interface{}, error) {
-// 	projectId, err := g.ProjectId()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	ctx := context.Background()
-// 	fwrSvc, err := computev1.NewForwardingRulesRESTClient(ctx, option.WithHTTPClient(client))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var fwRules []interface{}
-// 	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
-// 	for {
-// 		resp, err := it.Next()
-// 		if err == iterator.Done {
-// 			break
-// 		}
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		for _, fwr := range resp.Value.ForwardingRules {
-// 			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
-// 			for _, m := range fwr.GetMetadataFilters() {
-// 				filterLabels := make([]interface{}, 0, len(m.GetFilterLabels()))
-// 				for _, l := range m.GetFilterLabels() {
-// 					filterLabels = append(filterLabels, map[string]interface{}{
-// 						"name":  l.GetName(),
-// 						"value": l.GetValue(),
-// 					})
-// 				}
-// 				metadataFilters = append(metadataFilters, map[string]interface{}{
-// 					"filterLabels":        filterLabels,
-// 					"filterMatchCriteria": m.GetFilterMatchCriteria(),
-// 				})
-// 			}
-
-// 			serviceDirRegs := make([]interface{}, 0, len(fwr.GetServiceDirectoryRegistrations()))
-// 			for _, s := range fwr.GetServiceDirectoryRegistrations() {
-// 				serviceDirRegs = append(serviceDirRegs, map[string]interface{}{
-// 					"namespace":              s.GetNamespace(),
-// 					"service":                s.GetService(),
-// 					"serviceDirectoryRegion": s.GetServiceDirectoryRegion(),
-// 				})
-// 			}
-// 			mqlFwr, err := g.MotorRuntime.CreateResource("gcp.project.computeService.forwardingRule",
-// 				"id", fmt.Sprintf("%d", fwr.Id),
-// 				"ipAddress", fwr.GetIPAddress(),
-// 				"ipProtocol", fwr.GetIPProtocol(),
-// 				"allPorts", fwr.GetAllPorts(),
-// 				"allowGlobalAccess", fwr.GetAllowGlobalAccess(),
-// 				"backendService", fwr.GetBackendService(),
-// 				"created", parseTime(fwr.GetCreationTimestamp()),
-// 				"description", fwr.GetDescription(),
-// 				"ipVersion", fwr.GetIpVersion(),
-// 				"isMirroringCollector", fwr.GetIsMirroringCollector(),
-// 				"labels", core.StrMapToInterface(fwr.GetLabels()),
-// 				"loadBalancingScheme", fwr.GetLoadBalancingScheme(),
-// 				"metadataFilters", metadataFilters,
-// 				"name", fwr.GetName(),
-// 				"networkUrl", fwr.GetNetwork(),
-// 				"networkTier", fwr.GetNetworkTier(),
-// 				"noAutomateDnsZone", fwr.GetNoAutomateDnsZone(),
-// 				"portRange", fwr.GetPortRange(),
-// 				"ports", core.StrSliceToInterface(fwr.GetPorts()),
-// 				"regionUrl", fwr.GetRegion(),
-// 				"serviceDirectoryRegistrations", serviceDirRegs,
-// 				"serviceLabel", fwr.GetServiceLabel(),
-// 				"serviceName", fwr.GetServiceName(),
-// 				"subnetworkUrl", fwr.GetSubnetwork(),
-// 				"targetUrl", fwr.GetTarget(),
-// 			)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 			fwRules = append(fwRules, mqlFwr)
-// 		}
-// 	}
-// 	return fwRules, nil
-// }
-
-// func (g *mqlGcpProjectComputeServiceForwardingRule) id() (string, error) {
-// 	return g.Id()
-// }
-
-// func (g *mqlGcpProjectComputeServiceForwardingRule) GetNetwork() (interface{}, error) {
-// 	networkUrl, err := g.NetworkUrl()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return getNetworkByUrl(networkUrl, g.MotorRuntime)
-// }
-
-// func (g *mqlGcpProjectComputeServiceForwardingRule) GetSubnetwork() (interface{}, error) {
-// 	subnetUrl, err := g.SubnetworkUrl()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
-// }
+func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *computepb.Subnetwork, region *mqlGcpProjectComputeServiceRegion) (interface{}, error) {
+	subnetId := strconv.FormatUint(subnetwork.GetId(), 10)
+	var mqlLogConfig plugin.Resource
+	var err error
+	if subnetwork.LogConfig != nil {
+		mqlLogConfig, err = CreateResource(runtime, "gcp.project.computeService.subnetwork.logConfig", map[string]*llx.RawData{
+			"id":                  llx.StringData(fmt.Sprintf("%s/logConfig", subnetId)),
+			"aggregationInterval": llx.StringData(subnetwork.LogConfig.GetAggregationInterval()),
+			"enable":              llx.BoolData(subnetwork.LogConfig.GetEnable()),
+			"filterExpression":    llx.StringData(subnetwork.LogConfig.GetFilterExpr()),
+			"flowSampling":        llx.FloatData(float64(subnetwork.LogConfig.GetFlowSampling())),
+			"metadata":            llx.StringData(subnetwork.LogConfig.GetMetadata()),
+			"metadataFields":      llx.ArrayData(convert.SliceAnyToInterface(subnetwork.LogConfig.MetadataFields), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	args := map[string]*llx.RawData{
+		"id":                      llx.StringData(subnetId),
+		"projectId":               llx.StringData(projectId),
+		"name":                    llx.StringData(subnetwork.GetName()),
+		"description":             llx.StringData(subnetwork.GetDescription()),
+		"enableFlowLogs":          llx.BoolData(subnetwork.GetEnableFlowLogs()),
+		"externalIpv6Prefix":      llx.StringData(subnetwork.GetExternalIpv6Prefix()),
+		"fingerprint":             llx.StringData(subnetwork.GetFingerprint()),
+		"gatewayAddress":          llx.StringData(subnetwork.GetGatewayAddress()),
+		"internalIpv6Prefix":      llx.StringData(subnetwork.GetInternalIpv6Prefix()),
+		"ipCidrRange":             llx.StringData(subnetwork.GetIpCidrRange()),
+		"ipv6AccessType":          llx.StringData(subnetwork.GetIpv6AccessType()),
+		"ipv6CidrRange":           llx.StringData(subnetwork.GetIpv6CidrRange()),
+		"logConfig":               llx.ResourceData(mqlLogConfig, "gcp.project.computeService.subnetwork.logConfig"),
+		"privateIpGoogleAccess":   llx.BoolData(subnetwork.GetPrivateIpGoogleAccess()),
+		"privateIpv6GoogleAccess": llx.StringData(subnetwork.GetPrivateIpv6GoogleAccess()),
+		"purpose":                 llx.StringData(subnetwork.GetPurpose()),
+		"regionUrl":               llx.StringData(subnetwork.GetRegion()),
+		"role":                    llx.StringData(subnetwork.GetRole()),
+		"stackType":               llx.StringData(subnetwork.GetStackType()),
+		"state":                   llx.StringData(subnetwork.GetState()),
+		"created":                 llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
+	}
+	if region != nil {
+		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")
+	}
+	return CreateResource(runtime, "gcp.project.computeService.subnetwork", args)
+}
+
+func (g *mqlGcpProjectComputeService) subnetworks() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
+
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	subnetSvc, err := computev1.NewSubnetworksRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	it := subnetSvc.AggregatedList(ctx, &computepb.AggregatedListSubnetworksRequest{Project: projectId})
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		subnets := resp.Value.GetSubnetworks()
+		for _, subnet := range subnets {
+			mqlSubnetwork, err := newMqlSubnetwork(projectId, g.MqlRuntime, subnet, nil)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSubnetwork)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceRouter) id() (string, error) {
+	if err := g.Id.Error; err != nil {
+		return "", nil
+	}
+	return "gcloud.compute.router/" + g.Id.Data, nil
+}
+
+func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, runtime *plugin.Runtime, router *compute.Router) (interface{}, error) {
+	bgp, err := convert.JsonToDict(router.Bgp)
+	if err != nil {
+		return nil, err
+	}
+
+	bgpPeers, err := convert.JsonToDictSlice(router.BgpPeers)
+	if err != nil {
+		return nil, err
+	}
+
+	nats, err := convert.JsonToDictSlice(router.Nats)
+	if err != nil {
+		return nil, err
+	}
+
+	return CreateResource(runtime, "gcp.project.computeService.router", map[string]*llx.RawData{
+		"id":                          llx.StringData(strconv.FormatUint(router.Id, 10)),
+		"name":                        llx.StringData(router.Name),
+		"description":                 llx.StringData(router.Description),
+		"bgp":                         llx.DictData(bgp),
+		"bgpPeers":                    llx.ArrayData(bgpPeers, types.Dict),
+		"encryptedInterconnectRouter": llx.BoolData(router.EncryptedInterconnectRouter),
+		"nats":                        llx.ArrayData(nats, types.Dict),
+		"created":                     llx.TimeDataPtr(parseTime(router.CreationTimestamp)),
+	})
+}
+
+func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
+
+	regionsData := g.GetRegions()
+	if err := regionsData.Error; err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	res := []interface{}{}
+	wg.Add(len(regionsData.Data))
+	mux := &sync.Mutex{}
+
+	for i := range regionsData.Data {
+		r := regionsData.Data[i].(*mqlGcpProjectComputeServiceRegion)
+		if err := r.Name.Error; err != nil {
+			return nil, err
+		}
+		go func(svc *compute.Service, project string, region *mqlGcpProjectComputeServiceRegion, regionName string) {
+			req := computeSvc.Routers.List(projectId, regionName)
+			if err := req.Pages(ctx, func(page *compute.RouterList) error {
+				for _, router := range page.Items {
+
+					mqlRouter, err := newMqlRouter(projectId, region, g.MqlRuntime, router)
+					if err != nil {
+						return err
+					} else {
+						mux.Lock()
+						res = append(res, mqlRouter)
+						mux.Unlock()
+					}
+				}
+				return nil
+			}); err != nil {
+				log.Error().Err(err).Send()
+			}
+			wg.Done()
+		}(computeSvc, projectId, r, r.Name.Data)
+	}
+
+	wg.Wait()
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
+
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := computeSvc.BackendServices.AggregatedList(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]interface{}, 0, len(list.Items))
+	for _, sb := range list.Items {
+		for _, b := range sb.BackendServices {
+			backendServiceId := strconv.FormatUint(b.Id, 10)
+			mqlBackends := make([]interface{}, 0, len(b.Backends))
+			for i, backend := range b.Backends {
+				mqlBackend, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.backend", map[string]*llx.RawData{
+					"id":                        llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i)),
+					"balancingMode":             llx.StringData(backend.BalancingMode),
+					"capacityScaler":            llx.FloatData(backend.CapacityScaler),
+					"description":               llx.StringData(backend.Description),
+					"failover":                  llx.BoolData(backend.Failover),
+					"groupUrl":                  llx.StringData(backend.Group),
+					"maxConnections":            llx.IntData(backend.MaxConnections),
+					"maxConnectionsPerEndpoint": llx.IntData(backend.MaxConnectionsPerEndpoint),
+					"maxConnectionsPerInstance": llx.IntData(backend.MaxConnectionsPerInstance),
+					"maxRate":                   llx.IntData(backend.MaxRate),
+					"maxRatePerEndpoint":        llx.FloatData(backend.MaxRatePerEndpoint),
+					"maxRatePerInstance":        llx.FloatData(backend.MaxRatePerInstance),
+					"maxUtilization":            llx.FloatData(backend.MaxUtilization),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlBackends = append(mqlBackends, mqlBackend)
+			}
+
+			var cdnPolicy plugin.Resource
+			if b.CdnPolicy != nil {
+				bypassCacheOnRequestHeaders := make([]interface{}, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
+				for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
+					mqlH := map[string]interface{}{"headerName": h.HeaderName}
+					bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
+				}
+
+				var mqlCacheKeyPolicy interface{}
+				if b.CdnPolicy.CacheKeyPolicy != nil {
+					mqlCacheKeyPolicy = map[string]interface{}{
+						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
+						"includeHttpHeaders":   convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
+						"includeNamedCookies":  convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
+						"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
+						"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
+						"queryStringBlacklist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
+						"queryStringWhitelist": convert.SliceAnyToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
+					}
+				}
+
+				mqlNegativeCachingPolicy := make([]interface{}, 0, len(b.CdnPolicy.NegativeCachingPolicy))
+				for _, p := range b.CdnPolicy.NegativeCachingPolicy {
+					mqlP := map[string]interface{}{
+						"code": p.Code,
+						"ttl":  p.Ttl,
+					}
+					mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
+				}
+
+				cdnPolicy, err = CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService.cdnPolicy", map[string]*llx.RawData{
+					"id":                          llx.StringData(fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId)),
+					"bypassCacheOnRequestHeaders": llx.ArrayData(bypassCacheOnRequestHeaders, types.Dict),
+					"cacheKeyPolicy":              llx.DictData(mqlCacheKeyPolicy),
+					"cacheMode":                   llx.StringData(b.CdnPolicy.CacheMode),
+					"clientTtl":                   llx.IntData(b.CdnPolicy.ClientTtl),
+					"defaultTtl":                  llx.IntData(b.CdnPolicy.DefaultTtl),
+					"maxTtl":                      llx.IntData(b.CdnPolicy.MaxTtl),
+					"negativeCaching":             llx.BoolData(b.CdnPolicy.NegativeCaching),
+					"negativeCachingPolicy":       llx.ArrayData(mqlNegativeCachingPolicy, types.Dict),
+					"requestCoalescing":           llx.BoolData(b.CdnPolicy.RequestCoalescing),
+					"serveWhileStale":             llx.IntData(b.CdnPolicy.ServeWhileStale),
+					"signedUrlCacheMaxAgeSec":     llx.IntData(b.CdnPolicy.SignedUrlCacheMaxAgeSec),
+					"signedUrlKeyNames":           llx.ArrayData(convert.SliceAnyToInterface(b.CdnPolicy.SignedUrlKeyNames), types.String),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			var mqlCircuitBreakers interface{}
+			if b.CircuitBreakers != nil {
+				mqlCircuitBreakers = map[string]interface{}{
+					"maxConnections":           b.CircuitBreakers.MaxConnections,
+					"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
+					"maxRequests":              b.CircuitBreakers.MaxRequests,
+					"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
+					"maxRetries":               b.CircuitBreakers.MaxRetries,
+				}
+			}
+
+			var mqlConnectionDraining interface{}
+			if b.ConnectionDraining != nil {
+				mqlConnectionDraining = map[string]interface{}{
+					"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
+				}
+			}
+
+			var mqlConnectionTrackingPolicy interface{}
+			if b.ConnectionTrackingPolicy != nil {
+				mqlConnectionTrackingPolicy = map[string]interface{}{
+					"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
+					"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
+					"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
+					"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
+				}
+			}
+
+			var mqlConsistentHash interface{}
+			if b.ConsistentHash != nil {
+				mqlConsistentHash = map[string]interface{}{
+					"httpCookie": map[string]interface{}{
+						"name": b.ConsistentHash.HttpCookie.Name,
+						"path": b.ConsistentHash.HttpCookie.Path,
+						"ttl":  llx.TimeData(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
+					},
+					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
+					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
+				}
+			}
+
+			var mqlFailoverPolicy interface{}
+			if b.FailoverPolicy != nil {
+				mqlFailoverPolicy = map[string]interface{}{
+					"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
+					"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
+					"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
+				}
+			}
+
+			var mqlIap interface{}
+			if b.Iap != nil {
+				mqlIap = map[string]interface{}{
+					"enabled":                  b.Iap.Enabled,
+					"oauth2ClientId":           b.Iap.Oauth2ClientId,
+					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
+					"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
+				}
+			}
+
+			mqlLocalityLbPolicy := make([]interface{}, 0, len(b.LocalityLbPolicies))
+			for _, p := range b.LocalityLbPolicies {
+				var mqlCustomPolicy interface{}
+				if p.CustomPolicy != nil {
+					mqlCustomPolicy = map[string]interface{}{
+						"data": p.CustomPolicy.Data,
+						"name": p.CustomPolicy.Name,
+					}
+				}
+
+				var mqlPolicy interface{}
+				if p.Policy != nil {
+					mqlPolicy = map[string]interface{}{
+						"name": p.Policy.Name,
+					}
+				}
+				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]interface{}{
+					"customPolicy": mqlCustomPolicy,
+					"policy":       mqlPolicy,
+				})
+			}
+
+			var mqlLogConfig interface{}
+			if b.LogConfig != nil {
+				mqlLogConfig = map[string]interface{}{
+					"enable":     b.LogConfig.Enable,
+					"sampleRate": b.LogConfig.SampleRate,
+				}
+			}
+
+			var mqlSecuritySettings interface{}
+			if b.SecuritySettings != nil {
+				mqlSecuritySettings = map[string]interface{}{
+					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
+					"subjectAltNames": convert.SliceAnyToInterface(b.SecuritySettings.SubjectAltNames),
+				}
+			}
+
+			var maxStreamDuration *time.Time
+			if b.MaxStreamDuration != nil {
+				time := llx.DurationToTime(b.MaxStreamDuration.Seconds)
+				maxStreamDuration = &time
+			}
+
+			mqlB, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.backendService", map[string]*llx.RawData{
+				"id":                       llx.StringData(backendServiceId),
+				"affinityCookieTtlSec":     llx.IntData(b.AffinityCookieTtlSec),
+				"backends":                 llx.ArrayData(mqlBackends, types.Resource("gcp.project.computeService.backendService.backend")),
+				"cdnPolicy":                llx.ResourceData(cdnPolicy, "gcp.project.computeService.backendService.cdnPolicy"),
+				"circuitBreakers":          llx.DictData(mqlCircuitBreakers),
+				"compressionMode":          llx.StringData(b.CompressionMode),
+				"connectionDraining":       llx.DictData(mqlConnectionDraining),
+				"connectionTrackingPolicy": llx.DictData(mqlConnectionTrackingPolicy),
+				"consistentHash":           llx.DictData(mqlConsistentHash),
+				"created":                  llx.TimeDataPtr(parseTime(b.CreationTimestamp)),
+				"customRequestHeaders":     llx.ArrayData(convert.SliceAnyToInterface(b.CustomRequestHeaders), types.String),
+				"customResponseHeaders":    llx.ArrayData(convert.SliceAnyToInterface(b.CustomResponseHeaders), types.String),
+				"description":              llx.StringData(b.Description),
+				"edgeSecurityPolicy":       llx.StringData(b.EdgeSecurityPolicy),
+				"enableCDN":                llx.BoolData(b.EnableCDN),
+				"failoverPolicy":           llx.DictData(mqlFailoverPolicy),
+				"healthChecks":             llx.ArrayData(convert.SliceAnyToInterface(b.HealthChecks), types.String),
+				"iap":                      llx.DictData(mqlIap),
+				"loadBalancingScheme":      llx.StringData(b.LoadBalancingScheme),
+				"localityLbPolicies":       llx.ArrayData(mqlLocalityLbPolicy, types.Dict),
+				"localityLbPolicy":         llx.StringData(b.LocalityLbPolicy),
+				"logConfig":                llx.DictData(mqlLogConfig),
+				"maxStreamDuration":        llx.TimeDataPtr(maxStreamDuration),
+				"name":                     llx.StringData(b.Name),
+				"networkUrl":               llx.StringData(b.Network),
+				"portName":                 llx.StringData(b.PortName),
+				"protocol":                 llx.StringData(b.Protocol),
+				"regionUrl":                llx.StringData(b.Region),
+				"securityPolicyUrl":        llx.StringData(b.SecurityPolicy),
+				"securitySettings":         llx.DictData(mqlSecuritySettings),
+				"serviceBindingUrls":       llx.ArrayData(convert.SliceAnyToInterface(b.ServiceBindings), types.String),
+				"sessionAffinity":          llx.StringData(b.SessionAffinity),
+				"timeoutSec":               llx.IntData(b.TimeoutSec),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlB)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceBackendService) id() (string, error) {
+	if err := g.Id.Error; err != nil {
+		return "", nil
+	}
+	return "gcp.project.computeService.backendService/" + g.Id.Data, nil
+}
+
+func (g *mqlGcpProjectComputeServiceBackendServiceBackend) id() (string, error) {
+	return g.Id.Data, nil
+}
+
+func (g *mqlGcpProjectComputeServiceBackendServiceCdnPolicy) id() (string, error) {
+	return g.Id.Data, nil
+}
+
+func networkMode(n *compute.Network) string {
+	if n.IPv4Range != "" {
+		return "legacy"
+	} else if n.AutoCreateSubnetworks {
+		return "auto"
+	} else {
+		return "custom"
+	}
+}
+
+func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
+
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := computeSvc.Addresses.AggregatedList(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+	var mqlAddresses []interface{}
+	for _, as := range list.Items {
+		for _, a := range as.Addresses {
+			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.address", map[string]*llx.RawData{
+				"id":               llx.StringData(fmt.Sprintf("%d", a.Id)),
+				"address":          llx.StringData(a.Address),
+				"addressType":      llx.StringData(a.AddressType),
+				"created":          llx.TimeDataPtr(parseTime(a.CreationTimestamp)),
+				"description":      llx.StringData(a.Description),
+				"ipVersion":        llx.StringData(a.IpVersion),
+				"ipv6EndpointType": llx.StringData(a.Ipv6EndpointType),
+				"name":             llx.StringData(a.Name),
+				"networkUrl":       llx.StringData(a.Network),
+				"networkTier":      llx.StringData(a.NetworkTier),
+				"prefixLength":     llx.IntData(a.PrefixLength),
+				"purpose":          llx.StringData(a.Purpose),
+				"regionUrl":        llx.StringData(a.Region),
+				"status":           llx.StringData(a.Status),
+				"subnetworkUrl":    llx.StringData(a.Subnetwork),
+				"resourceUrls":     llx.ArrayData(convert.SliceAnyToInterface(a.Users), types.String),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlAddresses = append(mqlAddresses, mqlA)
+		}
+	}
+	return mqlAddresses, nil
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if err := g.NetworkUrl.Error; err != nil {
+		return nil, err
+	}
+	return getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	if err := g.SubnetworkUrl.Error; err != nil {
+		return nil, err
+	}
+	return getSubnetworkByUrl(g.SubnetworkUrl.Data, g.MqlRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
+	return g.Id.Data, nil
+}
+
+func (g *mqlGcpProjectComputeService) forwardingRules() ([]interface{}, error) {
+	if err := g.ProjectId.Error; err != nil {
+		return nil, err
+	}
+	projectId := g.ProjectId.Data
+
+	provider, err := gcpProvider(g.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	fwrSvc, err := computev1.NewForwardingRulesRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var fwRules []interface{}
+	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		for _, fwr := range resp.Value.ForwardingRules {
+			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
+			for _, m := range fwr.GetMetadataFilters() {
+				filterLabels := make([]interface{}, 0, len(m.GetFilterLabels()))
+				for _, l := range m.GetFilterLabels() {
+					filterLabels = append(filterLabels, map[string]interface{}{
+						"name":  l.GetName(),
+						"value": l.GetValue(),
+					})
+				}
+				metadataFilters = append(metadataFilters, map[string]interface{}{
+					"filterLabels":        filterLabels,
+					"filterMatchCriteria": m.GetFilterMatchCriteria(),
+				})
+			}
+
+			serviceDirRegs := make([]interface{}, 0, len(fwr.GetServiceDirectoryRegistrations()))
+			for _, s := range fwr.GetServiceDirectoryRegistrations() {
+				serviceDirRegs = append(serviceDirRegs, map[string]interface{}{
+					"namespace":              s.GetNamespace(),
+					"service":                s.GetService(),
+					"serviceDirectoryRegion": s.GetServiceDirectoryRegion(),
+				})
+			}
+			mqlFwr, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.forwardingRule", map[string]*llx.RawData{
+				"id":                            llx.StringData(fmt.Sprintf("%d", fwr.Id)),
+				"ipAddress":                     llx.StringData(fwr.GetIPAddress()),
+				"ipProtocol":                    llx.StringData(fwr.GetIPProtocol()),
+				"allPorts":                      llx.BoolData(fwr.GetAllPorts()),
+				"allowGlobalAccess":             llx.BoolData(fwr.GetAllowGlobalAccess()),
+				"backendService":                llx.StringData(fwr.GetBackendService()),
+				"created":                       llx.TimeDataPtr(parseTime(fwr.GetCreationTimestamp())),
+				"description":                   llx.StringData(fwr.GetDescription()),
+				"ipVersion":                     llx.StringData(fwr.GetIpVersion()),
+				"isMirroringCollector":          llx.BoolData(fwr.GetIsMirroringCollector()),
+				"labels":                        llx.MapData(convert.MapToInterfaceMap(fwr.GetLabels()), types.String),
+				"loadBalancingScheme":           llx.StringData(fwr.GetLoadBalancingScheme()),
+				"metadataFilters":               llx.ArrayData(metadataFilters, types.Dict),
+				"name":                          llx.StringData(fwr.GetName()),
+				"networkUrl":                    llx.StringData(fwr.GetNetwork()),
+				"networkTier":                   llx.StringData(fwr.GetNetworkTier()),
+				"noAutomateDnsZone":             llx.BoolData(fwr.GetNoAutomateDnsZone()),
+				"portRange":                     llx.StringData(fwr.GetPortRange()),
+				"ports":                         llx.ArrayData(convert.SliceAnyToInterface(fwr.GetPorts()), types.String),
+				"regionUrl":                     llx.StringData(fwr.GetRegion()),
+				"serviceDirectoryRegistrations": llx.ArrayData(serviceDirRegs, types.Dict),
+				"serviceLabel":                  llx.StringData(fwr.GetServiceLabel()),
+				"serviceName":                   llx.StringData(fwr.GetServiceName()),
+				"subnetworkUrl":                 llx.StringData(fwr.GetSubnetwork()),
+				"targetUrl":                     llx.StringData(fwr.GetTarget()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			fwRules = append(fwRules, mqlFwr)
+		}
+	}
+	return fwRules, nil
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) id() (string, error) {
+	return g.Id.Data, nil
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if err := g.NetworkUrl.Error; err != nil {
+		return nil, err
+	}
+	return getNetworkByUrl(g.NetworkUrl.Data, g.MqlRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	if err := g.SubnetworkUrl.Error; err != nil {
+		return nil, err
+	}
+	return getSubnetworkByUrl(g.SubnetworkUrl.Data, g.MqlRuntime)
+}

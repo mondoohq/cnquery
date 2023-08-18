@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -74,43 +75,51 @@ func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 // 	return &assetIdentifier{name: name, region: region, project: project}
 // }
 
-// type resourceId struct {
-// 	Project string
-// 	Region  string
-// 	Name    string
-// }
+type resourceId struct {
+	Project string
+	Region  string
+	Name    string
+}
 
-// func getNetworkByUrl(networkUrl string, runtime *resources.Runtime) (interface{}, error) {
-// 	// A reference to a network is not mandatory for this resource
-// 	if networkUrl == "" {
-// 		return nil, nil
-// 	}
+func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceNetwork, error) {
+	// A reference to a network is not mandatory for this resource
+	if networkUrl == "" {
+		return nil, nil
+	}
 
-// 	// Format is https://www.googleapis.com/compute/v1/projects/project1/global/networks/net-1
-// 	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
-// 	parts := strings.Split(params, "/")
-// 	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/global/networks/net-1
+	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
 
-// 	return runtime.CreateResource("gcp.project.computeService.network",
-// 		"name", resId.Name,
-// 		"projectId", resId.Project,
-// 	)
-// }
+	res, err := NewResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"name":      llx.StringData(resId.Name),
+		"projectId": llx.StringData(resId.Project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceNetwork), nil
+}
 
-// func getSubnetworkByUrl(subnetUrl string, runtime *resources.Runtime) (interface{}, error) {
-// 	// A reference to a subnetwork is not mandatory for this resource
-// 	if subnetUrl == "" {
-// 		return nil, nil
-// 	}
+func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	// A reference to a subnetwork is not mandatory for this resource
+	if subnetUrl == "" {
+		return nil, nil
+	}
 
-// 	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
-// 	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
-// 	parts := strings.Split(params, "/")
-// 	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/subnetworks/subnet-1
+	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 
-// 	return runtime.CreateResource("gcp.project.computeService.subnetwork",
-// 		"name", resId.Name,
-// 		"projectId", resId.Project,
-// 		"region", resId.Region,
-// 	)
-// }
+	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
+		"name":      llx.StringData(resId.Name),
+		"projectId": llx.StringData(resId.Project),
+		"region":    llx.StringData(resId.Region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
+}

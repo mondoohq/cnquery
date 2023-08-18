@@ -3,10 +3,12 @@ module go.mondoo.com/cnquery/providers/gcp
 go 1.20
 
 require (
+	cloud.google.com/go/compute v1.23.0
 	cloud.google.com/go/container v1.24.0
 	cloud.google.com/go/iam v1.1.1
 	cloud.google.com/go/recommender v1.10.1
 	cloud.google.com/go/serviceusage v1.7.1
+	github.com/aws/smithy-go v1.14.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.30.0
 	go.mondoo.com/cnquery v0.0.0-20230817085602-5cf8b3f7a3f4
@@ -18,7 +20,6 @@ require (
 
 require (
 	cloud.google.com/go v0.110.6 // indirect
-	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
