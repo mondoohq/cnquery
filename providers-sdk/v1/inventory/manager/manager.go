@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault/inmemory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault/multivault"
+	protobuf "google.golang.org/protobuf/proto"
 )
 
 var _ InventoryManager = (*inventoryManager)(nil)
@@ -200,6 +201,33 @@ func (im *inventoryManager) Resolve(ctx context.Context) map[*inventory.Asset]er
 	// logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)
 	// return resolvedAssets.Errors
 	return nil
+}
+
+func (im *inventoryManager) ResolveAsset(inventoryAsset *inventory.Asset) (*inventory.Asset, error) {
+	creds := im.GetCredsResolver()
+
+	// we clone the asset to make sure we do not modify the original asset
+	clonedAsset := protobuf.Clone(inventoryAsset).(*inventory.Asset)
+
+	for j := range clonedAsset.Connections {
+		conn := clonedAsset.Connections[j]
+		for k := range conn.Credentials {
+			credential := conn.Credentials[k]
+			if credential.SecretId == "" {
+				continue
+			}
+
+			resolvedCredential, err := creds.GetCredential(credential)
+			if err != nil {
+				log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
+				return nil, err
+			}
+
+			conn.Credentials[k] = resolvedCredential
+		}
+	}
+
+	return clonedAsset, nil
 }
 
 func (im *inventoryManager) GetCredsResolver() vault.Resolver {
