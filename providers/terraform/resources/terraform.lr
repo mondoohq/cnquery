@@ -1,6 +1,9 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+option provider = "go.mondoo.com/cnquery/providers/terraform"
+option go_package = "go.mondoo.com/cnquery/providers/terraform/resources"
+
 // Terraform Configuration Files
 terraform {
   // Access to individual files including .tf and .tf.json files

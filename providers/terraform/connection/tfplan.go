@@ -1,9 +1,15 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
+package connection
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"os"
+
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+)
 
 type Plan struct {
 	FormatVersion    string `json:"format_version,omitempty"`
@@ -13,8 +19,8 @@ type Plan struct {
 	Configuration      json.RawMessage    `json:"configuration,omitempty"`
 	PlannedValues      plannedStateValues `json:"planned_values,omitempty"`
 	Variables          variables          `json:"variables,omitempty"`
-	ResourceChanges    []resourceChange   `json:"resource_changes,omitempty"`
-	ResourceDrift      []resourceChange   `json:"resource_drift,omitempty"`
+	ResourceChanges    []ResourceChange   `json:"resource_changes,omitempty"`
+	ResourceDrift      []ResourceChange   `json:"resource_drift,omitempty"`
 	RelevantAttributes []resourceAttr     `json:"relevant_attributes,omitempty"`
 	OutputChanges      map[string]change  `json:"output_changes,omitempty"`
 }
@@ -85,7 +91,7 @@ type variable struct {
 // resourceChange is a description of an individual change action that Terraform
 // plans to use to move from the prior state to a new state matching the
 // configuration.
-type resourceChange struct {
+type ResourceChange struct {
 	// Address is the absolute resource address
 	Address string `json:"address,omitempty"`
 
@@ -185,4 +191,32 @@ type change struct {
 type resourceAttr struct {
 	Resource string          `json:"resource"`
 	Attr     json.RawMessage `json:"attribute"`
+}
+
+func NewPlanConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
+	cc := asset.Connections[0]
+
+	// NOTE: right now we are only supporting to load either state, plan or hcl files but not at the same time
+
+	var assetType terraformAssetType
+	var tfPlan Plan
+
+	assetType = planfile
+	planfile := cc.Options["path"]
+	log.Debug().Str("path", planfile).Msg("load terraform plan file")
+	data, err := os.ReadFile(planfile)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &tfPlan)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Connection{
+		asset:     asset,
+		assetType: assetType,
+
+		plan: &tfPlan,
+	}, nil
 }

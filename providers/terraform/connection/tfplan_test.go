@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
+package connection
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 )
 
 func TestTfplan(t *testing.T) {
-	data, err := os.ReadFile("testdata/gcp/plan_simple.json")
+	data, err := os.ReadFile("../testdata/gcp/plan_simple.json")
 	require.NoError(t, err)
 
 	var plan Plan
