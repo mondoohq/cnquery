@@ -25,6 +25,10 @@ gcp.project @defaults("name") {
   services() []gcp.service
   // List of recommendations
   recommendations() []gcp.recommendation
+  // GCP GKE resources
+  gke() gcp.project.gkeService
+  // GCP IAM Resources
+  iam() gcp.project.iamService
 }
 
 // GCP Resource Manager Binding
@@ -79,4 +83,547 @@ gcp.recommendation {
   lastRefreshTime time
   // State and Metadata about Recommendation
   state dict
+}
+
+// GCP GKE
+private gcp.project.gkeService {
+  // Project ID
+  projectId string
+  // List of GKE clusters in the current project
+  clusters() []gcp.project.gkeService.cluster
+}
+
+// GCP GKE Cluster
+private gcp.project.gkeService.cluster @defaults("name") {
+  // Project ID
+  projectId string
+  // Unique identifier for the cluster
+  id string
+  // The name of the cluster
+  name string
+  // Optional description for the cluster
+  description string
+  // The logging service the cluster should use to write logs
+  loggingService string
+  // The monitoring service the cluster should use to write metrics
+  monitoringService string
+  // The name of the Google Compute Engine network to which the cluster is connected
+  network string
+  // The IP address range of the container pods in this cluster
+  clusterIpv4Cidr string
+  // The name of the Google Compute Engine subnetwork to which the cluster is connected.
+  subnetwork string
+  // The list of node pools for the cluster
+  nodePools []gcp.project.gkeService.cluster.nodepool
+  // The list of Google Compute Engine zones in which the cluster's nodes should be located.
+  locations []string
+  // Enable Kubernetes alpha features
+  enableKubernetesAlpha bool
+  // Whether Autopilot is enabled for the cluster
+  autopilotEnabled bool
+  // Deprecated. Use location instead.
+  zone string
+  // Name of the Google Compute Engine zone/region in which the cluster exists
+  location string
+  // The IP address of this cluster's master endpoint
+  endpoint string
+  // The initial Kubernetes version for this cluster
+  initialClusterVersion string
+  // The current software version of the master endpoint
+  currentMasterVersion string
+  // The current status of this cluster
+  status string
+  // The resource labels for the cluster to use to annotate any related Google Compute Engine resources.
+  resourceLabels map[string]string
+  // Creation time
+  created time
+  // The time the cluster will be automatically deleted in
+  expirationTime time
+  // Configurations for the various addons available to run in the cluster
+  addonsConfig gcp.project.gkeService.cluster.addonsConfig
+  // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
+  workloadIdentityConfig dict
+  // Configuration for cluster IP allocation
+  ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
+  // Configuration for cluster networking
+  networkConfig gcp.project.gkeService.cluster.networkConfig
+  // Binary authorization configuration
+  binaryAuthorization dict
+  // Legacy ABAC authorization configuration
+  legacyAbac dict
+  // Authentication information for accessing the master endpoint
+  masterAuth dict
+  // Master authorized networks configuration
+  masterAuthorizedNetworksConfig dict
+  // Private cluster configuration
+  privateClusterConfig dict
+  // Etcd encryption configuration
+  databaseEncryption dict
+}
+
+// GKE Cluster Addons Config
+private gcp.project.gkeService.cluster.addonsConfig {
+  // Internal ID
+  id string
+  // Configuration for the HTTP (L7) load balancing controller addon
+  httpLoadBalancing dict
+  // Configuration for the horizontal pod autoscaling feature
+  horizontalPodAutoscaling dict
+  // Configuration for the Kubernetes Dashboard
+  kubernetesDashboard dict
+  // Configuration for NetworkPolicy
+  networkPolicyConfig dict
+  // Configuration for the Cloud Run addon
+  cloudRunConfig dict
+  // Configuration for NodeLocalDNS, a DNS cache running on cluster nodes
+  dnsCacheConfig dict
+  // Configuration for the ConfigConnector addon
+  configConnectorConfig dict
+  // Configuration for the Compute Engine Persistent Disk CSI driver
+  gcePersistentDiskCsiDriverConfig dict
+  // Configuration for the GCP Filestore CSI driver
+  gcpFilestoreCsiDriverConfig dict
+  // Configuration for the backup for GKE agent addon
+  gkeBackupAgentConfig dict
+}
+
+// GKE Cluster IP Allocation Policy
+private gcp.project.gkeService.cluster.ipAllocationPolicy {
+  // Internal ID
+  id string
+  // Whether alias IPs will be used for pod IPs in the cluster
+  useIpAliases bool
+  // Whether a new subnetwork will be created automatically for the cluster
+  createSubnetwork bool
+  // Custom subnetwork name to be used if createSubnetwork is true
+  subnetworkName string
+  // Name of the secondary range to be used for the cluster CIDR block
+  clusterSecondaryRangeName string
+  // Name of the secondary range to be used for the services CIDR block
+  servicesSecondaryRangeName string
+  // IP address range for the cluster pod IPs
+  clusterIpv4CidrBlock string
+  // IP address range of the instance IPs in this cluster
+  nodeIpv4CidrBlock string
+  // IP address range of the services IPs in this cluster
+  servicesIpv4CidrBlock string
+  // IP address range of the Cloud TPUs in this cluster
+  tpuIpv4CidrBlock string
+  // Whether routes will be used for pod IPs in this cluster
+  useRoutes bool
+  // IP stack type
+  stackType string
+  // IPv6 access type
+  ipv6AccessType string
+}
+
+// GKE Cluster Network Config
+private gcp.project.gkeService.cluster.networkConfig {
+  // Internal ID
+  id string
+  // Relative path of the network to which the cluster is connected
+  networkPath string
+  // Network to which the cluster is connected
+  network() gcp.project.computeService.network
+  // Relative path of the subnetwork to which the cluster is connected
+  subnetworkPath string
+  // Subnetwork to which the cluster is connected
+  subnetwork() gcp.project.computeService.subnetwork
+  // Whether intra-node visibility is enabled for this cluster
+  enableIntraNodeVisibility bool
+  // Whether the cluster disables default in-node sNAT rules
+  defaultSnatStatus dict
+  // Whether L4ILB subsetting is enabled for this cluster
+  enableL4IlbSubsetting bool
+  // Desired datapath provider for this cluster
+  datapathProvider string
+  // Desired state of IPv6 connectivity to Google Services
+  privateIpv6GoogleAccess string
+  // Cluster DNS configuration
+  dnsConfig dict
+  // Configuration specifying whether services with externalIPs field are blocked
+  serviceExternalIpsConfig dict
+}
+
+// GKE Cluster Node Pool
+private gcp.project.gkeService.cluster.nodepool @defaults("name") {
+  // Internal ID
+  id string
+  // The name of the node pool
+  name string
+  // The node configuration of the pool
+  config gcp.project.gkeService.cluster.nodepool.config
+  // The initial node count for the pool
+  initialNodeCount int
+  // The list of Google Compute Engine zones in which the NodePool's nodes should be located.
+  locations []string
+  // Networking configuration for this node pool.
+  networkConfig gcp.project.gkeService.cluster.nodepool.networkConfig
+  // The Kubernetes version
+  version string
+  // The resource URLs of the managed instance groups associated with this node pool
+  instanceGroupUrls []string
+  // The current status of this node pool
+  status string
+  // Node management configuration
+  management dict
+}
+
+// GCP GKE node pool-level network configuration
+private gcp.project.gkeService.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
+  // Internal ID
+  id string
+  // The ID of the secondary range for pod IPs
+  podRange string
+  // The IP address range for pod IPs in this node pool
+  podIpv4CidrBlock string
+  // Network performance tier configuration
+  performanceConfig gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig
+}
+
+// GCP GKE node pool network performance configuration
+private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
+  // Internal ID
+  id string
+  // Specifies the total network bandwidth tier for the node pool
+  totalEgressBandwidthTier string
+}
+
+// GCP GKE node pool configuration
+private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of a Google Compute Engine machine type
+  machineType string
+  // Size of the disk attached to each node, specified in GB
+  diskSizeGb int
+  // The set of Google API scopes to be made available on all of the node VMs under the "default" service account
+  oauthScopes []string
+  // Email of the Google Cloud Platform Service Account to be used by the node VMs
+  serviceAccountEmail string
+  // Google Cloud Platform Service Account to be used by the node VMs
+  serviceAccount() gcp.project.iamService.serviceAccount
+  // The metadata key/value pairs assigned to instances in the cluster
+  metadata map[string]string
+  // The image type to use for this node
+  imageType string
+  // The map of Kubernetes labels to be applied to each node
+  labels map[string]string
+  // The number of local SSD disks to be attached to the node
+  localSsdCount int
+  // The list of instance tags applied to all nodes
+  tags []string
+  // Whether the nodes are created as preemptible VM instances.
+  preemptible bool
+  // A list of hardware accelerators to be attached to each node
+  accelerators []gcp.project.gkeService.cluster.nodepool.config.accelerator
+  // Type of the disk attached to each node
+  diskType string
+  // Minimum CPU platform to be used by this instance
+  minCpuPlatform string
+  // The workload metadata mode for this node
+  workloadMetadataMode string
+  // List of Kubernetes taints to be applied to each node
+  taints []gcp.project.gkeService.cluster.nodepool.config.nodeTaint
+  // Sandbox configuration for this node
+  sandboxConfig gcp.project.gkeService.cluster.nodepool.config.sandboxConfig
+  // Shielded instance configuration
+  shieldedInstanceConfig gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig
+  // Parameters that can be configured on Linux nodes
+  linuxNodeConfig gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig
+  // Node kubelet configs
+  kubeletConfig gcp.project.gkeService.cluster.nodepool.config.kubeletConfig
+  // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
+  bootDiskKmsKey string
+  // Google Container File System (image streaming) configuration
+  gcfsConfig gcp.project.gkeService.cluster.nodepool.config.gcfsConfig
+  // Advanced features for the Compute Engine VM
+  advancedMachineFeatures gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures
+  // GVNIC configuration
+  gvnicConfig gcp.project.gkeService.cluster.nodepool.config.gvnicConfig
+  // Spot flag for enabling Spot VM, which is a rebrand of the existing preemptible flag
+  spot bool
+  // Confidential nodes configuration
+  confidentialNodes gcp.project.gkeService.cluster.nodepool.config.confidentialNodes
+}
+
+// GCP GKE node pool hardware accelerators configuration
+private gcp.project.gkeService.cluster.nodepool.config.accelerator @defaults("type count") {
+  // Internal ID
+  id string
+  // The number of the accelerator cards exposed to an instance
+  count int
+  // The accelerator type resource name
+  type string
+  // Size of partitions to create on the GPU
+  gpuPartitionSize string
+  // The configuration for GPU sharing
+  gpuSharingConfig gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig
+}
+
+// GPU sharing configuration
+private gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig @defaults("strategy") {
+  // Internal ID
+  id string
+  // The max number of containers that can share a GPU
+  maxSharedClientsPerGpu int
+  // The GPU sharing strategy
+  strategy string
+}
+
+// GCP GKE Kubernetes node taint
+private gcp.project.gkeService.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
+  // Internal ID
+  id string
+  // Key for the taint
+  key string
+  // Value for the taint
+  value string
+  // Effect for the taint
+  effect string
+}
+
+// GCP GKE node pool sandbox configuration
+private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("type") {
+  // Internal ID
+  id string
+  // Type of the sandbox to use for this node
+  type string
+}
+
+// GCP GKE node pool shielded instance configuration
+private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
+  // Internal ID
+  id string
+  // Defines whether the instance has Secure Boot enabled
+  enableSecureBoot bool
+  // Defines whether the instance has integrity monitoring enabled
+  enableIntegrityMonitoring bool
+}
+
+// GCP GKE node pool parameters that can be configured on Linux nodes
+private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
+  // Internal ID
+  id string
+  // The Linux kernel parameters to be applied to the nodes and all pods running on them
+  sysctls map[string]string
+}
+
+// GCP GKE node pool kubelet configuration
+private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
+  // Internal ID
+  id string
+  // Control the CPU management policy on the node
+  cpuManagerPolicy string
+  // Set the CPU CFS quota period value 'cpu.cfs_period_us'
+  cpuCfsQuotaPeriod string
+  // Set the Pod PID limits
+  podPidsLimit int
+}
+
+// GCP GKE node pool GCFS configuration
+private gcp.project.gkeService.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use GCFS
+  enabled bool
+}
+
+// GCP GKE node pool advanced machine features configuration
+private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
+  // Internal ID
+  id string
+  // The number of threads per physical core. If unset, the maximum number of threads supported per core by the underlying processor is assumed
+  threadsPerCore int
+}
+
+// GCP GKE node pool GVNIC configuration
+private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use GVNIC
+  enabled bool
+}
+
+// GCP GKE node pool confidential nodes configuration
+private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use confidential nodes
+  enabled bool
+}
+
+// GCP Service Account
+private gcp.project.iamService.serviceAccount {
+  // Project ID
+  projectId string
+  // Service account name
+  name string
+  // Unique, stable, numeric ID for the service account
+  uniqueId string
+  // Email address of the service account
+  email string
+  // User-specified, human-readable name for the service account
+  displayName string
+  // Service account description
+  description string
+  // OAuth 2.0 client ID
+  oauth2ClientId string
+  // Whether the service account is disabled
+  disabled bool
+  // Service account keys
+  keys() []gcp.project.iamService.serviceAccount.key
+}
+
+// GCP service account keys
+private gcp.project.iamService.serviceAccount.key {
+  // Service account key name
+  name string
+  // Algorithm (and possibly key size) of the key
+  keyAlgorithm string
+  // Key can be used after this timestamp
+  validAfterTime time
+  // Key can be used before this timestamp
+  validBeforeTime time
+  // Key origin
+  keyOrigin string
+  // Key type
+  keyType string
+  // Whether the key is disabled
+  disabled bool
+}
+
+// GCP Compute VPC Network resource
+private gcp.project.computeService.network @defaults("name") {
+  // Unique Identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the resource
+  name string
+  // An optional description of this resource
+  description string
+  // If not set, indicates a legacy network
+  autoCreateSubnetworks bool
+  // Indicates if ULA internal IPv6 is enabled on this network
+  enableUlaInternalIpv6 bool
+  // Gateway address for default routing
+  gatewayIPv4 string
+  // Maximum Transmission Unit in bytes
+  mtu int
+  // Network firewall policy enforcement order
+  networkFirewallPolicyEnforcementOrder string
+  // Creation timestamp
+  created time
+  // Network peerings for the resource
+  peerings []dict
+  // The network-wide routing mode to use
+  routingMode string
+  // Network mode - legacy, custom or auto
+  mode string
+  // List of URLs for the subnetwork in this network
+  subnetworkUrls []string
+  // Subnetworks in this network
+  subnetworks() []gcp.project.computeService.subnetwork
+}
+
+// GCP Compute VPC Network Partitioning
+private gcp.project.computeService.subnetwork @defaults("name") {
+  // Unique Identifier
+  id string
+  // Project ID
+  projectId string
+  // Name of the resource
+  name string
+  // An optional description of this resource
+  description string
+  // Indicates if flow logging for this subnetwork
+  enableFlowLogs bool
+  // External IPv6 address range
+  externalIpv6Prefix string
+  // Fingerprint of this resource
+  fingerprint string
+  // Gateway address for default routes
+  gatewayAddress string
+  // Internal IPv6 address range
+  internalIpv6Prefix string
+  // Range of internal addresses
+  ipCidrRange string
+  // Access type of IPv6 address
+  ipv6AccessType string
+  // Range of internal IPv6 addresses
+  ipv6CidrRange string
+  // VPC flow logging configuration
+  logConfig gcp.project.computeService.subnetwork.logConfig
+  // VMs in this subnet can access Google services without assigned external IP addresses
+  privateIpGoogleAccess bool
+  // VMs in this subnet can access Google services without assigned external IPv6 addresses
+  privateIpv6GoogleAccess string
+  // Purpose of the resource
+  purpose string
+  // Region
+  region() gcp.project.computeService.region
+  // Region URL
+  regionUrl string
+  // Role of subnetwork
+  role string
+  // Stack type for the subnet
+  stackType string
+  // State of the subnetwork
+  state string
+  // Creation timestamp
+  created time
+}
+
+// GCP Compute VPC Network Partitioning log configuration
+private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
+  // Internal ID
+  id string
+  // Toggles the aggregation interval for collecting flow logs
+  aggregationInterval string
+  // Whether to enable flow logging for this subnetwork
+  enable bool
+  // Used to define which VPC flow logs should be exported to Cloud Logging
+  filterExpression string
+  // Sampling rate of VPC flow logs within the subnetwork where 1.0 means all collected logs are reported and 0.0 means no logs are reported
+  flowSampling float
+  // Whether all, none or a subset of metadata should be added to the reported VPC flow logs
+  metadata string
+  // Metadata fields to be added to the reported VPC flow logs
+  metadataFields []string
+}
+
+// GCP Compute Region
+private gcp.project.computeService.region @defaults("name") {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Resource Description
+  description string
+  // Status of the region
+  status string
+  // Creation timestamp
+  created time
+  // Quotas assigned to this region
+  quotas map[string]float
+  // Deprecation status
+  deprecated dict
+}
+// GCP IAM Resources
+private gcp.project.iamService {
+  // Project ID
+  projectId string
+  // List of service accounts
+  serviceAccounts() []gcp.project.iamService.serviceAccount
+}
+
+// GCP Compute Engine
+private gcp.project.computeService {
+  // Project ID
+  projectId string
+  // Project Regions
+  regions() []gcp.project.computeService.region
 }

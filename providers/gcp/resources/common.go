@@ -2,10 +2,12 @@ package resources
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func gcpProvider(t plugin.Connection) (*connection.Connection, error) {
@@ -25,18 +27,18 @@ func parseTime(timestamp string) *time.Time {
 	return &parsedCreated
 }
 
-// func RegionNameFromRegionUrl(regionUrl string) string {
-// 	regionUrlSegments := strings.Split(regionUrl, "/")
-// 	return regionUrlSegments[len(regionUrlSegments)-1]
-// }
+func RegionNameFromRegionUrl(regionUrl string) string {
+	regionUrlSegments := strings.Split(regionUrl, "/")
+	return regionUrlSegments[len(regionUrlSegments)-1]
+}
 
-// func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
-// 	if t == nil {
-// 		return nil
-// 	}
-// 	tm := t.AsTime()
-// 	return &tm
-// }
+func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
+	if t == nil {
+		return nil
+	}
+	tm := t.AsTime()
+	return &tm
+}
 
 // // parseResourceName returns the name of a resource from either a full path or just the name.
 // func parseResourceName(fullPath string) string {

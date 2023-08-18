@@ -132,7 +132,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/gcp
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -143,19 +143,26 @@ providers/build/network: providers/lr
 providers/build/os: providers/lr
 	@$(call buildProvider, providers/os)
 
+providers/build/gcp: providers/lr
+	@$(call buildProvider, providers/gcp)
+	cp providers/gcp/resources/gcp.resources.json providers/gcp.resources.json
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
 	@$(call installProvider, providers/os)
+	@$(call installProvider, providers/gcp)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
+	@$(call bundleProvider, providers/gcp)
 
 providers/test:
 	@$(call testProvider, providers/core)
 	@$(call testProvider, providers/network)
 	@$(call testProvider, providers/os)
+	@$(call testProvider, providers/gcp)
 
 lr/test:
 	go test ./resources/lr/...

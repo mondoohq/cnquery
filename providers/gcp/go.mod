@@ -3,12 +3,17 @@ module go.mondoo.com/cnquery/providers/gcp
 go 1.20
 
 require (
+	cloud.google.com/go/container v1.24.0
+	cloud.google.com/go/iam v1.1.1
+	cloud.google.com/go/recommender v1.10.1
 	cloud.google.com/go/serviceusage v1.7.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.30.0
 	go.mondoo.com/cnquery v0.0.0-20230817085602-5cf8b3f7a3f4
 	golang.org/x/oauth2 v0.11.0
 	google.golang.org/api v0.137.0
+	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5
+	google.golang.org/protobuf v1.31.0
 )
 
 require (
@@ -60,11 +65,9 @@ require (
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
