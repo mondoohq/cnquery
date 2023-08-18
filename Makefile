@@ -146,8 +146,8 @@ providers/build/os: providers/lr
 
 providers/install:
 #	@$(call installProvider, providers/core)
-#	@$(call installProvider, providers/network)
-#	@$(call installProvider, providers/os)
+	@$(call installProvider, providers/network)
+	@$(call installProvider, providers/os)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
