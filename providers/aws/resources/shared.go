@@ -21,18 +21,21 @@ import (
 )
 
 const (
-	elbv1LbArnPattern         = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
-	cloudwatchAlarmArnPattern = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
-	ec2InstanceArnPattern     = "arn:aws:ec2:%s:%s:instance/%s"
-	securityGroupArnPattern   = "arn:aws:ec2:%s:%s:security-group/%s"
-	volumeArnPattern          = "arn:aws:ec2:%s:%s:volume/%s"
-	snapshotArnPattern        = "arn:aws:ec2:%s:%s:snapshot/%s"
-	internetGwArnPattern      = "arn:aws:ec2:%s:%s:gateway/%s"
-	vpnConnArnPattern         = "arn:aws:ec2:%s:%s:vpn-connection/%s"
-	networkAclArnPattern      = "arn:aws:ec2:%s:%s:network-acl/%s"
-	imageArnPattern           = "arn:aws:ec2:%s:%s:image/%s"
-	keypairArnPattern         = "arn:aws:ec2:%s:%s:keypair/%s"
-	s3ArnPattern              = "arn:aws:s3:::%s"
+	elbv1LbArnPattern           = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
+	cloudwatchAlarmArnPattern   = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
+	ec2InstanceArnPattern       = "arn:aws:ec2:%s:%s:instance/%s"
+	securityGroupArnPattern     = "arn:aws:ec2:%s:%s:security-group/%s"
+	volumeArnPattern            = "arn:aws:ec2:%s:%s:volume/%s"
+	snapshotArnPattern          = "arn:aws:ec2:%s:%s:snapshot/%s"
+	internetGwArnPattern        = "arn:aws:ec2:%s:%s:gateway/%s"
+	vpnConnArnPattern           = "arn:aws:ec2:%s:%s:vpn-connection/%s"
+	networkAclArnPattern        = "arn:aws:ec2:%s:%s:network-acl/%s"
+	imageArnPattern             = "arn:aws:ec2:%s:%s:image/%s"
+	keypairArnPattern           = "arn:aws:ec2:%s:%s:keypair/%s"
+	s3ArnPattern                = "arn:aws:s3:::%s"
+	dynamoTableArnPattern       = "arn:aws:dynamodb:%s:%s:table/%s"
+	limitsArn                   = "arn:aws:dynamodb:%s:%s"
+	dynamoGlobalTableArnPattern = "arn:aws:dynamodb:-:%s:globaltable/%s"
 )
 
 func (a *mqlAws) regions() ([]interface{}, error) {

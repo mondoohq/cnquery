@@ -294,6 +294,58 @@ func init() {
 			// to override args, implement: initAwsS3BucketPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsS3BucketPolicy,
 		},
+		"aws.applicationAutoscaling": {
+			// to override args, implement: initAwsApplicationAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApplicationAutoscaling,
+		},
+		"aws.applicationautoscaling.target": {
+			// to override args, implement: initAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApplicationautoscalingTarget,
+		},
+		"aws.backup": {
+			// to override args, implement: initAwsBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackup,
+		},
+		"aws.backup.vault": {
+			// to override args, implement: initAwsBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackupVault,
+		},
+		"aws.backup.vaultRecoveryPoint": {
+			// to override args, implement: initAwsBackupVaultRecoveryPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBackupVaultRecoveryPoint,
+		},
+		"aws.dynamodb": {
+			// to override args, implement: initAwsDynamodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDynamodb,
+		},
+		"aws.dynamodb.limit": {
+			// to override args, implement: initAwsDynamodbLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDynamodbLimit,
+		},
+		"aws.dynamodb.globaltable": {
+			Init: initAwsDynamodbGlobaltable,
+			Create: createAwsDynamodbGlobaltable,
+		},
+		"aws.dynamodb.table": {
+			// to override args, implement: initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDynamodbTable,
+		},
+		"aws.rds": {
+			// to override args, implement: initAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRds,
+		},
+		"aws.rds.dbcluster": {
+			// to override args, implement: initAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsDbcluster,
+		},
+		"aws.rds.snapshot": {
+			// to override args, implement: initAwsRdsSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRdsSnapshot,
+		},
+		"aws.rds.dbinstance": {
+			Init: initAwsRdsDbinstance,
+			Create: createAwsRdsDbinstance,
+		},
 	}
 }
 
@@ -1441,6 +1493,234 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetStatements()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.applicationAutoscaling.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscaling).GetNamespace()).ToDataRes(types.String)
+	},
+	"aws.applicationAutoscaling.scalableTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationAutoscaling).GetScalableTargets()).ToDataRes(types.Array(types.Resource("aws.applicationautoscaling.target")))
+	},
+	"aws.applicationautoscaling.target.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetNamespace()).ToDataRes(types.String)
+	},
+	"aws.applicationautoscaling.target.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetArn()).ToDataRes(types.String)
+	},
+	"aws.applicationautoscaling.target.scalableDimension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetScalableDimension()).ToDataRes(types.String)
+	},
+	"aws.applicationautoscaling.target.minCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetMinCapacity()).ToDataRes(types.Int)
+	},
+	"aws.applicationautoscaling.target.maxCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetMaxCapacity()).ToDataRes(types.Int)
+	},
+	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApplicationautoscalingTarget).GetSuspendedState()).ToDataRes(types.Dict)
+	},
+	"aws.backup.vaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackup).GetVaults()).ToDataRes(types.Array(types.Resource("aws.backup.vault")))
+	},
+	"aws.backup.vault.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetArn()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetName()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.recoveryPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetRecoveryPoints()).ToDataRes(types.Array(types.Resource("aws.backup.vaultRecoveryPoint")))
+	},
+	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreatedBy()).ToDataRes(types.Dict)
+	},
+	"aws.backup.vaultRecoveryPoint.iamRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetIamRoleArn()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"aws.backup.vaultRecoveryPoint.completionDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetCompletionDate()).ToDataRes(types.Time)
+	},
+	"aws.backup.vaultRecoveryPoint.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetEncryptionKeyArn()).ToDataRes(types.String)
+	},
+	"aws.backup.vaultRecoveryPoint.isEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetIsEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetBackups()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.dynamodb.globalTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetGlobalTables()).ToDataRes(types.Array(types.Resource("aws.dynamodb.globaltable")))
+	},
+	"aws.dynamodb.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetTables()).ToDataRes(types.Array(types.Resource("aws.dynamodb.table")))
+	},
+	"aws.dynamodb.limits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodb).GetLimits()).ToDataRes(types.Array(types.Resource("aws.dynamodb.limit")))
+	},
+	"aws.dynamodb.limit.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.limit.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.limit.accountMaxRead": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetAccountMaxRead()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.limit.accountMaxWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetAccountMaxWrite()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.limit.tableMaxRead": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetTableMaxRead()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.limit.tableMaxWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbLimit).GetTableMaxWrite()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.globaltable.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbGlobaltable).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.globaltable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbGlobaltable).GetName()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.globaltable.replicaSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbGlobaltable).GetReplicaSettings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.dynamodb.table.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetName()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetBackups()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.dynamodb.table.sseDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetSseDescription()).ToDataRes(types.Dict)
+	},
+	"aws.dynamodb.table.provisionedThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetProvisionedThroughput()).ToDataRes(types.Dict)
+	},
+	"aws.dynamodb.table.continuousBackups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetContinuousBackups()).ToDataRes(types.Dict)
+	},
+	"aws.dynamodb.table.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
+	},
+	"aws.rds.dbClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetDbClusters()).ToDataRes(types.Array(types.Resource("aws.rds.dbcluster")))
+	},
+	"aws.rds.dbcluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetId()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMembers()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
+	},
+	"aws.rds.dbcluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.rds.snapshot")))
+	},
+	"aws.rds.dbcluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetId()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetAttributes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.rds.snapshot.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetType()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.snapshot.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.isClusterSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetIsClusterSnapshot()).ToDataRes(types.Bool)
+	},
+	"aws.rds.snapshot.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbinstance.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.rds.snapshot")))
+	},
+	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.dbinstance.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetId()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEnhancedMonitoringResourceArn()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.dbinstance.dbInstanceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetDbInstanceClass()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.dbInstanceIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetDbInstanceIdentifier()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.rds.dbinstance.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStatus()).ToDataRes(types.String)
 	},
 }
 
@@ -3172,6 +3452,362 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketPolicy).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.applicationAutoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsApplicationAutoscaling).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.applicationAutoscaling.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscaling).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.applicationAutoscaling.scalableTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationAutoscaling).ScalableTargets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsApplicationautoscalingTarget).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.applicationautoscaling.target.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.scalableDimension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).ScalableDimension, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.minCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).MinCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.maxCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).MaxCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.applicationautoscaling.target.suspendedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApplicationautoscalingTarget).SuspendedState, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsBackup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.backup.vaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackup).Vaults, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsBackupVault).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.backup.vault.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.recoveryPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).RecoveryPoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsBackupVaultRecoveryPoint).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).CreatedBy, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.iamRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).IamRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.completionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).CompletionDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vaultRecoveryPoint.isEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVaultRecoveryPoint).IsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsDynamodb).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.dynamodb.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).Backups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.globalTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).GlobalTables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).Tables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodb).Limits, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsDynamodbLimit).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.dynamodb.limit.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.accountMaxRead": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).AccountMaxRead, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.accountMaxWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).AccountMaxWrite, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.tableMaxRead": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).TableMaxRead, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.limit.tableMaxWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbLimit).TableMaxWrite, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.globaltable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsDynamodbGlobaltable).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.dynamodb.globaltable.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbGlobaltable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.globaltable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbGlobaltable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.globaltable.replicaSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbGlobaltable).ReplicaSettings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsDynamodbTable).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.dynamodb.table.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Backups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.sseDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).SseDescription, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.provisionedThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).ProvisionedThroughput, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.continuousBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).ContinuousBackups, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRds).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.dbInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).DbInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).DbClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsDbcluster).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.dbcluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Snapshots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.snapshot.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Attributes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.isClusterSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).IsClusterSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRdsDbinstance).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.rds.dbinstance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Snapshots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.enhancedMonitoringResourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).EnhancedMonitoringResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.dbInstanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).DbInstanceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.dbInstanceIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).DbInstanceIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -8910,4 +9546,1088 @@ func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Statements, func() ([]interface{}, error) {
 		return c.statements()
 	})
+}
+
+// mqlAwsApplicationAutoscaling for the aws.applicationAutoscaling resource
+type mqlAwsApplicationAutoscaling struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsApplicationAutoscalingInternal it will be used here
+	Namespace plugin.TValue[string]
+	ScalableTargets plugin.TValue[[]interface{}]
+}
+
+// createAwsApplicationAutoscaling creates a new instance of this resource
+func createAwsApplicationAutoscaling(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApplicationAutoscaling{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.applicationAutoscaling", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApplicationAutoscaling) MqlName() string {
+	return "aws.applicationAutoscaling"
+}
+
+func (c *mqlAwsApplicationAutoscaling) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApplicationAutoscaling) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlAwsApplicationAutoscaling) GetScalableTargets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ScalableTargets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.applicationAutoscaling", c.__id, "scalableTargets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.scalableTargets()
+	})
+}
+
+// mqlAwsApplicationautoscalingTarget for the aws.applicationautoscaling.target resource
+type mqlAwsApplicationautoscalingTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsApplicationautoscalingTargetInternal it will be used here
+	Namespace plugin.TValue[string]
+	Arn plugin.TValue[string]
+	ScalableDimension plugin.TValue[string]
+	MinCapacity plugin.TValue[int64]
+	MaxCapacity plugin.TValue[int64]
+	SuspendedState plugin.TValue[interface{}]
+}
+
+// createAwsApplicationautoscalingTarget creates a new instance of this resource
+func createAwsApplicationautoscalingTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApplicationautoscalingTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.applicationautoscaling.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) MqlName() string {
+	return "aws.applicationautoscaling.target"
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetScalableDimension() *plugin.TValue[string] {
+	return &c.ScalableDimension
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetMinCapacity() *plugin.TValue[int64] {
+	return &c.MinCapacity
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetMaxCapacity() *plugin.TValue[int64] {
+	return &c.MaxCapacity
+}
+
+func (c *mqlAwsApplicationautoscalingTarget) GetSuspendedState() *plugin.TValue[interface{}] {
+	return &c.SuspendedState
+}
+
+// mqlAwsBackup for the aws.backup resource
+type mqlAwsBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsBackupInternal it will be used here
+	Vaults plugin.TValue[[]interface{}]
+}
+
+// createAwsBackup creates a new instance of this resource
+func createAwsBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackup) MqlName() string {
+	return "aws.backup"
+}
+
+func (c *mqlAwsBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackup) GetVaults() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Vaults, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup", c.__id, "vaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.vaults()
+	})
+}
+
+// mqlAwsBackupVault for the aws.backup.vault resource
+type mqlAwsBackupVault struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsBackupVaultInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	RecoveryPoints plugin.TValue[[]interface{}]
+}
+
+// createAwsBackupVault creates a new instance of this resource
+func createAwsBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackupVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup.vault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackupVault) MqlName() string {
+	return "aws.backup.vault"
+}
+
+func (c *mqlAwsBackupVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackupVault) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBackupVault) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBackupVault) GetRecoveryPoints() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RecoveryPoints, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.backup.vault", c.__id, "recoveryPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.recoveryPoints()
+	})
+}
+
+// mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource
+type mqlAwsBackupVaultRecoveryPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsBackupVaultRecoveryPointInternal it will be used here
+	Arn plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	CreatedBy plugin.TValue[interface{}]
+	IamRoleArn plugin.TValue[string]
+	Status plugin.TValue[string]
+	CreationDate plugin.TValue[*time.Time]
+	CompletionDate plugin.TValue[*time.Time]
+	EncryptionKeyArn plugin.TValue[string]
+	IsEncrypted plugin.TValue[bool]
+}
+
+// createAwsBackupVaultRecoveryPoint creates a new instance of this resource
+func createAwsBackupVaultRecoveryPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBackupVaultRecoveryPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.backup.vaultRecoveryPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) MqlName() string {
+	return "aws.backup.vaultRecoveryPoint"
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetCreatedBy() *plugin.TValue[interface{}] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetIamRoleArn() *plugin.TValue[string] {
+	return &c.IamRoleArn
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetCompletionDate() *plugin.TValue[*time.Time] {
+	return &c.CompletionDate
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetEncryptionKeyArn() *plugin.TValue[string] {
+	return &c.EncryptionKeyArn
+}
+
+func (c *mqlAwsBackupVaultRecoveryPoint) GetIsEncrypted() *plugin.TValue[bool] {
+	return &c.IsEncrypted
+}
+
+// mqlAwsDynamodb for the aws.dynamodb resource
+type mqlAwsDynamodb struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsDynamodbInternal it will be used here
+	Backups plugin.TValue[[]interface{}]
+	GlobalTables plugin.TValue[[]interface{}]
+	Tables plugin.TValue[[]interface{}]
+	Limits plugin.TValue[[]interface{}]
+}
+
+// createAwsDynamodb creates a new instance of this resource
+func createAwsDynamodb(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodb{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodb) MqlName() string {
+	return "aws.dynamodb"
+}
+
+func (c *mqlAwsDynamodb) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodb) GetBackups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Backups, func() ([]interface{}, error) {
+		return c.backups()
+	})
+}
+
+func (c *mqlAwsDynamodb) GetGlobalTables() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.GlobalTables, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "globalTables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.globalTables()
+	})
+}
+
+func (c *mqlAwsDynamodb) GetTables() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Tables, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
+func (c *mqlAwsDynamodb) GetLimits() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Limits, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dynamodb", c.__id, "limits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.limits()
+	})
+}
+
+// mqlAwsDynamodbLimit for the aws.dynamodb.limit resource
+type mqlAwsDynamodbLimit struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsDynamodbLimitInternal it will be used here
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	AccountMaxRead plugin.TValue[int64]
+	AccountMaxWrite plugin.TValue[int64]
+	TableMaxRead plugin.TValue[int64]
+	TableMaxWrite plugin.TValue[int64]
+}
+
+// createAwsDynamodbLimit creates a new instance of this resource
+func createAwsDynamodbLimit(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodbLimit{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb.limit", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodbLimit) MqlName() string {
+	return "aws.dynamodb.limit"
+}
+
+func (c *mqlAwsDynamodbLimit) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodbLimit) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDynamodbLimit) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDynamodbLimit) GetAccountMaxRead() *plugin.TValue[int64] {
+	return &c.AccountMaxRead
+}
+
+func (c *mqlAwsDynamodbLimit) GetAccountMaxWrite() *plugin.TValue[int64] {
+	return &c.AccountMaxWrite
+}
+
+func (c *mqlAwsDynamodbLimit) GetTableMaxRead() *plugin.TValue[int64] {
+	return &c.TableMaxRead
+}
+
+func (c *mqlAwsDynamodbLimit) GetTableMaxWrite() *plugin.TValue[int64] {
+	return &c.TableMaxWrite
+}
+
+// mqlAwsDynamodbGlobaltable for the aws.dynamodb.globaltable resource
+type mqlAwsDynamodbGlobaltable struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsDynamodbGlobaltableInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	ReplicaSettings plugin.TValue[[]interface{}]
+}
+
+// createAwsDynamodbGlobaltable creates a new instance of this resource
+func createAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodbGlobaltable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb.globaltable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodbGlobaltable) MqlName() string {
+	return "aws.dynamodb.globaltable"
+}
+
+func (c *mqlAwsDynamodbGlobaltable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodbGlobaltable) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDynamodbGlobaltable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDynamodbGlobaltable) GetReplicaSettings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ReplicaSettings, func() ([]interface{}, error) {
+		return c.replicaSettings()
+	})
+}
+
+// mqlAwsDynamodbTable for the aws.dynamodb.table resource
+type mqlAwsDynamodbTable struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsDynamodbTableInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	Region plugin.TValue[string]
+	Backups plugin.TValue[[]interface{}]
+	SseDescription plugin.TValue[interface{}]
+	ProvisionedThroughput plugin.TValue[interface{}]
+	ContinuousBackups plugin.TValue[interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsDynamodbTable creates a new instance of this resource
+func createAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDynamodbTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dynamodb.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDynamodbTable) MqlName() string {
+	return "aws.dynamodb.table"
+}
+
+func (c *mqlAwsDynamodbTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDynamodbTable) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDynamodbTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDynamodbTable) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDynamodbTable) GetBackups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Backups, func() ([]interface{}, error) {
+		return c.backups()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetSseDescription() *plugin.TValue[interface{}] {
+	return &c.SseDescription
+}
+
+func (c *mqlAwsDynamodbTable) GetProvisionedThroughput() *plugin.TValue[interface{}] {
+	return &c.ProvisionedThroughput
+}
+
+func (c *mqlAwsDynamodbTable) GetContinuousBackups() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.ContinuousBackups, func() (interface{}, error) {
+		return c.continuousBackups()
+	})
+}
+
+func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsRds for the aws.rds resource
+type mqlAwsRds struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsInternal it will be used here
+	DbInstances plugin.TValue[[]interface{}]
+	DbClusters plugin.TValue[[]interface{}]
+}
+
+// createAwsRds creates a new instance of this resource
+func createAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRds{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRds) MqlName() string {
+	return "aws.rds"
+}
+
+func (c *mqlAwsRds) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRds) GetDbInstances() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DbInstances, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "dbInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.dbInstances()
+	})
+}
+
+func (c *mqlAwsRds) GetDbClusters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DbClusters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "dbClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.dbClusters()
+	})
+}
+
+// mqlAwsRdsDbcluster for the aws.rds.dbcluster resource
+type mqlAwsRdsDbcluster struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsDbclusterInternal it will be used here
+	Arn plugin.TValue[string]
+	Region plugin.TValue[string]
+	Id plugin.TValue[string]
+	Members plugin.TValue[[]interface{}]
+	Snapshots plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsRdsDbcluster creates a new instance of this resource
+func createAwsRdsDbcluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsDbcluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.dbcluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsDbcluster) MqlName() string {
+	return "aws.rds.dbcluster"
+}
+
+func (c *mqlAwsRdsDbcluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsDbcluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsDbcluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsDbcluster) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRdsDbcluster) GetMembers() *plugin.TValue[[]interface{}] {
+	return &c.Members
+}
+
+func (c *mqlAwsRdsDbcluster) GetSnapshots() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Snapshots, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlAwsRdsDbcluster) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsRdsSnapshot for the aws.rds.snapshot resource
+type mqlAwsRdsSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsSnapshotInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Attributes plugin.TValue[[]interface{}]
+	Type plugin.TValue[string]
+	Encrypted plugin.TValue[bool]
+	Region plugin.TValue[string]
+	IsClusterSnapshot plugin.TValue[bool]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsRdsSnapshot creates a new instance of this resource
+func createAwsRdsSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsSnapshot) MqlName() string {
+	return "aws.rds.snapshot"
+}
+
+func (c *mqlAwsRdsSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsSnapshot) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsSnapshot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRdsSnapshot) GetAttributes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Attributes, func() ([]interface{}, error) {
+		return c.attributes()
+	})
+}
+
+func (c *mqlAwsRdsSnapshot) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsRdsSnapshot) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsRdsSnapshot) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsSnapshot) GetIsClusterSnapshot() *plugin.TValue[bool] {
+	return &c.IsClusterSnapshot
+}
+
+func (c *mqlAwsRdsSnapshot) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsRdsDbinstance for the aws.rds.dbinstance resource
+type mqlAwsRdsDbinstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRdsDbinstanceInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	BackupRetentionPeriod plugin.TValue[int64]
+	Snapshots plugin.TValue[[]interface{}]
+	StorageEncrypted plugin.TValue[bool]
+	Region plugin.TValue[string]
+	PubliclyAccessible plugin.TValue[bool]
+	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
+	DeletionProtection plugin.TValue[bool]
+	MultiAZ plugin.TValue[bool]
+	Id plugin.TValue[string]
+	EnhancedMonitoringResourceArn plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	DbInstanceClass plugin.TValue[string]
+	DbInstanceIdentifier plugin.TValue[string]
+	Engine plugin.TValue[string]
+	SecurityGroups plugin.TValue[[]interface{}]
+	Status plugin.TValue[string]
+}
+
+// createAwsRdsDbinstance creates a new instance of this resource
+func createAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsDbinstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.dbinstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsDbinstance) MqlName() string {
+	return "aws.rds.dbinstance"
+}
+
+func (c *mqlAwsRdsDbinstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsDbinstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsDbinstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRdsDbinstance) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsRdsDbinstance) GetSnapshots() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Snapshots, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlAwsRdsDbinstance) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsDbinstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsDbinstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRdsDbinstance) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]interface{}] {
+	return &c.EnabledCloudwatchLogsExports
+}
+
+func (c *mqlAwsRdsDbinstance) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsRdsDbinstance) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsRdsDbinstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRdsDbinstance) GetEnhancedMonitoringResourceArn() *plugin.TValue[string] {
+	return &c.EnhancedMonitoringResourceArn
+}
+
+func (c *mqlAwsRdsDbinstance) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsRdsDbinstance) GetDbInstanceClass() *plugin.TValue[string] {
+	return &c.DbInstanceClass
+}
+
+func (c *mqlAwsRdsDbinstance) GetDbInstanceIdentifier() *plugin.TValue[string] {
+	return &c.DbInstanceIdentifier
+}
+
+func (c *mqlAwsRdsDbinstance) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.SecurityGroups
+}
+
+func (c *mqlAwsRdsDbinstance) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }

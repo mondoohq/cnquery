@@ -1017,3 +1017,209 @@ private aws.s3.bucket.policy @defaults("name version") {
   // List of statements for the policy
   statements() []dict
 }
+
+
+// AWS Application Autoscaling
+aws.applicationAutoscaling @defaults("namespace") {
+  init(namespace string)
+  // Service namespace to query for application autoscaling
+  namespace string
+  // List of scalable targets belonging to the service namespace
+  scalableTargets() []aws.applicationautoscaling.target
+}
+
+// AWS Application Autoscaling Target
+private aws.applicationautoscaling.target @defaults("arn") {
+  // Namespace for the target
+  namespace string
+  // ARN of the autoscaling target
+  arn string
+  // Scalable dimension for the target
+  scalableDimension string
+  // Min capacity set for the autoscaling
+  minCapacity int
+  // Max capacity set for the autoscaling
+  maxCapacity int 
+  // suspendedState for the autoscaling target
+  suspendedState dict
+}
+
+// AWS Backup
+aws.backup {
+  // List of vaults for the service
+  vaults() []aws.backup.vault
+}
+
+// AWS Backup Vault
+private aws.backup.vault @defaults("arn") {
+  // ARN of the vault
+  arn string
+  // Name of the vault
+  name string
+  // List of recovery points stored in the backup vault
+  recoveryPoints() []aws.backup.vaultRecoveryPoint
+}
+
+// AWS Backup Vault Recovery Point
+private aws.backup.vaultRecoveryPoint @defaults("arn") {
+  // ARN of the recovery point
+  arn string
+  // Resource type for the recovery point, e.g. "EFS" or "DynamoDB"
+  resourceType string
+  // Information about who created the recovery point
+  createdBy dict
+  // ARN of the IAM role used to create the recovery point
+  iamRoleArn string
+  // Status of the recovery point
+  status string
+  // Date the recovery point was created
+  creationDate time
+  // Date the recovery point completed
+  completionDate time
+  // ARN of the key used to encrypt the recovery point
+  encryptionKeyArn string
+  // True if the recovery point is encrypted
+  isEncrypted bool
+}
+
+// Amazon DynamoDB
+aws.dynamodb {
+  // List of backups for DynamoDB
+  backups() []dict
+  // List of global tables for DynamoDB
+  globalTables() []aws.dynamodb.globaltable
+  // List of tables for DynamoDB
+  tables() []aws.dynamodb.table
+  // List of DynamoDB settings across all regions
+  limits() []aws.dynamodb.limit
+}
+
+// Amazon DynamoDB Limits
+private aws.dynamodb.limit @defaults("arn") {
+  // ARN representing the account + region where the limit applies 
+  arn string
+  // Region where the limits apply
+  region string
+  // Account max read limit
+  accountMaxRead int
+  // Account max write limit
+  accountMaxWrite int
+  // Table max read limit
+  tableMaxRead int
+  // Table max write limit
+  tableMaxWrite int
+}
+
+// Amazon DynamoDB Global Table
+private aws.dynamodb.globaltable @defaults("arn") {
+  // ARN for the global table
+  arn string
+  // Table name
+  name string
+  // List of replica settings for the table
+  replicaSettings() []dict
+}
+
+// Amazon DynamoDB Table
+private aws.dynamodb.table @defaults("arn") {
+  // ARN for the table
+  arn string
+  // Table name
+  name string
+  // Region where the table exists
+  region string
+  // Backups for the table
+  backups() []dict
+  // Description of server side encryption for the table
+  sseDescription dict
+  // Provisioned throughput settings for the table
+  provisionedThroughput dict
+  // Continuous backups and point in time recovery settings for the table
+  continuousBackups() dict
+  // Tags for the table
+  tags() map[string]string
+}
+
+// Amazon Relational Database Service (RDS)
+aws.rds {
+  // List of database instances
+  dbInstances() []aws.rds.dbinstance
+  // List of RDS database clusters
+  dbClusters() []aws.rds.dbcluster
+}
+
+// Amazon RDS Database Cluster
+private aws.rds.dbcluster @defaults("arn") {
+  // ARN for the database cluster
+  arn string
+  // Region where the database cluster exists
+  region string
+  // Identifier for the database cluster
+  id string
+  // List of database instances that belong to the cluster
+  members []aws.rds.dbinstance
+  // List of snapshots for the cluster
+  snapshots() []aws.rds.snapshot
+  // Tags for the database cluster
+  tags map[string]string
+}
+
+// Amazon RDS Snapshot
+private aws.rds.snapshot @defaults("arn") {
+  // ARN of the snapshot
+  arn string
+  // ID of the snapshot
+  id string
+  // Attribute values that describe permissions to restore the snapshot
+  attributes() []dict
+  // Type of snapshot (manual, automated)
+  type string
+  // Denotes whether or not snapshot is encrypted
+  encrypted bool
+  // Region where the snapshot exists
+  region string
+  // True if snapshot is for cluster
+  isClusterSnapshot bool
+  // Tags for the snapshot
+  tags map[string]string
+}
+
+// Amazon RDS Database Instance
+private aws.rds.dbinstance @defaults("arn") {
+  // ARN for the database instance
+  arn string
+  // Name of the database instance
+  name string
+  // Number of days for which automated snapshots are retained
+  backupRetentionPeriod int
+  // List of snapshots for the database instance
+  snapshots() []aws.rds.snapshot
+  // Denotes whether the instance is encrypted
+  storageEncrypted bool
+  // Region where the instance exists
+  region string
+  // Denotes whether or not the instance is publicly accessible
+  publiclyAccessible bool
+  // List of log types the instance is configured to export to cloudwatch logs
+  enabledCloudwatchLogsExports []string
+  // Indicates if deletion protection is enabled
+  deletionProtection bool
+  // Specifies whether the instance is a multi az deployment
+  multiAZ bool
+  // Identifier for the database instance
+  id string
+  // ARN of the CloudWatch log stream that receives the enhanced monitoring metrics data
+  enhancedMonitoringResourceArn string
+  // Tags for the database instance
+  tags map[string]string
+  // Name of the compute and memory capacity class of the DB instance
+  dbInstanceClass string
+  // User-supplied unique key that identifies a DB instance
+  dbInstanceIdentifier string
+  // Name of the database engine for this DB instance
+  engine string
+  // List of VPC security group elements that the DB instance belongs to
+  securityGroups []aws.ec2.securitygroup
+  // Current state of this database
+  status string
+}
