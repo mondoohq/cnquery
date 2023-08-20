@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -162,6 +162,9 @@ providers/build/gitlab: providers/lr
 providers/build/terraform: providers/lr
 	@$(call buildProvider, providers/terraform)
 
+providers/build/vsphere: providers/lr
+	@$(call buildProvider, providers/vsphere)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -172,6 +175,7 @@ providers/install:
 	@$(call installProvider, providers/github)
 	@$(call installProvider, providers/gitlab)
 	@$(call installProvider, providers/terraform)
+	@$(call installProvider, providers/vsphere)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -182,6 +186,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/github)
 	@$(call bundleProvider, providers/gitlab)
 	@$(call bundleProvider, providers/terraform)
+	@$(call bundleProvider, providers/vsphere)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -193,6 +198,7 @@ providers/test:
 	@$(call testGpModProvider, providers/github)
 	@$(call testGpModProvider, providers/gitlab)
 	@$(call testGpModProvider, providers/terraform)
+	@$(call testGpModProvider, providers/vsphere)
 
 lr/test:
 	go test ./resources/lr/...

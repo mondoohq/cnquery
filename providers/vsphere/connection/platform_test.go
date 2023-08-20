@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package vsphere
+package connection
 
 import (
 	"testing"
@@ -35,7 +35,6 @@ func TestVsphereID(t *testing.T) {
 }
 
 func TestMrnParser(t *testing.T) {
-
 	id := VsphereResourceID("uuid", types.ManagedObjectReference{Type: "VirtualMachine", Value: "4"})
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/vsphere/instance/uuid/moid/VirtualMachine-4", id)
 	ok := IsVsphereResourceID(id)
