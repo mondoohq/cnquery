@@ -36,6 +36,7 @@ const (
 	dynamoTableArnPattern       = "arn:aws:dynamodb:%s:%s:table/%s"
 	limitsArn                   = "arn:aws:dynamodb:%s:%s"
 	dynamoGlobalTableArnPattern = "arn:aws:dynamodb:-:%s:globaltable/%s"
+	rdsInstanceArnPattern       = "arn:aws:rds:%s:%s:db:%s"
 )
 
 func (a *mqlAws) regions() ([]interface{}, error) {

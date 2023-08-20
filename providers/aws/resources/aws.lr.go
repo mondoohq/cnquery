@@ -346,6 +346,34 @@ func init() {
 			Init: initAwsRdsDbinstance,
 			Create: createAwsRdsDbinstance,
 		},
+		"aws.elasticache": {
+			// to override args, implement: initAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticache,
+		},
+		"aws.elasticache.cluster": {
+			// to override args, implement: initAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticacheCluster,
+		},
+		"aws.redshift": {
+			// to override args, implement: initAwsRedshift(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRedshift,
+		},
+		"aws.redshift.cluster": {
+			Init: initAwsRedshiftCluster,
+			Create: createAwsRedshiftCluster,
+		},
+		"aws.ecr": {
+			// to override args, implement: initAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcr,
+		},
+		"aws.ecr.repository": {
+			// to override args, implement: initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcrRepository,
+		},
+		"aws.ecr.image": {
+			Init: initAwsEcrImage,
+			Create: createAwsEcrImage,
+		},
 	}
 }
 
@@ -1721,6 +1749,189 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticache.cacheClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticache).GetCacheClusters()).ToDataRes(types.Array(types.Resource("aws.elasticache.cluster")))
+	},
+	"aws.elasticache.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.atRestEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetAtRestEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.cluster.authTokenEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetAuthTokenEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.cluster.authTokenLastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetAuthTokenLastModifiedDate()).ToDataRes(types.Time)
+	},
+	"aws.elasticache.cluster.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.cluster.cacheClusterCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheClusterCreateTime()).ToDataRes(types.Time)
+	},
+	"aws.elasticache.cluster.cacheClusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheClusterId()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.cacheClusterStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheClusterStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.cacheNodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheNodeType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.cacheNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheNodes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticache.cluster.cacheSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheSecurityGroups()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elasticache.cluster.cacheSubnetGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetCacheSubnetGroupName()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.clientDownloadLandingPage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetClientDownloadLandingPage()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.ipDiscovery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetIpDiscovery()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.logDeliveryConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetLogDeliveryConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticache.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.notificationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetNotificationConfiguration()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.numCacheNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetNumCacheNodes()).ToDataRes(types.Int)
+	},
+	"aws.elasticache.cluster.preferredAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetPreferredAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticache.cluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetSnapshotRetentionLimit()).ToDataRes(types.Int)
+	},
+	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticache.cluster.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheCluster).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.redshift.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshift).GetClusters()).ToDataRes(types.Array(types.Resource("aws.redshift.cluster")))
+	},
+	"aws.redshift.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.allowVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetAllowVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.automatedSnapshotRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetAutomatedSnapshotRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetParameters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.redshift.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogging()).ToDataRes(types.Dict)
+	},
+	"aws.redshift.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.clusterParameterGroupNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterParameterGroupNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.redshift.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
+	},
+	"aws.ecr.publicRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcr).GetPublicRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
+	},
+	"aws.ecr.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcr).GetImages()).ToDataRes(types.Array(types.Resource("aws.ecr.image")))
+	},
+	"aws.ecr.repository.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ecr.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetName()).ToDataRes(types.String)
+	},
+	"aws.ecr.repository.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetUri()).ToDataRes(types.String)
+	},
+	"aws.ecr.repository.registryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetRegistryId()).ToDataRes(types.String)
+	},
+	"aws.ecr.repository.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetPublic()).ToDataRes(types.Bool)
+	},
+	"aws.ecr.repository.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetImages()).ToDataRes(types.Array(types.Resource("aws.ecr.image")))
+	},
+	"aws.ecr.repository.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetDigest()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.mediaType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetMediaType()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ecr.image.registryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetRegistryId()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.repoName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetRepoName()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ecr.image.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrImage).GetUri()).ToDataRes(types.String)
 	},
 }
 
@@ -3808,6 +4019,278 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsElasticache).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.elasticache.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticache).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cacheClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticache).CacheClusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsElasticacheCluster).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.elasticache.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.atRestEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).AtRestEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.authTokenEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).AuthTokenEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.authTokenLastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).AuthTokenLastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheClusterCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheClusterCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheClusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheClusterStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheClusterStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheNodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheNodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheNodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheSecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.cacheSubnetGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).CacheSubnetGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.clientDownloadLandingPage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).ClientDownloadLandingPage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.ipDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).IpDiscovery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.logDeliveryConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).LogDeliveryConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.notificationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).NotificationConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.numCacheNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).NumCacheNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.preferredAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).PreferredAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.snapshotRetentionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).SnapshotRetentionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.transitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).TransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.cluster.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheCluster).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRedshift).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.redshift.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshift).Clusters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsRedshiftCluster).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.redshift.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.allowVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).AllowVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.automatedSnapshotRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).AutomatedSnapshotRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.clusterParameterGroupNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterParameterGroupNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEcr).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ecr.privateRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcr).PrivateRepositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.publicRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcr).PublicRepositories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcr).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEcrRepository).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ecr.repository.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.registryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).RegistryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEcrImage).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ecr.image.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.mediaType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).MediaType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.registryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).RegistryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.repoName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).RepoName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.image.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrImage).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -10630,4 +11113,695 @@ func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] 
 
 func (c *mqlAwsRdsDbinstance) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlAwsElasticache for the aws.elasticache resource
+type mqlAwsElasticache struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsElasticacheInternal it will be used here
+	Clusters plugin.TValue[[]interface{}]
+	CacheClusters plugin.TValue[[]interface{}]
+}
+
+// createAwsElasticache creates a new instance of this resource
+func createAwsElasticache(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticache{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticache", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticache) MqlName() string {
+	return "aws.elasticache"
+}
+
+func (c *mqlAwsElasticache) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticache) GetClusters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+		return c.clusters()
+	})
+}
+
+func (c *mqlAwsElasticache) GetCacheClusters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.CacheClusters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticache", c.__id, "cacheClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cacheClusters()
+	})
+}
+
+// mqlAwsElasticacheCluster for the aws.elasticache.cluster resource
+type mqlAwsElasticacheCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsElasticacheClusterInternal it will be used here
+	Arn plugin.TValue[string]
+	AtRestEncryptionEnabled plugin.TValue[bool]
+	AuthTokenEnabled plugin.TValue[bool]
+	AuthTokenLastModifiedDate plugin.TValue[*time.Time]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
+	CacheClusterCreateTime plugin.TValue[*time.Time]
+	CacheClusterId plugin.TValue[string]
+	CacheClusterStatus plugin.TValue[string]
+	CacheNodeType plugin.TValue[string]
+	CacheNodes plugin.TValue[[]interface{}]
+	CacheSecurityGroups plugin.TValue[[]interface{}]
+	CacheSubnetGroupName plugin.TValue[string]
+	ClientDownloadLandingPage plugin.TValue[string]
+	NodeType plugin.TValue[string]
+	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
+	IpDiscovery plugin.TValue[string]
+	LogDeliveryConfigurations plugin.TValue[[]interface{}]
+	NetworkType plugin.TValue[string]
+	NotificationConfiguration plugin.TValue[string]
+	NumCacheNodes plugin.TValue[int64]
+	PreferredAvailabilityZone plugin.TValue[string]
+	Region plugin.TValue[string]
+	SecurityGroups plugin.TValue[[]interface{}]
+	SnapshotRetentionLimit plugin.TValue[int64]
+	TransitEncryptionEnabled plugin.TValue[bool]
+	TransitEncryptionMode plugin.TValue[string]
+}
+
+// createAwsElasticacheCluster creates a new instance of this resource
+func createAwsElasticacheCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticacheCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticache.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticacheCluster) MqlName() string {
+	return "aws.elasticache.cluster"
+}
+
+func (c *mqlAwsElasticacheCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticacheCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticacheCluster) GetAtRestEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.AtRestEncryptionEnabled
+}
+
+func (c *mqlAwsElasticacheCluster) GetAuthTokenEnabled() *plugin.TValue[bool] {
+	return &c.AuthTokenEnabled
+}
+
+func (c *mqlAwsElasticacheCluster) GetAuthTokenLastModifiedDate() *plugin.TValue[*time.Time] {
+	return &c.AuthTokenLastModifiedDate
+}
+
+func (c *mqlAwsElasticacheCluster) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheClusterCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CacheClusterCreateTime
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheClusterId() *plugin.TValue[string] {
+	return &c.CacheClusterId
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheClusterStatus() *plugin.TValue[string] {
+	return &c.CacheClusterStatus
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheNodeType() *plugin.TValue[string] {
+	return &c.CacheNodeType
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheNodes() *plugin.TValue[[]interface{}] {
+	return &c.CacheNodes
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.CacheSecurityGroups
+}
+
+func (c *mqlAwsElasticacheCluster) GetCacheSubnetGroupName() *plugin.TValue[string] {
+	return &c.CacheSubnetGroupName
+}
+
+func (c *mqlAwsElasticacheCluster) GetClientDownloadLandingPage() *plugin.TValue[string] {
+	return &c.ClientDownloadLandingPage
+}
+
+func (c *mqlAwsElasticacheCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsElasticacheCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsElasticacheCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsElasticacheCluster) GetIpDiscovery() *plugin.TValue[string] {
+	return &c.IpDiscovery
+}
+
+func (c *mqlAwsElasticacheCluster) GetLogDeliveryConfigurations() *plugin.TValue[[]interface{}] {
+	return &c.LogDeliveryConfigurations
+}
+
+func (c *mqlAwsElasticacheCluster) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsElasticacheCluster) GetNotificationConfiguration() *plugin.TValue[string] {
+	return &c.NotificationConfiguration
+}
+
+func (c *mqlAwsElasticacheCluster) GetNumCacheNodes() *plugin.TValue[int64] {
+	return &c.NumCacheNodes
+}
+
+func (c *mqlAwsElasticacheCluster) GetPreferredAvailabilityZone() *plugin.TValue[string] {
+	return &c.PreferredAvailabilityZone
+}
+
+func (c *mqlAwsElasticacheCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticacheCluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.SecurityGroups
+}
+
+func (c *mqlAwsElasticacheCluster) GetSnapshotRetentionLimit() *plugin.TValue[int64] {
+	return &c.SnapshotRetentionLimit
+}
+
+func (c *mqlAwsElasticacheCluster) GetTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.TransitEncryptionEnabled
+}
+
+func (c *mqlAwsElasticacheCluster) GetTransitEncryptionMode() *plugin.TValue[string] {
+	return &c.TransitEncryptionMode
+}
+
+// mqlAwsRedshift for the aws.redshift resource
+type mqlAwsRedshift struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRedshiftInternal it will be used here
+	Clusters plugin.TValue[[]interface{}]
+}
+
+// createAwsRedshift creates a new instance of this resource
+func createAwsRedshift(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRedshift{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.redshift", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRedshift) MqlName() string {
+	return "aws.redshift"
+}
+
+func (c *mqlAwsRedshift) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRedshift) GetClusters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Clusters, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsRedshiftCluster for the aws.redshift.cluster resource
+type mqlAwsRedshiftCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsRedshiftClusterInternal it will be used here
+	Arn plugin.TValue[string]
+	Encrypted plugin.TValue[bool]
+	NodeType plugin.TValue[string]
+	AllowVersionUpgrade plugin.TValue[bool]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	AutomatedSnapshotRetentionPeriod plugin.TValue[int64]
+	PubliclyAccessible plugin.TValue[bool]
+	Parameters plugin.TValue[[]interface{}]
+	Logging plugin.TValue[interface{}]
+	Name plugin.TValue[string]
+	Region plugin.TValue[string]
+	ClusterParameterGroupNames plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsRedshiftCluster creates a new instance of this resource
+func createAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRedshiftCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.redshift.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRedshiftCluster) MqlName() string {
+	return "aws.redshift.cluster"
+}
+
+func (c *mqlAwsRedshiftCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRedshiftCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRedshiftCluster) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsRedshiftCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsRedshiftCluster) GetAllowVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AllowVersionUpgrade
+}
+
+func (c *mqlAwsRedshiftCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsRedshiftCluster) GetAutomatedSnapshotRetentionPeriod() *plugin.TValue[int64] {
+	return &c.AutomatedSnapshotRetentionPeriod
+}
+
+func (c *mqlAwsRedshiftCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRedshiftCluster) GetParameters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+		return c.parameters()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Logging, func() (interface{}, error) {
+		return c.logging()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRedshiftCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterParameterGroupNames() *plugin.TValue[[]interface{}] {
+	return &c.ClusterParameterGroupNames
+}
+
+func (c *mqlAwsRedshiftCluster) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsEcr for the aws.ecr resource
+type mqlAwsEcr struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEcrInternal it will be used here
+	PrivateRepositories plugin.TValue[[]interface{}]
+	PublicRepositories plugin.TValue[[]interface{}]
+	Images plugin.TValue[[]interface{}]
+}
+
+// createAwsEcr creates a new instance of this resource
+func createAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcr{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcr) MqlName() string {
+	return "aws.ecr"
+}
+
+func (c *mqlAwsEcr) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcr) GetPrivateRepositories() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PrivateRepositories, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "privateRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.privateRepositories()
+	})
+}
+
+func (c *mqlAwsEcr) GetPublicRepositories() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PublicRepositories, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "publicRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.publicRepositories()
+	})
+}
+
+func (c *mqlAwsEcr) GetImages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+// mqlAwsEcrRepository for the aws.ecr.repository resource
+type mqlAwsEcrRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEcrRepositoryInternal it will be used here
+	Arn plugin.TValue[string]
+	Name plugin.TValue[string]
+	Uri plugin.TValue[string]
+	RegistryId plugin.TValue[string]
+	Public plugin.TValue[bool]
+	Images plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
+}
+
+// createAwsEcrRepository creates a new instance of this resource
+func createAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrRepository) MqlName() string {
+	return "aws.ecr.repository"
+}
+
+func (c *mqlAwsEcrRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrRepository) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEcrRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEcrRepository) GetUri() *plugin.TValue[string] {
+	return &c.Uri
+}
+
+func (c *mqlAwsEcrRepository) GetRegistryId() *plugin.TValue[string] {
+	return &c.RegistryId
+}
+
+func (c *mqlAwsEcrRepository) GetPublic() *plugin.TValue[bool] {
+	return &c.Public
+}
+
+func (c *mqlAwsEcrRepository) GetImages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecr.repository", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlAwsEcrRepository) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsEcrImage for the aws.ecr.image resource
+type mqlAwsEcrImage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEcrImageInternal it will be used here
+	Digest plugin.TValue[string]
+	MediaType plugin.TValue[string]
+	Tags plugin.TValue[[]interface{}]
+	RegistryId plugin.TValue[string]
+	RepoName plugin.TValue[string]
+	Region plugin.TValue[string]
+	Arn plugin.TValue[string]
+	Uri plugin.TValue[string]
+}
+
+// createAwsEcrImage creates a new instance of this resource
+func createAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcrImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecr.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcrImage) MqlName() string {
+	return "aws.ecr.image"
+}
+
+func (c *mqlAwsEcrImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcrImage) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlAwsEcrImage) GetMediaType() *plugin.TValue[string] {
+	return &c.MediaType
+}
+
+func (c *mqlAwsEcrImage) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEcrImage) GetRegistryId() *plugin.TValue[string] {
+	return &c.RegistryId
+}
+
+func (c *mqlAwsEcrImage) GetRepoName() *plugin.TValue[string] {
+	return &c.RepoName
+}
+
+func (c *mqlAwsEcrImage) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEcrImage) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEcrImage) GetUri() *plugin.TValue[string] {
+	return &c.Uri
 }
