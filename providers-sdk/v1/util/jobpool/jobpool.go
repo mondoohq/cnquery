@@ -1,61 +1,10 @@
 package jobpool
 
 import (
+	"errors"
 	"fmt"
 	"sync"
-
-	"github.com/pkg/errors"
 )
-
-/*
-HOW TO USE THIS
-
-in your primary resource function:
-
-func (s *mqlAwsEc2) PRIMARY_RESOURCE_FUNCTION() ([]interface{}, error) {
-	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(FUNCTION THAT ACTUALLY CALLS AWS, 5)
-	poolOfJobs.Run()
-
-	// check for errors
-	if poolOfJobs.HasErrors() {
-		return nil, poolOfJobs.GetErrors()
-	}
-	// get all the results
-	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
-	}
-	return res, nil
-}
-
-in the function that actually calls aws, the return object must be a slice of jobs:
-
-func (s *mqlAwsEc2) getThingsFromAWS() []*jobpool.Job {
-	var tasks = make([]*jobpool.Job, 0)
-	at, err := awstransport(s.Runtime.Motor.Provider)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-	regions, err := at.GetRegions()
-	if err != nil {
-		return []*jobpool.Job{{Err: err}}
-	}
-
-	for _, region := range regions {
-		regionVal := region
-		f := func() (jobpool.JobResult, error) {
-
-			svc := atWithRegion.Ec2()
-
-			AWS CALL AND HANDLING THE RESPONSE
-
-			return jobpool.JobResult(res), nil
-		}
-		tasks = append(tasks, jobpool.NewJob(f))
-	}
-	return tasks
-}
-*/
 
 type JobResult interface{}
 
@@ -114,7 +63,11 @@ func (p *Pool) GetErrors() error {
 	var err error
 	for _, job := range p.Jobs {
 		if job.Err != nil {
-			err = errors.Wrap(job.Err, "job err: ")
+			if err == nil {
+				err = job.Err
+			} else {
+				err = errors.Join(err, job.Err)
+			}
 		}
 	}
 	return err
