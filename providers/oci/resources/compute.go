@@ -1,32 +1,42 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package oci
+package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
-	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
-	"go.mondoo.com/cnquery/resources/library/jobpool"
-	corePack "go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/providers/oci/connection"
 )
 
 func (e *mqlOciCompute) id() (string, error) {
 	return "oci.compute", nil
 }
 
-func (o *mqlOciCompute) GetInstances() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+func (o *mqlOciCompute) instances() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	// fetch regions
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
 	if err != nil {
 		return nil, err
 	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
 
+	// fetch instances
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(conn, list.Data), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -67,25 +77,25 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 	return instances, nil
 }
 
-func (o *mqlOciCompute) getComputeInstances(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciCompute) getComputeInstances(conn *connection.OciConnection, regions []interface{}) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 	for _, region := range regions {
-		regionVal := region
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
 
-			svc, err := provider.ComputeClient(*regionVal.RegionKey)
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
+
+			svc, err := conn.ComputeClient(regionResource.Id.Data)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			instances, err := o.getComputeInstancesForRegion(ctx, svc, provider.TenantID())
+			instances, err := o.getComputeInstancesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -98,13 +108,13 @@ func (o *mqlOciCompute) getComputeInstances(provider *oci_provider.Provider) []*
 					created = &instance.TimeCreated.Time
 				}
 
-				mqlInstance, err := o.MotorRuntime.CreateResource("oci.compute.instance",
-					"id", corePack.ToString(instance.Id),
-					"name", corePack.ToString(instance.DisplayName),
-					"region", region,
-					"created", created,
-					"state", string(instance.LifecycleState),
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.instance", map[string]*llx.RawData{
+					"id":      llx.StringDataPtr(instance.Id),
+					"name":    llx.StringDataPtr(instance.DisplayName),
+					"region":  llx.ResourceData(regionResource, "oci.region"),
+					"created": llx.TimeDataPtr(created),
+					"state":   llx.StringData(string(instance.LifecycleState)),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -119,21 +129,26 @@ func (o *mqlOciCompute) getComputeInstances(provider *oci_provider.Provider) []*
 }
 
 func (o *mqlOciComputeInstance) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.compute.instance/" + id, nil
+	return "oci.compute.instance/" + o.Id.Data, nil
 }
 
-func (o *mqlOciCompute) GetImages() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+func (o *mqlOciCompute) images() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	// fetch regions
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
 	if err != nil {
 		return nil, err
 	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
 
+	// fetch images
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getComputeImage(conn, list.Data), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -174,25 +189,24 @@ func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeCl
 	return images, nil
 }
 
-func (o *mqlOciCompute) getComputeImage(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciCompute) getComputeImage(conn *connection.OciConnection, regions []interface{}) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
 	for _, region := range regions {
-		regionVal := region
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
+			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
 
-			svc, err := provider.ComputeClient(*regionVal.RegionKey)
+			svc, err := conn.ComputeClient(regionResource.Id.Data)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			images, err := o.getComputeInstancesForRegion(ctx, svc, provider.TenantID())
+			images, err := o.getComputeImagesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -205,13 +219,13 @@ func (o *mqlOciCompute) getComputeImage(provider *oci_provider.Provider) []*jobp
 					created = &image.TimeCreated.Time
 				}
 
-				mqlInstance, err := o.MotorRuntime.CreateResource("oci.compute.image",
-					"id", corePack.ToString(image.Id),
-					"name", corePack.ToString(image.DisplayName),
-					"region", region,
-					"created", created,
-					"state", string(image.LifecycleState),
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.image", map[string]*llx.RawData{
+					"id":      llx.StringDataPtr(image.Id),
+					"name":    llx.StringDataPtr(image.DisplayName),
+					"region":  llx.ResourceData(regionResource, "oci.region"),
+					"created": llx.TimeDataPtr(created),
+					"state":   llx.StringData(string(image.LifecycleState)),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -226,5 +240,5 @@ func (o *mqlOciCompute) getComputeImage(provider *oci_provider.Provider) []*jobp
 }
 
 func (o *mqlOciComputeImage) id() (string, error) {
-	return "oci.compute.image", nil
+	return "oci.compute.image/" + o.Id.Data, nil
 }

@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package oci
+package resources
 
 import (
 	"context"
@@ -10,23 +10,22 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
-	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
-	"go.mondoo.com/cnquery/resources/library/jobpool"
-	corePack "go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/providers/oci/connection"
+	"go.mondoo.com/cnquery/types"
 )
 
 func (o *mqlOciIdentity) id() (string, error) {
 	return "oci.identity", nil
 }
 
-func (o *mqlOciIdentity) GetUsers() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentity) users() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getUsers(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getUsers(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -67,10 +66,10 @@ func (s *mqlOciIdentity) getUsersForRegion(ctx context.Context, identityClient *
 	return users, nil
 }
 
-func (s *mqlOciIdentity) getUsers(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
+	regions, err := conn.GetRegions(ctx)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -79,13 +78,13 @@ func (s *mqlOciIdentity) getUsers(provider *oci_provider.Provider) []*jobpool.Jo
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			users, err := s.getUsersForRegion(ctx, svc, provider.TenantID())
+			users, err := o.getUsersForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -110,28 +109,28 @@ func (s *mqlOciIdentity) getUsers(provider *oci_provider.Provider) []*jobpool.Jo
 
 				capabilities := map[string]interface{}{}
 				if user.Capabilities != nil {
-					capabilities["canUseConsolePassword"] = corePack.ToBool(user.Capabilities.CanUseConsolePassword)
-					capabilities["canUseApiKeys"] = corePack.ToBool(user.Capabilities.CanUseApiKeys)
-					capabilities["canUseAuthTokens"] = corePack.ToBool(user.Capabilities.CanUseAuthTokens)
-					capabilities["canUseSmtpCredentials"] = corePack.ToBool(user.Capabilities.CanUseSmtpCredentials)
-					capabilities["canUseCustomerSecretKeys"] = corePack.ToBool(user.Capabilities.CanUseCustomerSecretKeys)
-					capabilities["canUseOAuth2ClientCredentials"] = corePack.ToBool(user.Capabilities.CanUseOAuth2ClientCredentials)
+					capabilities["canUseConsolePassword"] = boolValue(user.Capabilities.CanUseConsolePassword)
+					capabilities["canUseApiKeys"] = boolValue(user.Capabilities.CanUseApiKeys)
+					capabilities["canUseAuthTokens"] = boolValue(user.Capabilities.CanUseAuthTokens)
+					capabilities["canUseSmtpCredentials"] = boolValue(user.Capabilities.CanUseSmtpCredentials)
+					capabilities["canUseCustomerSecretKeys"] = boolValue(user.Capabilities.CanUseCustomerSecretKeys)
+					capabilities["canUseOAuth2ClientCredentials"] = boolValue(user.Capabilities.CanUseOAuth2ClientCredentials)
 				}
 
-				mqlInstance, err := s.MotorRuntime.CreateResource("oci.identity.user",
-					"id", corePack.ToString(user.Id),
-					"name", corePack.ToString(user.Name),
-					"description", corePack.ToString(user.Description),
-					"created", created,
-					"state", string(user.LifecycleState),
-					"mfaActivated", corePack.ToBool(user.IsMfaActivated),
-					"compartmentID", corePack.ToString(user.CompartmentId),
-					"email", corePack.ToString(user.Email),
-					"emailVerified", corePack.ToBool(user.EmailVerified),
-					"capabilities", capabilities,
-					"lastLogin", lastLogin,
-					"previousLogin", previousLogin,
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(user.Id),
+					"name":          llx.StringDataPtr(user.Name),
+					"description":   llx.StringDataPtr(user.Description),
+					"created":       llx.TimeDataPtr(created),
+					"state":         llx.StringData(string(user.LifecycleState)),
+					"mfaActivated":  llx.BoolData(boolValue(user.IsMfaActivated)),
+					"compartmentID": llx.StringDataPtr(user.CompartmentId),
+					"email":         llx.StringDataPtr(user.Email),
+					"emailVerified": llx.BoolData(boolValue(user.EmailVerified)),
+					"capabilities":  llx.MapData(capabilities, types.Bool),
+					"lastLogin":     llx.TimeDataPtr(lastLogin),
+					"previousLogin": llx.TimeDataPtr(previousLogin),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -146,22 +145,15 @@ func (s *mqlOciIdentity) getUsers(provider *oci_provider.Provider) []*jobpool.Jo
 }
 
 func (o *mqlOciIdentityUser) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.user/" + id, nil
+	return "oci.identity.user/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) GetApiKeys() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentityUser) apiKeys() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	userId, err := o.Id()
+	userId := o.Id.Data
 
-	client, err := provider.IdentityClient()
+	client, err := conn.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
@@ -183,13 +175,13 @@ func (o *mqlOciIdentityUser) GetApiKeys() ([]interface{}, error) {
 			created = &apikey.TimeCreated.Time
 		}
 
-		mqlInstance, err := o.MotorRuntime.CreateResource("oci.identity.apiKey",
-			"id", corePack.ToString(apikey.KeyId),
-			"value", corePack.ToString(apikey.KeyValue),
-			"fingerprint", corePack.ToString(apikey.Fingerprint),
-			"created", created,
-			"state", string(apikey.LifecycleState),
-		)
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.apiKey", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(apikey.KeyId),
+			"value":       llx.StringDataPtr(apikey.KeyValue),
+			"fingerprint": llx.StringDataPtr(apikey.Fingerprint),
+			"created":     llx.TimeDataPtr(created),
+			"state":       llx.StringData(string(apikey.LifecycleState)),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -200,22 +192,15 @@ func (o *mqlOciIdentityUser) GetApiKeys() ([]interface{}, error) {
 }
 
 func (o *mqlOciIdentityApiKey) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.apiKey/" + id, nil
+	return "oci.identity.apiKey/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) GetCustomerSecretKeys() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentityUser) customerSecretKeys() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	userId, err := o.Id()
+	userId := o.Id.Data
 
-	client, err := provider.IdentityClient()
+	client, err := conn.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
@@ -237,12 +222,12 @@ func (o *mqlOciIdentityUser) GetCustomerSecretKeys() ([]interface{}, error) {
 			created = &secretKey.TimeCreated.Time
 		}
 
-		mqlInstance, err := o.MotorRuntime.CreateResource("oci.identity.customerSecretKey",
-			"id", corePack.ToString(secretKey.Id),
-			"name", corePack.ToString(secretKey.DisplayName),
-			"created", created,
-			"state", string(secretKey.LifecycleState),
-		)
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.customerSecretKey", map[string]*llx.RawData{
+			"id":      llx.StringDataPtr(secretKey.Id),
+			"name":    llx.StringDataPtr(secretKey.DisplayName),
+			"created": llx.TimeDataPtr(created),
+			"state":   llx.StringData(string(secretKey.LifecycleState)),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -253,22 +238,15 @@ func (o *mqlOciIdentityUser) GetCustomerSecretKeys() ([]interface{}, error) {
 }
 
 func (o *mqlOciIdentityCustomerSecretKey) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.customerSecretKey/" + id, nil
+	return "oci.identity.customerSecretKey/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) GetAuthTokens() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentityUser) authTokens() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	userId, err := o.Id()
+	userId := o.Id.Data
 
-	client, err := provider.IdentityClient()
+	client, err := conn.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
@@ -294,13 +272,13 @@ func (o *mqlOciIdentityUser) GetAuthTokens() ([]interface{}, error) {
 			created = &authToken.TimeExpires.Time
 		}
 
-		mqlInstance, err := o.MotorRuntime.CreateResource("oci.identity.authToken",
-			"id", corePack.ToString(authToken.Id),
-			"description", corePack.ToString(authToken.Description),
-			"created", created,
-			"expires", expires,
-			"state", string(authToken.LifecycleState),
-		)
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.authToken", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(authToken.Id),
+			"description": llx.StringDataPtr(authToken.Description),
+			"created":     llx.TimeDataPtr(created),
+			"expires":     llx.TimeDataPtr(expires),
+			"state":       llx.StringData(string(authToken.LifecycleState)),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -311,30 +289,16 @@ func (o *mqlOciIdentityUser) GetAuthTokens() ([]interface{}, error) {
 }
 
 func (o *mqlOciIdentityAuthToken) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.authToken/" + id, nil
+	return "oci.identity.authToken/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentityUser) GetGroups() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentityUser) groups() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
-	userId, err := o.Id()
-	if err != nil {
-		return nil, err
-	}
+	userId := o.Id.Data
+	compartmentID := o.CompartmentID.Data
 
-	compartmentID, err := o.CompartmentID()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := provider.IdentityClient()
+	client, err := conn.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
@@ -357,20 +321,20 @@ func (o *mqlOciIdentityUser) GetGroups() ([]interface{}, error) {
 	}
 
 	// fetch all groups and filter the groups
-	obj, err := o.MotorRuntime.CreateResource("oci.identity")
+	obj, err := NewResource(o.MqlRuntime, "oci.identity", nil)
 	if err != nil {
 		return nil, err
 	}
-	ociIdentity := obj.(OciIdentity)
-	groups, err := ociIdentity.Groups()
-	if err != nil {
-		return nil, err
+	ociIdentity := obj.(*mqlOciIdentity)
+	list := ociIdentity.GetGroups()
+	if list.Error != nil {
+		return nil, list.Error
 	}
 
 	res := []interface{}{}
-	for i := range groups {
-		grp := groups[i].(OciIdentityGroup)
-		id, err := grp.Id()
+	for i := range list.Data {
+		grp := list.Data[i].(*mqlOciIdentityGroup)
+		id := grp.Id.Data
 		if err != nil {
 			return nil, err
 		}
@@ -383,14 +347,11 @@ func (o *mqlOciIdentityUser) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (o *mqlOciIdentity) GetGroups() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentity) groups() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getGroups(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getGroups(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -431,10 +392,10 @@ func (s *mqlOciIdentity) getGroupsForRegion(ctx context.Context, identityClient 
 	return groups, nil
 }
 
-func (s *mqlOciIdentity) getGroups(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciIdentity) getGroups(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
+	regions, err := conn.GetRegions(ctx)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -443,13 +404,13 @@ func (s *mqlOciIdentity) getGroups(provider *oci_provider.Provider) []*jobpool.J
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			groups, err := s.getGroupsForRegion(ctx, svc, provider.TenantID())
+			groups, err := o.getGroupsForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -462,14 +423,14 @@ func (s *mqlOciIdentity) getGroups(provider *oci_provider.Provider) []*jobpool.J
 					created = &grp.TimeCreated.Time
 				}
 
-				mqlInstance, err := s.MotorRuntime.CreateResource("oci.identity.group",
-					"id", corePack.ToString(grp.Id),
-					"name", corePack.ToString(grp.Name),
-					"description", corePack.ToString(grp.Description),
-					"created", created,
-					"state", string(grp.LifecycleState),
-					"compartmentID", corePack.ToString(grp.CompartmentId),
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.group", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(grp.Id),
+					"name":          llx.StringDataPtr(grp.Name),
+					"description":   llx.StringDataPtr(grp.Description),
+					"created":       llx.TimeDataPtr(created),
+					"state":         llx.StringData(string(grp.LifecycleState)),
+					"compartmentID": llx.StringDataPtr(grp.CompartmentId),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -484,21 +445,14 @@ func (s *mqlOciIdentity) getGroups(provider *oci_provider.Provider) []*jobpool.J
 }
 
 func (o *mqlOciIdentityGroup) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.group/" + id, nil
+	return "oci.identity.group/" + o.Id.Data, nil
 }
 
-func (o *mqlOciIdentity) GetPolicies() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciIdentity) policies() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getPolicies(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getPolicies(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -539,10 +493,10 @@ func (s *mqlOciIdentity) getPoliciesForRegion(ctx context.Context, identityClien
 	return policies, nil
 }
 
-func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciIdentity) getPolicies(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
+	regions, err := conn.GetRegions(ctx)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -551,13 +505,13 @@ func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.IdentityClientWithRegion(*regionVal.RegionKey)
+			svc, err := conn.IdentityClientWithRegion(*regionVal.RegionKey)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			policies, err := s.getPoliciesForRegion(ctx, svc, provider.TenantID())
+			policies, err := o.getPoliciesForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -570,15 +524,15 @@ func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool
 					created = &policy.TimeCreated.Time
 				}
 
-				mqlInstance, err := s.MotorRuntime.CreateResource("oci.identity.policy",
-					"id", corePack.ToString(policy.Id),
-					"name", corePack.ToString(policy.Name),
-					"description", corePack.ToString(policy.Description),
-					"created", created,
-					"state", string(policy.LifecycleState),
-					"compartmentID", corePack.ToString(policy.CompartmentId),
-					"statements", corePack.StrSliceToInterface(policy.Statements),
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.policy", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(policy.Id),
+					"name":          llx.StringDataPtr(policy.Name),
+					"description":   llx.StringDataPtr(policy.Description),
+					"created":       llx.TimeDataPtr(created),
+					"state":         llx.StringData(string(policy.LifecycleState)),
+					"compartmentID": llx.StringDataPtr(policy.CompartmentId),
+					"statements":    llx.ArrayData(convert.SliceAnyToInterface(policy.Statements), types.String),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -593,9 +547,5 @@ func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool
 }
 
 func (o *mqlOciIdentityPolicy) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.identity.policy/" + id, nil
+	return "oci.identity.policy/" + o.Id.Data, nil
 }

@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -146,23 +146,29 @@ providers/build/os: providers/lr
 
 providers/build/ipmi: providers/lr
 	@$(call buildProvider, providers/ipmi)
+	
+providers/build/oci: providers/lr
+	@$(call buildProvider, providers/oci)
 
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
 	@$(call installProvider, providers/os)
 	@$(call installProvider, providers/ipmi)
+	@$(call installProvider, providers/oci)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
 	@$(call bundleProvider, providers/ipmi)
+	@$(call bundleProvider, providers/oci)
 
 providers/test:
 	@$(call testProvider, providers/core)
 	@$(call testProvider, providers/network)
 	@$(call testProvider, providers/os)
 	@$(call testGpModProvider, providers/ipmi)
+	@$(call testGpModProvider, providers/oci)
 
 lr/test:
 	go test ./resources/lr/...
