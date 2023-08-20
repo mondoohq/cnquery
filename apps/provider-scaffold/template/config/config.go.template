@@ -1,0 +1,18 @@
+package config
+
+import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+
+var Config = plugin.Provider{
+	Name:    "{{ .ProviderID }}",
+	ID:      "{{ .GoPackage }}",
+	Version: "9.0.0",
+	Connectors: []plugin.Connector{
+		{
+			Name:      "{{ .ProviderID }}",
+			Use:       "{{ .ProviderID }}",
+			Short:     "{{ .ProviderName }}",
+			Discovery: []string{},
+			Flags:     []plugin.Flag{},
+		},
+	},
+}

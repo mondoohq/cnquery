@@ -1,0 +1,37 @@
+package connection
+
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+)
+
+type {{ .CamelcaseProviderID }}Connection struct {
+	id       uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	// Add custom connection fields here
+}
+
+func New{{ .CamelcaseProviderID }}Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*{{ .CamelcaseProviderID }}Connection, error) {
+	conn := &{{ .CamelcaseProviderID }}Connection{
+		Conf:  conf,
+		id:    id,
+		asset: asset,
+	}
+
+	// initialize your connection here
+
+	return conn, nil
+}
+
+func (c *{{ .CamelcaseProviderID }}Connection) Name() string {
+	return "{{ .ProviderID }}"
+}
+
+func (c *{{ .CamelcaseProviderID }}Connection) ID() uint32 {
+	return c.id
+}
+
+func (c *{{ .CamelcaseProviderID }}Connection) Asset() *inventory.Asset {
+	return c.asset
+}
+
