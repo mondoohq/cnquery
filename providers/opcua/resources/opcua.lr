@@ -1,7 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option go_package = "go.mondoo.com/cnquery/resources/packs/opcua"
+option provider = "go.mondoo.com/cnquery/providers/opcua"
+option go_package = "go.mondoo.com/cnquery/providers/opcua/resources"
 
 // OPC UA
 opcua {
@@ -28,7 +29,7 @@ opcua.server {
 }
 
 // OPC UA Namespace
-opcua.namespace {
+private opcua.namespace {
   // Namespace ID
   id int
   // Namespace Name
@@ -36,7 +37,7 @@ opcua.namespace {
 }
 
 // OPC UA Node
-opcua.node @defaults("id name") {
+private opcua.node @defaults("id name") {
   // Node id
   id string
   // Node browser name

@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -165,6 +165,9 @@ providers/build/terraform: providers/lr
 providers/build/vsphere: providers/lr
 	@$(call buildProvider, providers/vsphere)
 
+providers/build/opcua: providers/lr
+	@$(call buildProvider, providers/opcua)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -176,6 +179,7 @@ providers/install:
 	@$(call installProvider, providers/gitlab)
 	@$(call installProvider, providers/terraform)
 	@$(call installProvider, providers/vsphere)
+	@$(call installProvider, providers/opcua)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -187,6 +191,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/gitlab)
 	@$(call bundleProvider, providers/terraform)
 	@$(call bundleProvider, providers/vsphere)
+	@$(call bundleProvider, providers/opcua)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -199,6 +204,7 @@ providers/test:
 	@$(call testGpModProvider, providers/gitlab)
 	@$(call testGpModProvider, providers/terraform)
 	@$(call testGpModProvider, providers/vsphere)
+	@$(call testGpModProvider, providers/opcua)
 
 lr/test:
 	go test ./resources/lr/...

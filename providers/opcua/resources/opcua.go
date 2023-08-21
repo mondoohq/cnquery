@@ -1,43 +1,23 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package opcua
+package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
-	"go.mondoo.com/cnquery/motor/providers"
-	opcua_provider "go.mondoo.com/cnquery/motor/providers/opcua"
-	"go.mondoo.com/cnquery/resources/packs/opcua/info"
+	"go.mondoo.com/cnquery/providers/opcua/connection"
 )
-
-var Registry = info.Registry
-
-func init() {
-	Init(Registry)
-}
-
-func opcuaProvider(p providers.Instance) (*opcua_provider.Provider, error) {
-	at, ok := p.(*opcua_provider.Provider)
-	if !ok {
-		return nil, errors.New("OPC UA resource is not supported on this provider")
-	}
-	return at, nil
-}
 
 func (o *mqlOpcua) id() (string, error) {
 	return "opcua", nil
 }
 
-func (o *mqlOpcua) GetRoot() (interface{}, error) {
-	op, err := opcuaProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-	client := op.Client()
+func (o *mqlOpcua) root() (*mqlOpcuaNode, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OpcuaConnection)
+	client := conn.Client()
 
 	ctx := context.Background()
 	n := client.Node(ua.NewNumericNodeID(0, id.RootFolder))
@@ -45,7 +25,7 @@ func (o *mqlOpcua) GetRoot() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newMqlOpcuaNodeResource(o.MotorRuntime, ndef)
+	return newMqlOpcuaNodeResource(o.MqlRuntime, ndef)
 }
 
 func resolve(ctx context.Context, meta *nodeMeta) ([]*nodeMeta, error) {
@@ -96,12 +76,9 @@ func resolve(ctx context.Context, meta *nodeMeta) ([]*nodeMeta, error) {
 	return nodeList, nil
 }
 
-func (o *mqlOpcua) GetNodes() ([]interface{}, error) {
-	op, err := opcuaProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-	client := op.Client()
+func (o *mqlOpcua) nodes() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OpcuaConnection)
+	client := conn.Client()
 
 	ctx := context.Background()
 	n := client.Node(ua.NewNumericNodeID(0, id.RootFolder))
@@ -121,7 +98,7 @@ func (o *mqlOpcua) GetNodes() ([]interface{}, error) {
 	// convert list to interface
 	res := []interface{}{}
 	for i := range nodeList {
-		entry, err := newMqlOpcuaNodeResource(o.MotorRuntime, nodeList[i])
+		entry, err := newMqlOpcuaNodeResource(o.MqlRuntime, nodeList[i])
 		if err != nil {
 			return nil, err
 		}
