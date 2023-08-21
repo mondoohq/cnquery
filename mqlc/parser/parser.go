@@ -278,33 +278,33 @@ func (p *parser) token2string() string {
 	return vv
 }
 
-func (p *parser) parseValue() *Value {
+func (p *parser) parseValue() (*Value, error) {
 	switch p.token.Type {
 	case Ident:
 		switch p.token.Value {
 		case "true":
-			return &trueValue
+			return &trueValue, nil
 		case "false":
-			return &falseValue
+			return &falseValue, nil
 		case "null":
-			return &nilValue
+			return &nilValue, nil
 		case "NaN":
-			return &nanValue
+			return &nanValue, nil
 		case "Infinity":
-			return &infinityValue
+			return &infinityValue, nil
 		case "Never":
-			return &neverValue
+			return &neverValue, nil
 		default:
 			v := p.token.Value
-			return &Value{Ident: &v}
+			return &Value{Ident: &v}, nil
 		}
 
 	case Float:
 		v, err := strconv.ParseFloat(p.token.Value, 64)
 		if err != nil {
-			panic("Failed to parse float: " + err.Error())
+			return nil, p.errorMsg("failed to parse float: " + err.Error())
 		}
-		return &Value{Float: &v}
+		return &Value{Float: &v}, nil
 
 	case Int:
 		var v int64
@@ -316,13 +316,13 @@ func (p *parser) parseValue() *Value {
 		}
 
 		if err != nil {
-			panic("Failed to parse integer: " + err.Error())
+			return nil, p.errorMsg("failed to parse integer: " + err.Error())
 		}
-		return &Value{Int: &v}
+		return &Value{Int: &v}, nil
 
 	case String:
 		vv := p.token2string()
-		return &Value{String: &vv}
+		return &Value{String: &vv}, nil
 
 	case Regex:
 		v := p.token.Value
@@ -342,10 +342,10 @@ func (p *parser) parseValue() *Value {
 			vv = "(?" + mods + ")" + vv
 		}
 
-		return &Value{Regex: &vv}
+		return &Value{Regex: &vv}, nil
 
 	}
-	return nil
+	return nil, nil
 }
 
 func (p *parser) parseArg() (*Arg, error) {
@@ -471,9 +471,10 @@ func (p *parser) parseMap() (*Value, error) {
 // parseOperand and return the operand, and true if the operand is standalone
 func (p *parser) parseOperand() (*Operand, bool, error) {
 	// operand:      value [ call | accessor | '.' ident ]+ [ block ]
-	value := p.parseValue()
-	var err error
-
+	value, err := p.parseValue()
+	if err != nil {
+		return nil, false, err
+	}
 	if value == nil {
 		// arrays
 		if p.token.Value == "[" {
