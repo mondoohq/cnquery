@@ -144,19 +144,25 @@ providers/build/network: providers/lr
 providers/build/os: providers/lr
 	@$(call buildProvider, providers/os)
 
+providers/build/ipmi: providers/lr
+	@$(call buildProvider, providers/ipmi)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
 	@$(call installProvider, providers/os)
+	@$(call installProvider, providers/ipmi)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
+	@$(call bundleProvider, providers/ipmi)
 
 providers/test:
 	@$(call testProvider, providers/core)
 	@$(call testProvider, providers/network)
 	@$(call testProvider, providers/os)
+	@$(call testGpModProvider, providers/ipmi)
 
 lr/test:
 	go test ./resources/lr/...
