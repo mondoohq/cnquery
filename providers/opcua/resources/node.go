@@ -33,7 +33,7 @@ type nodeMeta struct {
 }
 
 func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
-	attrs, err := n.AttributesWithContext(ctx, ua.AttributeIDNodeClass, ua.AttributeIDBrowseName, ua.AttributeIDDescription, ua.AttributeIDAccessLevel, ua.AttributeIDDataType)
+	attrs, err := n.Attributes(ctx, ua.AttributeIDNodeClass, ua.AttributeIDBrowseName, ua.AttributeIDDescription, ua.AttributeIDAccessLevel, ua.AttributeIDDataType)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,8 @@ func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
 	}
 
 	// TODO: set path
-
 	fetchReference := func(refType uint32) ([]*opcua.Node, error) {
-		return n.ReferencedNodesWithContext(ctx, refType, ua.BrowseDirectionForward, ua.NodeClassAll, true)
+		return n.ReferencedNodes(ctx, refType, ua.BrowseDirectionForward, ua.NodeClassAll, true)
 	}
 
 	if componentRefs, err := fetchReference(id.HasComponent); err != nil {

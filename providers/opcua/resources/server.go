@@ -19,7 +19,6 @@ func initOpcuaServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	client := conn.Client()
 
 	ctx := context.Background()
-
 	n := client.Node(ua.NewNumericNodeID(0, id.Server))
 	ndef, err := fetchNodeInfo(ctx, n)
 	if err != nil {
@@ -34,7 +33,8 @@ func initOpcuaServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["node"] = llx.ResourceData(serverNode, "opcua.node")
 
 	// server status variable of server
-	v, err := client.Node(ua.NewNumericNodeID(0, id.Server_ServerStatus)).Value()
+	nodeID := ua.NewNumericNodeID(0, id.Server_ServerStatus)
+	v, err := client.Node(nodeID).Value(ctx)
 	switch {
 	case err != nil:
 		return nil, nil, err
