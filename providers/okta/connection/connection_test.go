@@ -4,7 +4,7 @@
 //go:build debugtest
 // +build debugtest
 
-package okta
+package connection
 
 import (
 	"context"
