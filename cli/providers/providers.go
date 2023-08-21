@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/components"
+	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -30,12 +31,12 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 		return err
 	}
 
-	connectorName := detectConnector(os.Args, rootCmd, commands)
+	connectorName, autoUpdate := detectConnector(os.Args, rootCmd, commands)
 	if connectorName == "" {
 		return nil
 	}
 
-	if _, err := providers.EnsureProvider(existing, connectorName); err != nil {
+	if _, err := providers.EnsureProvider(existing, connectorName, autoUpdate); err != nil {
 		return err
 	}
 
@@ -47,55 +48,43 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	return nil
 }
 
-func flagHasArgs(flag *pflag.Flag) bool {
-	if flag == nil {
-		return false
-	}
-	return flag.NoOptDefVal == ""
-}
+func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command) (string, bool) {
+	autoUpdate := true
+	action := ""
 
-func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command) string {
-	// We cannot fully parse the cli, yet. So we have to deal with what we have.
-	// We can safely ignore all options up to a point. We are looking for one of
-	// the supported commands, which can be followed by a provider.
-
-	// because the default first arg is the calling program, we are ignoring it
-	// and instead starting at arg position 2 (idx=1)
-	cmd, arg2, err := rootCmd.Find(args[1:])
-	if cmd == nil || err != nil {
-		return ""
-	}
-
-	found := false
-	for j := range commands {
-		if cmd == commands[j].Command {
-			found = true
-			continue
-		}
-	}
-	if !found {
-		return ""
+	preRunRoot := &cobra.Command{
+		Use: "root",
+		Run: func(cmd *cobra.Command, args []string) {
+			autoUpdate = viper.GetBool("auto_update")
+			for _, arg := range args {
+				for j := range commands {
+					if arg == commands[j].Command.Use {
+						action = arg
+						break
+					}
+				}
+				if action != "" {
+					break
+				}
+			}
+		},
+		FParseErrWhitelist: cobra.FParseErrWhitelist{
+			UnknownFlags: true,
+		},
 	}
 
-	argIsValue := false
-	for _, arg := range arg2 {
-		switch {
-		case strings.Contains(arg, "="):
-			continue // assigned flags don't get additional arg
-		case strings.HasPrefix(arg, "--"):
-			argIsValue = flagHasArgs(cmd.Flags().Lookup(arg[2:]))
-		case strings.HasPrefix(arg, "-"):
-			argIsValue = flagHasArgs(cmd.Flags().ShorthandLookup(arg[1:]))
-		case argIsValue:
-			argIsValue = false
-		default:
-			return arg
-		}
+	preRunRoot.Flags().Bool("auto-update", true, "Enable automatic provider installation and update")
+	viper.BindPFlag("auto_update", preRunRoot.Flags().Lookup("auto-update"))
+	config.Init(preRunRoot)
+
+	err := preRunRoot.Execute()
+	if err != nil {
+		log.Debug().Err(err).Msg("early detection error")
+		log.Error().Msg("failed to run early comman detection")
+		return "", false
 	}
 
-	// If we arrive here, we can safely assume that the command was called
-	// with no provider at all. This means that we default to local.
-	return "local"
+	return action, autoUpdate
 }
 
 func attacheProviders(existing providers.Providers, commands []*Command) {
