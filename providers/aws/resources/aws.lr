@@ -1374,3 +1374,439 @@ private aws.ecr.image {
   // uri for the image repository
   uri string
 }
+
+// AWS Database Migration Service (DMS)
+aws.dms {
+  // List of DMS replication instances
+  replicationInstances() []dict
+}
+
+// AWS API Gateway
+aws.apigateway {
+  // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
+  restApis() []aws.apigateway.restapi
+}
+
+// Amazon API Gateway REST API
+private aws.apigateway.restapi @defaults("arn") {
+  // ARN for the REST API
+  arn string
+  // Unique ID for the REST API
+  id string
+  // Name for the REST API
+  name string
+  // Time when the REST API was created
+  createdDate time
+  // Description for the REST API
+  description string
+  // Stages for the REST API
+  stages() []aws.apigateway.stage
+  // Region where the REST API exists
+  region string
+  // Tags for the REST API
+  tags map[string]string
+}
+
+// Amazon API Gateway REST API Stages
+private aws.apigateway.stage @defaults("arn") {
+  // ARN for the REST API stage
+  arn string
+  // Name for the stage
+  name string
+  // Bool that denotes if tracing is enabled for the stage
+  tracingEnabled bool
+  // Description for the stage
+  description string
+  // ID of the deployment the stage is attached to
+  deploymentId string
+  // Method settings for the stage
+  methodSettings dict
+}
+
+// AWS Lambda
+aws.lambda {
+  // List of lambda functions across all regions in the account
+  functions() []aws.lambda.function
+}
+
+// AWS Lambda Function
+private aws.lambda.function @defaults("arn") {
+  // ARN of the function
+  arn string
+  // Name of the function
+  name string
+  // Concurrency limit for the function
+  concurrency() int
+  // Target ARN of the DeadLetterQueue config
+  dlqTargetArn string
+  // Policy for the function
+  policy() dict
+  // VPC configuration for the lambda function
+  vpcConfig dict
+  // Region where the function exists
+  region string
+  // Tags for the function
+  tags map[string]string
+}
+
+// Amazon Systems Manager
+aws.ssm {
+  instances() []aws.ssm.instance
+}
+
+// Amazon SSM Instance
+private aws.ssm.instance {
+  // Instance ID for the SSM Instance
+  instanceId string
+  // Ping Status (e.g. online) for the SSM Instance
+  pingStatus string
+  // IP Address for the SSM Instance
+  ipAddress string
+  // Platform Name for the SSM Instance, as described by AWS
+  platformName string
+  // Region for the SSM Instance
+  region string
+  // ARN for the SSM Instance
+  arn string
+  // Tags for the SSM Instance
+  tags() map[string]string
+}
+
+// Amazon EC2
+aws.ec2 {
+  // List of security groups available to the account
+  securityGroups() []aws.ec2.securitygroup 
+  // List of instances across the AWS account (all regions)
+  instances() []aws.ec2.instance
+  // map[region]boolean used to denote if ebs encryption is on by default per region
+  ebsEncryptionByDefault() map[string]bool
+  // List of volumes across the AWS account
+  volumes() []aws.ec2.volume
+  // List of snapshots across the account
+  snapshots() []aws.ec2.snapshot
+  // List of internet gateways
+  internetGateways() []aws.ec2.internetgateway
+  // List of VPN connections 
+  vpnConnections() []aws.ec2.vpnconnection
+  // List of network ACLs 
+  networkAcls() []aws.ec2.networkacl
+  // List of keypairs for the account
+  keypairs() []aws.ec2.keypair
+}
+
+// Amazon EC2 Network ACL
+private aws.ec2.networkacl @defaults("arn") {
+  // ARN for the network ACL
+  arn string
+  // ID for the network ACL 
+  id string
+  // Region for the network ACL 
+  region string
+  // Entries for the network ACL
+  entries() []aws.ec2.networkacl.entry
+}
+
+// Amazon EC2 Network ACL Entry
+private aws.ec2.networkacl.entry {
+  // Denotes whether this is an entry for egress rules
+  egress bool
+  // Allow or deny
+  ruleAction string
+  // Port range for the ACL entry
+  portRange() aws.ec2.networkacl.entry.portrange
+  // ID for the ACL entry rule
+  id string
+}
+
+// Amazon EC2 Network ACL Entry Port Range
+private aws.ec2.networkacl.entry.portrange {
+  // Starting port for port range
+  from int
+  // Ending port for port range
+  to int
+  // ID for the entry port range
+  id string
+}
+
+// Amazon EC2 VPN Connection
+private aws.ec2.vpnconnection @defaults("arn") {
+  // ARN for the VPN connection
+  arn string
+  // List of telemetry data for the VPN
+  vgwTelemetry []aws.ec2.vgwtelemetry
+}
+
+// Amazon EC2 VPN Tunnel Telemetry
+private aws.ec2.vgwtelemetry {
+  // Outside IP address
+  outsideIpAddress string
+  // VPN Tunnel status
+  status string
+  // VPN Tunnel status message
+  statusMessage string
+}
+
+// Amazon EC2 Internet Gateway
+private aws.ec2.internetgateway @defaults("arn") {
+  // ARN for the gateway
+  arn string
+  // ID for the gateway
+  id string
+  // VPC attachments
+  attachments []dict
+}
+
+// Amazon EC2 Snapshot
+private aws.ec2.snapshot @defaults("arn") {
+  // ARN for the snapshot
+  arn string
+  // ID for the snapshot
+  id string
+  // Region where the snapshot exists
+  region string
+  // Users/groups that have the permissions for creating volumes from the snapshot
+  createVolumePermission() []dict
+  // ID of the volume used to create the snapshot
+  volumeId string
+  // Time when the snapshot was initiated
+  startTime time
+  // Tags for the snapshot
+  tags map[string]string
+  // State of the snapshot (pending, completed, error, recoverable, or recovering)
+  state string
+} 
+
+// Amazon EC2 Volume
+private aws.ec2.volume @defaults("arn encrypted state") {
+  // ARN for the EC2 volume
+  arn string
+  // ID of the EC2 volume
+  id string
+  // Information about the volume attachments
+  attachments []dict
+  // Denotes whether volume is encrypted
+  encrypted bool
+  // State of the volume (creating, available, in-use, etc.) 
+  state string
+  // A map of tags associated with the ebs volume
+  tags map[string]string
+  // Availability Zone in which the volume was created
+  availabilityZone string
+  // EBS volume type (gp2, gp3, io1, io2, st1, sc1, or standard)
+  volumeType string
+  // Time the volume was created
+  createTime time
+  // Region where the EC2 volume is stored
+  region string
+}
+
+// Amazon EC2 Instance
+private aws.ec2.instance @defaults("arn state") {
+  // ARN for the instance
+  arn string
+  // Instance id for the instance
+  instanceId string
+  // Indicates whether detailed monitoring is enabled
+  detailedMonitoring string
+  // Region where the instance exists
+  region string
+  // Public IP for instance
+  publicIp string
+  // Amazon Systems Manager information for the instance
+  ssm() dict
+  // VPC associated with the instance
+  vpc() aws.vpc
+  // A value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
+  httpTokens string
+  // Patch state information about the instance
+  patchState() dict
+  // State of the instance (pending, running, stopping, stopped, rebooting, or terminated)
+  state string
+  // List of devices attached to the instance (e.g. ebs volume)
+  deviceMappings []aws.ec2.instance.device
+  // List of security groups (ids) associated with the instance
+  securityGroups []aws.ec2.securitygroup
+  // Platform details 
+  platformDetails string
+  // Public dns name for the instance
+  publicDnsName string
+  // The status of the specified instance
+  instanceStatus() dict
+  // Reason for the most recent state transition
+  stateReason dict
+  // Reason for the most recent state transition
+  stateTransitionReason string
+  // Denotes whether or not instance has ebs optimization turned on
+  ebsOptimized bool
+  // Instance type, e.g. t2.micro
+  instanceType string
+  // Tags on the instance
+  tags map[string]string
+  // Image that was used for the instance
+  image aws.ec2.image
+  // Launch time of the instance
+  launchTime time
+  // Private IP address for the instance
+  privateIp string
+  // Private DNS name for the instance
+  privateDnsName string
+  // Keypair associated with the instance
+  keypair() aws.ec2.keypair
+}
+
+// Amazon EC2 Key Pair
+private aws.ec2.keypair @defaults("arn name") {
+  // ARN of the key pair
+  arn string
+  // Fingerprint for the key pair
+  fingerprint string
+  // Name of the key pair
+  name string
+  // Type of key (e.g. RSA)
+  type string
+  // Tags for the key pair
+  tags map[string]string
+  // Region where the key pair exists
+  region string
+}
+
+// Amazon EC2 Image (AMI)
+private aws.ec2.image @defaults("arn") {
+  // ARN for the AMI
+  arn string
+  // ID of the image
+  id string
+  // Name for the image
+  name string
+  // Architecture associated with the image
+  architecture string
+  // AWS account id of the image owner
+  ownerId string
+  // Alias for the image owner
+  ownerAlias string
+}
+
+// Amazon EC2 Instance Device
+private aws.ec2.instance.device {
+  // Boolean to denote whether volume should be deleted on instance termination
+  deleteOnTermination bool
+  // Status of the device
+  status string
+  // Volume id for the device
+  volumeId string
+  // Name for the device
+  deviceName string
+}
+
+// Amazon EC2 Security Group
+private aws.ec2.securitygroup @defaults("arn") {
+  // Security group arn
+  arn string
+  // Security group id
+  id string
+  // Name of the security group
+  name string
+  // Description of the security group
+  description string
+  // A map of tags associated with the security group
+  tags map[string]string
+  // VPC associated with the security group
+  vpc aws.vpc
+  // IP permissions (ingress) for the security group
+  ipPermissions []aws.ec2.securitygroup.ippermission
+  // IP permissions (egress) for the security group
+  ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+  // Region associated with the security group
+  region string
+  // Bool to denote if security group is attached to Amazon Elastic Compute Cloud
+  isAttachedToNetworkInterface() bool
+}
+
+// Amazon EC2 Security Group IP Permission
+private aws.ec2.securitygroup.ippermission @defaults("id") {
+  // Unique ID for the IP permission
+  id string
+  // Start of port range for TCP/UDP protocols
+  fromPort int
+  // End of port range for TCP/UDP protocols
+  toPort int
+  // IP protocol name
+  ipProtocol string
+  // IPv4 ranges
+  ipRanges []string
+  // IPv6 ranges
+  ipv6Ranges []string
+}
+
+
+// AWS Config
+aws.config {
+  // List of configuration recorders for each region in the account
+  recorders() []aws.config.recorder
+  // List of AWS Config rules
+  rules() []aws.config.rule
+}
+
+// AWS Config Rule
+private aws.config.rule @defaults("arn state") {
+  // ARN for the config rule
+  arn string
+  // State of the rule
+  state string
+  // Rule identifier that causes function to eval resources
+  source dict
+}
+
+// AWS Config Recorder
+private aws.config.recorder @defaults("name region") {
+  // Name of the recorder
+  name string
+  // ARN of the IAM role used to describe the AWS resources associated with the account
+  roleArn string
+  // Recording config changes for every supported type of regional resource
+  allSupported bool
+  // Recording all supported types of global resources with the resources that it records
+  includeGlobalResourceTypes bool
+  // Whether or not the recorder is currently recording
+  recording bool
+  // Last (previous) status of the recorder
+  lastStatus string
+  // Region for the recorder
+  region string
+}
+
+// Amazon Elastic Kubernetes Service (EKS)
+aws.eks {
+  // EKS clusters
+  clusters() []aws.eks.cluster
+}
+
+// Amazon EKS Cluster
+private aws.eks.cluster @defaults("arn version status") {
+  // Name of the cluster
+  name string
+  // ARN of the cluster
+  arn string
+  // Region for the cluster
+  region string
+  // A map of tags associated with the cluster
+  tags map[string]string
+  // The endpoint of Kubernetes API server
+  endpoint string
+  // Kubernetes server version
+  version string
+  // Amazon EKS cluster version
+  platformVersion string
+  // Cluster Status
+  status string
+  // Encryption configuration for the cluster
+  encryptionConfig []dict
+  // Cluster logging configuration
+  logging dict
+  // Kubernetes network configuration
+  networkConfig dict
+  //  VPC configuration
+  resourcesVpcConfig dict
+  // Cluster creation timestamp
+  createdAt time
+}
