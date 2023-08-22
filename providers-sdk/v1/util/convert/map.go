@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package convert
 
 // MapToInterfaceMap converts a map[string]T to map[string]interface{}

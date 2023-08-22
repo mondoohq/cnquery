@@ -1,3 +1,6 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 # .\exchangeonline.ps1 |  Out-File mondoo-ms365-datareport.json
 # Set-ExecutionPolicy RemoteSigned
 # $UserCredential = Get-Credential

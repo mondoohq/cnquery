@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package discovery
 
 // The discovery package is responsible to determine all assets reachable. E.g. If you provide an AWS

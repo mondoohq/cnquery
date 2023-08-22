@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 //
 // In this file we introduce feature flags. They help us activate optional
 // features on requests.

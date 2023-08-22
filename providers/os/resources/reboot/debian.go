@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package reboot
 
 import "go.mondoo.com/cnquery/providers/os/connection/shared"

@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 // +build windows
 
 // Package eventlog provides a io.Writer to send the logs

@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package execruntime
 
 const AWS_RUN_COMMAND = "aws_ssm_runcommand"

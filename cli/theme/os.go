@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package theme
 
 const logo = "  ___ _ __   __ _ _   _  ___ _ __ _   _ \n" +

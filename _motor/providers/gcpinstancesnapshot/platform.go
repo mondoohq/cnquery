@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package gcpinstancesnapshot
 
 func SnapshotPlatformMrn(project string, snapshotName string) string {

@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package colors
 
 // NOTE: this package is used by various packages and should really have NO external dependency

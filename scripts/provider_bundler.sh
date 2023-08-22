@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 ## Build the provider and bundle it into a single file
 
 REPOROOT=$(git rev-parse --show-toplevel)

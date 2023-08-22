@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package tlsshake
 
 var SSL2_CIPHERS = map[string]string{

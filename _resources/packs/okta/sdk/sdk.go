@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package sdk
 
 import "github.com/okta/okta-sdk-golang/v2/okta"
