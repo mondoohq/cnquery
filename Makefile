@@ -54,7 +54,7 @@ prep/tools:
 	# additional helper
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
+	go install github.com/hashicorp/copywrite@latest
 
 #   🌙 MQL/MOTOR   #
 
@@ -345,3 +345,11 @@ test/lint/govet:
 test/lint/golangci-lint/run: prep/tools
 	golangci-lint --version
 	golangci-lint run
+
+license: license/headers/check
+
+license/headers/check:
+	copywrite headers --plan
+
+license/headers/apply:
+	copywrite headers
