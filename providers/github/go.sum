@@ -857,8 +857,6 @@ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5t
 gitlab.com/bosi/decorder v0.2.3 h1:gX4/RgK16ijY8V+BRQHAySfQAb354T7/xQpDB2n10P0=
 gitlab.com/bosi/decorder v0.2.3/go.mod h1:9K1RB5+VPNQYtXtTDAzd2OEftsZb1oV0IrJrzChSdGE=
 go-simpler.org/assert v0.5.0 h1:+5L/lajuQtzmbtEfh69sr5cRf2/xZzyJhFjoOz/PPqs=
-go.mondoo.com/cnquery v0.0.0-20230822120357-4b3c486e0c35 h1:riK4NT+CWtZbszB8T2zzauqYR5MUTZYz3zd1qB3Pa0c=
-go.mondoo.com/cnquery v0.0.0-20230822120357-4b3c486e0c35/go.mod h1:F+KPF0rKgTQS1Uu2cLEDWSRuB/La+Ot1WSvmhDM/68M=
 go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f h1:l8N+cU5Ul8+NzC3DtyjrUqpzSDpPQDnGqvxpwMz7CMw=
 go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f/go.mod h1:3YKcqFrlPgaB4FZ4EoLgdmRtwMQdO7RoAkZYFn+F1eY=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

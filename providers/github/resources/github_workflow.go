@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/github/connection"
 	"sigs.k8s.io/yaml"
 )
 
@@ -43,10 +44,7 @@ func (g *mqlGithubWorkflow) configuration() (interface{}, error) {
 }
 
 func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Path.Error != nil {
 		return nil, g.Path.Error
@@ -63,7 +61,7 @@ func (g *mqlGithubWorkflow) file() (*mqlGithubFile, error) {
 
 	// TODO: no branch support yet
 	// if we workflow is running for a branch only, we do not see from the response the branch name
-	fileContent, _, _, err := gt.Client().Repositories.GetContents(context.Background(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{})
+	fileContent, _, _, err := conn.Client().Repositories.GetContents(context.Background(), ownerLogin, repoName, filePath, &github.RepositoryContentGetOptions{})
 	if err != nil {
 		// TODO: should this be an error
 		if strings.Contains(err.Error(), "404") {

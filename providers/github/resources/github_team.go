@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers/github/connection"
 )
 
 func (g *mqlGithubTeam) id() (string, error) {
@@ -21,10 +22,7 @@ func (g *mqlGithubTeam) id() (string, error) {
 }
 
 func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -44,7 +42,7 @@ func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
 	listOpts := &github.ListOptions{}
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := gt.Client().Teams.ListTeamReposByID(context.Background(), orgID, teamID, listOpts)
+		repos, resp, err := conn.Client().Teams.ListTeamReposByID(context.Background(), orgID, teamID, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -73,10 +71,7 @@ func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubTeam) members() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -98,7 +93,7 @@ func (g *mqlGithubTeam) members() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := gt.Client().Teams.ListTeamMembersByID(context.Background(), orgID, teamID, listOpts)
+		members, resp, err := conn.Client().Teams.ListTeamMembersByID(context.Background(), orgID, teamID, listOpts)
 		if err != nil {
 			return nil, err
 		}

@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/github/connection"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -125,19 +126,17 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	gt, err := githubProvider(runtime.Connection)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GithubConnection)
 
 	// userLogin := user.GetLogin()
 	var org *github.Organization
 	var user *github.User
-	org, err = gt.Organization()
+	var err error
+	org, err = conn.Organization()
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			log.Debug().Msg("could not find organization, trying to get user")
-			user, err = gt.User()
+			user, err = conn.User()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -156,7 +155,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	if x, ok := args["name"]; ok {
 		reponame = x.Value.(string)
 	} else {
-		repo, err := gt.Repository()
+		repo, err := conn.Repository()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -165,7 +164,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
 
 	if owner != "" && reponame != "" {
-		repo, _, err := gt.Client().Repositories.Get(context.Background(), owner, reponame)
+		repo, _, err := conn.Client().Repositories.Get(context.Background(), owner, reponame)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -225,10 +224,8 @@ func (g *mqlGithubLicense) id() (string, error) {
 }
 
 func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -242,7 +239,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	}
 	ownerLogin := ownerName.Login.Data
 
-	repoLicense, _, err := gt.Client().Repositories.License(context.Background(), ownerLogin, repoName)
+	repoLicense, _, err := conn.Client().Repositories.License(context.Background(), ownerLogin, repoName)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
@@ -268,10 +265,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 }
 
 func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -291,7 +285,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 	}
 	var allPulls []*github.PullRequest
 	for {
-		pulls, resp, err := gt.Client().PullRequests.List(context.TODO(), ownerLogin, repoName, listOpts)
+		pulls, resp, err := conn.Client().PullRequests.List(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -362,10 +356,7 @@ func (g *mqlGithubMergeRequest) id() (string, error) {
 }
 
 func (g *mqlGithubRepository) branches() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -390,7 +381,7 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 	}
 	var allBranches []*github.Branch
 	for {
-		branches, resp, err := gt.Client().Repositories.ListBranches(context.TODO(), ownerLogin, repoName, listOpts)
+		branches, resp, err := conn.Client().Repositories.ListBranches(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -453,10 +444,9 @@ type githubRequiredPullRequestReviews struct {
 }
 
 func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	var err error
+
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
 	}
@@ -478,7 +468,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	}
 	ownerName := owner.Login.Data
 
-	branchProtection, _, err := gt.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
+	branchProtection, _, err := conn.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
 	if err != nil {
 		// NOTE it is possible that the branch does not have any protection rules, therefore we don't return an error
 		// TODO: figure out if the client has the permission to fetch the protection rules
@@ -546,7 +536,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		return nil, err
 	}
 
-	sc, _, err := gt.Client().Repositories.GetSignaturesProtectedBranch(context.TODO(), ownerName, repoName, branchName)
+	sc, _, err := conn.Client().Repositories.GetSignaturesProtectedBranch(context.TODO(), ownerName, repoName, branchName)
 	if err != nil {
 		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
 		return nil, err
@@ -573,14 +563,11 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, owner string, repo string) (interface{}, error) {
 	var githubAuthor interface{}
 	var err error
+	conn := runtime.Connection.(*connection.GithubConnection)
 
 	// if the github author is nil, we have to load the commit again
 	if rc.Author == nil {
-		gt, err := githubProvider(runtime.Connection)
-		if err != nil {
-			return nil, err
-		}
-		rc, _, err = gt.Client().Repositories.GetCommit(context.TODO(), owner, repo, rc.GetSHA(), nil)
+		rc, _, err = conn.Client().Repositories.GetCommit(context.TODO(), owner, repo, rc.GetSHA(), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -631,10 +618,8 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 }
 
 func (g *mqlGithubRepository) commits() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -653,7 +638,7 @@ func (g *mqlGithubRepository) commits() ([]interface{}, error) {
 	}
 	var allCommits []*github.RepositoryCommit
 	for {
-		commits, resp, err := gt.Client().Repositories.ListCommits(context.TODO(), ownerLogin, repoName, listOpts)
+		commits, resp, err := conn.Client().Repositories.ListCommits(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -680,10 +665,8 @@ func (g *mqlGithubRepository) commits() ([]interface{}, error) {
 }
 
 func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	var err error
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
 	}
@@ -706,7 +689,7 @@ func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
 	}
 	var allReviews []*github.PullRequestReview
 	for {
-		reviews, resp, err := gt.Client().PullRequests.ListReviews(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
+		reviews, resp, err := conn.Client().PullRequests.ListReviews(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -748,10 +731,7 @@ func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
 }
 
 func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
 	}
@@ -774,7 +754,7 @@ func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
 	}
 	var allCommits []*github.RepositoryCommit
 	for {
-		commits, resp, err := gt.Client().PullRequests.ListCommits(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
+		commits, resp, err := conn.Client().PullRequests.ListCommits(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -801,10 +781,8 @@ func (g *mqlGithubMergeRequest) commits() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -823,7 +801,7 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 	}
 	var allContributors []*github.Contributor
 	for {
-		contributors, resp, err := gt.Client().Repositories.ListContributors(context.TODO(), ownerLogin, repoName, listOpts)
+		contributors, resp, err := conn.Client().Repositories.ListContributors(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -851,10 +829,8 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -873,7 +849,7 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 	}
 	var allContributors []*github.User
 	for {
-		contributors, resp, err := gt.Client().Repositories.ListCollaborators(context.TODO(), ownerLogin, repoName, listOpts)
+		contributors, resp, err := conn.Client().Repositories.ListCollaborators(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -916,10 +892,8 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) releases() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -938,7 +912,7 @@ func (g *mqlGithubRepository) releases() ([]interface{}, error) {
 	}
 	var allReleases []*github.RepositoryRelease
 	for {
-		releases, resp, err := gt.Client().Repositories.ListReleases(context.TODO(), ownerLogin, repoName, listOpts)
+		releases, resp, err := conn.Client().Repositories.ListReleases(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -979,10 +953,7 @@ func (g *mqlGithubWebhook) id() (string, error) {
 }
 
 func (g *mqlGithubRepository) webhooks() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -1002,7 +973,7 @@ func (g *mqlGithubRepository) webhooks() ([]interface{}, error) {
 	}
 	var allWebhooks []*github.Hook
 	for {
-		hooks, resp, err := gt.Client().Repositories.ListHooks(context.TODO(), ownerLogin, repoName, listOpts)
+		hooks, resp, err := conn.Client().Repositories.ListHooks(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -1046,10 +1017,7 @@ type mqlGithubWorkflowInternal struct {
 }
 
 func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -1074,7 +1042,7 @@ func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
 	}
 	var allWorkflows []*github.Workflow
 	for {
-		workflows, resp, err := gt.Client().Actions.ListWorkflows(context.Background(), ownerLogin, repoName, listOpts)
+		workflows, resp, err := conn.Client().Actions.ListWorkflows(context.Background(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -1135,10 +1103,8 @@ func newMqlGithubFile(runtime *plugin.Runtime, ownerName string, repoName string
 }
 
 func (g *mqlGithubRepository) files() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -1152,7 +1118,7 @@ func (g *mqlGithubRepository) files() ([]interface{}, error) {
 		return nil, owner.Login.Error
 	}
 	ownerLogin := owner.Login.Data
-	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), ownerLogin, repoName, "", &github.RepositoryContentGetOptions{})
+	_, dirContent, _, err := conn.Client().Repositories.GetContents(context.TODO(), ownerLogin, repoName, "", &github.RepositoryContentGetOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
@@ -1223,10 +1189,7 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 	if fileType != "dir" {
 		return nil, nil
 	}
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.RepoName.Error != nil {
 		return nil, g.RepoName.Error
 	}
@@ -1239,7 +1202,7 @@ func (g *mqlGithubFile) files() ([]interface{}, error) {
 		return nil, g.Path.Error
 	}
 	path := g.Path.Data
-	_, dirContent, _, err := gt.Client().Repositories.GetContents(context.TODO(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
+	_, dirContent, _, err := conn.Client().Repositories.GetContents(context.TODO(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
@@ -1282,10 +1245,7 @@ func (g *mqlGithubFile) content() (string, error) {
 	if fileType == "dir" {
 		return "", nil
 	}
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return "", err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.RepoName.Error != nil {
 		return "", g.RepoName.Error
 	}
@@ -1298,7 +1258,7 @@ func (g *mqlGithubFile) content() (string, error) {
 		return "", g.Path.Error
 	}
 	path := g.Path.Data
-	fileContent, _, _, err := gt.Client().Repositories.GetContents(context.TODO(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
+	fileContent, _, _, err := conn.Client().Repositories.GetContents(context.TODO(), ownerName, repoName, path, &github.RepositoryContentGetOptions{})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to get contents list")
 		if strings.Contains(err.Error(), "404") {
@@ -1320,10 +1280,7 @@ func (g *mqlGithubFile) content() (string, error) {
 }
 
 func (g *mqlGithubRepository) forks() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -1345,7 +1302,7 @@ func (g *mqlGithubRepository) forks() ([]interface{}, error) {
 	}
 	var allForks []*github.Repository
 	for {
-		forks, resp, err := gt.Client().Repositories.ListForks(context.Background(), ownerLogin, repoName, listOpts)
+		forks, resp, err := conn.Client().Repositories.ListForks(context.Background(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
@@ -1373,10 +1330,7 @@ func (g *mqlGithubRepository) forks() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -1396,7 +1350,7 @@ func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
 	}
 	var allStargazers []*github.Stargazer
 	for {
-		stargazers, resp, err := gt.Client().Activity.ListStargazers(context.Background(), ownerLogin, repoName, listOpts)
+		stargazers, resp, err := conn.Client().Activity.ListStargazers(context.Background(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
@@ -1444,10 +1398,7 @@ func (g *mqlGithubRepository) closedIssues() ([]interface{}, error) {
 }
 
 func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}
@@ -1470,7 +1421,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 	}
 	var allIssues []*github.Issue
 	for {
-		issues, resp, err := gt.Client().Issues.ListByRepo(context.Background(), ownerLogin, repoName, listOpts)
+		issues, resp, err := conn.Client().Issues.ListByRepo(context.Background(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {

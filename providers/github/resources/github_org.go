@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/github/connection"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -80,11 +81,7 @@ func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, Git
 */
 
 func (g *mqlGithubOrganization) members() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
 	}
@@ -95,7 +92,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		members, resp, err := conn.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -127,10 +124,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -143,7 +137,7 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 	}
 	var allMembers []*github.User
 	for {
-		members, resp, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		members, resp, err := conn.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -194,10 +188,7 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -209,7 +200,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 	}
 	var allTeams []*github.Team
 	for {
-		teams, resp, err := gt.Client().Teams.ListTeams(context.Background(), orgLogin, listOpts)
+		teams, resp, err := conn.Client().Teams.ListTeams(context.Background(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -245,10 +236,7 @@ func (g *mqlGithubOrganization) teams() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -262,7 +250,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := gt.Client().Repositories.ListByOrg(context.Background(), orgLogin, listOpts)
+		repos, resp, err := conn.Client().Repositories.ListByOrg(context.Background(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -290,10 +278,7 @@ func (g *mqlGithubOrganization) repositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -305,7 +290,7 @@ func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
 	}
 	var allHooks []*github.Hook
 	for {
-		hooks, resp, err := gt.Client().Organizations.ListHooks(context.TODO(), ownerLogin, listOpts)
+		hooks, resp, err := conn.Client().Organizations.ListHooks(context.TODO(), ownerLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -350,10 +335,7 @@ type mqlGithubPackageInternal struct {
 }
 
 func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -370,7 +352,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 
 		var allPackages []*github.Package
 		for {
-			packages, resp, err := gt.Client().Organizations.ListPackages(context.Background(), ownerLogin, listOpts)
+			packages, resp, err := conn.Client().Organizations.ListPackages(context.Background(), ownerLogin, listOpts)
 			if err != nil {
 				if strings.Contains(err.Error(), "404") {
 					return nil, nil
@@ -423,10 +405,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 }
 
 func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.pacakgeRepositry == "" {
 		return nil, errors.New("could not load the repository")
@@ -444,7 +423,7 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	}
 	ownerLogin := owner.Login.Data
 
-	repo, _, err := gt.Client().Repositories.Get(context.Background(), ownerLogin, repoName)
+	repo, _, err := conn.Client().Repositories.Get(context.Background(), ownerLogin, repoName)
 	if err != nil {
 		return nil, err
 	}
@@ -452,10 +431,7 @@ func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 }
 
 func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -467,7 +443,7 @@ func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
 	}
 	var allOrgInstallations []*github.Installation
 	for {
-		orgInstallations, resp, err := gt.Client().Organizations.ListInstallations(context.Background(), orgLogin, listOpts)
+		orgInstallations, resp, err := conn.Client().Organizations.ListInstallations(context.Background(), orgLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil

@@ -1,5 +1,7 @@
 module go.mondoo.com/cnquery/providers/github
 
+replace go.mondoo.com/cnquery => ../..
+
 go 1.20
 
 require (

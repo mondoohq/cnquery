@@ -12,6 +12,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers/github/connection"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/cnquery/utils/stringx"
 	"go.mondoo.com/ranger-rpc"
@@ -98,10 +99,7 @@ func (g *mqlGithubInstallation) id() (string, error) {
 }
 
 func (g *mqlGithubUser) repositories() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -114,7 +112,7 @@ func (g *mqlGithubUser) repositories() ([]interface{}, error) {
 
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := gt.Client().Repositories.List(context.Background(), githubLogin, listOpts)
+		repos, resp, err := conn.Client().Repositories.List(context.Background(), githubLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -150,10 +148,7 @@ func (g *mqlGithubGist) id() (string, error) {
 }
 
 func (g *mqlGithubUser) gists() ([]interface{}, error) {
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
 	if g.Login.Error != nil {
 		return nil, g.Login.Error
@@ -166,7 +161,7 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 
 	var allGists []*github.Gist
 	for {
-		gists, resp, err := gt.Client().Gists.List(context.Background(), userLogin, listOpts)
+		gists, resp, err := conn.Client().Gists.List(context.Background(), userLogin, listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
