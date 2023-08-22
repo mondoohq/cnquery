@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"os"
 	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
@@ -38,14 +39,20 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Type: req.Connector,
 	}
 
-	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
-		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", string(x.Value)))
+	token := ""
+	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+		token = string(x.Value)
 	}
+	if token == "" {
+		token = os.Getenv("SLACK_TOKEN")
+	}
+	if token == "" {
+		return nil, errors.New("no slack token provided, use --token or SLACK_TOKEN")
+	}
+	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{{
-			Type: "slack",
-		}},
+		Connections: []*inventory.Config{conn},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
