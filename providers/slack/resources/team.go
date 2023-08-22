@@ -5,6 +5,7 @@ package resources
 
 import (
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/slack/connection"
 )
 
@@ -12,9 +13,9 @@ func (x *mqlSlackTeam) id() (string, error) {
 	return "slack.team/" + x.Id.Data, nil
 }
 
-// init method for team
-func (s *mqlSlackTeam) init(args map[string]interface{}) (map[string]interface{}, *mqlSlackTeam, error) {
-	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
+// init method for slack team
+func initSlackTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	teamInfo, err := client.GetTeamInfo()
 	if err != nil {

@@ -226,17 +226,17 @@ func (x *mqlSlackEnterpriseUser) id() (string, error) {
 	return "slack.enterpriseUser/" + x.EnterpriseId.Data + "/" + x.Id.Data, nil
 }
 
-// init method for user
-func (s *mqlSlackUser) init(args map[string]interface{}) (map[string]interface{}, *mqlSlackUser, error) {
+// initSlackUser is the init method for slack user
+func initSlackUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// we only look up the user, if we have been supplied by its id and nothing else
 	raw, ok := args["id"]
 	if !ok || len(args) != 1 {
 		return args, nil, nil
 	}
 
-	id, ok := raw.(string)
+	id, ok := raw.Value.(string)
 
-	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
+	conn := runtime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 
 	users, err := client.GetUsersInfo(id)
@@ -253,7 +253,7 @@ func (s *mqlSlackUser) init(args map[string]interface{}) (map[string]interface{}
 		return nil, nil, errors.New("user " + id + " not available")
 	}
 
-	usr, err := newMqlSlackUser(s.MqlRuntime, userList[0])
+	usr, err := newMqlSlackUser(runtime, userList[0])
 	if err != nil {
 		return nil, nil, err
 	}

@@ -23,7 +23,6 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Slack API token",
-					Option:  plugin.FlagOption_Hidden,
 				},
 			},
 		},

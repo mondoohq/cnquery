@@ -6,13 +6,10 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/providers/slack/connection"
-
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-
-	"go.mondoo.com/cnquery/llx"
-
 	"github.com/slack-go/slack"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/slack/connection"
 )
 
 func (s *mqlSlack) userGroups() ([]interface{}, error) {
@@ -45,21 +42,21 @@ func newMqlSlackUserGroup(runtime *plugin.Runtime, userGroup slack.UserGroup) (i
 	dateUpdate := userGroup.DateUpdate.Time()
 	dateDelete := userGroup.DateDelete.Time()
 
-	createdBy, err := runtime.CreateResource(runtime, "slack.user", map[string]*llx.RawData{
+	createdBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
 		"id": llx.StringData(userGroup.CreatedBy),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	updatedBy, err := runtime.CreateResource(runtime, "slack.user", map[string]*llx.RawData{
+	updatedBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
 		"id": llx.StringData(userGroup.UpdatedBy),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	deletedBy, err := runtime.CreateResource(runtime, "slack.user", map[string]*llx.RawData{
+	deletedBy, err := NewResource(runtime, "slack.user", map[string]*llx.RawData{
 		"id": llx.StringData(userGroup.DeletedBy),
 	})
 	if err != nil {
@@ -101,7 +98,7 @@ func (s *mqlSlackUserGroup) members() ([]interface{}, error) {
 	}
 
 	for i := range members {
-		user, err := CreateResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
+		user, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
 			"id": llx.StringData(members[i]),
 		})
 		if err != nil {

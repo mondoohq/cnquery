@@ -6,15 +6,11 @@ package resources
 import (
 	"time"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-
-	"go.mondoo.com/cnquery/providers/slack/connection"
-
-	"go.mondoo.com/cnquery/llx"
-
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-
 	"github.com/slack-go/slack"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/slack/connection"
 )
 
 func (s *mqlSlack) conversations() ([]interface{}, error) {
@@ -101,7 +97,7 @@ func newMqlSlackConversation(runtime *plugin.Runtime, conversation slack.Channel
 	var creator plugin.Resource
 
 	if conversation.Creator != "" {
-		creator, err = CreateResource(runtime, "slack.user", map[string]*llx.RawData{
+		creator, err = NewResource(runtime, "slack.user", map[string]*llx.RawData{
 			"id": llx.StringData(conversation.Creator),
 		})
 		if err != nil {
@@ -158,7 +154,7 @@ func (s *mqlSlackConversation) members() ([]interface{}, error) {
 		}
 
 		for i := range members {
-			user, err := CreateResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
+			user, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
 				"id": llx.StringData(members[i]),
 			})
 			if err != nil {
