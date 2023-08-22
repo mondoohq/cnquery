@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package github
+package resources
 
 import (
 	"context"
@@ -9,37 +9,37 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v49/github"
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
 )
 
 func (g *mqlGithubTeam) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "github.team/" + strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
-	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+func (g *mqlGithubTeam) repositories() ([]interface{}, error) {
+	gt, err := githubProvider(g.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
 	}
 
-	teamID, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	teamID := g.Id.Data
 
-	org, err := g.Organization()
-	if err != nil {
-		return nil, err
+	if g.Organization.Error != nil {
+		return nil, g.Organization.Error
 	}
+	org := g.Organization.Data
 
-	orgID, err := org.Id()
-	if err != nil {
-		return nil, err
+	if org.Id.Error != nil {
+		return nil, org.Id.Error
 	}
+	orgID := org.Id.Data
 
 	listOpts := &github.ListOptions{}
 	var allRepos []*github.Repository
@@ -62,7 +62,7 @@ func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
 	for i := range allRepos {
 		repo := allRepos[i]
 
-		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
+		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -72,26 +72,26 @@ func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGithubTeam) GetMembers() ([]interface{}, error) {
-	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+func (g *mqlGithubTeam) members() ([]interface{}, error) {
+	gt, err := githubProvider(g.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
 	}
 
-	teamID, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	teamID := g.Id.Data
 
-	org, err := g.Organization()
-	if err != nil {
-		return nil, err
+	if g.Organization.Error != nil {
+		return nil, g.Organization.Error
 	}
+	org := g.Organization.Data
 
-	orgID, err := org.Id()
-	if err != nil {
-		return nil, err
+	if org.Id.Error != nil {
+		return nil, org.Id.Error
 	}
+	orgID := org.Id.Data
 
 	listOpts := &github.TeamListTeamMembersOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -113,10 +113,10 @@ func (g *mqlGithubTeam) GetMembers() ([]interface{}, error) {
 	for i := range allMembers {
 		member := allMembers[i]
 
-		r, err := g.MotorRuntime.CreateResource("github.user",
-			"id", core.ToInt64(member.ID),
-			"login", core.ToString(member.Login),
-		)
+		r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntDataPtr(member.ID),
+			"login": llx.StringDataPtr(member.Login),
+		})
 		if err != nil {
 			return nil, err
 		}

@@ -1,14 +1,14 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package github
+package resources
 
 import "strconv"
 
 func (g *mqlGithubPackage) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "github.package/" + strconv.FormatInt(id, 10), nil
 }

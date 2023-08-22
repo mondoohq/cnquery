@@ -1,37 +1,37 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package github
+package resources
 
 import (
 	"context"
 	"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v49/github"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/stringx"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/stringx"
 	"go.mondoo.com/ranger-rpc"
 )
 
 func (g *mqlGithubUser) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "github.user/" + strconv.FormatInt(id, 10), nil
 }
 
+/*
 func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser, error) {
 	if len(*args) > 3 {
 		return args, nil, nil
 	}
 
-	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+	gt, err := githubProvider(g.MqlRuntime.Connection)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -79,33 +79,34 @@ func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser,
 	(*args)["company"] = user.GetCompany()
 	return args, nil, nil
 }
+*/
 
 func (g *mqlGithubCollaborator) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return strconv.FormatInt(id, 10), nil
 }
 
 func (g *mqlGithubInstallation) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return strconv.FormatInt(id, 10), nil
 }
 
-func (g *mqlGithubUser) GetRepositories() ([]interface{}, error) {
-	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+func (g *mqlGithubUser) repositories() ([]interface{}, error) {
+	gt, err := githubProvider(g.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
 	}
 
-	githubLogin, err := g.Login()
-	if err != nil {
-		return nil, err
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
 	}
+	githubLogin := g.Login.Data
 
 	listOpts := &github.RepositoryListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -130,7 +131,7 @@ func (g *mqlGithubUser) GetRepositories() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allRepos {
 		repo := allRepos[i]
-		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
+		r, err := newMqlGithubRepository(g.MqlRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -141,23 +142,23 @@ func (g *mqlGithubUser) GetRepositories() ([]interface{}, error) {
 }
 
 func (g *mqlGithubGist) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "github.gist/" + id, nil
 }
 
-func (g *mqlGithubUser) GetGists() ([]interface{}, error) {
-	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+func (g *mqlGithubUser) gists() ([]interface{}, error) {
+	gt, err := githubProvider(g.MqlRuntime.Connection)
 	if err != nil {
 		return nil, err
 	}
 
-	userLogin, err := g.Login()
-	if err != nil {
-		return nil, err
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
 	}
+	userLogin := g.Login.Data
 
 	listOpts := &github.GistListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
@@ -187,29 +188,29 @@ func (g *mqlGithubUser) GetGists() ([]interface{}, error) {
 		for k := range gist.Files {
 			f := gist.Files[k]
 
-			gistFile, err := g.MotorRuntime.CreateResource("github.gistfile",
-				"gistId", core.ToString(gist.ID),
-				"filename", f.GetFilename(),
-				"type", f.GetType(),
-				"language", f.GetLanguage(),
-				"rawUrl", f.GetRawURL(),
-				"size", int64(f.GetSize()),
-			)
+			gistFile, err := CreateResource(g.MqlRuntime, "github.gistfile", map[string]*llx.RawData{
+				"gistId":   llx.StringDataPtr(gist.ID),
+				"filename": llx.StringData(f.GetFilename()),
+				"type":     llx.StringData(f.GetType()),
+				"language": llx.StringData(f.GetLanguage()),
+				"rawUrl":   llx.StringData(f.GetRawURL()),
+				"size":     llx.IntData(int64(f.GetSize())),
+			})
 			if err != nil {
 				return nil, err
 			}
 			files = append(files, gistFile)
 		}
 
-		r, err := g.MotorRuntime.CreateResource("github.gist",
-			"id", core.ToString(gist.ID),
-			"description", core.ToString(gist.Description),
-			"createdAt", gist.CreatedAt,
-			"updatedAt", gist.UpdatedAt,
-			"public", core.ToBool(gist.Public),
-			"owner", g,
-			"files", files,
-		)
+		r, err := CreateResource(g.MqlRuntime, "github.gist", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(gist.ID),
+			"description": llx.StringDataPtr(gist.Description),
+			"createdAt":   llx.TimeDataPtr(gist.CreatedAt),
+			"updatedAt":   llx.TimeDataPtr(gist.UpdatedAt),
+			"public":      llx.BoolDataPtr(gist.Public),
+			"owner":       llx.ResourceData(g, g.MqlName()),
+			"files":       llx.ArrayData(files, types.Any),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -220,14 +221,14 @@ func (g *mqlGithubUser) GetGists() ([]interface{}, error) {
 }
 
 func (g *mqlGithubGistfile) id() (string, error) {
-	id, err := g.GistId()
-	if err != nil {
-		return "", err
+	if g.GistId.Error != nil {
+		return "", g.GistId.Error
 	}
-	filename, err := g.Filename()
-	if err != nil {
-		return "", err
+	id := g.GistId.Data
+	if g.Filename.Error != nil {
+		return "", g.Filename.Error
 	}
+	filename := g.Filename.Data
 	return "github.gistfile/" + id + "/" + filename, nil
 }
 
@@ -250,16 +251,16 @@ var supportedGistContentTypes = []string{
 	"application/x-msdos-program",
 }
 
-func (g *mqlGithubGistfile) GetContent() (string, error) {
-	rawUrl, err := g.RawUrl()
-	if err != nil {
-		return "", err
+func (g *mqlGithubGistfile) content() (string, error) {
+	if g.RawUrl.Error != nil {
+		return "", g.RawUrl.Error
 	}
+	rawUrl := g.RawUrl.Data
 
-	filetyp, err := g.Type()
-	if err != nil {
-		return "", err
+	if g.Type.Error != nil {
+		return "", g.Type.Error
 	}
+	filetyp := g.Type.Data
 
 	// supported content types
 	if !stringx.Contains(supportedGistContentTypes, filetyp) {

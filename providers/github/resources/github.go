@@ -1,26 +1,19 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package github
+package resources
 
 import (
+	"errors"
 	"time"
 
-	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v49/github"
-	"go.mondoo.com/cnquery/motor/providers"
-	provider "go.mondoo.com/cnquery/motor/providers/github"
-	"go.mondoo.com/cnquery/resources/packs/github/info"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/github/connection"
 )
 
-var Registry = info.Registry
-
-func init() {
-	Init(Registry)
-}
-
-func githubProvider(t providers.Instance) (*provider.Provider, error) {
-	gt, ok := t.(*provider.Provider)
+func githubProvider(t plugin.Connection) (*connection.GithubConnection, error) {
+	gt, ok := t.(*connection.GithubConnection)
 	if !ok {
 		return nil, errors.New("github resource is not supported on this provider")
 	}

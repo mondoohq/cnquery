@@ -1,51 +1,50 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package github
+package connection
 
 import (
 	"context"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v49/github"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 var (
-	GithubRepoPlatform = &platform.Platform{
+	GithubRepoPlatform = &inventory.Platform{
 		Name:    "github-repo",
 		Title:   "GitHub Repository",
 		Family:  []string{"github"},
-		Kind:    providers.Kind_KIND_API,
-		Runtime: providers.RUNTIME_GITHUB,
+		Kind:    "api",
+		Runtime: "github",
 	}
-	GithubUserPlatform = &platform.Platform{
+	GithubUserPlatform = &inventory.Platform{
 		Name:    "github-user",
 		Title:   "GitHub User",
 		Family:  []string{"github"},
-		Kind:    providers.Kind_KIND_API,
-		Runtime: providers.RUNTIME_GITHUB,
+		Kind:    "api",
+		Runtime: "github",
 	}
-	GithubOrgPlatform = &platform.Platform{
+	GithubOrgPlatform = &inventory.Platform{
 		Name:    "github-org",
 		Title:   "GitHub Organization",
 		Family:  []string{"github"},
-		Kind:    providers.Kind_KIND_API,
-		Runtime: providers.RUNTIME_GITHUB,
+		Kind:    "api",
+		Runtime: "github",
 	}
 )
 
-func (p *Provider) PlatformInfo() (*platform.Platform, error) {
-	if orgId := p.opts["organization"]; orgId != "" {
+func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
+	if orgId := c.Conf.Options["organization"]; orgId != "" {
 		return GithubOrgPlatform, nil
 	}
 
-	if userId := p.opts["user"]; userId != "" {
+	if userId := c.Conf.Options["user"]; userId != "" {
 		return GithubUserPlatform, nil
 	}
 
-	_, err := p.Repository()
+	_, err := c.Repository()
 	if err == nil {
 		return GithubRepoPlatform, nil
 	}
@@ -65,25 +64,25 @@ func NewGitHubRepoIdentifier(ownerId string, repoId string) string {
 	return "//platformid.api.mondoo.app/runtime/github/owner/" + ownerId + "/repository/" + repoId
 }
 
-func (p *Provider) Identifier() (string, error) {
-	orgId := p.opts["organization"]
+func (c *GithubConnection) Identifier() (string, error) {
+	orgId := c.Conf.Options["organization"]
 	if orgId != "" {
 		return NewGithubOrgIdentifier(orgId), nil
 	}
 
-	userId := p.opts["user"]
+	userId := c.Conf.Options["user"]
 	if userId != "" {
 		return NewGithubUserIdentifier(userId), nil
 	}
 
-	repoId := p.opts["repository"]
+	repoId := c.Conf.Options["repository"]
 	if repoId != "" {
-		ownerId := p.opts["owner"]
+		ownerId := c.Conf.Options["owner"]
 		if ownerId == "" {
-			ownerId = p.opts["organization"]
+			ownerId = c.Conf.Options["organization"]
 		}
 		if ownerId == "" {
-			ownerId = p.opts["user"]
+			ownerId = c.Conf.Options["user"]
 		}
 		return NewGitHubRepoIdentifier(ownerId, repoId), nil
 	}
@@ -91,44 +90,44 @@ func (p *Provider) Identifier() (string, error) {
 	return "", errors.New("could not identifier GitHub asset")
 }
 
-func (p *Provider) Organization() (*github.Organization, error) {
-	orgId := p.opts["organization"]
+func (c *GithubConnection) Organization() (*github.Organization, error) {
+	orgId := c.Conf.Options["organization"]
 	if orgId == "" {
-		orgId = p.opts["owner"]
+		orgId = c.Conf.Options["owner"]
 	}
 	if orgId != "" {
-		org, _, err := p.Client().Organizations.Get(context.Background(), orgId)
+		org, _, err := c.Client().Organizations.Get(context.Background(), orgId)
 		return org, err
 	}
 
 	return nil, errors.New("no organization provided")
 }
 
-func (p *Provider) User() (*github.User, error) {
-	userId := p.opts["user"]
+func (c *GithubConnection) User() (*github.User, error) {
+	userId := c.Conf.Options["user"]
 	if userId == "" {
-		userId = p.opts["owner"]
+		userId = c.Conf.Options["owner"]
 	}
 
 	if userId != "" {
-		user, _, err := p.Client().Users.Get(context.Background(), userId)
+		user, _, err := c.Client().Users.Get(context.Background(), userId)
 		return user, err
 	}
 	return nil, errors.New("no user provided")
 }
 
-func (p *Provider) Repository() (*github.Repository, error) {
-	ownerId := p.opts["owner"]
+func (c *GithubConnection) Repository() (*github.Repository, error) {
+	ownerId := c.Conf.Options["owner"]
 	if ownerId == "" {
-		ownerId = p.opts["organization"]
+		ownerId = c.Conf.Options["organization"]
 	}
 	if ownerId == "" {
-		ownerId = p.opts["user"]
+		ownerId = c.Conf.Options["user"]
 	}
 
-	repoId := p.opts["repository"]
+	repoId := c.Conf.Options["repository"]
 	if ownerId != "" && repoId != "" {
-		repo, _, err := p.Client().Repositories.Get(context.Background(), ownerId, repoId)
+		repo, _, err := c.Client().Repositories.Get(context.Background(), ownerId, repoId)
 		return repo, err
 	}
 	return nil, errors.New("no user provided")

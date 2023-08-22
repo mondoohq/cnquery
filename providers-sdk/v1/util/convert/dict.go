@@ -24,7 +24,7 @@ func JsonToDict(v interface{}) (map[string]interface{}, error) {
 	return res, nil
 }
 
-// JsonToDict converts a raw golang object (typically loaded from JSON)
+// JsonToDictSlice converts a raw golang object (typically loaded from JSON)
 // into an array of `dict` types
 func JsonToDictSlice(v interface{}) ([]interface{}, error) {
 	res := []interface{}{}
