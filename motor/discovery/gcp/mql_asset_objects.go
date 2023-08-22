@@ -188,14 +188,14 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) (
 	}
 	for _, s := range subnets {
 		region := gcp.RegionNameFromRegionUrl(s.RegionUrl)
-
+		subnetName := s.Name + "-" + region
 		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
-				name: s.Name,
+				name: subnetName,
 				gcpObject: gcpObject{
 					project:    project,
 					region:     region,
-					name:       s.Name,
+					name:       subnetName,
 					id:         s.Id,
 					service:    "compute",
 					objectType: "subnetwork",
