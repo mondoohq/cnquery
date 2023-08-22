@@ -4,24 +4,22 @@
 //go:build debugtest
 // +build debugtest
 
-package github_test
+package resources_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers"
-	github_provider "go.mondoo.com/cnquery/motor/providers/github"
-	"go.mondoo.com/cnquery/resources/packs/github"
-	"go.mondoo.com/cnquery/resources/packs/testutils"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/providers/github"
 )
 
 var x = testutils.InitTester(GithubProvider(), github.Registry)
 
-func GithubProvider() *motor.Motor {
-	p, err := github_provider.New(&providers.Config{
-		Backend: providers.ProviderType_GITHUB,
+func GithubProvider() *github.GithubConnection {
+	p, err := github.NewGithubConnection(&inventory.Config{
+		Backend: "github",
 		Options: map[string]string{
 			"owner":      "mondoohq",
 			"repository": "ranger-rpc",
@@ -32,11 +30,7 @@ func GithubProvider() *motor.Motor {
 		panic(err)
 	}
 
-	m, err := motor.New(p)
-	if err != nil {
-		panic(err)
-	}
-	return m
+	return p.Connection
 }
 
 func TestResource_GithubRepo(t *testing.T) {

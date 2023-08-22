@@ -13,12 +13,12 @@ import (
 
 	"github.com/google/go-github/v49/github"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestGithub(t *testing.T) {
 	os.Setenv("GITHUB_TOKEN", "")
-	p, err := New(&providers.Config{})
+	p, err := NewGithubConnection(0, &inventory.Config{})
 	require.NoError(t, err)
 
 	client := p.Client()
