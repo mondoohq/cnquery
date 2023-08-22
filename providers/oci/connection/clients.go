@@ -1,12 +1,12 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package oci
+package connection
 
 import (
 	"context"
+	"errors"
 
-	"github.com/cockroachdb/errors"
 	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
@@ -14,22 +14,22 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 )
 
-func (p *Provider) IdentityClient() (identity.IdentityClient, error) {
-	return identity.NewIdentityClientWithConfigurationProvider(p.config)
+func (c *OciConnection) IdentityClient() (identity.IdentityClient, error) {
+	return identity.NewIdentityClientWithConfigurationProvider(c.config)
 }
 
-func (p *Provider) TenantID() string {
-	return p.tenancyOcid
+func (c *OciConnection) TenantID() string {
+	return c.tenancyOcid
 }
 
-func (p *Provider) Tenant(ctx context.Context) (*identity.Tenancy, error) {
-	oClient, err := p.IdentityClient()
+func (c *OciConnection) Tenant(ctx context.Context) (*identity.Tenancy, error) {
+	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := oClient.GetTenancy(ctx, identity.GetTenancyRequest{
-		TenancyId: &p.tenancyOcid,
+		TenancyId: &c.tenancyOcid,
 	})
 	if err != nil {
 		return nil, err
@@ -37,8 +37,8 @@ func (p *Provider) Tenant(ctx context.Context) (*identity.Tenancy, error) {
 	return &resp.Tenancy, nil
 }
 
-func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
-	oClient, err := p.IdentityClient()
+func (c *OciConnection) GetCompartments(ctx context.Context) ([]identity.Compartment, error) {
+	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment,
 	compartments := make([]identity.Compartment, 0)
 
 	req := identity.GetCompartmentRequest{
-		CompartmentId: &p.tenancyOcid,
+		CompartmentId: &c.tenancyOcid,
 	}
 
 	resp, err := oClient.GetCompartment(ctx, req)
@@ -58,7 +58,7 @@ func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment,
 	var page *string
 	for {
 		request := identity.ListCompartmentsRequest{
-			CompartmentId:          common.String(p.tenancyOcid),
+			CompartmentId:          common.String(c.tenancyOcid),
 			CompartmentIdInSubtree: common.Bool(true),
 			LifecycleState:         identity.CompartmentLifecycleStateActive,
 			Page:                   page,
@@ -66,7 +66,7 @@ func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment,
 
 		response, err := oClient.ListCompartments(ctx, request)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list compartments in tenancy: "+p.tenancyOcid)
+			return nil, errors.Join(errors.New("failed to list compartments in tenancy: "+c.tenancyOcid), err)
 		}
 
 		for i := range response.Items {
@@ -82,14 +82,14 @@ func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment,
 	return compartments, nil
 }
 
-func (p *Provider) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {
-	oClient, err := p.IdentityClient()
+func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {
+	oClient, err := c.IdentityClient()
 	if err != nil {
 		return nil, err
 	}
 
 	request := identity.ListRegionSubscriptionsRequest{
-		TenancyId: common.String(p.tenancyOcid),
+		TenancyId: common.String(c.tenancyOcid),
 	}
 
 	response, err := oClient.ListRegionSubscriptions(ctx, request)
@@ -108,8 +108,8 @@ func (p *Provider) GetRegions(ctx context.Context) ([]identity.RegionSubscriptio
 	return regions, nil
 }
 
-func (p *Provider) ComputeClient(region string) (*core.ComputeClient, error) {
-	client, err := core.NewComputeClientWithConfigurationProvider(p.config)
+func (c *OciConnection) ComputeClient(region string) (*core.ComputeClient, error) {
+	client, err := core.NewComputeClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,8 @@ func (p *Provider) ComputeClient(region string) (*core.ComputeClient, error) {
 	return &client, nil
 }
 
-func (p *Provider) IdentityClientWithRegion(region string) (*identity.IdentityClient, error) {
-	client, err := identity.NewIdentityClientWithConfigurationProvider(p.config)
+func (c *OciConnection) IdentityClientWithRegion(region string) (*identity.IdentityClient, error) {
+	client, err := identity.NewIdentityClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +126,8 @@ func (p *Provider) IdentityClientWithRegion(region string) (*identity.IdentityCl
 	return &client, nil
 }
 
-func (p *Provider) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(p.config)
+func (c *OciConnection) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +135,8 @@ func (p *Provider) NetworkClient(region string) (*core.VirtualNetworkClient, err
 	return &client, nil
 }
 
-func (p *Provider) AuditClient(region string) (*audit.AuditClient, error) {
-	client, err := audit.NewAuditClientWithConfigurationProvider(p.config)
+func (c *OciConnection) AuditClient(region string) (*audit.AuditClient, error) {
+	client, err := audit.NewAuditClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +144,8 @@ func (p *Provider) AuditClient(region string) (*audit.AuditClient, error) {
 	return &client, nil
 }
 
-func (p *Provider) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
-	client, err := objectstorage.NewObjectStorageClientWithConfigurationProvider(p.config)
+func (c *OciConnection) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
+	client, err := objectstorage.NewObjectStorageClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}

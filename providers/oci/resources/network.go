@@ -1,33 +1,31 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package oci
+package resources
 
 import (
 	"context"
 	"time"
 
-	"github.com/oracle/oci-go-sdk/v65/core"
-
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
-	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
-	"go.mondoo.com/cnquery/resources/library/jobpool"
-	corePack "go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/providers/oci/connection"
+	"go.mondoo.com/cnquery/types"
 )
 
 func (o *mqlOciNetwork) id() (string, error) {
 	return "oci.network", nil
 }
 
-func (o *mqlOciNetwork) GetVcns() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciNetwork) vcns() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getVcns(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getVcns(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -68,10 +66,10 @@ func (s *mqlOciNetwork) getVcnsForRegion(ctx context.Context, networkClient *cor
 	return vcns, nil
 }
 
-func (s *mqlOciNetwork) getVcns(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciNetwork) getVcns(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
+	regions, err := conn.GetRegions(ctx)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -80,13 +78,13 @@ func (s *mqlOciNetwork) getVcns(provider *oci_provider.Provider) []*jobpool.Job 
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.NetworkClient(*regionVal.RegionKey)
+			svc, err := conn.NetworkClient(*regionVal.RegionKey)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			vcns, err := s.getVcnsForRegion(ctx, svc, provider.TenantID())
+			vcns, err := o.getVcnsForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -99,15 +97,15 @@ func (s *mqlOciNetwork) getVcns(provider *oci_provider.Provider) []*jobpool.Job 
 					created = &vcn.TimeCreated.Time
 				}
 
-				mqlInstance, err := s.MotorRuntime.CreateResource("oci.network.vcn",
-					"id", corePack.ToString(vcn.Id),
-					"name", corePack.ToString(vcn.DisplayName),
-					"created", created,
-					"state", string(vcn.LifecycleState),
-					"compartmentID", corePack.ToString(vcn.CompartmentId),
-					"cidrBlock", corePack.ToString(vcn.CidrBlock),
-					"cidrBlocks", corePack.StrSliceToInterface(vcn.CidrBlocks),
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.vcn", map[string]*llx.RawData{
+					"id":            llx.StringDataPtr(vcn.Id),
+					"name":          llx.StringDataPtr(vcn.DisplayName),
+					"created":       llx.TimeDataPtr(created),
+					"state":         llx.StringData(string(vcn.LifecycleState)),
+					"compartmentID": llx.StringDataPtr(vcn.CompartmentId),
+					"cidrBlock":     llx.StringDataPtr(vcn.CidrBlock),
+					"cidrBlocks":    llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -122,21 +120,14 @@ func (s *mqlOciNetwork) getVcns(provider *oci_provider.Provider) []*jobpool.Job 
 }
 
 func (o *mqlOciNetworkVcn) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.network.vcn/" + id, nil
+	return "oci.network.vcn/" + o.Id.Data, nil
 }
 
-func (o *mqlOciNetwork) GetSecurityLists() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciNetwork) securityLists() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getSecurityLists(provider), 5)
+	poolOfJobs := jobpool.CreatePool(o.getSecurityLists(conn), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -217,10 +208,10 @@ type ingressSecurityRule struct {
 	IcmpOptions *core.IcmpOptions `json:"icmpOptions,omitempty"`
 }
 
-func (s *mqlOciNetwork) getSecurityLists(provider *oci_provider.Provider) []*jobpool.Job {
+func (o *mqlOciNetwork) getSecurityLists(conn *connection.OciConnection) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
+	regions, err := conn.GetRegions(ctx)
 	if err != nil {
 		return []*jobpool.Job{{Err: err}} // return the error
 	}
@@ -229,13 +220,13 @@ func (s *mqlOciNetwork) getSecurityLists(provider *oci_provider.Provider) []*job
 		f := func() (jobpool.JobResult, error) {
 			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.NetworkClient(*regionVal.RegionKey)
+			svc, err := conn.NetworkClient(*regionVal.RegionKey)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			securityLists, err := s.getSecurityListsForRegion(ctx, svc, provider.TenantID())
+			securityLists, err := o.getSecurityListsForRegion(ctx, svc, conn.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -252,17 +243,17 @@ func (s *mqlOciNetwork) getSecurityLists(provider *oci_provider.Provider) []*job
 				for j := range securityList.EgressSecurityRules {
 					rule := securityList.EgressSecurityRules[j]
 					egressSecurityRules = append(egressSecurityRules, egressSecurityRule{
-						Description:     corePack.ToString(rule.Description),
-						Stateless:       corePack.ToBool(rule.IsStateless),
-						Protocol:        corePack.ToString(rule.Protocol),
-						Destination:     corePack.ToString(rule.Destination),
+						Description:     stringValue(rule.Description),
+						Stateless:       boolValue(rule.IsStateless),
+						Protocol:        stringValue(rule.Protocol),
+						Destination:     stringValue(rule.Destination),
 						DestinationType: string(rule.DestinationType),
 						TcpOptions:      rule.TcpOptions,
 						UdpOptions:      rule.UdpOptions,
 						IcmpOptions:     rule.IcmpOptions,
 					})
 				}
-				egress, err := corePack.JsonToDictSlice(egressSecurityRules)
+				egress, err := convert.JsonToDictSlice(egressSecurityRules)
 				if err != nil {
 					return nil, err
 				}
@@ -271,30 +262,30 @@ func (s *mqlOciNetwork) getSecurityLists(provider *oci_provider.Provider) []*job
 				for j := range securityList.IngressSecurityRules {
 					rule := securityList.IngressSecurityRules[j]
 					ingressSecurityRules = append(ingressSecurityRules, ingressSecurityRule{
-						Description: corePack.ToString(rule.Description),
-						Stateless:   corePack.ToBool(rule.IsStateless),
-						Protocol:    corePack.ToString(rule.Protocol),
-						Source:      corePack.ToString(rule.Source),
+						Description: stringValue(rule.Description),
+						Stateless:   boolValue(rule.IsStateless),
+						Protocol:    stringValue(rule.Protocol),
+						Source:      stringValue(rule.Source),
 						SourceType:  string(rule.SourceType),
 						TcpOptions:  rule.TcpOptions,
 						UdpOptions:  rule.UdpOptions,
 						IcmpOptions: rule.IcmpOptions,
 					})
 				}
-				ingress, err := corePack.JsonToDictSlice(ingressSecurityRules)
+				ingress, err := convert.JsonToDictSlice(ingressSecurityRules)
 				if err != nil {
 					return nil, err
 				}
 
-				mqlInstance, err := s.MotorRuntime.CreateResource("oci.network.securityList",
-					"id", corePack.ToString(securityList.Id),
-					"name", corePack.ToString(securityList.DisplayName),
-					"created", created,
-					"state", string(securityList.LifecycleState),
-					"compartmentID", corePack.ToString(securityList.CompartmentId),
-					"egressSecurityRules", egress,
-					"ingressSecurityRules", ingress,
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.network.securityList", map[string]*llx.RawData{
+					"id":                   llx.StringDataPtr(securityList.Id),
+					"name":                 llx.StringDataPtr(securityList.DisplayName),
+					"created":              llx.TimeDataPtr(created),
+					"state":                llx.StringData(string(securityList.LifecycleState)),
+					"compartmentID":        llx.StringDataPtr(securityList.CompartmentId),
+					"egressSecurityRules":  llx.DictData(egress),
+					"ingressSecurityRules": llx.DictData(ingress),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -309,9 +300,5 @@ func (s *mqlOciNetwork) getSecurityLists(provider *oci_provider.Provider) []*job
 }
 
 func (o *mqlOciNetworkSecurityList) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "oci.network.securityList/" + id, nil
+	return "oci.network.securityList/" + o.Id.Data, nil
 }

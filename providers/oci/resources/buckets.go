@@ -1,41 +1,36 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package oci
+package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
-
-	"github.com/oracle/oci-go-sdk/v65/objectstorage"
-
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/rs/zerolog/log"
-	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
-	"go.mondoo.com/cnquery/resources/library/jobpool"
-	corePack "go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/providers/oci/connection"
 )
 
 func (e *mqlOciObjectStorage) id() (string, error) {
 	return "oci.objectStorage", nil
 }
 
-func (o *mqlOciObjectStorage) GetNamespace() (interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o *mqlOciObjectStorage) namespace() (string, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
 	ctx := context.Background()
-	tenant, err := provider.Tenant(ctx)
+	tenant, err := conn.Tenant(ctx)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	region := *tenant.HomeRegionKey
-	client, err := provider.ObjectStorageClient(region)
+	client, err := conn.ObjectStorageClient(region)
 	if err != nil {
 		return "", err
 	}
@@ -45,23 +40,35 @@ func (o *mqlOciObjectStorage) GetNamespace() (interface{}, error) {
 		return "", err
 	}
 
-	return corePack.ToString(response.Value), nil
+	if response.Value == nil {
+		return "", nil
+	} else {
+		return *response.Value, nil
+	}
 }
 
-func (o *mqlOciObjectStorage) GetBuckets() ([]interface{}, error) {
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+func (o *mqlOciObjectStorage) buckets() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	// fetch regions
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
 	if err != nil {
 		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
 	}
 
-	namespace, err := o.GetNamespace()
+	// fetch buckets
+	namespace, err := o.namespace()
 	if err != nil {
 		return nil, err
 	}
-	namespaceVal := namespace.(string)
 
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(o.getBuckets(provider, namespaceVal), 5)
+	poolOfJobs := jobpool.CreatePool(o.getBuckets(conn, namespace, list.Data), 5)
 	poolOfJobs.Run()
 
 	// check for errors
@@ -103,25 +110,25 @@ func (o *mqlOciObjectStorage) getBucketsForRegion(ctx context.Context, objectSto
 	return entries, nil
 }
 
-func (o *mqlOciObjectStorage) getBuckets(provider *oci_provider.Provider, namespace string) []*jobpool.Job {
+func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespace string, regions []interface{}) []*jobpool.Job {
 	ctx := context.Background()
 	tasks := make([]*jobpool.Job, 0)
-	regions, err := provider.GetRegions(ctx)
-	if err != nil {
-		return []*jobpool.Job{{Err: err}} // return the error
-	}
-	for _, region := range regions {
-		regionVal := region
-		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling oci with region %s", regionVal)
 
-			svc, err := provider.ObjectStorageClient(*regionVal.RegionKey)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci with region %s", regionResource.Id.Data)
+
+			svc, err := conn.ObjectStorageClient(regionResource.Id.Data)
 			if err != nil {
 				return nil, err
 			}
 
 			var res []interface{}
-			buckets, err := o.getBucketsForRegion(ctx, svc, provider.TenantID(), namespace)
+			buckets, err := o.getBucketsForRegion(ctx, svc, conn.TenantID(), namespace)
 			if err != nil {
 				return nil, err
 			}
@@ -134,12 +141,12 @@ func (o *mqlOciObjectStorage) getBuckets(provider *oci_provider.Provider, namesp
 					created = &bucket.TimeCreated.Time
 				}
 
-				mqlInstance, err := o.MotorRuntime.CreateResource("oci.objectStorage.bucket",
-					"namespace", corePack.ToString(bucket.Namespace),
-					"name", corePack.ToString(bucket.Name),
-					"region", region,
-					"created", created,
-				)
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
+					"namespace": llx.StringDataPtr(bucket.Namespace),
+					"name":      llx.StringDataPtr(bucket.Name),
+					"region":    llx.ResourceData(regionResource, "oci.region"),
+					"created":   llx.TimeDataPtr(created),
+				})
 				if err != nil {
 					return nil, err
 				}
@@ -153,100 +160,87 @@ func (o *mqlOciObjectStorage) getBuckets(provider *oci_provider.Provider, namesp
 	return tasks
 }
 
-func (o *mqlOciObjectStorageBucket) id() (string, error) {
-	namespace, err := o.Namespace()
-	if err != nil {
-		return "", err
-	}
+type mqlOciObjectStorageBucketInternal struct {
+	bucket *objectstorage.Bucket
+}
 
-	name, err := o.Name()
-	if err != nil {
-		return "", err
-	}
-	return "oci.objectStorage.bucket/" + namespace + "/" + name, nil
+func (o *mqlOciObjectStorageBucket) id() (string, error) {
+	return "oci.objectStorage.bucket/" + o.Namespace.Data + "/" + o.Name.Data, nil
 }
 
 func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, error) {
-	c, ok := o.MqlResource().Cache.Load("_bucket")
-	if ok {
-		bucket := c.Data.(*objectstorage.Bucket)
-		return bucket, nil
+	if o.bucket != nil {
+		return o.bucket, nil
 	}
 
-	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	region := o.GetRegion()
+	if region.Error != nil {
+		return nil, region.Error
 	}
 
-	region, err := o.Region()
-	if err != nil {
-		return nil, err
-	}
-	regionId, err := region.Id()
+	r := region.Data
+	client, err := conn.ObjectStorageClient(r.Id.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := provider.ObjectStorageClient(regionId)
-	if err != nil {
-		return nil, err
+	namespace := o.GetNamespace()
+	if namespace.Error != nil {
+		return nil, namespace.Error
 	}
 
-	namespace, err := o.Namespace()
-	if err != nil {
-		return nil, err
-	}
-
-	name, err := o.Name()
-	if err != nil {
-		return nil, err
+	name := o.GetName()
+	if name.Error != nil {
+		return nil, name.Error
 	}
 
 	response, err := client.GetBucket(context.Background(), objectstorage.GetBucketRequest{
-		NamespaceName: common.String(namespace),
-		BucketName:    common.String(name),
+		NamespaceName: common.String(namespace.Data),
+		BucketName:    common.String(name.Data),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	o.MqlResource().Cache.Store("_bucket", &resources.CacheEntry{Data: &response.Bucket})
-	return &response.Bucket, nil
+	o.bucket = &response.Bucket
+	return o.bucket, nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetPublicAccessType() (interface{}, error) {
+func (o *mqlOciObjectStorageBucket) publicAccessType() (string, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return string(bucketInfo.PublicAccessType), nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetStorageTier() (interface{}, error) {
+func (o *mqlOciObjectStorageBucket) storageTier() (string, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return string(bucketInfo.StorageTier), nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetAutoTiering() (interface{}, error) {
+func (o *mqlOciObjectStorageBucket) autoTiering() (string, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return string(bucketInfo.AutoTiering), nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetVersioning() (interface{}, error) {
+func (o *mqlOciObjectStorageBucket) versioning() (string, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return string(bucketInfo.Versioning), nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetObjectEventsEnabled() (bool, error) {
+func (o *mqlOciObjectStorageBucket) objectEventsEnabled() (bool, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
 		return false, err
@@ -254,7 +248,7 @@ func (o *mqlOciObjectStorageBucket) GetObjectEventsEnabled() (bool, error) {
 	return *bucketInfo.ObjectEventsEnabled, nil
 }
 
-func (o *mqlOciObjectStorageBucket) GetReplicationEnabled() (bool, error) {
+func (o *mqlOciObjectStorageBucket) replicationEnabled() (bool, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
 		return false, err

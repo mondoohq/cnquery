@@ -1,13 +1,12 @@
-module go.mondoo.com/cnquery/providers/ipmi
-
-replace go.mondoo.com/cnquery => ../..
+module go.mondoo.com/cnquery/providers/oci
 
 go 1.20
 
+replace go.mondoo.com/cnquery => ../..
+
 require (
+	github.com/oracle/oci-go-sdk/v65 v65.47.1
 	github.com/rs/zerolog v1.30.0
-	github.com/stretchr/testify v1.8.4
-	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.mondoo.com/cnquery v0.0.0-00010101000000-000000000000
 )
 
@@ -17,9 +16,9 @@ require (
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/getsentry/sentry-go v0.13.0 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
@@ -39,11 +38,11 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f // indirect
 	golang.org/x/crypto v0.12.0 // indirect
@@ -55,7 +54,6 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
