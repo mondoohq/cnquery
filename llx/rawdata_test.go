@@ -15,6 +15,8 @@ var now = time.Now()
 
 func TestRawData_String(t *testing.T) {
 	strVal := "yo"
+	intVal := int64(1)
+	boolVal := true
 	tests := []struct {
 		data *RawData
 		res  string
@@ -22,7 +24,11 @@ func TestRawData_String(t *testing.T) {
 		{NilData, "<null>"},
 		{BoolTrue, "true"},
 		{BoolFalse, "false"},
+		{BoolDataPtr(&boolVal), "true"},
+		{BoolDataPtr(nil), "<null>"},
 		{IntData(0), "0"},
+		{IntDataPtr(&intVal), "1"},
+		{IntDataPtr(nil), "<null>"},
 		{FloatData(123), "123"},
 		{StringData("yo"), "\"yo\""},
 		{StringDataPtr(nil), "<null>"},

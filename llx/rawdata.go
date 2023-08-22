@@ -392,6 +392,14 @@ func BoolData(v bool) *RawData {
 	}
 }
 
+// BoolDataPtr creates a rawdata struct from a go boolean
+func BoolDataPtr(v *bool) *RawData {
+	if v == nil {
+		return NilData
+	}
+	return BoolData(*v)
+}
+
 // BoolFalse is a RawData boolean set to false
 var BoolFalse = BoolData(false)
 
@@ -404,6 +412,14 @@ func IntData(v int64) *RawData {
 		Type:  types.Int,
 		Value: v,
 	}
+}
+
+// IntDataPtr creates a rawdata struct from a go int pointer
+func IntDataPtr(v *int64) *RawData {
+	if v == nil {
+		return NilData
+	}
+	return IntData(*v)
 }
 
 // FloatData creates a rawdata struct from a go float
