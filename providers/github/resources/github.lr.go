@@ -31,7 +31,7 @@ func init() {
 			Create: createGithubOrganization,
 		},
 		"github.user": {
-			// to override args, implement: initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGithubUser,
 			Create: createGithubUser,
 		},
 		"github.team": {

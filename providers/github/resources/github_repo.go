@@ -225,7 +225,6 @@ func (g *mqlGithubLicense) id() (string, error) {
 
 func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
-
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
 	}

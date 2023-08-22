@@ -8,10 +8,12 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/github/connection"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/cnquery/utils/stringx"
@@ -26,61 +28,58 @@ func (g *mqlGithubUser) id() (string, error) {
 	return "github.user/" + strconv.FormatInt(id, 10), nil
 }
 
-/*
-func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser, error) {
-	if len(*args) > 3 {
+func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
 		return args, nil, nil
 	}
 
-	gt, err := githubProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GithubConnection)
 
 	var user *github.User
-	if (*args)["login"] == nil {
-		user, err = gt.User()
+	var err error
+	if args["login"] == nil {
+		user, err = conn.User()
 		if err != nil {
 			return nil, nil, errors.New("login required to fetch github user")
 		}
 	} else {
-		userLogin := (*args)["login"].(string)
-		user, _, err = gt.Client().Users.Get(context.Background(), userLogin)
+		userLogin := args["login"]
+		user, _, err = conn.Client().Users.Get(context.Background(), userLogin.Value.(string))
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	(*args)["id"] = user.GetID()
-	(*args)["login"] = user.GetLogin()
-	(*args)["name"] = user.GetName()
-	(*args)["email"] = user.GetEmail()
-	(*args)["blog"] = user.GetBlog()
-	(*args)["location"] = user.GetLocation()
-	(*args)["avatarUrl"] = user.GetAvatarURL()
-	(*args)["followers"] = int64(user.GetFollowers())
-	(*args)["following"] = int64(user.GetFollowing())
-	(*args)["twitterUsername"] = user.GetTwitterUsername()
-	(*args)["bio"] = user.GetBio()
+	args["id"] = llx.IntData(user.GetID())
+	args["login"] = llx.StringData(user.GetLogin())
+	args["name"] = llx.StringData(user.GetName())
+	args["email"] = llx.StringData(user.GetEmail())
+	args["blog"] = llx.StringData(user.GetBlog())
+	args["location"] = llx.StringData(user.GetLocation())
+	args["avatarUrl"] = llx.StringData(user.GetAvatarURL())
+	args["followers"] = llx.IntData(int64(user.GetFollowers()))
+	args["following"] = llx.IntData(int64(user.GetFollowing()))
+	args["twitterUsername"] = llx.StringData(user.GetTwitterUsername())
+	args["bio"] = llx.StringData(user.GetBio())
+
 	var createdAt *time.Time
 	if user.CreatedAt != nil {
 		createdAt = &user.CreatedAt.Time
 	}
-	(*args)["createdAt"] = createdAt
+	args["createdAt"] = llx.TimeDataPtr(createdAt)
 	var updatedAt *time.Time
 	if user.UpdatedAt != nil {
 		updatedAt = &user.UpdatedAt.Time
 	}
-	(*args)["updatedAt"] = updatedAt
+	args["updatedAt"] = llx.TimeDataPtr(updatedAt)
 	var suspendedAt *time.Time
 	if user.SuspendedAt != nil {
 		suspendedAt = &user.SuspendedAt.Time
 	}
-	(*args)["suspendedAt"] = suspendedAt
-	(*args)["company"] = user.GetCompany()
+	args["suspendedAt"] = llx.TimeDataPtr(suspendedAt)
+	args["company"] = llx.StringData(user.GetCompany())
 	return args, nil, nil
 }
-*/
 
 func (g *mqlGithubCollaborator) id() (string, error) {
 	if g.Id.Error != nil {
