@@ -44,7 +44,7 @@ echo "Building the ${PROVIDER_NAME} provider (Version: ${PROVIDER_VERSION})..."
 
 # Build the non-binary files first
 echo "  - Generate the plugin..."
-go run ${PROVIDER_PATH}/gen/main.go ${PROVIDER_PATH}
+cd ${PROVIDER_PATH} && go run gen/main.go .
 echo "  - Compile the resources..."
 ${REPOROOT}/lr go ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr --dist ${PROVIDER_DIST}
 echo "  - Generate the resource docs..."
@@ -57,8 +57,9 @@ build_bundle(){
   GOARCH=$2
   GOARM=$3
 
-  echo "Building for ${GOOS}/${GOARCH}/${GOARM}..."
-  GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} ${PROVIDER_PATH}/main.go
+  echo "Building ${PROVIDER_DIST}/${PROVIDER_NAME} for ${GOOS}/${GOARCH}/${GOARM} ..."
+  # we switch into the path to use the local go.mods
+  cd ${PROVIDER_PATH} && GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} main.go
 
   # set linux flags that do not work on macos
   TAR_FLAGS=""
@@ -79,7 +80,7 @@ build_bundle(){
   rm ${PROVIDER_DIST}/${PROVIDER_NAME}
 }
 
- Build Darwin Architectures
+# Build Darwin Architectures
 build_bundle darwin amd64
 build_bundle darwin arm64
 
