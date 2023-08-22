@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
@@ -43,6 +44,7 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
+	github.com/spf13/afero v1.9.5 // indirect
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
