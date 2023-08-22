@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package stringx
 
 func Intersection(a, b []string) []string {

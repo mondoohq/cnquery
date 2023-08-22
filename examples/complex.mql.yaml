@@ -1,3 +1,6 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 # Note: this is a very complex query pack, that is designed to
 # show off some of the more advanced features. It is meant as a demo only.
 packs:

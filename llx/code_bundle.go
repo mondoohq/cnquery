@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package llx
 
 func (x *CodeBundle) FilterResults(results map[string]*RawResult) map[string]*RawResult {

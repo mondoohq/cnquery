@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package client
 
 // This test runs against the an IPMI service. For example, an simulator can be used like the openipmi simulator

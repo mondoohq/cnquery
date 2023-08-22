@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package msgraphconv
 
 // this package creates a copy of the msgraph object that we use for embedded struct. This is required since microsoft

@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package ms365report
 
 type ExchangeOnlineReport struct {

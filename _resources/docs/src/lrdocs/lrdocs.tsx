@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) Mondoo, Inc.
+ * SPDX-License-Identifier: BUSL-1.1
+ */
+
 import * as React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 

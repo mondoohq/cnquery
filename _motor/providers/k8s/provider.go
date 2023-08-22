@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package k8s
 
 //go:generate  go run github.com/golang/mock/mockgen -source=./provider.go -destination=./mock_provider.go -package=k8s

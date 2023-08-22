@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package microsoft
 
 // These roles only apply for MSGraph. They are not used for azure resources
