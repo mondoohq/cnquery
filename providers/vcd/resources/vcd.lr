@@ -1,7 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option go_package = "go.mondoo.com/cnquery/resources/packs/vcd"
+option provider = "go.mondoo.com/cnquery/providers/vcd"
+option go_package = "go.mondoo.com/cnquery/providers/vcd/resources"
 
 // VMware Cloud Director
 vcd {

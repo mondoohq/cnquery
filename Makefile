@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua providers/build/okta providers/build/google-workspace providers/build/arista providers/build/equinix
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua providers/build/okta providers/build/google-workspace providers/build/arista providers/build/equinix providers/build/vcd
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -180,6 +180,9 @@ providers/build/arista: providers/lr
 providers/build/equinix: providers/lr
 	@$(call buildProvider, providers/equinix)
 
+providers/build/vcd: providers/lr
+	@$(call buildProvider, providers/vcd)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -196,6 +199,7 @@ providers/install:
 	@$(call installProvider, providers/google-workspace)
 	@$(call installProvider, providers/arista)
 	@$(call installProvider, providers/equinix)
+	@$(call installProvider, providers/vcd)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -212,6 +216,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/google-workspace)
 	@$(call bundleProvider, providers/arista)
 	@$(call bundleProvider, providers/equinix)
+	@$(call bundleProvider, providers/vcd)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -229,6 +234,7 @@ providers/test:
 	@$(call testGpModProvider, providers/google-workspace)
 	@$(call testGpModProvider, providers/arista)
 	@$(call testGpModProvider, providers/equinix)
+	@$(call testGpModProvider, providers/vcd)
 
 lr/test:
 	go test ./resources/lr/...
