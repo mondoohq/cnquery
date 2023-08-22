@@ -1,1 +1,0 @@
-{"resources":{"ipmi":{"maturity":"experimental","fields":{"deviceID":{},"guid":{}},"min_mondoo_version":"5.15.0"},"ipmi.chassis":{"maturity":"experimental","fields":{"status":{},"systemBootOptions":{}},"min_mondoo_version":"5.15.0"}}}
