@@ -2,6 +2,10 @@ name: 'Build & Release Providers'
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Providers that should be released"
+        default: "os network oci ipmi"
 
 env:
   BUCKET: releases-us.mondoo.io
@@ -12,6 +16,11 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 30
     steps:
+      - name: Version from Workflow Dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "PROVIDERS=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
