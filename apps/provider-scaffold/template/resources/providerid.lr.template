@@ -1,0 +1,7 @@
+option provider = "{{ .GoPackage }}"
+option go_package = "{{ .GoPackage }}/resources"
+
+// {{ .ProviderName }}
+{{ .ProviderID }} {
+	field() string
+}

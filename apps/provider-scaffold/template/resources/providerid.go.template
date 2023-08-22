@@ -1,0 +1,9 @@
+package resources
+
+func (r *mql{{ .CamelcaseProviderID }}) id() (string, error) {
+	return "{{ .ProviderID }}", nil
+}
+
+func (r *mql{{ .CamelcaseProviderID }}) field() (string, error) {
+	return "example", nil
+}
