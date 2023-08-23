@@ -31,10 +31,6 @@ func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	return args, nil, nil
 }
 
-type mqlTerraformPlanResourceChangeInternal struct {
-	change plugin.TValue[*connection.ResourceChange]
-}
-
 func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
@@ -124,7 +120,6 @@ func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		list = append(list, r)
 	}
 

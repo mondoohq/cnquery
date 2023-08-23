@@ -31,14 +31,6 @@ func initTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	return args, nil, nil
 }
 
-type mqlTerraformStateInternal struct {
-	output plugin.TValue[*connection.Output]
-}
-
-type mqlTerraformStateModulInternal struct {
-	module plugin.TValue[*connection.Module]
-}
-
 func (t *mqlTerraformState) outputs() ([]interface{}, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
 	state, err := conn.State()
@@ -52,7 +44,6 @@ func (t *mqlTerraformState) outputs() ([]interface{}, error) {
 
 	var list []interface{}
 	for k := range state.Values.Outputs {
-
 		output := state.Values.Outputs[k]
 
 		r, err := CreateResource(t.MqlRuntime, "terraform.state.output", map[string]*llx.RawData{
@@ -62,7 +53,8 @@ func (t *mqlTerraformState) outputs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-
+		so := r.(*mqlTerraformStateOutput)
+		so.output = output
 		list = append(list, r)
 	}
 
@@ -89,19 +81,19 @@ func (t *mqlTerraformState) rootModule() (*mqlTerraformStateModule, error) {
 
 func (t *mqlTerraformState) modules() ([]interface{}, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	providerState, err := conn.State()
+	state, err := conn.State()
 	if err != nil {
 		return nil, err
 	}
 
-	if providerState.Values == nil {
+	if state.Values == nil {
 		return nil, nil
 	}
 
 	// resolve all tfstate modules
 	moduleList := []*connection.Module{}
-	moduleList = append(moduleList, providerState.Values.RootModule)
-	providerState.Values.RootModule.WalkChildModules(func(m *connection.Module) {
+	moduleList = append(moduleList, state.Values.RootModule)
+	state.Values.RootModule.WalkChildModules(func(m *connection.Module) {
 		moduleList = append(moduleList, m)
 	})
 
@@ -151,10 +143,10 @@ func (t *mqlTerraformState) resources() ([]interface{}, error) {
 }
 
 type mqlTerraformStateOutputInternal struct {
-	output plugin.TValue[*connection.Output]
+	output *connection.Output
 }
 
-func initTerraformStateOutpute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initTerraformStateOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -188,28 +180,24 @@ func (t *mqlTerraformStateOutput) id() (string, error) {
 }
 
 func (t *mqlTerraformStateOutput) value() (interface{}, error) {
-	var output *connection.Output
-	if t.output.State == plugin.StateIsSet {
-		output = t.output.Data
+	if t.output == nil {
+		return nil, nil
 	}
-	// FIXME: What happens if not set?
 
 	var value interface{}
-	if err := json.Unmarshal([]byte(output.Value), &value); err != nil {
+	if err := json.Unmarshal(t.output.Value, &value); err != nil {
 		return nil, err
 	}
 	return value, nil
 }
 
 func (t mqlTerraformStateOutput) compute_type() (interface{}, error) {
-	var output *connection.Output
-	if t.output.State == plugin.StateIsSet {
-		output = t.output.Data
+	if t.output == nil {
+		return nil, nil
 	}
-	// FIXME: What happens if not set?
 
 	var typ interface{}
-	if err := json.Unmarshal([]byte(output.Type), &typ); err != nil {
+	if err := json.Unmarshal([]byte(t.output.Type), &typ); err != nil {
 		return nil, err
 	}
 	return typ, nil
@@ -227,6 +215,10 @@ func (t *mqlTerraformStateModule) id() (string, error) {
 }
 
 func initTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
 	// check if identifier is there
 	nameRaw := args["address"]
 	if nameRaw != nil {
@@ -243,10 +235,6 @@ func initTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.RawD
 		tfstate := obj.(*mqlTerraformState)
 
 		modules := tfstate.GetModules()
-		if err != nil {
-			return nil, nil, err
-		}
-
 		for i := range modules.Data {
 			o := modules.Data[i].(*mqlTerraformStateModule)
 			id := o.Address.Data
@@ -261,19 +249,17 @@ func initTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.RawD
 }
 
 type mqlTerraformStateModuleInternal struct {
-	module plugin.TValue[*connection.Module]
+	module *connection.Module
 }
 
 func (t *mqlTerraformStateModule) resources() ([]interface{}, error) {
-	var module *connection.Module
-	if t.module.State == plugin.StateIsSet {
-		module = t.module.Data
+	if t.module == nil {
+		return nil, nil
 	}
-	// FIXME: What happens if not set?
 
 	var list []interface{}
-	for i := range module.Resources {
-		resource := module.Resources[i]
+	for i := range t.module.Resources {
+		resource := t.module.Resources[i]
 		r, err := newMqlResource(t.MqlRuntime, resource)
 		if err != nil {
 			return nil, err
@@ -291,7 +277,11 @@ func newMqlModule(runtime *plugin.Runtime, module *connection.Module) (*mqlTerra
 	if err != nil {
 		return nil, err
 	}
-	return r.(*mqlTerraformStateModule), nil
+
+	tmr := r.(*mqlTerraformStateModule)
+	tmr.module = module
+
+	return tmr, nil
 }
 
 func newMqlResource(runtime *plugin.Runtime, resource *connection.Resource) (plugin.Resource, error) {
@@ -314,15 +304,13 @@ func newMqlResource(runtime *plugin.Runtime, resource *connection.Resource) (plu
 }
 
 func (t *mqlTerraformStateModule) childModules() ([]interface{}, error) {
-	var module *connection.Module
-	if t.module.State == plugin.StateIsSet {
-		module = t.module.Data
+	if t.module == nil {
+		return nil, nil
 	}
-	// FIXME: What happens if not set?
 
 	var list []interface{}
-	for i := range module.ChildModules {
-		r, err := newMqlModule(t.MqlRuntime, module.ChildModules[i])
+	for i := range t.module.ChildModules {
+		r, err := newMqlModule(t.MqlRuntime, t.module.ChildModules[i])
 		if err != nil {
 			return nil, err
 		}

@@ -1335,7 +1335,7 @@ func (c *mqlTerraformSettings) GetRequiredProviders() *plugin.TValue[interface{}
 type mqlTerraformState struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlTerraformStateInternal
+	// optional: if you define mqlTerraformStateInternal it will be used here
 	FormatVersion plugin.TValue[string]
 	TerraformVersion plugin.TValue[string]
 	Outputs plugin.TValue[[]interface{}]
@@ -1831,7 +1831,7 @@ func (c *mqlTerraformPlanConfiguration) GetResources() *plugin.TValue[[]interfac
 type mqlTerraformPlanResourceChange struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlTerraformPlanResourceChangeInternal
+	// optional: if you define mqlTerraformPlanResourceChangeInternal it will be used here
 	Address plugin.TValue[string]
 	PreviousAddress plugin.TValue[string]
 	ModuleAddress plugin.TValue[string]
