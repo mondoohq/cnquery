@@ -50,6 +50,7 @@ type Alias struct {
 // LR are MQL resources parsed into an AST
 // nolint: govet
 type LR struct {
+	Comments  []string    `{ @Comment }`
 	Imports   []string    `{ "import" @String }`
 	Options   Map         `{ "option" @(Ident '=' String) }`
 	Aliases   []Alias     `{ "alias" @@ }`
