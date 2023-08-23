@@ -22,12 +22,9 @@ type mqlTerraformPlanResourceChangeInternal struct {
 }
 
 func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
-	plan, err := provider.Plan()
+	plan, err := conn.Plan()
 	if err != nil {
 		return nil, err
 	}
@@ -142,12 +139,8 @@ type PlanConfiguration struct {
 }
 
 func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	plan, err := provider.Plan()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	plan, err := conn.Plan()
 	if err != nil {
 		return nil, err
 	}
@@ -172,12 +165,8 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) 
 }
 
 func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	plan, err := provider.Plan()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	plan, err := conn.Plan()
 	if err != nil {
 		return nil, err
 	}

@@ -23,20 +23,17 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-func (g *mqlTerraform) id() (string, error) {
+func (t *mqlTerraform) id() (string, error) {
 	return "terraform", nil
 }
 
-func (g *mqlTerraform) files() ([]interface{}, error) {
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+func (t *mqlTerraform) files() ([]interface{}, error) {
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
 	var mqlTerraformFiles []interface{}
-	files := t.Parser().Files()
+	files := conn.Parser().Files()
 	for path := range files {
-		mqlTerraformFile, err := CreateResource(g.MqlRuntime, "terraform.file", map[string]*llx.RawData{
+		mqlTerraformFile, err := CreateResource(t.MqlRuntime, "terraform.file", map[string]*llx.RawData{
 			"path": llx.StringData(path),
 		})
 		if err != nil {
@@ -48,21 +45,15 @@ func (g *mqlTerraform) files() ([]interface{}, error) {
 	return mqlTerraformFiles, nil
 }
 
-func (g *mqlTerraform) tfvars() (interface{}, error) {
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-	return hclAttributesToDict(t.TfVars())
+func (t *mqlTerraform) tfvars() (interface{}, error) {
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	return hclAttributesToDict(conn.TfVars())
 }
 
-func (g *mqlTerraform) modules() ([]interface{}, error) {
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+func (t *mqlTerraform) modules() ([]interface{}, error) {
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
 
-	manifest := t.ModulesManifest()
+	manifest := conn.ModulesManifest()
 	if manifest == nil {
 		return nil, nil
 	}
@@ -71,7 +62,7 @@ func (g *mqlTerraform) modules() ([]interface{}, error) {
 	for i := range manifest.Records {
 		record := manifest.Records[i]
 
-		r, err := CreateResource(g.MqlRuntime, "terraform.module", map[string]*llx.RawData{
+		r, err := CreateResource(t.MqlRuntime, "terraform.module", map[string]*llx.RawData{
 			"key":     llx.StringData(record.Key),
 			"source":  llx.StringData(record.SourceAddr),
 			"version": llx.StringData(record.Version),
@@ -86,18 +77,14 @@ func (g *mqlTerraform) modules() ([]interface{}, error) {
 	return mqlModules, nil
 }
 
-func (g *mqlTerraform) blocks() ([]interface{}, error) {
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	files := t.Parser().Files()
+func (t *mqlTerraform) blocks() ([]interface{}, error) {
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	files := conn.Parser().Files()
 
 	var mqlHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.MqlRuntime, f.Body, f)
+		blocks, err := listHclBlocks(t.MqlRuntime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}
@@ -107,12 +94,8 @@ func (g *mqlTerraform) blocks() ([]interface{}, error) {
 }
 
 func filterBlockByType(runtime *plugin.Runtime, filterType string) ([]interface{}, error) {
-	t, err := terraformConnection(runtime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	files := t.Parser().Files()
+	conn := runtime.Connection.(*connection.Connection)
+	files := conn.Parser().Files()
 
 	var mqlHclBlocks []interface{}
 	for k := range files {
@@ -133,24 +116,24 @@ func filterBlockByType(runtime *plugin.Runtime, filterType string) ([]interface{
 	return mqlHclBlocks, nil
 }
 
-func (g *mqlTerraform) providers() ([]interface{}, error) {
-	return filterBlockByType(g.MqlRuntime, "provider")
+func (t *mqlTerraform) providers() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "provider")
 }
 
-func (g *mqlTerraform) datasources() ([]interface{}, error) {
-	return filterBlockByType(g.MqlRuntime, "data")
+func (t *mqlTerraform) datasources() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "data")
 }
 
-func (g *mqlTerraform) resources() ([]interface{}, error) {
-	return filterBlockByType(g.MqlRuntime, "resource")
+func (t *mqlTerraform) resources() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "resource")
 }
 
-func (g *mqlTerraform) variables() ([]interface{}, error) {
-	return filterBlockByType(g.MqlRuntime, "variable")
+func (t *mqlTerraform) variables() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "variable")
 }
 
-func (g *mqlTerraform) outputs() ([]interface{}, error) {
-	return filterBlockByType(g.MqlRuntime, "output")
+func (t *mqlTerraform) outputs() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "output")
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -216,9 +199,9 @@ type mqlTerraformBlockInternal struct {
 	cachedFile plugin.TValue[*hcl.File]
 }
 
-func (g *mqlTerraformBlock) id() (string, error) {
+func (t *mqlTerraformBlock) id() (string, error) {
 	// NOTE: a hcl block is identified by its filename and position
-	fp := g.Start
+	fp := t.Start
 
 	file := fp.Data.Path.Data
 	line := fp.Data.Line.Data
@@ -227,8 +210,8 @@ func (g *mqlTerraformBlock) id() (string, error) {
 	return "terraform.block/" + file + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
 }
 
-func (g *mqlTerraformBlock) nameLabel() (string, error) {
-	labels := g.Labels.Data
+func (t *mqlTerraformBlock) nameLabel() (string, error) {
+	labels := t.Labels.Data
 
 	// labels are string
 	if len(labels) == 0 {
@@ -238,13 +221,13 @@ func (g *mqlTerraformBlock) nameLabel() (string, error) {
 	return labels[0].(string), nil
 }
 
-func (g *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
+func (t *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
 	var hclBlock *hcl.Block
-	if g.block.State == plugin.StateIsSet {
-		hclBlock = g.block.Data
+	if t.block.State == plugin.StateIsSet {
+		hclBlock = t.block.Data
 	} else {
-		if g.block.Error != nil {
-			return nil, g.block.Error
+		if t.block.Error != nil {
+			return nil, t.block.Error
 		}
 		return nil, errors.New("cannot get hcl block")
 	}
@@ -254,13 +237,13 @@ func (g *mqlTerraformBlock) attributes() (map[string]interface{}, error) {
 	return hclAttributesToDict(attributes)
 }
 
-func (g *mqlTerraformBlock) arguments() (map[string]interface{}, error) {
+func (t *mqlTerraformBlock) arguments() (map[string]interface{}, error) {
 	var hclBlock *hcl.Block
-	if g.block.State == plugin.StateIsSet {
-		hclBlock = g.block.Data
+	if t.block.State == plugin.StateIsSet {
+		hclBlock = t.block.Data
 	} else {
-		if g.block.Error != nil {
-			return nil, g.block.Error
+		if t.block.Error != nil {
+			return nil, t.block.Error
 		}
 		return nil, errors.New("cannot get hcl block")
 	}
@@ -506,52 +489,43 @@ func newFilePosRange(runtime *plugin.Runtime, r hcl.Range) (plugin.Resource, plu
 	return start, end, nil
 }
 
-func (p *mqlTerraformFileposition) id() (string, error) {
-	path := p.Path.Data
-	line := p.Line.Data
-	column := p.Column.Data
+func (t *mqlTerraformFileposition) id() (string, error) {
+	path := t.Path.Data
+	line := t.Line.Data
+	column := t.Column.Data
 	return "file.position/" + path + "/" + strconv.FormatInt(line, 10) + "/" + strconv.FormatInt(column, 10), nil
 }
 
-func (g *mqlTerraformFile) id() (string, error) {
-	p := g.Path.Data
+func (t *mqlTerraformFile) id() (string, error) {
+	p := t.Path.Data
 	return "terraform.file/" + p, nil
 }
 
-func (g *mqlTerraformFile) blocks() ([]interface{}, error) {
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+func (t *mqlTerraformFile) blocks() ([]interface{}, error) {
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	p := t.Path.Data
 
-	p := g.Path.Data
-
-	files := t.Parser().Files()
+	files := conn.Parser().Files()
 	file := files[p]
-	return listHclBlocks(g.MqlRuntime, file.Body, file)
+	return listHclBlocks(t.MqlRuntime, file.Body, file)
 }
 
-func (g *mqlTerraformModule) id() (string, error) {
+func (t *mqlTerraformModule) id() (string, error) {
 	// FIXME: Do we need to check .Error first?
-	k := g.Key.Data
-	v := g.Version.Data
+	k := t.Key.Data
+	v := t.Version.Data
 	return "terraform.module/key/" + k + "/version/" + v, nil
 }
 
-func (g *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
-	key := g.Key.Data
-
-	t, err := terraformConnection(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	files := t.Parser().Files()
+func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
+	key := t.Key.Data
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	files := conn.Parser().Files()
 
 	var mqlHclBlock *mqlTerraformBlock
 	for k := range files {
 		f := files[k]
-		blocks, err := listHclBlocks(g.MqlRuntime, f.Body, f)
+		blocks, err := listHclBlocks(t.MqlRuntime, f.Body, f)
 		if err != nil {
 			return nil, err
 		}

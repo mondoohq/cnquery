@@ -26,12 +26,8 @@ type mqlTerraformStateModulInternal struct {
 }
 
 func (t *mqlTerraformState) outputs() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := provider.State()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	state, err := conn.State()
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +56,8 @@ func (t *mqlTerraformState) outputs() ([]interface{}, error) {
 }
 
 func (t *mqlTerraformState) rootModule() (*mqlTerraformStateModule, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := provider.State()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	state, err := conn.State()
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +74,8 @@ func (t *mqlTerraformState) rootModule() (*mqlTerraformStateModule, error) {
 }
 
 func (t *mqlTerraformState) modules() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	providerState, err := provider.State()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	providerState, err := conn.State()
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +105,8 @@ func (t *mqlTerraformState) modules() ([]interface{}, error) {
 }
 
 func (t *mqlTerraformState) resources() ([]interface{}, error) {
-	provider, err := terraformConnection(t.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
-
-	providerState, err := provider.State()
+	conn := t.MqlRuntime.Connection.(*connection.Connection)
+	providerState, err := conn.State()
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ func TestTerraform(t *testing.T) {
 		Connections: []*inventory.Config{
 			{
 				Options: map[string]string{
-					"path": "../testdata/hcl",
+					"path": "./testdata/hcl",
 				},
 				Type: "hcl",
 			},
@@ -34,7 +34,7 @@ func TestModuleManifestIssue676(t *testing.T) {
 		Connections: []*inventory.Config{
 			{
 				Options: map[string]string{
-					"path": "../testdata/issue676",
+					"path": "./testdata/issue676",
 				},
 				Type: "hcl",
 			},

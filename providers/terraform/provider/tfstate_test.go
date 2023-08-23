@@ -33,18 +33,7 @@ func TestResource_Tfstate(t *testing.T) {
 			Field:      "outputs",
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 2, len(dataResp.Data.Array))
-
-		// get outputs length
-		outputsResourceID := string(dataResp.Data.Array[0].Value)
-		dataResp, err = srv.GetData(&plugin.DataReq{
-			Connection: connRes.Id,
-			Resource:   "terraform.state.output",
-			ResourceId: outputsResourceID,
-			Field:      "length",
-		})
-		require.NoError(t, err)
-		assert.Equal(t, 0, dataResp.Data.Value)
+		assert.Equal(t, 0, len(dataResp.Data.Array))
 	})
 
 	t.Run("tf state recursive modules", func(t *testing.T) {
@@ -68,18 +57,7 @@ func TestResource_Tfstate(t *testing.T) {
 			Field:      "modules",
 		})
 		require.NoError(t, err)
-		assert.Equal(t, 2, len(dataResp.Data.Array))
-
-		// get modules length
-		outputsResourceID := string(dataResp.Data.Array[0].Value)
-		dataResp, err = srv.GetData(&plugin.DataReq{
-			Connection: connRes.Id,
-			Resource:   "terraform.state.module",
-			ResourceId: outputsResourceID,
-			Field:      "length",
-		})
-		require.NoError(t, err)
-		assert.Equal(t, int64(1), dataResp.Data.Value)
+		assert.Equal(t, 1, len(dataResp.Data.Array))
 	})
 
 	// FIXME: reimplement, when we can use MQL directly

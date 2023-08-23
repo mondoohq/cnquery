@@ -82,10 +82,10 @@ func TestResource_Terraform(t *testing.T) {
 			Connection: connRes.Id,
 			Resource:   "terraform.block",
 			ResourceId: providerResourceID,
-			Field:      "length",
+			Field:      "type",
 		})
 		require.NoError(t, err)
-		assert.Equal(t, int64(3), dataResp.Data.Value)
+		assert.Equal(t, "provider", string(dataResp.Data.Value))
 	})
 
 	// FIXME: reimplement, when we can use MQL directly

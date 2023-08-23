@@ -7,14 +7,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestLoadHclBlocks(t *testing.T) {
-	path := "../testdata/"
+	path := "./testdata/"
 	cc := &inventory.Asset{
 		Connections: []*inventory.Config{
 			{
@@ -35,7 +34,7 @@ func TestLoadHclBlocks(t *testing.T) {
 }
 
 func TestLoadTfvars(t *testing.T) {
-	path := "../testdata/hcl/sample.tfvars"
+	path := "./testdata/hcl/sample.tfvars"
 	variables := make(map[string]*hcl.Attribute)
 	err := ReadTfVarsFromFile(path, variables)
 	require.NoError(t, err)
