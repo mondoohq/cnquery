@@ -46,10 +46,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	port := 0
 	if len(req.Args) != 0 {
 		target := req.Args[0]
+		// if no scheme is provided, set schema so we can use url.Parse
 		if !strings.Contains(target, "://") {
-			target = "ssh://" + target
+			target = "scheme://" + target
 		}
 
+		// eg. used to parse users from `cnquery shell vsphere chris@vsphere.local@hostname`
 		x, err := url.Parse(target)
 		if err != nil {
 			return nil, errors.New("incorrect format of target, please use user@host:port")
