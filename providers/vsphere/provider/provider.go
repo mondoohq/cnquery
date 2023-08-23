@@ -162,7 +162,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 	}
 
 	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/vsphere/"}
 	return nil
 }
 
