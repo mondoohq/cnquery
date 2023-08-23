@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -156,6 +156,9 @@ providers/build/slack: providers/lr
 providers/build/github: providers/lr
 	@$(call buildProvider, providers/github)
 
+providers/build/gitlab: providers/lr
+	@$(call buildProvider, providers/gitlab)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -164,6 +167,7 @@ providers/install:
 	@$(call installProvider, providers/oci)
 	@$(call installProvider, providers/slack)
 	@$(call installProvider, providers/github)
+	@$(call installProvider, providers/gitlab)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -172,6 +176,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/oci)
 	@$(call bundleProvider, providers/slack)
 	@$(call bundleProvider, providers/github)
+	@$(call bundleProvider, providers/gitlab)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -181,6 +186,7 @@ providers/test:
 	@$(call testGpModProvider, providers/oci)
 	@$(call testGpModProvider, providers/slack)
 	@$(call testProvider, providers/github)
+	@$(call testProvider, providers/gitlab)
 
 lr/test:
 	go test ./resources/lr/...

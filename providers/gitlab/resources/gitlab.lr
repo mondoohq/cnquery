@@ -1,6 +1,5 @@
-import "../core/core.lr"
-
-option go_package = "go.mondoo.com/cnquery/resources/packs/gitlab"
+option provider = "go.mondoo.com/cnquery/providers/gitlab"
+option go_package = "go.mondoo.com/cnquery/providers/gitlab/resources"
 
 // GitLab Group
 gitlab.group {

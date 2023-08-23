@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package gitlab
+package connection
 
 import (
 	"strconv"
@@ -9,8 +9,8 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func (t *Provider) Identifier() (string, error) {
-	grp, err := t.Group()
+func (c *GitLabConnection) Identifier() (string, error) {
+	grp, err := c.Group()
 	if err != nil {
 		return "", err
 	}
@@ -18,8 +18,8 @@ func (t *Provider) Identifier() (string, error) {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(grp.ID), nil
 }
 
-func (t *Provider) Group() (*gitlab.Group, error) {
-	grp, _, err := t.Client().Groups.GetGroup(t.GroupPath, nil)
+func (c *GitLabConnection) Group() (*gitlab.Group, error) {
+	grp, _, err := c.Client().Groups.GetGroup(c.GroupPath, nil)
 	if err != nil {
 		return nil, err
 	}
