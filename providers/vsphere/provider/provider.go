@@ -152,7 +152,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnection) error {
-	// TODO: adjust asset detection
+	// TODO: adjust asset detection with full discovery
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
@@ -163,8 +163,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 		Title:  "VMware vSphere",
 	}
 
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/vsphere/"}
+	id, err := conn.Identifier()
+	if err != nil {
+		return err
+	}
+	asset.PlatformIds = []string{id}
 	return nil
 }
 
