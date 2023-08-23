@@ -65,8 +65,8 @@ jobs:
         run: |
           # CertLocker Authentication Certifiate
           CERT_PATH="$(mktemp -t cert.XXX)"
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}/Certificate_pkcs12.p12
-          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}/Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}
+          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}" >> "$GITHUB_ENV"
           echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
           # CertLocker API Key & Host
           echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
@@ -122,3 +122,7 @@ jobs:
             "repository": "${{ github.event.repository.name }}",
             "version":  "${{  github.ref_name }}"
           }'
+
+      - name: Cleanup
+        run:
+          rm -f ${CERT_PATH}
