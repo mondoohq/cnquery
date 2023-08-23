@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package vsphere
+package connection
 
 import (
 	"context"
@@ -73,17 +73,6 @@ func IsNotFound(err error) bool {
 	return errors.As(err, &e)
 }
 
-// $ESXCli.system.version.get()
-// Build   : Releasebuild-8169922
-// Patch   : 0
-// Product : VMware ESXi
-// Update  : 0
-// Version : 6.7.0
-// see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func (p *Provider) EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
-	return EsxiVersion(host)
-}
-
 type EsxiSystemVersion struct {
 	Build   string
 	Patch   string
@@ -93,6 +82,13 @@ type EsxiSystemVersion struct {
 	Moid    string
 }
 
+// $ESXCli.system.version.get()
+// Build   : Releasebuild-8169922
+// Patch   : 0
+// Product : VMware ESXi
+// Update  : 0
+// Version : 6.7.0
+// see https://kb.vmware.com/s/article/2143832 for version and build number mapping
 func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	e, err := esxcli.NewExecutor(host.Client(), host)
 	if err != nil {
@@ -188,13 +184,13 @@ func InstanceUUID(client *govmomi.Client) (string, error) {
 // https://kb.vmware.com/s/article/1009458
 // /usr/sbin/dmidecode | grep UUID https://communities.vmware.com/thread/420420
 // wmic bios get name,serialnumber,version  https://communities.vmware.com/thread/582729/
-func (p *Provider) Identifier() (string, error) {
+func (c *VsphereConnection) Identifier() (string, error) {
 	// a specific resource id was passed into the transport eg. for a esxi host or esxi vm
-	if len(p.selectedPlatformID) > 0 {
-		return p.selectedPlatformID, nil
+	if len(c.selectedPlatformID) > 0 {
+		return c.selectedPlatformID, nil
 	}
 
-	id, err := InstanceUUID(p.Client())
+	id, err := InstanceUUID(c.Client())
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get vsphere instance uuid")
 		// This error is being ignored
@@ -205,8 +201,8 @@ func (p *Provider) Identifier() (string, error) {
 }
 
 // Info returns the connection information
-func (t *Provider) Info() types.AboutInfo {
-	return t.Client().ServiceContent.About
+func (c *VsphereConnection) Info() types.AboutInfo {
+	return c.Client().ServiceContent.About
 }
 
 func VsphereResourceID(instance string, reference types.ManagedObjectReference) string {
@@ -260,12 +256,12 @@ func IsVsphereID(mrn string) bool {
 	return strings.HasPrefix(mrn, "//platformid.api.mondoo.app/runtime/vsphere/instance/")
 }
 
-func (c *Provider) Host(moid types.ManagedObjectReference) (*object.HostSystem, error) {
+func (c *VsphereConnection) Host(moid types.ManagedObjectReference) (*object.HostSystem, error) {
 	// TODO: how should we handle the case when the moid does not exist
 	return object.NewHostSystem(c.Client().Client, moid), nil
 }
 
-func (c *Provider) VirtualMachine(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
+func (c *VsphereConnection) VirtualMachine(moid types.ManagedObjectReference) (*object.VirtualMachine, error) {
 	// TODO: how should we handle the case when the moid does not exist
 	return object.NewVirtualMachine(c.Client().Client, moid), nil
 }

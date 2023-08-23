@@ -8,11 +8,12 @@ import (
 	"regexp"
 	"strings"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
-	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func NewEsxiClient(c *govmomi.Client, inventoryPath string, host *object.HostSystem) *Esxi {
@@ -50,7 +51,7 @@ func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
 			dict[k] = val[k][0]
 		} else {
 			// convert to []interface
-			dict[k] = core.StrSliceToInterface(val[k])
+			dict[k] = convert.SliceAnyToInterface(val[k])
 		}
 	}
 	return dict
