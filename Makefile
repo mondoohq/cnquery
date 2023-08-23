@@ -185,8 +185,8 @@ providers/test:
 	@$(call testGpModProvider, providers/ipmi)
 	@$(call testGpModProvider, providers/oci)
 	@$(call testGpModProvider, providers/slack)
-	@$(call testProvider, providers/github)
-	@$(call testProvider, providers/gitlab)
+	@$(call testGpModProvider, providers/github)
+	@$(call testGpModProvider, providers/gitlab)
 
 lr/test:
 	go test ./resources/lr/...

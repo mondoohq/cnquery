@@ -135,7 +135,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnection) error {
-	// TODO: adjust asset detection
 	asset.Id = conn.Conf.Type
 
 	asset.Platform = &inventory.Platform{

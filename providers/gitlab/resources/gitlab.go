@@ -4,21 +4,12 @@
 package resources
 
 import (
-	"errors"
 	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gitlab/connection"
 )
-
-func gitlabProvider(c plugin.Connection) (*connection.GitLabConnection, error) {
-	gt, ok := c.(*connection.GitLabConnection)
-	if !ok {
-		return nil, errors.New("gitlab resource is not supported on this provider")
-	}
-	return gt, nil
-}
 
 func (g *mqlGitlabGroup) id() (string, error) {
 	return "gitlab.group/" + strconv.FormatInt(g.Id.Data, 10), nil
@@ -31,12 +22,8 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	gt, err := gitlabProvider(runtime.Connection)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	grp, _, err := gt.Client().Groups.GetGroup(gt.GroupPath, nil)
+	conn := runtime.Connection.(*connection.GitLabConnection)
+	grp, _, err := conn.Client().Groups.GetGroup(conn.GroupPath, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,17 +41,14 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 // GetProjects list all projects that belong to a group
 // see https://docs.gitlab.com/ee/api/projects.html
 func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
-	gt, err := gitlabProvider(g.MqlRuntime.Connection)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	if g.Path.Error != nil {
 		return nil, g.Path.Error
 	}
 	path := g.Path.Data
 
-	grp, _, err := gt.Client().Groups.GetGroup(path, nil)
+	grp, _, err := conn.Client().Groups.GetGroup(path, nil)
 	if err != nil {
 		return nil, err
 	}
