@@ -4,7 +4,7 @@
 //go:build debugtest
 // +build debugtest
 
-package gitlab
+package connection
 
 import (
 	"strings"
@@ -12,11 +12,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestGitlab(t *testing.T) {
-	p, err := New(&providers.Config{
+	p, err := New(&inventory.Config{
 		Options: map[string]string{
 			"token": "<add-token-here>",
 			"group": "mondoolabs",
