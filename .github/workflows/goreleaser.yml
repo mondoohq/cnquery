@@ -60,7 +60,27 @@ jobs:
         env:
           CERT_CONTENTS: '${{ steps.gcp_secrets.outputs.code_sign_cert_b64 }}'
 
-      - name: Install Quill for Mac Signing and Notarization 
+      - name: Configure DigiCert Signing Variables
+        shell: bash
+        run: |
+          # CertLocker Authentication Certifiate
+          CERT_PATH="$(mktemp -t cert.XXX)"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}
+          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          # CertLocker API Key & Host
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
+          # DigiCert CertLocker Code Signing Certificate
+          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
+          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
+
+      # - name: Install jSign (Windows Signing Tool) -- Required for public runners
+      #   run: |
+      #     curl -LO https://github.com/ebourg/jsign/releases/download/5.0/jsign_5.0_all.deb
+      #     sudo dpkg -i ./jsign_5.0_all.deb
+
+      - name: Install Quill for Mac Signing and Notarization
         run: |
             curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp v0.2.0
             /tmp/quill help
@@ -87,8 +107,8 @@ jobs:
           QUILL_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
           QUILL_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           QUILL_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
-          
-      - name: Check RPMs 
+
+      - name: Check RPMs
         run: |
           rpm -qpi dist/*.rpm
 
@@ -102,3 +122,7 @@ jobs:
             "repository": "${{ github.event.repository.name }}",
             "version":  "${{  github.ref_name }}"
           }'
+
+      - name: Cleanup
+        run:
+          rm -f ${CERT_PATH}
