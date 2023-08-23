@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"errors"
 	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
@@ -12,8 +13,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers/terraform/connection"
 	"go.mondoo.com/cnquery/providers/terraform/resources"
-
-	"github.com/cockroachdb/errors"
 )
 
 type Service struct {

@@ -4,14 +4,12 @@ replace go.mondoo.com/cnquery => ../..
 
 go 1.20
 
-require (
-	github.com/cockroachdb/errors v1.9.1
-	github.com/hashicorp/hcl/v2 v2.17.0
-)
+require github.com/hashicorp/hcl/v2 v2.17.0
 
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
