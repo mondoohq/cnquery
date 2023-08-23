@@ -31,6 +31,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 			Kind:    "code",
 			Runtime: "terraform",
 		}
+	case "hcl":
+		fallthrough
 	default:
 		p = &inventory.Platform{
 			Name:    "terraform-hcl",
