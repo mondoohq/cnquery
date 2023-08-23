@@ -71,10 +71,10 @@ jobs:
           echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
           echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
 
-      - name: Install jSign (Windows Signing Tool)
-        run: |
-          curl -LO https://github.com/ebourg/jsign/releases/download/5.0/jsign_5.0_all.deb
-          sudo dpkg -i ./jsign_5.0_all.deb
+      # - name: Install jSign (Windows Signing Tool) -- Required for public runners
+      #   run: |
+      #     curl -LO https://github.com/ebourg/jsign/releases/download/5.0/jsign_5.0_all.deb
+      #     sudo dpkg -i ./jsign_5.0_all.deb
 
       - name: Install Quill for Mac Signing and Notarization
         run: |
