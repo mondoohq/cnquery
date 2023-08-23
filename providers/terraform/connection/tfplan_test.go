@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
+package connection
 
 import (
 	"encoding/json"
@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTfstate(t *testing.T) {
-	data, err := os.ReadFile("testdata/aws/state_simple.json")
+func TestTfplan(t *testing.T) {
+	data, err := os.ReadFile("./testdata/gcp/plan_simple.json")
 	require.NoError(t, err)
 
-	var state State
-	err = json.Unmarshal(data, &state)
+	var plan Plan
+	err = json.Unmarshal(data, &plan)
 	require.NoError(t, err)
-	assert.NotNil(t, state)
+	assert.NotNil(t, plan)
 }

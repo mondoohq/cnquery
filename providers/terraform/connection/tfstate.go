@@ -1,9 +1,15 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
+package connection
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"os"
+
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+)
 
 // This is designed around https://www.terraform.io/internals/json-format
 // NOTE: it is very similar to the plan file format, but not exactly the same.
@@ -72,4 +78,32 @@ type Resource struct {
 
 	// Deposed is set if the resource is deposed in terraform state
 	DeposedKey string `json:"deposed_key,omitempty"`
+}
+
+func NewStateConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
+	cc := asset.Connections[0]
+
+	// NOTE: right now we are only supporting to load either state, plan or hcl files but not at the same time
+
+	var assetType terraformAssetType
+	var tfState State
+
+	assetType = statefile
+	stateFilePath := cc.Options["path"]
+	log.Debug().Str("path", stateFilePath).Msg("load terraform state file")
+	data, err := os.ReadFile(stateFilePath)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &tfState)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Connection{
+		asset:     asset,
+		assetType: assetType,
+
+		state: &tfState,
+	}, nil
 }

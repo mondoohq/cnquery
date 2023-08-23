@@ -1,12 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
-
-import (
-	"encoding/json"
-	"os"
-)
+package connection
 
 type ModuleManifest struct {
 	Records []Record `json:"Modules"`
@@ -27,21 +22,10 @@ type Record struct {
 	Dir string `json:"Dir"`
 }
 
-func ParseTerraformModuleManifest(manifestPath string) (*ModuleManifest, error) {
-	_, err := os.Stat(manifestPath)
-	if err != nil {
-		return nil, err
-	}
+type terraformAssetType int32
 
-	f, err := os.Open(manifestPath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var manifest ModuleManifest
-	if err := json.NewDecoder(f).Decode(&manifest); err != nil {
-		return nil, err
-	}
-	return &manifest, nil
-}
+const (
+	configurationfiles terraformAssetType = 0
+	planfile           terraformAssetType = 1
+	statefile          terraformAssetType = 2
+)

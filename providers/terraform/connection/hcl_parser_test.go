@@ -1,30 +1,36 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package terraform
+package connection
 
 import (
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
-	"go.mondoo.com/cnquery/motor/providers"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestLoadHclBlocks(t *testing.T) {
 	path := "./testdata/"
-	tc := &providers.Config{
-		Options: map[string]string{
-			"path": path,
+	cc := &inventory.Asset{
+		Connections: []*inventory.Config{
+			{
+				Options: map[string]string{
+					"path": path,
+				},
+				Type: "hcl",
+			},
 		},
 	}
-	tf, err := New(tc)
+	tf, err := NewHclConnection(0, cc)
 	require.NoError(t, err)
-	require.NotNil(t, tf.parsed)
-	assert.Equal(t, 2, len(tf.tfVars))
-	assert.Equal(t, 5, len(tf.parsed.Files()))
+	parser := tf.Parser()
+	require.NotNil(t, parser)
+	tfVars := tf.TfVars()
+	assert.Equal(t, 2, len(tfVars))
+	assert.Equal(t, 5, len(parser.Files()))
 }
 
 func TestLoadTfvars(t *testing.T) {
