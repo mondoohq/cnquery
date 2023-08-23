@@ -42,15 +42,15 @@ func init() {
 			Create: createTerraformSettings,
 		},
 		"terraform.state": {
-			// to override args, implement: initTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformState,
 			Create: createTerraformState,
 		},
 		"terraform.state.output": {
-			// to override args, implement: initTerraformStateOutput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformStateOutput,
 			Create: createTerraformStateOutput,
 		},
 		"terraform.state.module": {
-			// to override args, implement: initTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformStateModule,
 			Create: createTerraformStateModule,
 		},
 		"terraform.state.resource": {
@@ -58,7 +58,7 @@ func init() {
 			Create: createTerraformStateResource,
 		},
 		"terraform.plan": {
-			// to override args, implement: initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformPlan,
 			Create: createTerraformPlan,
 		},
 		"terraform.plan.configuration": {

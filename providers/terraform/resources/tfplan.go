@@ -17,6 +17,20 @@ func (t *mqlTerraformPlan) id() (string, error) {
 	return "terraform.plan", nil
 }
 
+func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.Connection)
+
+	plan, err := conn.Plan()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	args["formatVersion"] = llx.StringData(plan.FormatVersion)
+	args["terraformVersion"] = llx.StringData(plan.TerraformVersion)
+
+	return args, nil, nil
+}
+
 type mqlTerraformPlanResourceChangeInternal struct {
 	change plugin.TValue[*connection.ResourceChange]
 }

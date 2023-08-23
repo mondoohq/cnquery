@@ -17,6 +17,20 @@ func (t *mqlTerraformState) id() (string, error) {
 	return "terraform.state", nil
 }
 
+func initTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	conn := runtime.Connection.(*connection.Connection)
+
+	state, err := conn.State()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	args["formatVersion"] = llx.StringData(state.FormatVersion)
+	args["terraformVersion"] = llx.StringData(state.TerraformVersion)
+
+	return args, nil, nil
+}
+
 type mqlTerraformStateInternal struct {
 	output plugin.TValue[*connection.Output]
 }
@@ -140,6 +154,34 @@ type mqlTerraformStateOutputInternal struct {
 	output plugin.TValue[*connection.Output]
 }
 
+func initTerraformStateOutpute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	// check if identifier is there
+	nameRaw := args["identifier"]
+	if nameRaw != nil {
+		name := nameRaw.Value.(string)
+		obj, err := CreateResource(runtime, "terraform.state", nil)
+		if err != nil {
+			return nil, nil, err
+		}
+		tfstate := obj.(*mqlTerraformState)
+
+		outputs := tfstate.GetOutputs()
+		for i := range outputs.Data {
+			o := outputs.Data[i].(*mqlTerraformStateOutput)
+			id := o.Identifier.Data
+			if id == name {
+				return nil, o, nil
+			}
+		}
+	}
+
+	return args, nil, nil
+}
+
 func (t *mqlTerraformStateOutput) id() (string, error) {
 	id := t.Identifier
 	return "terraform.state.output/identifier/" + id.Data, nil
@@ -182,6 +224,40 @@ func (t *mqlTerraformStateModule) id() (string, error) {
 	}
 
 	return name, nil
+}
+
+func initTerraformStateModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// check if identifier is there
+	nameRaw := args["address"]
+	if nameRaw != nil {
+		return args, nil, nil
+	}
+
+	idRaw := args["identifier"]
+	if idRaw != nil {
+		identifier := idRaw.Value.(string)
+		obj, err := CreateResource(runtime, "terraform.state", nil)
+		if err != nil {
+			return nil, nil, err
+		}
+		tfstate := obj.(*mqlTerraformState)
+
+		modules := tfstate.GetModules()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for i := range modules.Data {
+			o := modules.Data[i].(*mqlTerraformStateModule)
+			id := o.Address.Data
+			if id == identifier {
+				return nil, o, nil
+			}
+		}
+		delete(args, "identifier")
+	}
+
+	return args, nil, nil
 }
 
 type mqlTerraformStateModuleInternal struct {
