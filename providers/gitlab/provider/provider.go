@@ -137,7 +137,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnection) error {
 	// TODO: adjust asset detection
 	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
 		Name:   "gitlab",
@@ -146,8 +145,13 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 		Title:  "GitLab",
 	}
 
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
+	grp, err := conn.Group()
+	if err != nil {
+		return err
+	}
+	asset.Name = "GitLab Group " + grp.Name
+
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(grp.ID)}
 	return nil
 }
 

@@ -81,3 +81,11 @@ func (c *GitLabConnection) Asset() *inventory.Asset {
 func (c *GitLabConnection) Client() *gitlab.Client {
 	return c.client
 }
+
+func (c *GitLabConnection) Group() (*gitlab.Group, error) {
+	grp, _, err := c.Client().Groups.GetGroup(c.GroupPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	return grp, err
+}
