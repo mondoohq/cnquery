@@ -92,13 +92,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Sign Exe (TEMPORARY TEST)
-        run: |
-          curl -LO https://releases.mondoo.io/cnquery/8.23.2/cnquery_8.23.2_windows_amd64.zip
-          unzip cnquery_8.23.2_windows_amd64.zip
-          jsign --storetype DIGICERTONE --alias "cert_492206180" --storepass "${SM_API_KEY}|${SM_CLIENT_CERT_FILE}|${SM_CLIENT_CERT_PASSWORD}" --tsaurl "http://timestamp.digicert.com" cnquery.exe
-
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
