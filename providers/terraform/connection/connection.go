@@ -49,15 +49,6 @@ func (c *Connection) Kind() string {
 	return "code"
 }
 
-/*
-// TODO: implement
-func (c *Connection) PlatformIdDetectors() []PlatformIdDetector {
-	return []PlatformIdDetector{
-		TransportPlatformIdentifierDetector,
-	}
-}
-*/
-
 func (c *Connection) Runtime() string {
 	return "terraform"
 }
@@ -100,14 +91,4 @@ func (c *Connection) State() (*State, error) {
 
 func (c *Connection) Plan() (*Plan, error) {
 	return c.plan, nil
-}
-
-func (c *Connection) Platform() *inventory.Platform {
-	return &inventory.Platform{
-		Name:    "terraform-manifest",
-		Family:  []string{"terraform"},
-		Kind:    "code",
-		Runtime: "terraform",
-		Title:   "Terraform HCL Manifest",
-	}
 }

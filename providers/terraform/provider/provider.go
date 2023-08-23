@@ -59,7 +59,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		} else {
 			return nil, errors.New("no path provided")
 		}
+	case "hcl":
+		conn.Type = "hcl"
+		if len(req.Args) > 1 {
+			conn.Options["path"] = req.Args[1]
+		} else {
+			return nil, errors.New("no path provided")
+		}
 	default:
+		if len(req.Args) > 1 {
+			return nil, errors.New("unknown set of arguments, use 'state <path>', 'plan <path>' or 'hcl <path>'")
+		}
 		conn.Type = "hcl"
 		conn.Options["path"] = req.Args[0]
 	}
@@ -67,17 +77,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conn},
 	}
-
-	// TODO: implement transport-platform-id detector handling
-	/*
-		idDetector := "hostname"
-		if flag, ok := flags["id-detector"]; ok {
-			idDetector = string(flag.Value)
-		}
-		if idDetector != "" {
-			asset.IdDetector = []string{idDetector}
-		}
-	*/
 
 	res := plugin.ParseCLIRes{
 		Asset: asset,
