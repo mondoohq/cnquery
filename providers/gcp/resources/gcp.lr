@@ -1,0 +1,7 @@
+option provider = "go.mondoo.com/cnquery/providers/gcp"
+option go_package = "go.mondoo.com/cnquery/providers/gcp/resources"
+
+// GCP Cloud
+gcp {
+	field() string
+}

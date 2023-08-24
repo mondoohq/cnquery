@@ -140,7 +140,24 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua providers/build/okta providers/build/google-workspace providers/build/arista providers/build/equinix providers/build/vcd
+# Note we need \ to escape the target line into multiple lines
+providers/build: providers/build/core \
+	providers/build/network \
+	providers/build/os \
+	providers/build/ipmi \
+	providers/build/oci \
+	providers/build/slack \
+	providers/build/github \
+	providers/build/gitlab \
+	providers/build/terraform \
+	providers/build/vsphere \
+	providers/build/opcua \
+	providers/build/okta \
+	providers/build/google-workspace \
+	providers/build/arista \
+	providers/build/equinix \
+	providers/build/vcd \
+	providers/build/gcp
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -190,6 +207,9 @@ providers/build/equinix: providers/lr
 providers/build/vcd: providers/lr
 	@$(call buildProvider, providers/vcd)
 
+providers/build/gcp: providers/lr
+	@$(call buildProvider, providers/gcp)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -207,6 +227,7 @@ providers/install:
 	@$(call installProvider, providers/arista)
 	@$(call installProvider, providers/equinix)
 	@$(call installProvider, providers/vcd)
+	@$(call installProvider, providers/gcp)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -224,6 +245,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/arista)
 	@$(call bundleProvider, providers/equinix)
 	@$(call bundleProvider, providers/vcd)
+	@$(call bundleProvider, providers/gcp)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -242,6 +264,7 @@ providers/test:
 	@$(call testGpModProvider, providers/arista)
 	@$(call testGpModProvider, providers/equinix)
 	@$(call testGpModProvider, providers/vcd)
+	@$(call testGpModProvider, providers/gcp)
 
 providers/gomodtidy:
 #	@$(call gomodtidyProvider, providers/core)
@@ -260,6 +283,7 @@ providers/gomodtidy:
 	@$(call gomodtidyProvider, providers/arista)
 	@$(call gomodtidyProvider, providers/equinix)
 	@$(call gomodtidyProvider, providers/vcd)
+	@$(call gomodtidyProvider, providers/gcp)
 
 lr/test:
 	go test ./resources/lr/...
