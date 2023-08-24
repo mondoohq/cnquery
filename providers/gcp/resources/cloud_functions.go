@@ -6,27 +6,27 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 
 	functions "cloud.google.com/go/functions/apiv1"
 	"cloud.google.com/go/functions/apiv1/functionspb"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) cloudFunctions() ([]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	creds, err := provider.Credentials(functions.DefaultAuthScopes()...)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(functions.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 
 		secretEnvVars := make(map[string]interface{})
 		for _, v := range f.SecretEnvironmentVariables {
-			envVar, err := core.JsonToDict(mqlSecretEnvVar{ProjectId: v.ProjectId, Secret: v.Secret, Version: v.Version})
+			envVar, err := convert.JsonToDict(mqlSecretEnvVar{ProjectId: v.ProjectId, Secret: v.Secret, Version: v.Version})
 			if err != nil {
 				return nil, err
 			}
@@ -98,7 +98,7 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 			for _, vv := range v.Versions {
 				versions = append(versions, mqlSecretVolumeVersion{Version: vv.Version, Path: vv.Path})
 			}
-			vol, err := core.JsonToDict(mqlSecretVolume{MountPath: v.MountPath, ProjectId: v.ProjectId, Secret: v.Secret, Versions: versions})
+			vol, err := convert.JsonToDict(mqlSecretVolume{MountPath: v.MountPath, ProjectId: v.ProjectId, Secret: v.Secret, Versions: versions})
 			if err != nil {
 				return nil, err
 			}
@@ -112,7 +112,7 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 			sourceArchiveUrl = f.GetSourceArchiveUrl()
 		case *functionspb.CloudFunction_SourceRepository:
 			pbSourceRepo := f.GetSourceRepository()
-			sourceRepository, err = core.JsonToDict(mqlSourceRepository{Url: pbSourceRepo.Url, DeployedUrl: pbSourceRepo.DeployedUrl})
+			sourceRepository, err = convert.JsonToDict(mqlSourceRepository{Url: pbSourceRepo.Url, DeployedUrl: pbSourceRepo.DeployedUrl})
 			if err != nil {
 				return nil, err
 			}
@@ -124,13 +124,13 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 		switch f.Trigger.(type) {
 		case *functionspb.CloudFunction_HttpsTrigger:
 			pbHttpsTrigger := f.GetHttpsTrigger()
-			httpsTrigger, err = core.JsonToDict(mqlHttpsTrigger{Url: pbHttpsTrigger.Url, SecurityLevel: pbHttpsTrigger.SecurityLevel.String()})
+			httpsTrigger, err = convert.JsonToDict(mqlHttpsTrigger{Url: pbHttpsTrigger.Url, SecurityLevel: pbHttpsTrigger.SecurityLevel.String()})
 			if err != nil {
 				return nil, err
 			}
 		case *functionspb.CloudFunction_EventTrigger:
 			pbEventTrigger := f.GetEventTrigger()
-			eventTrigger, err = core.JsonToDict(mqlEventTrigger{
+			eventTrigger, err = convert.JsonToDict(mqlEventTrigger{
 				EventType:     pbEventTrigger.EventType,
 				Resource:      pbEventTrigger.Resource,
 				Service:       pbEventTrigger.Service,
@@ -141,41 +141,41 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 			}
 		}
 
-		mqlCloudFuncs, err := g.MotorRuntime.CreateResource("gcp.project.cloudFunction",
-			"projectId", projectId,
-			"name", parseResourceName(f.Name),
-			"description", f.Description,
-			"sourceArchiveUrl", sourceArchiveUrl,
-			"sourceRepository", sourceRepository,
-			"sourceUploadUrl", sourceUploadUrl,
-			"httpsTrigger", httpsTrigger,
-			"eventTrigger", eventTrigger,
-			"status", f.Status.String(),
-			"entryPoint", f.EntryPoint,
-			"runtime", f.Runtime,
-			"timeout", core.MqlTime(llx.DurationToTime(int64(f.Timeout.Seconds))),
-			"availableMemoryMb", int64(f.AvailableMemoryMb),
-			"serviceAccountEmail", f.ServiceAccountEmail,
-			"updated", core.MqlTime(f.UpdateTime.AsTime()),
-			"versionId", f.VersionId,
-			"labels", core.StrMapToInterface(f.Labels),
-			"envVars", core.StrMapToInterface(f.EnvironmentVariables),
-			"buildEnvVars", core.StrMapToInterface(f.BuildEnvironmentVariables),
-			"network", f.Network,
-			"maxInstances", int64(f.MaxInstances),
-			"minInstances", int64(f.MinInstances),
-			"vpcConnector", f.VpcConnector,
-			"egressSettings", f.VpcConnectorEgressSettings.String(),
-			"ingressSettings", f.IngressSettings.String(),
-			"kmsKeyName", f.KmsKeyName,
-			"buildWorkerPool", f.BuildWorkerPool,
-			"buildId", f.BuildId,
-			"buildName", f.BuildName,
-			"secretEnvVars", secretEnvVars,
-			"secretVolumes", secretVolumes,
-			"dockerRepository", f.DockerRepository,
-			"dockerRegistry", f.DockerRegistry.String(),
-		)
+		mqlCloudFuncs, err := CreateResource(g.MqlRuntime, "gcp.project.cloudFunction", map[string]*llx.RawData{
+			"projectId":           llx.StringData(projectId),
+			"name":                llx.StringData(parseResourceName(f.Name)),
+			"description":         llx.StringData(f.Description),
+			"sourceArchiveUrl":    llx.StringData(sourceArchiveUrl),
+			"sourceRepository":    llx.DictData(sourceRepository),
+			"sourceUploadUrl":     llx.StringData(sourceUploadUrl),
+			"httpsTrigger":        llx.DictData(httpsTrigger),
+			"eventTrigger":        llx.DictData(eventTrigger),
+			"status":              llx.StringData(f.Status.String()),
+			"entryPoint":          llx.StringData(f.EntryPoint),
+			"runtime":             llx.StringData(f.Runtime),
+			"timeout":             llx.TimeData(llx.DurationToTime(int64(f.Timeout.Seconds))),
+			"availableMemoryMb":   llx.IntData(int64(f.AvailableMemoryMb)),
+			"serviceAccountEmail": llx.StringData(f.ServiceAccountEmail),
+			"updated":             llx.TimeData(f.UpdateTime.AsTime()),
+			"versionId":           llx.IntData(f.VersionId),
+			"labels":              llx.MapData(convert.MapToInterfaceMap(f.Labels), types.String),
+			"envVars":             llx.MapData(convert.MapToInterfaceMap(f.EnvironmentVariables), types.String),
+			"buildEnvVars":        llx.MapData(convert.MapToInterfaceMap(f.BuildEnvironmentVariables), types.String),
+			"network":             llx.StringData(f.Network),
+			"maxInstances":        llx.IntData(int64(f.MaxInstances)),
+			"minInstances":        llx.IntData(int64(f.MinInstances)),
+			"vpcConnector":        llx.StringData(f.VpcConnector),
+			"egressSettings":      llx.StringData(f.VpcConnectorEgressSettings.String()),
+			"ingressSettings":     llx.StringData(f.IngressSettings.String()),
+			"kmsKeyName":          llx.StringData(f.KmsKeyName),
+			"buildWorkerPool":     llx.StringData(f.BuildWorkerPool),
+			"buildId":             llx.StringData(f.BuildId),
+			"buildName":           llx.StringData(f.BuildName),
+			"secretEnvVars":       llx.MapData(secretEnvVars, types.Dict),
+			"secretVolumes":       llx.ArrayData(secretVolumes, types.Dict),
+			"dockerRepository":    llx.StringData(f.DockerRepository),
+			"dockerRegistry":      llx.StringData(f.DockerRegistry.String()),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -185,13 +185,13 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectCloudFunction) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
-	name, err := g.Name()
-	if err != nil {
-		return "", err
+	projectId := g.ProjectId.Data
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
+	name := g.Name.Data
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }

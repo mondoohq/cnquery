@@ -5,76 +5,77 @@ package resources
 
 import (
 	"context"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/resources"
-
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/option"
 )
 
 func (g *mqlGcpProjectDnsService) id() (string, error) {
-	id, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	id := g.ProjectId.Data
 	return "gcp.project.dnsService/" + id, nil
 }
 
-func (g *mqlGcpProject) GetDns() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) dns() (*mqlGcpProjectDnsService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.dnsService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectDnsService), nil
 }
 
-func (g *mqlGcpProjectDnsService) init(args *resources.Args) (*resources.Args, GcpProjectDnsService, error) {
-	if len(*args) > 2 {
+func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "gcp.project.dnsService.managedzone/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectDnsService) managedZones() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(dns.CloudPlatformReadOnlyScope)
+	client, err := conn.Client(dns.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -109,18 +110,18 @@ func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
 				}
 			}
 
-			mqlManagedZone, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.managedzone",
-				"id", strconv.FormatInt(int64(managedZone.Id), 10),
-				"projectId", projectId,
-				"name", managedZone.Name,
-				"description", managedZone.Description,
-				"dnssecConfig", mqlDnssecCfg,
-				"dnsName", managedZone.DnsName,
-				"nameServerSet", managedZone.NameServerSet,
-				"nameServers", core.StrSliceToInterface(managedZone.NameServers),
-				"visibility", managedZone.Visibility,
-				"created", parseTime(managedZone.CreationTime),
-			)
+			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
+				"id":            llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
+				"projectId":     llx.StringData(projectId),
+				"name":          llx.StringData(managedZone.Name),
+				"description":   llx.StringData(managedZone.Description),
+				"dnssecConfig":  llx.DictData(mqlDnssecCfg),
+				"dnsName":       llx.StringData(managedZone.DnsName),
+				"nameServerSet": llx.StringData(managedZone.NameServerSet),
+				"nameServers":   llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
+				"visibility":    llx.StringData(managedZone.Visibility),
+				"created":       llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+			})
 			if err != nil {
 				return err
 			}
@@ -135,30 +136,27 @@ func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "gcp.project.dnsService.policy/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectDnsService) policies() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(dns.CloudPlatformReadOnlyScope)
+	client, err := conn.Client(dns.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -182,15 +180,15 @@ func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 				networkNames = append(networkNames, segments[len(segments)-1])
 			}
 
-			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.policy",
-				"projectId", projectId,
-				"id", strconv.FormatInt(int64(policy.Id), 10),
-				"name", policy.Name,
-				"description", policy.Description,
-				"enableInboundForwarding", policy.EnableInboundForwarding,
-				"enableLogging", policy.EnableLogging,
-				"networkNames", networkNames,
-			)
+			mqlDnsPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.policy", map[string]*llx.RawData{
+				"projectId":               llx.StringData(projectId),
+				"id":                      llx.StringData(strconv.FormatInt(int64(policy.Id), 10)),
+				"name":                    llx.StringData(policy.Name),
+				"description":             llx.StringData(policy.Description),
+				"enableInboundForwarding": llx.BoolData(policy.EnableInboundForwarding),
+				"enableLogging":           llx.BoolData(policy.EnableLogging),
+				"networkNames":            llx.ArrayData(networkNames, types.String),
+			})
 			if err != nil {
 				return err
 			}
@@ -204,34 +202,33 @@ func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectDnsServicePolicy) GetNetworks() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectDnsServicePolicy) networks() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	networkNames := g.GetNetworkNames()
+	if networkNames.Error != nil {
+		return nil, networkNames.Error
 	}
 
-	networkNames, err := g.NetworkNames()
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
+	}
+	gcpCompute := obj.(*mqlGcpProjectComputeService)
+	networks := gcpCompute.GetNetworks()
+	if networks.Error != nil {
+		return nil, networks.Error
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", projectId)
-	if err != nil {
-		return nil, err
-	}
-	gcpCompute := obj.(GcpProjectComputeService)
-	networks, err := gcpCompute.Networks()
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]interface{}, 0, len(networkNames))
-	for _, network := range networks {
-		networkName, err := network.(GcpProjectComputeServiceNetwork).Name()
-		if err != nil {
-			return nil, err
-		}
-		for _, name := range networkNames {
+	res := make([]interface{}, 0, len(networkNames.Data))
+	for _, network := range networks.Data {
+		networkName := network.(*mqlGcpProjectComputeServiceNetwork).Name.Data
+		for _, name := range networkNames.Data {
 			if name == networkName {
 				res = append(res, network)
 				break
@@ -242,35 +239,32 @@ func (g *mqlGcpProjectDnsServicePolicy) GetNetworks() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	id, err := g.Name()
-	if err != nil {
-		return "", err
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
+	id := g.Name.Data
 	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectDnsServiceManagedzone) recordSets() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	managedZone, err := g.Name()
-	if err != nil {
-		return nil, err
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
 	}
+	managedZone := g.Name.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(dns.CloudPlatformReadOnlyScope)
+	client, err := conn.Client(dns.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -288,14 +282,14 @@ func (g *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() ([]interface{}, err
 		for i := range page.Rrsets {
 			rSet := page.Rrsets[i]
 
-			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.recordset",
-				"projectId", projectId,
-				"name", rSet.Name,
-				"rrdatas", core.StrSliceToInterface(rSet.Rrdatas),
-				"signatureRrdatas", core.StrSliceToInterface(rSet.SignatureRrdatas),
-				"ttl", rSet.Ttl,
-				"type", rSet.Type,
-			)
+			mqlDnsPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.recordset", map[string]*llx.RawData{
+				"projectId":        llx.StringData(projectId),
+				"name":             llx.StringData(rSet.Name),
+				"rrdatas":          llx.ArrayData(convert.SliceAnyToInterface(rSet.Rrdatas), types.String),
+				"signatureRrdatas": llx.ArrayData(convert.SliceAnyToInterface(rSet.SignatureRrdatas), types.String),
+				"ttl":              llx.IntData(rSet.Ttl),
+				"type":             llx.StringData(rSet.Type),
+			})
 			if err != nil {
 				return err
 			}

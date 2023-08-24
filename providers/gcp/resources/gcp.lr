@@ -2042,6 +2042,7 @@ private gcp.project.apiKey.restrictions {
   // The IP addresses that are allowed to use the key
   serverKeyRestrictions dict
 }
+
 // GCP Logging resources
 private gcp.project.loggingservice {
   // Project ID

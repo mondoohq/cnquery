@@ -6,82 +6,85 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
-	"go.mondoo.com/cnquery/resources"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
 )
 
 func (g *mqlGcpProjectIamService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.iamService", projectId), nil
 }
 
-func (g *mqlGcpProject) GetIam() (interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
 
-	return g.MotorRuntime.CreateResource("gcp.project.iamService",
-		"projectId", projectId,
-	)
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
+	return res.(*mqlGcpProjectIamService), err
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
-	return g.UniqueId()
+	return g.UniqueId.Data, g.UniqueId.Error
 }
 
 func (g *mqlGcpProjectIamServiceServiceAccountKey) id() (string, error) {
-	return g.Name()
+	return g.Name.Data, g.Name.Error
 }
 
-func (g *mqlGcpProjectIamServiceServiceAccount) init(args *resources.Args) (*resources.Args, GcpProjectIamServiceServiceAccount, error) {
-	if len(*args) > 2 {
+func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.project.iamService", "projectId", (*args)["projectId"])
+	obj, err := CreateResource(runtime, "gcp.project.iamService", map[string]*llx.RawData{
+		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	iamSvc := obj.(GcpProjectIamService)
-	sas, err := iamSvc.ServiceAccounts()
-	if err != nil {
-		return nil, nil, err
+	iamSvc := obj.(*mqlGcpProjectIamService)
+	sas := iamSvc.GetServiceAccounts()
+	if sas.Error != nil {
+		return nil, nil, sas.Error
 	}
 
-	for _, s := range sas {
-		sa := s.(GcpProjectIamServiceServiceAccount)
-		email, err := sa.Email()
-		if err != nil {
-			return nil, nil, err
+	for _, s := range sas.Data {
+		sa := s.(*mqlGcpProjectIamServiceServiceAccount)
+		email := sa.GetEmail()
+		if email.Error != nil {
+			return nil, nil, email.Error
 		}
 
-		if email == (*args)["email"] {
+		if email.Data == args["email"].Value {
 			return args, sa, nil
 		}
 	}
-	return nil, nil, &resources.ResourceNotFound{}
+	return nil, nil, nil
 }
 
-func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(admin.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(admin.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,16 +107,16 @@ func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlSA, err := g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
-			"projectId", s.ProjectId,
-			"name", s.Name,
-			"uniqueId", s.UniqueId,
-			"email", s.Email,
-			"displayName", s.DisplayName,
-			"description", s.Description,
-			"oauth2ClientId", s.Oauth2ClientId,
-			"disabled", s.Disabled,
-		)
+		mqlSA, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+			"projectId":      llx.StringData(s.ProjectId),
+			"name":           llx.StringData(s.Name),
+			"uniqueId":       llx.StringData(s.UniqueId),
+			"email":          llx.StringData(s.Email),
+			"displayName":    llx.StringData(s.DisplayName),
+			"description":    llx.StringData(s.Description),
+			"oauth2ClientId": llx.StringData(s.Oauth2ClientId),
+			"disabled":       llx.BoolData(s.Disabled),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -122,23 +125,20 @@ func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
 	return serviceAccounts, nil
 }
 
-func (g *mqlGcpProjectIamServiceServiceAccount) GetKeys() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	email, err := g.Email()
-	if err != nil {
-		return nil, err
+	if g.Email.Error != nil {
+		return nil, g.Email.Error
 	}
+	email := g.Email.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(admin.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(admin.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -157,15 +157,15 @@ func (g *mqlGcpProjectIamServiceServiceAccount) GetKeys() ([]interface{}, error)
 	}
 	mqlKeys := make([]interface{}, 0, len(resp.Keys))
 	for _, k := range resp.Keys {
-		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount.key",
-			"name", k.Name,
-			"keyAlgorithm", k.KeyAlgorithm.String(),
-			"validAfterTime", timestampAsTimePtr(k.ValidAfterTime),
-			"validBeforeTime", timestampAsTimePtr(k.ValidBeforeTime),
-			"keyOrigin", k.KeyOrigin.String(),
-			"keyType", k.KeyType.String(),
-			"disabled", k.Disabled,
-		)
+		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount.key", map[string]*llx.RawData{
+			"name":            llx.StringData(k.Name),
+			"keyAlgorithm":    llx.StringData(k.KeyAlgorithm.String()),
+			"validAfterTime":  llx.TimeDataPtr(timestampAsTimePtr(k.ValidAfterTime)),
+			"validBeforeTime": llx.TimeDataPtr(timestampAsTimePtr(k.ValidBeforeTime)),
+			"keyOrigin":       llx.StringData(k.KeyOrigin.String()),
+			"keyType":         llx.StringData(k.KeyType.String()),
+			"disabled":        llx.BoolData(k.Disabled),
+		})
 		if err != nil {
 			return nil, err
 		}

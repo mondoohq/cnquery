@@ -14,12 +14,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (t *Provider) OrganizationID() (string, error) {
-	switch t.ResourceType() {
+func (c *GcpConnection) OrganizationID() (string, error) {
+	switch c.ResourceType() {
 	case Project:
 		ctx := context.Background()
 
-		client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+		client, err := c.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
 		if err != nil {
 			return "", err
 		}
@@ -30,7 +30,7 @@ func (t *Provider) OrganizationID() (string, error) {
 		}
 
 		// TODO: GetAncestry is not available in v3 anymore, we need to find an alternative approach
-		ancest, err := svc.Projects.GetAncestry(t.id, &v1cloudresourcemanager.GetAncestryRequest{}).Do()
+		ancest, err := svc.Projects.GetAncestry(c.resourceID, &v1cloudresourcemanager.GetAncestryRequest{}).Do()
 		if err != nil {
 			return "", err
 		}
@@ -42,16 +42,16 @@ func (t *Provider) OrganizationID() (string, error) {
 			}
 		}
 	case Organization:
-		return t.id, nil
+		return c.resourceID, nil
 	}
 
 	return "", errors.New("could not find the organization")
 }
 
-func (t *Provider) GetProject(name string) (*cloudresourcemanager.Project, error) {
+func (c *GcpConnection) GetProject(name string) (*cloudresourcemanager.Project, error) {
 	ctx := context.Background()
 
-	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
+	client, err := c.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -63,10 +63,10 @@ func (t *Provider) GetProject(name string) (*cloudresourcemanager.Project, error
 	return svc.Projects.Get("projects/" + name).Do()
 }
 
-func (t *Provider) GetOrganization(name string) (*cloudresourcemanager.Organization, error) {
+func (c *GcpConnection) GetOrganization(name string) (*cloudresourcemanager.Organization, error) {
 	ctx := context.Background()
 
-	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
+	client, err := c.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, cloudresourcemanager.CloudPlatformScope, iam.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}

@@ -5,24 +5,24 @@ package resources
 
 import (
 	"context"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/essentialcontacts/v1"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) GetEssentialContacts() (interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) essentialContacts() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	client, err := provider.Client(essentialcontacts.CloudPlatformScope)
+	client, err := conn.Client(essentialcontacts.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -41,14 +41,14 @@ func (g *mqlGcpProject) GetEssentialContacts() (interface{}, error) {
 
 	mqlContacts := make([]interface{}, 0, len(contacts.Contacts))
 	for _, c := range contacts.Contacts {
-		mqlC, err := g.MotorRuntime.CreateResource("gcp.essentialContact",
-			"resourcePath", c.Name,
-			"email", c.Email,
-			"languageTag", c.LanguageTag,
-			"notificationCategories", core.StrSliceToInterface(c.NotificationCategorySubscriptions),
-			"validated", parseTime(c.ValidateTime),
-			"validationState", c.ValidationState,
-		)
+		mqlC, err := CreateResource(g.MqlRuntime, "gcp.essentialContact", map[string]*llx.RawData{
+			"resourcePath":           llx.StringData(c.Name),
+			"email":                  llx.StringData(c.Email),
+			"languageTag":            llx.StringData(c.LanguageTag),
+			"notificationCategories": llx.ArrayData(convert.SliceAnyToInterface(c.NotificationCategorySubscriptions), types.String),
+			"validated":              llx.TimeDataPtr(parseTime(c.ValidateTime)),
+			"validationState":        llx.StringData(c.ValidationState),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -58,5 +58,5 @@ func (g *mqlGcpProject) GetEssentialContacts() (interface{}, error) {
 }
 
 func (g *mqlGcpEssentialContact) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }

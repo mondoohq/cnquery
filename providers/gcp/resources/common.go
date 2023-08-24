@@ -4,10 +4,12 @@
 package resources
 
 import (
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -36,26 +38,26 @@ type assetIdentifier struct {
 	project string
 }
 
-func getAssetIdentifier(runtime *resources.Runtime) *assetIdentifier {
-	a := runtime.Motor.GetAsset()
-	if a == nil {
+func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
+	conn := runtime.Connection.(*connection.GcpConnection)
+	id, err := conn.Identifier()
+	if err != nil {
 		return nil
 	}
-	var name, region, project string
-	for _, id := range a.PlatformIds {
-		if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
-			// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
-			segments := strings.Split(id, "/")
-			if len(segments) < 12 {
-				return nil
-			}
-			name = segments[len(segments)-1]
-			region = segments[10]
-			project = segments[8]
-			break
+
+	if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
+		// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
+		segments := strings.Split(id, "/")
+		if len(segments) < 12 {
+			return nil
 		}
+		name := segments[len(segments)-1]
+		region := segments[10]
+		project := segments[8]
+		return &assetIdentifier{name: name, region: region, project: project}
 	}
-	return &assetIdentifier{name: name, region: region, project: project}
+
+	return nil
 }
 
 type resourceId struct {
@@ -64,7 +66,7 @@ type resourceId struct {
 	Name    string
 }
 
-func getNetworkByUrl(networkUrl string, runtime *resources.Runtime) (interface{}, error) {
+func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceNetwork, error) {
 	// A reference to a network is not mandatory for this resource
 	if networkUrl == "" {
 		return nil, nil
@@ -75,13 +77,17 @@ func getNetworkByUrl(networkUrl string, runtime *resources.Runtime) (interface{}
 	parts := strings.Split(params, "/")
 	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
 
-	return runtime.CreateResource("gcp.project.computeService.network",
-		"name", resId.Name,
-		"projectId", resId.Project,
-	)
+	res, err := CreateResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"name":      llx.StringData(resId.Name),
+		"projectId": llx.StringData(resId.Project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceNetwork), nil
 }
 
-func getSubnetworkByUrl(subnetUrl string, runtime *resources.Runtime) (interface{}, error) {
+func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceSubnetwork, error) {
 	// A reference to a subnetwork is not mandatory for this resource
 	if subnetUrl == "" {
 		return nil, nil
@@ -92,9 +98,13 @@ func getSubnetworkByUrl(subnetUrl string, runtime *resources.Runtime) (interface
 	parts := strings.Split(params, "/")
 	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 
-	return runtime.CreateResource("gcp.project.computeService.subnetwork",
-		"name", resId.Name,
-		"projectId", resId.Project,
-		"region", resId.Region,
-	)
+	res, err := CreateResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
+		"name":      llx.StringData(resId.Name),
+		"projectId": llx.StringData(resId.Project),
+		"region":    llx.StringData(resId.Region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
 }

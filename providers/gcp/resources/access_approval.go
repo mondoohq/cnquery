@@ -6,46 +6,42 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 
 	accessapproval "cloud.google.com/go/accessapproval/apiv1"
 	accessapprovalpb "cloud.google.com/go/accessapproval/apiv1/accessapprovalpb"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpOrganization) GetAccessApprovalSettings() (interface{}, error) {
-	id, err := g.Id()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpOrganization) accessApprovalSettings() (*mqlGcpAccessApprovalSettings, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	id := g.Id.Data
 
-	return accessApprovalSettings(
-		g.MotorRuntime.Motor.Provider, g.MotorRuntime, fmt.Sprintf("organizations/%s/accessApprovalSettings", id))
+	return accessApprovalSettings(g.MqlRuntime, fmt.Sprintf("organizations/%s/accessApprovalSettings", id))
 }
 
-func (g *mqlGcpProject) GetAccessApprovalSettings() (interface{}, error) {
-	id, err := g.Id()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProject) accessApprovalSettings() (*mqlGcpAccessApprovalSettings, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	id := g.Id.Data
 
-	return accessApprovalSettings(
-		g.MotorRuntime.Motor.Provider, g.MotorRuntime, fmt.Sprintf("projects/%s/accessApprovalSettings", id))
+	return accessApprovalSettings(g.MqlRuntime, fmt.Sprintf("projects/%s/accessApprovalSettings", id))
 }
 
 func (g *mqlGcpAccessApprovalSettings) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
-func accessApprovalSettings(motorProvider providers.Instance, runtime *resources.Runtime, settingsName string) (interface{}, error) {
-	provider, err := gcpProvider(motorProvider)
-	if err != nil {
-		return nil, err
-	}
-
-	credentials, err := provider.Credentials(accessapproval.DefaultAuthScopes()...)
+func accessApprovalSettings(runtime *plugin.Runtime, settingsName string) (*mqlGcpAccessApprovalSettings, error) {
+	conn := runtime.Connection.(*connection.GcpConnection)
+	credentials, err := conn.Credentials(accessapproval.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +68,17 @@ func accessApprovalSettings(motorProvider providers.Instance, runtime *resources
 		})
 	}
 
-	return runtime.CreateResource("gcp.accessApprovalSettings",
-		"resourcePath", settings.Name,
-		"notificationEmails", core.StrSliceToInterface(settings.NotificationEmails),
-		"enrolledServices", mqlEnrolledServices,
-		"enrolledAncestor", settings.EnrolledAncestor,
-		"activeKeyVersion", settings.ActiveKeyVersion,
-		"ancestorHasActiveKeyVersion", settings.AncestorHasActiveKeyVersion,
-		"invalidKeyVersion", settings.InvalidKeyVersion,
-	)
+	res, err := CreateResource(runtime, "gcp.accessApprovalSettings", map[string]*llx.RawData{
+		"resourcePath":                llx.StringData(settings.Name),
+		"notificationEmails":          llx.ArrayData(convert.SliceAnyToInterface(settings.NotificationEmails), types.String),
+		"enrolledServices":            llx.ArrayData(mqlEnrolledServices, types.Dict),
+		"enrolledAncestor":            llx.BoolData(settings.EnrolledAncestor),
+		"activeKeyVersion":            llx.StringData(settings.ActiveKeyVersion),
+		"ancestorHasActiveKeyVersion": llx.BoolData(settings.AncestorHasActiveKeyVersion),
+		"invalidKeyVersion":           llx.BoolData(settings.InvalidKeyVersion),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpAccessApprovalSettings), nil
 }

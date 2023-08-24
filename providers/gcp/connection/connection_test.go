@@ -7,31 +7,26 @@
 package connection
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestGcpDiscovery(t *testing.T) {
 	orgId := "<insert org id>"
-	pCfg := &providers.Config{
-		Type: providers.ProviderType_GCP,
+	conf := &inventory.Config{
+		Type: "gcp",
 		Options: map[string]string{
 			"organization": orgId,
 		},
-		Discover: &providers.Discovery{
+		Discover: &inventory.Discovery{
 			Targets: []string{"all"},
 		},
 	}
 
-	p, err := New(pCfg)
+	conn, err := NewGcpConnection(0, nil, conf)
 	require.NoError(t, err)
-	org, err := p.GetOrganization(orgId)
+	_, err = conn.GetOrganization(orgId)
 	require.NoError(t, err)
-
-	projects, err := trans.GetProjectsForOrganization(org)
-	require.NoError(t, err)
-	fmt.Printf("%v", projects)
 }

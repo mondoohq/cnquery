@@ -6,11 +6,14 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
@@ -18,52 +21,50 @@ import (
 )
 
 func (g *mqlGcpProjectStorageService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("gcp.project.storageService/%s", projectId), nil
 }
 
-func (g *mqlGcpProjectStorageService) init(args *resources.Args) (*resources.Args, GcpProjectStorageService, error) {
-	if len(*args) > 2 {
+func initGcpProjectStorageService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	conn := runtime.Connection.(*connection.GcpConnection)
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetStorage() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) storage() (*mqlGcpProjectStorageService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.storageService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.storageService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectStorageService), nil
 }
 
-func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +75,7 @@ func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectID := provider.ResourceID()
+	projectID := conn.ResourceID()
 	buckets, err := storageSvc.Buckets.List(projectID).Do()
 	if err != nil {
 		return nil, err
@@ -131,20 +132,20 @@ func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
 				"isLocked":        bucket.RetentionPolicy.IsLocked,
 			}
 		}
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.storageService.bucket",
-			"id", bucket.Id,
-			"projectId", projectId,
-			"name", bucket.Name,
-			"labels", core.StrMapToInterface(bucket.Labels),
-			"location", bucket.Location,
-			"locationType", bucket.LocationType,
-			"projectNumber", strconv.FormatUint(bucket.ProjectNumber, 10),
-			"storageClass", bucket.StorageClass,
-			"created", created,
-			"updated", updated,
-			"iamConfiguration", iamConfigurationDict,
-			"retentionPolicy", retentionPolicy,
-		)
+		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
+			"id":               llx.StringData(bucket.Id),
+			"projectId":        llx.StringData(projectId),
+			"name":             llx.StringData(bucket.Name),
+			"labels":           llx.MapData(convert.MapToInterfaceMap(bucket.Labels), types.String),
+			"location":         llx.StringData(bucket.Location),
+			"locationType":     llx.StringData(bucket.LocationType),
+			"projectNumber":    llx.StringData(strconv.FormatUint(bucket.ProjectNumber, 10)),
+			"storageClass":     llx.StringData(bucket.StorageClass),
+			"created":          llx.TimeDataPtr(created),
+			"updated":          llx.TimeDataPtr(updated),
+			"iamConfiguration": llx.DictData(iamConfigurationDict),
+			"retentionPolicy":  llx.DictData(retentionPolicy),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -154,76 +155,78 @@ func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("gcp.project.storageService.bucket/%s/%s", projectId, id), nil
 }
 
-func (g *mqlGcpProjectStorageServiceBucket) init(args *resources.Args) (*resources.Args, GcpProjectStorageServiceBucket, error) {
-	if len(*args) > 2 {
+func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	// If no args are set, try reading them from the platform ID
-	if len(*args) == 0 {
-		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-			(*args)["name"] = ids.name
-			(*args)["projectId"] = ids.project
-			(*args)["location"] = ids.region
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+			args["location"] = llx.StringData(ids.region)
 		}
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.project.storageService", "projectId", (*args)["projectId"])
+	obj, err := CreateResource(runtime, "gcp.project.storageService", map[string]*llx.RawData{
+		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	storageSvc := obj.(GcpProjectStorageService)
-	buckets, err := storageSvc.Buckets()
-	if err != nil {
-		return nil, nil, err
+	storageSvc := obj.(*mqlGcpProjectStorageService)
+	buckets := storageSvc.GetBuckets()
+	if buckets.Error != nil {
+		return nil, nil, buckets.Error
 	}
 
-	for _, b := range buckets {
-		bucket := b.(GcpProjectStorageServiceBucket)
-		name, err := bucket.Name()
-		if err != nil {
-			return nil, nil, err
-		}
-		projectId, err := bucket.ProjectId()
-		if err != nil {
-			return nil, nil, err
-		}
-		location, err := bucket.Location()
-		if err != nil {
-			return nil, nil, err
-		}
+	for _, b := range buckets.Data {
+		bucket := b.(*mqlGcpProjectStorageServiceBucket)
 
-		if name == (*args)["name"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
+		if bucket.Name.Error != nil {
+			return nil, nil, bucket.Name.Error
+		}
+		name := bucket.Name.Data
+
+		if bucket.ProjectId.Error != nil {
+			return nil, nil, bucket.ProjectId.Error
+		}
+		projectId := bucket.ProjectId.Data
+
+		if bucket.Location.Error != nil {
+			return nil, nil, bucket.Location.Error
+		}
+		location := bucket.Location.Data
+
+		if name == args["name"].Value.(string) && projectId == args["projectId"].Value.(string) && location == args["location"].Value.(string) {
 			return args, bucket, nil
 		}
 	}
-	return nil, nil, &resources.ResourceNotFound{}
+	return nil, nil, nil
 }
 
-func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error) {
-	bucketName, err := g.Name()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]interface{}, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
 	}
+	bucketName := g.Name.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -243,11 +246,11 @@ func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", bucketName+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
+		mqlServiceaccount, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(bucketName + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
 		if err != nil {
 			return nil, err
 		}

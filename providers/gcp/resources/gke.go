@@ -6,173 +6,180 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/option"
 )
 
 func (g *mqlGcpProjectGkeService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.gkeService", projectId), nil
 }
 
-func (g *mqlGcpProject) GetGke() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) gke() (*mqlGcpProjectGkeService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.gkeService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectGkeService), nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.gkeService.cluster/%s", id), nil
 }
 
-func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.Args, GcpProjectGkeServiceCluster, error) {
-	if len(*args) > 3 {
+func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
 		return args, nil, nil
 	}
 
 	// If no args are set, try reading them from the platform ID
-	if len(*args) == 0 {
-		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-			(*args)["name"] = ids.name
-			(*args)["location"] = ids.region
-			(*args)["projectId"] = ids.project
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
 		}
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.project.gkeService", "projectId", (*args)["projectId"])
+	obj, err := CreateResource(runtime, "gcp.project.gkeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	gkeSvc := obj.(GcpProjectGkeService)
-	clusters, err := gkeSvc.Clusters()
-	if err != nil {
-		return nil, nil, err
+	gkeSvc := obj.(*mqlGcpProjectGkeService)
+	clusters := gkeSvc.GetClusters()
+	if clusters.Error != nil {
+		return nil, nil, clusters.Error
 	}
 
-	for _, c := range clusters {
-		cluster := c.(GcpProjectGkeServiceCluster)
-		name, err := cluster.Name()
-		if err != nil {
-			return nil, nil, err
+	for _, c := range clusters.Data {
+		cluster := c.(*mqlGcpProjectGkeServiceCluster)
+		name := cluster.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
 		}
-		projectId, err := cluster.ProjectId()
-		if err != nil {
-			return nil, nil, err
+		projectId := cluster.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
 		}
-		location, err := cluster.Location()
-		if err != nil {
-			return nil, nil, err
+		location := cluster.GetLocation()
+		if location.Error != nil {
+			return nil, nil, location.Error
 		}
 
-		if name == (*args)["name"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value && location.Data == args["location"].Value {
 			return args, cluster, nil
 		}
 	}
-	return nil, nil, &resources.ResourceNotFound{}
+	return nil, nil, nil
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepool) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterAddonsConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(container.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(container.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +205,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 
 		nodePools := make([]interface{}, 0, len(c.NodePools))
 		for _, np := range c.NodePools {
-			mqlNodePool, err := createMqlNodePool(g.MotorRuntime, np, c.Id, projectId)
+			mqlNodePool, err := createMqlNodePool(g.MqlRuntime, np, c.Id, projectId)
 			if err != nil {
 				return nil, err
 			}
@@ -210,7 +217,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			autopilotEnabled = c.Autopilot.Enabled
 		}
 
-		var addonsConfig interface{}
+		var addonsConfig plugin.Resource
 		if c.AddonsConfig != nil {
 			var httpLoadBalancing map[string]interface{}
 			if c.AddonsConfig.HttpLoadBalancing != nil {
@@ -283,19 +290,19 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 				}
 			}
 
-			addonsConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.addonsConfig",
-				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id),
-				"httpLoadBalancing", httpLoadBalancing,
-				"horizontalPodAutoscaling", horizontalPodAutoscaling,
-				"kubernetesDashboard", kubernetesDashboard,
-				"networkPolicyConfig", networkPolicyConfig,
-				"cloudRunConfig", cloudRunConfig,
-				"dnsCacheConfig", dnsCacheConfig,
-				"configConnectorConfig", configConnectorConfig,
-				"gcePersistentDiskCsiDriverConfig", gcePersistentDiskCsiDriverConfig,
-				"gcpFilestoreCsiDriverConfig", gcpFilestoreCsiDriverConfig,
-				"gkeBackupAgentConfig", gkeBackupAgentConfig,
-			)
+			addonsConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.addonsConfig", map[string]*llx.RawData{
+				"id":                               llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id)),
+				"httpLoadBalancing":                llx.DictData(httpLoadBalancing),
+				"horizontalPodAutoscaling":         llx.DictData(horizontalPodAutoscaling),
+				"kubernetesDashboard":              llx.DictData(kubernetesDashboard),
+				"networkPolicyConfig":              llx.DictData(networkPolicyConfig),
+				"cloudRunConfig":                   llx.DictData(cloudRunConfig),
+				"dnsCacheConfig":                   llx.DictData(dnsCacheConfig),
+				"configConnectorConfig":            llx.DictData(configConnectorConfig),
+				"gcePersistentDiskCsiDriverConfig": llx.DictData(gcePersistentDiskCsiDriverConfig),
+				"gcpFilestoreCsiDriverConfig":      llx.DictData(gcpFilestoreCsiDriverConfig),
+				"gkeBackupAgentConfig":             llx.DictData(gkeBackupAgentConfig),
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -308,28 +315,28 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
-		var ipAllocPolicy interface{}
+		var ipAllocPolicy plugin.Resource
 		if c.IpAllocationPolicy != nil {
-			ipAllocPolicy, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.ipAllocationPolicy",
-				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/ipAllocationPolicy", c.Id),
-				"useIpAliases", c.IpAllocationPolicy.UseIpAliases,
-				"createSubnetwork", c.IpAllocationPolicy.CreateSubnetwork,
-				"subnetworkName", c.IpAllocationPolicy.SubnetworkName,
-				"clusterSecondaryRangeName", c.IpAllocationPolicy.ClusterSecondaryRangeName,
-				"servicesSecondaryRangeName", c.IpAllocationPolicy.ServicesSecondaryRangeName,
-				"clusterIpv4CidrBlock", c.IpAllocationPolicy.ClusterIpv4CidrBlock,
-				"nodeIpv4CidrBlock", c.IpAllocationPolicy.NodeIpv4CidrBlock,
-				"servicesIpv4CidrBlock", c.IpAllocationPolicy.ServicesIpv4CidrBlock,
-				"tpuIpv4CidrBlock", c.IpAllocationPolicy.TpuIpv4CidrBlock,
-				"useRoutes", c.IpAllocationPolicy.UseRoutes,
-				"stackType", c.IpAllocationPolicy.StackType.String(),
-				"ipv6AccessType", c.IpAllocationPolicy.Ipv6AccessType.String(),
-			)
+			ipAllocPolicy, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.ipAllocationPolicy", map[string]*llx.RawData{
+				"id":                         llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/ipAllocationPolicy", c.Id)),
+				"useIpAliases":               llx.BoolData(c.IpAllocationPolicy.UseIpAliases),
+				"createSubnetwork":           llx.BoolData(c.IpAllocationPolicy.CreateSubnetwork),
+				"subnetworkName":             llx.StringData(c.IpAllocationPolicy.SubnetworkName),
+				"clusterSecondaryRangeName":  llx.StringData(c.IpAllocationPolicy.ClusterSecondaryRangeName),
+				"servicesSecondaryRangeName": llx.StringData(c.IpAllocationPolicy.ServicesSecondaryRangeName),
+				"clusterIpv4CidrBlock":       llx.StringData(c.IpAllocationPolicy.ClusterIpv4CidrBlock),
+				"nodeIpv4CidrBlock":          llx.StringData(c.IpAllocationPolicy.NodeIpv4CidrBlock),
+				"servicesIpv4CidrBlock":      llx.StringData(c.IpAllocationPolicy.ServicesIpv4CidrBlock),
+				"tpuIpv4CidrBlock":           llx.StringData(c.IpAllocationPolicy.TpuIpv4CidrBlock),
+				"useRoutes":                  llx.BoolData(c.IpAllocationPolicy.UseRoutes),
+				"stackType":                  llx.StringData(c.IpAllocationPolicy.StackType.String()),
+				"ipv6AccessType":             llx.StringData(c.IpAllocationPolicy.Ipv6AccessType.String()),
+			})
 			if err != nil {
 				return nil, err
 			}
 		}
-		var networkConfig interface{}
+		var networkConfig plugin.Resource
 		if c.NetworkConfig != nil {
 			var defaultSnatStatus map[string]interface{}
 			if c.NetworkConfig.DefaultSnatStatus != nil {
@@ -353,18 +360,18 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 					"enabled": c.NetworkConfig.ServiceExternalIpsConfig.Enabled,
 				}
 			}
-			networkConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.networkConfig",
-				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id),
-				"networkPath", c.NetworkConfig.Network,
-				"subnetworkPath", c.NetworkConfig.Subnetwork,
-				"enableIntraNodeVisibility", c.NetworkConfig.EnableIntraNodeVisibility,
-				"defaultSnatStatus", defaultSnatStatus,
-				"enableL4IlbSubsetting", c.NetworkConfig.EnableL4IlbSubsetting,
-				"datapathProvider", c.NetworkConfig.DatapathProvider.String(),
-				"privateIpv6GoogleAccess", c.NetworkConfig.PrivateIpv6GoogleAccess.String(),
-				"dnsConfig", dnsConfig,
-				"serviceExternalIpsConfig", serviceExternalIpsConfig,
-			)
+			networkConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkConfig", map[string]*llx.RawData{
+				"id":                        llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id)),
+				"networkPath":               llx.StringData(c.NetworkConfig.Network),
+				"subnetworkPath":            llx.StringData(c.NetworkConfig.Subnetwork),
+				"enableIntraNodeVisibility": llx.BoolData(c.NetworkConfig.EnableIntraNodeVisibility),
+				"defaultSnatStatus":         llx.DictData(defaultSnatStatus),
+				"enableL4IlbSubsetting":     llx.BoolData(c.NetworkConfig.EnableL4IlbSubsetting),
+				"datapathProvider":          llx.StringData(c.NetworkConfig.DatapathProvider.String()),
+				"privateIpv6GoogleAccess":   llx.StringData(c.NetworkConfig.PrivateIpv6GoogleAccess.String()),
+				"dnsConfig":                 llx.DictData(dnsConfig),
+				"serviceExternalIpsConfig":  llx.DictData(serviceExternalIpsConfig),
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -446,40 +453,40 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
-		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
-			"projectId", projectId,
-			"id", c.Id,
-			"name", c.Name,
-			"description", c.Description,
-			"loggingService", c.LoggingService,
-			"monitoringService", c.MonitoringService,
-			"network", c.Network,
-			"clusterIpv4Cidr", c.ClusterIpv4Cidr,
-			"subnetwork", c.Subnetwork,
-			"nodePools", nodePools,
-			"locations", core.StrSliceToInterface(c.Locations),
-			"enableKubernetesAlpha", c.EnableKubernetesAlpha,
-			"autopilotEnabled", autopilotEnabled,
-			"zone", c.Zone,
-			"location", c.Location,
-			"endpoint", c.Endpoint,
-			"initialClusterVersion", c.InitialClusterVersion,
-			"currentMasterVersion", c.CurrentMasterVersion,
-			"status", c.Status.String(),
-			"resourceLabels", core.StrMapToInterface(c.ResourceLabels),
-			"created", parseTime(c.CreateTime),
-			"expirationTime", parseTime(c.ExpireTime),
-			"addonsConfig", addonsConfig,
-			"workloadIdentityConfig", workloadIdCfg,
-			"ipAllocationPolicy", ipAllocPolicy,
-			"networkConfig", networkConfig,
-			"binaryAuthorization", binAuth,
-			"legacyAbac", legacyAbac,
-			"masterAuth", masterAuth,
-			"masterAuthorizedNetworksConfig", masterAuthorizedNetworksCfg,
-			"privateClusterConfig", privateClusterCfg,
-			"databaseEncryption", databaseEncryption,
-		)
+		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
+			"projectId":                      llx.StringData(projectId),
+			"id":                             llx.StringData(c.Id),
+			"name":                           llx.StringData(c.Name),
+			"description":                    llx.StringData(c.Description),
+			"loggingService":                 llx.StringData(c.LoggingService),
+			"monitoringService":              llx.StringData(c.MonitoringService),
+			"network":                        llx.StringData(c.Network),
+			"clusterIpv4Cidr":                llx.StringData(c.ClusterIpv4Cidr),
+			"subnetwork":                     llx.StringData(c.Subnetwork),
+			"nodePools":                      llx.ArrayData(nodePools, types.Resource("gcp.project.gkeService.cluster.nodepool")),
+			"locations":                      llx.ArrayData(convert.SliceAnyToInterface(c.Locations), types.String),
+			"enableKubernetesAlpha":          llx.BoolData(c.EnableKubernetesAlpha),
+			"autopilotEnabled":               llx.BoolData(autopilotEnabled),
+			"zone":                           llx.StringData(c.Zone),
+			"location":                       llx.StringData(c.Location),
+			"endpoint":                       llx.StringData(c.Endpoint),
+			"initialClusterVersion":          llx.StringData(c.InitialClusterVersion),
+			"currentMasterVersion":           llx.StringData(c.CurrentMasterVersion),
+			"status":                         llx.StringData(c.Status.String()),
+			"resourceLabels":                 llx.MapData(convert.MapToInterfaceMap(c.ResourceLabels), types.String),
+			"created":                        llx.TimeDataPtr(parseTime(c.CreateTime)),
+			"expirationTime":                 llx.TimeDataPtr(parseTime(c.ExpireTime)),
+			"addonsConfig":                   llx.ResourceData(addonsConfig, "gcp.project.gkeService.cluster.addonsConfig"),
+			"workloadIdentityConfig":         llx.DictData(workloadIdCfg),
+			"ipAllocationPolicy":             llx.ResourceData(ipAllocPolicy, "gcp.project.gkeService.cluster.ipAllocationPolicy"),
+			"networkConfig":                  llx.ResourceData(networkConfig, "gcp.project.gkeService.cluster.networkConfig"),
+			"binaryAuthorization":            llx.DictData(binAuth),
+			"legacyAbac":                     llx.DictData(legacyAbac),
+			"masterAuth":                     llx.DictData(masterAuth),
+			"masterAuthorizedNetworksConfig": llx.DictData(masterAuthorizedNetworksCfg),
+			"privateClusterConfig":           llx.DictData(privateClusterCfg),
+			"databaseEncryption":             llx.DictData(databaseEncryption),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -489,24 +496,29 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetServiceAccount() (interface{}, error) {
-	projectId, err := g.ProjectId()
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	email, err := g.ServiceAccountEmail()
-	if err != nil {
-		return nil, err
-	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
-		"projectId", projectId,
-		"email", email,
-	)
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
-func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clusterId, projectId string) (resources.ResourceType, error) {
+func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, clusterId, projectId string) (plugin.Resource, error) {
 	nodePoolId := fmt.Sprintf("%s/%s", clusterId, np.Name)
 
 	mqlPoolConfig, err := createMqlNodePoolConfig(runtime, np, nodePoolId, projectId)
@@ -535,21 +547,21 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool",
-		"id", nodePoolId,
-		"name", np.Name,
-		"config", mqlPoolConfig,
-		"initialNodeCount", int64(np.InitialNodeCount),
-		"locations", core.StrSliceToInterface(np.Locations),
-		"networkConfig", mqlPoolNetworkConfig,
-		"version", np.Version,
-		"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
-		"status", np.Status.String(),
-		"management", management,
-	)
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool", map[string]*llx.RawData{
+		"id":                llx.StringData(nodePoolId),
+		"name":              llx.StringData(np.Name),
+		"config":            llx.ResourceData(mqlPoolConfig, "gcp.project.gkeService.cluster.nodepool.config"),
+		"initialNodeCount":  llx.IntData(int64(np.InitialNodeCount)),
+		"locations":         llx.ArrayData(convert.SliceAnyToInterface(np.Locations), types.String),
+		"networkConfig":     llx.ResourceData(mqlPoolNetworkConfig, "gcp.project.gkeService.cluster.nodepool.networkConfig"),
+		"version":           llx.StringData(np.Version),
+		"instanceGroupUrls": llx.ArrayData(convert.SliceAnyToInterface(np.InstanceGroupUrls), types.String),
+		"status":            llx.StringData(np.Status.String()),
+		"management":        llx.DictData(management),
+	})
 }
 
-func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (resources.ResourceType, error) {
+func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (plugin.Resource, error) {
 	cfg := np.Config
 	var err error
 	mqlAccelerators := make([]interface{}, 0, len(cfg.Accelerators))
@@ -563,104 +575,104 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	nodeTaints := make([]interface{}, 0, len(cfg.Taints))
 	for i, taint := range cfg.Taints {
-		mqlNodeTaint, err := runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.nodeTaint",
-			"id", fmt.Sprintf("%s/taints/%d", nodePoolId, i),
-			"key", taint.Key,
-			"value", taint.Value,
-			"effect", taint.Effect.String(),
-		)
+		mqlNodeTaint, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.nodeTaint", map[string]*llx.RawData{
+			"id":     llx.StringData(fmt.Sprintf("%s/taints/%d", nodePoolId, i)),
+			"key":    llx.StringData(taint.Key),
+			"value":  llx.StringData(taint.Value),
+			"effect": llx.StringData(taint.Effect.String()),
+		})
 		if err != nil {
 			return nil, err
 		}
 		nodeTaints = append(nodeTaints, mqlNodeTaint)
 	}
 
-	var mqlSandboxCfg resources.ResourceType
+	var mqlSandboxCfg plugin.Resource
 	if cfg.SandboxConfig != nil {
-		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig",
-			"id", fmt.Sprintf("%s/sandbox", nodePoolId),
-			"type", cfg.SandboxConfig.Type.String(),
-		)
+		mqlSandboxCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig", map[string]*llx.RawData{
+			"id":   llx.StringData(fmt.Sprintf("%s/sandbox", nodePoolId)),
+			"type": llx.StringData(cfg.SandboxConfig.Type.String()),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlShieldedInstanceCfg resources.ResourceType
+	var mqlShieldedInstanceCfg plugin.Resource
 	if cfg.ShieldedInstanceConfig != nil {
-		mqlShieldedInstanceCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig",
-			"id", fmt.Sprintf("%s/shieldedInstanceConfig", nodePoolId),
-			"enableSecureBoot", cfg.ShieldedInstanceConfig.EnableSecureBoot,
-			"enableIntegrityMonitoring", cfg.ShieldedInstanceConfig.EnableIntegrityMonitoring,
-		)
+		mqlShieldedInstanceCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig", map[string]*llx.RawData{
+			"id":                        llx.StringData(fmt.Sprintf("%s/shieldedInstanceConfig", nodePoolId)),
+			"enableSecureBoot":          llx.BoolData(cfg.ShieldedInstanceConfig.EnableSecureBoot),
+			"enableIntegrityMonitoring": llx.BoolData(cfg.ShieldedInstanceConfig.EnableIntegrityMonitoring),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlLinuxNodeCfg resources.ResourceType
+	var mqlLinuxNodeCfg plugin.Resource
 	if cfg.LinuxNodeConfig != nil {
-		mqlLinuxNodeCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig",
-			"id", fmt.Sprintf("%s/linuxNodeConfig", nodePoolId),
-			"sysctls", core.StrMapToInterface(cfg.LinuxNodeConfig.Sysctls),
-		)
+		mqlLinuxNodeCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("%s/linuxNodeConfig", nodePoolId)),
+			"sysctls": llx.MapData(convert.MapToInterfaceMap(cfg.LinuxNodeConfig.Sysctls), types.String),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlKubeletCfg resources.ResourceType
+	var mqlKubeletCfg plugin.Resource
 	if cfg.KubeletConfig != nil {
-		mqlKubeletCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.kubeletConfig",
-			"id", fmt.Sprintf("%s/kubeletConfig", nodePoolId),
-			"cpuManagerPolicy", cfg.KubeletConfig.CpuManagerPolicy,
-			"cpuCfsQuotaPeriod", cfg.KubeletConfig.CpuCfsQuotaPeriod,
-			"podPidsLimit", cfg.KubeletConfig.PodPidsLimit,
-		)
+		mqlKubeletCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig", map[string]*llx.RawData{
+			"id":                llx.StringData(fmt.Sprintf("%s/kubeletConfig", nodePoolId)),
+			"cpuManagerPolicy":  llx.StringData(cfg.KubeletConfig.CpuManagerPolicy),
+			"cpuCfsQuotaPeriod": llx.StringData(cfg.KubeletConfig.CpuCfsQuotaPeriod),
+			"podPidsLimit":      llx.IntData(cfg.KubeletConfig.PodPidsLimit),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlGcfsCfg resources.ResourceType
+	var mqlGcfsCfg plugin.Resource
 	if cfg.GcfsConfig != nil {
-		mqlGcfsCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.gcfsConfig",
-			"id", fmt.Sprintf("%s/gcfsConfig", nodePoolId),
-			"enabled", cfg.GcfsConfig.Enabled,
-		)
+		mqlGcfsCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("%s/gcfsConfig", nodePoolId)),
+			"enabled": llx.BoolData(cfg.GcfsConfig.Enabled),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlAdvancedMachineFeatures resources.ResourceType
+	var mqlAdvancedMachineFeatures plugin.Resource
 	if cfg.AdvancedMachineFeatures != nil {
-		mqlAdvancedMachineFeatures, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures",
-			"id", fmt.Sprintf("%s/advancedMachineFeatures", nodePoolId),
-			"threadsPerCore", cfg.Gvnic.Enabled,
-		)
+		mqlAdvancedMachineFeatures, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures", map[string]*llx.RawData{
+			"id":             llx.StringData(fmt.Sprintf("%s/advancedMachineFeatures", nodePoolId)),
+			"threadsPerCore": llx.BoolData(cfg.Gvnic.Enabled),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlGvnicCfg resources.ResourceType
+	var mqlGvnicCfg plugin.Resource
 	if cfg.GcfsConfig != nil {
-		mqlGvnicCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.gvnicConfig",
-			"id", fmt.Sprintf("%s/gvnicConfig", nodePoolId),
-			"enabled", cfg.Gvnic.Enabled,
-		)
+		mqlGvnicCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("%s/gvnicConfig", nodePoolId)),
+			"enabled": llx.BoolData(cfg.Gvnic.Enabled),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlConfidentialNodes resources.ResourceType
+	var mqlConfidentialNodes plugin.Resource
 	if cfg.ConfidentialNodes != nil {
-		mqlConfidentialNodes, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.confidentialNodes",
-			"id", fmt.Sprintf("%s/confidentialNodes", nodePoolId),
-			"enabled", cfg.ConfidentialNodes.Enabled,
-		)
+		mqlConfidentialNodes, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes", map[string]*llx.RawData{
+			"id":      llx.StringData(fmt.Sprintf("%s/confidentialNodes", nodePoolId)),
+			"enabled": llx.BoolData(cfg.ConfidentialNodes.Enabled),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -671,38 +683,38 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 		workloadMetadataMode = cfg.WorkloadMetadataConfig.Mode.String()
 	}
 
-	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config",
-		"id", fmt.Sprintf("%s/config", nodePoolId),
-		"projectId", projectId,
-		"machineType", cfg.MachineType,
-		"diskSizeGb", int64(cfg.DiskSizeGb),
-		"oauthScopes", core.StrSliceToInterface(cfg.OauthScopes),
-		"serviceAccountEmail", cfg.ServiceAccount,
-		"metadata", core.StrMapToInterface(cfg.Metadata),
-		"imageType", cfg.ImageType,
-		"labels", core.StrMapToInterface(cfg.Labels),
-		"localSsdCount", int64(cfg.LocalSsdCount),
-		"tags", core.StrSliceToInterface(cfg.Tags),
-		"preemptible", cfg.Preemptible,
-		"accelerators", mqlAccelerators,
-		"diskType", cfg.DiskType,
-		"minCpuPlatform", cfg.MinCpuPlatform,
-		"workloadMetadataMode", workloadMetadataMode,
-		"taints", nodeTaints,
-		"sandboxConfig", mqlSandboxCfg,
-		"shieldedInstanceConfig", mqlShieldedInstanceCfg,
-		"linuxNodeConfig", mqlLinuxNodeCfg,
-		"kubeletConfig", mqlKubeletCfg,
-		"bootDiskKmsKey", cfg.BootDiskKmsKey,
-		"gcfsConfig", mqlGcfsCfg,
-		"gvnicConfig", mqlGvnicCfg,
-		"advancedMachineFeatures", mqlAdvancedMachineFeatures,
-		"spot", cfg.Spot,
-		"confidentialNodes", mqlConfidentialNodes,
-	)
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config", map[string]*llx.RawData{
+		"id":                      llx.StringData(fmt.Sprintf("%s/config", nodePoolId)),
+		"projectId":               llx.StringData(projectId),
+		"machineType":             llx.StringData(cfg.MachineType),
+		"diskSizeGb":              llx.IntData(int64(cfg.DiskSizeGb)),
+		"oauthScopes":             llx.ArrayData(convert.SliceAnyToInterface(cfg.OauthScopes), types.String),
+		"serviceAccountEmail":     llx.StringData(cfg.ServiceAccount),
+		"metadata":                llx.MapData(convert.MapToInterfaceMap(cfg.Metadata), types.String),
+		"imageType":               llx.StringData(cfg.ImageType),
+		"labels":                  llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
+		"localSsdCount":           llx.IntData(int64(cfg.LocalSsdCount)),
+		"tags":                    llx.ArrayData(convert.SliceAnyToInterface(cfg.Tags), types.String),
+		"preemptible":             llx.BoolData(cfg.Preemptible),
+		"accelerators":            llx.ArrayData(mqlAccelerators, types.Resource("gcp.project.gkeService.cluster.nodepool.config.accelerator")),
+		"diskType":                llx.StringData(cfg.DiskType),
+		"minCpuPlatform":          llx.StringData(cfg.MinCpuPlatform),
+		"workloadMetadataMode":    llx.StringData(workloadMetadataMode),
+		"taints":                  llx.ArrayData(nodeTaints, types.Resource("gcp.project.gkeService.cluster.nodepool.config.nodeTaint")),
+		"sandboxConfig":           llx.ResourceData(mqlSandboxCfg, "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"),
+		"shieldedInstanceConfig":  llx.ResourceData(mqlShieldedInstanceCfg, "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"),
+		"linuxNodeConfig":         llx.ResourceData(mqlLinuxNodeCfg, " gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"),
+		"kubeletConfig":           llx.ResourceData(mqlKubeletCfg, "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"),
+		"bootDiskKmsKey":          llx.StringData(cfg.BootDiskKmsKey),
+		"gcfsConfig":              llx.ResourceData(mqlGcfsCfg, "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"),
+		"gvnicConfig":             llx.ResourceData(mqlGvnicCfg, "gcp.project.gkeService.cluster.nodepool.config.gvnicConfig"),
+		"advancedMachineFeatures": llx.ResourceData(mqlAdvancedMachineFeatures, "gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures"),
+		"spot":                    llx.BoolData(cfg.Spot),
+		"confidentialNodes":       llx.ResourceData(mqlConfidentialNodes, "gcp.project.gkeService.cluster.nodepool.config.confidentialNodes"),
+	})
 }
 
-func createMqlNodePoolNetworkConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId string) (resources.ResourceType, error) {
+func createMqlNodePoolNetworkConfig(runtime *plugin.Runtime, np *containerpb.NodePool, nodePoolId string) (plugin.Resource, error) {
 	netCfg := np.NetworkConfig
 	if netCfg == nil {
 		return nil, nil
@@ -710,76 +722,84 @@ func createMqlNodePoolNetworkConfig(runtime *resources.Runtime, np *containerpb.
 
 	netCfgId := fmt.Sprintf("%s/networkConfig", nodePoolId)
 
-	var performanceConfig resources.ResourceType
+	var performanceConfig plugin.Resource
 	var err error
 	if netCfg.NetworkPerformanceConfig != nil {
-		performanceConfig, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig",
-			"id", fmt.Sprintf("%s/performanceConfig", netCfgId),
-			"totalEgressBandwidthTier", netCfg.NetworkPerformanceConfig.TotalEgressBandwidthTier.String(),
-		)
+		performanceConfig, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig", map[string]*llx.RawData{
+			"id":                       llx.StringData(fmt.Sprintf("%s/performanceConfig", netCfgId)),
+			"totalEgressBandwidthTier": llx.StringData(netCfg.NetworkPerformanceConfig.TotalEgressBandwidthTier.String()),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.networkConfig",
-		"id", netCfgId,
-		"podRange", netCfg.PodRange,
-		"podIpv4CidrBlock", netCfg.PodIpv4CidrBlock,
-		"performanceConfig", performanceConfig,
-	)
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.networkConfig", map[string]*llx.RawData{
+		"id":                llx.StringData(netCfgId),
+		"podRange":          llx.StringData(netCfg.PodRange),
+		"podIpv4CidrBlock":  llx.StringData(netCfg.PodIpv4CidrBlock),
+		"performanceConfig": llx.ResourceData(performanceConfig, "gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig"),
+	})
 }
 
-func createMqlAccelerator(runtime *resources.Runtime, acc *containerpb.AcceleratorConfig, nodePoolId string, i int) (resources.ResourceType, error) {
+func createMqlAccelerator(runtime *plugin.Runtime, acc *containerpb.AcceleratorConfig, nodePoolId string, i int) (plugin.Resource, error) {
 	accId := fmt.Sprintf("%s/accelerators/%d", nodePoolId, i)
 
-	var gpuSharingConfig resources.ResourceType
+	var gpuSharingConfig plugin.Resource
 	var err error
 	if acc.GpuSharingConfig != nil {
-		gpuSharingConfig, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.gpuSharingConfig",
-			"id", fmt.Sprintf("%s/gpuSharingConfig", accId),
-			"maxSharedClientsPerGpu", acc.GpuSharingConfig.MaxSharedClientsPerGpu,
-			"strategy", acc.GpuSharingConfig.GpuSharingStrategy.String(),
-		)
+		gpuSharingConfig, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig", map[string]*llx.RawData{
+			"id":                     llx.StringData(fmt.Sprintf("%s/gpuSharingConfig", accId)),
+			"maxSharedClientsPerGpu": llx.IntData(acc.GpuSharingConfig.MaxSharedClientsPerGpu),
+			"strategy":               llx.StringData(acc.GpuSharingConfig.GpuSharingStrategy.String()),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.accelerator",
-		"id", accId,
-		"count", acc.AcceleratorCount,
-		"type", acc.AcceleratorType,
-		"gpuPartitionSize", acc.GpuPartitionSize,
-		"gpuSharingConfig", gpuSharingConfig,
-	)
+	return CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.accelerator", map[string]*llx.RawData{
+		"id":               llx.StringData(accId),
+		"count":            llx.IntData(acc.AcceleratorCount),
+		"type":             llx.StringData(acc.AcceleratorType),
+		"gpuPartitionSize": llx.StringData(acc.GpuPartitionSize),
+		"gpuSharingConfig": llx.ResourceData(gpuSharingConfig, "gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig"),
+	})
 }
 
-func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetNetwork() (interface{}, error) {
-	networkPath, err := g.NetworkPath()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkPath.Error != nil {
+		return nil, g.NetworkPath.Error
 	}
+	networkPath := g.NetworkPath.Data
 
 	// Format is projects/project-1/global/networks/net-1
 	params := strings.Split(networkPath, "/")
-	return g.MotorRuntime.CreateResource("gcp.project.computeService.network",
-		"name", params[len(params)-1],
-		"projectId", params[1],
-	)
-}
-
-func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetSubnetwork() (interface{}, error) {
-	subnetPath, err := g.SubnetworkPath()
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"name":      llx.StringData(params[len(params)-1]),
+		"projectId": llx.StringData(params[1]),
+	})
 	if err != nil {
 		return nil, err
 	}
+	return res.(*mqlGcpProjectComputeServiceNetwork), nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) subnetwork() (*mqlGcpProjectComputeServiceSubnetwork, error) {
+	if g.SubnetworkPath.Error != nil {
+		return nil, g.SubnetworkPath.Error
+	}
+	subnetPath := g.SubnetworkPath.Data
 
 	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
 	params := strings.Split(subnetPath, "/")
-	return g.MotorRuntime.CreateResource("gcp.project.computeService.subnetwork",
-		"name", params[len(params)-1],
-		"projectId", params[1],
-		"region", params[3],
-	)
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
+		"name":      llx.StringData(params[len(params)-1]),
+		"projectId": llx.StringData(params[1]),
+		"region":    llx.StringData(params[3]),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
 }

@@ -9,10 +9,13 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/dataproc/v1"
+	dataproc "google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/serviceusage/v1"
 )
@@ -47,26 +50,23 @@ type mqlGkeNodePoolTarget struct {
 }
 
 func (g *mqlGcpProjectDataprocService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.dataprocService", projectId), nil
 }
 
-func (g *mqlGcpProject) GetDataproc() (interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) dataproc() (*mqlGcpProjectDataprocService, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
 	ctx := context.Background()
-	client, err := provider.Client(dataproc.CloudPlatformScope)
+	client, err := conn.Client(dataproc.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -81,25 +81,26 @@ func (g *mqlGcpProject) GetDataproc() (interface{}, error) {
 		return nil, err
 	}
 	enabled := dataProcSvc.State == "ENABLED"
-	return g.MotorRuntime.CreateResource("gcp.project.dataprocService",
-		"projectId", projectId,
-		"enabled", enabled,
-	)
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"enabled":   llx.BoolData(enabled),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectDataprocService), nil
 }
 
-func (g *mqlGcpProjectDataprocService) GetRegions() ([]interface{}, error) {
+func (g *mqlGcpProjectDataprocService) regions() ([]interface{}, error) {
 	// no check whether DataProc service is enabled here, this uses a different service
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	client, err := provider.Client(dataproc.CloudPlatformScope)
+	client, err := conn.Client(dataproc.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -122,31 +123,28 @@ func (g *mqlGcpProjectDataprocService) GetRegions() ([]interface{}, error) {
 	return regionNames, nil
 }
 
-func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
-	enabled, err := g.Enabled()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
+	if g.Enabled.Error != nil {
+		return nil, g.Enabled.Error
 	}
+	enabled := g.Enabled.Data
 	if !enabled {
 		log.Warn().Msg("DataProc Cloud API is not enabled, not querying clusters")
 		return []interface{}{}, nil
 	}
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	regions := g.GetRegions()
+	if regions.Error != nil {
+		return nil, regions.Error
 	}
 
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
-	}
-
-	regions, err := g.Regions()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := provider.Client(dataproc.CloudPlatformScope)
+	client, err := conn.Client(dataproc.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -160,9 +158,9 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 
 	var wg sync.WaitGroup
 	var mqlClusters []interface{}
-	wg.Add(len(regions))
+	wg.Add(len(regions.Data))
 	mux := &sync.Mutex{}
-	for _, region := range regions {
+	for _, region := range regions.Data {
 		go func(projectId, regionName string) {
 			defer wg.Done()
 			clusters, err := dataprocSvc.Projects.Regions.Clusters.List(projectId, regionName).Do()
@@ -170,14 +168,14 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 				log.Error().Str("region", regionName).Err(err).Send()
 			} else {
 				for _, c := range clusters.Clusters {
-					var mqlConfig resources.ResourceType
+					var mqlConfig plugin.Resource
 					if c.Config != nil {
 						var mqlAutoscalingCfg map[string]interface{}
 						if c.Config.AutoscalingConfig != nil {
 							type mqlAutoscalingConfig struct {
 								PolicyUri string `json:"policyUri"`
 							}
-							mqlAutoscalingCfg, err = core.JsonToDict(mqlAutoscalingConfig{PolicyUri: c.Config.AutoscalingConfig.PolicyUri})
+							mqlAutoscalingCfg, err = convert.JsonToDict(mqlAutoscalingConfig{PolicyUri: c.Config.AutoscalingConfig.PolicyUri})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
@@ -201,7 +199,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								})
 							}
 
-							mqlMetricsCfg, err = core.JsonToDict(mqlMetricsConfig{Metrics: mqlMetricsConfigs})
+							mqlMetricsCfg, err = convert.JsonToDict(mqlMetricsConfig{Metrics: mqlMetricsConfigs})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
@@ -212,7 +210,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							type mqlEncryptionConfig struct {
 								GcePdKmsKeyName string `json:"gcePdKmsKeyName"`
 							}
-							mqlEncryptionCfg, err = core.JsonToDict(mqlEncryptionConfig{GcePdKmsKeyName: c.Config.EncryptionConfig.GcePdKmsKeyName})
+							mqlEncryptionCfg, err = convert.JsonToDict(mqlEncryptionConfig{GcePdKmsKeyName: c.Config.EncryptionConfig.GcePdKmsKeyName})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
@@ -224,7 +222,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								HttpPorts            map[string]string `json:"httpPorts"`
 								EnableHttpPortAccess bool              `json:"enableHttpPortAccess"`
 							}
-							mqlEndpointCfg, err = core.JsonToDict(mqlEndpointConfig{
+							mqlEndpointCfg, err = convert.JsonToDict(mqlEndpointConfig{
 								HttpPorts:            c.Config.EndpointConfig.HttpPorts,
 								EnableHttpPortAccess: c.Config.EndpointConfig.EnableHttpPortAccess,
 							})
@@ -233,14 +231,14 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							}
 						}
 
-						var mqlGceClusterCfg resources.ResourceType
+						var mqlGceClusterCfg plugin.Resource
 						if c.Config.GceClusterConfig != nil {
 							var mqlConfidentialInstanceCfg map[string]interface{}
 							if c.Config.GceClusterConfig.ConfidentialInstanceConfig != nil {
 								type mqlConfidentialInstanceConfig struct {
 									EnableConfidentialCompute bool `json:"enableConfidentialCompute"`
 								}
-								mqlConfidentialInstanceCfg, err = core.JsonToDict(mqlConfidentialInstanceConfig{
+								mqlConfidentialInstanceCfg, err = convert.JsonToDict(mqlConfidentialInstanceConfig{
 									EnableConfidentialCompute: c.Config.GceClusterConfig.ConfidentialInstanceConfig.EnableConfidentialCompute,
 								})
 								if err != nil {
@@ -253,7 +251,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								type mqlNodeGroupAffinityConfig struct {
 									Uri string `json:"uri"`
 								}
-								mqlNodeGroupAffinityCfg, err = core.JsonToDict(mqlNodeGroupAffinityConfig{
+								mqlNodeGroupAffinityCfg, err = convert.JsonToDict(mqlNodeGroupAffinityConfig{
 									Uri: c.Config.GceClusterConfig.NodeGroupAffinity.NodeGroupUri,
 								})
 								if err != nil {
@@ -261,69 +259,69 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								}
 							}
 
-							var mqlReservationAffinity resources.ResourceType
+							var mqlReservationAffinity plugin.Resource
 							if c.Config.GceClusterConfig.ReservationAffinity != nil {
-								mqlReservationAffinity, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity",
-									"id", fmt.Sprintf("%s/dataproc/%s/config/gceCluster/reservationAffinity", projectId, c.ClusterName),
-									"consumeReservationType", c.Config.GceClusterConfig.ReservationAffinity.ConsumeReservationType,
-									"key", c.Config.GceClusterConfig.ReservationAffinity.Key,
-									"values", core.StrSliceToInterface(c.Config.GceClusterConfig.ReservationAffinity.Values),
-								)
+								mqlReservationAffinity, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity", map[string]*llx.RawData{
+									"id":                     llx.StringData(fmt.Sprintf("%s/dataproc/%s/config/gceCluster/reservationAffinity", projectId, c.ClusterName)),
+									"consumeReservationType": llx.StringData(c.Config.GceClusterConfig.ReservationAffinity.ConsumeReservationType),
+									"key":                    llx.StringData(c.Config.GceClusterConfig.ReservationAffinity.Key),
+									"values":                 llx.ArrayData(convert.SliceAnyToInterface(c.Config.GceClusterConfig.ReservationAffinity.Values), types.String),
+								})
 								if err != nil {
 									log.Error().Err(err).Send()
 								}
 							}
 
-							var mqlShieldedCfg resources.ResourceType
+							var mqlShieldedCfg plugin.Resource
 							if c.Config.GceClusterConfig.ShieldedInstanceConfig != nil {
-								mqlShieldedCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig",
-									"id", fmt.Sprintf("%s/dataproc/%s/config/gceCluster/shieldedInstanceConfig", projectId, c.ClusterName),
-									"enableIntegrityMonitoring", c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableIntegrityMonitoring,
-									"enableSecureBoot", c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableSecureBoot,
-									"enableVtpm", c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableVtpm,
-								)
+								mqlShieldedCfg, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig", map[string]*llx.RawData{
+									"id":                        llx.StringData(fmt.Sprintf("%s/dataproc/%s/config/gceCluster/shieldedInstanceConfig", projectId, c.ClusterName)),
+									"enableIntegrityMonitoring": llx.BoolData(c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableIntegrityMonitoring),
+									"enableSecureBoot":          llx.BoolData(c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableSecureBoot),
+									"enableVtpm":                llx.BoolData(c.Config.GceClusterConfig.ShieldedInstanceConfig.EnableVtpm),
+								})
 								if err != nil {
 									log.Error().Err(err).Send()
 								}
 							}
 
-							mqlGceClusterCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.gceCluster",
-								"id", fmt.Sprintf("%s/dataproc/%s/config/gceCluster", projectId, c.ClusterName),
-								"projectId", projectId,
-								"confidentialInstance", mqlConfidentialInstanceCfg,
-								"internalIpOnly", c.Config.GceClusterConfig.InternalIpOnly,
-								"metadata", core.StrMapToInterface(c.Config.GceClusterConfig.Metadata),
-								"networkUri", c.Config.GceClusterConfig.NetworkUri,
-								"nodeGroupAffinity", mqlNodeGroupAffinityCfg,
-								"privateIpv6GoogleAccess", c.Config.GceClusterConfig.PrivateIpv6GoogleAccess,
-								"reservationAffinity", mqlReservationAffinity,
-								"serviceAccountEmail", c.Config.GceClusterConfig.ServiceAccount,
-								"serviceAccountScopes", core.StrSliceToInterface(c.Config.GceClusterConfig.ServiceAccountScopes),
-								"shieldedInstanceConfig", mqlShieldedCfg,
-								"subnetworkUri", c.Config.GceClusterConfig.SubnetworkUri,
-								"tags", core.StrSliceToInterface(c.Config.GceClusterConfig.Tags),
-								"zoneUri", c.Config.GceClusterConfig.ZoneUri,
-							)
+							mqlGceClusterCfg, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config.gceCluster", map[string]*llx.RawData{
+								"id":                      llx.StringData(fmt.Sprintf("%s/dataproc/%s/config/gceCluster", projectId, c.ClusterName)),
+								"projectId":               llx.StringData(projectId),
+								"confidentialInstance":    llx.DictData(mqlConfidentialInstanceCfg),
+								"internalIpOnly":          llx.BoolData(c.Config.GceClusterConfig.InternalIpOnly),
+								"metadata":                llx.MapData(convert.MapToInterfaceMap(c.Config.GceClusterConfig.Metadata), types.String),
+								"networkUri":              llx.StringData(c.Config.GceClusterConfig.NetworkUri),
+								"nodeGroupAffinity":       llx.DictData(mqlNodeGroupAffinityCfg),
+								"privateIpv6GoogleAccess": llx.StringData(c.Config.GceClusterConfig.PrivateIpv6GoogleAccess),
+								"reservationAffinity":     llx.ResourceData(mqlReservationAffinity, "gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity"),
+								"serviceAccountEmail":     llx.StringData(c.Config.GceClusterConfig.ServiceAccount),
+								"serviceAccountScopes":    llx.ArrayData(convert.SliceAnyToInterface(c.Config.GceClusterConfig.ServiceAccountScopes), types.String),
+								"shieldedInstanceConfig":  llx.ResourceData(mqlShieldedCfg, "gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig"),
+								"subnetworkUri":           llx.StringData(c.Config.GceClusterConfig.SubnetworkUri),
+								"tags":                    llx.ArrayData(convert.SliceAnyToInterface(c.Config.GceClusterConfig.Tags), types.String),
+								"zoneUri":                 llx.StringData(c.Config.GceClusterConfig.ZoneUri),
+							})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
 						}
 
-						var mqlGkeClusterCfg resources.ResourceType
+						var mqlGkeClusterCfg plugin.Resource
 						if c.Config.GkeClusterConfig != nil {
 							mqlNodePools := make([]mqlGkeNodePoolTarget, 0, len(c.Config.GkeClusterConfig.NodePoolTarget))
 							for _, npt := range c.Config.GkeClusterConfig.NodePoolTarget {
 								mqlNodePools = append(mqlNodePools, nodePoolTargetToMql(npt))
 							}
-							nodePoolsDict, err := core.JsonToDictSlice(mqlNodePools)
+							nodePoolsDict, err := convert.JsonToDictSlice(mqlNodePools)
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
-							mqlGkeClusterCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.gkeCluster",
-								"id", fmt.Sprintf("%s/dataproc/%s/config/gkeCluster", projectId, c.ClusterName),
-								"gkeClusterTarget", c.Config.GkeClusterConfig.GkeClusterTarget,
-								"nodePoolTarget", nodePoolsDict,
-							)
+							mqlGkeClusterCfg, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config.gkeCluster", map[string]*llx.RawData{
+								"id":               llx.StringData(fmt.Sprintf("%s/dataproc/%s/config/gkeCluster", projectId, c.ClusterName)),
+								"gkeClusterTarget": llx.StringData(c.Config.GkeClusterConfig.GkeClusterTarget),
+								"nodePoolTarget":   llx.ArrayData(nodePoolsDict, types.Dict),
+							})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
@@ -341,27 +339,27 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							})
 						}
 
-						dictInitActions, err := core.JsonToDictSlice(initActions)
+						dictInitActions, err := convert.JsonToDictSlice(initActions)
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
 
-						var mqlLifecycleCfg resources.ResourceType
+						var mqlLifecycleCfg plugin.Resource
 						if c.Config.LifecycleConfig != nil {
-							mqlLifecycleCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.lifecycle",
-								"id", fmt.Sprintf("%s/dataproc/%s/config/lifecycle", projectId, c.ClusterName),
-								"autoDeleteTime", c.Config.LifecycleConfig.AutoDeleteTime,
-								"autoDeleteTtl", c.Config.LifecycleConfig.AutoDeleteTtl,
-								"idleDeleteTtl", c.Config.LifecycleConfig.IdleDeleteTtl,
-								"idleStartTime", c.Config.LifecycleConfig.IdleStartTime,
-							)
+							mqlLifecycleCfg, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config.lifecycle", map[string]*llx.RawData{
+								"id":             llx.StringData(fmt.Sprintf("%s/dataproc/%s/config/lifecycle", projectId, c.ClusterName)),
+								"autoDeleteTime": llx.StringData(c.Config.LifecycleConfig.AutoDeleteTime),
+								"autoDeleteTtl":  llx.StringData(c.Config.LifecycleConfig.AutoDeleteTtl),
+								"idleDeleteTtl":  llx.StringData(c.Config.LifecycleConfig.IdleDeleteTtl),
+								"idleStartTime":  llx.StringData(c.Config.LifecycleConfig.IdleStartTime),
+							})
 							if err != nil {
 								log.Error().Err(err).Send()
 							}
 						}
 
 						mqlMasterCfg, err := instaceGroupConfigToMql(
-							g.MotorRuntime, c.Config.MasterConfig, fmt.Sprintf("%s/dataproc/%s/config/master", projectId, c.ClusterName))
+							g.MqlRuntime, c.Config.MasterConfig, fmt.Sprintf("%s/dataproc/%s/config/master", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
@@ -371,7 +369,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 						}
 						var mqlMetastoreCfg map[string]interface{}
 						if c.Config.MetastoreConfig != nil {
-							mqlMetastoreCfg, err = core.JsonToDict(mqlMetastoreConfig{
+							mqlMetastoreCfg, err = convert.JsonToDict(mqlMetastoreConfig{
 								DataprocMetastoreService: c.Config.MetastoreConfig.DataprocMetastoreService,
 							})
 							if err != nil {
@@ -380,7 +378,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 						}
 
 						mqlSecondaryWorkerCfg, err := instaceGroupConfigToMql(
-							g.MotorRuntime, c.Config.SecondaryWorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/secondaryWorker", projectId, c.ClusterName))
+							g.MqlRuntime, c.Config.SecondaryWorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/secondaryWorker", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
@@ -435,7 +433,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 									TruststorePasswordUri:            c.Config.SecurityConfig.KerberosConfig.TruststorePasswordUri,
 									TruststoreUri:                    c.Config.SecurityConfig.KerberosConfig.TruststoreUri,
 								}
-								mqlSecurityCfg, err = core.JsonToDict(cfg)
+								mqlSecurityCfg, err = convert.JsonToDict(cfg)
 								if err != nil {
 									log.Error().Err(err).Send()
 								}
@@ -448,7 +446,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 						}
 						var mqlSoftwareCfg map[string]interface{}
 						if c.Config.SoftwareConfig != nil {
-							mqlSoftwareCfg, err = core.JsonToDict(mqlSoftwareConfig{
+							mqlSoftwareCfg, err = convert.JsonToDict(mqlSoftwareConfig{
 								ImageVersion:       c.Config.SoftwareConfig.ImageVersion,
 								OptionalComponents: c.Config.SoftwareConfig.OptionalComponents,
 							})
@@ -458,31 +456,31 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 						}
 
 						mqlWorkerCfg, err := instaceGroupConfigToMql(
-							g.MotorRuntime, c.Config.WorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/worker", projectId, c.ClusterName))
+							g.MqlRuntime, c.Config.WorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/worker", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
 
-						mqlConfig, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config",
-							"projectId", c.ProjectId,
-							"parentResourcePath", fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName),
-							"autoscaling", mqlAutoscalingCfg,
-							"configBucket", c.Config.ConfigBucket,
-							"metrics", mqlMetricsCfg,
-							"encryption", mqlEncryptionCfg,
-							"endpoint", mqlEndpointCfg,
-							"gceCluster", mqlGceClusterCfg,
-							"gkeCluster", mqlGkeClusterCfg,
-							"initializationActions", dictInitActions,
-							"lifecycle", mqlLifecycleCfg,
-							"master", mqlMasterCfg,
-							"metastore", mqlMetastoreCfg,
-							"secondaryWorker", mqlSecondaryWorkerCfg,
-							"security", mqlSecurityCfg,
-							"software", mqlSoftwareCfg,
-							"tempBucket", c.Config.TempBucket,
-							"worker", mqlWorkerCfg,
-						)
+						mqlConfig, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config", map[string]*llx.RawData{
+							"projectId":             llx.StringData(c.ProjectId),
+							"parentResourcePath":    llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
+							"autoscaling":           llx.DictData(mqlAutoscalingCfg),
+							"configBucket":          llx.StringData(c.Config.ConfigBucket),
+							"metrics":               llx.DictData(mqlMetricsCfg),
+							"encryption":            llx.DictData(mqlEncryptionCfg),
+							"endpoint":              llx.DictData(mqlEndpointCfg),
+							"gceCluster":            llx.ResourceData(mqlGceClusterCfg, "gcp.project.dataprocService.cluster.config.gceCluster"),
+							"gkeCluster":            llx.ResourceData(mqlGkeClusterCfg, "gcp.project.dataprocService.cluster.config.gkeCluster"),
+							"initializationActions": llx.ArrayData(dictInitActions, types.Dict),
+							"lifecycle":             llx.ResourceData(mqlLifecycleCfg, "gcp.project.dataprocService.cluster.config.lifecycle"),
+							"master":                llx.ResourceData(mqlMasterCfg, "gcp.project.dataprocService.cluster.config.instance"),
+							"metastore":             llx.DictData(mqlMetastoreCfg),
+							"secondaryWorker":       llx.ResourceData(mqlSecondaryWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
+							"security":              llx.DictData(mqlSecurityCfg),
+							"software":              llx.DictData(mqlSoftwareCfg),
+							"tempBucket":            llx.StringData(c.Config.TempBucket),
+							"worker":                llx.ResourceData(mqlWorkerCfg, "gcp.project.dataprocService.cluster.config.instance"),
+						})
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
@@ -494,21 +492,21 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							HdfsMetrics map[string]string `json:"hdfsMetrics"`
 							YarnMetrics map[string]string `json:"yarnMetrics"`
 						}
-						mqlMetrics, err = core.JsonToDict(mqlClusterMetrics{HdfsMetrics: c.Metrics.HdfsMetrics, YarnMetrics: c.Metrics.YarnMetrics})
+						mqlMetrics, err = convert.JsonToDict(mqlClusterMetrics{HdfsMetrics: c.Metrics.HdfsMetrics, YarnMetrics: c.Metrics.YarnMetrics})
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
 					}
 
-					var mqlStatus resources.ResourceType
+					var mqlStatus plugin.Resource
 					if c.Status != nil {
-						mqlStatus, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.status",
-							"id", fmt.Sprintf("%s/dataproc/%s/status", projectId, c.ClusterName),
-							"detail", c.Status.Detail,
-							"state", c.Status.State,
-							"started", parseTime(c.Status.StateStartTime),
-							"substate", c.Status.Substate,
-						)
+						mqlStatus, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.status", map[string]*llx.RawData{
+							"id":       llx.StringData(fmt.Sprintf("%s/dataproc/%s/status", projectId, c.ClusterName)),
+							"detail":   llx.StringData(c.Status.Detail),
+							"state":    llx.StringData(c.Status.State),
+							"started":  llx.TimeDataPtr(parseTime(c.Status.StateStartTime)),
+							"substate": llx.StringData(c.Status.Substate),
+						})
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
@@ -516,20 +514,20 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 
 					mqlStatusHistory := make([]interface{}, 0, len(c.StatusHistory))
 					for i, s := range c.StatusHistory {
-						mqlStatus, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.status",
-							"id", fmt.Sprintf("%s/dataproc/%s/status/%d", projectId, c.ClusterName, i),
-							"detail", s.Detail,
-							"state", s.State,
-							"started", parseTime(s.StateStartTime),
-							"substate", s.Substate,
-						)
+						mqlStatus, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.status", map[string]*llx.RawData{
+							"id":       llx.StringData(fmt.Sprintf("%s/dataproc/%s/status/%d", projectId, c.ClusterName, i)),
+							"detail":   llx.StringData(s.Detail),
+							"state":    llx.StringData(s.State),
+							"started":  llx.TimeDataPtr(parseTime(s.StateStartTime)),
+							"substate": llx.StringData(s.Substate),
+						})
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
 						mqlStatusHistory = append(mqlStatusHistory, mqlStatus)
 					}
 
-					var mqlVirtualClusterCfg resources.ResourceType
+					var mqlVirtualClusterCfg plugin.Resource
 					if c.VirtualClusterConfig != nil {
 						type mqlMetastoreConfig struct {
 							DataprocMetastoreService string `json:"dataprocMetastoreService"`
@@ -542,7 +540,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							SparkHistoryServerConfig mqlSparkHistoryServerConfig `json:"sparkHistoryServerConfig"`
 						}
 
-						mqlAuxServices, err := core.JsonToDict(mqlAuxiliaryServices{
+						mqlAuxServices, err := convert.JsonToDict(mqlAuxiliaryServices{
 							MetastoreConfig:          mqlMetastoreConfig{DataprocMetastoreService: c.VirtualClusterConfig.AuxiliaryServicesConfig.MetastoreConfig.DataprocMetastoreService},
 							SparkHistoryServerConfig: mqlSparkHistoryServerConfig{DataprocCluster: c.VirtualClusterConfig.AuxiliaryServicesConfig.SparkHistoryServerConfig.DataprocCluster},
 						})
@@ -574,7 +572,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							npTargets = append(npTargets, nodePoolTargetToMql(npt))
 						}
 
-						mqlK8sClusterCfg, err := core.JsonToDict(mqlKubernetesClusterConfig{
+						mqlK8sClusterCfg, err := convert.JsonToDict(mqlKubernetesClusterConfig{
 							GkeClusterConfig: mqlGkeClusterConfig{
 								TargetCluster: c.VirtualClusterConfig.KubernetesClusterConfig.GkeClusterConfig.GkeClusterTarget,
 								NamespacedGkeDeploymentTarget: mqlNamespacedGkeDeploymentTarget{
@@ -588,28 +586,28 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 							log.Error().Err(err).Send()
 						}
 
-						mqlVirtualClusterCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.virtualClusterConfig",
-							"parentResourcePath", fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName),
-							"auxiliaryServices", mqlAuxServices,
-							"kubernetesCluster", mqlK8sClusterCfg,
-							"stagingBucket", c.VirtualClusterConfig.StagingBucket,
-						)
+						mqlVirtualClusterCfg, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.virtualClusterConfig", map[string]*llx.RawData{
+							"parentResourcePath": llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
+							"auxiliaryServices":  llx.DictData(mqlAuxServices),
+							"kubernetesCluster":  llx.DictData(mqlK8sClusterCfg),
+							"stagingBucket":      llx.StringData(c.VirtualClusterConfig.StagingBucket),
+						})
 						if err != nil {
 							log.Error().Err(err).Send()
 						}
 					}
 
-					mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster",
-						"projectId", projectId,
-						"name", c.ClusterName,
-						"uuid", c.ClusterUuid,
-						"config", mqlConfig,
-						"labels", core.StrMapToInterface(c.Labels),
-						"metrics", mqlMetrics,
-						"status", mqlStatus,
-						"statusHistory", mqlStatusHistory,
-						"virtualClusterConfig", mqlVirtualClusterCfg,
-					)
+					mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster", map[string]*llx.RawData{
+						"projectId":            llx.StringData(projectId),
+						"name":                 llx.StringData(c.ClusterName),
+						"uuid":                 llx.StringData(c.ClusterUuid),
+						"config":               llx.ResourceData(mqlConfig, "gcp.project.dataprocService.cluster.config"),
+						"labels":               llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
+						"metrics":              llx.DictData(mqlMetrics),
+						"status":               llx.ResourceData(mqlStatus, "gcp.project.dataprocService.cluster.status"),
+						"statusHistory":        llx.ArrayData(mqlStatusHistory, types.Resource("gcp.project.dataprocService.cluster.status")),
+						"virtualClusterConfig": llx.ResourceData(mqlVirtualClusterCfg, "gcp.project.dataprocService.cluster.virtualClusterConfig"),
+					})
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
@@ -624,81 +622,86 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 	return mqlClusters, nil
 }
 
-func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetServiceAccount() (interface{}, error) {
-	projectId, err := g.ProjectId()
+func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	email, err := g.ServiceAccountEmail()
-	if err != nil {
-		return nil, err
-	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
-		"projectId", projectId,
-		"email", email,
-	)
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
 func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
-	name, err := g.Name()
-	if err != nil {
-		return "", err
+	projectId := g.ProjectId.Data
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
+	name := g.Name.Data
 	return fmt.Sprintf("%s/dataproc/%s", projectId, name), nil
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {
-	parentResource, err := g.ParentResourcePath()
-	if err != nil {
-		return "", err
+
+	if g.ParentResourcePath.Error != nil {
+		return "", g.ParentResourcePath.Error
 	}
+	parentResource := g.ParentResourcePath.Data
 	return fmt.Sprintf("%s/config", parentResource), nil
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterStatus) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) id() (string, error) {
-	parentResource, err := g.ParentResourcePath()
-	if err != nil {
-		return "", err
+	if g.ParentResourcePath.Error != nil {
+		return "", g.ParentResourcePath.Error
 	}
+	parentResource := g.ParentResourcePath.Data
 	return fmt.Sprintf("%s/virtualClusterConfig", parentResource), nil
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigLifecycle) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigInstance) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func nodePoolTargetToMql(npt *dataproc.GkeNodePoolTarget) mqlGkeNodePoolTarget {
@@ -733,7 +736,7 @@ func nodePoolTargetToMql(npt *dataproc.GkeNodePoolTarget) mqlGkeNodePoolTarget {
 	}
 }
 
-func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceGroupConfig, id string) (resources.ResourceType, error) {
+func instaceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGroupConfig, id string) (plugin.Resource, error) {
 	if igc == nil {
 		return nil, nil
 	}
@@ -748,20 +751,20 @@ func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceG
 			AcceleratorTypeUri: acc.AcceleratorTypeUri,
 		})
 	}
-	mqlAccs, err := core.JsonToDictSlice(accs)
+	mqlAccs, err := convert.JsonToDictSlice(accs)
 	if err != nil {
 		return nil, err
 	}
 
-	var mqlDiskCfg resources.ResourceType
+	var mqlDiskCfg plugin.Resource
 	if igc.DiskConfig != nil {
-		mqlDiskCfg, err = runtime.CreateResource("gcp.project.dataprocService.cluster.config.instance.diskConfig",
-			"id", fmt.Sprintf("%s/diskConfig", id),
-			"bootDiskSizeGb", igc.DiskConfig.BootDiskSizeGb,
-			"bootDiskType", igc.DiskConfig.BootDiskType,
-			"localSsdInterface", igc.DiskConfig.LocalSsdInterface,
-			"numLocalSsds", igc.DiskConfig.NumLocalSsds,
-		)
+		mqlDiskCfg, err = CreateResource(runtime, "gcp.project.dataprocService.cluster.config.instance.diskConfig", map[string]*llx.RawData{
+			"id":                llx.StringData(fmt.Sprintf("%s/diskConfig", id)),
+			"bootDiskSizeGb":    llx.IntData(igc.DiskConfig.BootDiskSizeGb),
+			"bootDiskType":      llx.StringData(igc.DiskConfig.BootDiskType),
+			"localSsdInterface": llx.StringData(igc.DiskConfig.LocalSsdInterface),
+			"numLocalSsds":      llx.IntData(igc.DiskConfig.NumLocalSsds),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -782,7 +785,7 @@ func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceG
 			PublicKey:      ref.PublicKey,
 		})
 	}
-	mqlInstanceRefs, err := core.JsonToDictSlice(instanceReferences)
+	mqlInstanceRefs, err := convert.JsonToDictSlice(instanceReferences)
 	if err != nil {
 		return nil, err
 	}
@@ -793,7 +796,7 @@ func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceG
 	}
 	var mqlManagerGroupCfg map[string]interface{}
 	if igc.ManagedGroupConfig != nil {
-		mqlManagerGroupCfg, err = core.JsonToDict(mqlManagedGroupConfig{
+		mqlManagerGroupCfg, err = convert.JsonToDict(mqlManagedGroupConfig{
 			InstanceGroupManagerName: igc.ManagedGroupConfig.InstanceGroupManagerName,
 			InstanceTemplateName:     igc.ManagedGroupConfig.InstanceTemplateName,
 		})
@@ -802,18 +805,18 @@ func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceG
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.dataprocService.cluster.config.instance",
-		"id", id,
-		"accelerators", mqlAccs,
-		"diskConfig", mqlDiskCfg,
-		"imageUri", igc.ImageUri,
-		"instanceNames", core.StrSliceToInterface(igc.InstanceNames),
-		"instanceReferences", mqlInstanceRefs,
-		"isPreemptible", igc.IsPreemptible,
-		"machineTypeUri", igc.MachineTypeUri,
-		"managedGroupConfig", mqlManagerGroupCfg,
-		"minCpuPlatform", igc.MinCpuPlatform,
-		"numInstances", igc.NumInstances,
-		"preemptibility", igc.Preemptibility,
-	)
+	return CreateResource(runtime, "gcp.project.dataprocService.cluster.config.instance", map[string]*llx.RawData{
+		"id":                 llx.StringData(id),
+		"accelerators":       llx.ArrayData(mqlAccs, types.Dict),
+		"diskConfig":         llx.ResourceData(mqlDiskCfg, "gcp.project.dataprocService.cluster.config.instance.diskConfig"),
+		"imageUri":           llx.StringData(igc.ImageUri),
+		"instanceNames":      llx.ArrayData(convert.SliceAnyToInterface(igc.InstanceNames), types.String),
+		"instanceReferences": llx.ArrayData(mqlInstanceRefs, types.Dict),
+		"isPreemptible":      llx.BoolData(igc.IsPreemptible),
+		"machineTypeUri":     llx.StringData(igc.MachineTypeUri),
+		"managedGroupConfig": llx.DictData(mqlManagerGroupCfg),
+		"minCpuPlatform":     llx.StringData(igc.MinCpuPlatform),
+		"numInstances":       llx.IntData(igc.NumInstances),
+		"preemptibility":     llx.StringData(igc.Preemptibility),
+	})
 }

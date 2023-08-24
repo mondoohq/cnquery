@@ -6,6 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"strings"
 	"sync"
 
@@ -13,50 +17,47 @@ import (
 
 	"google.golang.org/api/compute/v1"
 
-	"go.mondoo.com/cnquery/resources"
-
 	recommender "cloud.google.com/go/recommender/apiv1"
 	"cloud.google.com/go/recommender/apiv1/recommenderpb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-func newMqlRecommendation(runtime *resources.Runtime, item *recommenderpb.Recommendation) (GcpRecommendation, error) {
+func newMqlRecommendation(runtime *plugin.Runtime, item *recommenderpb.Recommendation) (*mqlGcpRecommendation, error) {
 	category := ""
 	if item.PrimaryImpact != nil {
 		category = item.PrimaryImpact.Category.String()
 	}
 
-	primaryImpact, _ := core.JsonToDict(item.PrimaryImpact)
-	additionalImpact, _ := core.JsonToDictSlice(item.AdditionalImpact)
-	content, _ := core.JsonToDict(item.Content)
+	primaryImpact, _ := convert.JsonToDict(item.PrimaryImpact)
+	additionalImpact, _ := convert.JsonToDictSlice(item.AdditionalImpact)
+	content, _ := convert.JsonToDict(item.Content)
 	lastRefreshTime := item.LastRefreshTime.AsTime()
 	priority := item.Priority.String()
-	state, _ := core.JsonToDict(item.StateInfo)
+	state, _ := convert.JsonToDict(item.StateInfo)
 
 	// /projects/{projectid}/locations/{zone}/recommenders/{recommender}/recommendations/{id}
 	values := strings.Split(item.Name, "/")
 
-	obj, err := runtime.CreateResource("gcp.recommendation",
-		"id", values[7],
-		"projectId", values[1],
-		"zoneName", values[3],
-		"name", item.Description,
-		"recommender", values[5],
-		"primaryImpact", primaryImpact,
-		"additionalImpact", additionalImpact,
-		"content", content,
-		"category", category,
-		"priority", priority,
-		"lastRefreshTime", &lastRefreshTime,
-		"state", state,
-	)
+	res, err := CreateResource(runtime, "gcp.recommendation", map[string]*llx.RawData{
+		"id":               llx.StringData(values[7]),
+		"projectId":        llx.StringData(values[1]),
+		"zoneName":         llx.StringData(values[3]),
+		"name":             llx.StringData(item.Description),
+		"recommender":      llx.StringData(values[5]),
+		"primaryImpact":    llx.DictData(primaryImpact),
+		"additionalImpact": llx.DictData(additionalImpact),
+		"content":          llx.DictData(content),
+		"category":         llx.StringData(category),
+		"priority":         llx.StringData(priority),
+		"lastRefreshTime":  llx.TimeData(lastRefreshTime),
+		"state":            llx.DictData(state),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return obj.(GcpRecommendation), nil
+	return res.(*mqlGcpRecommendation), nil
 }
 
 // https://cloud.google.com/recommender/docs/recommenders#recommenders
@@ -85,18 +86,16 @@ var recommenders = []string{
 }
 
 // GetRecommendations returns recommendations from Google Cloud
-func (g *mqlGcpProject) GetRecommendations() ([]interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) recommendations() ([]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +119,7 @@ func (g *mqlGcpProject) GetRecommendations() ([]interface{}, error) {
 	}
 
 	// gather all recommendations
-	credentials, err := provider.Credentials(recommender.DefaultAuthScopes()...)
+	credentials, err := conn.Credentials(recommender.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +157,7 @@ func (g *mqlGcpProject) GetRecommendations() ([]interface{}, error) {
 						break
 					}
 
-					mqlRecommendation, err := newMqlRecommendation(g.MotorRuntime, item)
+					mqlRecommendation, err := newMqlRecommendation(g.MqlRuntime, item)
 					if err != nil {
 						log.Error().Str("parent", parent).Err(err).Msg("could not create mql recommendation")
 						break
@@ -176,10 +175,9 @@ func (g *mqlGcpProject) GetRecommendations() ([]interface{}, error) {
 }
 
 func (g *mqlGcpRecommendation) id() (string, error) {
-	name, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
 
-	return "gcp.recommendation/" + name, nil
+	return "gcp.recommendation/" + g.Id.Data, nil
 }

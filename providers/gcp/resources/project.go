@@ -7,11 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"strconv"
 	"strings"
+	"time"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -19,32 +23,21 @@ import (
 )
 
 func (g *mqlGcpProjects) id() (string, error) {
-	id, err := g.ParentId()
-	if err != nil {
-		return "", err
+	if g.ParentId.Error != nil {
+		return "", g.ParentId.Error
 	}
+	id := g.ParentId.Data
 	return fmt.Sprintf("gcp.projects/%s", id), nil
 }
 
-func (g *mqlGcpProject) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("gcp.project/%s", id), nil
-}
-
-func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject, error) {
-	if len(*args) > 2 {
+func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -55,84 +48,83 @@ func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject,
 		return nil, nil, err
 	}
 
-	projectId := fmt.Sprintf("projects/%s", provider.ResourceID())
+	projectId := fmt.Sprintf("projects/%s", conn.ResourceID())
 	project, err := svc.Projects.Get(projectId).Do()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	(*args)["id"] = project.ProjectId
-	(*args)["number"] = strings.TrimPrefix(project.Name, "projects/")[0:10]
-	(*args)["name"] = project.DisplayName
-	(*args)["parentId"] = project.Parent
-	(*args)["state"] = project.State
-	(*args)["lifecycleState"] = project.State
-	(*args)["createTime"] = parseTime(project.CreateTime)
-	(*args)["labels"] = core.StrMapToInterface(project.Labels)
+	args["id"] = llx.StringData(project.ProjectId)
+	args["number"] = llx.StringData(strings.TrimPrefix(project.Name, "projects/")[0:10])
+	args["name"] = llx.StringData(project.DisplayName)
+	args["parentId"] = llx.StringData(project.Parent)
+	args["state"] = llx.StringData(project.State)
+	args["lifecycleState"] = llx.StringData(project.State)
+	args["createTime"] = llx.TimeDataPtr(parseTime(project.CreateTime))
+	args["labels"] = llx.MapData(convert.MapToInterfaceMap(project.Labels), types.String)
 	// TODO: add organization gcp.organization
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetId() (string, error) {
+func (g *mqlGcpProject) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	id := g.Id.Data
+	return fmt.Sprintf("gcp.project/%s", id), nil
+}
+
+func (g *mqlGcpProject) name() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetName() (string, error) {
+func (g *mqlGcpProject) parentId() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetParentId() (string, error) {
+func (g *mqlGcpProject) number() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetNumber() (string, error) {
+func (g *mqlGcpProject) state() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetState() (string, error) {
+func (g *mqlGcpProject) lifecycleState() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetLifecycleState() (string, error) {
-	// placeholder to convince MQL that this is an optional field
-	// should never be called since the data is initialized in init
-	return "", errors.New("not implemented")
-}
-
-func (g *mqlGcpProject) GetCreateTime() (string, error) {
-	// placeholder to convince MQL that this is an optional field
-	// should never be called since the data is initialized in init
-	return "", errors.New("not implemented")
-}
-
-func (g *mqlGcpProject) GetLabels() (map[string]interface{}, error) {
+func (g *mqlGcpProject) createTime() (*time.Time, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) labels() (map[string]interface{}, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return nil, errors.New("not implemented")
+}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProject) iamPolicy() ([]interface{}, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +144,11 @@ func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", projectId+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
+		mqlServiceaccount, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(projectId + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -166,18 +158,16 @@ func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) commonInstanceMetadata() (map[string]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -197,24 +187,26 @@ func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, err
 	metadata := make(map[string]string)
 	if p.CommonInstanceMetadata != nil {
 		for _, item := range p.CommonInstanceMetadata.Items {
-			metadata[item.Key] = core.ToString(item.Value)
+			value := ""
+			if item.Value != nil {
+				value = *item.Value
+			}
+			metadata[item.Key] = value
 		}
 	}
-	return core.StrMapToInterface(metadata), nil
+	return convert.MapToInterfaceMap(metadata), nil
 }
 
-func (g *mqlGcpProjects) GetChildren() ([]interface{}, error) {
-	parentId, err := g.ParentId()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjects) children() ([]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.ParentId.Error != nil {
+		return nil, g.ParentId.Error
 	}
+	parentId := g.ParentId.Data
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +224,7 @@ func (g *mqlGcpProjects) GetChildren() ([]interface{}, error) {
 
 	mqlProjects := make([]interface{}, 0, len(projects.Projects))
 	for _, p := range projects.Projects {
-		mqlP, err := projectToMql(g.MotorRuntime, p)
+		mqlP, err := projectToMql(g.MqlRuntime, p)
 		if err != nil {
 			return nil, err
 		}
@@ -241,37 +233,37 @@ func (g *mqlGcpProjects) GetChildren() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
-func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
-	parentId, err := g.ParentId()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjects) list() ([]interface{}, error) {
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.folders", "parentId", parentId)
+	if g.ParentId.Error != nil {
+		return nil, g.ParentId.Error
+	}
+	parentId := g.ParentId.Data
+
+	obj, err := CreateResource(g.MqlRuntime, "gcp.folders", map[string]*llx.RawData{
+		"parentId": llx.StringData(parentId),
+	})
 	if err != nil {
 		return nil, err
 	}
-	foldersSvc := obj.(GcpFolders)
-	folders, err := foldersSvc.List()
-	if err != nil {
-		return nil, err
+	foldersSvc := obj.(*mqlGcpFolders)
+	folders := foldersSvc.GetList()
+	if folders.Error != nil {
+		return nil, folders.Error
 	}
 
 	foldersMap := map[string]struct{}{parentId: {}}
-	for _, f := range folders {
-		id, err := f.(GcpFolder).Id()
-		if err != nil {
-			return nil, err
+	for _, f := range folders.Data {
+		id := f.(*mqlGcpFolder).GetId()
+		if id.Error != nil {
+			return nil, id.Error
 		}
-		foldersMap[id] = struct{}{}
+		foldersMap[id.Data] = struct{}{}
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +281,7 @@ func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
 	mqlProjects := make([]interface{}, 0, len(projects.Projects))
 	for _, p := range projects.Projects {
 		if _, ok := foldersMap[p.Parent]; ok {
-			mqlP, err := projectToMql(g.MotorRuntime, p)
+			mqlP, err := projectToMql(g.MqlRuntime, p)
 			if err != nil {
 				return nil, err
 			}
@@ -299,14 +291,18 @@ func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
-func projectToMql(runtime *resources.Runtime, p *cloudresourcemanager.Project) (interface{}, error) {
-	return runtime.CreateResource("gcp.project",
-		"id", p.ProjectId,
-		"number", strings.TrimPrefix(p.Name, "projects/")[0:10],
-		"name", p.DisplayName,
-		"parentId", p.Parent,
-		"state", p.State,
-		"createTime", parseTime(p.CreateTime),
-		"labels", core.StrMapToInterface(p.Labels),
-	)
+func projectToMql(runtime *plugin.Runtime, p *cloudresourcemanager.Project) (*mqlGcpProject, error) {
+	res, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id":         llx.StringData(p.ProjectId),
+		"number":     llx.StringData(strings.TrimPrefix(p.Name, "projects/")[0:10]),
+		"name":       llx.StringData(p.DisplayName),
+		"parentId":   llx.StringData(p.Parent),
+		"state":      llx.StringData(p.State),
+		"createTime": llx.TimeDataPtr(parseTime(p.CreateTime)),
+		"labels":     llx.MapData(convert.MapToInterfaceMap(p.Labels), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProject), nil
 }

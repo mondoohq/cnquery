@@ -6,8 +6,9 @@ package resources
 import (
 	"context"
 	"fmt"
-
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -15,32 +16,29 @@ import (
 )
 
 func (g *mqlGcpFolders) id() (string, error) {
-	id, err := g.ParentId()
-	if err != nil {
-		return "", err
+	if g.ParentId.Error != nil {
+		return "", g.ParentId.Error
 	}
+	id := g.ParentId.Data
 	return fmt.Sprintf("gcp.folders/%s", id), nil
 }
 
 func (g *mqlGcpFolder) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return fmt.Sprintf("gcp.folder/%s", id), nil
 }
 
-func (g *mqlGcpFolder) init(args *resources.Args) (*resources.Args, GcpFolder, error) {
-	if len(*args) > 2 {
+func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -51,36 +49,33 @@ func (g *mqlGcpFolder) init(args *resources.Args) (*resources.Args, GcpFolder, e
 		return nil, nil, err
 	}
 
-	folderId := provider.ResourceID()
-	if (*args)["id"] != "" {
-		folderId = fmt.Sprintf("folders/%s", (*args)["id"].(string))
+	folderId := conn.ResourceID()
+	if args["id"] != nil {
+		folderId = fmt.Sprintf("folders/%s", args["id"].Value.(string))
 	}
 	folder, err := svc.Folders.Get(folderId).Do()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	(*args)["id"] = folder.Name
-	(*args)["name"] = folder.DisplayName
-	(*args)["created"] = parseTime(folder.CreateTime)
-	(*args)["updated"] = parseTime(folder.CreateTime)
-	(*args)["parentId"] = folder.Parent
-	(*args)["state"] = folder.State
+	args["id"] = llx.StringData(folder.Name)
+	args["name"] = llx.StringData(folder.DisplayName)
+	args["created"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
+	args["updated"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
+	args["parentId"] = llx.StringData(folder.Parent)
+	args["state"] = llx.StringData(folder.State)
 	return args, nil, nil
 }
 
-func (g *mqlGcpFolders) GetChildren() ([]interface{}, error) {
-	parentId, err := g.ParentId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpFolders) children() ([]interface{}, error) {
+	if g.ParentId.Error != nil {
+		return nil, g.ParentId.Error
 	}
+	parentId := g.ParentId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +93,7 @@ func (g *mqlGcpFolders) GetChildren() ([]interface{}, error) {
 
 	mqlFolders := make([]interface{}, 0, len(folders.Folders))
 	for _, f := range folders.Folders {
-		mqlF, err := folderToMql(g.MotorRuntime, f)
+		mqlF, err := folderToMql(g.MqlRuntime, f)
 		if err != nil {
 			return nil, err
 		}
@@ -107,18 +102,15 @@ func (g *mqlGcpFolders) GetChildren() ([]interface{}, error) {
 	return mqlFolders, nil
 }
 
-func (g *mqlGcpFolders) GetList() ([]interface{}, error) {
-	parentId, err := g.ParentId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpFolders) list() ([]interface{}, error) {
+	if g.ParentId.Error != nil {
+		return nil, g.ParentId.Error
 	}
+	parentId := g.ParentId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +129,7 @@ func (g *mqlGcpFolders) GetList() ([]interface{}, error) {
 	filteredFolders := getChildren(folders.Folders, parentId)
 	mqlFolders := make([]interface{}, 0, len(filteredFolders))
 	for _, f := range filteredFolders {
-		mqlF, err := folderToMql(g.MotorRuntime, f)
+		mqlF, err := folderToMql(g.MqlRuntime, f)
 		if err != nil {
 			return nil, err
 		}
@@ -157,29 +149,41 @@ func getChildren(fs []*cloudresourcemanager.Folder, root string) []*cloudresourc
 	return children
 }
 
-func (g *mqlGcpFolder) GetFolders() (interface{}, error) {
-	folderId, err := g.Id()
+func (g *mqlGcpFolder) folders() (*mqlGcpFolders, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	folderId := g.Id.Data
+	res, err := CreateResource(g.MqlRuntime, "gcp.folders", map[string]*llx.RawData{
+		"parentId": llx.StringData(folderId),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return g.MotorRuntime.CreateResource("gcp.folders", "parentId", folderId)
+	return res.(*mqlGcpFolders), nil
 }
 
-func (g *mqlGcpFolder) GetProjects() (interface{}, error) {
-	folderId, err := g.Id()
+func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	folderId := g.Id.Data
+	res, err := CreateResource(g.MqlRuntime, "gcp.projects", map[string]*llx.RawData{
+		"parentId": llx.StringData(folderId),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return g.MotorRuntime.CreateResource("gcp.projects", "parentId", folderId)
+	return res.(*mqlGcpProjects), nil
 }
 
-func folderToMql(runtime *resources.Runtime, f *cloudresourcemanager.Folder) (interface{}, error) {
-	return runtime.CreateResource("gcp.folder",
-		"id", f.Name,
-		"name", f.DisplayName,
-		"created", parseTime(f.CreateTime),
-		"updated", parseTime(f.UpdateTime),
-		"parentId", f.Parent,
-		"state", f.State,
-	)
+func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (interface{}, error) {
+	return CreateResource(runtime, "gcp.folder", map[string]*llx.RawData{
+		"id":       llx.StringData(f.Name),
+		"name":     llx.StringData(f.DisplayName),
+		"created":  llx.TimeDataPtr(parseTime(f.CreateTime)),
+		"updated":  llx.TimeDataPtr(parseTime(f.UpdateTime)),
+		"parentId": llx.StringData(f.Parent),
+		"state":    llx.StringData(f.State),
+	})
 }

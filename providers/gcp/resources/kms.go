@@ -6,6 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"strconv"
 	"sync"
 	"time"
@@ -14,8 +18,6 @@ import (
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
@@ -23,88 +25,88 @@ import (
 )
 
 func (g *mqlGcpProjectKmsService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.kmsService", projectId), nil
 }
 
-func (g *mqlGcpProjectKmsService) init(args *resources.Args) (*resources.Args, GcpProjectKmsService, error) {
-	if len(*args) > 0 {
+func initGcpProjectKmsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetKms() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) kms() (*mqlGcpProjectKmsService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.kmsService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectKmsService), nil
 }
 
 func (g *mqlGcpProjectKmsServiceKeyring) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation) id() (string, error) {
-	name, err := g.CryptoKeyVersionName()
-	if err != nil {
-		return "", err
+	if g.CryptoKeyVersionName.Error != nil {
+		return "", g.CryptoKeyVersionName.Error
 	}
+	name := g.CryptoKeyVersionName.Data
 	return fmt.Sprintf("%s/attestation", name), nil
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions) id() (string, error) {
-	name, err := g.CryptoKeyVersionName()
-	if err != nil {
-		return "", err
+
+	if g.CryptoKeyVersionName.Error != nil {
+		return "", g.CryptoKeyVersionName.Error
 	}
+	name := g.CryptoKeyVersionName.Data
 	return fmt.Sprintf("%s/externalProtectionLevelOptions", name), nil
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains) id() (string, error) {
-	name, err := g.CryptoKeyVersionName()
-	if err != nil {
-		return "", err
+	if g.CryptoKeyVersionName.Error != nil {
+		return "", g.CryptoKeyVersionName.Error
 	}
+	name := g.CryptoKeyVersionName.Data
 	return fmt.Sprintf("%s/attestation/certchains", name), nil
 }
 
-func (g *mqlGcpProjectKmsService) GetLocations() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectKmsService) locations() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,23 +135,20 @@ func (g *mqlGcpProjectKmsService) GetLocations() ([]interface{}, error) {
 	return locations, nil
 }
 
-func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectKmsService) keyrings() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	locations := g.GetLocations()
+	if locations.Error != nil {
+		return nil, locations.Error
 	}
 
-	locations, err := g.Locations()
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +163,10 @@ func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
 
 	var keyrings []interface{}
 	var wg sync.WaitGroup
-	wg.Add(len(locations))
+	wg.Add(len(locations.Data))
 	mux := &sync.Mutex{}
 
-	for _, location := range locations {
+	for _, location := range locations.Data {
 		go func(svc *kms.KeyManagementClient, project string, location string) {
 			defer wg.Done()
 			it := kmsSvc.ListKeyRings(ctx,
@@ -183,13 +182,13 @@ func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
 				}
 
 				created := k.CreateTime.AsTime()
-				mqlKeyring, err := g.MotorRuntime.CreateResource("gcp.project.kmsService.keyring",
-					"projectId", projectId,
-					"resourcePath", k.Name,
-					"name", parseResourceName(k.Name),
-					"created", &created,
-					"location", location,
-				)
+				mqlKeyring, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.keyring", map[string]*llx.RawData{
+					"projectId":    llx.StringData(projectId),
+					"resourcePath": llx.StringData(k.Name),
+					"name":         llx.StringData(parseResourceName(k.Name)),
+					"created":      llx.TimeData(created),
+					"location":     llx.StringData(location),
+				})
 				if err != nil {
 					log.Error().Err(err)
 					return
@@ -204,18 +203,15 @@ func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
 	return keyrings, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) {
-	keyring, err := g.ResourcePath()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
 	}
+	keyring := g.ResourcePath.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -247,9 +243,9 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 			return nil, err
 		}
 
-		var mqlPrimary interface{}
+		var mqlPrimary plugin.Resource
 		if k.Primary != nil {
-			mqlPrimary, err = cryptoKeyVersionToMql(g.MotorRuntime, k.Primary)
+			mqlPrimary, err = cryptoKeyVersionToMql(g.MqlRuntime, k.Primary)
 			if err != nil {
 				return nil, err
 			}
@@ -257,7 +253,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 
 		var versionTemplate map[string]interface{}
 		if k.VersionTemplate != nil {
-			versionTemplate, err = core.JsonToDict(mqlVersionTemplate{
+			versionTemplate, err = convert.JsonToDict(mqlVersionTemplate{
 				ProtectionLevel: k.VersionTemplate.ProtectionLevel.String(),
 				Algorithm:       k.VersionTemplate.Algorithm.String(),
 			})
@@ -269,46 +265,46 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 		var mqlRotationPeriod *time.Time
 		rotationPeriod := k.GetRotationPeriod()
 		if rotationPeriod != nil {
-			mqlRotationPeriod = core.MqlTime(llx.DurationToTime(rotationPeriod.Seconds))
+			v := llx.DurationToTime(rotationPeriod.Seconds)
+			mqlRotationPeriod = &v
 		}
 
 		var mqlDestroyScheduledDuration *time.Time
 		if k.DestroyScheduledDuration != nil {
-			mqlDestroyScheduledDuration = core.MqlTime(llx.DurationToTime(k.DestroyScheduledDuration.Seconds))
+			v := llx.DurationToTime(k.DestroyScheduledDuration.Seconds)
+			mqlDestroyScheduledDuration = &v
 		}
 
-		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.kmsService.keyring.cryptokey",
-			"resourcePath", k.Name,
-			"name", parseResourceName(k.Name),
-			"primary", mqlPrimary,
-			"purpose", k.Purpose.String(),
-			"created", core.MqlTime(k.CreateTime.AsTime()),
-			"nextRotation", core.MqlTime(k.NextRotationTime.AsTime()),
-			"rotationPeriod", mqlRotationPeriod,
-			"versionTemplate", versionTemplate,
-			"labels", core.StrMapToInterface(k.Labels),
-			"importOnly", k.ImportOnly,
-			"destroyScheduledDuration", mqlDestroyScheduledDuration,
-			"cryptoKeyBackend", k.CryptoKeyBackend,
-		)
+		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey", map[string]*llx.RawData{
+			"resourcePath":             llx.StringData(k.Name),
+			"name":                     llx.StringData(parseResourceName(k.Name)),
+			"primary":                  llx.ResourceData(mqlPrimary, "gcp.project.kmsService.keyring.cryptokey.version"),
+			"purpose":                  llx.StringData(k.Purpose.String()),
+			"created":                  llx.TimeData(k.CreateTime.AsTime()),
+			"nextRotation":             llx.TimeData(k.NextRotationTime.AsTime()),
+			"rotationPeriod":           llx.TimeDataPtr(mqlRotationPeriod),
+			"versionTemplate":          llx.DictData(versionTemplate),
+			"labels":                   llx.MapData(convert.MapToInterfaceMap(k.Labels), types.String),
+			"importOnly":               llx.BoolData(k.ImportOnly),
+			"destroyScheduledDuration": llx.TimeDataPtr(mqlDestroyScheduledDuration),
+			"cryptoKeyBackend":         llx.StringData(k.CryptoKeyBackend),
+		})
 
 		keys = append(keys, mqlKey)
 	}
 	return keys, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetVersions() ([]interface{}, error) {
-	cryptokey, err := g.ResourcePath()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
 	}
+	cryptokey := g.ResourcePath.Data
 
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -336,24 +332,21 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetVersions() ([]interface{}, 
 			return nil, err
 		}
 
-		mqlVersion, err := cryptoKeyVersionToMql(g.MotorRuntime, v)
+		mqlVersion, err := cryptoKeyVersionToMql(g.MqlRuntime, v)
 		versions = append(versions, mqlVersion)
 	}
 	return versions, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{}, error) {
-	cryptokey, err := g.ResourcePath()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]interface{}, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
 	}
+	cryptokey := g.ResourcePath.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -372,11 +365,11 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{},
 	}
 	res := make([]interface{}, 0, len(policy.Bindings))
 	for i, b := range policy.Bindings {
-		mqlBinding, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", cryptokey+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(cryptokey + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -385,56 +378,56 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{},
 	return res, nil
 }
 
-func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion) (resources.ResourceType, error) {
-	var mqlAttestation resources.ResourceType
+func cryptoKeyVersionToMql(runtime *plugin.Runtime, v *kmspb.CryptoKeyVersion) (plugin.Resource, error) {
+	var mqlAttestation plugin.Resource
 	if v.Attestation != nil {
-		mqlAttestationCertChains, err := runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains",
-			"cryptoKeyVersionName", v.Name,
-			"caviumCerts", core.StrSliceToInterface(v.Attestation.CertChains.CaviumCerts),
-			"googleCardCerts", core.StrSliceToInterface(v.Attestation.CertChains.GoogleCardCerts),
-			"googlePartitionCerts", core.StrSliceToInterface(v.Attestation.CertChains.GooglePartitionCerts),
-		)
+		mqlAttestationCertChains, err := CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains", map[string]*llx.RawData{
+			"cryptoKeyVersionName": llx.StringData(v.Name),
+			"caviumCerts":          llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.CaviumCerts), types.String),
+			"googleCardCerts":      llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GoogleCardCerts), types.String),
+			"googlePartitionCerts": llx.ArrayData(convert.SliceAnyToInterface(v.Attestation.CertChains.GooglePartitionCerts), types.String),
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		mqlAttestation, err = runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version.attestation",
-			"cryptoKeyVersionName", v.Name,
-			"format", v.Attestation.Format.String(),
-			"certificateChains", mqlAttestationCertChains,
-		)
+		mqlAttestation, err = CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version.attestation", map[string]*llx.RawData{
+			"cryptoKeyVersionName": llx.StringData(v.Name),
+			"format":               llx.StringData(v.Attestation.Format.String()),
+			"certificateChains":    llx.ResourceData(mqlAttestationCertChains, "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	var mqlExtProtOpts resources.ResourceType
+	var mqlExtProtOpts plugin.Resource
 	var err error
 	if v.ExternalProtectionLevelOptions != nil {
-		mqlExtProtOpts, err = runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions",
-			"cryptoKeyVersionName", v.Name,
-			"externalKeyUri", v.ExternalProtectionLevelOptions.ExternalKeyUri,
-			"ekmConnectionKeyPath", v.ExternalProtectionLevelOptions.EkmConnectionKeyPath,
-		)
+		mqlExtProtOpts, err = CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions", map[string]*llx.RawData{
+			"cryptoKeyVersionName": llx.StringData(v.Name),
+			"externalKeyUri":       llx.StringData(v.ExternalProtectionLevelOptions.ExternalKeyUri),
+			"ekmConnectionKeyPath": llx.StringData(v.ExternalProtectionLevelOptions.EkmConnectionKeyPath),
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
-	return runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version",
-		"resourcePath", v.Name,
-		"name", parseResourceName(v.Name),
-		"state", v.State.String(),
-		"protectionLevel", v.ProtectionLevel.String(),
-		"algorithm", v.Algorithm.String(),
-		"attestation", mqlAttestation,
-		"created", timestampAsTimePtr(v.CreateTime),
-		"generated", timestampAsTimePtr(v.GenerateTime),
-		"destroyed", timestampAsTimePtr(v.DestroyTime),
-		"destroyEventTime", timestampAsTimePtr(v.DestroyEventTime),
-		"importJob", v.ImportJob,
-		"importTime", timestampAsTimePtr(v.ImportTime),
-		"importFailureReason", v.ImportFailureReason,
-		"externalProtectionLevelOptions", mqlExtProtOpts,
-		"reimportEligible", v.ReimportEligible,
-	)
+	return CreateResource(runtime, "gcp.project.kmsService.keyring.cryptokey.version", map[string]*llx.RawData{
+		"resourcePath":                   llx.StringData(v.Name),
+		"name":                           llx.StringData(parseResourceName(v.Name)),
+		"state":                          llx.StringData(v.State.String()),
+		"protectionLevel":                llx.StringData(v.ProtectionLevel.String()),
+		"algorithm":                      llx.StringData(v.Algorithm.String()),
+		"attestation":                    llx.ResourceData(mqlAttestation, "gcp.project.kmsService.keyring.cryptokey.version.attestation"),
+		"created":                        llx.TimeDataPtr(timestampAsTimePtr(v.CreateTime)),
+		"generated":                      llx.TimeDataPtr(timestampAsTimePtr(v.GenerateTime)),
+		"destroyed":                      llx.TimeDataPtr(timestampAsTimePtr(v.DestroyTime)),
+		"destroyEventTime":               llx.TimeDataPtr(timestampAsTimePtr(v.DestroyEventTime)),
+		"importJob":                      llx.StringData(v.ImportJob),
+		"importTime":                     llx.TimeDataPtr(timestampAsTimePtr(v.ImportTime)),
+		"importFailureReason":            llx.StringData(v.ImportFailureReason),
+		"externalProtectionLevelOptions": llx.ResourceData(mqlExtProtOpts, "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"),
+		"reimportEligible":               llx.BoolData(v.ReimportEligible),
+	})
 }

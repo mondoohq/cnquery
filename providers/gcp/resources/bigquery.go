@@ -7,62 +7,64 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProjectBigqueryService) init(args *resources.Args) (*resources.Args, GcpProjectBigqueryService, error) {
-	if len(*args) > 2 {
+func initGcpProjectBigqueryService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
 func (g *mqlGcpProjectBigqueryService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("gcp.project.bigqueryService/%s", projectId), nil
 }
 
-func (g *mqlGcpProject) GetBigquery() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.bigqueryService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectBigqueryService), nil
 }
 
-func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	client, err := provider.Client()
+	client, err := conn.Client()
 	if err != nil {
 		return nil, err
 	}
@@ -126,35 +128,35 @@ func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
 					"targetTypes": a.Dataset.TargetTypes,
 				}
 			}
-			mqlA, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.dataset.accessEntry",
-				"id", fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%d", projectId, dataset.DatasetID, i),
-				"datasetId", dataset.DatasetID,
-				"role", string(a.Role),
-				"entityType", entityTypeToString(a.EntityType),
-				"entity", a.Entity,
-				"viewRef", viewRef,
-				"routineRef", routineRef,
-				"datasetRef", datasetRef,
-			)
+			mqlA, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset.accessEntry", map[string]*llx.RawData{
+				"id":         llx.StringData(fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%d", projectId, dataset.DatasetID, i)),
+				"datasetId":  llx.StringData(dataset.DatasetID),
+				"role":       llx.StringData(string(a.Role)),
+				"entityType": llx.StringData(entityTypeToString(a.EntityType)),
+				"entity":     llx.StringData(a.Entity),
+				"viewRef":    llx.DictData(viewRef),
+				"routineRef": llx.DictData(routineRef),
+				"datasetRef": llx.DictData(datasetRef),
+			})
 			if err != nil {
 				return nil, err
 			}
 			access = append(access, mqlA)
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.dataset",
-			"id", dataset.DatasetID,
-			"projectId", dataset.ProjectID,
-			"name", metadata.Name,
-			"description", metadata.Description,
-			"location", metadata.Location,
-			"labels", core.StrMapToInterface(metadata.Labels),
-			"created", &metadata.CreationTime,
-			"modified", &metadata.LastModifiedTime,
-			"tags", core.StrMapToInterface(tags),
-			"kmsName", kmsName,
-			"access", access,
-		)
+		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.dataset", map[string]*llx.RawData{
+			"id":          llx.StringData(dataset.DatasetID),
+			"projectId":   llx.StringData(dataset.ProjectID),
+			"name":        llx.StringData(metadata.Name),
+			"description": llx.StringData(metadata.Description),
+			"location":    llx.StringData(metadata.Location),
+			"labels":      llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
+			"created":     llx.TimeData(metadata.CreationTime),
+			"modified":    llx.TimeData(metadata.LastModifiedTime),
+			"tags":        llx.MapData(convert.MapToInterfaceMap(tags), types.String),
+			"kmsName":     llx.StringData(kmsName),
+			"access":      llx.ArrayData(access, types.Resource("gcp.project.bigqueryService.dataset.accessEntry")),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -165,90 +167,89 @@ func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	name, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	name := g.Id.Data
 	return "gcp.project.bigqueryService.dataset/" + projectId + "/" + name, nil
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) init(args *resources.Args) (*resources.Args, GcpProjectBigqueryServiceDataset, error) {
-	if len(*args) > 2 {
+func initGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
 	// If no args are set, try reading them from the platform ID
-	if len(*args) == 0 {
-		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-			(*args)["id"] = ids.name
-			(*args)["location"] = ids.region
-			(*args)["projectId"] = ids.project
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.name)
+			args["location"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
 		}
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService", "projectId", (*args)["projectId"])
+	obj, err := CreateResource(runtime, "gcp.project.bigqueryService", map[string]*llx.RawData{
+		"projectId": llx.StringData(args["projectId"].Value.(string)),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	bigquerySvc := obj.(GcpProjectBigqueryService)
-	datasets, err := bigquerySvc.Datasets()
-	if err != nil {
-		return nil, nil, err
+	bigquerySvc := obj.(*mqlGcpProjectBigqueryService)
+	datasets := bigquerySvc.GetDatasets()
+	if datasets.Error != nil {
+		return nil, nil, datasets.Error
 	}
 
-	for _, d := range datasets {
-		dataset := d.(GcpProjectBigqueryServiceDataset)
-		id, err := dataset.Id()
-		if err != nil {
-			return nil, nil, err
+	for _, d := range datasets.Data {
+		dataset := d.(*mqlGcpProjectBigqueryServiceDataset)
+		id := dataset.GetId()
+		if id.Error != nil {
+			return nil, nil, id.Error
 		}
-		location, err := dataset.Location()
-		if err != nil {
-			return nil, nil, err
+		location := dataset.GetLocation()
+		if location.Error != nil {
+			return nil, nil, location.Error
 		}
-		projectId, err := dataset.ProjectId()
-		if err != nil {
-			return nil, nil, err
+		projectId := dataset.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
 		}
 
-		if id == (*args)["id"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
+		if id == args["id"].Value && projectId == args["projectId"].Value && location == args["location"].Value {
 			return args, dataset, nil
 		}
 	}
-	return nil, nil, &resources.ResourceNotFound{}
+	return nil, nil, nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client()
+	client, err := conn.Client()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	projectID := provider.ResourceID()
+	projectID := conn.ResourceID()
 	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	datasetID, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	datasetID := g.Id.Data
 
 	dataset := bigquerySvc.Dataset(datasetID)
 	if dataset == nil {
@@ -278,30 +279,30 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 
 		var clusteringFields []interface{}
 		if metadata.Clustering != nil {
-			clusteringFields = core.StrSliceToInterface(metadata.Clustering.Fields)
+			clusteringFields = convert.SliceAnyToInterface(metadata.Clustering.Fields)
 		}
 
-		externalDataConfig, err := core.JsonToDict(metadata.ExternalDataConfig)
+		externalDataConfig, err := convert.JsonToDict(metadata.ExternalDataConfig)
 		if err != nil {
 			return nil, err
 		}
 
-		materializedView, err := core.JsonToDict(metadata.MaterializedView)
+		materializedView, err := convert.JsonToDict(metadata.MaterializedView)
 		if err != nil {
 			return nil, err
 		}
 
-		rangePartitioning, err := core.JsonToDict(metadata.RangePartitioning)
+		rangePartitioning, err := convert.JsonToDict(metadata.RangePartitioning)
 		if err != nil {
 			return nil, err
 		}
 
-		schema, err := core.JsonToDictSlice(metadata.Schema)
+		schema, err := convert.JsonToDictSlice(metadata.Schema)
 		if err != nil {
 			return nil, err
 		}
 
-		timePartitioning, err := core.JsonToDict(metadata.TimePartitioning)
+		timePartitioning, err := convert.JsonToDict(metadata.TimePartitioning)
 		if err != nil {
 			return nil, err
 		}
@@ -311,33 +312,33 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 			snapshotTime = &metadata.SnapshotDefinition.SnapshotTime
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.table",
-			"id", table.TableID,
-			"projectId", table.ProjectID,
-			"datasetId", table.DatasetID,
-			"name", metadata.Name,
-			"location", metadata.Location,
-			"description", metadata.Description,
-			"labels", core.StrMapToInterface(metadata.Labels),
-			"useLegacySQL", metadata.UseLegacySQL,
-			"requirePartitionFilter", metadata.RequirePartitionFilter,
-			"created", &metadata.CreationTime,
-			"modified", &metadata.LastModifiedTime,
-			"numBytes", metadata.NumBytes,
-			"numLongTermBytes", metadata.NumLongTermBytes,
-			"numRows", int64(metadata.NumRows),
-			"type", string(metadata.Type),
-			"expirationTime", &metadata.ExpirationTime,
-			"kmsName", kmsName,
-			"snapshotTime", snapshotTime,
-			"viewQuery", metadata.ViewQuery,
-			"clusteringFields", clusteringFields,
-			"externalDataConfig", externalDataConfig,
-			"materializedView", materializedView,
-			"rangePartitioning", rangePartitioning,
-			"timePartitioning", timePartitioning,
-			"schema", schema,
-		)
+		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
+			"id":                     llx.StringData(table.TableID),
+			"projectId":              llx.StringData(table.ProjectID),
+			"datasetId":              llx.StringData(table.DatasetID),
+			"name":                   llx.StringData(metadata.Name),
+			"location":               llx.StringData(metadata.Location),
+			"description":            llx.StringData(metadata.Description),
+			"labels":                 llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
+			"useLegacySQL":           llx.BoolData(metadata.UseLegacySQL),
+			"requirePartitionFilter": llx.BoolData(metadata.RequirePartitionFilter),
+			"created":                llx.TimeData(metadata.CreationTime),
+			"modified":               llx.TimeData(metadata.LastModifiedTime),
+			"numBytes":               llx.IntData(metadata.NumBytes),
+			"numLongTermBytes":       llx.IntData(metadata.NumLongTermBytes),
+			"numRows":                llx.IntData(int64(metadata.NumRows)),
+			"type":                   llx.StringData(string(metadata.Type)),
+			"expirationTime":         llx.TimeData(metadata.ExpirationTime),
+			"kmsName":                llx.StringData(kmsName),
+			"snapshotTime":           llx.TimeDataPtr(snapshotTime),
+			"viewQuery":              llx.StringData(metadata.ViewQuery),
+			"clusteringFields":       llx.DictData(clusteringFields),
+			"externalDataConfig":     llx.DictData(externalDataConfig),
+			"materializedView":       llx.DictData(materializedView),
+			"rangePartitioning":      llx.DictData(rangePartitioning),
+			"timePartitioning":       llx.DictData(timePartitioning),
+			"schema":                 llx.ArrayData(schema, types.Dict),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -348,43 +349,42 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 }
 
 func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
-	datasetId, err := g.DatasetId()
-	if err != nil {
-		return "", err
+	projectId := g.ProjectId.Data
+
+	if g.DatasetId.Error != nil {
+		return "", g.DatasetId.Error
 	}
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	datasetId := g.DatasetId.Data
+
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.bigqueryService.table/%s/%s/%s", projectId, datasetId, id), nil
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client()
+	client, err := conn.Client()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	projectID := provider.ResourceID()
+	projectID := conn.ResourceID()
 	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	datasetID, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	datasetID := g.Id.Data
 
 	dataset := bigquerySvc.Dataset(datasetID)
 	if dataset == nil {
@@ -412,21 +412,20 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error)
 			kmsName = metadata.EncryptionConfig.KMSKeyName
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.model",
-			"id", model.ModelID,
-			"datasetId", model.DatasetID,
-			"projectId", model.ProjectID,
-			"name", metadata.Name,
-			"location", metadata.Location,
-			"description", metadata.Description,
-			"location", metadata.Location,
-			"labels", core.StrMapToInterface(metadata.Labels),
-			"created", &metadata.CreationTime,
-			"modified", &metadata.LastModifiedTime,
-			"type", string(metadata.Type),
-			"expirationTime", &metadata.ExpirationTime,
-			"kmsName", kmsName,
-		)
+		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.model", map[string]*llx.RawData{
+			"id":             llx.StringData(model.ModelID),
+			"datasetId":      llx.StringData(model.DatasetID),
+			"projectId":      llx.StringData(model.ProjectID),
+			"name":           llx.StringData(metadata.Name),
+			"description":    llx.StringData(metadata.Description),
+			"location":       llx.StringData(metadata.Location),
+			"labels":         llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
+			"created":        llx.TimeData(metadata.CreationTime),
+			"modified":       llx.TimeData(metadata.LastModifiedTime),
+			"type":           llx.StringData(string(metadata.Type)),
+			"expirationTime": llx.TimeData(metadata.ExpirationTime),
+			"kmsName":        llx.StringData(kmsName),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -437,43 +436,41 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error)
 }
 
 func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	projectId := g.ProjectId.Data
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
-	datasetId, err := g.DatasetId()
-	if err != nil {
-		return "", err
+	id := g.Id.Data
+
+	if g.DatasetId.Error != nil {
+		return "", g.DatasetId.Error
 	}
+	datasetId := g.DatasetId.Data
 	return fmt.Sprintf("gcp.project.bigqueryService.model/%s/%s/%s", projectId, datasetId, id), nil
 }
 
-func (g *mqlGcpProjectBigqueryServiceDataset) GetRoutines() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := provider.Client()
+	client, err := conn.Client()
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	projectID := provider.ResourceID()
+	projectID := conn.ResourceID()
 	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	datasetID, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	datasetID := g.Id.Data
 
 	dataset := bigquerySvc.Dataset(datasetID)
 	if dataset == nil {
@@ -496,16 +493,16 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetRoutines() ([]interface{}, erro
 			return nil, err
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.routine",
-			"id", routine.RoutineID,
-			"datasetId", routine.DatasetID,
-			"projectId", routine.ProjectID,
-			"language", metadata.Language,
-			"description", metadata.Description,
-			"created", &metadata.CreationTime,
-			"modified", &metadata.LastModifiedTime,
-			"type", string(metadata.Type),
-		)
+		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.routine", map[string]*llx.RawData{
+			"id":          llx.StringData(routine.RoutineID),
+			"datasetId":   llx.StringData(routine.DatasetID),
+			"projectId":   llx.StringData(routine.ProjectID),
+			"language":    llx.StringData(metadata.Language),
+			"description": llx.StringData(metadata.Description),
+			"created":     llx.TimeData(metadata.CreationTime),
+			"modified":    llx.TimeData(metadata.LastModifiedTime),
+			"type":        llx.StringData(string(metadata.Type)),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -516,10 +513,10 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetRoutines() ([]interface{}, erro
 }
 
 func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
-	name, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	name := g.Id.Data
 	return "gcp.project.bigqueryService.routine/" + name, nil
 }
 

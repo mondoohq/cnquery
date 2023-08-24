@@ -10,22 +10,22 @@ import (
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 )
 
-func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
+func (c *GcpConnection) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
 	ctx := context.Background()
 	credParams := googleoauth.CredentialsParams{
 		Scopes:  scopes,
-		Subject: t.serviceAccountSubject,
+		Subject: c.serviceAccountSubject,
 	}
-	if t.cred != nil {
+	if c.cred != nil {
 		// use service account from secret
-		data, err := credsServiceAccountData(t.cred)
+		data, err := credsServiceAccountData(c.cred)
 		if err != nil {
 			return nil, err
 		}
@@ -37,16 +37,16 @@ func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, erro
 	return googleoauth.FindDefaultCredentials(ctx, scopes...)
 }
 
-func (t *Provider) Client(scope ...string) (*http.Client, error) {
+func (c *GcpConnection) Client(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
 	// use service account from secret if one is provided
-	if t.cred != nil {
-		data, err := credsServiceAccountData(t.cred)
+	if c.cred != nil {
+		data, err := credsServiceAccountData(c.cred)
 		if err != nil {
 			return nil, err
 		}
-		return serviceAccountAuth(ctx, t.serviceAccountSubject, data, scope...)
+		return serviceAccountAuth(ctx, c.serviceAccountSubject, data, scope...)
 	}
 
 	// otherwise fallback to default google sdk authentication

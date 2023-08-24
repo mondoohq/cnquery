@@ -6,25 +6,25 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/apikeys/v2"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	client, err := provider.Client(apikeys.CloudPlatformReadOnlyScope)
+	client, err := conn.Client(apikeys.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 
 	mqlKeys := make([]interface{}, 0, len(keys.Keys))
 	for _, k := range keys.Keys {
-		var mqlRestrictions resources.ResourceType
+		var mqlRestrictions plugin.Resource
 		if k.Restrictions != nil {
 			var mqlAndroidRestr interface{}
 			if k.Restrictions.AndroidKeyRestrictions != nil {
@@ -64,7 +64,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 					})
 				}
 
-				mqlAndroidRestr, err = core.JsonToDict(androidRestrictions)
+				mqlAndroidRestr, err = convert.JsonToDict(androidRestrictions)
 				if err != nil {
 					return nil, err
 				}
@@ -78,7 +78,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 				}
 
 				for _, a := range k.Restrictions.ApiTargets {
-					target, err := core.JsonToDict(mqlApiTarget{
+					target, err := convert.JsonToDict(mqlApiTarget{
 						Service: a.Service,
 						Methods: a.Methods,
 					})
@@ -95,7 +95,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 					AllowedReferrers []string `json:"allowedReferrers"`
 				}
 
-				mqlBrowserRest, err = core.JsonToDict(mqlBrowserKeyRestrictions{
+				mqlBrowserRest, err = convert.JsonToDict(mqlBrowserKeyRestrictions{
 					AllowedReferrers: k.Restrictions.BrowserKeyRestrictions.AllowedReferrers,
 				})
 				if err != nil {
@@ -109,7 +109,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 					AllowedBundleIds []string `json:"allowedBundleIds"`
 				}
 
-				mqlIosRestr, err = core.JsonToDict(mqlIosKeyRestrictions{
+				mqlIosRestr, err = convert.JsonToDict(mqlIosKeyRestrictions{
 					AllowedBundleIds: k.Restrictions.IosKeyRestrictions.AllowedBundleIds,
 				})
 				if err != nil {
@@ -123,7 +123,7 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 					AllowedIps []string `json:"allowedIps"`
 				}
 
-				mqlServerKeyRestr, err = core.JsonToDict(mqlServerKeyRestrictions{
+				mqlServerKeyRestr, err = convert.JsonToDict(mqlServerKeyRestrictions{
 					AllowedIps: k.Restrictions.ServerKeyRestrictions.AllowedIps,
 				})
 				if err != nil {
@@ -131,31 +131,31 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 				}
 			}
 
-			mqlRestrictions, err = g.MotorRuntime.CreateResource("gcp.project.apiKey.restrictions",
-				"parentResourcePath", k.Name,
-				"androidKeyRestrictions", mqlAndroidRestr,
-				"browserKeyRestrictions", mqlBrowserRest,
-				"iosKeyRestrictions", mqlIosRestr,
-				"serverKeyRestrictions", mqlServerKeyRestr,
-				"apiTargets", mqlApiTargets,
-			)
+			mqlRestrictions, err = CreateResource(g.MqlRuntime, "gcp.project.apiKey.restrictions", map[string]*llx.RawData{
+				"parentResourcePath":     llx.StringData(k.Name),
+				"androidKeyRestrictions": llx.DictData(mqlAndroidRestr),
+				"browserKeyRestrictions": llx.DictData(mqlBrowserRest),
+				"iosKeyRestrictions":     llx.DictData(mqlIosRestr),
+				"serverKeyRestrictions":  llx.DictData(mqlServerKeyRestr),
+				"apiTargets":             llx.ArrayData(mqlApiTargets, types.Dict),
+			})
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.apiKey",
-			"projectId", projectId,
-			"id", parseResourceName(k.Name),
-			"name", k.DisplayName,
-			"resourcePath", k.Name,
-			"annotations", core.StrMapToInterface(k.Annotations),
-			"created", parseTime(k.CreateTime),
-			"deleted", parseTime(k.DeleteTime),
-			"keyString", k.KeyString,
-			"restrictions", mqlRestrictions,
-			"updated", parseTime(k.UpdateTime),
-		)
+		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.apiKey", map[string]*llx.RawData{
+			"projectId":    llx.StringData(projectId),
+			"id":           llx.StringData(parseResourceName(k.Name)),
+			"name":         llx.StringData(k.DisplayName),
+			"resourcePath": llx.StringData(k.Name),
+			"annotations":  llx.MapData(convert.MapToInterfaceMap(k.Annotations), types.String),
+			"created":      llx.TimeDataPtr(parseTime(k.CreateTime)),
+			"deleted":      llx.TimeDataPtr(parseTime(k.DeleteTime)),
+			"keyString":    llx.StringData(k.KeyString),
+			"restrictions": llx.ResourceData(mqlRestrictions, "gcp.project.apiKey.restrictions"),
+			"updated":      llx.TimeDataPtr(parseTime(k.UpdateTime)),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -165,13 +165,12 @@ func (g *mqlGcpProject) GetApiKeys() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectApiKey) id() (string, error) {
-	return g.ResourcePath()
+	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
 func (g *mqlGcpProjectApiKeyRestrictions) id() (string, error) {
-	parent, err := g.ParentResourcePath()
-	if err != nil {
-		return "", err
+	if g.ParentResourcePath.Error != nil {
+		return "", g.ParentResourcePath.Error
 	}
-	return fmt.Sprintf("%s/restrictions", parent), nil
+	return fmt.Sprintf("%s/restrictions", g.ParentResourcePath.Data), nil
 }

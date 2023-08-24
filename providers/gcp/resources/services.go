@@ -5,12 +5,14 @@ package resources
 
 import (
 	"context"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"strings"
 
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -20,18 +22,16 @@ func serviceName(name string) string {
 	return entries[len(entries)-1]
 }
 
-func (g *mqlGcpProject) GetServices() ([]interface{}, error) {
-	projectId, err := g.Id()
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProject) services() ([]interface{}, error) {
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
 	}
+	projectId := g.Id.Data
 
-	credentials, err := provider.Credentials(serviceusage.DefaultAuthScopes()...)
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	credentials, err := conn.Credentials(serviceusage.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +70,13 @@ func (g *mqlGcpProject) GetServices() ([]interface{}, error) {
 			title = item.Config.Title
 		}
 
-		mqlService, err := g.MotorRuntime.CreateResource("gcp.service",
-			"projectId", projectId,
-			"name", serviceName(item.Name),
-			"parentName", item.Parent,
-			"state", item.State.String(),
-			"title", title,
-		)
+		mqlService, err := CreateResource(g.MqlRuntime, "gcp.service", map[string]*llx.RawData{
+			"projectId":  llx.StringData(projectId),
+			"name":       llx.StringData(serviceName(item.Name)),
+			"parentName": llx.StringData(item.Parent),
+			"state":      llx.StringData(item.State.String()),
+			"title":      llx.StringData(title),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -87,45 +87,41 @@ func (g *mqlGcpProject) GetServices() ([]interface{}, error) {
 }
 
 func (g *mqlGcpService) id() (string, error) {
-	name, err := g.Name()
-	if err != nil {
-		return "", err
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
-	parent, err := g.ParentName()
-	if err != nil {
-		return "", err
+	name := g.Name.Data
+	parent := g.GetParentName()
+	if parent.Error != nil {
+		return "", parent.Error
 	}
 
-	return "gcp.service/" + parent + "/" + name, nil
+	return "gcp.service/" + parent.Data + "/" + name, nil
 }
 
-func (g *mqlGcpService) init(args *resources.Args) (*resources.Args, GcpService, error) {
-	if len(*args) > 2 {
+func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	nameRaw := (*args)["name"]
+	nameRaw := args["name"]
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.(string)
+	name := nameRaw.Value.(string)
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	credentials, err := provider.Credentials(serviceusage.DefaultAuthScopes()...)
+	conn := runtime.Connection.(*connection.GcpConnection)
+	credentials, err := conn.Credentials(serviceusage.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	var projectId string
-	projectIdRaw := (*args)["projectId"]
+	projectIdRaw := args["projectId"]
 	if projectIdRaw != nil {
-		projectId = projectIdRaw.(string)
+		projectId = projectIdRaw.Value.(string)
 	} else {
-		projectId = provider.ResourceID()
+		projectId = conn.ResourceID()
 	}
 
 	ctx := context.Background()
@@ -142,24 +138,24 @@ func (g *mqlGcpService) init(args *resources.Args) (*resources.Args, GcpService,
 		return nil, nil, err
 	}
 
-	(*args)["projectId"] = projectId
-	(*args)["name"] = serviceName(item.Name)
-	(*args)["parentName"] = item.Parent
-	(*args)["state"] = item.State.String()
+	args["projectId"] = llx.StringData(projectId)
+	args["name"] = llx.StringData(serviceName(item.Name))
+	args["parentName"] = llx.StringData(item.Parent)
+	args["state"] = llx.StringData(item.State.String())
 
 	title := ""
 	if item.Config != nil {
 		title = item.Config.Title
 	}
-	(*args)["title"] = title
+	args["title"] = llx.StringData(title)
 
 	return args, nil, nil
 }
 
-func (g *mqlGcpService) GetEnabled() (bool, error) {
-	state, err := g.State()
-	if err != nil {
-		return false, err
+func (g *mqlGcpService) enabled() (bool, error) {
+	if g.State.Error != nil {
+		return false, g.State.Error
 	}
+	state := g.State.Data
 	return state == "ENABLED", nil
 }

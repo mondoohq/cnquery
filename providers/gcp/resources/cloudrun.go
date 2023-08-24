@@ -6,6 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 	"sync"
 
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
@@ -13,112 +17,111 @@ import (
 	runpb "cloud.google.com/go/run/apiv2/runpb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
 func (g *mqlGcpProjectCloudRunService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.cloudRunService", projectId), nil
 }
 
-func (g *mqlGcpProjectCloudRunService) init(args *resources.Args) (*resources.Args, GcpProjectCloudRunService, error) {
-	if len(*args) > 0 {
+func initGcpProjectCloudRunService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
+	conn := runtime.Connection.(*connection.GcpConnection)
 
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetCloudRun() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) cloudRun() (*mqlGcpProjectCloudRunService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.cloudRunService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectCloudRunService), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceOperation) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
-	name, err := g.Name()
-	if err != nil {
-		return "", err
+	projectId := g.ProjectId.Data
+	if g.Name.Error != nil {
+		return "", g.Name.Error
 	}
+	name := g.Name.Data
 	return fmt.Sprintf("gcp.project.cloudRunService.operation/%s/%s", projectId, name), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.cloudRunService.service/%s", id), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return fmt.Sprintf("gcp.project.cloudRunService.job/%s", id), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainer) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceContainerProbe) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceCondition) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplate) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) id() (string, error) {
-	return g.Id()
+	return g.Id.Data, g.Id.Error
 }
 
-func (g *mqlGcpProjectCloudRunService) GetRegions() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (g *mqlGcpProjectCloudRunService) regions() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	client, err := provider.Client(run.DefaultAuthScopes()...)
+	client, err := conn.Client(run.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,23 +144,20 @@ func (g *mqlGcpProjectCloudRunService) GetRegions() ([]interface{}, error) {
 	return regionNames, nil
 }
 
-func (g *mqlGcpProjectCloudRunService) GetOperations() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectCloudRunService) operations() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	regions, err := g.Regions()
-	if err != nil {
-		return nil, err
+	if g.Regions.Error != nil {
+		return nil, g.Regions.Error
 	}
+	regions := g.Regions.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(run.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(run.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,11 +186,11 @@ func (g *mqlGcpProjectCloudRunService) GetOperations() ([]interface{}, error) {
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
-				mqlOp, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.operation",
-					"projectId", projectId,
-					"name", t.Name,
-					"done", t.Done,
-				)
+				mqlOp, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.operation", map[string]*llx.RawData{
+					"projectId": llx.StringData(projectId),
+					"name":      llx.StringData(t.Name),
+					"done":      llx.BoolData(t.Done),
+				})
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
@@ -204,23 +204,20 @@ func (g *mqlGcpProjectCloudRunService) GetOperations() ([]interface{}, error) {
 	return operations, nil
 }
 
-func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectCloudRunService) services() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	regions, err := g.Regions()
-	if err != nil {
-		return nil, err
+	if g.Regions.Error != nil {
+		return nil, g.Regions.Error
 	}
+	regions := g.Regions.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(run.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(run.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -255,11 +252,11 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					log.Error().Err(err).Send()
 				}
 
-				var mqlTemplate resources.ResourceType
+				var mqlTemplate plugin.Resource
 				if s.Template != nil {
 					var scalingCfg map[string]interface{}
 					if s.Template.Scaling != nil {
-						scalingCfg, err = core.JsonToDict(mqlRevisionScaling{
+						scalingCfg, err = convert.JsonToDict(mqlRevisionScaling{
 							MinInstanceCount: s.Template.Scaling.MinInstanceCount,
 							MaxInstanceCount: s.Template.Scaling.MaxInstanceCount,
 						})
@@ -274,27 +271,27 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					}
 
 					templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
-					mqlContainers, err := mqlContainers(g.MotorRuntime, s.Template.Containers, templateId)
+					mqlContainers, err := mqlContainers(g.MqlRuntime, s.Template.Containers, templateId)
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
 
-					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service.revisionTemplate",
-						"id", templateId,
-						"projectId", projectId,
-						"name", s.Template.Revision,
-						"labels", core.StrMapToInterface(s.Template.Labels),
-						"annotations", core.StrMapToInterface(s.Template.Annotations),
-						"scaling", scalingCfg,
-						"vpcAccess", vpcCfg,
-						"timeout", core.MqlTime(llx.DurationToTime((s.Template.Timeout.Seconds))),
-						"serviceAccountEmail", s.Template.ServiceAccount,
-						"containers", mqlContainers,
-						"volumes", mqlVolumes(s.Template.Volumes),
-						"executionEnvironment", s.Template.ExecutionEnvironment.String(),
-						"encryptionKey", s.Template.EncryptionKey,
-						"maxInstanceRequestConcurrency", int64(s.Template.MaxInstanceRequestConcurrency),
-					)
+					mqlTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.revisionTemplate", map[string]*llx.RawData{
+						"id":                            llx.StringData(templateId),
+						"projectId":                     llx.StringData(projectId),
+						"name":                          llx.StringData(s.Template.Revision),
+						"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
+						"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
+						"scaling":                       llx.DictData(scalingCfg),
+						"vpcAccess":                     llx.DictData(vpcCfg),
+						"timeout":                       llx.TimeData(llx.DurationToTime((s.Template.Timeout.Seconds))),
+						"serviceAccountEmail":           llx.StringData(s.Template.ServiceAccount),
+						"containers":                    llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
+						"volumes":                       llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
+						"executionEnvironment":          llx.StringData(s.Template.ExecutionEnvironment.String()),
+						"encryptionKey":                 llx.StringData(s.Template.EncryptionKey),
+						"maxInstanceRequestConcurrency": llx.IntData(int64(s.Template.MaxInstanceRequestConcurrency)),
+					})
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
@@ -310,14 +307,14 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					})
 				}
 
-				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, s.TerminalCondition, s.Name, "terminal")
+				mqlTerminalCondition, err := mqlCondition(g.MqlRuntime, s.TerminalCondition, s.Name, "terminal")
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
 
 				mqlConditions := make([]interface{}, 0, len(s.Conditions))
 				for i, c := range s.Conditions {
-					mqlCondition, err := mqlCondition(g.MotorRuntime, c, s.Name, fmt.Sprintf("%d", i))
+					mqlCondition, err := mqlCondition(g.MqlRuntime, c, s.Name, fmt.Sprintf("%d", i))
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
@@ -335,34 +332,34 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					})
 				}
 
-				mqlS, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service",
-					"id", s.Name,
-					"projectId", projectId,
-					"region", region,
-					"name", parseResourceName(s.Name),
-					"description", s.Description,
-					"generation", s.Generation,
-					"labels", core.StrMapToInterface(s.Labels),
-					"annotations", core.StrMapToInterface(s.Annotations),
-					"created", core.MqlTime(s.CreateTime.AsTime()),
-					"updated", core.MqlTime(s.UpdateTime.AsTime()),
-					"deleted", core.MqlTime(s.DeleteTime.AsTime()),
-					"expired", core.MqlTime(s.ExpireTime.AsTime()),
-					"creator", s.Creator,
-					"lastModifier", s.LastModifier,
-					"ingress", s.Ingress.String(),
-					"launchStage", s.LaunchStage.String(),
-					"template", mqlTemplate,
-					"traffic", mqlTraffic,
-					"observedGeneration", s.ObservedGeneration,
-					"terminalCondition", mqlTerminalCondition,
-					"conditions", mqlConditions,
-					"latestReadyRevision", s.LatestReadyRevision,
-					"latestCreatedRevision", s.LatestCreatedRevision,
-					"trafficStatuses", mqlTrafficStatuses,
-					"uri", s.Uri,
-					"reconciling", s.Reconciling,
-				)
+				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
+					"id":                    llx.StringData(s.Name),
+					"projectId":             llx.StringData(projectId),
+					"region":                llx.StringData(region),
+					"name":                  llx.StringData(parseResourceName(s.Name)),
+					"description":           llx.StringData(s.Description),
+					"generation":            llx.IntData(s.Generation),
+					"labels":                llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
+					"annotations":           llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
+					"created":               llx.TimeData(s.CreateTime.AsTime()),
+					"updated":               llx.TimeData(s.UpdateTime.AsTime()),
+					"deleted":               llx.TimeData(s.DeleteTime.AsTime()),
+					"expired":               llx.TimeData(s.ExpireTime.AsTime()),
+					"creator":               llx.StringData(s.Creator),
+					"lastModifier":          llx.StringData(s.LastModifier),
+					"ingress":               llx.StringData(s.Ingress.String()),
+					"launchStage":           llx.StringData(s.LaunchStage.String()),
+					"template":              llx.ResourceData(mqlTemplate, "gcp.project.cloudRunService.service.revisionTemplate"),
+					"traffic":               llx.ArrayData(mqlTraffic, types.Dict),
+					"observedGeneration":    llx.IntData(s.ObservedGeneration),
+					"terminalCondition":     llx.ResourceData(mqlTerminalCondition, "gcp.project.cloudRunService.condition"),
+					"conditions":            llx.ArrayData(mqlConditions, types.Resource("gcp.project.cloudRunService.condition")),
+					"latestReadyRevision":   llx.StringData(s.LatestReadyRevision),
+					"latestCreatedRevision": llx.StringData(s.LatestCreatedRevision),
+					"trafficStatuses":       llx.ArrayData(mqlTrafficStatuses, types.Dict),
+					"uri":                   llx.StringData(s.Uri),
+					"reconciling":           llx.BoolData(s.Reconciling),
+				})
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
@@ -376,57 +373,62 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 	return services, nil
 }
 
-func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) GetServiceAccount() (interface{}, error) {
-	projectId, err := g.ProjectId()
+func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	email, err := g.ServiceAccountEmail()
-	if err != nil {
-		return nil, err
-	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
-		"projectId", projectId,
-		"email", email,
-	)
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
-func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) GetServiceAccount() (interface{}, error) {
-	projectId, err := g.ProjectId()
+func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+		"email":     llx.StringData(email),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	email, err := g.ServiceAccountEmail()
-	if err != nil {
-		return nil, err
-	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
-		"projectId", projectId,
-		"email", email,
-	)
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
-func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectCloudRunService) jobs() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	regions, err := g.Regions()
-	if err != nil {
-		return nil, err
+	if g.Regions.Error != nil {
+		return nil, g.Regions.Error
 	}
+	regions := g.Regions.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(run.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(run.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -456,10 +458,10 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 					return
 				}
 
-				var mqlTemplate resources.ResourceType
+				var mqlTemplate plugin.Resource
 				if j.Template != nil {
 					templateId := fmt.Sprintf("%s/executionTemplate", j.Name)
-					var mqlTaskTemplate resources.ResourceType
+					var mqlTaskTemplate plugin.Resource
 					if j.Template.Template != nil {
 						vpcAccess, err := mqlVpcAccess(j.Template.Template.VpcAccess)
 						if err != nil {
@@ -467,45 +469,45 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 							return
 						}
 
-						mqlContainers, err := mqlContainers(g.MotorRuntime, j.Template.Template.Containers, templateId)
+						mqlContainers, err := mqlContainers(g.MqlRuntime, j.Template.Template.Containers, templateId)
 						if err != nil {
 							log.Error().Err(err).Send()
 							return
 						}
 
-						mqlTaskTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job.executionTemplate.taskTemplate",
-							"id", fmt.Sprintf("%s/template", templateId),
-							"projectId", projectId,
-							"vpcAccess", vpcAccess,
-							"timeout", core.MqlTime(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
-							"serviceAccountEmail", j.Template.Template.ServiceAccount,
-							"containers", mqlContainers,
-							"volumes", mqlVolumes(j.Template.Template.Volumes),
-							"executionEnvironment", j.Template.Template.ExecutionEnvironment.String(),
-							"encryptionKey", j.Template.Template.EncryptionKey,
-							"maxRetries", int64(j.Template.Template.GetMaxRetries()),
-						)
+						mqlTaskTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.job.executionTemplate.taskTemplate", map[string]*llx.RawData{
+							"id":                   llx.StringData(fmt.Sprintf("%s/template", templateId)),
+							"projectId":            llx.StringData(projectId),
+							"vpcAccess":            llx.DictData(vpcAccess),
+							"timeout":              llx.TimeData(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
+							"serviceAccountEmail":  llx.StringData(j.Template.Template.ServiceAccount),
+							"containers":           llx.ArrayData(mqlContainers, types.Resource("gcp.project.cloudRunService.container")),
+							"volumes":              llx.ArrayData(mqlVolumes(j.Template.Template.Volumes), types.Dict),
+							"executionEnvironment": llx.StringData(j.Template.Template.ExecutionEnvironment.String()),
+							"encryptionKey":        llx.StringData(j.Template.Template.EncryptionKey),
+							"maxRetries":           llx.IntData(int64(j.Template.Template.GetMaxRetries())),
+						})
 						if err != nil {
 							log.Error().Err(err).Send()
 							return
 						}
 					}
 
-					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job.executionTemplate",
-						"id", templateId,
-						"labels", core.StrMapToInterface(j.Template.Labels),
-						"annotations", core.StrMapToInterface(j.Template.Annotations),
-						"parallelism", int64(j.Template.Parallelism),
-						"taskCount", int64(j.Template.TaskCount),
-						"template", mqlTaskTemplate,
-					)
+					mqlTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.job.executionTemplate", map[string]*llx.RawData{
+						"id":          llx.StringData(templateId),
+						"labels":      llx.MapData(convert.MapToInterfaceMap(j.Template.Labels), types.String),
+						"annotations": llx.MapData(convert.MapToInterfaceMap(j.Template.Annotations), types.String),
+						"parallelism": llx.IntData(int64(j.Template.Parallelism)),
+						"taskCount":   llx.IntData(int64(j.Template.TaskCount)),
+						"template":    llx.ResourceData(mqlTaskTemplate, "gcp.project.cloudRunService.job.executionTemplate.taskTemplate"),
+					})
 					if err != nil {
 						log.Error().Err(err).Send()
 						return
 					}
 				}
 
-				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, j.TerminalCondition, j.Name, "terminal")
+				mqlTerminalCondition, err := mqlCondition(g.MqlRuntime, j.TerminalCondition, j.Name, "terminal")
 				if err != nil {
 					log.Error().Err(err).Send()
 					return
@@ -513,7 +515,7 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 
 				mqlConditions := make([]interface{}, 0, len(j.Conditions))
 				for i, c := range j.Conditions {
-					mqlCondition, err := mqlCondition(g.MotorRuntime, c, j.Name, fmt.Sprintf("%d", i))
+					mqlCondition, err := mqlCondition(g.MqlRuntime, c, j.Name, fmt.Sprintf("%d", i))
 					if err != nil {
 						log.Error().Err(err).Send()
 						return
@@ -521,30 +523,30 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 					mqlConditions = append(mqlConditions, mqlCondition)
 				}
 
-				mqlJob, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job",
-					"id", j.Name,
-					"projectId", projectId,
-					"region", region,
-					"name", parseResourceName(j.Name),
-					"generation", j.Generation,
-					"labels", core.StrMapToInterface(j.Labels),
-					"annotations", core.StrMapToInterface(j.Annotations),
-					"created", core.MqlTime(j.CreateTime.AsTime()),
-					"updated", core.MqlTime(j.UpdateTime.AsTime()),
-					"deleted", core.MqlTime(j.DeleteTime.AsTime()),
-					"expired", core.MqlTime(j.ExpireTime.AsTime()),
-					"creator", j.Creator,
-					"lastModifier", j.LastModifier,
-					"client", j.Client,
-					"clientVersion", j.ClientVersion,
-					"launchStage", j.LaunchStage.String(),
-					"template", mqlTemplate,
-					"observedGeneration", j.ObservedGeneration,
-					"terminalCondition", mqlTerminalCondition,
-					"conditions", mqlConditions,
-					"executionCount", int64(j.ExecutionCount),
-					"reconciling", j.Reconciling,
-				)
+				mqlJob, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.job", map[string]*llx.RawData{
+					"id":                 llx.StringData(j.Name),
+					"projectId":          llx.StringData(projectId),
+					"region":             llx.StringData(region),
+					"name":               llx.StringData(parseResourceName(j.Name)),
+					"generation":         llx.IntData(j.Generation),
+					"labels":             llx.MapData(convert.MapToInterfaceMap(j.Labels), types.String),
+					"annotations":        llx.MapData(convert.MapToInterfaceMap(j.Annotations), types.String),
+					"created":            llx.TimeData(j.CreateTime.AsTime()),
+					"updated":            llx.TimeData(j.UpdateTime.AsTime()),
+					"deleted":            llx.TimeData(j.DeleteTime.AsTime()),
+					"expired":            llx.TimeData(j.ExpireTime.AsTime()),
+					"creator":            llx.StringData(j.Creator),
+					"lastModifier":       llx.StringData(j.LastModifier),
+					"client":             llx.StringData(j.Client),
+					"clientVersion":      llx.StringData(j.ClientVersion),
+					"launchStage":        llx.StringData(j.LaunchStage.String()),
+					"template":           llx.ResourceData(mqlTemplate, "gcp.project.cloudRunService.job.executionTemplate"),
+					"observedGeneration": llx.IntData(j.ObservedGeneration),
+					"terminalCondition":  llx.ResourceData(mqlTerminalCondition, "gcp.project.cloudRunService.condition"),
+					"conditions":         llx.ArrayData(mqlConditions, types.Resource("gcp.project.cloudRunService.condition")),
+					"executionCount":     llx.IntData(int64(j.ExecutionCount)),
+					"reconciling":        llx.BoolData(j.Reconciling),
+				})
 				if err != nil {
 					log.Error().Err(err).Send()
 					return
@@ -559,7 +561,7 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 	return jobs, nil
 }
 
-func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, containerId string) (resources.ResourceType, error) {
+func mqlContainerProbe(runtime *plugin.Runtime, probe *runpb.Probe, containerId string) (plugin.Resource, error) {
 	if probe == nil {
 		return nil, nil
 	}
@@ -585,29 +587,29 @@ func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, container
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.cloudRunService.container.probe",
-		"id", fmt.Sprintf("%s/livenessProbe", containerId),
-		"initialDelaySeconds", probe.InitialDelaySeconds,
-		"timeoutSeconds", probe.TimeoutSeconds,
-		"periodSeconds", probe.PeriodSeconds,
-		"failureThreshold", probe.FailureThreshold,
-		"httpGet", mqlHttpGet,
-		"tcpSocket", mqlTcpSocket,
-	)
+	return CreateResource(runtime, "gcp.project.cloudRunService.container.probe", map[string]*llx.RawData{
+		"id":                  llx.StringData(fmt.Sprintf("%s/livenessProbe", containerId)),
+		"initialDelaySeconds": llx.IntData(int64(probe.InitialDelaySeconds)),
+		"timeoutSeconds":      llx.IntData(int64(probe.TimeoutSeconds)),
+		"periodSeconds":       llx.IntData(int64(probe.PeriodSeconds)),
+		"failureThreshold":    llx.IntData(int64(probe.FailureThreshold)),
+		"httpGet":             llx.DictData(mqlHttpGet),
+		"tcpSocket":           llx.DictData(mqlTcpSocket),
+	})
 }
 
-func mqlCondition(runtime *resources.Runtime, c *runpb.Condition, parentId, suffix string) (resources.ResourceType, error) {
+func mqlCondition(runtime *plugin.Runtime, c *runpb.Condition, parentId, suffix string) (plugin.Resource, error) {
 	if c == nil {
 		return nil, nil
 	}
-	return runtime.CreateResource("gcp.project.cloudRunService.condition",
-		"id", fmt.Sprintf("%s/condition/%s", parentId, suffix),
-		"type", c.Type,
-		"state", c.String(),
-		"message", c.Message,
-		"lastTransitionTime", core.MqlTime(c.LastTransitionTime.AsTime()),
-		"severity", c.Severity.String(),
-	)
+	return CreateResource(runtime, "gcp.project.cloudRunService.condition", map[string]*llx.RawData{
+		"id":                 llx.StringData(fmt.Sprintf("%s/condition/%s", parentId, suffix)),
+		"type":               llx.StringData(c.Type),
+		"state":              llx.StringData(c.String()),
+		"message":            llx.StringData(c.Message),
+		"lastTransitionTime": llx.TimeData(c.LastTransitionTime.AsTime()),
+		"severity":           llx.StringData(c.Severity.String()),
+	})
 }
 
 func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]interface{}, error) {
@@ -618,13 +620,13 @@ func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]interface{}, error) {
 	if vpcAccess == nil {
 		return nil, nil
 	}
-	return core.JsonToDict(mqlVpcAccess{
+	return convert.JsonToDict(mqlVpcAccess{
 		Connector: vpcAccess.Connector,
 		Egress:    vpcAccess.Egress.String(),
 	})
 }
 
-func mqlContainers(runtime *resources.Runtime, containers []*runpb.Container, templateId string) ([]interface{}, error) {
+func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templateId string) ([]interface{}, error) {
 	mqlContainers := make([]interface{}, 0, len(containers))
 	for _, c := range containers {
 		mqlEnvs := make([]interface{}, 0, len(c.Env))
@@ -649,7 +651,7 @@ func mqlContainers(runtime *resources.Runtime, containers []*runpb.Container, te
 		var mqlResources map[string]interface{}
 		if c.Resources != nil {
 			mqlResources = map[string]interface{}{
-				"limits":  core.StrMapToInterface(c.Resources.Limits),
+				"limits":  convert.MapToInterfaceMap(c.Resources.Limits),
 				"cpuIdle": c.Resources.CpuIdle,
 			}
 		}
@@ -681,20 +683,20 @@ func mqlContainers(runtime *resources.Runtime, containers []*runpb.Container, te
 			return nil, err
 		}
 
-		mqlContainer, err := runtime.CreateResource("gcp.project.cloudRunService.container",
-			"id", containerId,
-			"name", c.Name,
-			"image", c.Image,
-			"command", core.StrSliceToInterface(c.Command),
-			"args", core.StrSliceToInterface(c.Args),
-			"env", mqlEnvs,
-			"resources", mqlResources,
-			"ports", mqlPorts,
-			"volumeMounts", mqlVolumeMounts,
-			"workingDir", c.WorkingDir,
-			"livenessProbe", mqlLivenessProbe,
-			"startupProbe", mqlStartupProbe,
-		)
+		mqlContainer, err := CreateResource(runtime, "gcp.project.cloudRunService.container", map[string]*llx.RawData{
+			"id":            llx.StringData(containerId),
+			"name":          llx.StringData(c.Name),
+			"image":         llx.StringData(c.Image),
+			"command":       llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
+			"args":          llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
+			"env":           llx.ArrayData(mqlEnvs, types.Dict),
+			"resources":     llx.DictData(mqlResources),
+			"ports":         llx.ArrayData(mqlPorts, types.Dict),
+			"volumeMounts":  llx.ArrayData(mqlVolumeMounts, types.Dict),
+			"workingDir":    llx.StringData(c.WorkingDir),
+			"livenessProbe": llx.ResourceData(mqlLivenessProbe, "gcp.project.cloudRunService.container.probe"),
+			"startupProbe":  llx.ResourceData(mqlStartupProbe, "gcp.project.cloudRunService.container.probe"),
+		})
 		if err != nil {
 			return nil, err
 		}

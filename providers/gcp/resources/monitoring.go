@@ -6,68 +6,68 @@ package resources
 import (
 	"context"
 	"fmt"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/types"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
 func (g *mqlGcpProjectMonitoringService) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 	return fmt.Sprintf("%s/gcp.project.monitoringService", projectId), nil
 }
 
-func (g *mqlGcpProjectMonitoringService) init(args *resources.Args) (*resources.Args, GcpProjectMonitoringService, error) {
-	if len(*args) > 0 {
+func initGcpProjectMonitoringService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	conn := runtime.Connection.(*connection.GcpConnection)
+	projectId := conn.ResourceID()
+	args["projectId"] = llx.StringData(projectId)
 
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetMonitoring() (interface{}, error) {
-	projectId, err := g.Id()
+func (g *mqlGcpProject) monitoring() (*mqlGcpProjectMonitoringService, error) {
+
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	projectId := g.Id.Data
+
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return g.MotorRuntime.CreateResource("gcp.project.monitoringService",
-		"projectId", projectId,
-	)
+	return res.(*mqlGcpProjectMonitoringService), nil
 }
 
 func (g *mqlGcpProjectMonitoringServiceAlertPolicy) id() (string, error) {
-	return g.Name()
+	return g.Name.Data, g.Name.Error
 }
 
-func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
+func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]interface{}, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
 	}
+	projectId := g.ProjectId.Data
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, erro
 					"denominatorFilter":     thresh.DenominatorFilter,
 					"comparison":            thresh.Comparison.String(),
 					"thresholdValue":        thresh.ThresholdValue,
-					"duration":              core.MqlTime(llx.DurationToTime(thresh.Duration.Seconds)),
+					"duration":              thresh.Duration.Seconds,
 					"evaluationMissingData": thresh.EvaluationMissingData.String(),
 				}
 			}
@@ -117,7 +117,7 @@ func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, erro
 			if absent := c.GetConditionAbsent(); absent != nil {
 				mqlAbsent = map[string]interface{}{
 					"filter":   absent.Filter,
-					"duration": core.MqlTime(llx.DurationToTime(absent.Duration.Seconds)),
+					"duration": llx.DurationToTime(absent.Duration.Seconds),
 				}
 			}
 
@@ -133,7 +133,7 @@ func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, erro
 			if monitoringQLanguage := c.GetConditionMonitoringQueryLanguage(); monitoringQLanguage != nil {
 				mqlMonitoringQueryLanguage = map[string]interface{}{
 					"query":                 monitoringQLanguage.Query,
-					"duration":              core.MqlTime(llx.DurationToTime(int64(monitoringQLanguage.Duration.Seconds))),
+					"duration":              int64(monitoringQLanguage.Duration.Seconds),
 					"evaluationMissingData": monitoringQLanguage.EvaluationMissingData.String(),
 				}
 			}
@@ -161,32 +161,32 @@ func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, erro
 			var mqlNotifRateLimit interface{}
 			if p.AlertStrategy.NotificationRateLimit != nil {
 				mqlNotifRateLimit = map[string]interface{}{
-					"period": core.MqlTime(llx.DurationToTime(p.AlertStrategy.NotificationRateLimit.Period.Seconds)),
+					"period": llx.TimeData(llx.DurationToTime(p.AlertStrategy.NotificationRateLimit.Period.Seconds)),
 				}
 			}
 			mqlAlertStrategy = map[string]interface{}{
 				"notificationRateLimit": mqlNotifRateLimit,
-				"autoClose":             core.MqlTime(llx.DurationToTime(p.AlertStrategy.AutoClose.Seconds)),
+				"autoClose":             llx.TimeData(llx.DurationToTime(p.AlertStrategy.AutoClose.Seconds)),
 			}
 		}
 
-		mqlPolicy, err := g.MotorRuntime.CreateResource("gcp.project.monitoringService.alertPolicy",
-			"projectId", projectId,
-			"name", p.Name,
-			"displayName", p.DisplayName,
-			"documentation", mqlDoc,
-			"labels", core.StrMapToInterface(p.UserLabels),
-			"conditions", mqlConditions,
-			"combiner", p.Combiner.String(),
-			"enabled", p.Enabled.Value,
-			"validity", mqlValidity,
-			"notificationChannelUrls", core.StrSliceToInterface(p.NotificationChannels),
-			"created", core.MqlTime(p.CreationRecord.MutateTime.AsTime()),
-			"createdBy", p.CreationRecord.MutatedBy,
-			"updated", core.MqlTime(p.MutationRecord.MutateTime.AsTime()),
-			"updatedBy", p.MutationRecord.MutatedBy,
-			"alertStrategy", mqlAlertStrategy,
-		)
+		mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.monitoringService.alertPolicy", map[string]*llx.RawData{
+			"projectId":               llx.StringData(projectId),
+			"name":                    llx.StringData(p.Name),
+			"displayName":             llx.StringData(p.DisplayName),
+			"documentation":           llx.DictData(mqlDoc),
+			"labels":                  llx.MapData(convert.MapToInterfaceMap(p.UserLabels), types.String),
+			"conditions":              llx.ArrayData(mqlConditions, types.Dict),
+			"combiner":                llx.StringData(p.Combiner.String()),
+			"enabled":                 llx.BoolData(p.Enabled.Value),
+			"validity":                llx.DictData(mqlValidity),
+			"notificationChannelUrls": llx.ArrayData(convert.SliceAnyToInterface(p.NotificationChannels), types.String),
+			"created":                 llx.TimeData(p.CreationRecord.MutateTime.AsTime()),
+			"createdBy":               llx.StringData(p.CreationRecord.MutatedBy),
+			"updated":                 llx.TimeData(p.MutationRecord.MutateTime.AsTime()),
+			"updatedBy":               llx.StringData(p.MutationRecord.MutatedBy),
+			"alertStrategy":           llx.DictData(mqlAlertStrategy),
+		})
 		if err != nil {
 			return nil, err
 		}
