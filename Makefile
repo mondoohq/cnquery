@@ -133,7 +133,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua providers/build/okta providers/build/google-workspace
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/ipmi providers/build/oci providers/build/slack providers/build/github providers/build/gitlab providers/build/terraform providers/build/vsphere providers/build/opcua providers/build/okta providers/build/google-workspace providers/build/arista
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -174,6 +174,9 @@ providers/build/okta: providers/lr
 providers/build/google-workspace: providers/lr
 	@$(call buildProvider, providers/google-workspace)
 
+providers/build/arista: providers/lr
+	@$(call buildProvider, providers/arista)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -188,6 +191,7 @@ providers/install:
 	@$(call installProvider, providers/opcua)
 	@$(call installProvider, providers/okta)
 	@$(call installProvider, providers/google-workspace)
+	@$(call installProvider, providers/arista)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -202,6 +206,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/opcua)
 	@$(call bundleProvider, providers/okta)
 	@$(call bundleProvider, providers/google-workspace)
+	@$(call bundleProvider, providers/arista)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -217,6 +222,7 @@ providers/test:
 	@$(call testGpModProvider, providers/opcua)
 	@$(call testGpModProvider, providers/okta)
 	@$(call testGpModProvider, providers/google-workspace)
+	@$(call testGpModProvider, providers/arista)
 
 lr/test:
 	go test ./resources/lr/...

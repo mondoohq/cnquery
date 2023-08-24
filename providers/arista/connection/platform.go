@@ -1,10 +1,10 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package arista
+package connection
 
-func (t *Provider) Identifier() (string, error) {
-	v, err := t.GetVersion()
+func (c *AristaConnection) Identifier() (string, error) {
+	v, err := c.GetVersion()
 	if err != nil {
 		return "", err
 	}
