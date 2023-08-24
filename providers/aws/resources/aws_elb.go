@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package resources
 
 import (
@@ -68,7 +71,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId, toString(lb.LoadBalancerName))),
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), toString(lb.LoadBalancerName))),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
 							"dnsName":              llx.StringData(toString(lb.DNSName)),
 							"name":                 llx.StringData(toString(lb.LoadBalancerName)),

@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package resources
 
 import (
@@ -171,8 +174,8 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAwsEc2NetworkaclEntry) portRange() (interface{}, error) {
-	return nil, nil
+func (a *mqlAwsEc2NetworkaclEntry) portRange() (*mqlAwsEc2NetworkaclEntryPortrange, error) {
+	return &mqlAwsEc2NetworkaclEntryPortrange{}, nil
 }
 
 func (a *mqlAwsEc2Securitygroup) isAttachedToNetworkInterface() (bool, error) {
@@ -825,14 +828,14 @@ func (a *mqlAwsEc2Instance) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsEc2Instance) vpc() (interface{}, error) {
+func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
 	// this indicated that no vpc is attached since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare:
 	// aws.ec2.instances.where(state != "terminated") { vpc != null }
 	return nil, nil
 }
 
-func (a *mqlAwsEc2Instance) keypair() (interface{}, error) {
+func (a *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 	// this indicated that no keypair is assigned to the ec2instance since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare, e.g.:
 	// aws.ec2.instances.where(keypair != null) { instanceId }

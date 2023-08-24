@@ -220,7 +220,7 @@ providers/build/azure: providers/lr
 	@$(call buildProvider, providers/azure)
 	
 providers/build/aws: providers/lr
-	@$(call genProvider, providers/aws)
+	@$(call buildProvider, providers/aws)
 
 providers/build/ms365: providers/lr
 	@$(call buildProvider, providers/ms365)
