@@ -1,15 +1,18 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package googleworkspace
+package resources
 
 import (
 	"errors"
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/types"
 	reports "google.golang.org/api/admin/reports/v1"
 )
 
@@ -45,22 +48,23 @@ func (g *mqlGoogleworkspaceReportApps) id() (string, error) {
 	return "googleworkspace.report.apps", nil
 }
 
-func (g *mqlGoogleworkspaceReportApps) GetDrive() ([]interface{}, error) {
-	provider, reportsService, err := reportsService(g.MotorRuntime.Motor.Provider)
+func (g *mqlGoogleworkspaceReportApps) drive() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	reportsService, err := reportsService(conn)
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
 
-	activities, err := reportsService.Activities.List("all", "drive").CustomerId(provider.GetCustomerID()).Do()
+	activities, err := reportsService.Activities.List("all", "drive").CustomerId(conn.CustomerID()).Do()
 	if err != nil {
 		return nil, err
 	}
 
 	for {
 		for i := range activities.Items {
-			r, err := newMqlGoogleWorkspaceReportActivity(g.MotorRuntime, activities.Items[i])
+			r, err := newMqlGoogleWorkspaceReportActivity(g.MqlRuntime, activities.Items[i])
 			if err != nil {
 				return nil, err
 			}
@@ -71,7 +75,7 @@ func (g *mqlGoogleworkspaceReportApps) GetDrive() ([]interface{}, error) {
 			break
 		}
 
-		activities, err = reportsService.Activities.List("all", "drive").CustomerId(provider.GetCustomerID()).
+		activities, err = reportsService.Activities.List("all", "drive").CustomerId(conn.CustomerID()).
 			PageToken(activities.NextPageToken).Do()
 		if err != nil {
 			return nil, err
@@ -82,45 +86,46 @@ func (g *mqlGoogleworkspaceReportApps) GetDrive() ([]interface{}, error) {
 }
 
 func (g *mqlGoogleworkspaceReportActivity) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
+	if g.Id.Error != nil {
+		return "", g.Id.Error
 	}
+	id := g.Id.Data
 	return "googleworkspace.report.activity/" + strconv.FormatInt(id, 10), nil
 }
 
-func newMqlGoogleWorkspaceReportActivity(runtime *resources.Runtime, entry *reports.Activity) (interface{}, error) {
-	actor, err := core.JsonToDict(entry.Actor)
+func newMqlGoogleWorkspaceReportActivity(runtime *plugin.Runtime, entry *reports.Activity) (interface{}, error) {
+	actor, err := convert.JsonToDict(entry.Actor)
 	if err != nil {
 		return nil, err
 	}
-	events, err := core.JsonToDictSlice(entry.Events)
+	events, err := convert.JsonToDictSlice(entry.Events)
 	if err != nil {
 		return nil, err
 	}
 
-	return runtime.CreateResource("googleworkspace.report.activity",
-		"id", entry.Id.UniqueQualifier,
-		"ipAddress", entry.IpAddress,
-		"ownerDomain", entry.OwnerDomain,
-		"actor", actor,
-		"events", events,
-	)
+	return CreateResource(runtime, "googleworkspace.report.activity", map[string]*llx.RawData{
+		"id":          llx.IntData(entry.Id.UniqueQualifier),
+		"ipAddress":   llx.StringData(entry.IpAddress),
+		"ownerDomain": llx.StringData(entry.OwnerDomain),
+		"actor":       llx.MapData(actor, types.Any),
+		"events":      llx.ArrayData(events, types.Any),
+	})
 }
 
 func (g *mqlGoogleworkspaceReportUsers) id() (string, error) {
 	return "googleworkspace.report.users", nil
 }
 
-func (g *mqlGoogleworkspaceReportUsers) GetList() ([]interface{}, error) {
-	provider, reportsService, err := reportsService(g.MotorRuntime.Motor.Provider)
+func (g *mqlGoogleworkspaceReportUsers) list() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	reportsService, err := reportsService(conn)
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
 	date := time.Now()
-	usageReports, err := reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(provider.GetCustomerID()).Do()
+	usageReports, err := reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +133,7 @@ func (g *mqlGoogleworkspaceReportUsers) GetList() ([]interface{}, error) {
 		if len(usageReports.UsageReports) == 0 {
 			date = date.Add(-24 * time.Hour)
 			// try fetching from a day before
-			usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(provider.GetCustomerID()).Do()
+			usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
 			if err != nil {
 				return nil, err
 			}
@@ -136,7 +141,7 @@ func (g *mqlGoogleworkspaceReportUsers) GetList() ([]interface{}, error) {
 		}
 
 		for i := range usageReports.UsageReports {
-			r, err := newMqlGoogleWorkspaceUsageReport(g.MotorRuntime, usageReports.UsageReports[i])
+			r, err := newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, usageReports.UsageReports[i])
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +152,7 @@ func (g *mqlGoogleworkspaceReportUsers) GetList() ([]interface{}, error) {
 			break
 		}
 
-		usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(provider.GetCustomerID()).
+		usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).
 			PageToken(usageReports.NextPageToken).Do()
 		if err != nil {
 			return nil, err
@@ -157,62 +162,63 @@ func (g *mqlGoogleworkspaceReportUsers) GetList() ([]interface{}, error) {
 	return res, nil
 }
 
-func newMqlGoogleWorkspaceUsageReport(runtime *resources.Runtime, entry *reports.UsageReport) (interface{}, error) {
+func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.UsageReport) (*mqlGoogleworkspaceReportUsage, error) {
 	var date *time.Time
 	parsedDate, err := time.Parse(ISO8601, entry.Date)
 	if err == nil {
 		date = &parsedDate
 	}
 
-	parameters, err := core.JsonToDictSlice(entry.Parameters)
+	parameters, err := convert.JsonToDictSlice(entry.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
 	r := parseUserReports(entry.Parameters)
 
-	accountUsage, err := core.JsonToDict(r.Account)
+	accountUsage, err := convert.JsonToDict(r.Account)
 	if err != nil {
 		return nil, err
 	}
 
-	securityUsage, err := core.JsonToDict(r.Security)
+	securityUsage, err := convert.JsonToDict(r.Security)
 	if err != nil {
 		return nil, err
 	}
 
-	appUsage, err := core.JsonToDict(r.AppUsage)
+	appUsage, err := convert.JsonToDict(r.AppUsage)
 	if err != nil {
 		return nil, err
 	}
 
-	return runtime.CreateResource("googleworkspace.report.usage",
-		"customerId", entry.Entity.CustomerId,
-		"entityId", entry.Entity.EntityId,
-		"profileId", entry.Entity.ProfileId,
-		"type", entry.Entity.Type,
-		"userEmail", entry.Entity.UserEmail,
-		"date", date,
-		"parameters", parameters,
-		"account", accountUsage,
-		"security", securityUsage,
-		"appUsage", appUsage,
-	)
+	report, err := CreateResource(runtime, "googleworkspace.report.usage", map[string]*llx.RawData{
+		"customerId": llx.StringData(entry.Entity.CustomerId),
+		"entityId":   llx.StringData(entry.Entity.EntityId),
+		"profileId":  llx.StringData(entry.Entity.ProfileId),
+		"type":       llx.StringData(entry.Entity.Type),
+		"userEmail":  llx.StringData(entry.Entity.UserEmail),
+		"date":       llx.TimeDataPtr(date),
+		"parameters": llx.ArrayData(parameters, types.Any),
+		"account":    llx.MapData(accountUsage, types.Any),
+		"security":   llx.MapData(securityUsage, types.Any),
+		"appUsage":   llx.MapData(appUsage, types.Any),
+	})
+	return report.(*mqlGoogleworkspaceReportUsage), err
 }
 
 func (g *mqlGoogleworkspaceReportUsage) id() (string, error) {
-	customerId, err := g.CustomerId()
-	if err != nil {
-		return "", err
+	if g.CustomerId.Error != nil {
+		return "", g.CustomerId.Error
 	}
-	profileId, err := g.ProfileId()
-	if err != nil {
-		return "", err
+	customerId := g.CustomerId.Data
+	if g.ProfileId.Error != nil {
+		return "", g.ProfileId.Error
 	}
-	date, err := g.Date()
-	if err != nil {
-		return "", err
+	profileId := g.ProfileId.Data
+	if g.Date.Error != nil {
+		return "", g.Date.Error
 	}
+	date := g.Date.Data
 
 	return "googleworkspace.report.usage/" + customerId + "/" + profileId + "/" + date.Format(ISO8601), nil
 }
@@ -348,17 +354,17 @@ func parseUserReports(params []*reports.UsageReportParameters) *userReport {
 	return r
 }
 
-func (g *mqlGoogleworkspaceReportUsage) GetAccount() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) account() (interface{}, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGoogleworkspaceReportUsage) GetSecurity() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) security() (interface{}, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGoogleworkspaceReportUsage) GetAppUsage() (interface{}, error) {
+func (g *mqlGoogleworkspaceReportUsage) appUsage() (interface{}, error) {
 	// is auto-computed during creation time
 	return nil, errors.New("not implemented")
 }

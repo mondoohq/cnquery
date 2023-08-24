@@ -10,17 +10,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers"
-	google_provider "go.mondoo.com/cnquery/motor/providers/google"
-	"go.mondoo.com/cnquery/resources/packs/testutils"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 var x = testutils.InitTester(googleWorkspaceProvider(), Registry)
 
-func googleWorkspaceProvider() *motor.Motor {
-	provider, err := google_provider.New(&providers.Config{
-		Backend: providers.ProviderType_GOOGLE_WORKSPACE,
+func googleWorkspaceProvider() *googleWorkspaceConnection {
+	provider, err := googleworkspace.NewGoogleWorkspaceConnection(&inventory.Config{
+		Backend: "google-workspace",
 		Options: map[string]string{
 			"customer-id": "<add-here>",
 		},
@@ -29,12 +27,7 @@ func googleWorkspaceProvider() *motor.Motor {
 		panic(err.Error())
 	}
 
-	m, err := motor.New(provider)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return m
+	return m.Connection
 }
 
 func TestResource_Domain(t *testing.T) {

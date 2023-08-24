@@ -1,7 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option go_package = "go.mondoo.com/cnquery/resources/packs/googleworkspace"
+option provider = "go.mondoo.com/cnquery/providers/google-workspace"
+option go_package = "go.mondoo.com/cnquery/providers/google-workspace/resources"
 
 // Google Workspace
 googleworkspace {
