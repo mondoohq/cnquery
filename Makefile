@@ -159,7 +159,8 @@ providers/build: providers/build/core \
 	providers/build/vcd \
 	providers/build/gcp \
 	providers/build/k8s \
-	providers/build/azure
+	providers/build/azure \
+	providers/build/aws
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -245,6 +246,8 @@ providers/install:
 	@$(call installProvider, providers/k8s)
 	@$(call installProvider, providers/azure)
 	@$(call installProvider, providers/ms365)
+	@$(call installProvider, providers/aws)
+
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -266,6 +269,8 @@ providers/bundle:
 	@$(call bundleProvider, providers/k8s)
 	@$(call bundleProvider, providers/azure)
 	@$(call bundleProvider, providers/ms365)
+	@$(call bundleProvider, providers/aws)
+
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -288,6 +293,8 @@ providers/test:
 	@$(call testGpModProvider, providers/k8s)
 	@$(call testGpModProvider, providers/azure)
 	@$(call testGpModProvider, providers/ms365)
+	@$(call testGpModProvider, providers/aws)
+
 
 providers/gomodtidy:
 #	@$(call gomodtidyProvider, providers/core)
@@ -310,6 +317,8 @@ providers/gomodtidy:
 	@$(call gomodtidyProvider, providers/k8s)
 	@$(call gomodtidyProvider, providers/azure)
 	@$(call gomodtidyProvider, providers/ms365)
+	@$(call testGpModProvider, providers/aws)
+
 
 lr/test:
 	go test ./resources/lr/...

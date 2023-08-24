@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
-	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
 )
 
 func (a *mqlAwsDms) id() (string, error) {

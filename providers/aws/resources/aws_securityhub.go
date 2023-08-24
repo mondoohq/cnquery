@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
-	"go.mondoo.com/cnquery/providers/aws/resources/jobpool"
 )
 
 func (a *mqlAwsSecurityhub) id() (string, error) {
