@@ -36,10 +36,7 @@ func Go(packageName string, ast *LR, collector *Collector) (string, error) {
 	o.goSetData(ast.Resources)
 
 	for i := range ast.Resources {
-		err := o.goResource(ast.Resources[i])
-		if err != nil {
-			return o.data, err
-		}
+		o.goResource(ast.Resources[i])
 	}
 
 	imports := ""
@@ -318,11 +315,10 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	)
 }
 
-func (b *goBuilder) goResource(r *Resource) error {
+func (b *goBuilder) goResource(r *Resource) {
 	b.goStruct(r)
 	b.goFactory(r)
 	b.goFields(r)
-	return nil
 }
 
 func (b *goBuilder) goStruct(r *Resource) {
