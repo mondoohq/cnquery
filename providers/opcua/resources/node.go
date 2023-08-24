@@ -1,17 +1,17 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package opcua
+package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gopcua/opcua"
 	"github.com/gopcua/opcua/errors"
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
 
 type nodeMeta struct {
@@ -33,7 +33,7 @@ type nodeMeta struct {
 }
 
 func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
-	attrs, err := n.AttributesWithContext(ctx, ua.AttributeIDNodeClass, ua.AttributeIDBrowseName, ua.AttributeIDDescription, ua.AttributeIDAccessLevel, ua.AttributeIDDataType)
+	attrs, err := n.Attributes(ctx, ua.AttributeIDNodeClass, ua.AttributeIDBrowseName, ua.AttributeIDDescription, ua.AttributeIDAccessLevel, ua.AttributeIDDataType)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +119,8 @@ func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
 	}
 
 	// TODO: set path
-
 	fetchReference := func(refType uint32) ([]*opcua.Node, error) {
-		return n.ReferencedNodesWithContext(ctx, refType, ua.BrowseDirectionForward, ua.NodeClassAll, true)
+		return n.ReferencedNodes(ctx, refType, ua.BrowseDirectionForward, ua.NodeClassAll, true)
 	}
 
 	if componentRefs, err := fetchReference(id.HasComponent); err != nil {
@@ -145,76 +144,61 @@ func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
 	return &def, nil
 }
 
-func newMqlOpcuaNodeResource(runtime *resources.Runtime, ndef *nodeMeta) (interface{}, error) {
-	res, err := runtime.CreateResource("opcua.node",
-		"id", ndef.NodeID.String(),
-		"name", ndef.BrowseName,
-		"class", ndef.NodeClass.String(),
-		"description", ndef.Description,
-		"writeable", ndef.Writable,
-		"dataType", ndef.DataType,
-		"min", ndef.Min,
-		"max", ndef.Max,
-		"unit", ndef.Unit,
-		"accessLevel", ndef.AccessLevel.String(),
-	)
+func newMqlOpcuaNodeResource(runtime *plugin.Runtime, ndef *nodeMeta) (*mqlOpcuaNode, error) {
+	res, err := CreateResource(runtime, "opcua.node", map[string]*llx.RawData{
+		"id":          llx.StringData(ndef.NodeID.String()),
+		"name":        llx.StringData(ndef.BrowseName),
+		"class":       llx.StringData(ndef.NodeClass.String()),
+		"description": llx.StringData(ndef.Description),
+		"writeable":   llx.BoolData(ndef.Writable),
+		"dataType":    llx.StringData(ndef.DataType),
+		"min":         llx.StringData(ndef.Min),
+		"max":         llx.StringData(ndef.Max),
+		"unit":        llx.StringData(ndef.Unit),
+		"accessLevel": llx.StringData(ndef.AccessLevel.String()),
+	})
 	if err != nil {
 		return nil, err
 	}
-	res.MqlResource().Cache.Store("_object", &resources.CacheEntry{
-		Data: ndef,
-	})
-	return res, nil
+
+	r := res.(*mqlOpcuaNode)
+	r.object = ndef
+	return r, nil
+}
+
+type mqlOpcuaNodeInternal struct {
+	object *nodeMeta
 }
 
 func (o *mqlOpcuaNode) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "opcua.node/" + id, nil
+	return "opcua.node/" + o.Id.Data, o.Id.Error
 }
 
-func (o *mqlOpcuaNode) GetNamespace() (interface{}, error) {
-	res, ok := o.Cache.Load("_object")
-	if !ok {
+func (o *mqlOpcuaNode) namespace() (*mqlOpcuaNamespace, error) {
+	nodeDef := o.object
+	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
 	}
 
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	nodeDef, ok := res.Data.(*nodeMeta)
-	if !ok {
-		return nil, fmt.Errorf("\"opcua\" failed to cast field \"node\" to the right type: %#v", res)
-	}
-
-	obj, err := o.MotorRuntime.CreateResource("opcua")
+	obj, err := CreateResource(o.MqlRuntime, "opcua", nil)
 	if err != nil {
 		return nil, err
 	}
-	mqlOpcua := obj.(Opcua)
+	mqlOpcua := obj.(*mqlOpcua)
 
-	namespaces, err := mqlOpcua.Namespaces()
-	if err != nil {
-		return nil, err
+	namespaces := mqlOpcua.GetNamespaces()
+	if namespaces.Error != nil {
+		return nil, namespaces.Error
 	}
 
-	entry := namespaces[nodeDef.NodeID.Namespace()]
-	return entry, nil
+	entry := namespaces.Data[nodeDef.NodeID.Namespace()]
+	return entry.(*mqlOpcuaNamespace), nil
 }
 
-func (o *mqlOpcuaNode) GetProperties() ([]interface{}, error) {
-	res, ok := o.Cache.Load("_object")
-	if !ok {
+func (o *mqlOpcuaNode) properties() ([]interface{}, error) {
+	nodeDef := o.object
+	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	nodeDef, ok := res.Data.(*nodeMeta)
-	if !ok {
-		return nil, fmt.Errorf("\"opcua\" failed to cast field \"node\" to the right type: %#v", res)
 	}
 
 	ctx := context.Background()
@@ -225,7 +209,7 @@ func (o *mqlOpcuaNode) GetProperties() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := newMqlOpcuaNodeResource(o.MotorRuntime, n)
+		r, err := newMqlOpcuaNodeResource(o.MqlRuntime, n)
 		if err != nil {
 			return nil, err
 		}
@@ -235,17 +219,10 @@ func (o *mqlOpcuaNode) GetProperties() ([]interface{}, error) {
 	return results, nil
 }
 
-func (o *mqlOpcuaNode) GetComponents() ([]interface{}, error) {
-	res, ok := o.Cache.Load("_object")
-	if !ok {
+func (o *mqlOpcuaNode) components() ([]interface{}, error) {
+	nodeDef := o.object
+	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	nodeDef, ok := res.Data.(*nodeMeta)
-	if !ok {
-		return nil, fmt.Errorf("\"opcua\" failed to cast field \"node\" to the right type: %#v", res)
 	}
 
 	ctx := context.Background()
@@ -256,7 +233,7 @@ func (o *mqlOpcuaNode) GetComponents() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := newMqlOpcuaNodeResource(o.MotorRuntime, n)
+		r, err := newMqlOpcuaNodeResource(o.MqlRuntime, n)
 		if err != nil {
 			return nil, err
 		}
@@ -266,17 +243,10 @@ func (o *mqlOpcuaNode) GetComponents() ([]interface{}, error) {
 	return results, nil
 }
 
-func (o *mqlOpcuaNode) GetOrganizes() ([]interface{}, error) {
-	res, ok := o.Cache.Load("_object")
-	if !ok {
+func (o *mqlOpcuaNode) organizes() ([]interface{}, error) {
+	nodeDef := o.object
+	if nodeDef == nil {
 		return nil, errors.New("could not fetch properties")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	nodeDef, ok := res.Data.(*nodeMeta)
-	if !ok {
-		return nil, fmt.Errorf("\"opcua\" failed to cast field \"node\" to the right type: %#v", res)
 	}
 
 	ctx := context.Background()
@@ -287,7 +257,7 @@ func (o *mqlOpcuaNode) GetOrganizes() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := newMqlOpcuaNodeResource(o.MotorRuntime, n)
+		r, err := newMqlOpcuaNodeResource(o.MqlRuntime, n)
 		if err != nil {
 			return nil, err
 		}
