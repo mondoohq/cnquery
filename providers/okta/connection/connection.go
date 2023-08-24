@@ -41,7 +41,6 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 
 	org := conf.Options["organization"]
 
-	// if a secret was provided, it always overrides the env variable since it has precedence
 	var token string
 	if len(conf.Credentials) > 0 {
 		log.Debug().Int("credentials", len(conf.Credentials)).Msg("credentials")
@@ -54,9 +53,8 @@ func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 			}
 		}
 	}
-
 	if token == "" {
-		return nil, errors.New("a valid Okta token is required, pass --token '<yourtoken>' or set OKTA_CLIENT_TOKEN environment variable")
+		return nil, errors.New("a valid Okta token is required, pass --token '<yourtoken>' or set OKTA_API_TOKEN environment variable")
 	}
 
 	_, client, err := okta.NewClient(

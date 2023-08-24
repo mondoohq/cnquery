@@ -21,7 +21,6 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Specify the Okta organization to scan",
-					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "token",

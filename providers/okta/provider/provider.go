@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -46,6 +47,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		token = string(x.Value)
 	}
 	if token == "" {
+		// aligns the handling with https://github.com/okta/terraform-provider-okta/blob/03be7cc28de0a9259a48f424c9411cc1c2708c2e/website/docs/index.html.markdown?plain=1#L64-L68
+		token = os.Getenv("OKTA_API_TOKEN")
+	}
+	if token == "" {
 		token = os.Getenv("OKTA_TOKEN")
 	}
 	if token == "" {
@@ -56,6 +61,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	organization := ""
 	if x, ok := flags["organization"]; ok && len(x.Value) != 0 {
 		organization = string(x.Value)
+	}
+	if organization == "" {
+		// aligns the handling with https://github.com/okta/terraform-provider-okta/blob/03be7cc28de0a9259a48f424c9411cc1c2708c2e/website/docs/index.html.markdown?plain=1#L64-L68
+		orgName := os.Getenv("OKTA_ORG_NAME")
+		baseUrl := os.Getenv("OKTA_BASE_URL")
+		organization = strings.TrimSpace(orgName) + "." + strings.TrimSpace(baseUrl)
+	}
+	if organization == "" {
+		return nil, errors.New("okta provider requires an organization. please set option `organization` like `dev-123456.okta.com`")
 	}
 	if organization != "" {
 		conn.Options["organization"] = organization
