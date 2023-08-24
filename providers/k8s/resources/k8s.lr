@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 import "../../os/resources/os.lr"
 
 option provider = "go.mondoo.com/cnquery/providers/k8s"
