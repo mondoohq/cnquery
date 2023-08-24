@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package okta
+package resources
 
 import (
 	"context"
@@ -14,9 +14,11 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/okta/sdk"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/okta/connection"
+	"go.mondoo.com/cnquery/providers/okta/resources/sdk"
 )
 
 // https://developer.okta.com/docs/reference/api/policy/#policy-object
@@ -36,14 +38,11 @@ func (o *mqlOktaPolicies) id() (string, error) {
 	return "okta.policies", nil
 }
 
-func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interface{}, error) {
-	op, err := oktaProvider(runtime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-	ctx := context.Background()
-	client := op.Client()
+func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]interface{}, error) {
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
 
+	ctx := context.Background()
 	apiSupplement := &sdk.ApiExtension{
 		RequestExecutor: client.CloneRequestExecutor(),
 	}
@@ -107,36 +106,36 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	return list, nil
 }
 
-func (o *mqlOktaPolicies) GetPassword() (interface{}, error) {
-	return listPolicies(o.MotorRuntime, PASSWORD)
+func (o *mqlOktaPolicies) password() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, PASSWORD)
 }
 
-func (o *mqlOktaPolicies) GetMfaEnroll() (interface{}, error) {
-	return listPolicies(o.MotorRuntime, MFA_ENROLL)
+func (o *mqlOktaPolicies) mfaEnroll() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, MFA_ENROLL)
 }
 
-func (o *mqlOktaPolicies) GetSignOn() (interface{}, error) {
-	return listPolicies(o.MotorRuntime, OKTA_SIGN_ON)
+func (o *mqlOktaPolicies) signOn() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, OKTA_SIGN_ON)
 }
 
-func (o *mqlOktaPolicies) GetOauthAuthorizationPolicy() (interface{}, error) {
-	return listPolicies(o.MotorRuntime, OAUTH_AUTHORIZATION_POLICY)
+func (o *mqlOktaPolicies) oauthAuthorizationPolicy() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, OAUTH_AUTHORIZATION_POLICY)
 }
 
-func (o *mqlOktaPolicies) GetIdpDiscovery() (interface{}, error) {
-	return listPolicies(o.MotorRuntime, IDP_DISCOVERY)
+func (o *mqlOktaPolicies) idpDiscovery() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, IDP_DISCOVERY)
 }
 
-func (o *mqlOktaPolicies) GetAccessPolicy() ([]interface{}, error) {
-	return listPolicies(o.MotorRuntime, ACCESS_POLICY)
+func (o *mqlOktaPolicies) accessPolicy() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, ACCESS_POLICY)
 }
 
-func (o *mqlOktaPolicies) GetProfileEnrollment() ([]interface{}, error) {
-	return listPolicies(o.MotorRuntime, PROFILE_ENROLLMENT)
+func (o *mqlOktaPolicies) profileEnrollment() ([]interface{}, error) {
+	return listPolicies(o.MqlRuntime, PROFILE_ENROLLMENT)
 }
 
-func newMqlOktaPolicy(runtime *resources.Runtime, entry *sdk.PolicyWrapper) (interface{}, error) {
-	conditions, err := core.JsonToDict(entry.Conditions)
+func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (interface{}, error) {
+	conditions, err := convert.JsonToDict(entry.Conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -146,57 +145,44 @@ func newMqlOktaPolicy(runtime *resources.Runtime, entry *sdk.PolicyWrapper) (int
 		system = *entry.System
 	}
 
-	settings, err := core.JsonToDict(entry.Settings)
+	settings, err := convert.JsonToDict(entry.Settings)
 	if err != nil {
 		return nil, err
 	}
 
-	return runtime.CreateResource("okta.policy",
-		"id", entry.Id,
-		"name", entry.Name,
-		"description", entry.Description,
-		"priority", entry.Priority,
-		"status", entry.Status,
-		"system", system,
-		"type", entry.Type,
-		"conditions", conditions,
-		"settings", settings,
-		"created", entry.Created,
-		"lastUpdated", entry.LastUpdated,
-	)
+	return CreateResource(runtime, "okta.policy", map[string]*llx.RawData{
+		"id":          llx.StringData(entry.Id),
+		"name":        llx.StringData(entry.Name),
+		"description": llx.StringData(entry.Description),
+		"priority":    llx.IntData(entry.Priority),
+		"status":      llx.StringData(entry.Status),
+		"system":      llx.BoolData(system),
+		"type":        llx.StringData(entry.Type),
+		"conditions":  llx.DictData(conditions),
+		"settings":    llx.DictData(settings),
+		"created":     llx.TimeDataPtr(entry.Created),
+		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
+	})
 }
 
 func (o *mqlOktaPolicy) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "okta.policy/" + id, nil
+	return "okta.policy/" + o.Id.Data, o.Id.Error
 }
 
-func (o mqlOktaPolicy) GetRules() ([]interface{}, error) {
-	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
+func (o mqlOktaPolicy) rules() ([]interface{}, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+
 	ctx := context.Background()
-	client := op.Client()
-
-	policyId, err := o.Id()
-	if err != nil {
-		return nil, err
+	if o.Id.Error != nil {
+		return nil, o.Id.Error
 	}
 
-	policyType, err := o.Type()
-	if err != nil {
-		return nil, err
+	if o.Type.Data == ACCESS_POLICY {
+		return getAccessPolicyRules(ctx, o.MqlRuntime, o.Id.Data, conn.OrganizationID(), conn.Token())
 	}
 
-	if policyType == ACCESS_POLICY {
-		return getAccessPolicyRules(ctx, o.MotorRuntime, policyId, op.OrganizationID(), op.Token())
-	}
-
-	rules, resp, err := client.Policy.ListPolicyRules(ctx, policyId)
+	rules, resp, err := client.Policy.ListPolicyRules(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +194,7 @@ func (o mqlOktaPolicy) GetRules() ([]interface{}, error) {
 	list := []interface{}{}
 	appendEntry := func(datalist []*okta.PolicyRule) error {
 		for i := range datalist {
-			r, err := newMqlOktaPolicyRule(o.MotorRuntime, datalist[i])
+			r, err := newMqlOktaPolicyRule(o.MqlRuntime, datalist[i])
 			if err != nil {
 				return err
 			}
@@ -236,19 +222,19 @@ func (o mqlOktaPolicy) GetRules() ([]interface{}, error) {
 	return list, nil
 }
 
-func getAccessPolicyRules(ctx context.Context, runtime *resources.Runtime, policyId, host, token string) ([]interface{}, error) {
+func getAccessPolicyRules(ctx context.Context, runtime *plugin.Runtime, policyId, host, token string) ([]interface{}, error) {
 	rules, err := fetchAccessPolicyRules(ctx, policyId, host, token)
 	if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
 	for _, entry := range rules {
-		actions, err := core.JsonToDict(entry.Actions)
+		actions, err := convert.JsonToDict(entry.Actions)
 		if err != nil {
 			return nil, err
 		}
 
-		conditions, err := core.JsonToDict(entry.Conditions)
+		conditions, err := convert.JsonToDict(entry.Conditions)
 		if err != nil {
 			return nil, err
 		}
@@ -258,18 +244,18 @@ func getAccessPolicyRules(ctx context.Context, runtime *resources.Runtime, polic
 			system = *entry.System
 		}
 
-		mqlRule, err := runtime.CreateResource("okta.policyRule",
-			"id", entry.Id,
-			"name", entry.Name,
-			"priority", entry.Priority,
-			"status", entry.Status,
-			"system", system,
-			"type", entry.Type,
-			"actions", actions,
-			"conditions", conditions,
-			"created", entry.Created,
-			"lastUpdated", entry.LastUpdated,
-		)
+		mqlRule, err := CreateResource(runtime, "okta.policyRule", map[string]*llx.RawData{
+			"id":          llx.StringData(entry.Id),
+			"name":        llx.StringData(entry.Name),
+			"priority":    llx.IntData(entry.Priority),
+			"status":      llx.StringData(entry.Status),
+			"system":      llx.BoolData(system),
+			"type":        llx.StringData(entry.Type),
+			"actions":     llx.DictData(actions),
+			"conditions":  llx.DictData(conditions),
+			"created":     llx.TimeDataPtr(entry.Created),
+			"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -278,13 +264,13 @@ func getAccessPolicyRules(ctx context.Context, runtime *resources.Runtime, polic
 	return res, nil
 }
 
-func newMqlOktaPolicyRule(runtime *resources.Runtime, entry *okta.PolicyRule) (interface{}, error) {
-	actions, err := core.JsonToDict(entry.Actions)
+func newMqlOktaPolicyRule(runtime *plugin.Runtime, entry *okta.PolicyRule) (interface{}, error) {
+	actions, err := convert.JsonToDict(entry.Actions)
 	if err != nil {
 		return nil, err
 	}
 
-	conditions, err := core.JsonToDict(entry.Conditions)
+	conditions, err := convert.JsonToDict(entry.Conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -294,26 +280,22 @@ func newMqlOktaPolicyRule(runtime *resources.Runtime, entry *okta.PolicyRule) (i
 		system = *entry.System
 	}
 
-	return runtime.CreateResource("okta.policyRule",
-		"id", entry.Id,
-		"name", entry.Name,
-		"priority", entry.Priority,
-		"status", entry.Status,
-		"system", system,
-		"type", entry.Type,
-		"actions", actions,
-		"conditions", conditions,
-		"created", entry.Created,
-		"lastUpdated", entry.LastUpdated,
-	)
+	return CreateResource(runtime, "okta.policyRule", map[string]*llx.RawData{
+		"id":          llx.StringData(entry.Id),
+		"name":        llx.StringData(entry.Name),
+		"priority":    llx.IntData(entry.Priority),
+		"status":      llx.StringData(entry.Status),
+		"system":      llx.BoolData(system),
+		"type":        llx.StringData(entry.Type),
+		"actions":     llx.DictData(actions),
+		"conditions":  llx.DictData(conditions),
+		"created":     llx.TimeDataPtr(entry.Created),
+		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
+	})
 }
 
 func (o *mqlOktaPolicyRule) id() (string, error) {
-	id, err := o.Id()
-	if err != nil {
-		return "", err
-	}
-	return "okta.policyRule/" + id, nil
+	return "okta.policyRule/" + o.Id.Data, o.Id.Error
 }
 
 // see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesnt letch you fetch
