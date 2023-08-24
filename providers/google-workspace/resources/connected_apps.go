@@ -1,11 +1,13 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package googleworkspace
+package resources
 
 import (
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/stringx"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 type connectedApp struct {
@@ -16,29 +18,29 @@ type connectedApp struct {
 	tokens   []*mqlGoogleworkspaceToken
 }
 
-func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
+func (g *mqlGoogleworkspace) connectedApps() ([]interface{}, error) {
 	// get all users
-	users, err := g.Users()
-	if err != nil {
-		return nil, err
+	if g.Users.Error != nil {
+		return nil, g.Users.Error
 	}
+	users := g.Users.Data
 
 	connectedApps := map[string]*connectedApp{}
 	for _, user := range users {
 		usr := user.(*mqlGoogleworkspaceUser)
 		// get all token from user
-		tokens, err := usr.GetTokens()
-		if err != nil {
-			return nil, err
+		tokens := usr.GetTokens()
+		if tokens.Error != nil {
+			return nil, tokens.Error
 		}
 
-		for _, token := range tokens {
+		for _, token := range tokens.Data {
 			tk := token.(*mqlGoogleworkspaceToken)
 
-			clientID, err := tk.ClientId()
-			if err != nil {
-				return nil, err
+			if tk.ClientId.Error != nil {
+				return nil, tk.ClientId.Error
 			}
+			clientID := tk.ClientId.Data
 
 			cApp, ok := connectedApps[clientID]
 			if !ok {
@@ -50,17 +52,16 @@ func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
 			}
 
 			// assign name
-			displayText, err := tk.DisplayText()
-			if err != nil {
-				return nil, err
+			if tk.DisplayText.Error != nil {
+				return nil, tk.DisplayText.Error
 			}
-			cApp.name = displayText
+			cApp.name = tk.DisplayText.Data
 
 			// merge scopes
-			scopes, err := tk.Scopes()
-			if err != nil {
-				return nil, err
+			if tk.Scopes.Error != nil {
+				return nil, tk.Scopes.Error
 			}
+			scopes := tk.Scopes.Data
 			stringScopes := []string{}
 			for _, scope := range scopes {
 				stringScopes = append(stringScopes, scope.(string))
@@ -75,7 +76,7 @@ func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
 	}
 
 	// group token by client id
-	runtime := g.MotorRuntime
+	runtime := g.MqlRuntime
 	res := make([]interface{}, len(connectedApps))
 	i := 0
 	for k := range connectedApps {
@@ -95,13 +96,13 @@ func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
 			}
 		}
 
-		mqlApp, err := runtime.CreateResource("googleworkspace.connectedApp",
-			"clientId", connectedApp.clientID,
-			"name", connectedApp.name,
-			"scopes", core.StrSliceToInterface(connectedApp.scopes),
-			"users", mqlUsers,
-			"tokens", mqlTokens,
-		)
+		mqlApp, err := CreateResource(runtime, "googleworkspace.connectedApp", map[string]*llx.RawData{
+			"clientId": llx.StringData(connectedApp.clientID),
+			"name":     llx.StringData(connectedApp.name),
+			"scopes":   llx.ArrayData(convert.SliceAnyToInterface[string](connectedApp.scopes), types.Any),
+			"users":    llx.ArrayData(mqlUsers, types.Any),
+			"tokens":   llx.ArrayData(mqlTokens, types.Any),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -109,14 +110,9 @@ func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
 		i++
 	}
 
-	return res, err
+	return res, nil
 }
 
 func (g *mqlGoogleworkspaceConnectedApp) id() (string, error) {
-	clientId, err := g.ClientId()
-	if err != nil {
-		return "", err
-	}
-
-	return "googleworkspace.connectedApp/" + clientId, nil
+	return "googleworkspace.connectedApp/" + g.ClientId.Data, g.ClientId.Error
 }
