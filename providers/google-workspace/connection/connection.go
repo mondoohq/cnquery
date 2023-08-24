@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
@@ -23,6 +25,24 @@ func NewGoogleWorkspaceConnection(id uint32, asset *inventory.Asset, conf *inven
 		Conf:  conf,
 		id:    id,
 		asset: asset,
+	}
+
+	if len(conf.Credentials) != 0 {
+		conn.cred = conf.Credentials[0]
+	}
+
+	if conn.cred == nil {
+		return nil, errors.New("google workspace provider requires a service account")
+	}
+
+	conn.customerId = conf.Options["customer-id"]
+	conn.serviceAccountSubject = conf.Options["impersonated-user-email"]
+
+	// check if we have access to the workspace
+	_, err := conn.GetWorkspaceCustomer(conn.customerId)
+	if err != nil {
+		log.Error().Err(err).Msgf("could not access to Google Workspace %s", conn.customerId)
+		return nil, err
 	}
 
 	return conn, nil

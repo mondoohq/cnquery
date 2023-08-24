@@ -5,6 +5,8 @@ package provider
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"os"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -28,6 +30,40 @@ func Init() *Service {
 	}
 }
 
+// returns only the env vars that have a set value
+func readEnvs(envs ...string) []string {
+	vals := []string{}
+	for i := range envs {
+		val := os.Getenv(envs[i])
+		if val != "" {
+			vals = append(vals, val)
+		}
+	}
+
+	return vals
+}
+
+// to be used by gcp/googleworkspace cmds, fetches the creds from either the env vars provided or from a flag in the provided cmd
+func getGoogleCreds(credentialPath string, envs ...string) []byte {
+	var credsPaths []string
+	// env vars have precedence over the --credentials-path arg
+	credsPaths = readEnvs(envs...)
+
+	if credentialPath != "" {
+		credsPaths = append(credsPaths, credentialPath)
+	}
+
+	for i := range credsPaths {
+		path := credsPaths[i]
+
+		serviceAccount, err := os.ReadFile(path)
+		if err == nil {
+			return serviceAccount
+		}
+	}
+	return nil
+}
+
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	flags := req.Flags
 	if flags == nil {
@@ -38,25 +74,44 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Type:    req.Connector,
 		Options: map[string]string{},
 	}
-
 	missingCliFlags := false
-	if len(flags["customer-id"].Value) == 0 {
-		log.Error().Msg("google workspace provider requires an customer id. please set option `customer-id`")
-		missingCliFlags = true
-	}
-	conf.Options["customer-id"] = flags["customer-id"].String()
 
-	if len(flags["impersonated-user-email"].Value) == 0 {
-		log.Error().Msg("google workspace provider requires an impersonated user email. please set option `impersonated-user-email`")
-		missingCliFlags = true
+	var credentialsPath string
+	if x, ok := flags["credentials-path"]; ok && len(x.Value) != 0 {
+		credentialsPath = string(x.Value)
 	}
-	conf.Options["impersonated-user-email"] = flags["impersonated-user-email"].String()
 
-	if len(flags["credentials-path"].Value) == 0 {
+	envVars := []string{
+		"GOOGLE_APPLICATION_CREDENTIALS",
+		"GOOGLEWORKSPACE_CREDENTIALS",
+		"GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON",
+		"GOOGLE_CREDENTIALS",
+	}
+	serviceAccount := getGoogleCreds(credentialsPath, envVars...)
+	if serviceAccount != nil {
+		conf.Credentials = append(conf.Credentials, &vault.Credential{
+			Type:   vault.CredentialType_json,
+			Secret: serviceAccount,
+		})
+	}
+	if len(conf.Credentials) == 0 {
 		log.Error().Msg("google workspace provider requires a service account. please set option `credentials-path`")
 		missingCliFlags = true
 	}
-	conf.Options["credentials-path"] = flags["credentials-path"].String()
+
+	if x, ok := flags["customer-id"]; ok && len(x.Value) != 0 {
+		conf.Options["customer-id"] = string(x.Value)
+	} else {
+		log.Error().Msg("google workspace provider requires an customer id. please set option `customer-id`")
+		missingCliFlags = true
+	}
+
+	if x, ok := flags["impersonated-user-email"]; ok && len(x.Value) != 0 {
+		conf.Options["impersonated-user-email"] = string(x.Value)
+	} else {
+		log.Error().Msg("google workspace provider requires an impersonated user email. please set option `impersonated-user-email`")
+		missingCliFlags = true
+	}
 
 	if missingCliFlags {
 		return nil, errors.New("missing required flags")
@@ -109,15 +164,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		s.lastConnectionID++
 		conn, err = connection.NewGoogleWorkspaceConnection(s.lastConnectionID, asset, conf)
 	}
-
 	if err != nil {
-		return nil, err
-	}
-
-	customerId := conf.Options["customer-id"]
-	_, err = conn.GetWorkspaceCustomer(customerId)
-	if err != nil {
-		log.Error().Err(err).Msgf("could not find or have no access to workspace %s", customerId)
 		return nil, err
 	}
 

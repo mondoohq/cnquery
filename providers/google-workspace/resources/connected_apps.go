@@ -29,12 +29,12 @@ func (g *mqlGoogleworkspace) connectedApps() ([]interface{}, error) {
 	for _, user := range users {
 		usr := user.(*mqlGoogleworkspaceUser)
 		// get all token from user
-		if usr.GetTokens().Error != nil {
-			return nil, usr.GetTokens().Error
+		tokens := usr.GetTokens()
+		if tokens.Error != nil {
+			return nil, tokens.Error
 		}
-		tokens := usr.GetTokens().Data
 
-		for _, token := range tokens {
+		for _, token := range tokens.Data {
 			tk := token.(*mqlGoogleworkspaceToken)
 
 			if tk.ClientId.Error != nil {
