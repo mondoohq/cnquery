@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package python
+package resources
 
 import (
 	"bufio"
@@ -17,14 +17,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-
-	motoros "go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/python/info"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/types"
 )
-
-var Registry = info.Registry
 
 type pythonDirectory struct {
 	path   string
@@ -61,19 +58,15 @@ var pythonDirectoriesDarwin = []string{
 	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
 }
 
-func init() {
-	Init(Registry)
-}
-
-func (k *mqlPython) init(args *resources.Args) (*resources.Args, Python, error) {
-	if x, ok := (*args)["path"]; ok {
-		_, ok := x.(string)
+func initPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		_, ok := x.Value.(string)
 		if !ok {
 			return nil, nil, errors.New("Wrong type for 'path' in python initialization, it must be a string")
 		}
 	} else {
 		// empty path means search through default locations
-		(*args)["path"] = ""
+		args["path"] = llx.StringData("")
 	}
 
 	return args, nil, nil
@@ -86,16 +79,16 @@ func (k *mqlPython) id() (string, error) {
 func (k *mqlPython) getAllPackages() ([]pythonPackageDetails, error) {
 	allResults := []pythonPackageDetails{}
 
-	provider, ok := k.MotorRuntime.Motor.Provider.(motoros.OperatingSystemProvider)
+	conn, ok := k.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
 		return nil, fmt.Errorf("provider is not an operating system provider")
 	}
-	afs := &afero.Afero{Fs: provider.FS()}
+	afs := &afero.Afero{Fs: conn.FileSystem()}
 
-	pyPath, err := k.Path()
-	if err != nil {
-		return nil, err
+	if k.Path.Error != nil {
+		return nil, k.Path.Error
 	}
+	pyPath := k.Path.Data
 	if pyPath != "" {
 		// only search the specific path provided (if it was provided)
 		allResults = gatherPackages(afs, pyPath)
@@ -119,7 +112,7 @@ func (k *mqlPython) getAllPackages() ([]pythonPackageDetails, error) {
 	return allResults, nil
 }
 
-func (k *mqlPython) GetPackages() ([]interface{}, error) {
+func (k *mqlPython) packages() ([]interface{}, error) {
 	allPyPkgDetails, err := k.getAllPackages()
 	if err != nil {
 		return nil, err
@@ -127,12 +120,12 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 
 	// this is the "global" map so that the recursive function calls can keep track of
 	// resources already created
-	pythonPackageResourceMap := map[string]resources.ResourceType{}
+	pythonPackageResourceMap := map[string]plugin.Resource{}
 
 	resp := []interface{}{}
 
 	for _, pyPkgDetails := range allPyPkgDetails {
-		res, err := pythonPackageDetailsWithDependenciesToResource(k.MotorRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
+		res, err := pythonPackageDetailsWithDependenciesToResource(k.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
 		if err != nil {
 			log.Error().Err(err).Msg("error while creating resource(s) for python package")
 			// we will keep trying to make resources even if a single one failed
@@ -144,8 +137,8 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 	return resp, nil
 }
 
-func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runtime, newPyPkgDetails pythonPackageDetails,
-	pythonPgkDetailsList []pythonPackageDetails, pythonPackageResourceMap map[string]resources.ResourceType,
+func pythonPackageDetailsWithDependenciesToResource(runtime *plugin.Runtime, newPyPkgDetails pythonPackageDetails,
+	pythonPgkDetailsList []pythonPackageDetails, pythonPackageResourceMap map[string]plugin.Resource,
 ) (interface{}, error) {
 	res := pythonPackageResourceMap[newPyPkgDetails.name]
 	if res != nil {
@@ -168,7 +161,7 @@ func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runt
 			// can't create a resource for something we didn't discover ¯\_(ツ)_/¯
 			continue
 		}
-		res, err := pythonPackageDetailsWithDependenciesToResource(motorRuntime, depPyPkgDetails, pythonPgkDetailsList, pythonPackageResourceMap)
+		res, err := pythonPackageDetailsWithDependenciesToResource(runtime, depPyPkgDetails, pythonPgkDetailsList, pythonPackageResourceMap)
 		if err != nil {
 			log.Warn().Err(err).Msg("failed to create python packag resource")
 			continue
@@ -177,7 +170,7 @@ func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runt
 	}
 
 	// finally create the resource
-	r, err := pythonPackageDetailsToResource(motorRuntime, newPyPkgDetails, dependencies)
+	r, err := pythonPackageDetailsToResource(runtime, newPyPkgDetails, dependencies)
 	if err != nil {
 		log.Error().Err(err).Str("resource", newPyPkgDetails.file).Msg("error while creating MQL resource")
 		return nil, err
@@ -188,23 +181,25 @@ func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runt
 	return r, nil
 }
 
-func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonPackageDetails, dependencies []interface{}) (resources.ResourceType, error) {
-	f, err := motorRuntime.CreateResource("file", "path", ppd.file)
+func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDetails, dependencies []interface{}) (plugin.Resource, error) {
+	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(ppd.file),
+	})
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating file resource for python package resource")
 		return nil, err
 	}
 
-	r, err := motorRuntime.CreateResource("python.package",
-		"id", ppd.file,
-		"name", ppd.name,
-		"version", ppd.version,
-		"author", ppd.author,
-		"summary", ppd.summary,
-		"license", ppd.license,
-		"file", f.(core.File),
-		"dependencies", dependencies,
-	)
+	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
+		"id":           llx.StringData(ppd.file),
+		"name":         llx.StringData(ppd.name),
+		"version":      llx.StringData(ppd.version),
+		"author":       llx.StringData(ppd.author),
+		"summary":      llx.StringData(ppd.summary),
+		"license":      llx.StringData(ppd.license),
+		"file":         llx.ResourceData(f, f.MqlName()),
+		"dependencies": llx.ArrayData(dependencies, types.Any),
+	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
 		return nil, err
@@ -212,7 +207,7 @@ func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonP
 	return r, nil
 }
 
-func (k *mqlPython) GetToplevel() ([]interface{}, error) {
+func (k *mqlPython) toplevel() ([]interface{}, error) {
 	allPyPkgDetails, err := k.getAllPackages()
 	if err != nil {
 		return nil, err
@@ -220,7 +215,7 @@ func (k *mqlPython) GetToplevel() ([]interface{}, error) {
 
 	// this is the "global" map so that the recursive function calls can keep track of
 	// resources already created
-	pythonPackageResourceMap := map[string]resources.ResourceType{}
+	pythonPackageResourceMap := map[string]plugin.Resource{}
 
 	resp := []interface{}{}
 
@@ -229,7 +224,7 @@ func (k *mqlPython) GetToplevel() ([]interface{}, error) {
 			continue
 		}
 
-		res, err := pythonPackageDetailsWithDependenciesToResource(k.MotorRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
+		res, err := pythonPackageDetailsWithDependenciesToResource(k.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
 		if err != nil {
 			log.Error().Err(err).Msg("error while creating resource(s) for python package")
 			// we will keep trying to make resources even if a single one failed

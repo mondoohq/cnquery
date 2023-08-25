@@ -178,9 +178,13 @@ func Local(pathToTestutils string) llx.Runtime {
 }
 
 func mockRuntime(pathToTestutils string, testdata string) llx.Runtime {
+	return mockRuntimeAbs(pathToTestutils, filepath.Join(pathToTestutils, testdata))
+}
+
+func mockRuntimeAbs(pathToTestutils string, testdata string) llx.Runtime {
 	runtime := Local(pathToTestutils).(*providers.Runtime)
 
-	abs, _ := filepath.Abs(filepath.Join(pathToTestutils, testdata))
+	abs, _ := filepath.Abs(testdata)
 	recording, err := providers.LoadRecordingFile(abs)
 	if err != nil {
 		panic("failed to load recording: " + err.Error())
@@ -212,6 +216,10 @@ func KubeletAKSMock(pathToTestutils string) llx.Runtime {
 
 func WindowsMock(pathToTestutils string) llx.Runtime {
 	return mockRuntime(pathToTestutils, "testdata/windows.json")
+}
+
+func RecordingMock(pathToTestutils string, absTestdataPath string) llx.Runtime {
+	return mockRuntimeAbs(pathToTestutils, absTestdataPath)
 }
 
 func CustomMock(path string) llx.Runtime {

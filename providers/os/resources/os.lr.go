@@ -330,6 +330,14 @@ func init() {
 			Init: initKubelet,
 			Create: createKubelet,
 		},
+		"python": {
+			Init: initPython,
+			Create: createPython,
+		},
+		"python.package": {
+			Init: initPythonPackage,
+			Create: createPythonPackage,
+		},
 	}
 }
 
@@ -1447,6 +1455,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kubelet.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKubelet).GetConfiguration()).ToDataRes(types.Dict)
+	},
+	"python.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPython).GetPath()).ToDataRes(types.String)
+	},
+	"python.packages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPython).GetPackages()).ToDataRes(types.Array(types.Resource("python.package")))
+	},
+	"python.toplevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPython).GetToplevel()).ToDataRes(types.Array(types.Resource("python.package")))
+	},
+	"python.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetId()).ToDataRes(types.String)
+	},
+	"python.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetName()).ToDataRes(types.String)
+	},
+	"python.package.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"python.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"python.package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetLicense()).ToDataRes(types.String)
+	},
+	"python.package.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetAuthor()).ToDataRes(types.String)
+	},
+	"python.package.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetSummary()).ToDataRes(types.String)
+	},
+	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
 	},
 }
 
@@ -3170,6 +3211,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"kubelet.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKubelet).Configuration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"python.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPython).__id, ok = v.Value.(string)
+			return
+		},
+	"python.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPython).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPython).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"python.toplevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPython).Toplevel, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"python.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPythonPackage).__id, ok = v.Value.(string)
+			return
+		},
+	"python.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"python.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Dependencies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -9365,4 +9458,193 @@ func (c *mqlKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
 
 func (c *mqlKubelet) GetConfiguration() *plugin.TValue[interface{}] {
 	return &c.Configuration
+}
+
+// mqlPython for the python resource
+type mqlPython struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPythonInternal it will be used here
+	Path plugin.TValue[string]
+	Packages plugin.TValue[[]interface{}]
+	Toplevel plugin.TValue[[]interface{}]
+}
+
+// createPython creates a new instance of this resource
+func createPython(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPython{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("python", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPython) MqlName() string {
+	return "python"
+}
+
+func (c *mqlPython) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPython) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlPython) GetPackages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Packages, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("python", c.__id, "packages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.packages()
+	})
+}
+
+func (c *mqlPython) GetToplevel() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Toplevel, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("python", c.__id, "toplevel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.toplevel()
+	})
+}
+
+// mqlPythonPackage for the python.package resource
+type mqlPythonPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPythonPackageInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Version plugin.TValue[string]
+	License plugin.TValue[string]
+	Author plugin.TValue[string]
+	Summary plugin.TValue[string]
+	Dependencies plugin.TValue[[]interface{}]
+}
+
+// createPythonPackage creates a new instance of this resource
+func createPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPythonPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("python.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPythonPackage) MqlName() string {
+	return "python.package"
+}
+
+func (c *mqlPythonPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPythonPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlPythonPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlPythonPackage) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlPythonPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlPythonPackage) GetLicense() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.License, func() (string, error) {
+		return c.license()
+	})
+}
+
+func (c *mqlPythonPackage) GetAuthor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Author, func() (string, error) {
+		return c.author()
+	})
+}
+
+func (c *mqlPythonPackage) GetSummary() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Summary, func() (string, error) {
+		return c.summary()
+	})
+}
+
+func (c *mqlPythonPackage) GetDependencies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Dependencies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("python.package", c.__id, "dependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.dependencies()
+	})
 }
