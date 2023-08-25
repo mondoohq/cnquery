@@ -195,7 +195,7 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) (
 				gcpObject: gcpObject{
 					project:    project,
 					region:     region,
-					name:       subnetName,
+					name:       s.Name,
 					id:         s.Id,
 					service:    "compute",
 					objectType: "subnetwork",
