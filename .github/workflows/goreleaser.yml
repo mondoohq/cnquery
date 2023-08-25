@@ -89,7 +89,7 @@ jobs:
 
       - name: Install Quill for Mac Signing and Notarization
         run: |
-            curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp v0.4.0
+            curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp
             /tmp/quill help
 
       - name: Log in to the Container registry
