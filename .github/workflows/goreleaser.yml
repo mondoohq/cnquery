@@ -7,9 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       skip-publish:
-        description: 'Skip publishing to releases.mondoo.com'
+        description: 'Skip publishing to releases.mondoo.com?'
+        type: boolean
         required: false
         default: false
+
 
 env:
   REGISTRY: docker.io
