@@ -37,7 +37,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: make(map[string]string),
 	}
@@ -74,20 +74,20 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if tenancy != "" {
-		conn.Options["tenancy"] = tenancy
+		conf.Options["tenancy"] = tenancy
 	}
 	if fingerprint != "" {
-		conn.Options["fingerprint"] = fingerprint
+		conf.Options["fingerprint"] = fingerprint
 	}
 	if region != "" {
-		conn.Options["region"] = region
+		conf.Options["region"] = region
 	}
 	if user != "" {
-		conn.Options["user"] = user
+		conf.Options["user"] = user
 	}
 
 	if keyPath != "" {
-		conn.Credentials = append(conn.Credentials, &vault.Credential{
+		conf.Credentials = append(conf.Credentials, &vault.Credential{
 			Type:           vault.CredentialType_private_key,
 			PrivateKeyPath: keyPath,
 			Password:       keySecret,
@@ -95,7 +95,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
