@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
@@ -180,4 +182,51 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 		}
 	}
 	return res, nil
+}
+
+func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// if len(*args) == 0 {
+	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+	// 		args["id"] = ids.name
+	// 		args["arn"] = ids.arn
+	// 	}
+	// }
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws vpc")
+	}
+
+	// load all vpcs
+	obj, err := runtime.CreateResource(runtime, "aws", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	a := obj.(*mqlAws)
+
+	rawResources, err := a.vpcs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var match func(secGroup *mqlAwsVpc) bool
+
+	if args["arn"] != nil {
+		arnVal := args["arn"].Value.(string)
+		match = func(vol *mqlAwsVpc) bool {
+			return vol.Arn.Data == arnVal
+		}
+	}
+
+	for i := range rawResources {
+		volume := rawResources[i].(*mqlAwsVpc)
+		if match(volume) {
+			return args, volume, nil
+		}
+	}
+
+	return nil, nil, errors.New("vpc does not exist")
 }

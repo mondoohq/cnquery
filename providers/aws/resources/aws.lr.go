@@ -31,7 +31,7 @@ func init() {
 			Create: createAwsOrganization,
 		},
 		"aws.vpc": {
-			// to override args, implement: initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsVpc,
 			Create: createAwsVpc,
 		},
 		"aws.vpc.routetable": {

@@ -260,14 +260,58 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 								"ipProtocol": llx.StringData(toString(permission.IpProtocol)),
 								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
 								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
-								// prefixListIds
-								// userIdGroupPairs
 							})
 						if err != nil {
 							return nil, err
 						}
 
 						mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
+					}
+
+					mqlIpPermissionsEgress := []interface{}{}
+					for p := range group.IpPermissionsEgress {
+						permission := group.IpPermissionsEgress[p]
+
+						ipRanges := []interface{}{}
+						for r := range permission.IpRanges {
+							iprange := permission.IpRanges[r]
+							if iprange.CidrIp != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIp)
+							}
+						}
+
+						ipv6Ranges := []interface{}{}
+						for r := range permission.Ipv6Ranges {
+							iprange := permission.Ipv6Ranges[r]
+							if iprange.CidrIpv6 != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIpv6)
+							}
+						}
+						mqlSecurityGroupIpPermission, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
+							map[string]*llx.RawData{
+								"id":         llx.StringData(toString(group.GroupId) + "-" + strconv.Itoa(p) + "-egress"),
+								"fromPort":   llx.IntData(toInt64From32(permission.FromPort)),
+								"toPort":     llx.IntData(toInt64From32(permission.ToPort)),
+								"ipProtocol": llx.StringData(toString(permission.IpProtocol)),
+								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
+								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
+							})
+						if err != nil {
+							return nil, err
+						}
+
+						mqlIpPermissionsEgress = append(mqlIpPermissionsEgress, mqlSecurityGroupIpPermission)
+					}
+
+					args := map[string]*llx.RawData{
+						"arn":                 llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(group.GroupId))),
+						"id":                  llx.StringData(toString(group.GroupId)),
+						"name":                llx.StringData(toString(group.GroupName)),
+						"description":         llx.StringData(toString(group.Description)),
+						"tags":                llx.MapData(Ec2TagsToMap(group.Tags), types.String),
+						"ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Any),
+						"ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Any),
+						"region":              llx.StringData(regionVal),
 					}
 
 					// NOTE: this will create the resource and determine the data in its init method
@@ -278,18 +322,10 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 					if err != nil {
 						return nil, err
 					}
-					mqlS3SecurityGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup",
-						map[string]*llx.RawData{
-							"arn":           llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(group.GroupId))),
-							"id":            llx.StringData(toString(group.GroupId)),
-							"name":          llx.StringData(toString(group.GroupName)),
-							"description":   llx.StringData(toString(group.Description)),
-							"tags":          llx.MapData(Ec2TagsToMap(group.Tags), types.String),
-							"vpc":           llx.ResourceData(mqlVpc, "aws.vpc"),
-							"ipPermissions": llx.ArrayData(mqlIpPermissions, types.Any),
-							// "ipPermissionsEgress", []interface{}{}, // TODO copy from main
-							"region": llx.StringData(regionVal),
-						})
+					if mqlVpc != nil {
+						args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+					}
+					mqlS3SecurityGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup", args)
 					if err != nil {
 						return nil, err
 					}
@@ -651,12 +687,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				return nil, err
 			}
 
-			mqlImage, err := NewResource(a.MqlRuntime, "aws.ec2.image",
-				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, regionVal, conn.AccountId(), toString(instance.ImageId)))})
-			if err != nil {
-				return nil, err
-			}
-
 			args := map[string]*llx.RawData{
 				"platformDetails":       llx.StringData(toString(instance.PlatformDetails)),
 				"arn":                   llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), toString(instance.InstanceId))),
@@ -674,15 +704,24 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"ebsOptimized":          llx.BoolData(toBool(instance.EbsOptimized)),
 				"instanceType":          llx.StringData(string(instance.InstanceType)),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
-				"image":                 llx.ResourceData(mqlImage, "aws.ec2.image"),
 				"launchTime":            llx.TimeData(toTime(instance.LaunchTime)),
 				"privateIp":             llx.StringData(toString(instance.PrivateIpAddress)),
 				"privateDnsName":        llx.StringData(toString(instance.PrivateDnsName)),
 			}
 
+			if instance.ImageId != nil {
+				mqlImage, err := NewResource(a.MqlRuntime, "aws.ec2.image",
+					map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, regionVal, conn.AccountId(), toString(instance.ImageId)))})
+				if err != nil {
+					return nil, err
+				}
+				if mqlImage != nil {
+					args["image"] = llx.ResourceData(mqlImage, mqlImage.MqlName())
+				}
+			}
+
 			// add vpc if there is one
 			if instance.VpcId != nil {
-				// NOTE: this will create the resource and determine the data in its init method
 				mqlVpcResource, err := NewResource(a.MqlRuntime, "aws.vpc",
 					map[string]*llx.RawData{
 						"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), toString(instance.VpcId))),
@@ -690,8 +729,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				if err != nil {
 					return nil, err
 				}
-				mqlVpc := mqlVpcResource.(*mqlAwsVpc)
-				args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+				if mqlVpcResource != nil {
+					mqlVpc := mqlVpcResource.(*mqlAwsVpc)
+					args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+				}
 			}
 
 			// only add a keypair if the ec2 instance has one attached
@@ -701,7 +742,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 						"region": llx.StringData(regionVal),
 						"name":   llx.StringData(toString(instance.KeyName)),
 					})
-				if err == nil {
+				if err != nil {
+					return nil, err
+				}
+				if mqlKeyPair != nil {
 					mqlKp := mqlKeyPair.(*mqlAwsEc2Keypair)
 					args["keypair"] = llx.ResourceData(mqlKp, mqlKp.MqlName())
 				}
