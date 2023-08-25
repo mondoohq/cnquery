@@ -5,6 +5,13 @@ on:
     tags:
       - '*'
   workflow_dispatch:
+    inputs:
+      skip-publish:
+        description: 'Skip publishing to releases.mondoo.com?'
+        type: boolean
+        required: false
+        default: false
+
 
 env:
   REGISTRY: docker.io
@@ -82,7 +89,7 @@ jobs:
 
       - name: Install Quill for Mac Signing and Notarization
         run: |
-            curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp v0.2.0
+            curl -sSfL https://raw.githubusercontent.com/anchore/quill/main/install.sh | sh -s -- -b /tmp
             /tmp/quill help
 
       - name: Log in to the Container registry
@@ -111,8 +118,17 @@ jobs:
       - name: Check RPMs
         run: |
           rpm -qpi dist/*.rpm
+      - name: Output Quill Logs
+        if: ${{ failure() }}
+        run: |
+          for f in $(find /tmp -name 'quill-*.log' 2>/dev/null); do
+            echo "=== $f ==="
+            ls -l $f
+            cat $f
+          done
 
       - name: Publish Release to releases.mondoo.com
+        if: ${{ ! inputs.skip-publish }}
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
@@ -124,5 +140,6 @@ jobs:
           }'
 
       - name: Cleanup
+        if: always()
         run:
           rm -f ${CERT_PATH}
