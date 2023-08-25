@@ -19,12 +19,13 @@ import (
 )
 
 const (
-	OPTION_MANIFEST         = "path"
-	OPTION_IMMEMORY_CONTENT = "manifest-content"
-	OPTION_NAMESPACE        = "namespace"
-	OPTION_ADMISSION        = "k8s-admission-review"
-	OPTION_OBJECT_KIND      = "object-kind"
-	OPTION_CONTEXT          = "context"
+	OPTION_MANIFEST          = "path"
+	OPTION_IMMEMORY_CONTENT  = "manifest-content"
+	OPTION_NAMESPACE         = "namespace"
+	OPTION_NAMESPACE_EXCLUDE = "namespace-exclude"
+	OPTION_ADMISSION         = "k8s-admission-review"
+	OPTION_OBJECT_KIND       = "object-kind"
+	OPTION_CONTEXT           = "context"
 )
 
 type Service struct {
@@ -50,28 +51,30 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Discover: parseDiscover(flags),
 		Type:     req.Connector,
 		Options:  map[string]string{},
 	}
 
 	if len(req.Args) == 1 {
-		conn.Options[OPTION_MANIFEST] = req.Args[0]
+		conf.Options[OPTION_MANIFEST] = req.Args[0]
 	}
 
 	if context, ok := req.Flags["context"]; ok {
-		conn.Options[OPTION_CONTEXT] = context.RawData().Value.(string)
+		conf.Options[OPTION_CONTEXT] = string(context.Value)
 	}
 
 	if ns, ok := req.Flags["namespaces"]; ok {
-		conn.Options[OPTION_NAMESPACE] = ns.RawData().Value.(string)
+		conf.Options[OPTION_NAMESPACE] = string(ns.Value)
 	}
 
-	// TODO: add ns exclude
+	if ns, ok := req.Flags["namespaces-exclude"]; ok {
+		conf.Options[OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
+	}
 
 	asset := &inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	idDetector := "hostname"
