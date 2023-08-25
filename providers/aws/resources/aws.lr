@@ -20,7 +20,7 @@ aws.account @defaults("id") {
 }
 
 // AWS Organization resource
-aws.organization @defaults("arn") {
+aws.organization @defaults("arn masterAccountEmail") {
   // ARN of the organization
   arn string
   // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
@@ -224,7 +224,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 }
 
 // AWS IAM User
-private aws.iam.user @defaults("arn") {
+private aws.iam.user @defaults("arn name") {
   // ARN of the IAM user 
   arn string
   // ID of the IAM user
@@ -248,7 +248,7 @@ private aws.iam.user @defaults("arn") {
 }
 
 // AWS IAM Policy
-private aws.iam.policy @defaults("arn") {
+private aws.iam.policy @defaults("arn name") {
   // ARN of the policy
   arn string
   // ID of the policy
@@ -281,7 +281,7 @@ private aws.iam.policy @defaults("arn") {
 }
 
 // AWS IAM Policy Version
-private aws.iam.policyversion @defaults("arn") {
+private aws.iam.policyversion @defaults("arn isDefaultVersion") {
   // ARN of the policy version
   arn string
   // Version ID
@@ -295,7 +295,7 @@ private aws.iam.policyversion @defaults("arn") {
 }
 
 // AWS IAM Role
-private aws.iam.role @defaults("arn") {
+private aws.iam.role @defaults("arn name") {
   // ARN of the role
   arn string
   // ID of the role
@@ -311,7 +311,7 @@ private aws.iam.role @defaults("arn") {
 }
 
 // AWS IAM Group
-private aws.iam.group @defaults("arn") {
+private aws.iam.group @defaults("arn name") {
   // ARN of the group
   arn string
   // ID of the group
@@ -343,7 +343,7 @@ aws.sagemaker {
 }
 
 // AWS SageMaker Notebook Instance
-private aws.sagemaker.notebookinstance @defaults("arn") {
+private aws.sagemaker.notebookinstance @defaults("arn name") {
   // ARN for the notebook instance
   arn string
   // Name of the notebook instance
@@ -367,7 +367,7 @@ private aws.sagemaker.notebookinstance.details @defaults("arn") {
 }
 
 // AWS SageMaker Endpoint
-private aws.sagemaker.endpoint @defaults("arn") {
+private aws.sagemaker.endpoint @defaults("arn name") {
   // ARN for the endpoint
   arn string
   // Name of the endpoint
@@ -415,7 +415,7 @@ aws.es {
 }
 
 // Amazon Elasticsearch Service Domain
-private aws.es.domain @defaults("arn") {
+private aws.es.domain @defaults("arn name") {
   // ARN for the Elasticsearch domain
   arn string
   // Denotes whether encryption at rest is enabled
@@ -439,7 +439,7 @@ aws.acm {
 }
 
 // AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
-private aws.acm.certificate @defaults("arn") {
+private aws.acm.certificate @defaults("arn domainName") {
   // ARN for the certificate
   arn string
   // Time before which the certificate is not valid
@@ -467,7 +467,7 @@ aws.autoscaling {
 }
 
 // AWS Auto Scaling Group
-private aws.autoscaling.group @defaults("arn") {
+private aws.autoscaling.group @defaults("arn name") {
   // ARN for the autoscaling group
   arn string
   // Name of the group
@@ -489,7 +489,7 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancing Load Balancer
-private aws.elb.loadbalancer @defaults("arn") {
+private aws.elb.loadbalancer @defaults("arn name") {
   // ARN for the load balancer
   arn string
   // DNS name for the load balancer
@@ -511,7 +511,7 @@ aws.codebuild {
 }
 
 // AWS CodeBuild Project
-private aws.codebuild.project @defaults("arn") {
+private aws.codebuild.project @defaults("arn name") {
   // ARN for the project
   arn string
   // Description of the project
@@ -569,7 +569,7 @@ aws.secretsmanager {
 }
 
 // AWS Secrets Manager Secret
-private aws.secretsmanager.secret @defaults("arn") {
+private aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
   // Denotes whether rotation is enabled for the secret
