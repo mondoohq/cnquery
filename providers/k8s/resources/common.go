@@ -78,33 +78,6 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]i
 // 	return asset.Labels["k8s.mondoo.com/name"], asset.Labels["k8s.mondoo.com/namespace"], nil
 // }
 
-// // This function is now (v6.17.0) no longer needed
-// // Perhaps remove it in v8?
-// func getPlatformIdentifierElements(transport providers.Instance) (string, string, error) {
-// 	kt, err := k8sProvider(transport)
-// 	if err != nil {
-// 		return "", "", err
-// 	}
-
-// 	identifier, err := kt.Identifier()
-// 	if err != nil {
-// 		return "", "", err
-// 	}
-
-// 	var identifierName string
-// 	var identifierNamespace string
-// 	splitIdentifier := strings.Split(identifier, "/")
-// 	arrayLength := len(splitIdentifier)
-// 	if arrayLength >= 1 {
-// 		identifierName = splitIdentifier[arrayLength-1]
-// 	}
-// 	if arrayLength >= 4 {
-// 		identifierNamespace = splitIdentifier[arrayLength-4]
-// 	}
-
-// 	return identifierName, identifierNamespace, nil
-// }
-
 type K8sNamespacedObject interface {
 	K8sObject
 	Namespace() (string, error)

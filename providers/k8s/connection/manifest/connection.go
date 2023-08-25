@@ -38,10 +38,6 @@ func WithManifestContent(data []byte) Option {
 	}
 }
 
-const (
-	Api shared.ConnectionType = "api"
-)
-
 type Connection struct {
 	shared.ManifestParser
 	runtime   string

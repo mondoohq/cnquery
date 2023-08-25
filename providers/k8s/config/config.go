@@ -41,28 +41,3 @@ var Config = plugin.Provider{
 		},
 	},
 }
-
-// cmd := &cobra.Command{
-// 	Use:     "k8s (optional MANIFEST path)",
-// 	Aliases: []string{"kubernetes"},
-// 	Short:   docs.GetShort("kubernetes"),
-// 	Long:    docs.GetLong("kubernetes"),
-// 	Args:    cobra.MaximumNArgs(1),
-// 	PreRun: func(cmd *cobra.Command, args []string) {
-// 		preRun(cmd, args)
-// 		viper.BindPFlag("namespaces-exclude", cmd.Flags().Lookup("namespaces-exclude"))
-// 		viper.BindPFlag("namespaces", cmd.Flags().Lookup("namespaces"))
-// 		viper.BindPFlag("context", cmd.Flags().Lookup("context"))
-// 	},
-// 	Run: func(cmd *cobra.Command, args []string) {
-// 		if len(args) > 0 {
-// 			cmd.Flags().Set("path", args[0])
-// 		}
-// 		runFn(cmd, args)
-// 	},
-// }
-// commonCmdFlags(cmd)
-
-// cmd.Flags().String("context", "", "Target a Kubernetes context.")
-// cmd.Flags().String("namespaces-exclude", "", "Filter out Kubernetes objects in the matching namespaces.")
-// cmd.Flags().String("namespaces", "", "Only include Kubernetes object in the matching namespaces.")

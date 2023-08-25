@@ -1,5 +1,7 @@
 module go.mondoo.com/cnquery/providers/k8s
 
+replace go.mondoo.com/cnquery => ../..
+
 go 1.20
 
 require (
