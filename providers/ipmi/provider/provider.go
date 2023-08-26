@@ -37,7 +37,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type: req.Connector,
 	}
 
@@ -57,8 +57,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 
 		user = x.User.Username()
-		conn.Host = x.Hostname()
-		conn.Path = x.Path
+		conf.Host = x.Hostname()
+		conf.Path = x.Path
 
 		if sPort := x.Port(); sPort != "" {
 			port, err = strconv.Atoi(x.Port())
@@ -69,15 +69,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if port > 0 {
-		conn.Port = int32(port)
+		conf.Port = int32(port)
 	}
 
 	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
-		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

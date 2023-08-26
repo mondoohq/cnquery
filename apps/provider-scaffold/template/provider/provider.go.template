@@ -30,7 +30,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type: req.Connector,
 		Options: map[string]string{},
 	}
@@ -38,7 +38,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// Do custom flag parsing here
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

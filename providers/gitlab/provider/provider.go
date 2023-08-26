@@ -35,7 +35,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: map[string]string{},
 	}
@@ -50,7 +50,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		return nil, errors.New("a valid GitLab token is required, pass --token '<yourtoken>' or set GITLAB_TOKEN environment variable")
 	}
-	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
 	group := ""
 	if x, ok := flags["group"]; ok && len(x.Value) != 0 {
@@ -59,10 +59,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if group == "" {
 		return nil, errors.New("a valid GitLab group is required")
 	}
-	conn.Options["group"] = group
+	conf.Options["group"] = group
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

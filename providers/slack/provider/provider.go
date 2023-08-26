@@ -35,7 +35,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type: req.Connector,
 	}
 
@@ -49,10 +49,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		return nil, errors.New("no slack token provided, use --token or SLACK_TOKEN")
 	}
-	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

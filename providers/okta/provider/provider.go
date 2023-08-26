@@ -36,7 +36,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: make(map[string]string),
 	}
@@ -56,7 +56,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		return nil, errors.New("no okta token provided, use --token or OKTA_TOKEN")
 	}
-	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
 	organization := ""
 	if x, ok := flags["organization"]; ok && len(x.Value) != 0 {
@@ -72,11 +72,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		return nil, errors.New("okta provider requires an organization. please set option `organization` like `dev-123456.okta.com`")
 	}
 	if organization != "" {
-		conn.Options["organization"] = organization
+		conf.Options["organization"] = organization
 	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

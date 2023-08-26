@@ -36,7 +36,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: map[string]string{},
 	}
@@ -51,22 +51,22 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		return nil, errors.New("a valid GitHub token is required, pass --token '<yourtoken>' or set GITHUB_TOKEN environment variable")
 	}
-	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
 	// Do custom flag parsing here
 	switch req.Args[0] {
 	case "org":
-		conn.Options["organization"] = req.Args[1]
+		conf.Options["organization"] = req.Args[1]
 	case "user":
-		conn.Options["user"] = req.Args[1]
+		conf.Options["user"] = req.Args[1]
 	case "repo":
-		conn.Options["repository"] = req.Args[1]
+		conf.Options["repository"] = req.Args[1]
 	default:
 		return nil, errors.New("invalid GitHub sub-command")
 	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

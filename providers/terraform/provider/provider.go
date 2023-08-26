@@ -33,7 +33,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
+	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: map[string]string{},
 	}
@@ -45,23 +45,23 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// tc.Options["asset-type"] == "state"
 	switch req.Args[0] {
 	case "state":
-		conn.Type = "state"
+		conf.Type = "state"
 		if len(req.Args) > 1 {
-			conn.Options["path"] = req.Args[1]
+			conf.Options["path"] = req.Args[1]
 		} else {
 			return nil, errors.New("no path provided")
 		}
 	case "plan":
-		conn.Type = "plan"
+		conf.Type = "plan"
 		if len(req.Args) > 1 {
-			conn.Options["path"] = req.Args[1]
+			conf.Options["path"] = req.Args[1]
 		} else {
 			return nil, errors.New("no path provided")
 		}
 	case "hcl":
-		conn.Type = "hcl"
+		conf.Type = "hcl"
 		if len(req.Args) > 1 {
-			conn.Options["path"] = req.Args[1]
+			conf.Options["path"] = req.Args[1]
 		} else {
 			return nil, errors.New("no path provided")
 		}
@@ -69,12 +69,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		if len(req.Args) > 1 {
 			return nil, errors.New("unknown set of arguments, use 'state <path>', 'plan <path>' or 'hcl <path>'")
 		}
-		conn.Type = "hcl"
-		conn.Options["path"] = req.Args[0]
+		conf.Type = "hcl"
+		conf.Options["path"] = req.Args[0]
 	}
 
 	asset := &inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	res := plugin.ParseCLIRes{
