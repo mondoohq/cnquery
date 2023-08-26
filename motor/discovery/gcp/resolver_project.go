@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -82,14 +83,15 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	if tc.IncludesOneOfDiscoveryTarget(append(ProjectDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll)...) {
 		assetList, err := GatherAssets(ctx, tc, project, credsResolver, sfn)
 		if err != nil {
-			return nil, err
-		}
-		for i := range assetList {
-			a := assetList[i]
-			if resolvedRoot != nil {
-				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			log.Error().Err(err).Msg("unable to resolve assets")
+		} else {
+			for i := range assetList {
+				a := assetList[i]
+				if resolvedRoot != nil {
+					a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+				}
+				resolved = append(resolved, a)
 			}
-			resolved = append(resolved, a)
 		}
 	}
 	return resolved, nil

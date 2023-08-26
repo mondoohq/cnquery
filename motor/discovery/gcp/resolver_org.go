@@ -2,9 +2,9 @@ package gcp
 
 import (
 	"context"
-
 	"errors"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -99,16 +99,16 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 
 			assets, err := (&GcpFolderResolver{}).Resolve(ctx, folderConfig, credsResolver, sfn, userIdDetectors...)
 			if err != nil {
-				return nil, err
-			}
-			for i := range assets {
-				a := assets[i]
-				if rootAsset != nil {
-					a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+				log.Error().Err(err).Msg("unable to resolve assets")
+			} else {
+				for i := range assets {
+					a := assets[i]
+					if rootAsset != nil {
+						a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+					}
+					resolved = append(resolved, a)
 				}
-				resolved = append(resolved, a)
 			}
-			resolved = append(resolved, assets...)
 		}
 	}
 
@@ -135,14 +135,15 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 
 			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, credsResolver, sfn, userIdDetectors...)
 			if err != nil {
-				return nil, err
-			}
-			for i := range assets {
-				a := assets[i]
-				if rootAsset != nil && a.Platform.Name == "gcp-project" {
-					a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+				log.Error().Err(err).Msg("unable to resolve assets")
+			} else {
+				for i := range assets {
+					a := assets[i]
+					if rootAsset != nil && a.Platform.Name == "gcp-project" {
+						a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+					}
+					resolved = append(resolved, a)
 				}
-				resolved = append(resolved, a)
 			}
 		}
 	}
