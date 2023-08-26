@@ -59,7 +59,6 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 	var resourceType ResourceType
 	var resourceID string
-	requireServiceAccount := false
 	if conf.Options["project-id"] != "" {
 		resourceType = Project
 		resourceID = conf.Options["project-id"]
@@ -89,10 +88,6 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	conn.resourceType = resourceType
 	conn.cred = cred
 	conn.platformOverride = override
-
-	if cred == nil && requireServiceAccount {
-		return nil, errors.New("google workspace provider requires a service account")
-	}
 
 	// verify that we have access to the organization or project
 	switch resourceType {

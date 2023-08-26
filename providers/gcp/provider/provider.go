@@ -5,6 +5,8 @@ package provider
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"os"
 	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
@@ -27,20 +29,86 @@ func Init() *Service {
 	}
 }
 
+// returns only the env vars that have a set value
+func readEnvs(envs ...string) []string {
+	vals := []string{}
+	for i := range envs {
+		val := os.Getenv(envs[i])
+		if val != "" {
+			vals = append(vals, val)
+		}
+	}
+
+	return vals
+}
+
+// to be used by gcp/googleworkspace cmds, fetches the creds from either the env vars provided or from a flag in the provided cmd
+func getGoogleCreds(credentialPath string, envs ...string) []byte {
+	var credsPaths []string
+	// env vars have precedence over the --credentials-path arg
+	credsPaths = readEnvs(envs...)
+
+	if credentialPath != "" {
+		credsPaths = append(credsPaths, credentialPath)
+	}
+
+	for i := range credsPaths {
+		path := credsPaths[i]
+
+		serviceAccount, err := os.ReadFile(path)
+		if err == nil {
+			return serviceAccount
+		}
+	}
+	return nil
+}
+
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	flags := req.Flags
 	if flags == nil {
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
-		Type: req.Connector,
+	if len(req.Args) != 2 {
+		return nil, errors.New("missing argument, use `gcp project id` or `gcp organization id` or `gcp folder id`")
 	}
 
-	// Do custom flag parsing here
+	conf := &inventory.Config{
+		Type:    req.Connector,
+		Options: map[string]string{},
+	}
+
+	// custom flag parsing
+	var credentialsPath string
+	if x, ok := flags["credentials-path"]; ok && len(x.Value) != 0 {
+		credentialsPath = string(x.Value)
+	}
+
+	envVars := []string{
+		"GOOGLE_APPLICATION_CREDENTIALS",
+		"GOOGLE_CREDENTIALS",
+		"GOOGLE_CLOUD_KEYFILE_JSON",
+		"GCLOUD_KEYFILE_JSON",
+	}
+	serviceAccount := getGoogleCreds(credentialsPath, envVars...)
+	if serviceAccount != nil {
+		conf.Credentials = append(conf.Credentials, &vault.Credential{
+			Type:   vault.CredentialType_json,
+			Secret: serviceAccount,
+		})
+	}
+
+	switch req.Args[0] {
+	case "org":
+		conf.Options["organization-id"] = req.Args[1]
+	case "project":
+		conf.Options["project-id"] = req.Args[1]
+	case "folder":
+		conf.Options["folder-id"] = req.Args[1]
+	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
@@ -113,8 +181,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GcpConnection) error {
-  // TODO: adjust asset detection
-  asset.Id = conn.Conf.Type
+	// TODO: adjust asset detection
+	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{

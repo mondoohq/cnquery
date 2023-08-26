@@ -15,7 +15,14 @@ var Config = plugin.Provider{
 			Use:       "gcp",
 			Short:     "GCP Cloud",
 			Discovery: []string{},
-			Flags:     []plugin.Flag{},
+			Flags: []plugin.Flag{
+				{
+					Long:    "credentials-path",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "The path to the service account credentials to access the APIs with",
+				},
+			},
 		},
 	},
 }
