@@ -56,7 +56,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 		user = x.User.Username()
 		conn.Host = x.Hostname()
-		conn.Path = x.Path
 
 		if sPort := x.Port(); sPort != "" {
 			port, err = strconv.Atoi(x.Port())
