@@ -4,20 +4,19 @@
 //go:build debugtest
 // +build debugtest
 
-package vcd
+package connection
 
 import (
 	"fmt"
 	"testing"
 
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault"
-
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 func TestApiAccess(t *testing.T) {
-	p, err := New(&providers.Config{
+	p, err := NewVcdConnection(0, nil, &inventory.Config{
 		Host: "<host>",
 		Credentials: []*vault.Credential{
 			{
