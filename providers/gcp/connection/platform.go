@@ -9,14 +9,30 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
+func NewOrganizationPlatformID(id string) string {
+	return "//platformid.api.mondoo.app/runtime/gcp/organizations/" + id
+}
+
+func NewProjectPlatformID(id string) string {
+	return "//platformid.api.mondoo.app/runtime/gcp/projects/" + id
+}
+
+func NewFolderPlatformID(id string) string {
+	return "//platformid.api.mondoo.app/runtime/gcp/folders/" + id
+}
+
+func NewResourcePlatformID(service, project, region, objectType, name string) string {
+	return "//platformid.api.mondoo.app/runtime/gcp/" + service + "/v1/projects/" + project + "/regions/" + region + "/" + objectType + "/" + name
+}
+
 func (c *GcpConnection) Identifier() (string, error) {
 	switch c.ResourceType() {
 	case Organization:
-		return "//platformid.api.mondoo.app/runtime/gcp/organizations/" + c.resourceID, nil
+		return NewOrganizationPlatformID(c.resourceID), nil
 	case Project:
-		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + c.resourceID, nil
+		return NewProjectPlatformID(c.resourceID), nil
 	case Folder:
-		return "//platformid.api.mondoo.app/runtime/gcp/folders/" + c.resourceID, nil
+		return NewFolderPlatformID(c.resourceID), nil
 	default:
 		return "", fmt.Errorf("unsupported resource type %d", c.ResourceType())
 	}

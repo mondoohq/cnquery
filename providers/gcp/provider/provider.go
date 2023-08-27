@@ -111,6 +111,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Connections: []*inventory.Config{conf},
 	}
 
+	// parse discovery flags
+	conf.Discover = &inventory.Discovery{
+		Targets: []string{},
+	}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			conf.Discover.Targets = append(conf.Discover.Targets, entry)
+		}
+	}
+
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
@@ -131,11 +142,17 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	// discovery assets for further scanning
+	inventory, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -195,6 +212,21 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GcpConnection)
 	// TODO: Add platform IDs
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
 	return nil
+}
+
+func (s *Service) discover(conn *connection.GcpConnection) (*inventory.Inventory, error) {
+
+	if conn.Conf.Discover != nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime)
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
