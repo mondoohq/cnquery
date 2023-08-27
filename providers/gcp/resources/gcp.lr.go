@@ -9159,9 +9159,7 @@ func (c *mqlGcpOrganization) MqlID() string {
 }
 
 func (c *mqlGcpOrganization) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
+	return &c.Id
 }
 
 func (c *mqlGcpOrganization) GetName() *plugin.TValue[string] {
@@ -9594,9 +9592,7 @@ func (c *mqlGcpProject) MqlID() string {
 }
 
 func (c *mqlGcpProject) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
+	return &c.Id
 }
 
 func (c *mqlGcpProject) GetName() *plugin.TValue[string] {

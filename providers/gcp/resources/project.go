@@ -67,11 +67,7 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 func (g *mqlGcpProject) id() (string, error) {
-	if g.Id.Error != nil {
-		return "", g.Id.Error
-	}
-	id := g.Id.Data
-	return fmt.Sprintf("gcp.project/%s", id), nil
+	return g.Id.Data, g.Id.Error
 }
 
 func (g *mqlGcpProject) name() (string, error) {

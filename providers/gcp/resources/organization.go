@@ -21,7 +21,7 @@ import (
 )
 
 func (g *mqlGcpOrganization) id() (string, error) {
-	return "gcp.organization", nil
+	return g.Id.Data, g.Id.Error
 }
 
 func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

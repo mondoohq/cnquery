@@ -23,7 +23,7 @@ alias gcp.storage = gcp.project.storageService
 // GCP Cloud Organization
 gcp.organization @defaults("name") {
   // Organization ID
-  id() string
+  id string
   // Organization name
   name() string
   // Organization state
@@ -81,7 +81,7 @@ private gcp.projects {
 // Google Cloud Platform Project
 gcp.project @defaults("name") {
   // Unique, user-assigned id of the project
-  id() string
+  id string
   // The unique resource name
   name() string
   // Parent ID
