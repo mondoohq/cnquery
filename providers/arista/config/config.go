@@ -1,0 +1,40 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package config
+
+import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+
+var Config = plugin.Provider{
+	Name:    "arista",
+	ID:      "go.mondoo.com/cnquery/providers/arista",
+	Version: "9.0.0",
+	Connectors: []plugin.Connector{
+		{
+			Name:      "arista",
+			Use:       "arista user@host",
+			Short:     "Arista EOS",
+			Discovery: []string{},
+			MinArgs:   1,
+			MaxArgs:   1,
+			Flags: []plugin.Flag{
+				{
+					Long:        "ask-pass",
+					Type:        plugin.FlagType_Bool,
+					Default:     "false",
+					Desc:        "Prompt for connection password",
+					ConfigEntry: "-",
+				},
+				{
+					Long:        "password",
+					Short:       "p",
+					Type:        plugin.FlagType_String,
+					Default:     "",
+					Desc:        "Set the connection password",
+					Option:      plugin.FlagOption_Password,
+					ConfigEntry: "-",
+				},
+			},
+		},
+	},
+}

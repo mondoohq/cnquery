@@ -1,7 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option go_package = "go.mondoo.com/cnquery/resources/packs/arista"
+option provider = "go.mondoo.com/cnquery/providers/arista"
+option go_package = "go.mondoo.com/cnquery/providers/arista/resources"
 
 // Arista EOS resource
 arista.eos {
@@ -42,7 +43,7 @@ arista.eos.runningConfig.section {
 }
 
 // User on the local Arista EOS system
-arista.eos.user {
+arista.eos.user @defaults("name") {
   // The name of the user
   name string
   // Indicates if the user is able to authenticate without a password
@@ -60,7 +61,7 @@ arista.eos.user {
 }
 
 // Arista EOS role resource
-arista.eos.role {
+private arista.eos.role @defaults("name default"){
   // Name of role
   name string
   // Flag for default role
@@ -84,7 +85,7 @@ arista.eos.ntpSetting {
 }
 
 // Arista EOS interface resource
-arista.eos.interface {
+private arista.eos.interface @defaults("name") {
   // Interface name, link status, vlan, duplex, speed, and type of the specified interfaces
   name string
   // Interface bandwidth
@@ -122,7 +123,7 @@ arista.eos.interface {
 }
 
 // Arista EOS IP interfacea
-arista.eos.ipInterface {
+private arista.eos.ipInterface @defaults("name") {
   // Interface Name
   name string
   // IP Address
@@ -156,7 +157,7 @@ arista.eos.stp.mst {
 }
 
 // Multiple Spanning Tree Protocol (MSTP) information for a specified interface
-arista.eos.spt.mstInterface {
+arista.eos.spt.mstInterface @defaults("name") {
   id string
   // MST instance number
   mstInstanceId string
