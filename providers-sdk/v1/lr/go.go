@@ -442,6 +442,11 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 		return
 	}
 
+	if field.BasicField.ID == "id" {
+		b.errors.Add(errors.New("cannot create a dynamically computed `id` field, please turn it into a static field (ie: `id(..)` => `id`)"))
+		return
+	}
+
 	goName := field.BasicField.goName()
 	goType := field.BasicField.Type.goType(b)
 	goZero := field.BasicField.Type.goZeroValue()

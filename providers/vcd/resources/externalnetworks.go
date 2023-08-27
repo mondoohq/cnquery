@@ -43,6 +43,13 @@ type mqlVcdExternalNetworkInternal struct {
 	externalNetwork *govcd.ExternalNetwork
 }
 
+func (v *mqlVcdExternalNetwork) id() (string, error) {
+	if v.Name.Error != nil {
+		return "", v.Name.Error
+	}
+	return "vcd.externalNetwork/" + v.Name.Data, nil
+}
+
 func (v *mqlVcdExternalNetwork) getData() (*types.ExternalNetwork, error) {
 	// check if the data is cached
 	// TODO: probably we need locking here to make sure concurrent access is covered
@@ -67,7 +74,7 @@ func (v *mqlVcdExternalNetwork) getData() (*types.ExternalNetwork, error) {
 	return externalNetwork.ExternalNetwork, nil
 }
 
-func (v *mqlVcdExternalNetwork) id() (string, error) {
+func (v *mqlVcdExternalNetwork) urn() (string, error) {
 	externalNetwork, err := v.getData()
 	if err != nil {
 		return "", err

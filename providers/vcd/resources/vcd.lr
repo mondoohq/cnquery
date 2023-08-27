@@ -120,10 +120,10 @@ vcd.networkPool {
 
 // VMware Cloud Director External Network
 private vcd.externalNetwork @defaults("name") {
-  // URN of the network
-  id() string
   // Unique name for the network
   name string
+	// URN of the network
+	urn() string
   // Network description
   description() string
   // External network configuration

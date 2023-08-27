@@ -274,11 +274,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vcd.networkPool.networkPoolType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVcdNetworkPool).GetNetworkPoolType()).ToDataRes(types.Int)
 	},
-	"vcd.externalNetwork.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVcdExternalNetwork).GetId()).ToDataRes(types.String)
-	},
 	"vcd.externalNetwork.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVcdExternalNetwork).GetName()).ToDataRes(types.String)
+	},
+	"vcd.externalNetwork.urn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVcdExternalNetwork).GetUrn()).ToDataRes(types.String)
 	},
 	"vcd.externalNetwork.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVcdExternalNetwork).GetDescription()).ToDataRes(types.String)
@@ -705,12 +705,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlVcdExternalNetwork).__id, ok = v.Value.(string)
 			return
 		},
-	"vcd.externalNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVcdExternalNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"vcd.externalNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVcdExternalNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vcd.externalNetwork.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVcdExternalNetwork).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vcd.externalNetwork.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1625,8 +1625,8 @@ type mqlVcdExternalNetwork struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlVcdExternalNetworkInternal
-	Id plugin.TValue[string]
 	Name plugin.TValue[string]
+	Urn plugin.TValue[string]
 	Description plugin.TValue[string]
 	Configuration plugin.TValue[interface{}]
 }
@@ -1668,14 +1668,14 @@ func (c *mqlVcdExternalNetwork) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlVcdExternalNetwork) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
-}
-
 func (c *mqlVcdExternalNetwork) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlVcdExternalNetwork) GetUrn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Urn, func() (string, error) {
+		return c.urn()
+	})
 }
 
 func (c *mqlVcdExternalNetwork) GetDescription() *plugin.TValue[string] {
