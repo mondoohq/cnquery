@@ -1,0 +1,81 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/providers/equinix"
+option go_package = "go.mondoo.com/cnquery/providers/equinix/resources"
+
+// Equinix Metal project
+equinix.metal.project @defaults("name") {
+  id string
+  name string
+  organization() equinix.metal.organization
+  createdAt time
+  updatedAt time
+  url string
+  sshKeys() []equinix.metal.sshkey
+  devices() []equinix.metal.device
+}
+
+// Equinix Metal organization
+equinix.metal.organization @defaults("name") {
+  id string
+  name string
+  description string
+  website string
+  twitter string
+  createdAt time
+  updatedAt time
+  address dict
+  taxId string
+  mainPhone string
+  billingPhone string
+  creditAmount float
+  url string
+ 	users() []equinix.metal.user
+}
+
+// Equinix Metal user
+private equinix.metal.user @defaults("email") {
+  id string
+  firstName string
+  lastName string
+  fullName string
+  email string
+  twoFactorAuth string
+  avatarUrl string
+  twitter string
+  facebook string
+  linkedin string
+  createdAt time
+  updatedAt time
+  timezone string
+  phoneNumber string
+  url string
+}
+
+// Equinix Metal SSH key
+equinix.metal.sshkey @defaults("label") {
+  id string
+  label string
+  key string
+  fingerPrint string
+  createdAt time
+  updatedAt time
+  url string
+}
+
+// Equinix Metal device
+equinix.metal.device {
+  id string
+  shortID string
+  url string
+  hostname string
+  description string
+  state string
+  createdAt time
+  updatedAt time
+  locked bool
+  billingCycle string
+  spotInstance bool
+  os dict
+}

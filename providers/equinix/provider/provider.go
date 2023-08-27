@@ -6,16 +6,15 @@ package provider
 import (
 	"errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"net/url"
+	"os"
 	"strconv"
-	"strings"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/providers/arista/connection"
-	"go.mondoo.com/cnquery/providers/arista/resources"
+	"go.mondoo.com/cnquery/providers/equinix/connection"
+	"go.mondoo.com/cnquery/providers/equinix/resources"
 )
 
 type Service struct {
@@ -36,45 +35,39 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
-		Type: req.Connector,
+	if len(req.Args) != 2 {
+		return nil, errors.New("missing argument, use `equinix project <project-id>`")
+	}
+
+	conf := &inventory.Config{
+		Type:    req.Connector,
+		Options: make(map[string]string),
 	}
 
 	// custom flag parsing
-	user := ""
-	port := 0
-	if len(req.Args) != 0 {
-		target := req.Args[0]
-		if !strings.Contains(target, "://") {
-			target = "ssh://" + target
-		}
-
-		x, err := url.Parse(target)
-		if err != nil {
-			return nil, errors.New("incorrect format of target, please use user@host:port")
-		}
-
-		user = x.User.Username()
-		conn.Host = x.Hostname()
-
-		if sPort := x.Port(); sPort != "" {
-			port, err = strconv.Atoi(x.Port())
-			if err != nil {
-				return nil, errors.New("port '" + x.Port() + "'is incorrectly formatted, must be a number")
-			}
-		}
+	token := ""
+	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+		token = string(x.Value)
 	}
-
-	if port > 0 {
-		conn.Port = int32(port)
+	if token == "" {
+		token = os.Getenv("PACKET_AUTH_TOKEN")
 	}
+	if token == "" {
+		return nil, errors.New("no slack token provided, use --token or PACKET_AUTH_TOKEN")
+	}
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
-	if x, ok := flags["password"]; ok && len(x.Value) != 0 {
-		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
+	switch req.Args[0] {
+	case "org":
+		conf.Options["org-id"] = req.Args[1]
+	case "project":
+		conf.Options["project-id"] = req.Args[1]
+	default:
+		return nil, errors.New("invalid argument, use `equinix project <project-id>`")
 	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
@@ -105,20 +98,20 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.AristaConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.EquinixConnection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.AristaConnection
+	var conn *connection.EquinixConnection
 	var err error
 
 	switch conf.Type {
 	default:
 		s.lastConnectionID++
-		conn, err = connection.NewAristaConnection(s.lastConnectionID, asset, conf)
+		conn, err = connection.NewEquinixConnection(s.lastConnectionID, asset, conf)
 	}
 
 	if err != nil {
@@ -146,15 +139,14 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnection) error {
+func (s *Service) detect(asset *inventory.Asset, conn *connection.EquinixConnection) error {
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:   "arista",
-		Family: []string{"arista"},
-		Kind:   "api",
-		Title:  "Arista EOS",
+		Name:  "equinix",
+		Kind:  "api",
+		Title: "Equinix Metal",
 	}
 
 	id, err := conn.Identifier()
