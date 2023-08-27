@@ -93,58 +93,66 @@ func GatherAssets(ctx context.Context, tc *providers.Config, project string, cre
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		instances, err := computeInstances(m, project, tc, sfn)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover compute instances")
+		} else {
+			assets = append(assets, instances...)
 		}
-		assets = append(assets, instances...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeImages) {
 		images, err := computeImages(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover compute images")
+		} else {
+			assets = append(assets, images...)
 		}
-		assets = append(assets, images...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeNetworks) {
 		networks, err := computeNetworks(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover compute networks")
+		} else {
+			assets = append(assets, networks...)
 		}
-		assets = append(assets, networks...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeSubnetworks) {
 		subnetworks, err := computeSubnetworks(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover compute subnetworks")
+		} else {
+			assets = append(assets, subnetworks...)
 		}
-		assets = append(assets, subnetworks...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeFirewalls) {
 		firewalls, err := computeFirewalls(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover compute firewalls")
+		} else {
+			assets = append(assets, firewalls...)
 		}
-		assets = append(assets, firewalls...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryGkeClusters) {
 		clusters, err := gkeClusters(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover gke clusters")
+		} else {
+			assets = append(assets, clusters...)
 		}
-		assets = append(assets, clusters...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryStorageBuckets) {
 		buckets, err := storageBuckets(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover storage buckets")
+		} else {
+			assets = append(assets, buckets...)
 		}
-		assets = append(assets, buckets...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryBigQueryDatasets) {
 		datasets, err := bigQueryDatasets(m, project, tc)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("cannot discover bigquery datasets")
+		} else {
+			assets = append(assets, datasets...)
 		}
-		assets = append(assets, datasets...)
 	}
 
 	return assets, nil
