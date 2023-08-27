@@ -35,8 +35,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &inventory.Config{
-		Type: req.Connector,
+	if len(req.Args) != 2 {
+		return nil, errors.New("missing argument, use `equinix project <project-id>`")
+	}
+
+	conf := &inventory.Config{
+		Type:    req.Connector,
+		Options: make(map[string]string),
 	}
 
 	// custom flag parsing
@@ -50,10 +55,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if token == "" {
 		return nil, errors.New("no slack token provided, use --token or PACKET_AUTH_TOKEN")
 	}
-	conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential("", token))
+	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
+
+	switch req.Args[0] {
+	case "org":
+		conf.Options["org-id"] = req.Args[1]
+	case "project":
+		conf.Options["project-id"] = req.Args[1]
+	default:
+		return nil, errors.New("invalid argument, use `equinix project <project-id>`")
+	}
 
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conn},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil

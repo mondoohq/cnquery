@@ -13,14 +13,24 @@ import (
 	"os"
 )
 
+type ResourceType int
+
+const (
+	Unknown ResourceType = iota
+	Project
+	Organization
+)
+
 type EquinixConnection struct {
 	id    uint32
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	// custom connection fields
-	client    *packngo.Client
-	projectId string
-	project   *packngo.Project
+	client       *packngo.Client
+	resourceType ResourceType
+	resourceID   string
+	project      *packngo.Project
+	org          *packngo.Organization
 }
 
 func NewEquinixConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*EquinixConnection, error) {
@@ -51,43 +61,51 @@ func NewEquinixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 		return nil, plugin.ErrProviderTypeDoesNotMatch
 	}
 
-	projectId := conf.Options["projectID"]
-
-	if conf.Options == nil || len(projectId) == 0 {
-		return nil, errors.New("equinix provider requires an project id")
-	}
-
 	c, err := packngo.NewClient(packngo.WithAuth("packngo lib", token))
 	if err != nil {
 		return nil, err
 	}
 
-	// NOTE: we cannot check the project itself because it throws a 404
-	// https://github.com/packethost/packngo/issues/245
-	//project, _, err := c.Projects.Get(projectId, nil)
-	//if err != nil {
-	//	return nil, errors.Wrap(err, "could not find the requested equinix project: "+projectId)
-	//}
+	if conf.Options["project-id"] != "" {
+		projectId := conf.Options["project-id"]
+		// NOTE: we cannot check the project itself because it throws a 404
+		// https://github.com/packethost/packngo/issues/245
+		//project, _, err := c.Projects.Get(projectId, nil)
+		//if err != nil {
+		//	return nil, errors.Wrap(err, "could not find the requested equinix project: "+projectId)
+		//}
 
-	ps, _, err := c.Projects.List(nil)
-	if err != nil {
-		return nil, errors.Join(errors.New("cannot retrieve equinix projects"), err)
-	}
-
-	var project *packngo.Project
-	for _, p := range ps {
-		if p.ID == projectId {
-			project = &p
+		ps, _, err := c.Projects.List(nil)
+		if err != nil {
+			return nil, errors.Join(errors.New("cannot retrieve equinix projects"), err)
 		}
-	}
-	if project == nil {
-		return nil, errors.Join(errors.New("could not find the requested equinix project: "+projectId), err)
+
+		var project *packngo.Project
+		for _, p := range ps {
+			if p.ID == projectId {
+				project = &p
+			}
+		}
+		if project == nil {
+			return nil, errors.Join(errors.New("could not find the requested equinix project: "+projectId), err)
+		}
+		conn.resourceID = projectId
+		conn.resourceType = Project
+		conn.project = project
+	} else if conf.Options["org-id"] != "" {
+		orgId := conf.Options["org-id"]
+		org, _, err := c.Organizations.Get(orgId, nil)
+		if err != nil {
+			return nil, errors.Join(errors.New("could not find the requested equinix organization: "+orgId), err)
+		}
+		conn.resourceID = orgId
+		conn.resourceType = Organization
+		conn.org = org
+	} else {
+		return nil, errors.New("equinix provider requires an project id or organization id")
 	}
 
 	conn.client = c
-	conn.projectId = projectId
-	conn.project = project
-
 	return conn, nil
 }
 
@@ -111,6 +129,47 @@ func (c *EquinixConnection) Project() *packngo.Project {
 	return c.project
 }
 
+func (c *EquinixConnection) Organization() *packngo.Organization {
+	if c.resourceType == Organization {
+		return c.org
+	} else if c.resourceType == Project {
+		if c.org != nil {
+			return c.org
+		}
+
+		client := c.Client()
+		// NOTE: if we are going to support multiple projects, we need to change this logic
+		project := c.Project()
+
+		// we need to list the organization to circumvent the get issue
+		// if we request the project and try to access the org, it only returns the url
+		// its similar to https://github.com/packethost/packngo/issues/245
+		var org *packngo.Organization
+		orgs, _, err := client.Organizations.List(nil)
+		if err != nil {
+			return nil
+		}
+
+		for i := range orgs {
+			o := orgs[i]
+			if o.URL == project.Organization.URL {
+				org = &o
+				break
+			}
+		}
+		c.org = org
+		return org
+	}
+	return nil
+}
+
 func (c *EquinixConnection) Identifier() (string, error) {
-	return "//platformid.api.mondoo.app/runtime/equinix/projects/" + c.projectId, nil
+	switch c.resourceType {
+	case Project:
+		return "//platformid.api.mondoo.app/runtime/equinix/projects/" + c.resourceID, nil
+	case Organization:
+		return "//platformid.api.mondoo.app/runtime/equinix/organizations/" + c.resourceID, nil
+	default:
+		return "", errors.New("unknown resource type")
+	}
 }
