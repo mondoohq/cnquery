@@ -5,9 +5,10 @@ package provider
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"os"
 	"strconv"
+
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -215,8 +216,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GcpConnection)
 }
 
 func (s *Service) discover(conn *connection.GcpConnection) (*inventory.Inventory, error) {
-
-	if conn.Conf.Discover != nil {
+	if conn.Conf.Discover == nil {
 		return nil, nil
 	}
 

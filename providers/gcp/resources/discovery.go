@@ -49,6 +49,18 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			in.Spec.Assets = append(in.Spec.Assets, list...)
 		}
+		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+			PlatformIds: []string{
+				connection.NewProjectPlatformID(gcpProject.Id.Data),
+			},
+			Name: gcpProject.Name.Data,
+			Platform: &inventory.Platform{
+				Name:  "gcp-project",
+				Title: "GCP Project " + gcpProject.Name.Data,
+			},
+			Labels:      map[string]string{},
+			Connections: conn.Asset().Connections,
+		})
 	}
 
 	return in, nil
@@ -273,7 +285,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, storage.Error
 		}
 		buckets := storage.Data.GetBuckets()
-		if buckets != nil {
+		if buckets == nil {
 			return nil, buckets.Error
 		}
 		for i := range buckets.Data {
