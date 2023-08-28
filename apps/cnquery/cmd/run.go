@@ -17,16 +17,16 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(RunCmd)
 
-	runCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
-	runCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")
-	runCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
-	runCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
-	runCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
+	RunCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
+	RunCmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")
+	RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
+	RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
+	RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
 }
 
-var runCmd = &cobra.Command{
+var RunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run an MQL query.",
 	Long:  `Run an MQL query on the CLI and displays its results.`,
@@ -35,7 +35,7 @@ var runCmd = &cobra.Command{
 	},
 }
 
-var runcmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
+var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
 	conf := proto.RunQueryConfig{}
 
 	conf.Command, _ = cmd.Flags().GetString("command")

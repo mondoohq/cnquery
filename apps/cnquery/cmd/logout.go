@@ -17,11 +17,11 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(logoutCmd)
-	logoutCmd.Flags().Bool("force", false, "Force re-authentication")
+	rootCmd.AddCommand(LogoutCmd)
+	LogoutCmd.Flags().Bool("force", false, "Force re-authentication")
 }
 
-var logoutCmd = &cobra.Command{
+var LogoutCmd = &cobra.Command{
 	Use:     "logout",
 	Aliases: []string{"unregister"},
 	Short:   "Log out from Mondoo Platform.",

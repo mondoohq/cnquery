@@ -55,8 +55,8 @@ func Execute() {
 			Action:  "Interactive shell with ",
 		},
 		&providers.Command{
-			Command: runCmd,
-			Run:     runcmdRun,
+			Command: RunCmd,
+			Run:     RunCmdRun,
 			Action:  "Run a query with ",
 		},
 		&providers.Command{
