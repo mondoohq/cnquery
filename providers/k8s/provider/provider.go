@@ -18,16 +18,6 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/resources"
 )
 
-const (
-	OPTION_MANIFEST          = "path"
-	OPTION_IMMEMORY_CONTENT  = "manifest-content"
-	OPTION_NAMESPACE         = "namespace"
-	OPTION_NAMESPACE_EXCLUDE = "namespace-exclude"
-	OPTION_ADMISSION         = "k8s-admission-review"
-	OPTION_OBJECT_KIND       = "object-kind"
-	OPTION_CONTEXT           = "context"
-)
-
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
@@ -58,19 +48,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) == 1 {
-		conf.Options[OPTION_MANIFEST] = req.Args[0]
+		conf.Options[shared.OPTION_MANIFEST] = req.Args[0]
 	}
 
 	if context, ok := req.Flags["context"]; ok {
-		conf.Options[OPTION_CONTEXT] = string(context.Value)
+		conf.Options[shared.OPTION_CONTEXT] = string(context.Value)
 	}
 
 	if ns, ok := req.Flags["namespaces"]; ok {
-		conf.Options[OPTION_NAMESPACE] = string(ns.Value)
+		conf.Options[shared.OPTION_NAMESPACE] = string(ns.Value)
 	}
 
 	if ns, ok := req.Flags["namespaces-exclude"]; ok {
-		conf.Options[OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
+		conf.Options[shared.OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
 	}
 
 	asset := &inventory.Asset{
@@ -84,6 +74,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if idDetector != "" {
 		asset.IdDetector = []string{idDetector}
 	}
+
+	// TODO: set creds here and parse CLI args
 
 	res := plugin.ParseCLIRes{
 		Asset: asset,
@@ -129,19 +121,19 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
-	if manifestContent, ok := conf.Options[OPTION_IMMEMORY_CONTENT]; ok {
+	if manifestContent, ok := conf.Options[shared.OPTION_IMMEMORY_CONTENT]; ok {
 		s.lastConnectionID++
 		conn, err = manifest.NewConnection(s.lastConnectionID, asset, manifest.WithManifestContent([]byte(manifestContent)))
 		if err != nil {
 			return nil, err
 		}
-	} else if manifestFile, ok := conf.Options[OPTION_MANIFEST]; ok {
+	} else if manifestFile, ok := conf.Options[shared.OPTION_MANIFEST]; ok {
 		s.lastConnectionID++
 		conn, err = manifest.NewConnection(s.lastConnectionID, asset, manifest.WithManifestFile(manifestFile))
 		if err != nil {
 			return nil, err
 		}
-	} else if data, ok := conf.Options[OPTION_ADMISSION]; ok {
+	} else if data, ok := conf.Options[shared.OPTION_ADMISSION]; ok {
 		s.lastConnectionID++
 		conn, err = admission.NewConnection(s.lastConnectionID, asset, data)
 		if err != nil {

@@ -21,6 +21,7 @@ type Connection struct {
 	runtime string
 	id      uint32
 	asset   *inventory.Asset
+	namespace string
 
 	selectedResourceID string
 	objectKind         string
@@ -31,6 +32,7 @@ func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Conne
 	c := &Connection{
 		// objectKind: objectKind,
 		asset: asset,
+		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
 
 	admission, err := base64.StdEncoding.DecodeString(data)

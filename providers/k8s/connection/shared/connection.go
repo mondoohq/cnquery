@@ -12,12 +12,13 @@ import (
 )
 
 const (
-	OPTION_MANIFEST         = "path"
-	OPTION_IMMEMORY_CONTENT = "manifest-content"
-	OPTION_NAMESPACE        = "namespace"
-	OPTION_ADMISSION        = "k8s-admission-review"
-	OPTION_OBJECT_KIND      = "object-kind"
-	OPTION_CONTEXT          = "context"
+	OPTION_MANIFEST          = "path"
+	OPTION_IMMEMORY_CONTENT  = "manifest-content"
+	OPTION_NAMESPACE         = "namespace"
+	OPTION_NAMESPACE_EXCLUDE = "namespace-exclude"
+	OPTION_ADMISSION         = "k8s-admission-review"
+	OPTION_OBJECT_KIND       = "object-kind"
+	OPTION_CONTEXT           = "context"
 )
 
 type ConnectionType string

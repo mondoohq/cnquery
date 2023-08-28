@@ -16,10 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,10 +47,6 @@ func NewManifestParser(manifest []byte, namespace, selectedResourceID string) (M
 
 func (t *ManifestParser) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return resources.NewApiResourceIndex(), nil
-}
-
-func (t *ManifestParser) Nodes() ([]v1.Node, error) {
-	return []v1.Node{}, nil
 }
 
 func (t *ManifestParser) Namespace(name string) (*v1.Namespace, error) {
@@ -102,94 +95,6 @@ func (t *ManifestParser) Namespaces() ([]v1.Namespace, error) {
 	return nss, nil
 }
 
-func (t *ManifestParser) Pod(namespace string, name string) (*v1.Pod, error) {
-	result, err := t.Resources("pods.v1.", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple pods found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("pod %s not found", name)
-	}
-	foundPod, ok := result.Resources[0].(*v1.Pod)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to pod")
-	}
-
-	if foundPod.Name == "" {
-		return nil, errors.New("pod not found")
-	}
-	return foundPod, nil
-}
-
-func (t *ManifestParser) Pods(namespace v1.Namespace) ([]*v1.Pod, error) {
-	result, err := t.Resources("pods.v1.", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var pods []v1.Pod
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		pod, ok := r.(*v1.Pod)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to pod")
-			continue
-		}
-		pods = append(pods, *pod)
-	}
-
-	return sliceToPtrSlice(pods), nil
-}
-
-func (t *ManifestParser) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
-	result, err := t.Resources("deployments.v1.apps", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple deployments found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("deployment %s not found", name)
-	}
-	foundDeployment, ok := result.Resources[0].(*appsv1.Deployment)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to deployment")
-	}
-
-	if foundDeployment.Name == "" {
-		return nil, errors.New("deployment not found")
-	}
-	return foundDeployment, nil
-}
-
-func (t *ManifestParser) Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error) {
-	result, err := t.Resources("deployments.v1.apps", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var deployments []appsv1.Deployment
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		deployment, ok := r.(*appsv1.Deployment)
-		if !ok {
-			log.Error().Err(err).Msg("could not convert k8s resource to deployment")
-			return nil, err
-		}
-		deployments = append(deployments, *deployment)
-	}
-
-	return sliceToPtrSlice(deployments), nil
-}
-
 func (t *ManifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
 	// find root nodes
 	resList, err := resources.CachedServerResources()
@@ -231,7 +136,18 @@ func (t *ManifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
 	return resTypes, nil
 }
 
+// Resources retrieves the cluster resources. If the connection has a global namespace set, then that's used
 func (t *ManifestParser) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
+	// The connection namespace has precedence
+	if t.namespace != "" {
+		namespace = t.namespace
+	}
+
+	return t.resources(kind, name, namespace)
+}
+
+// resources retrieves the cluster resources
+func (t *ManifestParser) resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	var ns string
 	if namespace == "" {
 		ns = t.namespace
@@ -263,295 +179,6 @@ func (t *ManifestParser) Resources(kind string, name string, namespace string) (
 		Namespace:    ns,
 		AllNs:        allNs,
 	}, err
-}
-
-func (t *ManifestParser) CronJob(namespace string, name string) (*batchv1.CronJob, error) {
-	result, err := t.Resources("cronjobs.v1.batch", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple cronjobs found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("cronjob %s not found", name)
-	}
-	foundCronJob, ok := result.Resources[0].(*batchv1.CronJob)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to cronjob")
-	}
-
-	if foundCronJob.Name == "" {
-		return nil, errors.New("cronjob not found")
-	}
-	return foundCronJob, nil
-}
-
-func (t *ManifestParser) CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error) {
-	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var cronJobs []batchv1.CronJob
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		cronJob, ok := r.(*batchv1.CronJob)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to cronjob")
-			continue
-		}
-		cronJobs = append(cronJobs, *cronJob)
-	}
-
-	return sliceToPtrSlice(cronJobs), nil
-}
-
-func (t *ManifestParser) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
-	result, err := t.Resources("statefulsets.v1.apps", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple statefulsets found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("statefulset %s not found", name)
-	}
-	foundStatefulSet, ok := result.Resources[0].(*appsv1.StatefulSet)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to statefulset")
-	}
-
-	if foundStatefulSet.Name == "" {
-		return nil, errors.New("statefulset not found")
-	}
-	return foundStatefulSet, nil
-}
-
-func (t *ManifestParser) StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error) {
-	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var statefulSets []appsv1.StatefulSet
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		statefulSet, ok := r.(*appsv1.StatefulSet)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to statefulset")
-			continue
-		}
-		statefulSets = append(statefulSets, *statefulSet)
-	}
-
-	return sliceToPtrSlice(statefulSets), nil
-}
-
-func (t *ManifestParser) Job(namespace string, name string) (*batchv1.Job, error) {
-	result, err := t.Resources("jobs.v1.batch", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple jobs found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("job %s not found", name)
-	}
-	foundJob, ok := result.Resources[0].(*batchv1.Job)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to job")
-	}
-
-	if foundJob.Name == "" {
-		return nil, errors.New("job not found")
-	}
-	return foundJob, nil
-}
-
-func (t *ManifestParser) Jobs(namespace v1.Namespace) ([]*batchv1.Job, error) {
-	result, err := t.Resources("jobs.v1.batch", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var jobs []batchv1.Job
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		job, ok := r.(*batchv1.Job)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to job")
-			continue
-		}
-		jobs = append(jobs, *job)
-	}
-
-	return sliceToPtrSlice(jobs), nil
-}
-
-func (t *ManifestParser) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
-	result, err := t.Resources("replicasets.v1.apps", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple replicasets found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("replicaset %s not found", name)
-	}
-	foundReplicaSet, ok := result.Resources[0].(*appsv1.ReplicaSet)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to replicaset")
-	}
-
-	if foundReplicaSet.Name == "" {
-		return nil, errors.New("replicaset not found")
-	}
-	return foundReplicaSet, nil
-}
-
-func (t *ManifestParser) ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error) {
-	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var replicaSets []appsv1.ReplicaSet
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		replicaSet, ok := r.(*appsv1.ReplicaSet)
-		if !ok {
-			log.Warn().Msg("could not convert k8s resource to replicaset")
-			continue
-		}
-		replicaSets = append(replicaSets, *replicaSet)
-	}
-
-	return sliceToPtrSlice(replicaSets), nil
-}
-
-func (t *ManifestParser) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
-	result, err := t.Resources("daemonsets.v1.apps", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple daemonsets found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("daemonset %s not found", name)
-	}
-	foundDaemonSet, ok := result.Resources[0].(*appsv1.DaemonSet)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to daemonset")
-	}
-
-	if foundDaemonSet.Name == "" {
-		return nil, errors.New("daemonset not found")
-	}
-	return foundDaemonSet, nil
-}
-
-func (t *ManifestParser) DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error) {
-	// iterate over all resources and extract the daemonsets
-
-	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var daemonsets []appsv1.DaemonSet
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		daemonset, ok := r.(*appsv1.DaemonSet)
-		if !ok {
-			log.Error().Err(err).Msg("could not convert k8s resource to daemonset")
-			return nil, err
-		}
-		daemonsets = append(daemonsets, *daemonset)
-	}
-
-	return sliceToPtrSlice(daemonsets), nil
-}
-
-func (t *ManifestParser) Ingress(namespace, name string) (*networkingv1.Ingress, error) {
-	result, err := t.Resources("ingresses.v1.networking.k8s.io", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple ingresses found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("ingress %s not found", name)
-	}
-	foundIngress, ok := result.Resources[0].(*networkingv1.Ingress)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to ingress")
-	}
-
-	if foundIngress.Name == "" {
-		return nil, errors.New("ingress not found")
-	}
-	return foundIngress, nil
-}
-
-func (t *ManifestParser) Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error) {
-	result, err := t.Resources("ingresses.v1.networking.k8s.io", "", namespace.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	var ingresses []networkingv1.Ingress
-	for i := range result.Resources {
-		r := result.Resources[i]
-
-		ingress, ok := r.(*networkingv1.Ingress)
-		if !ok {
-			log.Error().Err(err).Msg("could not convert k8s resource to ingress")
-			return nil, err
-		}
-		ingresses = append(ingresses, *ingress)
-	}
-
-	return sliceToPtrSlice(ingresses), nil
-}
-
-func (t *ManifestParser) Secret(namespace, name string) (*v1.Secret, error) {
-	result, err := t.Resources("secrets.v1.", name, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(result.Resources) > 1 {
-		return nil, errors.New("multiple secrets found")
-	}
-	if len(result.Resources) == 0 {
-		return nil, fmt.Errorf("secret %s not found", name)
-	}
-	foundSecret, ok := result.Resources[0].(*v1.Secret)
-	if !ok {
-		return nil, errors.New("could not convert k8s resource to secret")
-	}
-
-	if foundSecret.Name == "" {
-		return nil, errors.New("secret not found")
-	}
-	return foundSecret, nil
 }
 
 func load(manifest []byte) ([]k8sRuntime.Object, error) {

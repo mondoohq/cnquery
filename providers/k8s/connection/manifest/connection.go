@@ -55,7 +55,8 @@ type Connection struct {
 func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
 	c := &Connection{
 		// objectKind: objectKind,
-		asset: asset,
+		asset:     asset,
+		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
 
 	for _, option := range opts {

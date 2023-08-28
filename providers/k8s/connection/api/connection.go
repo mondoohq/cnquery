@@ -90,6 +90,7 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 		d:                  d,
 		config:             config,
 		clientset:          clientset,
+		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 		currentClusterName: kubeConfig.Contexts[kubeConfig.CurrentContext].Cluster,
 	}
 
@@ -194,7 +195,8 @@ func (c *Connection) Platform() *inventory.Platform {
 
 func (c *Connection) AssetId() (string, error) {
 	// we use "kube-system" namespace uid as identifier for the cluster
-	result, err := c.Resources("namespaces", "kube-system", "")
+	// use the internal resources function to make sure we can get the right namespace
+	result, err := c.resources("namespaces", "kube-system", "")
 	if err != nil {
 		return "", err
 	}
@@ -213,7 +215,18 @@ func (c *Connection) AssetId() (string, error) {
 	return shared.NewPlatformId(uid), nil
 }
 
+// Resources retrieves the cluster resources. If the connection has a global namespace set, then that's used
 func (c *Connection) Resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
+	// The connection namespace has precedence
+	if c.namespace != "" {
+		namespace = c.namespace
+	}
+
+	return c.resources(kind, name, namespace)
+}
+
+// resources retrieves the cluster resources
+func (c *Connection) resources(kind string, name string, namespace string) (*shared.ResourceResult, error) {
 	ctx := context.Background()
 	allNs := false
 	if len(namespace) == 0 {
