@@ -77,11 +77,13 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		panic("MIGRATE Child connection for docker container")
-		// asset, dcp, err := providerFactory.NewDockerContainerProvider(dContainer.ID)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		/*
+			FIXME: ??? not used?
+			conn, err := connection.NewDockerEngineContainer(dContainer.ID)
+			if err != nil {
+				return nil, err
+			}
+		*/
 
 		o, err := CreateResource(p.MqlRuntime, "docker.container", map[string]*llx.RawData{
 			"id":      llx.StringData(dContainer.ID),

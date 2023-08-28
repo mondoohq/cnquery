@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func TestDockerRegistry(t *testing.T) {
@@ -50,7 +49,7 @@ func TestHarbor(t *testing.T) {
 		require.NoError(t, err, url)
 
 		// check that we resolved it correctly and we got a specific shasum
-		assert.Equal(t, providers.ProviderType_CONTAINER_REGISTRY, a.Connections[0].Backend)
+		assert.Equal(t, "container-registry", a.Connections[0].Backend)
 		assert.True(t, strings.HasPrefix(a.Connections[0].Host, "index.docker.io/library/centos"), url)
 		assert.True(t, len(strings.Split(a.Connections[0].Host, "@")) == 2, url)
 	}

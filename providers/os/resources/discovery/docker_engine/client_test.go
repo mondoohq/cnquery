@@ -10,11 +10,10 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/discovery/docker_engine"
+	"go.mondoo.com/cnquery/providers/os/resources/discovery/docker_engine"
 )
 
 func resetEnv(env []string) {
-
 }
 
 func TestDockerEnvParsing(t *testing.T) {
@@ -60,5 +59,4 @@ func TestDockerEnvParsing(t *testing.T) {
 	cli, err = client.NewClientWithOpts(docker_engine.FromDockerEnv)
 	assert.Nil(t, err)
 	assert.Equal(t, "tcp://192.168.59.103:2377", cli.DaemonHost())
-
 }

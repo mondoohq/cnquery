@@ -50,6 +50,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	port := 0
+	containerID := ""
 	switch req.Connector {
 	case "local":
 		conf.Type = "local"
@@ -61,10 +62,27 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		port = 5985
 	case "vagrant":
 		conf.Type = "vagrant"
+	case "container", "docker":
+		if len(req.Args) > 1 {
+			switch req.Args[0] {
+			case "image":
+				conf.Type = "docker-image"
+				conf.Backend = "tar"
+				conf.Host = req.Args[1]
+			case "registry":
+				conf.Type = "docker-registry"
+			case "tar":
+				conf.Type = "docker-snapshot"
+				conf.Path = req.Args[1]
+			}
+		} else {
+			conf.Type = "docker-container"
+			containerID = req.Args[0]
+		}
 	}
 
 	user := ""
-	if len(req.Args) != 0 {
+	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container")) {
 		target := req.Args[0]
 		if !strings.Contains(target, "://") {
 			target = "ssh://" + target
@@ -99,9 +117,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Connections: []*inventory.Config{conf},
 	}
 
+	if containerID != "" {
+		asset.Name = containerID
+		conf.Host = containerID
+	}
+
 	idDetector := "hostname"
 	if flag, ok := flags["id-detector"]; ok {
-		idDetector = string(flag.Value)
+		if string(flag.Value) != "" {
+			idDetector = string(flag.Value)
+		}
 	}
 	if idDetector != "" {
 		asset.IdDetector = []string{idDetector}
@@ -194,6 +219,18 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err != nil {
 			return nil, err
 		}
+
+	case "docker-image":
+		s.lastConnectionID++
+		conn, err = connection.NewDockerContainerImageConnection(s.lastConnectionID, conf, asset)
+
+	case "docker-container":
+		s.lastConnectionID++
+		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
+
+	case "registry-image":
+		s.lastConnectionID++
+		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

@@ -1,11 +1,10 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package tar_test
+package connection_test
 
 import (
-	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -17,9 +16,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/providers/tar"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/tar"
 )
 
 const (
@@ -34,22 +33,22 @@ func TestTarCommand(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
-	})
+	}, nil)
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	cmd, err := p.RunCommand("ls /")
+	cmd, err := c.RunCommand("ls /")
 	assert.Nil(t, err)
 	if assert.NotNil(t, cmd) {
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, -1, cmd.ExitStatus, "command should not be executed")
-		stdoutContent, _ := ioutil.ReadAll(cmd.Stdout)
+		stdoutContent, _ := io.ReadAll(cmd.Stdout)
 		assert.Equal(t, "", string(stdoutContent), "output should be correct")
-		stderrContent, _ := ioutil.ReadAll(cmd.Stdout)
+		stderrContent, _ := io.ReadAll(cmd.Stdout)
 		assert.Equal(t, "", string(stderrContent), "output should be correct")
 	}
 }
@@ -58,14 +57,14 @@ func TestPlatformIdentifier(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	m, err := resolver.NewMotorConnection(context.Background(), &providers.Config{
-		Backend: providers.ProviderType_TAR,
+	conn, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
 	}, nil)
 	require.NoError(t, err)
-	platformId, err := m.Provider.(providers.PlatformIdentifier).Identifier()
+	platformId, err := conn.Identifier()
 	require.NoError(t, err)
 	assert.True(t, len(platformId) > 0)
 }
@@ -74,15 +73,15 @@ func TestTarSymlinkFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
-	})
+	}, nil)
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := p.FS().Open("/bin/cat")
+	f, err := c.FileSystem().Open("/bin/cat")
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
@@ -94,7 +93,7 @@ func TestTarSymlinkFile(t *testing.T) {
 		assert.Equal(t, nil, err, "should stat without error")
 		assert.Equal(t, int64(796240), stat.Size(), "should read file size")
 
-		content, err := ioutil.ReadAll(f)
+		content, err := io.ReadAll(f)
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, 796240, len(content), "should read the full content")
 	}
@@ -106,15 +105,15 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	err := cacheCentos()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: centosContainerPath,
+			connection.OPTION_FILE: centosContainerPath,
 		},
-	})
+	}, nil)
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := p.FS().Open("/etc/redhat-release")
+	f, err := c.FileSystem().Open("/etc/redhat-release")
 	require.NoError(t, err)
 
 	if assert.NotNil(t, f) {
@@ -127,7 +126,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 		assert.Equal(t, nil, err, "should stat without error")
 		assert.Equal(t, int64(37), stat.Size(), "should read file size")
 
-		content, err := ioutil.ReadAll(f)
+		content, err := io.ReadAll(f)
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, 37, len(content), "should read the full content")
 	}
@@ -137,15 +136,15 @@ func TestTarFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
-	})
+	}, nil)
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	f, err := p.FS().Open("/etc/alpine-release")
+	f, err := c.FileSystem().Open("/etc/alpine-release")
 	assert.Nil(t, err)
 	if assert.NotNil(t, f) {
 		assert.Equal(t, nil, err, "should execute without error")
@@ -157,7 +156,7 @@ func TestTarFile(t *testing.T) {
 		assert.Equal(t, int64(6), stat.Size(), "should read file size")
 		assert.Equal(t, nil, err, "should execute without error")
 
-		content, err := ioutil.ReadAll(f)
+		content, err := io.ReadAll(f)
 		assert.Equal(t, nil, err, "should execute without error")
 		assert.Equal(t, 6, len(content), "should read the full content")
 	}
@@ -167,16 +166,16 @@ func TestFilePermissions(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
-	})
+	}, nil)
 	require.NoError(t, err)
 
 	path := "/etc/alpine-release"
-	details, err := p.FileInfo(path)
+	details, err := c.FileInfo(path)
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), details.Uid)
 	assert.Equal(t, int64(0), details.Gid)
@@ -198,7 +197,7 @@ func TestFilePermissions(t *testing.T) {
 	assert.False(t, details.Mode.Sticky())
 
 	path = "/etc"
-	details, err = p.FileInfo(path)
+	details, err = c.FileInfo(path)
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), details.Uid)
 	assert.Equal(t, int64(0), details.Gid)
@@ -224,15 +223,15 @@ func TestTarFileFind(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	p, err := tar.New(&providers.Config{
-		Backend: providers.ProviderType_TAR,
+	c, err := connection.NewTarConnection(0, &inventory.Config{
+		Backend: "tar",
 		Options: map[string]string{
-			tar.OPTION_FILE: alpineContainerPath,
+			connection.OPTION_FILE: alpineContainerPath,
 		},
-	})
+	}, nil)
 	assert.Equal(t, nil, err, "should create tar without error")
 
-	fs := p.FS()
+	fs := c.FileSystem()
 
 	fSearch := fs.(*tar.FS)
 

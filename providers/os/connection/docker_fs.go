@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package docker_engine
+package connection
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 type FS struct {
 	Container    string
 	dockerClient *client.Client
-	Provider     *Provider
+	Connection   *DockerContainerConnection
 	catFS        *cat.Fs
 }
 
@@ -53,7 +53,7 @@ func isDockerClientSupported(path string) bool {
 
 func (fs *FS) Open(name string) (afero.File, error) {
 	if isDockerClientSupported(name) {
-		return FileOpen(fs.dockerClient, name, fs.Container, fs.Provider, fs.catFS)
+		return FileOpen(fs.dockerClient, name, fs.Container, fs.Connection, fs.catFS)
 	} else {
 		return fs.catFS.Open(name)
 	}

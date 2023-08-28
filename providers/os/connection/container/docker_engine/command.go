@@ -11,24 +11,23 @@ import (
 	"io"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type Command struct {
-	os.Command
-	Container    string
-	dockerClient *client.Client
+	shared.Command
+	Container string
+	Client    *client.Client
 }
 
-func (c *Command) Exec(command string) (*os.Command, error) {
+func (c *Command) Exec(command string) (*shared.Command, error) {
 	c.Command.Command = command
 	c.Command.Stats.Start = time.Now()
 
 	ctx := context.Background()
-	res, err := c.dockerClient.ContainerExecCreate(ctx, c.Container, docker.ExecConfig{
+	res, err := c.Client.ContainerExecCreate(ctx, c.Container, docker.ExecConfig{
 		Cmd:          []string{"/bin/sh", "-c", c.Command.Command},
 		Detach:       true,
 		Tty:          false,
@@ -40,7 +39,7 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 		return nil, err
 	}
 
-	resp, err := c.dockerClient.ContainerExecAttach(ctx, res.ID, docker.ExecStartCheck{
+	resp, err := c.Client.ContainerExecAttach(ctx, res.ID, docker.ExecStartCheck{
 		Detach: false,
 		Tty:    false,
 	})
@@ -72,7 +71,7 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
 
-	info, err := c.dockerClient.ContainerExecInspect(ctx, res.ID)
+	info, err := c.Client.ContainerExecInspect(ctx, res.ID)
 	if err != nil {
 		return nil, err
 	}

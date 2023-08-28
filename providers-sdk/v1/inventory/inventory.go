@@ -308,7 +308,60 @@ func (p *Platform) IsFamily(family string) bool {
 
 func (p *Platform) PrettyTitle() string {
 	prettyTitle := p.Title
-	panic("MIGRATE PrettyTitle")
+
+	// extend the title only for OS and k8s objects
+	if !(p.IsFamily("k8s-workload") || p.IsFamily("os")) {
+		return prettyTitle
+	}
+
+	var runtimeNiceName string
+	runtimeName := p.Runtime
+	if runtimeName != "" {
+		switch runtimeName {
+		case "aws-ec2-instance":
+			runtimeNiceName = "AWS EC2 Instance"
+		case "azure-vm":
+			runtimeNiceName = "Azure Virtual Machine"
+		case "docker-container":
+			runtimeNiceName = "Docker Container"
+		case "docker-image":
+			runtimeNiceName = "Docker Image"
+		case "gcp-vm":
+			runtimeNiceName = "GCP Virtual Machine"
+		case "k8s-cluster":
+			runtimeNiceName = "Kubernetes Cluster"
+		case "k8s-manifest":
+			runtimeNiceName = "Kubernetes Manifest File"
+		case "vsphere-host":
+			runtimeNiceName = "vSphere Host"
+		case "vsphere-vm":
+			runtimeNiceName = "vSphere Virtual Machine"
+		}
+	} else {
+		runtimeKind := p.Kind
+		switch runtimeKind {
+		case "baremetal":
+			runtimeNiceName = "bare metal"
+		case "container":
+			runtimeNiceName = "Container"
+		case "container-image":
+			runtimeNiceName = "Container Image"
+		case "virtualmachine":
+			runtimeNiceName = "Virtual Machine"
+		case "virtualmachine-image":
+			runtimeNiceName = "Virtual Machine Image"
+		}
+	}
+	// e.g. ", Kubernetes Cluster" and also "Kubernetes, Kubernetes Cluster" do not look nice, so prevent them
+	if prettyTitle == "" || strings.Contains(runtimeNiceName, prettyTitle) {
+		return runtimeNiceName
+	}
+
+	// do not add runtime name when the title is already obvious, e.g. "Network API, Network"
+	if !strings.Contains(prettyTitle, runtimeNiceName) {
+		prettyTitle += ", " + runtimeNiceName
+	}
+
 	return prettyTitle
 }
 

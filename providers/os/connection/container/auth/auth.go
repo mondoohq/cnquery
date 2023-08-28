@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/providers/container/image"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/providers/os/connection/container/image"
 )
 
 func AuthOption(credentials []*vault.Credential) []image.Option {

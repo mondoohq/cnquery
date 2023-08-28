@@ -8,10 +8,8 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/motorid/containerid"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
 
 // be aware that images are prefixed with sha256:, while containers are not
@@ -38,12 +36,12 @@ func (e *dockerEngineDiscovery) ListImageShas() ([]string, error) {
 	return imagesShas, nil
 }
 
-func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
+func (e *dockerEngineDiscovery) ListImages() ([]*inventory.Asset, error) {
 	dImages, err := e.imageList()
 	if err != nil {
 		return nil, err
 	}
-	imgs := make([]*asset.Asset, len(dImages))
+	imgs := make([]*inventory.Asset, len(dImages))
 	for i, dImg := range dImages {
 
 		// TODO: we need to use the digest sha
@@ -54,20 +52,20 @@ func (e *dockerEngineDiscovery) ListImages() ([]*asset.Asset, error) {
 			digest = dImg.ID
 		}
 
-		asset := &asset.Asset{
+		asset := &inventory.Asset{
 			Name:        strings.Join(dImg.RepoTags, ","),
 			PlatformIds: []string{containerid.MondooContainerImageID(digest)},
-			Platform: &platform.Platform{
-				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
-				Runtime: providers.RUNTIME_DOCKER_IMAGE,
+			Platform: &inventory.Platform{
+				Kind:    "container-image",
+				Runtime: "docker-image",
 			},
-			Connections: []*providers.Config{
+			Connections: []*inventory.Config{
 				{
-					Backend: providers.ProviderType_DOCKER_ENGINE_IMAGE,
+					Backend: "docker-image",
 					Host:    dImg.ID,
 				},
 			},
-			State: asset.State_STATE_ONLINE,
+			State: inventory.State_STATE_ONLINE,
 		}
 
 		// update labels

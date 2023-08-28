@@ -23,16 +23,16 @@ func (lpm *DockerTopManager) Name() string {
 // List lists the processes running in a Docker container. Note that currently this function returns child
 // processes as well.
 func (lpm *DockerTopManager) List() ([]*OSProcess, error) {
-	dockerTrans, ok := lpm.conn.(*connection.DockerContainerConnection)
+	dockerConn, ok := lpm.conn.(*connection.DockerContainerConnection)
 	if !ok {
 		return nil, fmt.Errorf("wrong transport type")
 	}
 
 	ctx := context.Background()
-	client := dockerTrans.Client
+	client := dockerConn.Client
 
 	// The Docker API uses ps underneath so we can provide any ps arguments we want here.
-	resp, err := client.ContainerTop(ctx, dockerTrans.ContainerID, []string{"-o", "pid,user,comm,s,command"})
+	resp, err := client.ContainerTop(ctx, dockerConn.ContainerId(), []string{"-o", "pid,user,comm,s,command"})
 	if err != nil {
 		return nil, err
 	}
