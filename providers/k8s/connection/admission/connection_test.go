@@ -18,7 +18,7 @@ func TestAdmissionProvider(t *testing.T) {
 	data, err := os.ReadFile(manifestFile)
 	require.NoError(t, err)
 
-	c, err := NewConnection(1, &inventory.Asset{Name: "K8s Admission review test-dep-5f65697f8d-fxclr"}, base64.StdEncoding.EncodeToString(data))
+	c, err := NewConnection(1, &inventory.Asset{Name: "K8s Admission review test-dep-5f65697f8d-fxclr", Connections: []*inventory.Config{{Options: map[string]string{}}}}, base64.StdEncoding.EncodeToString(data))
 	require.NoError(t, err)
 	require.NotNil(t, c)
 	res, err := c.AdmissionReviews()
