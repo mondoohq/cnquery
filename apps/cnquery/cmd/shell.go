@@ -40,6 +40,25 @@ var shellCmd = &cobra.Command{
 }
 
 var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
+	shellConf := ParseShellConfig(cmd, cliRes)
+	if err := StartShell(runtime, shellConf); err != nil {
+		log.Fatal().Err(err).Msg("failed to run query")
+	}
+}
+
+// ShellConfig is the shared configuration for running a shell given all
+// commandline and config inputs.
+// TODO: the config is a shared structure, which should be moved to proto
+type ShellConfig struct {
+	Command        string
+	Asset          *inventory.Asset
+	Features       cnquery.Features
+	PlatformID     string
+	WelcomeMessage string
+	UpstreamConfig *upstream.UpstreamConfig
+}
+
+func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConfig {
 	conf, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")
@@ -67,22 +86,7 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 	}
 
 	shellConf.Command, _ = cmd.Flags().GetString("command")
-	err = StartShell(runtime, &shellConf)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to run query")
-	}
-}
-
-// ShellConfig is the shared configuration for running a shell given all
-// commandline and config inputs.
-// TODO: the config is a shared structure, which should be moved to proto
-type ShellConfig struct {
-	Command        string
-	Asset          *inventory.Asset
-	Features       cnquery.Features
-	PlatformID     string
-	WelcomeMessage string
-	UpstreamConfig *upstream.UpstreamConfig
+	return &shellConf
 }
 
 // StartShell will start an interactive CLI shell
