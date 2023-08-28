@@ -72,6 +72,10 @@ func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (c *Connection) InventoryConfig() *inventory.Config {
+	return c.asset.Connections[0]
+}
+
 func (c *Connection) AssetId() (string, error) {
 	reviews, err := c.AdmissionReviews()
 	if err != nil {

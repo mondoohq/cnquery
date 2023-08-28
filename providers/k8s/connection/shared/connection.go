@@ -4,6 +4,9 @@
 package shared
 
 import (
+	"fmt"
+	"strings"
+
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -37,6 +40,7 @@ type Connection interface {
 	AssetId() (string, error)
 
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
+	InventoryConfig() *inventory.Config
 }
 
 type ClusterInfo struct {
@@ -114,4 +118,28 @@ func sliceToPtrSlice[T any](items []T) []*T {
 
 func NewPlatformId(assetId string) string {
 	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + assetId
+}
+
+func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid string) string {
+	if workloadType == "namespace" {
+		return NewNamespacePlatformId(clusterIdentifier, name, uid)
+	}
+
+	platformIdentifier := clusterIdentifier
+	// when mondoo is called with "--namespace xyz" the cluster identifier already contains the namespace
+	// when called without the namespace, it is missing, but we need it to identify workloads
+	if !strings.Contains(clusterIdentifier, "namespace") && namespace != "" {
+		platformIdentifier += "/namespace/" + namespace
+	}
+	// add plural "s"
+	platformIdentifier += "/" + workloadType + "s" + "/name/" + name
+	return platformIdentifier
+}
+
+func NewNamespacePlatformId(clusterIdentifier, name, uid string) string {
+	if clusterIdentifier == "" {
+		return fmt.Sprintf("//platformid.api.mondoo.app/runtime/k8s/namespace/%s", name)
+	}
+
+	return fmt.Sprintf("%s/namespace/%s/uid/%s", clusterIdentifier, name, uid)
 }

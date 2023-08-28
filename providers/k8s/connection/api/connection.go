@@ -115,6 +115,10 @@ func (c *Connection) ID() uint32 {
 	return c.id
 }
 
+func (c *Connection) InventoryConfig() *inventory.Config {
+	return c.asset.Connections[0]
+}
+
 func (c *Connection) ClusterName() (string, error) {
 	ctx := context.Background()
 
