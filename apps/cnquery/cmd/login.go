@@ -20,13 +20,13 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(loginCmd)
-	loginCmd.Flags().StringP("token", "t", "", "Set a client registration token.")
-	loginCmd.Flags().String("name", "", "Set asset name.")
-	loginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
+	rootCmd.AddCommand(LoginCmd)
+	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token.")
+	LoginCmd.Flags().String("name", "", "Set asset name.")
+	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
 }
 
-var loginCmd = &cobra.Command{
+var LoginCmd = &cobra.Command{
 	Use:     "login",
 	Aliases: []string{"register"},
 	Short:   "Register with Mondoo Platform.",

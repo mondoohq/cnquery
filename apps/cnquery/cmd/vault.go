@@ -17,18 +17,18 @@ import (
 
 func init() {
 	vaultListCmd.Flags().Bool("show-options", false, "displays configured options")
-	vaultCmd.AddCommand(vaultListCmd)
+	VaultCmd.AddCommand(vaultListCmd)
 
 	vaultConfigureCmd.Flags().String("type", "", "possible values: "+strings.Join(vault.TypeIds(), " | "))
 	vaultConfigureCmd.Flags().StringToString("option", nil, "addition vault connection options, multiple options via --option key=value")
-	vaultCmd.AddCommand(vaultConfigureCmd)
+	VaultCmd.AddCommand(vaultConfigureCmd)
 
-	vaultCmd.AddCommand(vaultRemoveCmd)
-	vaultCmd.AddCommand(vaultResetCmd)
+	VaultCmd.AddCommand(vaultRemoveCmd)
+	VaultCmd.AddCommand(vaultResetCmd)
 
-	vaultCmd.AddCommand(vaultAddSecretCmd)
+	VaultCmd.AddCommand(vaultAddSecretCmd)
 
-	rootCmd.AddCommand(vaultCmd)
+	rootCmd.AddCommand(VaultCmd)
 }
 
 func emptyVaultConfigSecret() *vault.Secret {
@@ -39,8 +39,8 @@ func emptyVaultConfigSecret() *vault.Secret {
 	}
 }
 
-// vaultCmd represents the vault command
-var vaultCmd = &cobra.Command{
+// VaultCmd represents the vault command
+var VaultCmd = &cobra.Command{
 	Use:   "vault",
 	Short: "Manage vault environments.",
 	Long:  ``,

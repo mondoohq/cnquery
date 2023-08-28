@@ -25,12 +25,12 @@ import (
 )
 
 func init() {
-	statusCmd.Flags().StringP("output", "o", "", "Set output format. Accepts json or yaml.")
-	rootCmd.AddCommand(statusCmd)
+	StatusCmd.Flags().StringP("output", "o", "", "Set output format. Accepts json or yaml.")
+	rootCmd.AddCommand(StatusCmd)
 }
 
-// statusCmd represents the version command
-var statusCmd = &cobra.Command{
+// StatusCmd represents the version command
+var StatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Verify access to Mondoo Platform.",
 	Long: `
