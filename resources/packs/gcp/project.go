@@ -285,6 +285,9 @@ func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
 	}
 	mqlProjects := make([]interface{}, 0, len(projects.Projects))
 	for _, p := range projects.Projects {
+		if p.State == "DELETE_REQUESTED" {
+			continue
+		}
 		if _, ok := foldersMap[p.Parent]; ok {
 			mqlP, err := projectToMql(g.MotorRuntime, p)
 			if err != nil {
