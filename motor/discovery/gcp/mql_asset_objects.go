@@ -106,7 +106,7 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 					name:       i.Name,
 					id:         i.Id,
 					service:    "compute",
-					objectType: "image",
+					objectType: "instance",
 				},
 			}, tc)
 		a.State = mapInstanceStatus(i.Status)
