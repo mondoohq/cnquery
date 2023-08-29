@@ -30,8 +30,8 @@ var BuiltinCoreID = coreconf.Config.ID
 //go:embed core/resources/core.resources.json
 var coreInfo []byte
 
-// //go:embed os/resources/os.resources.json
-// var osInfo []byte
+//go:embed os/resources/os.resources.json
+var osInfo []byte
 
 // //go:embed network/resources/network.resources.json
 // var networkInfo []byte

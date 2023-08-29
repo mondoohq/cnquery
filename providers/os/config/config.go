@@ -169,6 +169,12 @@ var Config = plugin.Provider{
 					Desc:    "User override for platform ID detection mechanism",
 					Option:  plugin.FlagOption_Hidden,
 				},
+				{
+					Long:    "disable-cache",
+					Type:    plugin.FlagType_Bool,
+					Default: "false",
+					Desc:    "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.",
+				},
 			},
 		},
 	},

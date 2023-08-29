@@ -5,6 +5,7 @@ package connection
 
 import (
 	"archive/tar"
+	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -61,6 +62,10 @@ func (p *TarConnection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *TarConnection) Conf() *inventory.Config {
+	return p.conf
+}
+
 func (c *TarConnection) Identifier() (string, error) {
 	return c.PlatformIdentifier, nil
 }
@@ -70,7 +75,8 @@ func (c *TarConnection) Capabilities() shared.Capabilities {
 }
 
 func (p *TarConnection) RunCommand(command string) (*shared.Command, error) {
-	return nil, errors.New("cannot run commands on docker snapshots")
+	res := shared.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
+	return &res, nil
 }
 
 func (p *TarConnection) FileSystem() afero.Fs {

@@ -79,7 +79,28 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
-	assetList := conf.Inventory.Spec.Assets
+	var upstreamConfig *upstream.UpstreamConfig
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		upstreamConfig = &upstream.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Incognito:   true,
+			Creds:       serviceAccount,
+		}
+	}
+
+	err := runtime.Connect(&pp.ConnectReq{
+		Features: config.Features,
+		Asset:    conf.Inventory.Spec.Assets[0],
+		Upstream: upstreamConfig,
+	})
+	if err != nil {
+		return err
+	}
+
+	assetList := runtime.Provider.Connection.Inventory.Spec.Assets
+	// assetList := conf.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	filteredAssets := []*inventory.Asset{}
@@ -95,17 +116,6 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	if conf.Format == "json" {
 		out.WriteString("[")
-	}
-
-	var upstreamConfig *upstream.UpstreamConfig
-	serviceAccount := opts.GetServiceCredential()
-	if serviceAccount != nil {
-		upstreamConfig = &upstream.UpstreamConfig{
-			SpaceMrn:    opts.GetParentMrn(),
-			ApiEndpoint: opts.UpstreamApiEndpoint(),
-			Incognito:   true,
-			Creds:       serviceAccount,
-		}
 	}
 
 	for i := range filteredAssets {

@@ -27,9 +27,11 @@
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "args": [
         "run",
-        "local",
+        "container",
+        "registry",
+        "gcr.io/mondoo-base-infra/mvd-data-advisory",
         "-c",
-        "asset.eol"
+        "asset{ name platform ids kind runtime title }"
       ],
     },
     {

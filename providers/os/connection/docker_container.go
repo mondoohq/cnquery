@@ -202,6 +202,9 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 		conn.PlatformIdentifier = identifier
 		conn.Metadata.Name = containerid.ShortContainerImageID(hash.String())
 
+		asset.PlatformIds = []string{identifier}
+		asset.Name = conn.Metadata.Name
+
 		// set the platform architecture using the image configuration
 		imgConfig, err := img.ConfigFile()
 		if err == nil {
