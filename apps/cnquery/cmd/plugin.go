@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	v1plugin "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/shared"
 	run "go.mondoo.com/cnquery/shared/proto"
@@ -79,7 +80,16 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
-	assetList := conf.Inventory.Spec.Assets
+	res, err := runtime.Provider.Instance.Plugin.Connect(&v1plugin.ConnectReq{
+		Features: conf.Features,
+		Asset:    conf.Inventory.Spec.Assets[0],
+		Upstream: nil,
+	}, nil)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not load asset information")
+	}
+
+	assetList := res.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	filteredAssets := []*inventory.Asset{}
