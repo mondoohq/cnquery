@@ -75,8 +75,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		asset.IdDetector = []string{idDetector}
 	}
 
-	// TODO: set creds here and parse CLI args
-
 	res := plugin.ParseCLIRes{
 		Asset: asset,
 	}

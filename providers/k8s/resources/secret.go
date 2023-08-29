@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,9 +59,9 @@ func (k *mqlK8sSecret) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-// func (p *mqlK8sSecret) init(args *resources.Args) (*resources.Args, K8sSecret, error) {
-// 	return initNamespacedResource[K8sSecret](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Secrets() })
-// }
+func initK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initNamespacedResource[*mqlK8sSecret](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetSecrets() })
+}
 
 func (k *mqlK8sSecret) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil

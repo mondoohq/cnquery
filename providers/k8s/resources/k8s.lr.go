@@ -35,31 +35,31 @@ func init() {
 			Create: createK8sNode,
 		},
 		"k8s.pod": {
-			// to override args, implement: initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sPod,
 			Create: createK8sPod,
 		},
 		"k8s.deployment": {
-			// to override args, implement: initK8sDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sDeployment,
 			Create: createK8sDeployment,
 		},
 		"k8s.daemonset": {
-			// to override args, implement: initK8sDaemonset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sDaemonset,
 			Create: createK8sDaemonset,
 		},
 		"k8s.statefulset": {
-			// to override args, implement: initK8sStatefulset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sStatefulset,
 			Create: createK8sStatefulset,
 		},
 		"k8s.replicaset": {
-			// to override args, implement: initK8sReplicaset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sReplicaset,
 			Create: createK8sReplicaset,
 		},
 		"k8s.job": {
-			// to override args, implement: initK8sJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sJob,
 			Create: createK8sJob,
 		},
 		"k8s.cronjob": {
-			// to override args, implement: initK8sCronjob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sCronjob,
 			Create: createK8sCronjob,
 		},
 		"k8s.container": {
@@ -75,15 +75,15 @@ func init() {
 			Create: createK8sEphemeralContainer,
 		},
 		"k8s.secret": {
-			// to override args, implement: initK8sSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sSecret,
 			Create: createK8sSecret,
 		},
 		"k8s.configmap": {
-			// to override args, implement: initK8sConfigmap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sConfigmap,
 			Create: createK8sConfigmap,
 		},
 		"k8s.service": {
-			// to override args, implement: initK8sService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sService,
 			Create: createK8sService,
 		},
 		"k8s.ingressresourceref": {
@@ -111,27 +111,27 @@ func init() {
 			Create: createK8sIngresstls,
 		},
 		"k8s.ingress": {
-			// to override args, implement: initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sIngress,
 			Create: createK8sIngress,
 		},
 		"k8s.serviceaccount": {
-			// to override args, implement: initK8sServiceaccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sServiceaccount,
 			Create: createK8sServiceaccount,
 		},
 		"k8s.rbac.clusterrole": {
-			// to override args, implement: initK8sRbacClusterrole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sRbacClusterrole,
 			Create: createK8sRbacClusterrole,
 		},
 		"k8s.rbac.clusterrolebinding": {
-			// to override args, implement: initK8sRbacClusterrolebinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sRbacClusterrolebinding,
 			Create: createK8sRbacClusterrolebinding,
 		},
 		"k8s.rbac.role": {
-			// to override args, implement: initK8sRbacRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sRbacRole,
 			Create: createK8sRbacRole,
 		},
 		"k8s.rbac.rolebinding": {
-			// to override args, implement: initK8sRbacRolebinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sRbacRolebinding,
 			Create: createK8sRbacRolebinding,
 		},
 		"k8s.podsecuritypolicy": {
@@ -139,7 +139,7 @@ func init() {
 			Create: createK8sPodsecuritypolicy,
 		},
 		"k8s.networkpolicy": {
-			// to override args, implement: initK8sNetworkpolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sNetworkpolicy,
 			Create: createK8sNetworkpolicy,
 		},
 		"k8s.customresource": {

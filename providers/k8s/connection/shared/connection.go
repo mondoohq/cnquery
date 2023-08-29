@@ -33,6 +33,7 @@ type Connection interface {
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 	Platform() *inventory.Platform
+	Asset() *inventory.Asset
 	AssetId() (string, error)
 
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)

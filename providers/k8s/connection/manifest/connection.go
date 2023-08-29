@@ -45,16 +45,13 @@ type Connection struct {
 	asset     *inventory.Asset
 	namespace string
 
-	manifestFile       string
-	manifestContent    []byte
-	selectedResourceID string
-	objectKind         string
+	manifestFile    string
+	manifestContent []byte
 }
 
 // func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
 func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
 	c := &Connection{
-		// objectKind: objectKind,
 		asset:     asset,
 		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
@@ -68,7 +65,6 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 
 	if len(c.manifestContent) > 0 {
 		manifest = c.manifestContent
-		// c.assetName = "K8s Manifest"
 	} else if c.manifestFile != "" {
 		manifest, err = shared.LoadManifestFile(c.manifestFile)
 		if err != nil {
@@ -77,7 +73,6 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		// manifest parent directory name
 		clusterName := shared.ProjectNameFromPath(c.manifestFile)
 		clusterName = "K8s Manifest " + clusterName
-		// c.assetName = clusterName
 	}
 
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
@@ -85,7 +80,6 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		return nil, err
 	}
 
-	// c.selectedResourceID = selectedResourceID
 	return c, nil
 }
 
@@ -113,6 +107,10 @@ func (c *Connection) Platform() *inventory.Platform {
 		Runtime: "k8s-manifest",
 		Title:   "Kubernetes Manifest",
 	}
+}
+
+func (c *Connection) Asset() *inventory.Asset {
+	return c.asset
 }
 
 func (c *Connection) AssetId() (string, error) {

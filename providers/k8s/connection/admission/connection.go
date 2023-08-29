@@ -18,21 +18,17 @@ import (
 
 type Connection struct {
 	shared.ManifestParser
-	runtime string
-	id      uint32
-	asset   *inventory.Asset
+	runtime   string
+	id        uint32
+	asset     *inventory.Asset
 	namespace string
-
-	selectedResourceID string
-	objectKind         string
 }
 
 // func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
 func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Connection, error) {
 	c := &Connection{
-		// objectKind: objectKind,
-		asset: asset,
-		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
+		asset:     asset,
+		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
 
 	admission, err := base64.StdEncoding.DecodeString(data)
@@ -70,6 +66,10 @@ func (p *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, erro
 
 func (p *Connection) ID() uint32 {
 	return p.id
+}
+
+func (c *Connection) Asset() *inventory.Asset {
+	return c.asset
 }
 
 func (c *Connection) AssetId() (string, error) {

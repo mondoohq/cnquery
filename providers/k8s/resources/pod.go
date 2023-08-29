@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	corev1 "k8s.io/api/core/v1"
@@ -68,9 +69,9 @@ func (k *mqlK8sPod) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-// func (p *mqlK8sPod) init(args *resources.Args) (*resources.Args, K8sPod, error) {
-// 	return initNamespacedResource[K8sPod](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Pods() })
-// }
+func initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initNamespacedResource[*mqlK8sPod](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetPods() })
+}
 
 func (k *mqlK8sPod) initContainers() ([]interface{}, error) {
 	return getContainers(k.obj, &k.obj.ObjectMeta, k.MqlRuntime, InitContainerType)

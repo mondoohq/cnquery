@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/types"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -68,9 +69,9 @@ func (k *mqlK8sRbacRolebinding) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-// func (p *mqlK8sRbacRolebinding) init(args *resources.Args) (*resources.Args, K8sRbacRolebinding, error) {
-// 	return initNamespacedResource[K8sRbacRolebinding](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Rolebindings() })
-// }
+func initK8sRbacRolebinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initNamespacedResource[*mqlK8sRbacRolebinding](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetRolebindings() })
+}
 
 func (k *mqlK8sRbacRolebinding) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil

@@ -74,9 +74,9 @@ func (k *mqlK8sIngress) id() (string, error) {
 	return k.Id.Data, nil
 }
 
-// func (p *mqlK8sIngress) init(args *resources.Args) (*resources.Args, K8sIngress, error) {
-// 	return initNamespacedResource[K8sIngress](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Ingresses() })
-// }
+func initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initNamespacedResource[*mqlK8sIngress](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetIngresses() })
+}
 
 func (k *mqlK8sIngress) annotations() (map[string]interface{}, error) {
 	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
