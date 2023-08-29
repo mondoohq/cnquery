@@ -192,3 +192,22 @@ const (
 	// CertificateBlockType is a possible value for pem.Block.Type.
 	CertificateBlockType = "CERTIFICATE"
 )
+
+type assetIdentifier struct {
+	name string
+	arn  string
+}
+
+func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
+	a := runtime.Connection.(*connection.AwsConnection).Asset()
+	if a == nil {
+		return nil
+	}
+	arn := ""
+	for _, id := range a.PlatformIds {
+		if strings.HasPrefix(id, "arn:aws:") {
+			arn = id
+		}
+	}
+	return &assetIdentifier{name: a.Name, arn: arn}
+}

@@ -5,6 +5,42 @@ package config
 
 import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 
+// Discovery Flags
+const (
+	// DiscoveryInstances    = "instances"     // todo: convert to using mql under the hood
+	// DiscoverySSM          = "ssm"           // deprecated: use DiscoverySSMInstances instead
+	// DiscoverySSMInstances = "ssm-instances" // todo: convert to using mql under the hood
+	// DiscoveryECR          = "ecr"           // todo: convert to using mql under the hood
+	// DiscoveryECS          = "ecs"           // todo: convert to using mql under the hood, add ecs-exec
+
+	// API scan
+	DiscoveryAccounts  = "accounts"
+	DiscoveryResources = "resources" // all the resources
+	// DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
+	// DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
+	// DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
+	// DiscoverySSMInstanceAPI             = "ssm-instances-api"  // need policy + dedup story
+	// DiscoveryS3Buckets = "s3-buckets"
+	// DiscoveryCloudtrailTrails           = "cloudtrail-trails"
+	// DiscoveryRdsDbInstances             = "rds-dbinstances"
+	// DiscoveryVPCs                       = "vpcs"
+	// DiscoverySecurityGroups             = "security-groups"
+	DiscoveryIAMUsers = "iam-users"
+	// DiscoveryIAMGroups                  = "iam-groups"
+	// DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
+	// DiscoveryLambdaFunctions            = "lambda-functions"
+	// DiscoveryDynamoDBTables             = "dynamodb-tables"
+	// DiscoveryRedshiftClusters           = "redshift-clusters"
+	// DiscoveryVolumes                    = "ec2-volumes"
+	// DiscoverySnapshots                  = "ec2-snapshots"
+	// DiscoveryEFSFilesystems             = "efs-filesystems"
+	// DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"
+	// DiscoveryELBLoadBalancers           = "elb-loadbalancers"
+	// DiscoveryESDomains                  = "es-domains"
+	// DiscoveryKMSKeys                    = "kms-keys"
+	// DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
+)
+
 var Config = plugin.Provider{
 	Name:    "aws",
 	ID:      "go.mondoo.com/cnquery/providers/aws",
@@ -16,7 +52,7 @@ var Config = plugin.Provider{
 			Short:     "aws account",
 			MinArgs:   0,
 			MaxArgs:   0,
-			Discovery: []string{},
+			Discovery: []string{DiscoveryAccounts, DiscoveryResources, DiscoveryIAMUsers},
 			Flags:     []plugin.Flag{},
 		},
 	},

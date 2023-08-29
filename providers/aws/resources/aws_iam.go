@@ -699,12 +699,12 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	// 	// if len(*args) == 0 {
-	// 	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 	// 		(*args)["name"] = ids.name
-	// 	// 		(*args)["arn"] = ids.arn
-	// 	// 	}
-	// 	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam user")

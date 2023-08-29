@@ -169,7 +169,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		if isNotFoundForS3(err) {
 			return nil, nil
 		}
-		return nil, err
+		return &mqlAwsS3BucketPolicy{}, err
 	}
 
 	if policy != nil && policy.Policy != nil {
@@ -186,7 +186,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	}
 
 	// no bucket policy found, return nil for the policy
-	return nil, nil
+	return &mqlAwsS3BucketPolicy{}, nil
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {

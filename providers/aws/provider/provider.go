@@ -28,9 +28,22 @@ func Init() *Service {
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
+	flags := req.Flags
+	if flags == nil {
+		flags = map[string]*llx.Primitive{}
+	}
+
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{{
-			Type: "aws",
+			Type:     "aws",
+			Discover: &inventory.Discovery{Targets: discoverTargets},
 		}},
 	}
 
@@ -53,11 +66,15 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 	}
+	inventory, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -163,4 +180,18 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 
 func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	return nil, errors.New("not yet implemented")
+}
+
+func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory, error) {
+	if conn.Conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime)
 }
