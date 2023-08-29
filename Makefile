@@ -157,7 +157,8 @@ providers/build: providers/build/core \
 	providers/build/arista \
 	providers/build/equinix \
 	providers/build/vcd \
-	providers/build/gcp
+	providers/build/gcp \
+	providers/build/k8s
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -207,6 +208,9 @@ providers/build/equinix: providers/lr
 providers/build/vcd: providers/lr
 	@$(call buildProvider, providers/vcd)
 
+providers/build/k8s: providers/lr
+	@$(call buildProvider, providers/k8s)
+
 providers/build/gcp: providers/lr
 	@$(call buildProvider, providers/gcp)
 
@@ -228,6 +232,7 @@ providers/install:
 	@$(call installProvider, providers/equinix)
 	@$(call installProvider, providers/vcd)
 	@$(call installProvider, providers/gcp)
+	@$(call installProvider, providers/k8s)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -246,6 +251,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/equinix)
 	@$(call bundleProvider, providers/vcd)
 	@$(call bundleProvider, providers/gcp)
+	@$(call bundleProvider, providers/k8s)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -265,6 +271,7 @@ providers/test:
 	@$(call testGpModProvider, providers/equinix)
 	@$(call testGpModProvider, providers/vcd)
 	@$(call testGpModProvider, providers/gcp)
+	@$(call testGpModProvider, providers/k8s)
 
 providers/gomodtidy:
 #	@$(call gomodtidyProvider, providers/core)
@@ -284,24 +291,7 @@ providers/gomodtidy:
 	@$(call gomodtidyProvider, providers/equinix)
 	@$(call gomodtidyProvider, providers/vcd)
 	@$(call gomodtidyProvider, providers/gcp)
-
-providers/gomodtidy:
-#	@$(call gomodtidyProvider, providers/core)
-#	@$(call gomodtidyProvider, providers/network)
-#	@$(call gomodtidyProvider, providers/os)
-	@$(call gomodtidyProvider, providers/ipmi)
-	@$(call gomodtidyProvider, providers/oci)
-	@$(call gomodtidyProvider, providers/slack)
-	@$(call gomodtidyProvider, providers/github)
-	@$(call gomodtidyProvider, providers/gitlab)
-	@$(call gomodtidyProvider, providers/terraform)
-	@$(call gomodtidyProvider, providers/vsphere)
-	@$(call gomodtidyProvider, providers/opcua)
-	@$(call gomodtidyProvider, providers/okta)
-	@$(call gomodtidyProvider, providers/google-workspace)
-	@$(call gomodtidyProvider, providers/arista)
-	@$(call gomodtidyProvider, providers/equinix)
-	@$(call gomodtidyProvider, providers/vcd)
+	@$(call gomodtidyProvider, providers/k8s)
 
 lr/test:
 	go test ./resources/lr/...
