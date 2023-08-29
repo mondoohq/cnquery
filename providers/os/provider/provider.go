@@ -59,6 +59,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	case "winrm":
 		conf.Type = "winrm"
 		port = 5985
+	case "vagrant":
+		conf.Type = "vagrant"
 	}
 
 	user := ""
@@ -179,6 +181,19 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case "docker-snapshot":
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
+
+	case "vagrant":
+		s.lastConnectionID++
+		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
+		// We need to detect the platform for the connection asset here, because
+		// this platform information will be used to determine the package manager
+		err := s.detect(conn.Asset(), conn)
+		if err != nil {
+			return nil, err
+		}
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

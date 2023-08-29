@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/discovery/vagrant"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/vagrant"
 )
 
 func TestVagrantSshConfigParsing(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/vagrant.toml")
+	mock, err := mock.New("./testdata/vagrant.toml", nil)
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant ssh-config debian10")
@@ -30,7 +30,7 @@ func TestVagrantSshConfigParsing(t *testing.T) {
 }
 
 func TestVagrantStatusParsing(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/vagrant.toml")
+	mock, err := mock.New("./testdata/vagrant.toml", nil)
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant status")
