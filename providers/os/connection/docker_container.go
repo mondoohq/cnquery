@@ -203,7 +203,10 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 		conn.Metadata.Name = containerid.ShortContainerImageID(hash.String())
 
 		asset.PlatformIds = []string{identifier}
-		asset.Name = conn.Metadata.Name
+		repoName := ref.Context().Name()
+		imgDigest := hash.String()
+		name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
+		asset.Name = name
 
 		// set the platform architecture using the image configuration
 		imgConfig, err := img.ConfigFile()

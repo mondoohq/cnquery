@@ -237,7 +237,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		s.lastConnectionID++
 		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
 
-	case "docker-registry":
+	case "docker-registry", "container-registry":
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 

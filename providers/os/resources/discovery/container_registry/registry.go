@@ -199,13 +199,10 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	asset := &inventory.Asset{
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
 		Name:        name,
-		Platform: &inventory.Platform{
-			Kind:    "container-image",
-			Runtime: "docker-registry",
-		},
 		Connections: []*inventory.Config{
 			{
 				Backend:     "container-registry",
+				Type:        "container-registry",
 				Host:        imageUrl,
 				Credentials: creds,
 			},
