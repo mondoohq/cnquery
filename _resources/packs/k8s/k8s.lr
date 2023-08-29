@@ -1,8 +1,0 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
-
-import "../os/os.lr"
-import "../core/core.lr"
-
-option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
-
