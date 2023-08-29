@@ -39,6 +39,9 @@ var coreInfo []byte
 // //go:embed k8s/resources/k8s.resources.json
 // var k8sInfo []byte
 
+// //go:embed azure.resources.json
+// var azureInfo []byte
+
 var builtinProviders = map[string]*builtinProvider{
 	coreconf.Config.ID: {
 		Runtime: &RunningProvider{
@@ -71,7 +74,6 @@ var builtinProviders = map[string]*builtinProvider{
 	// 	Config: &networkconf.Config,
 	// },
 	// k8sconf.Config.ID: {
-	// 	Runtime: &RunningProvider{
 	// 		Name:     k8sconf.Config.Name,
 	// 		ID:       k8sconf.Config.ID,
 	// 		Plugin:   k8s.Init(),
@@ -80,6 +82,14 @@ var builtinProviders = map[string]*builtinProvider{
 	// 	},
 	// 	Config: &k8sconf.Config,
 	// },
+	// azureconf.Config.ID: {
+	// 		Name:     azureconf.Config.Name,
+	// 		ID:       azureconf.Config.ID,
+	// 		Plugin:   azure.Init(),
+	// 		Schema:   MustLoadSchema("azure", azureInfo),
+	// 		isClosed: false,
+	// 	},
+	// 	Config: &azureconf.Config,
 }
 
 type builtinProvider struct {
