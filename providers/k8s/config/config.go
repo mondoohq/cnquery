@@ -22,6 +22,16 @@ var Config = plugin.Provider{
 			MaxArgs: 1,
 			Discovery: []string{
 				resources.DiscoveryPods,
+				resources.DiscoveryJobs,
+				resources.DiscoveryCronJobs,
+				resources.DiscoveryStatefulSets,
+				resources.DiscoveryDeployments,
+				resources.DiscoveryReplicaSets,
+				resources.DiscoveryDaemonSets,
+				resources.DiscoveryContainerImages,
+				resources.DiscoveryAdmissionReviews,
+				resources.DiscoveryIngresses,
+				resources.DiscoveryNamespaces,
 			},
 			Flags: []plugin.Flag{
 				{
