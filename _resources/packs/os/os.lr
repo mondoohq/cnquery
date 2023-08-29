@@ -26,15 +26,6 @@ alias os.unix.mount = mount
 alias os.unix.shadow = shadow
 alias os.linux.yum = yum
 
-// Windows registry key property
-registrykey.property @defaults("path name") {
-  init(path string, name string)
-  path string
-  name string
-  value() string
-  exists() bool
-}
-
 // Windows-specific resource to get operating system details
 windows {
   // A consolidated object of system and operating system properties
