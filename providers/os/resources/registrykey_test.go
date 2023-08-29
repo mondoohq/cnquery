@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package os_test
+package resources_test
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestResource_Registrykey(t *testing.T) {
 		assert.Equal(t, "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", res[0].Data.Value)
 	})
 
-	t.Run("existent registry key", func(t *testing.T) {
+	t.Run("existing registry key", func(t *testing.T) {
 		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System').exists")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
