@@ -10,8 +10,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
-type microsoftAssetType int32
-
 const (
 	OptionTenantID         = "tenant-id"
 	OptionClientID         = "client-id"
@@ -20,74 +18,35 @@ const (
 	OptionPlatformOverride = "platform-override"
 )
 
-const (
-	ms365 microsoftAssetType = 0
-	azure microsoftAssetType = 1
-)
-
 type AzureConnection struct {
 	id    uint32
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	token azcore.TokenCredential
 	// note: in the future, we might make this optional if we have a tenant-level asset.
-	subscriptionId          string
-	subscriptionDisplayName string
-	tenantId                string
-	clientId                string
+	subscriptionId string
 }
 
 func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
-	var assetType microsoftAssetType
-	if conf.Type == "azure" {
-		assetType = azure
-	} else if conf.Type == "ms365" {
-		assetType = ms365
-	}
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
-	// we need credentials for ms365. for azure these are optional, we fallback to the AZ cli (if installed)
-	if assetType == ms365 && (len(conf.Credentials) != 1 || conf.Credentials[0] == nil) {
-		return nil, errors.New("microsoft provider requires a credentials file, pass path via --certificate-path option")
-	}
+	subId := conf.Options[OptionSubscriptionID]
 
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
 		cred = conf.Credentials[0]
 	}
 
-	if assetType == ms365 && len(tenantId) == 0 {
-		return nil, errors.New("ms365 backend requires a tenant-id")
-	}
 	token, err := getTokenCredential(cred, tenantId, clientId)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
-	subsClient := NewSubscriptionsClient(token)
-	subs, err := subsClient.GetSubscriptions(SubscriptionsFilter{})
-	if err != nil {
-		return nil, err
-	}
-	if len(subs) == 0 {
-		return nil, errors.New("cannot find an azure subscription")
-	}
-
-	// TODO: discover other subs too once we can do > 1 assets
-	sub := subs[0]
-
-	subDisplayName := *sub.SubscriptionID
-	if sub.DisplayName != nil {
-		subDisplayName = *sub.DisplayName
-	}
 	return &AzureConnection{
-		Conf:                    conf,
-		id:                      id,
-		asset:                   asset,
-		token:                   token,
-		subscriptionId:          *sub.SubscriptionID,
-		tenantId:                *sub.TenantID,
-		subscriptionDisplayName: subDisplayName,
-		clientId:                clientId,
+		Conf:           conf,
+		id:             id,
+		asset:          asset,
+		token:          token,
+		subscriptionId: subId,
 	}, nil
 }
 
@@ -113,8 +72,4 @@ func (p *AzureConnection) Token() azcore.TokenCredential {
 
 func (p *AzureConnection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + p.subscriptionId
-}
-
-func (p *AzureConnection) SubName() string {
-	return p.subscriptionDisplayName
 }

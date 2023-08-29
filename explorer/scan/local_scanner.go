@@ -183,6 +183,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		// we grab the asset from the connection, because it contains all the
 		// detected metadata (and IDs)
 		assets = append(assets, runtime.Provider.Connection.Asset)
+		assets = append(assets, runtime.Provider.Connection.Inventory.GetSpec().GetAssets()...)
 		runtimes = append(runtimes, runtime)
 	}
 

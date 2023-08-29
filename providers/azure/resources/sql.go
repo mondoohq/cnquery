@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/cnquery/llx"
@@ -688,4 +689,41 @@ func (a *mqlAzureSubscriptionSqlDatabase) usage() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func initAzureSubscriptionSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure sql server")
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.sql", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	sqlSvc := res.(*mqlAzureSubscriptionSql)
+	servers := sqlSvc.GetServers()
+	if servers.Error != nil {
+		return nil, nil, servers.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range servers.Data {
+		vm := entry.(*mqlAzureSubscriptionSqlServer)
+		if vm.Id.Data == id {
+			return args, vm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure sql server does not exist")
 }

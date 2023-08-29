@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package resources
 
 import (
 	"context"
@@ -11,34 +11,22 @@ import (
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-type SubscriptionsClient struct {
+type subscriptionsClient struct {
 	token azcore.TokenCredential
 }
-type SubscriptionsFilter struct {
-	Exclude []string
-	Include []string
+
+type subscriptionsFilter struct {
+	exclude []string
+	include []string
 }
 
-func NewSubscriptionsClient(token azcore.TokenCredential) *SubscriptionsClient {
-	return &SubscriptionsClient{
+func NewSubscriptionsClient(token azcore.TokenCredential) *subscriptionsClient {
+	return &subscriptionsClient{
 		token: token,
 	}
 }
 
-func (client *SubscriptionsClient) GetSubscription(subscriptionId string) (subscriptions.Subscription, error) {
-	subscriptionsC, err := subscriptions.NewClient(client.token, &arm.ClientOptions{})
-	if err != nil {
-		return subscriptions.Subscription{}, err
-	}
-	ctx := context.Background()
-	resp, err := subscriptionsC.Get(ctx, subscriptionId, &subscriptions.ClientGetOptions{})
-	if err != nil {
-		return subscriptions.Subscription{}, err
-	}
-	return resp.Subscription, nil
-}
-
-func (client *SubscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) ([]subscriptions.Subscription, error) {
+func (client *subscriptionsClient) GetSubscriptions(filter subscriptionsFilter) ([]subscriptions.Subscription, error) {
 	subscriptionsC, err := subscriptions.NewClient(client.token, &arm.ClientOptions{})
 
 	ctx := context.Background()
@@ -61,10 +49,10 @@ func (client *SubscriptionsClient) GetSubscriptions(filter SubscriptionsFilter) 
 	return subs, nil
 }
 
-func skipSub(sub *subscriptions.Subscription, filter SubscriptionsFilter) bool {
+func skipSub(sub *subscriptions.Subscription, filter subscriptionsFilter) bool {
 	// anything explicitly specified in the list of includes means accept only from that list
-	if len(filter.Include) > 0 {
-		for _, s := range filter.Include {
+	if len(filter.include) > 0 {
+		for _, s := range filter.include {
 			if s == *sub.SubscriptionID {
 				return false
 			}
@@ -75,8 +63,8 @@ func skipSub(sub *subscriptions.Subscription, filter SubscriptionsFilter) bool {
 
 	// if nothing explicitly meant to be included, then check whether
 	// it should be excluded
-	if len(filter.Exclude) > 0 {
-		for _, s := range filter.Exclude {
+	if len(filter.exclude) > 0 {
+		for _, s := range filter.exclude {
 			if s == *sub.SubscriptionID {
 				return true
 			}

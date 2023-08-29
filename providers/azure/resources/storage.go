@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -404,4 +405,88 @@ func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *conn
 	}
 
 	return storageAccountToMql(runtime, &account.Account)
+}
+
+func initAzureSubscriptionStorageAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure storage account")
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	storage := res.(*mqlAzureSubscriptionStorage)
+	accs := storage.GetAccounts()
+	if accs.Error != nil {
+		return nil, nil, accs.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range accs.Data {
+		storageAcc := entry.(*mqlAzureSubscriptionStorageAccount)
+		if storageAcc.Id.Data == id {
+			return args, storageAcc, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure storage account does not exist")
+}
+
+func initAzureSubscriptionStorageAccountContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure storage account")
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	storage := res.(*mqlAzureSubscriptionStorage)
+	accs := storage.GetAccounts()
+	if accs.Error != nil {
+		return nil, nil, accs.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range accs.Data {
+		storageAcc := entry.(*mqlAzureSubscriptionStorageAccount)
+		containers := storageAcc.GetContainers()
+		if containers.Error != nil {
+			return nil, nil, containers.Error
+		}
+		for _, c := range containers.Data {
+			container := c.(*mqlAzureSubscriptionStorageAccountContainer)
+			if container.Id.Data == id {
+				return args, storageAcc, nil
+			}
+
+		}
+	}
+
+	return nil, nil, errors.New("azure storage account does not exist")
 }
