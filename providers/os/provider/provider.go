@@ -60,7 +60,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Type = "winrm"
 		port = 5985
 	case "vagrant":
-		conn.Type = "vagrant"
+		conf.Type = "vagrant"
 	}
 
 	user := ""
