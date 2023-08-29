@@ -282,10 +282,11 @@ func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime
 				continue
 			}
 
-			if secret.Certificates.Error != nil {
+			certs := secret.GetCertificates()
+			if certs.Error != nil {
 				return nil, errors.New("error getting certificate data from Secret")
 			}
-			if secret.Certificates.Data == nil || len(secret.Certificates.Data) == 0 {
+			if certs.Data == nil || len(certs.Data) == 0 {
 				// no TLS data in Secret referenced
 				// k8s will allow this, so we'll just follow along with this being
 				// a non-critical issue and skip processing the Secret
