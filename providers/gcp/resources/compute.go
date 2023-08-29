@@ -7,11 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/smithy-go/ptr"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/aws/smithy-go/ptr"
 
 	computev1 "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -65,7 +66,6 @@ func (g *mqlGcpProjectComputeService) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceRegion) id() (string, error) {
-
 	if g.Name.Error != nil {
 		return "", g.Name.Error
 	}
@@ -123,7 +123,6 @@ func (g *mqlGcpProjectComputeService) regions() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceZone) id() (string, error) {
-
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
@@ -181,7 +180,6 @@ func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceMachineType) id() (string, error) {
-
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
@@ -283,7 +281,6 @@ func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
-
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
@@ -958,6 +955,8 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
 			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 
@@ -1085,7 +1084,7 @@ func (g *mqlGcpProjectComputeServiceNetwork) subnetworks() ([]interface{}, error
 	return subnets, nil
 }
 
-func initlGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
@@ -1095,6 +1094,8 @@ func initlGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[stri
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
 			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 
@@ -1121,7 +1122,7 @@ func initlGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[stri
 			return nil, nil, projectId.Error
 		}
 
-		if name == args["name"].Value && projectId == args["projectId"].Value {
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
 			return args, network, nil
 		}
 	}
@@ -1211,6 +1212,8 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 			args["name"] = llx.StringData(ids.name)
 			args["region"] = llx.StringData(ids.region)
 			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 

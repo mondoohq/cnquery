@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/config"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"golang.org/x/exp/slices"
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -34,7 +35,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			in.Spec.Assets = append(in.Spec.Assets, list...)
 		}
 	} else if conn.ResourceType() == connection.Project {
-		res, err := runtime.CreateResource(runtime, "gcp.project", nil)
+		res, err := NewResource(runtime, "gcp.project", nil)
 		if err != nil {
 			return nil, err
 		}
@@ -49,18 +50,21 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			}
 			in.Spec.Assets = append(in.Spec.Assets, list...)
 		}
-		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
-			PlatformIds: []string{
-				connection.NewProjectPlatformID(gcpProject.Id.Data),
-			},
-			Name: gcpProject.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "gcp-project",
-				Title: "GCP Project " + gcpProject.Name.Data,
-			},
-			Labels:      map[string]string{},
-			Connections: conn.Asset().Connections,
-		})
+
+		if slices.Contains(conn.Conf.Discover.Targets, config.DiscoveryProjects) {
+			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewProjectPlatformID(gcpProject.Id.Data),
+				},
+				Name: gcpProject.Name.Data,
+				Platform: &inventory.Platform{
+					Name:  "gcp-project",
+					Title: "GCP Project " + gcpProject.Name.Data,
+				},
+				Labels:      map[string]string{},
+				Connections: conn.Asset().Connections,
+			})
+		}
 	}
 
 	return in, nil
@@ -116,7 +120,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, compute.Error
 		}
 		instances := compute.Data.GetInstances()
-		if instances != nil {
+		if instances.Error != nil {
 			return nil, instances.Error
 		}
 
@@ -160,7 +164,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, compute.Error
 		}
 		images := compute.Data.GetImages()
-		if images != nil {
+		if images.Error != nil {
 			return nil, images.Error
 		}
 
@@ -189,7 +193,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, compute.Error
 		}
 		networks := compute.Data.GetNetworks()
-		if networks != nil {
+		if networks.Error != nil {
 			return nil, networks.Error
 		}
 		for i := range networks.Data {
@@ -213,14 +217,18 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, compute.Error
 		}
 		networks := compute.Data.GetSubnetworks()
-		if networks != nil {
+		if networks.Error != nil {
 			return nil, networks.Error
 		}
 		for i := range networks.Data {
 			network := networks.Data[i].(*mqlGcpProjectComputeServiceSubnetwork)
+			region := network.GetRegionUrl()
+			if region.Error != nil {
+				return nil, region.Error
+			}
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("compute", gcpProject.Id.Data, "global", "subnetwork", network.Name.Data),
+					connection.NewResourcePlatformID("compute", gcpProject.Id.Data, RegionNameFromRegionUrl(region.Data), "subnetwork", network.Name.Data),
 				},
 				Name: network.Name.Data,
 				Platform: &inventory.Platform{
@@ -237,7 +245,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, compute.Error
 		}
 		firewalls := compute.Data.GetFirewalls()
-		if firewalls != nil {
+		if firewalls.Error != nil {
 			return nil, firewalls.Error
 		}
 		for i := range firewalls.Data {
@@ -261,7 +269,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			return nil, gke.Error
 		}
 		clusters := gke.Data.GetClusters()
-		if clusters != nil {
+		if clusters.Error != nil {
 			return nil, clusters.Error
 		}
 		for i := range clusters.Data {

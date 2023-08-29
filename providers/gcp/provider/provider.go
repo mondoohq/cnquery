@@ -211,7 +211,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GcpConnection)
 	}
 
 	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gcp/"}
 	return nil
 }
 

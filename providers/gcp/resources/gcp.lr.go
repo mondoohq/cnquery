@@ -103,7 +103,7 @@ func init() {
 			Create: createGcpProjectComputeServiceFirewall,
 		},
 		"gcp.project.computeService.network": {
-			// to override args, implement: initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectComputeServiceNetwork,
 			Create: createGcpProjectComputeServiceNetwork,
 		},
 		"gcp.project.computeService.subnetwork": {

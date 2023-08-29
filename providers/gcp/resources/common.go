@@ -4,11 +4,12 @@
 package resources
 
 import (
+	"strings"
+	"time"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"strings"
-	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -40,10 +41,7 @@ type assetIdentifier struct {
 
 func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	conn := runtime.Connection.(*connection.GcpConnection)
-	id, err := conn.Identifier()
-	if err != nil {
-		return nil
-	}
+	id := conn.Asset().PlatformIds[0]
 
 	if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
 		// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
