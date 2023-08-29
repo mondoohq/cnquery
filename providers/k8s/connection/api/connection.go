@@ -20,14 +20,12 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/homedir"
 )
 
 type Connection struct {
-	runtime            string
 	id                 uint32
 	asset              *inventory.Asset
 	d                  *resources.Discovery
@@ -99,9 +97,9 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 
 // buildConfigFromFlags we rebuild clientcmd.BuildConfigFromFlags to make sure we do not log warnings for every
 // scan.
-func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*restclient.Config, error) {
+func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*rest.Config, error) {
 	if kubeconfigPath == "" && masterUrl == "" {
-		kubeconfig, err := restclient.InClusterConfig()
+		kubeconfig, err := rest.InClusterConfig()
 		if err == nil {
 			return kubeconfig, nil
 		}
@@ -166,10 +164,6 @@ func (c *Connection) Name() string {
 	}
 	return clusterName
 }
-
-// func (p *ApiConnection) Type() shared.ConnectionType {
-// 	return ConnType
-// }
 
 func (c *Connection) Asset() *inventory.Asset {
 	return c.asset

@@ -99,7 +99,6 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	// TODO: discovery of related assets and use them in the inventory below
 	inventory, err := s.discover(conn)
 	if err != nil {
 		return nil, err
