@@ -811,12 +811,12 @@ func initAwsEc2SecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 		args["name"] = ids.name
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil && args["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws security group")
@@ -1045,12 +1045,12 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 		args["id"] = ids.name
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws volume")
@@ -1092,11 +1092,11 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch ec2 instance")
@@ -1128,11 +1128,11 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws snapshot")

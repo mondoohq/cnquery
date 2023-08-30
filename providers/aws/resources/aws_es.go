@@ -89,13 +89,13 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
-	// 		(*args)["name"] = ids.name
-	// 		(*args)["arn"] = ids.arn
+	// if len(args) == 0 {
+	// 	if ids := aruntime); ids != nil {
+	// 		args["name"] = ids.name
+	// 		args["arn"] = ids.arn
 	// 		if arn.IsARN(ids.arn) {
 	// 			if p, err := arn.Parse(ids.arn); err == nil {
-	// 				(*args)["region"] = p.Region
+	// 				args["region"] = p.Region
 	// 			}
 	// 		}
 	// 	}

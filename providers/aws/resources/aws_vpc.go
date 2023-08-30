@@ -189,12 +189,12 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 		args["id"] = ids.name
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws vpc")

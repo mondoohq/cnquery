@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package connection
 
 import "go.mondoo.com/cnquery/providers-sdk/v1/inventory"

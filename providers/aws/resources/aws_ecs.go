@@ -156,11 +156,11 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(e.MqlResource().MotorRuntime); ids != nil {
-	// 		(*args)["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch ecs cluster")
@@ -316,125 +316,123 @@ func (s *mqlAwsEcsTask) id() (string, error) {
 }
 
 func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	{
-		if len(args) > 2 {
-			return args, nil, nil
-		}
-
-		// if len(*args) == 0 {
-		// 	if ids := getAssetIdentifier(e.MqlResource().MotorRuntime); ids != nil {
-		// 		(*args)["arn"] = ids.arn
-		// 	}
-		// }
-
-		if args["arn"] == nil {
-			return nil, nil, errors.New("arn required to fetch ecs task")
-		}
-		a := args["arn"].Value.(string)
-
-		conn := runtime.Connection.(*connection.AwsConnection)
-
-		region := ""
-		clusterName := ""
-		if arn.IsARN(a) {
-			if val, err := arn.Parse(a); err == nil {
-				region = val.Region
-				if res := strings.Split(val.Resource, "/"); len(res) == 3 {
-					clusterName = res[1]
-				}
-			}
-		}
-		svc := conn.Ecs(region)
-		ctx := context.Background()
-		params := &ecs.DescribeTasksInput{Tasks: []string{a}}
-		params.Cluster = &clusterName
-		taskDetails, err := svc.DescribeTasks(ctx, params)
-		if err != nil {
-			return nil, nil, err
-		}
-		if len(taskDetails.Tasks) != 1 {
-			return nil, nil, errors.Newf("only expected one task, got %d", len(taskDetails.Tasks))
-		}
-		t := taskDetails.Tasks[0]
-		taskDefinitionArn := t.TaskDefinitionArn
-		definition, err := svc.DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{TaskDefinition: taskDefinitionArn})
-		if err != nil {
-			return nil, nil, err
-		}
-		containerLogDriverMap := make(map[string]string)
-		containerCommandMap := make(map[string][]string)
-
-		for i := range definition.TaskDefinition.ContainerDefinitions {
-			cd := definition.TaskDefinition.ContainerDefinitions[i]
-			if cd.Name != nil {
-				containerCommandMap[*cd.Name] = cd.Command
-				if cd.LogConfiguration != nil {
-					containerLogDriverMap[*cd.Name] = string(cd.LogConfiguration.LogDriver)
-				} else {
-					containerLogDriverMap[*cd.Name] = "none"
-				}
-			}
-		}
-
-		args["connectivity"] = llx.StringData(string(t.Connectivity))
-		args["lastStatus"] = llx.StringData(toString(t.LastStatus))
-		args["platformFamily"] = llx.StringData(toString(t.PlatformFamily))
-		args["platformVersion"] = llx.StringData(toString(t.PlatformVersion))
-		args["tags"] = llx.MapData(ecsTags(t.Tags), types.String)
-
-		containers := []interface{}{}
-		// pf, _ := a.platformFamily()
-		// pv, _ := a.PlatformVersion()
-
-		for _, c := range t.Containers {
-			cmds := []interface{}{}
-			for i := range containerCommandMap[toString(c.Name)] {
-				cmds = append(cmds, containerCommandMap[toString(c.Name)][i])
-			}
-			publicIp := getContainerIP(ctx, conn, t.Attachments, c, region)
-			name := toString(c.Name)
-			if publicIp != "" {
-				name = name + "-" + publicIp
-			}
-
-			mqlContainer, err := runtime.CreateResource(runtime, "aws.ecs.container",
-				map[string]*llx.RawData{
-					"name": llx.StringData(name),
-					// "platformFamily", pf,
-					// "platformVersion", pv,
-					"status":            llx.StringData(toString(c.LastStatus)),
-					"publicIp":          llx.StringData(publicIp),
-					"arn":               llx.StringData(toString(c.ContainerArn)),
-					"logDriver":         llx.StringData(containerLogDriverMap[toString(c.Name)]),
-					"image":             llx.StringData(toString(c.Image)),
-					"clusterName":       llx.StringData(clusterName),
-					"taskDefinitionArn": llx.StringData(toString(taskDefinitionArn)),
-					"region":            llx.StringData(region),
-					"command":           llx.ArrayData(cmds, types.Any),
-					"taskArn":           llx.StringData(toString(t.TaskArn)),
-					"runtimeId":         llx.StringData(toString(c.RuntimeId)),
-					"containerName":     llx.StringData(toString(c.Name)),
-				})
-			if err != nil {
-				return args, nil, err
-			}
-			containers = append(containers, mqlContainer)
-		}
-		args["containers"] = llx.ArrayData(containers, types.Resource("aws.ecs.container"))
-
+	if len(args) > 2 {
 		return args, nil, nil
 	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch ecs task")
+	}
+	a := args["arn"].Value.(string)
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+
+	region := ""
+	clusterName := ""
+	if arn.IsARN(a) {
+		if val, err := arn.Parse(a); err == nil {
+			region = val.Region
+			if res := strings.Split(val.Resource, "/"); len(res) == 3 {
+				clusterName = res[1]
+			}
+		}
+	}
+	svc := conn.Ecs(region)
+	ctx := context.Background()
+	params := &ecs.DescribeTasksInput{Tasks: []string{a}}
+	params.Cluster = &clusterName
+	taskDetails, err := svc.DescribeTasks(ctx, params)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(taskDetails.Tasks) != 1 {
+		return nil, nil, errors.Newf("only expected one task, got %d", len(taskDetails.Tasks))
+	}
+	t := taskDetails.Tasks[0]
+	taskDefinitionArn := t.TaskDefinitionArn
+	definition, err := svc.DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{TaskDefinition: taskDefinitionArn})
+	if err != nil {
+		return nil, nil, err
+	}
+	containerLogDriverMap := make(map[string]string)
+	containerCommandMap := make(map[string][]string)
+
+	for i := range definition.TaskDefinition.ContainerDefinitions {
+		cd := definition.TaskDefinition.ContainerDefinitions[i]
+		if cd.Name != nil {
+			containerCommandMap[*cd.Name] = cd.Command
+			if cd.LogConfiguration != nil {
+				containerLogDriverMap[*cd.Name] = string(cd.LogConfiguration.LogDriver)
+			} else {
+				containerLogDriverMap[*cd.Name] = "none"
+			}
+		}
+	}
+
+	args["connectivity"] = llx.StringData(string(t.Connectivity))
+	args["lastStatus"] = llx.StringData(toString(t.LastStatus))
+	args["platformFamily"] = llx.StringData(toString(t.PlatformFamily))
+	args["platformVersion"] = llx.StringData(toString(t.PlatformVersion))
+	args["tags"] = llx.MapData(ecsTags(t.Tags), types.String)
+
+	containers := []interface{}{}
+	// pf, _ := a.platformFamily()
+	// pv, _ := a.PlatformVersion()
+
+	for _, c := range t.Containers {
+		cmds := []interface{}{}
+		for i := range containerCommandMap[toString(c.Name)] {
+			cmds = append(cmds, containerCommandMap[toString(c.Name)][i])
+		}
+		publicIp := getContainerIP(ctx, conn, t.Attachments, c, region)
+		name := toString(c.Name)
+		if publicIp != "" {
+			name = name + "-" + publicIp
+		}
+
+		mqlContainer, err := runtime.CreateResource(runtime, "aws.ecs.container",
+			map[string]*llx.RawData{
+				"name": llx.StringData(name),
+				// "platformFamily", pf,
+				// "platformVersion", pv,
+				"status":            llx.StringData(toString(c.LastStatus)),
+				"publicIp":          llx.StringData(publicIp),
+				"arn":               llx.StringData(toString(c.ContainerArn)),
+				"logDriver":         llx.StringData(containerLogDriverMap[toString(c.Name)]),
+				"image":             llx.StringData(toString(c.Image)),
+				"clusterName":       llx.StringData(clusterName),
+				"taskDefinitionArn": llx.StringData(toString(taskDefinitionArn)),
+				"region":            llx.StringData(region),
+				"command":           llx.ArrayData(cmds, types.Any),
+				"taskArn":           llx.StringData(toString(t.TaskArn)),
+				"runtimeId":         llx.StringData(toString(c.RuntimeId)),
+				"containerName":     llx.StringData(toString(c.Name)),
+			})
+		if err != nil {
+			return args, nil, err
+		}
+		containers = append(containers, mqlContainer)
+	}
+	args["containers"] = llx.ArrayData(containers, types.Resource("aws.ecs.container"))
+
+	return args, nil, nil
 }
 
 func initAwsEcsContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(e.MqlResource().MotorRuntime); ids != nil {
-	// 		(*args)["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 	obj, err := runtime.CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err

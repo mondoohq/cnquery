@@ -211,3 +211,11 @@ func getAssetIdentifier(runtime *plugin.Runtime) *assetIdentifier {
 	}
 	return &assetIdentifier{name: a.Name, arn: arn}
 }
+
+func mapStringInterfaceToStringString(m map[string]interface{}) map[string]string {
+	newM := make(map[string]string)
+	for k, v := range m {
+		newM[k] = v.(string)
+	}
+	return newM
+}

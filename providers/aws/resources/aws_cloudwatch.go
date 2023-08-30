@@ -641,12 +641,12 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, nil
 	}
 
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(c.MqlResource().MotorRuntime); ids != nil {
-	// 		args["name"] = ids.name
-	// 		args["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
 	}

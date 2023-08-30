@@ -1224,21 +1224,17 @@ func (a *mqlAwsIamRole) id() (string, error) {
 
 func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
-		log.Info().Msg("greater than 2")
-
 		return args, nil, nil
 	}
-	log.Info().Msg("1")
-	// if len(*args) == 0 {
-	// 	if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
-	// 		(*args)["name"] = ids.name
-	// 		(*args)["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam group")
 	}
-	log.Info().Msg("2")
 
 	conn := runtime.Connection.(*connection.AwsConnection)
 
@@ -1251,15 +1247,12 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 			GroupName: &groupname,
 		})
 		if err != nil {
-			log.Info().Msg("err")
-
 			return nil, nil, err
 		}
 		usernames := []interface{}{}
 		for _, user := range resp.Users {
 			usernames = append(usernames, toString(user.UserName))
 		}
-		log.Info().Msg("3")
 
 		grp := resp.Group
 		args["arn"] = llx.StringData(toString(grp.Arn))

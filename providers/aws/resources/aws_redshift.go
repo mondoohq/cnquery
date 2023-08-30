@@ -132,12 +132,12 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 
-	// if lenargs == 0 {
-	// 	if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
-	// 		(*args)["name"] = ids.name
-	// 		(*args)["arn"] = ids.arn
-	// 	}
-	// }
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
 
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch redshift cluster")
