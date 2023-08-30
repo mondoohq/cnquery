@@ -55,11 +55,11 @@ func determineScannerInstanceInfo() (*scannerInstance, error) {
 	}
 	scannerInstanceInfo, err := gce.Resolve(localProvider, pf)
 	if err != nil {
-		return nil, errors.New("gcp snapshot provider needs to run on a gcp instance")
+		return nil, errors.New("GCP snapshot provider must run from a GCP VM instance")
 	}
 	identity, err := scannerInstanceInfo.Identify()
 	if err != nil {
-		return nil, errors.New("gcp snapshot provider needs to run on a gcp instance")
+		return nil, errors.New("GCP snapshot provider must run from a GCP VM instance")
 	}
 	instanceID := identity.PlatformMrn
 
