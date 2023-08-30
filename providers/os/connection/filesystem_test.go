@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package fs_test
+package connection_test
 
 import (
 	"testing"
@@ -9,37 +9,37 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/fs"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/fs/fsutil"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 func TestOsDetection(t *testing.T) {
-	trans := &fs.Provider{
-		MountedDir: "./testdata/centos8",
-	}
-
-	m, err := motor.New(trans)
+	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
+		Path: "./fs/testdata/centos8",
+	}, nil)
 	require.NoError(t, err)
 
-	pf, err := m.Platform()
-	require.NoError(t, err)
+	pf, detected := detector.DetectOS(conn)
+	require.True(t, detected)
 
 	assert.Equal(t, "centos", pf.Name)
 	assert.Equal(t, "8.2.2004", pf.Version)
 }
 
 func TestMountedDirectoryFile(t *testing.T) {
-	trans := &fs.Provider{
-		MountedDir: "./testdata/centos8",
-	}
+	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
+		Path: "./fs/testdata/centos8",
+	}, nil)
+	require.NoError(t, err)
 
-	f, err := trans.FS().Open("/etc/os-release")
+	f, err := conn.FileSystem().Open("/etc/os-release")
 	assert.Nil(t, err, "should open without error")
 	assert.NotNil(t, f)
 	defer f.Close()
 
-	afutil := afero.Afero{Fs: trans.FS()}
+	afutil := afero.Afero{Fs: conn.FileSystem()}
 	afutil.Exists(f.Name())
 
 	p := f.Name()
@@ -67,11 +67,12 @@ func TestMountedDirectoryFile(t *testing.T) {
 }
 
 func TestRunCommandReturnsErr(t *testing.T) {
-	trans := &fs.Provider{
-		MountedDir: "./testdata/centos8",
-	}
+	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
+		Path: "./fs/testdata/centos8",
+	}, nil)
+	require.NoError(t, err)
 
-	_, err := trans.RunCommand("aa-status")
+	_, err = conn.RunCommand("aa-status")
 	require.Error(t, err)
 	assert.Equal(t, "provider does not implement RunCommand", err.Error())
 }

@@ -180,5 +180,20 @@ var Config = plugin.Provider{
 				},
 			},
 		},
+		{
+			Name:    "filesystem",
+			Use:     "filesystem [flags]",
+			Short:   "a mounted file system target.",
+			MinArgs: 0,
+			MaxArgs: 0,
+			Flags: []plugin.Flag{
+				{
+					Long:    "path",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Path to a local file or directory for the connection to use.",
+				},
+			},
+		},
 	},
 }

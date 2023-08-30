@@ -26,3 +26,14 @@ References
 * https://www.digitalocean.com/community/tutorials/how-to-use-sshfs-to-mount-remote-file-systems-over-ssh
 * https://osxfuse.github.io/
 * https://github.com/osxfuse/sshfs/releases
+
+### local Linux & Vagrant
+
+On debian, the needed package is called `sshfs`.
+
+When you want to connect to a Vagrant VM, you need to add an ssh key to the root user.
+
+Then you can use root, to mount via sshfs:
+```bash
+sshfs -o default_permissions root@127.0.0.1:/ ./mnt -o IdentityFile=/home/you/.ssh/id_rsa -o Port=2222
+```

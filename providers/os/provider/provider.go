@@ -82,6 +82,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			conf.Type = "docker-container"
 			containerID = req.Args[0]
 		}
+	case "filesystem", "fs":
+		conf.Type = "filesystem"
 	}
 
 	user := ""
@@ -122,6 +124,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			return nil, err
 		}
 		conf.Credentials = append(conf.Credentials, credential)
+	}
+
+	if x, ok := flags["path"]; ok && len(x.Value) != 0 {
+		conf.Path = string(x.Value)
 	}
 
 	asset := &inventory.Asset{
@@ -252,6 +258,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case "registry-image":
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
+
+	case "filesystem":
+		s.lastConnectionID++
+		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

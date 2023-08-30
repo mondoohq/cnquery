@@ -4,14 +4,14 @@
 //go:build !windows
 // +build !windows
 
-package fs
+package connection
 
 import (
 	"os"
 	"syscall"
 )
 
-func (t *Provider) fileowner(stat os.FileInfo) (int64, int64) {
+func (c *FileSystemConnection) fileowner(stat os.FileInfo) (int64, int64) {
 	uid := int64(-1)
 	gid := int64(-1)
 	if stat, ok := stat.Sys().(*syscall.Stat_t); ok {
