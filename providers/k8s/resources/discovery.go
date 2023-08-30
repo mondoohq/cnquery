@@ -8,15 +8,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	"golang.org/x/exp/slices"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 const (
@@ -34,6 +38,46 @@ const (
 	DiscoveryNamespaces       = "namespaces"
 )
 
+type NamespaceFilterOpts struct {
+	include []string
+	exclude []string
+}
+
+func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
+	// anything explicitly specified in the list of includes means accept only from that list
+	if len(f.include) > 0 {
+		for _, ns := range f.include {
+			g, err := glob.Compile(ns)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to compile glob")
+				return false
+			}
+			if g.Match(namespace) {
+				// stop looking, we found our match
+				return false
+			}
+		}
+
+		// didn't find it, so it must be skipped
+		return true
+	}
+
+	// if nothing explicitly meant to be included, then check whether
+	// it should be excluded
+	for _, ns := range f.exclude {
+		g, err := glob.Compile(ns)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to compile glob")
+			return false
+		}
+		if g.Match(namespace) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(shared.Connection)
 
@@ -49,44 +93,96 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	}
 	k8s := res.(*mqlK8s)
 
-	clusterId, err := conn.AssetId()
-	if err != nil {
-		return nil, err
+	nsFilter := NamespaceFilterOpts{}
+	if include, ok := invConfig.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
+		nsFilter.include = strings.Split(include, ",")
 	}
-	for _, target := range invConfig.Discover.Targets {
-		var list []*inventory.Asset
-		switch target {
-		case DiscoveryClusters:
-			assetId, err := conn.AssetId()
+
+	if exclude, ok := invConfig.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
+		nsFilter.exclude = strings.Split(exclude, ",")
+	}
+
+	// If we can discover the cluster asset, then we use that as root and build all
+	// platform IDs for the assets based on it. If we cannot discover the cluster, we
+	// discover the individual namespaces according to the ns filter and then build
+	// the platform IDs for the assets based on the namespace.
+	if slices.Contains(invConfig.Discover.Targets, DiscoveryClusters) {
+		assetId, err := conn.AssetId()
+		if err != nil {
+			return nil, err
+		}
+		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+			PlatformIds: []string{assetId},
+			Name:        conn.Name(),
+			Platform:    conn.Platform(),
+			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+		})
+
+		assets, err := discoverAssets(conn, invConfig, assetId, k8s, nsFilter, false)
+		if err != nil {
+			return nil, err
+		}
+		in.Spec.Assets = append(in.Spec.Assets, assets...)
+	} else {
+		nss, err := discoverNamespaces(conn, invConfig, "", nsFilter)
+		if err != nil {
+			return nil, err
+		}
+
+		in.Spec.Assets = append(in.Spec.Assets, nss...)
+
+		// Discover the assets for each namespace and use the namespace platform ID as root
+		for _, ns := range nss {
+			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
+
+			// We don't want to discover the namespaces again since we have already done this above
+			assets, err := discoverAssets(conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, true)
 			if err != nil {
 				return nil, err
 			}
-			list = []*inventory.Asset{
-				{
-					PlatformIds: []string{assetId},
-					Name:        conn.Name(),
-					Platform:    conn.Platform(),
-					Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
-				},
-			}
+			in.Spec.Assets = append(in.Spec.Assets, assets...)
+		}
+	}
+
+	return in, nil
+}
+
+func discoverAssets(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	nsFilter NamespaceFilterOpts,
+	skipNsDiscovery bool,
+) ([]*inventory.Asset, error) {
+	var assets []*inventory.Asset
+	var err error
+	for _, target := range invConfig.Discover.Targets {
+		var list []*inventory.Asset
+		switch target {
 		case DiscoveryPods:
-			list, err = discoverPods(invConfig, clusterId, k8s)
+			list, err = discoverPods(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryJobs:
-			list, err = discoverJobs(invConfig, clusterId, k8s)
+			list, err = discoverJobs(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryCronJobs:
-			list, err = discoverCronJobs(invConfig, clusterId, k8s)
+			list, err = discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryStatefulSets:
-			list, err = discoverStatefulSets(invConfig, clusterId, k8s)
+			list, err = discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryDeployments:
-			list, err = discoverDeployments(invConfig, clusterId, k8s)
+			list, err = discoverDeployments(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryReplicaSets:
-			list, err = discoverReplicaSets(invConfig, clusterId, k8s)
+			list, err = discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryDaemonSets:
-			list, err = discoverDaemonSets(invConfig, clusterId, k8s)
+			list, err = discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryAdmissionReviews:
-			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s)
+			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryIngresses:
-			list, err = discoverIngresses(invConfig, clusterId, k8s)
+			list, err = discoverIngresses(invConfig, clusterId, k8s, nsFilter)
+		case DiscoveryNamespaces:
+			if skipNsDiscovery {
+				continue
+			}
+			list, err = discoverNamespaces(conn, invConfig, clusterId, nsFilter)
 		default:
 			continue
 		}
@@ -94,12 +190,12 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		if err != nil {
 			return nil, err
 		}
-		in.Spec.Assets = append(in.Spec.Assets, list...)
+		assets = append(assets, list...)
 	}
-	return in, nil
+	return assets, nil
 }
 
-func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -108,6 +204,11 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([
 	assetList := make([]*inventory.Asset, 0, len(pods.Data))
 	for _, p := range pods.Data {
 		pod := p.(*mqlK8sPod)
+
+		if skip := nsFilter.skipNamespace(pod.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range pod.GetLabels().Data {
 			labels[k] = v.(string)
@@ -129,7 +230,7 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([
 	return assetList, nil
 }
 
-func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	jobs := k8s.GetJobs()
 	if jobs.Error != nil {
 		return nil, jobs.Error
@@ -138,6 +239,11 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([
 	assetList := make([]*inventory.Asset, 0, len(jobs.Data))
 	for _, j := range jobs.Data {
 		job := j.(*mqlK8sJob)
+
+		if skip := nsFilter.skipNamespace(job.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range job.GetLabels().Data {
 			labels[k] = v.(string)
@@ -159,7 +265,7 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([
 	return assetList, nil
 }
 
-func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	cjs := k8s.GetCronjobs()
 	if cjs.Error != nil {
 		return nil, cjs.Error
@@ -168,6 +274,11 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 	assetList := make([]*inventory.Asset, 0, len(cjs.Data))
 	for _, cj := range cjs.Data {
 		cjob := cj.(*mqlK8sCronjob)
+
+		if skip := nsFilter.skipNamespace(cjob.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range cjob.GetLabels().Data {
 			labels[k] = v.(string)
@@ -189,7 +300,7 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 	return assetList, nil
 }
 
-func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	ss := k8s.GetStatefulsets()
 	if ss.Error != nil {
 		return nil, ss.Error
@@ -198,6 +309,11 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 	assetList := make([]*inventory.Asset, 0, len(ss.Data))
 	for _, j := range ss.Data {
 		statefulset := j.(*mqlK8sStatefulset)
+
+		if skip := nsFilter.skipNamespace(statefulset.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range statefulset.GetLabels().Data {
 			labels[k] = v.(string)
@@ -219,7 +335,7 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 	return assetList, nil
 }
 
-func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	ds := k8s.GetStatefulsets()
 	if ds.Error != nil {
 		return nil, ds.Error
@@ -227,7 +343,12 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 
 	assetList := make([]*inventory.Asset, 0, len(ds.Data))
 	for _, d := range ds.Data {
-		deployment := d.(*mqlK8sStatefulset)
+		deployment := d.(*mqlK8sDeployment)
+
+		if skip := nsFilter.skipNamespace(deployment.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range deployment.GetLabels().Data {
 			labels[k] = v.(string)
@@ -249,7 +370,7 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 	return assetList, nil
 }
 
-func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	rs := k8s.GetReplicasets()
 	if rs.Error != nil {
 		return nil, rs.Error
@@ -258,6 +379,11 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 	assetList := make([]*inventory.Asset, 0, len(rs.Data))
 	for _, r := range rs.Data {
 		replicaset := r.(*mqlK8sReplicaset)
+
+		if skip := nsFilter.skipNamespace(replicaset.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range replicaset.GetLabels().Data {
 			labels[k] = v.(string)
@@ -279,7 +405,7 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 	return assetList, nil
 }
 
-func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	ds := k8s.GetDaemonsets()
 	if ds.Error != nil {
 		return nil, ds.Error
@@ -288,6 +414,11 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 	assetList := make([]*inventory.Asset, 0, len(ds.Data))
 	for _, d := range ds.Data {
 		daemonset := d.(*mqlK8sDaemonset)
+
+		if skip := nsFilter.skipNamespace(daemonset.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range daemonset.GetLabels().Data {
 			labels[k] = v.(string)
@@ -309,7 +440,7 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 	return assetList, nil
 }
 
-func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	admissionReviews, err := conn.AdmissionReviews()
 	if err != nil {
 		return nil, err
@@ -332,7 +463,7 @@ func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Confi
 	return assetList, nil
 }
 
-func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8s) ([]*inventory.Asset, error) {
+func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	is := k8s.GetIngresses()
 	if is.Error != nil {
 		return nil, is.Error
@@ -341,6 +472,11 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 	assetList := make([]*inventory.Asset, 0, len(is.Data))
 	for _, d := range is.Data {
 		ingress := d.(*mqlK8sIngress)
+
+		if skip := nsFilter.skipNamespace(ingress.Namespace.Data); skip {
+			continue
+		}
+
 		labels := map[string]string{}
 		for k, v := range ingress.GetLabels().Data {
 			labels[k] = v.(string)
@@ -354,6 +490,50 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 			Platform: &inventory.Platform{
 				Name:  "k8s-ingress",
 				Title: "Kubernetes Ingress, Kubernetes Cluster",
+			},
+			Labels:      labels,
+			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+		})
+	}
+	return assetList, nil
+}
+
+func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clusterId string, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+	// We don't use MQL here since we need to handle k8s permission errors
+	nss, err := conn.Namespaces()
+	if err != nil {
+		if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
+			for _, ns := range nsFilter.include {
+				n, err := conn.Namespace(ns)
+				if err != nil {
+					return nil, err
+				}
+				nss = append(nss, *n)
+			}
+		} else {
+			return nil, errors.Wrap(err, "failed to list namespaces")
+		}
+	}
+
+	assetList := make([]*inventory.Asset, 0, len(nss))
+	for _, ns := range nss {
+		if skip := nsFilter.skipNamespace(ns.Name); skip {
+			continue
+		}
+
+		labels := map[string]string{}
+		for k, v := range ns.Labels {
+			labels[k] = v
+		}
+		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
+		assetList = append(assetList, &inventory.Asset{
+			PlatformIds: []string{
+				shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
+			},
+			Name: ns.Name,
+			Platform: &inventory.Platform{
+				Name:  "k8s-namespace",
+				Title: "Kubernetes Namespace, Kubernetes Cluster",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config

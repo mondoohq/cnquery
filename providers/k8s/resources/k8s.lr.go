@@ -334,6 +334,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.namespace.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNamespace).GetManifest()).ToDataRes(types.Dict)
 	},
+	"k8s.namespace.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.namespace.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.namespace.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sNamespace).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"k8s.node.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetId()).ToDataRes(types.String)
 	},
@@ -1445,6 +1454,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.namespace.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8sNamespace).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.namespace.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sNamespace).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3367,12 +3388,15 @@ func (c *mqlK8sApiresource) GetCategories() *plugin.TValue[[]interface{}] {
 type mqlK8sNamespace struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlK8sNamespaceInternal it will be used here
+	mqlK8sNamespaceInternal
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	Name plugin.TValue[string]
 	Created plugin.TValue[*time.Time]
 	Manifest plugin.TValue[interface{}]
+	Kind plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
 }
 
 // createK8sNamespace creates a new instance of this resource
@@ -3430,6 +3454,22 @@ func (c *mqlK8sNamespace) GetCreated() *plugin.TValue[*time.Time] {
 
 func (c *mqlK8sNamespace) GetManifest() *plugin.TValue[interface{}] {
 	return &c.Manifest
+}
+
+func (c *mqlK8sNamespace) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sNamespace) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sNamespace) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
 }
 
 // mqlK8sNode for the k8s.node resource

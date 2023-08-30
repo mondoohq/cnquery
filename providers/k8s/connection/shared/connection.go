@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -40,6 +41,9 @@ type Connection interface {
 	AssetId() (string, error)
 
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
+	Namespace(name string) (*v1.Namespace, error)
+	Namespaces() ([]v1.Namespace, error)
+
 	InventoryConfig() *inventory.Config
 }
 

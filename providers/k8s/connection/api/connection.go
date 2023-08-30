@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
@@ -267,4 +268,28 @@ func (c *Connection) resources(kind string, name string, namespace string) (*sha
 
 func (c *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
 	return []admissionv1.AdmissionReview{}, nil
+}
+
+func (c *Connection) Namespace(name string) (*v1.Namespace, error) {
+	ctx := context.Background()
+	ns, err := c.clientset.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	ns.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Namespace"))
+	return ns, err
+}
+
+func (c *Connection) Namespaces() ([]v1.Namespace, error) {
+	ctx := context.Background()
+	list, err := c.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Namespace"))
+	}
+	return list.Items, err
 }
