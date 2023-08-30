@@ -95,6 +95,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
+	if x, ok := flags["identity-file"]; ok && len(x.Value) != 0 {
+		credential, err := vault.NewPrivateKeyCredentialFromPath(user, string(x.Value), "")
+		if err != nil {
+			return nil, err
+		}
+		conf.Credentials = append(conf.Credentials, credential)
+	}
+
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -164,7 +172,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	switch conf.Type {
 	case "local":
 		s.lastConnectionID++
-		conn = connection.NewLocalConnection(s.lastConnectionID, asset)
+		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
 
 	case "ssh":
 		s.lastConnectionID++

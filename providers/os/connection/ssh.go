@@ -26,6 +26,8 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsinstanceconnect"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsssmsession"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/cat"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/scp"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/sftp"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/signers"
 	"go.mondoo.com/cnquery/utils/multierr"
@@ -40,7 +42,7 @@ const (
 
 type SshConnection struct {
 	fs    afero.Fs
-	Sudo  *shared.Sudo
+	Sudo  *inventory.Sudo
 	id    uint32
 	conf  *inventory.Config
 	asset *inventory.Asset
@@ -96,7 +98,7 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 		if string(stdout) != "0" {
 			// configure sudo
 			log.Debug().Msg("activated sudo for ssh connection")
-			res.Sudo = shared.NewSudo()
+			res.Sudo = conf.Sudo
 		}
 	}
 
@@ -132,8 +134,8 @@ func (p *SshConnection) Capabilities() shared.Capabilities {
 }
 
 func (c *SshConnection) RunCommand(command string) (*shared.Command, error) {
-	if c.Sudo != nil {
-		command = c.Sudo.Build(command)
+	if c.Sudo != nil && c.Sudo.Active {
+		command = shared.BuildSudoCommand(c.Sudo, command)
 	}
 	return c.runRawCommand(command)
 }
@@ -211,11 +213,9 @@ func (c *SshConnection) FileSystem() afero.Fs {
 	//	return t.fs
 	//}
 
-	if c.Sudo != nil {
-		// p.fs = cat.New(p)
-		panic("NOT MIGRATED")
-	} else {
-		c.fs = afero.NewOsFs()
+	if c.Sudo != nil && c.Sudo.Active {
+		c.fs = cat.New(c)
+		return c.fs
 	}
 
 	// we always try to use sftp first (if scp is not user-enforced)
@@ -232,8 +232,13 @@ func (c *SshConnection) FileSystem() afero.Fs {
 		}
 	}
 
-	panic("MIGRATE")
+	if c.UseScpFilesystem {
+		c.fs = scp.NewFs(c, c.SSHClient)
+		return c.fs
+	}
 
+	// always fallback to catfs, slow but it works
+	c.fs = cat.New(c)
 	return c.fs
 }
 
@@ -654,7 +659,7 @@ func (c *SshConnection) verify() error {
 	var err error
 	if c.Sudo != nil {
 		// Wrap sudo command, to see proper error messages. We set /dev/null to disable stdin
-		command := "sh -c '" + c.Sudo.Build("echo 'hi'") + " < /dev/null'"
+		command := "sh -c '" + shared.BuildSudoCommand(c.Sudo, "echo 'hi'") + " < /dev/null'"
 		out, err = c.runRawCommand(command)
 	} else {
 		out, err = c.runRawCommand("echo 'hi'")
