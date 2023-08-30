@@ -56,6 +56,19 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
 		switch target {
+		case DiscoveryClusters:
+			assetId, err := conn.AssetId()
+			if err != nil {
+				return nil, err
+			}
+			list = []*inventory.Asset{
+				{
+					PlatformIds: []string{assetId},
+					Name:        conn.Name(),
+					Platform:    conn.Platform(),
+					Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+				},
+			}
 		case DiscoveryPods:
 			list, err = discoverPods(invConfig, clusterId, k8s)
 		case DiscoveryJobs:

@@ -31,8 +31,17 @@ func Init() *Service {
 }
 
 func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
-	// TODO: parse me...
-	return &inventory.Discovery{Targets: []string{"auto"}}
+	var targets []string
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		targets = make([]string, 0, len(x.Array))
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			targets = append(targets, entry)
+		}
+	} else {
+		targets = []string{"auto"}
+	}
+	return &inventory.Discovery{Targets: targets}
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
