@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	DiscoveryAuto             = "auto"
 	DiscoveryClusters         = "clusters"
 	DiscoveryPods             = "pods"
 	DiscoveryJobs             = "jobs"
@@ -160,6 +161,54 @@ func discoverAssets(
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
 		switch target {
+		case DiscoveryAuto:
+			pods, err := discoverPods(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, pods...)
+
+			jobs, err := discoverJobs(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, jobs...)
+
+			cronjobs, err := discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, cronjobs...)
+
+			statefulsets, err := discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, statefulsets...)
+
+			deployments, err := discoverDeployments(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, deployments...)
+
+			replicasets, err := discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, replicasets...)
+
+			daemonsets, err := discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, daemonsets...)
+
+			ingresses, err := discoverIngresses(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, ingresses...)
 		case DiscoveryPods:
 			list, err = discoverPods(invConfig, clusterId, k8s, nsFilter)
 		case DiscoveryJobs:

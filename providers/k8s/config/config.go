@@ -21,6 +21,8 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 1,
 			Discovery: []string{
+				resources.DiscoveryAuto,
+				resources.DiscoveryClusters,
 				resources.DiscoveryPods,
 				resources.DiscoveryJobs,
 				resources.DiscoveryCronJobs,
