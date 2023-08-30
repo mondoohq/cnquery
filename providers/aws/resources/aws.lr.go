@@ -5790,9 +5790,7 @@ func (c *mqlAwsAccount) MqlID() string {
 }
 
 func (c *mqlAwsAccount) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
+	return &c.Id
 }
 
 func (c *mqlAwsAccount) GetAliases() *plugin.TValue[[]interface{}] {
@@ -7082,9 +7080,7 @@ func (c *mqlAwsIamPolicy) GetArn() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsIamPolicy) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
+	return &c.Id
 }
 
 func (c *mqlAwsIamPolicy) GetName() *plugin.TValue[string] {
@@ -11382,9 +11378,7 @@ func (c *mqlAwsS3BucketPolicy) GetVersion() *plugin.TValue[string] {
 }
 
 func (c *mqlAwsS3BucketPolicy) GetId() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Id, func() (string, error) {
-		return c.id()
-	})
+	return &c.Id
 }
 
 func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {

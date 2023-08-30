@@ -7,11 +7,13 @@ import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 
 // Discovery Flags
 const (
-	// DiscoveryInstances    = "instances"     // todo: convert to using mql under the hood
-	// DiscoverySSM          = "ssm"           // deprecated: use DiscoverySSMInstances instead
-	// DiscoverySSMInstances = "ssm-instances" // todo: convert to using mql under the hood
-	// DiscoveryECR          = "ecr"           // todo: convert to using mql under the hood
-	// DiscoveryECS          = "ecs"           // todo: convert to using mql under the hood, add ecs-exec
+	// DiscoveryInstances    = "instances"
+	// DiscoverySSMInstances = "ssm-instances"
+	// DiscoveryECR          = "ecr"
+	// DiscoveryECS          = "ecs"
+
+	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everrrything
+	DiscoveryAuto = "auto" // just the account for now
 
 	// API scan
 	DiscoveryAccounts  = "accounts"

@@ -174,7 +174,6 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
 		}
 	}
-
 	return resources.GetData(resource, req.Field, args), nil
 }
 

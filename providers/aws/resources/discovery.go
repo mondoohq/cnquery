@@ -18,7 +18,10 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
-
+	if len(conn.Conf.Discover.Targets) == 0 {
+		// default to account discovery if none is defined.
+		conn.Conf.Discover.Targets = []string{config.DiscoveryAccounts}
+	}
 	res, err := runtime.CreateResource(runtime, "aws.account", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
@@ -68,8 +71,9 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 	accountId := awsAccount.Id.Data
 	assetList := []*inventory.Asset{}
 	switch target {
+	case config.DiscoveryAuto:
+		assetList = append(assetList, accountAsset(conn, awsAccount))
 	case config.DiscoveryAccounts:
-
 		assetList = append(assetList, accountAsset(conn, awsAccount))
 	case config.DiscoveryIAMUsers:
 		res, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})

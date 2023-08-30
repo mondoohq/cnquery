@@ -80,7 +80,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				"arn":                  llx.StringData(toString(d.ARN)),
 				"status":               llx.StringData(toString(d.Status)),
 				"domainName":           llx.StringData(toString(d.DomainName)),
-				"origins":              llx.ArrayData(origins, types.Any),
+				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
 				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
 			}

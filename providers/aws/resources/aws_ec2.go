@@ -309,8 +309,8 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						"name":                llx.StringData(toString(group.GroupName)),
 						"description":         llx.StringData(toString(group.Description)),
 						"tags":                llx.MapData(Ec2TagsToMap(group.Tags), types.String),
-						"ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Any),
-						"ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Any),
+						"ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Resource("aws.ec2.securitygroup.ippermission")),
+						"ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Resource("aws.ec2.securitygroup.ippermission")),
 						"region":              llx.StringData(regionVal),
 					}
 
@@ -696,8 +696,8 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"detailedMonitoring":    llx.StringData(string(instance.Monitoring.State)),
 				"httpTokens":            llx.StringData(httpTokens),
 				"state":                 llx.StringData(string(instance.State.Name)),
-				"deviceMappings":        llx.ArrayData(mqlDevices, types.Any),
-				"securityGroups":        llx.ArrayData(sgs, types.Any),
+				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
+				"securityGroups":        llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 				"publicDnsName":         llx.StringData(toString(instance.PublicDnsName)),
 				"stateReason":           llx.MapData(stateReason, types.Any),
 				"stateTransitionReason": llx.StringData(toString(instance.StateTransitionReason)),
@@ -857,7 +857,7 @@ func initAwsEc2SecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		}
 	}
 
-	return nil, nil, errors.New("security group does not exist")
+	return nil, &mqlAwsEc2Securitygroup{}, errors.New("security group does not exist")
 }
 
 func (a *mqlAwsEc2SecuritygroupIppermission) id() (string, error) {
@@ -876,14 +876,14 @@ func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
 	// this indicated that no vpc is attached since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare:
 	// aws.ec2.instances.where(state != "terminated") { vpc != null }
-	return nil, nil
+	return &mqlAwsVpc{}, nil
 }
 
 func (a *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
 	// this indicated that no keypair is assigned to the ec2instance since we set the value when we construct the resource
 	// we return nil here to make it easier for users to compare, e.g.:
 	// aws.ec2.instances.where(keypair != null) { instanceId }
-	return nil, nil
+	return &mqlAwsEc2Keypair{}, nil
 }
 
 func (a *mqlAwsEc2Instance) ssm() (interface{}, error) {
@@ -1084,7 +1084,7 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 	}
 
-	return nil, nil, errors.New("volume does not exist")
+	return nil, &mqlAwsEc2Volume{}, errors.New("volume does not exist")
 }
 
 func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1120,7 +1120,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 			return args, instance, nil
 		}
 	}
-	return nil, nil, errors.New("ec2 instance does not exist")
+	return nil, &mqlAwsEc2Instance{}, errors.New("ec2 instance does not exist")
 }
 
 func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -1173,7 +1173,7 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 
-	return nil, nil, errors.New("snapshot does not exist")
+	return nil, &mqlAwsEc2Snapshot{}, errors.New("snapshot does not exist")
 }
 
 func (a *mqlAwsEc2Volume) id() (string, error) {
@@ -1241,7 +1241,7 @@ func (a *mqlAwsEc2) getVpnConnections(conn *connection.AwsConnection) []*jobpool
 				mqlVpnConn, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.vpnconnection",
 					map[string]*llx.RawData{
 						"arn":          llx.StringData(fmt.Sprintf(vpnConnArnPattern, regionVal, conn.AccountId(), toString(vpnConn.VpnConnectionId))),
-						"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Any),
+						"vgwTelemetry": llx.ArrayData(mqlVgwT, types.Resource("aws.ec2.vgwtelemetry")),
 					})
 				if err != nil {
 					return nil, err

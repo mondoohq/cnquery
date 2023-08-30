@@ -78,7 +78,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return args, trail, nil
 		}
 	}
-	return args, nil, err
+	return args, &mqlAwsCloudtrailTrail{}, err
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
@@ -181,17 +181,17 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
 	// no s3 bucket on the trail object
-	return nil, nil
+	return &mqlAwsS3Bucket{}, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
 	// no log group on the trail object
-	return nil, nil
+	return &mqlAwsCloudwatchLoggroup{}, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) kmsKey() (*mqlAwsKmsKey, error) {
 	// no key id on the trail object
-	return nil, nil
+	return &mqlAwsKmsKey{}, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) id() (string, error) {

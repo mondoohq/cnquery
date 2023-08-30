@@ -71,11 +71,22 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 	for i := range buckets.Buckets {
 		bucket := buckets.Buckets[i]
 
+		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
+			Bucket: bucket.Name,
+		})
+
+		region := string(location.LocationConstraint)
+		// us-east-1 returns "" therefore we set it explicitly
+		// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html#API_GetBucketLocation_ResponseSyntax
+		if region == "" {
+			region = "us-east-1"
+		}
 		mqlS3Bucket, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
-				"name":   llx.StringData(toString(bucket.Name)),
-				"arn":    llx.StringData(fmt.Sprintf(s3ArnPattern, toString(bucket.Name))),
-				"exists": llx.BoolData(true),
+				"name":     llx.StringData(toString(bucket.Name)),
+				"arn":      llx.StringData(fmt.Sprintf(s3ArnPattern, toString(bucket.Name))),
+				"exists":   llx.BoolData(true),
+				"location": llx.StringData(region),
 			})
 		if err != nil {
 			return nil, err
@@ -167,7 +178,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	})
 	if err != nil {
 		if isNotFoundForS3(err) {
-			return nil, nil
+			return &mqlAwsS3BucketPolicy{}, nil
 		}
 		return &mqlAwsS3BucketPolicy{}, err
 	}
@@ -277,13 +288,13 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
 
-		grantee, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket.grant", map[string]*llx.RawData{
+		grantee := map[string]interface{}{
 			"id":           llx.StringData(toString(grant.Grantee.ID)),
 			"name":         llx.StringData(toString(grant.Grantee.DisplayName)),
 			"emailAddress": llx.StringData(toString(grant.Grantee.EmailAddress)),
 			"type":         llx.StringData(string(grant.Grantee.Type)),
 			"uri":          llx.StringData(toString(grant.Grantee.URI)),
-		})
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -306,7 +317,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 				"id":         llx.StringData(id),
 				"name":       llx.StringData(bucketname),
 				"permission": llx.StringData(string(grant.Permission)),
-				"grantee":    llx.ResourceData(grantee, grantee.MqlName()),
+				"grantee":    llx.MapData(grantee, types.String),
 			})
 		if err != nil {
 			return nil, err

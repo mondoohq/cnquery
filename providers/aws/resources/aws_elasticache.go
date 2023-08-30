@@ -200,7 +200,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 							"numCacheNodes":             llx.IntData(toInt64From32(cluster.NumCacheNodes)),
 							"preferredAvailabilityZone": llx.StringData(toString(cluster.PreferredAvailabilityZone)),
 							"region":                    llx.StringData(regionVal),
-							"securityGroups":            llx.ArrayData(sgs, types.Any),
+							"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 							"snapshotRetentionLimit":    llx.IntData(toInt64From32(cluster.SnapshotRetentionLimit)),
 							"transitEncryptionEnabled":  llx.BoolData(toBool(cluster.TransitEncryptionEnabled)),
 							"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),

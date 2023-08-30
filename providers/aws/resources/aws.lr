@@ -12,7 +12,7 @@ aws @defaults("account.id") {
 // AWS Account
 aws.account @defaults("id") {
   // Account ID
-  id() string
+  id string
   // Account Aliases
   aliases() []string
   // Information about the associated organization if any
@@ -252,7 +252,7 @@ private aws.iam.policy @defaults("arn name") {
   // ARN of the policy
   arn string
   // ID of the policy
-  id() string
+  id string
   // Name of the policy
   name() string
   // Description of the policy
@@ -1013,7 +1013,7 @@ private aws.s3.bucket.policy @defaults("name version") {
   // Version of the policy
   version() string
   // Unique ID for the policy
-  id() string
+  id string
   // List of statements for the policy
   statements() []dict
 }

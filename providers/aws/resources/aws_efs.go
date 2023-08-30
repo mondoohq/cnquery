@@ -110,7 +110,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 }
 
 func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
-	return nil, nil
+	return &mqlAwsKmsKey{}, nil
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {

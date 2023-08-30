@@ -420,7 +420,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			}
 			containers = append(containers, mqlContainer)
 		}
-		args["containers"] = llx.ArrayData(containers, types.Any)
+		args["containers"] = llx.ArrayData(containers, types.Resource("aws.ecs.container"))
 
 		return args, nil, nil
 	}

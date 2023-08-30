@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	rdstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -73,18 +74,18 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 					for _, logExport := range dbInstance.EnabledCloudwatchLogsExports {
 						stringSliceInterface = append(stringSliceInterface, logExport)
 					}
-					// sgs := []*mqlAwsEc2Securitygroup{}
-					// for i := range dbInstance.VpcSecurityGroups {
-					// 	// NOTE: this will create the resource and determine the data in its init method
-					// 	mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
-					// 		map[string]*llx.RawData{
-					// 			"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId))),
-					// 		})
-					// 	if err != nil {
-					// 		return nil, err
-					// 	}
-					// 	sgs = append(sgs, mqlSg)
-					// }
+					sgs := []interface{}{}
+					for i := range dbInstance.VpcSecurityGroups {
+						// NOTE: this will create the resource and determine the data in its init method
+						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						sgs = append(sgs, mqlSg.(*mqlAwsEc2Securitygroup))
+					}
 
 					mqlDBInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
 						map[string]*llx.RawData{
@@ -103,8 +104,8 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"dbInstanceClass":               llx.StringData(toString(dbInstance.DBInstanceClass)),
 							"dbInstanceIdentifier":          llx.StringData(toString(dbInstance.DBInstanceIdentifier)),
 							"engine":                        llx.StringData(toString(dbInstance.Engine)),
-							// "securityGroups":                llx.ResourceData(sgs, "aws.ec2.securitygroup"),
-							"status": llx.StringData(toString(dbInstance.DBInstanceStatus)),
+							"securityGroups":                llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+							"status":                        llx.StringData(toString(dbInstance.DBInstanceStatus)),
 						})
 					if err != nil {
 						return nil, err
