@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
@@ -16,16 +17,25 @@ import (
 )
 
 type AwsConnection struct {
-	id          uint32
-	Conf        *inventory.Config
-	asset       *inventory.Asset
-	cfg         aws.Config
-	accountId   string
-	clientcache ClientsCache
+	id               uint32
+	Conf             *inventory.Config
+	asset            *inventory.Asset
+	cfg              aws.Config
+	accountId        string
+	clientcache      ClientsCache
+	awsConfigOptions []func(*config.LoadOptions) error
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	// check flags for connection options
+	c := &AwsConnection{
+		awsConfigOptions: []func(*config.LoadOptions) error{},
+	}
+	opts := parseFlagsForConnectionOptions(asset.Options)
+	for _, opt := range opts {
+		opt(c)
+	}
+	cfg, err := config.LoadDefaultConfig(context.Background(), c.awsConfigOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +60,96 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 			return nil, err
 		}
 	}
-	return &AwsConnection{
-		Conf:      conf,
-		id:        id,
-		asset:     asset,
-		cfg:       cfg,
-		accountId: *identity.Account,
-	}, nil
+
+	c.Conf = conf
+	c.id = id
+	c.asset = asset
+	c.cfg = cfg
+	c.accountId = *identity.Account
+	return c, nil
+}
+
+func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
+	o := make([]ConnectionOption, 0)
+	if apiEndpoint, ok := m["endpoint-url"]; ok {
+		o = append(o, WithEndpoint(apiEndpoint))
+	}
+
+	if awsRegion, ok := m["region"]; ok {
+		log.Debug().Str("region", awsRegion).Msg("using region")
+		o = append(o, WithRegion(awsRegion))
+	}
+
+	if awsProfile, ok := m["profile"]; ok {
+		log.Debug().Str("profile", awsProfile).Msg("using aws profile")
+		o = append(o, WithProfile(awsProfile))
+	}
+
+	if role, ok := m["role"]; ok {
+		log.Debug().Str("role", role).Msg("using aws sts assume role")
+		cfg, _ := config.LoadDefaultConfig(context.Background())
+		externalId := m["external-id"]
+		o = append(o, WithAssumeRole(cfg, role, externalId))
+	}
+	return o
+}
+
+type ConnectionOption func(charp *AwsConnection)
+
+// // delegate back to the default v2 resolver otherwise
+// return s3.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, params)
+func WithEndpoint(apiEndpoint string) ConnectionOption {
+	return func(a *AwsConnection) {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			if apiEndpoint != "" {
+				return aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           apiEndpoint,
+					SigningRegion: region,
+				}, nil
+			}
+
+			// returning EndpointNotFoundError will allow the service to fallback to its default resolution
+			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+		})
+		a.awsConfigOptions = append(a.awsConfigOptions, config.WithEndpointResolverWithOptions(customResolver))
+	}
+}
+
+func WithRegion(region string) ConnectionOption {
+	return func(a *AwsConnection) {
+		a.awsConfigOptions = append(a.awsConfigOptions, config.WithRegion(region))
+	}
+}
+
+func WithProfile(profile string) ConnectionOption {
+	return func(a *AwsConnection) {
+		a.awsConfigOptions = append(a.awsConfigOptions, config.WithSharedConfigProfile(profile))
+	}
+}
+
+func WithExternalId(id string) func(o *stscreds.AssumeRoleOptions) {
+	if id != "" {
+		return func(o *stscreds.AssumeRoleOptions) {
+			o.ExternalID = &id
+		}
+	}
+	return func(o *stscreds.AssumeRoleOptions) {}
+}
+
+func WithAssumeRole(defaultCfg aws.Config, roleArn string, externalId string) ConnectionOption {
+	opts := WithExternalId(externalId)
+	return func(a *AwsConnection) {
+		stsClient := sts.NewFromConfig(defaultCfg)
+		a.awsConfigOptions = append(a.awsConfigOptions, config.WithCredentialsProvider(
+			aws.NewCredentialsCache(
+				stscreds.NewAssumeRoleProvider(
+					stsClient,
+					roleArn,
+					opts,
+				)),
+		))
+	}
 }
 
 func (h *AwsConnection) Name() string {

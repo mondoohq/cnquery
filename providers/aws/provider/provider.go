@@ -33,6 +33,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
+	inventoryConfig := &inventory.Config{
+		Type: "aws",
+	}
+
+	// discovery flags
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
 		for i := range x.Array {
@@ -40,14 +45,24 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			discoverTargets = append(discoverTargets, entry)
 		}
 	}
+	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets}
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{{
-			Type:     "aws",
-			Discover: &inventory.Discovery{Targets: discoverTargets},
-		}},
+		Connections: []*inventory.Config{inventoryConfig},
+		Options:     parseFlagsToOptions(flags),
 	}
-
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
+	o := make(map[string]string, 0)
+	for k, v := range m {
+		if k == "profile" || k == "region" || k == "role" || k == "endpoint-url" {
+			if val := string(v.Value); val != "" {
+				o[k] = string(v.Value)
+			}
+		}
+	}
+	return o
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -82,7 +97,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
-
 	asset := req.Asset
 	conf := asset.Connections[0]
 	var conn *connection.AwsConnection
