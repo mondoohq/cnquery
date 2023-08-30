@@ -7,10 +7,10 @@ import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 
 // Discovery Flags
 const (
-	// DiscoveryInstances    = "instances"
-	// DiscoverySSMInstances = "ssm-instances"
-	// DiscoveryECR          = "ecr"
-	// DiscoveryECS          = "ecs"
+	DiscoveryInstances    = "instances"
+	DiscoverySSMInstances = "ssm-instances"
+	DiscoveryECR          = "ecr"
+	DiscoveryECS          = "ecs"
 
 	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everrrything
 	DiscoveryAuto = "auto" // just the account for now
@@ -43,15 +43,19 @@ const (
 	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
 )
 
+var All = []string{
+	DiscoveryAccounts,
+}
+
 var Auto = []string{
 	DiscoveryAccounts,
 }
 
-var AllResources = []string{
-	DiscoveryECSContainersAPI,
-	DiscoveryECRImageAPI,
-	DiscoveryEC2InstanceAPI,
-	DiscoverySSMInstanceAPI,
+var AllAPIResources = []string{
+	// DiscoveryECSContainersAPI,
+	// DiscoveryECRImageAPI,
+	// DiscoveryEC2InstanceAPI,
+	// DiscoverySSMInstanceAPI,
 	DiscoveryS3Buckets,
 	DiscoveryCloudtrailTrails,
 	DiscoveryRdsDbInstances,

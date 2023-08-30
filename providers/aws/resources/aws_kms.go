@@ -124,6 +124,14 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if len(args) > 2 {
 		return args, nil, nil
 	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
 	r := args["arn"]
 	if r == nil {
 		return nil, nil, errors.New("arn required to fetch aws kms key")

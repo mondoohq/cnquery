@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
@@ -48,16 +49,17 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 func handleTargets(targets []string) []string {
 	if len(targets) == 0 {
 		// default to auto if none defined
-		targets = []string{config.DiscoveryAccounts}
+		return []string{config.DiscoveryAccounts}
 	}
 	if stringx.Contains(targets, config.DiscoveryAll) {
-		targets = []string{config.DiscoveryAccounts}
+		return config.All
 	}
 	if stringx.Contains(targets, config.DiscoveryAuto) {
-		targets = []string{config.DiscoveryAccounts}
+		return config.Auto
 	}
 	if stringx.Contains(targets, config.DiscoveryResources) {
-		targets = append(targets, config.AllResources...)
+		targets = remove(targets, config.DiscoveryResources)
+		targets = append(targets, config.AllAPIResources...)
 	}
 	return targets
 }
@@ -96,6 +98,143 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 	case config.DiscoveryAccounts:
 		assetList = append(assetList, accountAsset(conn, awsAccount))
 
+	// case config.DiscoveryInstances:
+	// case config.DiscoverySSMInstances:
+	// case config.DiscoveryECR:
+	// case config.DiscoveryECS:
+	// case config.DiscoveryECSContainersAPI:
+	// case config.DiscoveryECRImageAPI:
+	// case config.DiscoveryEC2InstanceAPI:
+	// case config.DiscoverySSMInstanceAPI:
+	case config.DiscoveryS3Buckets:
+		res, err := NewResource(runtime, "aws.s3", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		s := res.(*mqlAwsS3)
+
+		bs := s.GetBuckets()
+		if bs == nil {
+			return assetList, nil
+		}
+
+		for i := range bs.Data {
+			f := bs.Data[i].(*mqlAwsS3Bucket)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Location.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "s3", objectType: "bucket",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryCloudtrailTrails:
+		res, err := NewResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		l := res.(*mqlAwsCloudtrail)
+
+		fs := l.GetTrails()
+		if fs == nil {
+			return assetList, nil
+		}
+
+		for i := range fs.Data {
+			f := fs.Data[i].(*mqlAwsCloudtrailTrail)
+
+			m := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "cloudtrail", objectType: "trail",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryRdsDbInstances:
+		res, err := NewResource(runtime, "aws.rds", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		r := res.(*mqlAwsRds)
+
+		dbs := r.GetDbInstances()
+		if dbs == nil {
+			return assetList, nil
+		}
+
+		for i := range dbs.Data {
+			f := dbs.Data[i].(*mqlAwsRdsDbinstance)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "rds", objectType: "dbinstance",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryVPCs:
+		res, err := NewResource(runtime, "aws", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		a := res.(*mqlAws)
+
+		vpcs := a.GetVpcs()
+		if vpcs == nil {
+			return assetList, nil
+		}
+
+		for i := range vpcs.Data {
+			f := vpcs.Data[i].(*mqlAwsVpc)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Id.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "vpc", objectType: "vpc",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoverySecurityGroups:
+		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEc2)
+
+		sgs := e.GetSecurityGroups()
+		if sgs == nil {
+			return assetList, nil
+		}
+
+		for i := range sgs.Data {
+			f := sgs.Data[i].(*mqlAwsEc2Securitygroup)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "ec2", objectType: "securitygroup",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
 	case config.DiscoveryIAMGroups:
 		res, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
 		if err != nil {
@@ -122,7 +261,6 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-
 	case config.DiscoveryCloudwatchLoggroups:
 		res, err := NewResource(runtime, "aws.cloudwatch", map[string]*llx.RawData{})
 		if err != nil {
@@ -244,6 +382,243 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
+	case config.DiscoveryRedshiftClusters:
+		res, err := NewResource(runtime, "aws.redshift", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		r := res.(*mqlAwsRedshift)
+
+		cs := r.GetClusters()
+		if cs == nil {
+			return assetList, nil
+		}
+
+		for i := range cs.Data {
+			f := cs.Data[i].(*mqlAwsRedshiftCluster)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "redshift", objectType: "cluster",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryVolumes:
+		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEc2)
+
+		vs := e.GetVolumes()
+		if vs == nil {
+			return assetList, nil
+		}
+
+		for i := range vs.Data {
+			f := vs.Data[i].(*mqlAwsEc2Volume)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Id.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "ec2", objectType: "volume",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoverySnapshots:
+		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEc2)
+
+		s := e.GetSnapshots()
+		if s == nil {
+			return assetList, nil
+		}
+
+		for i := range s.Data {
+			f := s.Data[i].(*mqlAwsEc2Snapshot)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Id.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "ec2", objectType: "snapshot",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryEFSFilesystems:
+		res, err := NewResource(runtime, "aws.efs", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEfs)
+
+		fs := e.GetFilesystems()
+		if fs == nil {
+			return assetList, nil
+		}
+
+		for i := range fs.Data {
+			f := fs.Data[i].(*mqlAwsEfsFilesystem)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "efs", objectType: "filesystem",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryAPIGatewayRestAPIs:
+		res, err := NewResource(runtime, "aws.apigateway", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsApigateway)
+
+		ras := e.GetRestApis()
+		if ras == nil {
+			return assetList, nil
+		}
+
+		for i := range ras.Data {
+			f := ras.Data[i].(*mqlAwsApigatewayRestapi)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "gateway", objectType: "restapi",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryELBLoadBalancers:
+		res, err := NewResource(runtime, "aws.elb", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsElb)
+
+		lbs := e.GetLoadBalancers()
+		if lbs == nil {
+			return assetList, nil
+		}
+
+		for i := range lbs.Data {
+			f := lbs.Data[i].(*mqlAwsElbLoadbalancer)
+			var region string
+			if arn.IsARN(f.Arn.Data) {
+				if p, err := arn.Parse(f.Arn.Data); err == nil {
+					region = p.Region
+				}
+			}
+			m := mqlObject{
+				name: f.Name.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: region, arn: f.Arn.Data,
+					id: f.Name.Data, service: "elb", objectType: "loadbalancer",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryESDomains:
+		res, err := NewResource(runtime, "aws.es", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsEs)
+
+		ras := e.GetDomains()
+		if ras == nil {
+			return assetList, nil
+		}
+
+		for i := range ras.Data {
+			f := ras.Data[i].(*mqlAwsEsDomain)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "es", objectType: "domain",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoveryKMSKeys:
+		res, err := NewResource(runtime, "aws.kms", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsKms)
+
+		ras := e.GetKeys()
+		if ras == nil {
+			return assetList, nil
+		}
+
+		for i := range ras.Data {
+			f := ras.Data[i].(*mqlAwsKmsKey)
+
+			m := mqlObject{
+				name: f.Id.Data, labels: map[string]string{},
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "kms", objectType: "key",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case config.DiscoverySagemakerNotebookInstances:
+		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		e := res.(*mqlAwsSagemaker)
+
+		ras := e.GetNotebookInstances()
+		if ras == nil {
+			return assetList, nil
+		}
+
+		for i := range ras.Data {
+			f := ras.Data[i].(*mqlAwsSagemakerNotebookinstance)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Name.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Name.Data, service: "sagemaker", objectType: "notebookinstance",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
 	}
 	return assetList, nil
 }
@@ -271,10 +646,11 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 	if mqlObject.name == "" {
 		mqlObject.name = mqlObject.awsObject.id
 	}
-	// if err := validate(mqlObject); err != nil {
-	// 	log.Error().Err(err).Msg("missing values in mql object to asset translation")
-	// 	return nil
-	// }
+	// todo: maybe find name in tags here? why arent we doing that?
+	if err := validate(mqlObject); err != nil {
+		log.Error().Err(err).Msg("missing values in mql object to asset translation")
+		return nil
+	}
 	info, err := getTitleFamily(mqlObject.awsObject)
 	if err != nil {
 		log.Error().Err(err).Msg("missing runtime info")
