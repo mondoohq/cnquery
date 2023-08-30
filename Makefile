@@ -109,7 +109,7 @@ define testProvider
 	gotestsum --junitfile ./report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
 endef
 
-define testGpModProvider
+define testGoModProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
 	$(eval $@_PKGS = $(shell bash -c "cd ${$@_HOME} && go list ./..."))

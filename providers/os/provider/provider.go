@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
+	"go.mondoo.com/cnquery/providers/os/resources/discovery/container_registry"
 )
 
 type Service struct {
@@ -50,6 +52,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	port := 0
+	containerID := ""
 	switch req.Connector {
 	case "local":
 		conf.Type = "local"
@@ -61,10 +64,28 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		port = 5985
 	case "vagrant":
 		conf.Type = "vagrant"
+	case "container", "docker":
+		if len(req.Args) > 1 {
+			switch req.Args[0] {
+			case "image":
+				conf.Type = "docker-image"
+				conf.Backend = "tar"
+				conf.Host = req.Args[1]
+			case "registry":
+				conf.Type = "docker-registry"
+				conf.Host = req.Args[1]
+			case "tar":
+				conf.Type = "docker-snapshot"
+				conf.Path = req.Args[1]
+			}
+		} else {
+			conf.Type = "docker-container"
+			containerID = req.Args[0]
+		}
 	}
 
 	user := ""
-	if len(req.Args) != 0 {
+	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container")) {
 		target := req.Args[0]
 		if !strings.Contains(target, "://") {
 			target = "ssh://" + target
@@ -99,9 +120,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Connections: []*inventory.Config{conf},
 	}
 
+	if containerID != "" {
+		asset.Name = containerID
+		conf.Host = containerID
+	}
+
 	idDetector := "hostname"
 	if flag, ok := flags["id-detector"]; ok {
-		idDetector = string(flag.Value)
+		if string(flag.Value) != "" {
+			idDetector = string(flag.Value)
+		}
 	}
 	if idDetector != "" {
 		asset.IdDetector = []string{idDetector}
@@ -141,13 +169,19 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	// TODO: discovery of related assets and use them in the inventory below
+	var inventory *inventory.Inventory
+	if conn.Asset().Connections[0].Type == "docker-registry" {
+		inventory, err = s.discover(conn.(*connection.TarConnection))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -194,6 +228,22 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err != nil {
 			return nil, err
 		}
+
+	case "docker-image":
+		s.lastConnectionID++
+		conn, err = connection.NewDockerContainerImageConnection(s.lastConnectionID, conf, asset)
+
+	case "docker-container":
+		s.lastConnectionID++
+		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
+
+	case "docker-registry", "container-registry":
+		s.lastConnectionID++
+		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
+
+	case "registry-image":
+		s.lastConnectionID++
+		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)
@@ -307,4 +357,22 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 		return nil, errors.New(strings.Join(errs, ", "))
 	}
 	return &plugin.StoreRes{}, nil
+}
+
+func (s *Service) discover(conn *connection.TarConnection) (*inventory.Inventory, error) {
+	conf := conn.Asset().Connections[0]
+	if conf == nil {
+		return nil, nil
+	}
+
+	resolver := container_registry.Resolver{}
+	resolvedAssets, err := resolver.Resolve(context.Background(), conn.Asset(), conf, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	inventory := &inventory.Inventory{}
+	inventory.AddAssets(resolvedAssets...)
+
+	return inventory, nil
 }

@@ -9,10 +9,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/motorid/containerid"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
 
 func (e *dockerEngineDiscovery) containerList() ([]types.Container, error) {
@@ -126,25 +124,25 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	return ii, nil
 }
 
-func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
+func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 	dContainers, err := e.containerList()
 	if err != nil {
 		return nil, err
 	}
 
-	container := make([]*asset.Asset, len(dContainers))
+	container := make([]*inventory.Asset, len(dContainers))
 	for i, dContainer := range dContainers {
 		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
-		asset := &asset.Asset{
+		asset := &inventory.Asset{
 			Name:        name,
 			PlatformIds: []string{containerid.MondooContainerID(dContainer.ID)},
-			Platform: &platform.Platform{
-				Kind:    providers.Kind_KIND_CONTAINER,
-				Runtime: providers.RUNTIME_DOCKER_CONTAINER,
+			Platform: &inventory.Platform{
+				Kind:    "container",
+				Runtime: "docker-container",
 			},
-			Connections: []*providers.Config{
+			Connections: []*inventory.Config{
 				{
-					Backend: providers.ProviderType_DOCKER_ENGINE_CONTAINER,
+					Backend: "docker-engine",
 					Host:    dContainer.ID,
 				},
 			},
@@ -168,23 +166,23 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 	return container, nil
 }
 
-func mapContainerState(state string) asset.State {
+func mapContainerState(state string) inventory.State {
 	switch state {
 	case "running":
-		return asset.State_STATE_RUNNING
+		return inventory.State_STATE_RUNNING
 	case "created":
-		return asset.State_STATE_PENDING
+		return inventory.State_STATE_PENDING
 	case "paused":
-		return asset.State_STATE_STOPPED
+		return inventory.State_STATE_STOPPED
 	case "exited":
-		return asset.State_STATE_TERMINATED
+		return inventory.State_STATE_TERMINATED
 	case "restarting":
-		return asset.State_STATE_PENDING
+		return inventory.State_STATE_PENDING
 	case "dead":
-		return asset.State_STATE_ERROR
+		return inventory.State_STATE_ERROR
 	default:
 		log.Warn().Str("state", state).Msg("unknown container state")
-		return asset.State_STATE_UNKNOWN
+		return inventory.State_STATE_UNKNOWN
 	}
 }
 

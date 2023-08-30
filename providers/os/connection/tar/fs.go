@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,7 +16,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers/os/fsutil"
 )
 
 func NewFs(source string) *FS {
@@ -185,7 +184,7 @@ func (fs *FS) tar(path string, header *tar.Header) (io.ReadCloser, error) {
 	}
 
 	// convert raw stream to tar stream
-	go fsutil.StreamFileAsTar(header.Name, fi, ioutil.NopCloser(fReader), tarWriter)
+	go fsutil.StreamFileAsTar(header.Name, fi, io.NopCloser(fReader), tarWriter)
 
 	// return the reader
 	return tarReader, nil

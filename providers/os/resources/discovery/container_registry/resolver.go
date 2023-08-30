@@ -12,10 +12,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 type Resolver struct {
@@ -30,15 +28,16 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll}
+	return []string{"auto", "all"}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+// func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*inventory.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
+	resolved := []*inventory.Asset{}
 
 	imageFetcher := NewContainerRegistryResolver()
 	// to support self-signed certs
-	imageFetcher.Insecure = pCfg.Insecure
+	imageFetcher.Insecure = conf.Insecure
 
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoo/client are converted
@@ -48,34 +47,34 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		opts = name.WeakValidation
 	}
 
-	ref, err := name.ParseReference(pCfg.Host, opts)
+	ref, err := name.ParseReference(conf.Host, opts)
 	if err == nil {
-		log.Debug().Str("image", pCfg.Host).Msg("detected container image in container registry")
+		log.Debug().Str("image", conf.Host).Msg("detected container image in container registry")
 
-		remoteOpts := AuthOption(pCfg.Credentials, credsResolver)
+		remoteOpts := AuthOption(conf.Credentials, credsResolver)
 		// we need to disable default keychain auth if an auth method was found
 		if len(remoteOpts) > 0 {
 			imageFetcher.DisableKeychainAuth = true
 		}
 
-		a, err := imageFetcher.GetImage(ref, pCfg.Credentials, remoteOpts...)
+		a, err := imageFetcher.GetImage(ref, conf.Credentials, remoteOpts...)
 		if err != nil {
 			return nil, err
 		}
 
-		if pCfg.Insecure {
+		if conf.Insecure {
 			for i := range a.Connections {
 				c := a.Connections[i]
-				c.Insecure = pCfg.Insecure
-				c.Credentials = pCfg.Credentials
+				c.Insecure = conf.Insecure
+				c.Credentials = conf.Credentials
 			}
 		}
 
-		return []*asset.Asset{a}, nil
+		return []*inventory.Asset{a}, nil
 	}
 
 	// okay, no image, lets check the repository
-	repository := pCfg.Host
+	repository := conf.Host
 	log.Info().Str("registry", repository).Msg("fetch meta information from container registry")
 
 	assetList, err := imageFetcher.ListImages(repository)
@@ -88,10 +87,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		a := assetList[i]
 		log.Info().Str("name", a.Name).Str("image", a.Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
 
-		if pCfg.Insecure {
+		if conf.Insecure {
 			for i := range a.Connections {
 				c := a.Connections[i]
-				c.Insecure = pCfg.Insecure
+				c.Insecure = conf.Insecure
 			}
 		}
 		resolved = append(resolved, a)

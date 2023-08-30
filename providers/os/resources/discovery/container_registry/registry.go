@@ -17,13 +17,11 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/motorid/containerid"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/container/auth"
-	"go.mondoo.com/cnquery/motor/providers/container/image"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/providers/os/connection/container/auth"
+	"go.mondoo.com/cnquery/providers/os/connection/container/image"
+	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
 
 func NewContainerRegistryResolver() *DockerRegistryImages {
@@ -93,7 +91,7 @@ func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error)
 
 // ListRegistry tries to iterate over all repositores in one registry
 // eg. 1234567.dkr.ecr.us-east-1.amazonaws.com
-func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, error) {
+func (a *DockerRegistryImages) ListRegistry(registry string) ([]*inventory.Asset, error) {
 	reg, err := name.NewRegistry(registry)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve registry")
@@ -104,7 +102,7 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, er
 		return nil, err
 	}
 
-	assets := []*asset.Asset{}
+	assets := []*inventory.Asset{}
 	for i := range repos {
 		repoName := reg.RegistryStr() + "/" + repos[i]
 		log.Debug().Str("repository", repoName).Msg("discovered repository")
@@ -125,8 +123,8 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, er
 // index.docker.io/mondoo/client
 // harbor.lunalectric.com/library
 // harbor.lunalectric.com/library/ubuntu
-func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, error) {
-	assets := []*asset.Asset{}
+func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
 
 	repo, err := name.NewRepository(repoName)
 	if err != nil {
@@ -139,7 +137,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		return nil, handleUnauthorizedError(err, repo.Name())
 	}
 
-	foundAssets := map[string]*asset.Asset{}
+	foundAssets := map[string]*inventory.Asset{}
 	for i := range tags {
 		repoWithTag := repo.Name() + ":" + tags[i]
 
@@ -169,7 +167,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 }
 
 // ListImages either takes a registry or a repository and tries to fetch as many images as possible
-func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, error) {
+func (a *DockerRegistryImages) ListImages(repoName string) ([]*inventory.Asset, error) {
 	url, err := url.Parse("//" + repoName)
 	if err != nil {
 		return nil, fmt.Errorf("registries must be valid RFC 3986 URI authorities: %s", repoName)
@@ -184,11 +182,11 @@ func (a *DockerRegistryImages) ListImages(repoName string) ([]*asset.Asset, erro
 	}
 }
 
-func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*asset.Asset, error) {
+func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
 	return a.toAsset(ref, creds, opts...)
 }
 
-func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*asset.Asset, error) {
+func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
 	desc, err := image.GetImageDescriptor(ref, auth.AuthOption(creds)...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, ref.Name())
@@ -198,21 +196,18 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	imgTag := ref.Context().Tag(ref.Identifier()).TagStr()
 	name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
 	imageUrl := repoName + "@" + imgDigest
-	asset := &asset.Asset{
+	asset := &inventory.Asset{
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
 		Name:        name,
-		Platform: &platform.Platform{
-			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: providers.RUNTIME_DOCKER_REGISTRY,
-		},
-		Connections: []*providers.Config{
+		Connections: []*inventory.Config{
 			{
-				Backend:     providers.ProviderType_CONTAINER_REGISTRY,
+				Backend:     "container-registry",
+				Type:        "container-registry",
 				Host:        imageUrl,
 				Credentials: creds,
 			},
 		},
-		State:  asset.State_STATE_ONLINE,
+		State:  inventory.State_STATE_ONLINE,
 		Labels: make(map[string]string),
 	}
 

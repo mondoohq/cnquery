@@ -144,5 +144,38 @@ var Config = plugin.Provider{
 				},
 			},
 		},
+		{
+			Name:    "container",
+			Use:     "container",
+			Short:   "a running container or container image",
+			MinArgs: 1,
+			MaxArgs: 1,
+			Discovery: []string{
+				"containers",
+				"container-images",
+			},
+			Flags: []plugin.Flag{
+				{
+					Long:        "sudo",
+					Type:        plugin.FlagType_Bool,
+					Default:     "false",
+					Desc:        "Elevate privileges with sudo.",
+					ConfigEntry: "sudo.active",
+				},
+				{
+					Long:    "id-detector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "User override for platform ID detection mechanism",
+					Option:  plugin.FlagOption_Hidden,
+				},
+				{
+					Long:    "disable-cache",
+					Type:    plugin.FlagType_Bool,
+					Default: "false",
+					Desc:    "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.",
+				},
+			},
+		},
 	},
 }

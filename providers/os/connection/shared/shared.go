@@ -43,6 +43,7 @@ const (
 	Capability_RunCommand Capabilities = 1 << iota
 	Capability_File
 	Capability_FindFile
+	Capability_FileSearch
 )
 
 func (c Capabilities) Has(other Capabilities) bool {

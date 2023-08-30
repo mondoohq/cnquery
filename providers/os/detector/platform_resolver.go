@@ -6,6 +6,7 @@ package detector
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -26,32 +27,35 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 	// start recursive platform resolution
 	pi, resolved := r.resolvePlatform(di, conn)
 
-	// TODO: all of the below
+	// if we have a container image use the architecture specified in the transport as it is resolved
+	// using the container image properties
+	tarConn, ok := conn.(*connection.TarConnection)
+	if resolved && ok {
+		pi.Arch = tarConn.PlatformArchitecture
+		di.Runtime = "docker-image"
+		di.Kind = "container-image"
 
-	// // if we have a container image use the architecture specified in the transport as it is resolved
-	// // using the container image properties
-	// tarTransport, ok := p.(*tar.Provider)
-	// if resolved && ok {
-	// 	pi.Arch = tarTransport.PlatformArchitecture
+		// if the platform name is not set, we should fallback to the scratch operating system
+		if len(pi.Name) == 0 {
+			di.Name = "scratch"
+			di.Arch = tarConn.PlatformArchitecture
+			return di, true
+		}
+	}
 
-	// 	// if the platform name is not set, we should fallback to the scratch operating system
-	// 	if len(pi.Name) == 0 {
-	// 		di.Name = "scratch"
-	// 		di.Arch = tarTransport.PlatformArchitecture
-	// 		return di, true
-	// 	}
-	// }
+	containerConn, ok := conn.(*connection.DockerContainerConnection)
+	if resolved && ok {
+		pi.Arch = containerConn.PlatformArchitecture
+		di.Runtime = string(containerConn.Type())
+		di.Kind = "container"
 
-	// _, ok = p.(*docker_engine.Provider)
-	// if resolved && ok {
-	// 	pi.Arch = p.(*docker_engine.Provider).PlatformArchitecture
-	// 	// if the platform name is not set, we should fallback to the scratch operating system
-	// 	if len(pi.Name) == 0 {
-	// 		di.Name = "scratch"
-	// 		di.Arch = pi.Arch
-	// 		return di, true
-	// 	}
-	// }
+		// if the platform name is not set, we should fallback to the scratch operating system
+		if len(pi.Name) == 0 {
+			di.Name = "scratch"
+			di.Arch = pi.Arch
+			return di, true
+		}
+	}
 
 	log.Debug().Str("platform", pi.Name).Strs("family", pi.Family).Msg("platform> detected os")
 	return pi, resolved

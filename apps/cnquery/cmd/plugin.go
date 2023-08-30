@@ -79,7 +79,16 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
-	assetList := conf.Inventory.Spec.Assets
+	err := runtime.Connect(&pp.ConnectReq{
+		Features: config.Features,
+		Asset:    conf.Inventory.Spec.Assets[0],
+		Upstream: nil,
+	})
+	if err != nil {
+		return err
+	}
+
+	assetList := runtime.Provider.Connection.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	filteredAssets := []*inventory.Asset{}

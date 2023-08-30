@@ -54,7 +54,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		"runtime":  llx.StringData(asset.Platform.Runtime),
 		"version":  llx.StringData(asset.Platform.Version),
 		"arch":     llx.StringData(asset.Platform.Arch),
-		"title":    llx.StringData(asset.Platform.Title),
+		"title":    llx.StringData(asset.Platform.PrettyTitle()),
 		"family":   llx.ArrayData(llx.TArr2Raw(asset.Platform.Family), types.String),
 		"build":    llx.StringData(asset.Platform.Build),
 		"labels":   llx.MapData(llx.TMap2Raw(asset.Platform.Labels), types.String),

@@ -8,21 +8,21 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/fsutil"
 )
 
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	p, err := local.New()
-	assert.Nil(t, err)
+	conn := connection.NewLocalConnection(0, &inventory.Asset{})
 
-	fs := p.FS()
+	fs := conn.FileSystem()
 	afutil := afero.Afero{Fs: fs}
 
 	// create the file and set the content
-	err = afutil.WriteFile(path, []byte("hello world"), 0o666)
+	err := afutil.WriteFile(path, []byte("hello world"), 0o666)
 	assert.Nil(t, err)
 
 	f, err := fs.Open(path)
