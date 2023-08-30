@@ -18,7 +18,6 @@ import (
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
@@ -91,16 +90,16 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
-	im, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{conf.Asset},
-		},
-	}, runtime))
+	res, err := runtime.Provider.Instance.Plugin.Connect(&plugin.ConnectReq{
+		Features: conf.Features,
+		Asset:    conf.Asset,
+		Upstream: nil,
+	}, nil)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
 
-	assetList := im.GetAssets()
+	assetList := res.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	if len(assetList) == 0 {
@@ -129,14 +128,9 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	resolvedAsset, err := im.ResolveAsset(connectAsset)
-	if err != nil {
-		return err
-	}
-
 	err = runtime.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
-		Asset:    resolvedAsset,
+		Asset:    connectAsset,
 		Upstream: conf.UpstreamConfig,
 	})
 	if err != nil {

@@ -7,14 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"go.mondoo.com/cnquery/types"
-	"strconv"
-	"strings"
-	"time"
 
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
@@ -33,6 +34,10 @@ func (g *mqlGcpProjects) id() (string, error) {
 func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
+	}
+
+	if args == nil {
+		args = make(map[string]*llx.RawData)
 	}
 
 	conn := runtime.Connection.(*connection.GcpConnection)
@@ -155,7 +160,6 @@ func (g *mqlGcpProject) iamPolicy() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProject) commonInstanceMetadata() (map[string]interface{}, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -194,7 +198,6 @@ func (g *mqlGcpProject) commonInstanceMetadata() (map[string]interface{}, error)
 }
 
 func (g *mqlGcpProjects) children() ([]interface{}, error) {
-
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}
@@ -230,7 +233,6 @@ func (g *mqlGcpProjects) children() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjects) list() ([]interface{}, error) {
-
 	if g.ParentId.Error != nil {
 		return nil, g.ParentId.Error
 	}

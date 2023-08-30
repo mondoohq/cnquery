@@ -312,6 +312,13 @@ func (p *Platform) PrettyTitle() string {
 	return prettyTitle
 }
 
+func (cfg *Config) Clone() *Config {
+	if cfg == nil {
+		return nil
+	}
+	return proto.Clone(cfg).(*Config)
+}
+
 func (c *Config) ToUrl() string {
 	schema := c.Type
 	if _, ok := c.Options["tls"]; ok {
