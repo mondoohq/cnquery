@@ -107,17 +107,20 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
 	// the platform IDs for the assets based on the namespace.
-	if slices.Contains(invConfig.Discover.Targets, DiscoveryClusters) {
+	if len(nsFilter.include) == 0 && len(nsFilter.exclude) == 0 {
 		assetId, err := conn.AssetId()
 		if err != nil {
 			return nil, err
 		}
-		in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
-			PlatformIds: []string{assetId},
-			Name:        conn.Name(),
-			Platform:    conn.Platform(),
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
-		})
+
+		if slices.Contains(invConfig.Discover.Targets, DiscoveryClusters) {
+			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+				PlatformIds: []string{assetId},
+				Name:        conn.Name(),
+				Platform:    conn.Platform(),
+				Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			})
+		}
 
 		assets, err := discoverAssets(conn, invConfig, assetId, k8s, nsFilter, false)
 		if err != nil {
