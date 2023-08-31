@@ -169,11 +169,19 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	var inventory *inventory.Inventory
+	var inv *inventory.Inventory
 	if conn.Asset().Connections[0].Type == "docker-registry" {
-		inventory, err = s.discover(conn.(*connection.TarConnection))
+		inv, err = s.discover(conn.(*connection.TarConnection))
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	if inv == nil {
+		inv = &inventory.Inventory{
+			Spec: &inventory.InventorySpec{
+				Assets: []*inventory.Asset{req.Asset},
+			},
 		}
 	}
 
@@ -181,7 +189,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: inventory,
+		Inventory: inv,
 	}, nil
 }
 
