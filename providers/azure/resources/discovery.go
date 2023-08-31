@@ -179,7 +179,7 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 			}
 			asset := mqlObjectToAsset(mqlObject{
 				name:   vm.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(vm.Tags.Data),
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -226,7 +226,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 			}
 			asset := mqlObjectToAsset(mqlObject{
 				name:   vm.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(vm.Tags.Data),
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -278,7 +278,7 @@ func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig
 			s := sqlServ.(*mqlAzureSubscriptionSqlServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(s.Tags.Data),
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -311,7 +311,7 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 			s := mysqlServ.(*mqlAzureSubscriptionMySqlServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(s.Tags.Data),
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -344,7 +344,7 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(s.Tags.Data),
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -377,7 +377,7 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 			s := mysqlServ.(*mqlAzureSubscriptionMariaDbServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(s.Tags.Data),
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -410,7 +410,7 @@ func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithCo
 			a := account.(*mqlAzureSubscriptionStorageAccount)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   a.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(a.Tags.Data),
 				azureObject: azureObject{
 					id:           a.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -483,7 +483,7 @@ func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 			s := secGrp.(*mqlAzureSubscriptionNetworkSecurityGroup)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(s.Tags.Data),
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -516,7 +516,7 @@ func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([
 			v := vlt.(*mqlAzureSubscriptionKeyVaultVault)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   v.VaultName.Data,
-				labels: map[string]string{},
+				labels: interfaceMapToStr(v.Tags.Data),
 				azureObject: azureObject{
 					id:           v.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
@@ -708,4 +708,14 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	l[RegionLabel] = o.azureObject.region
 	l[SubscriptionLabel] = o.azureObject.subscription
 	return l
+}
+
+func interfaceMapToStr(m map[string]interface{}) map[string]string {
+	res := make(map[string]string)
+	for k, v := range m {
+		if str, ok := v.(string); ok {
+			res[k] = str
+		}
+	}
+	return res
 }
