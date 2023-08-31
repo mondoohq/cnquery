@@ -13,6 +13,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/cat"
@@ -23,9 +25,13 @@ func TestCatFs(t *testing.T) {
 	p, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
+	flags := map[string]*llx.Primitive{
+		"sudo": llx.BoolPrimitive(true),
+	}
+
 	cw := &CommandWrapper{
 		commandRunner: p,
-		wrapper:       shared.NewSudo(),
+		sudo:          shared.ParseSudo(flags),
 	}
 
 	catfs := cat.New(cw)
@@ -72,10 +78,10 @@ UsePAM yes
 
 type CommandWrapper struct {
 	commandRunner cat.CommandRunner
-	wrapper       shared.Wrapper
+	sudo          *inventory.Sudo
 }
 
 func (cw *CommandWrapper) RunCommand(command string) (*shared.Command, error) {
-	cmd := cw.wrapper.Build(command)
+	cmd := shared.BuildSudoCommand(cw.sudo, command)
 	return cw.commandRunner.RunCommand(cmd)
 }

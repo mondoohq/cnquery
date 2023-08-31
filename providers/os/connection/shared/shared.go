@@ -187,7 +187,6 @@ func (mode FileModeDetails) UnixMode() uint32 {
 	return uint32(m)
 }
 
-// TODO: unify the internal sudy and this data structure
 func ParseSudo(flags map[string]*llx.Primitive) *inventory.Sudo {
 	sudo := flags["sudo"]
 	if sudo == nil {
@@ -200,35 +199,26 @@ func ParseSudo(flags map[string]*llx.Primitive) *inventory.Sudo {
 	}
 
 	return &inventory.Sudo{
-		Active: true,
+		Active:     true,
+		Executable: "sudo",
 	}
 }
 
-func NewSudo() *Sudo {
-	return &Sudo{
-		user:       "",
-		executable: "sudo",
-		shell:      "",
-	}
-}
-
-type Sudo struct {
-	user       string
-	executable string
-	shell      string
-}
-
-func (sudo *Sudo) Build(cmd string) string {
+func BuildSudoCommand(sudo *inventory.Sudo, cmd string) string {
 	var sb strings.Builder
 
-	sb.WriteString(sudo.executable)
-
-	if len(sudo.user) > 0 {
-		sb.WriteString(" -u " + sudo.user)
+	if sudo == nil || !sudo.Active {
+		return cmd
 	}
 
-	if len(sudo.shell) > 0 {
-		sb.WriteString(" " + sudo.shell + " -c " + cmd)
+	sb.WriteString(sudo.Executable)
+
+	if len(sudo.User) > 0 {
+		sb.WriteString(" -u " + sudo.User)
+	}
+
+	if len(sudo.Shell) > 0 {
+		sb.WriteString(" " + sudo.Shell + " -c " + cmd)
 	} else {
 		sb.WriteString(" ")
 		sb.WriteString(cmd)

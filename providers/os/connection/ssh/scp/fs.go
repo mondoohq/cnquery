@@ -11,8 +11,8 @@ import (
 
 	scp_client "github.com/hnakamur/go-scp"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers/os/statutil"
-	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/providers/os/connection/local/statutil"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/cat"
 	"golang.org/x/crypto/ssh"
 )
 

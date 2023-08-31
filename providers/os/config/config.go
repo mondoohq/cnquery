@@ -73,6 +73,13 @@ var Config = plugin.Provider{
 					ConfigEntry: "-",
 				},
 				{
+					Long:    "identity-file",
+					Short:   "i",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Select a file from which to read the identity (private key) for public key authentication.",
+				},
+				{
 					Long:    "id-detector",
 					Type:    plugin.FlagType_String,
 					Default: "",
@@ -125,16 +132,12 @@ var Config = plugin.Provider{
 			MinArgs: 1,
 			MaxArgs: 1,
 			Flags: []plugin.Flag{
-				/*
-					// looks like we currently do not have sudo support for vagrant
-					// Should we support it?
-					{
-						Long:    "sudo",
-						Type:    plugin.FlagType_Bool,
-						Default: "false",
-						Desc:    "Elevate privileges with sudo.",
-					},
-				*/
+				{
+					Long:    "sudo",
+					Type:    plugin.FlagType_Bool,
+					Default: "false",
+					Desc:    "Elevate privileges with sudo.",
+				},
 				{
 					Long:    "id-detector",
 					Type:    plugin.FlagType_String,

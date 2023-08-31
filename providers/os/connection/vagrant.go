@@ -49,7 +49,10 @@ func (p *VagrantConnection) Type() shared.ConnectionType {
 }
 
 func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.Asset) (*SshConnection, error) {
-	localProvider := NewLocalConnection(id, root)
+	// For now, we do not provide the conf to the local connection
+	// conf might include sudo, which is only intended for the actual vagrant connection
+	// local currently does not need it. Quite the contrary, it cause issues.
+	localProvider := NewLocalConnection(id, nil, root)
 
 	// we run status first, since vagrant ssh-config does not return a proper state
 	// if in a multi-vm setup not all vms are running

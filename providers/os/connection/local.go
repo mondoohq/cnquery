@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/cat"
 )
 
 const (
@@ -24,17 +25,20 @@ const (
 type LocalConnection struct {
 	shell   []string
 	fs      afero.Fs
-	Sudo    *shared.Sudo
+	Sudo    *inventory.Sudo
 	runtime string
 	id      uint32
 	asset   *inventory.Asset
 }
 
-func NewLocalConnection(id uint32, asset *inventory.Asset) *LocalConnection {
+func NewLocalConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
 	// expect unix shell by default
 	res := LocalConnection{
 		id:    id,
 		asset: asset,
+	}
+	if conf != nil {
+		res.Sudo = conf.Sudo
 	}
 
 	if runtime.GOOS == "windows" {
@@ -69,10 +73,10 @@ func (p *LocalConnection) Capabilities() shared.Capabilities {
 }
 
 func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
-	log.Debug().Msgf("local> run command %s", command)
 	if p.Sudo != nil {
-		command = p.Sudo.Build(command)
+		command = shared.BuildSudoCommand(p.Sudo, command)
 	}
+	log.Debug().Msgf("local> run command %s", command)
 	c := &commandRunner{Shell: p.shell}
 	args := []string{}
 
@@ -85,9 +89,8 @@ func (p *LocalConnection) FileSystem() afero.Fs {
 		return p.fs
 	}
 
-	if p.Sudo != nil {
-		// p.fs = cat.New(p)
-		panic("NOT MIGRATED")
+	if p.Sudo != nil && p.Sudo.Active {
+		p.fs = cat.New(p)
 	} else {
 		p.fs = afero.NewOsFs()
 	}
