@@ -12,6 +12,15 @@ func Contains(slice []string, entry string) bool {
 	return false
 }
 
+func ContainsAnyOf(slice []string, entries ...string) bool {
+	for _, entry := range entries {
+		if Contains(slice, entry) {
+			return true
+		}
+	}
+	return false
+}
+
 func RemoveEmpty(a []string) []string {
 	b := a[:0]
 	for _, x := range a {
