@@ -41,11 +41,12 @@ const (
 )
 
 type SshConnection struct {
-	fs    afero.Fs
-	Sudo  *inventory.Sudo
 	id    uint32
 	conf  *inventory.Config
 	asset *inventory.Asset
+
+	fs   afero.Fs
+	Sudo *inventory.Sudo
 
 	serverVersion    string
 	UseScpFilesystem bool

@@ -1,0 +1,122 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package connection
+
+import (
+	"errors"
+
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/fs"
+)
+
+const (
+	FileSystem shared.ConnectionType = "filesystem"
+)
+
+var _ shared.Connection = &FileSystemConnection{}
+
+func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, assert *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
+	path, ok := conf.Options["path"]
+	if !ok {
+		// fallback to host + path option
+		path = conf.Host + conf.Path
+	}
+
+	if path == "" {
+		return nil, errors.New("missing filesystem mount path, use 'path' option")
+	}
+
+	log.Debug().Str("path", path).Msg("load filesystem")
+
+	return &FileSystemConnection{
+		id:         id,
+		conf:       conf,
+		asset:      assert,
+		MountedDir: path,
+		closeFN:    closeFN,
+		fs:         fs.NewMountedFs(path),
+	}, nil
+}
+
+func NewFileSystemConnection(id uint32, conf *inventory.Config, assert *inventory.Asset) (*FileSystemConnection, error) {
+	return NewFileSystemConnectionWithClose(id, conf, assert, nil)
+}
+
+type FileSystemConnection struct {
+	id    uint32
+	conf  *inventory.Config
+	asset *inventory.Asset
+
+	MountedDir   string
+	fs           afero.Fs
+	tcPlatformId string
+	closeFN      func()
+}
+
+func (c *FileSystemConnection) RunCommand(command string) (*shared.Command, error) {
+	return nil, plugin.ErrRunCommandNotImplemented
+}
+
+func (c *FileSystemConnection) FileSystem() afero.Fs {
+	if c.fs == nil {
+		c.fs = fs.NewMountedFs(c.MountedDir)
+	}
+	return c.fs
+}
+
+func (c *FileSystemConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+	fs := c.FileSystem()
+	afs := &afero.Afero{Fs: fs}
+	stat, err := afs.Stat(path)
+	if err != nil {
+		return shared.FileInfoDetails{}, err
+	}
+
+	uid, gid := c.fileowner(stat)
+
+	mode := stat.Mode()
+	return shared.FileInfoDetails{
+		Mode: shared.FileModeDetails{mode},
+		Size: stat.Size(),
+		Uid:  uid,
+		Gid:  gid,
+	}, nil
+}
+
+func (c *FileSystemConnection) Close() {
+	if c.closeFN != nil {
+		c.closeFN()
+	}
+}
+
+func (c *FileSystemConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_FileSearch | shared.Capability_File
+}
+
+func (c *FileSystemConnection) Identifier() (string, error) {
+	if c.tcPlatformId == "" {
+		return "", errors.New("not platform id provided")
+	}
+	return c.tcPlatformId, nil
+}
+
+func (c *FileSystemConnection) ID() uint32 {
+	return c.id
+}
+
+func (c *FileSystemConnection) Name() string {
+	return string(FileSystem)
+}
+
+func (c *FileSystemConnection) Type() shared.ConnectionType {
+	return FileSystem
+}
+
+func (c *FileSystemConnection) Asset() *inventory.Asset {
+	return c.asset
+}

@@ -8,17 +8,15 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection"
-	"go.mondoo.com/cnquery/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers/os/connection/fs/fsutil"
 )
 
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := connection.NewLocalConnection(0, &inventory.Config{
-		Path: path,
-	}, &inventory.Asset{})
+	conn := connection.NewLocalConnection(0, nil, nil)
+	assert.NotNil(t, conn)
 
 	fs := conn.FileSystem()
 	afutil := afero.Afero{Fs: fs}
