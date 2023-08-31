@@ -35,6 +35,8 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 8,
 			Discovery: []string{
+				DiscoveryAuto,
+				DiscoveryAll,
 				DiscoverySubscriptions,
 				DiscoveryInstances,
 				DiscoveryInstancesApi,
