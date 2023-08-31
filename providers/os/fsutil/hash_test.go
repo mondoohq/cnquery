@@ -16,7 +16,9 @@ import (
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := connection.NewLocalConnection(0, &inventory.Asset{})
+	conn := connection.NewLocalConnection(0, &inventory.Config{
+		Path: path,
+	}, &inventory.Asset{})
 
 	fs := conn.FileSystem()
 	afutil := afero.Afero{Fs: fs}
