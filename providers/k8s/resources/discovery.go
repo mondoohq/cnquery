@@ -160,86 +160,76 @@ func discoverAssets(
 	var err error
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
-		switch target {
-		case DiscoveryAuto:
-			pods, err := discoverPods(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, pods...)
-
-			jobs, err := discoverJobs(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, jobs...)
-
-			cronjobs, err := discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, cronjobs...)
-
-			statefulsets, err := discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, statefulsets...)
-
-			deployments, err := discoverDeployments(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, deployments...)
-
-			replicasets, err := discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, replicasets...)
-
-			daemonsets, err := discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, daemonsets...)
-
-			ingresses, err := discoverIngresses(invConfig, clusterId, k8s, nsFilter)
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, ingresses...)
-		case DiscoveryPods:
+		if target == DiscoveryPods || target == DiscoveryAuto {
 			list, err = discoverPods(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryJobs:
-			list, err = discoverJobs(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryCronJobs:
-			list, err = discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryStatefulSets:
-			list, err = discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryDeployments:
-			list, err = discoverDeployments(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryReplicaSets:
-			list, err = discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryDaemonSets:
-			list, err = discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryAdmissionReviews:
-			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryIngresses:
-			list, err = discoverIngresses(invConfig, clusterId, k8s, nsFilter)
-		case DiscoveryNamespaces:
-			if skipNsDiscovery {
-				continue
+			if err != nil {
+				return nil, err
 			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryJobs || target == DiscoveryAuto {
+			list, err = discoverJobs(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryCronJobs || target == DiscoveryAuto {
+			list, err = discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryStatefulSets || target == DiscoveryAuto {
+			list, err = discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryDeployments || target == DiscoveryAuto {
+			list, err = discoverDeployments(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryReplicaSets || target == DiscoveryAuto {
+			list, err = discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryDaemonSets || target == DiscoveryAuto {
+			list, err = discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryIngresses || target == DiscoveryAuto {
+			list, err = discoverIngresses(invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryAdmissionReviews {
+			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
+		if target == DiscoveryNamespaces && !skipNsDiscovery {
 			list, err = discoverNamespaces(conn, invConfig, clusterId, nsFilter)
-		default:
-			continue
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
 		}
-
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, list...)
 	}
 	return assets, nil
 }

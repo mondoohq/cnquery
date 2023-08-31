@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,6 +18,10 @@ import (
 type mqlK8sNamespaceInternal struct {
 	lock sync.Mutex
 	obj  *corev1.Namespace
+}
+
+func initK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initResource[*mqlK8sNamespace](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetNamespaces() })
 }
 
 func (k *mqlK8s) namespaces() ([]interface{}, error) {

@@ -27,7 +27,7 @@ func init() {
 			Create: createK8sApiresource,
 		},
 		"k8s.namespace": {
-			// to override args, implement: initK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sNamespace,
 			Create: createK8sNamespace,
 		},
 		"k8s.node": {
