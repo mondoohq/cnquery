@@ -9,9 +9,16 @@
       "type": "go",
       "request": "attach",
       "mode": "remote",
+      "debugAdapter": "dlv-dap",
       "remotePath": "${workspaceFolder}",
-      "port": 2345,
-      "host": "127.0.0.1"
+      "port": 12345,
+      "host": "35.241.232.183",
+      "substitutePath":[
+        {
+          "from": "${workspaceFolder}",
+          "to": "/home/christian/workspace/cnquery"
+        }
+      ]
     },
     {
       "name": "Launch Package",

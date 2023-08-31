@@ -9,22 +9,15 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/motorid/gce"
-	"go.mondoo.com/cnquery/motor/platform/detector"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/fs"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/snapshot"
 	"go.mondoo.com/cnquery/mrn"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/gcp/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/providers/os/detector"
+	"go.mondoo.com/cnquery/providers/os/id/gce"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
-)
-
-var (
-	_ providers.Instance           = (*Provider)(nil)
-	_ providers.PlatformIdentifier = (*Provider)(nil)
-	_ os.OperatingSystemProvider   = (*Provider)(nil)
 )
 
 type scanTarget struct {
@@ -34,6 +27,10 @@ type scanTarget struct {
 	InstanceName string
 	SnapshotName string
 }
+
+const (
+	SnapshotConnectionType shared.ConnectionType = "gcp-snapshot"
+)
 
 type scannerInstance struct {
 	projectID    string
@@ -46,23 +43,20 @@ type mountInfo struct {
 	diskUrl    string
 }
 
-func determineScannerInstanceInfo() (*scannerInstance, error) {
-	localProvider, err := local.New()
-	if err != nil {
-		return nil, err
+func determineScannerInstanceInfo(id uint32, conf *inventory.Config, asset *inventory.Asset) (*scannerInstance, error) {
+	// FIXME: need to pass conf
+	localConn := connection.NewLocalConnection(id, conf, asset)
+	pf, detected := detector.DetectOS(localConn)
+	if !detected {
+		return nil, errors.New("could not detect platform")
 	}
-	localProviderDetector := detector.New(localProvider)
-	pf, err := localProviderDetector.Platform()
+	scannerInstanceInfo, err := gce.Resolve(localConn, pf)
 	if err != nil {
-		return nil, err
-	}
-	scannerInstanceInfo, err := gce.Resolve(localProvider, pf)
-	if err != nil {
-		return nil, errors.New("gcp snapshot provider needs to run on a gcp instance")
+		return nil, errors.New("GCP snapshot provider must run from a GCP VM instance")
 	}
 	identity, err := scannerInstanceInfo.Identify()
 	if err != nil {
-		return nil, errors.New("gcp snapshot provider needs to run on a gcp instance")
+		return nil, errors.New("GCP snapshot provider must run from a GCP VM instance")
 	}
 	instanceID := identity.PlatformMrn
 
@@ -92,21 +86,21 @@ func determineScannerInstanceInfo() (*scannerInstance, error) {
 	}, nil
 }
 
-func ParseTarget(pCfg *providers.Config) scanTarget {
+func ParseTarget(conf *inventory.Config) scanTarget {
 	return scanTarget{
-		TargetType:   pCfg.Options["type"],
-		ProjectID:    pCfg.Options["project-id"],
-		Zone:         pCfg.Options["zone"],
-		InstanceName: pCfg.Options["instance-name"],
-		SnapshotName: pCfg.Options["snapshot-name"],
+		TargetType:   conf.Options["type"],
+		ProjectID:    conf.Options["project-id"],
+		Zone:         conf.Options["zone"],
+		InstanceName: conf.Options["instance-name"],
+		SnapshotName: conf.Options["snapshot-name"],
 	}
 }
 
-func New(pCfg *providers.Config) (*Provider, error) {
-	target := ParseTarget(pCfg)
+func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*GcpSnapshotConnection, error) {
+	target := ParseTarget(conf)
 
 	// check if we run on a gcp instance
-	scanner, err := determineScannerInstanceInfo()
+	scanner, err := determineScannerInstanceInfo(id, conf, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +126,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
 		}
 
-		if pCfg.Options["create-snapshot"] != "true" {
+		if conf.Options["create-snapshot"] != "true" {
 			// search for the latest snapshot for this machine
 			snapshotUrl, created, err := sc.searchLatestSnapshot(target.ProjectID, instanceInfo.BootDiskSourceURL)
 			if status.Code(err) == codes.NotFound {
@@ -215,35 +209,49 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		return nil, err
 	}
 
+	conf.Options["path"] = volumeMounter.ScanDir
 	// create and initialize fs provider
-	fsProvider, err := fs.New(&providers.Config{
+	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
 		Path:       volumeMounter.ScanDir,
-		Backend:    providers.ProviderType_FS,
-		PlatformId: pCfg.PlatformId,
-		Options:    pCfg.Options,
-	})
+		Backend:    "fs",
+		PlatformId: conf.PlatformId,
+		Options:    conf.Options,
+		Type:       conf.Type,
+	}, asset)
 	if err != nil {
 		errorHandler()
 		return nil, err
 	}
 
-	p := &Provider{
-		Provider:        fsProvider,
-		opts:            pCfg.Options,
-		targetType:      target.TargetType,
-		volumeMounter:   volumeMounter,
-		snapshotCreator: sc,
-		target:          target,
-		scanner:         *scanner,
-		mountInfo:       mi,
-		identifier:      pCfg.PlatformId,
+	c := &GcpSnapshotConnection{
+		FileSystemConnection: fsConn,
+		opts:                 conf.Options,
+		targetType:           target.TargetType,
+		volumeMounter:        volumeMounter,
+		snapshotCreator:      sc,
+		target:               target,
+		scanner:              *scanner,
+		mountInfo:            mi,
+		identifier:           conf.PlatformId,
 	}
 
-	return p, nil
+	var ok bool
+	asset.Platform, ok = detector.DetectOS(fsConn)
+	if !ok {
+		return nil, errors.New("failed to detect OS")
+	}
+	asset.Id = conf.Type
+	asset.Name = conf.Options["snapshot-name"]
+	asset.Platform.Kind = c.Kind()
+	asset.Platform.Runtime = c.Runtime()
+	platformId := fmt.Sprintf("//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/%s/snapshots/%s", conf.Options["project-id"], conf.Options["snapshot-name"])
+	asset.PlatformIds = []string{platformId}
+
+	return c, nil
 }
 
-type Provider struct {
-	*fs.Provider
+type GcpSnapshotConnection struct {
+	*connection.FileSystemConnection
 	opts map[string]string
 	// the type of object we're targeting (instance, disk, snapshot)
 	targetType      string
@@ -255,60 +263,62 @@ type Provider struct {
 	identifier      string
 }
 
-func (p *Provider) Close() {
-	if p == nil {
+func (c *GcpSnapshotConnection) Close() {
+	log.Debug().Msg("closing gcp snapshot connection")
+	if c == nil {
 		return
 	}
 
-	if p.opts != nil {
-		if p.opts[snapshot.NoSetup] == "true" {
+	if c.opts != nil {
+		if c.opts[snapshot.NoSetup] == "true" {
 			return
 		}
 	}
 
-	err := p.volumeMounter.UnmountVolumeFromInstance()
+	err := c.volumeMounter.UnmountVolumeFromInstance()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
 
-	if p.snapshotCreator != nil {
-		err = p.snapshotCreator.detachDisk(p.scanner.projectID, p.scanner.zone, p.scanner.instanceName, p.mountInfo.deviceName)
+	if c.snapshotCreator != nil {
+		err = c.snapshotCreator.detachDisk(c.scanner.projectID, c.scanner.zone, c.scanner.instanceName, c.mountInfo.deviceName)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to detach volume")
 		}
 
-		err = p.snapshotCreator.deleteCreatedDisk(p.mountInfo.diskUrl)
+		err = c.snapshotCreator.deleteCreatedDisk(c.mountInfo.diskUrl)
 		if err != nil {
 			log.Error().Err(err).Msg("could not delete created disk")
 		}
 	}
 
-	err = p.volumeMounter.RemoveTempScanDir()
+	err = c.volumeMounter.RemoveTempScanDir()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to remove dir")
 	}
 }
 
-func (p *Provider) Capabilities() providers.Capabilities {
-	return providers.Capabilities{
-		providers.Capability_Aws_Ebs,
-	}
+func (c *GcpSnapshotConnection) Capabilities() shared.Capabilities {
+	// FIXME: this looks strange in a gcp package, but it's C&P from v8
+	return shared.Capability_Aws_Ebs
 }
 
-func (p *Provider) Kind() providers.Kind {
-	return providers.Kind_KIND_API
+func (c *GcpSnapshotConnection) Kind() string {
+	return "api"
 }
 
-func (p *Provider) Runtime() string {
-	return providers.RUNTIME_GCP_COMPUTE
+func (c *GcpSnapshotConnection) Runtime() string {
+	return "gcp-vm"
 }
 
-func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
-	return []providers.PlatformIdDetector{
-		providers.TransportPlatformIdentifierDetector,
-	}
+func (c *GcpSnapshotConnection) Identifier() (string, error) {
+	return c.identifier, nil
 }
 
-func (p *Provider) Identifier() (string, error) {
-	return p.identifier, nil
+func (c *GcpSnapshotConnection) Type() shared.ConnectionType {
+	return SnapshotConnectionType
+}
+
+func (c *GcpSnapshotConnection) Config() *inventory.Config {
+	return c.FileSystemConnection.Conf
 }

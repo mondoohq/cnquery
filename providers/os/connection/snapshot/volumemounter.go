@@ -9,11 +9,10 @@ import (
 	"os"
 	"strings"
 
-	"go.mondoo.com/cnquery/stringx"
+	"go.mondoo.com/cnquery/utils/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	osProvider "go.mondoo.com/cnquery/motor/providers/os"
 )
 
 const NoSetup = "no-setup"
@@ -24,7 +23,7 @@ type VolumeMounter struct {
 	// where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 	VolumeAttachmentLoc string
 	opts                map[string]string
-	cmdRunner           osProvider.CommandRunner
+	cmdRunner           *LocalCommandRunner
 }
 
 func NewVolumeMounter(shell []string) *VolumeMounter {
