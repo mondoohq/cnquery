@@ -4,31 +4,77 @@
 package resources
 
 import (
+	"sync"
+
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-func (k *mqlK8s) namespaces() ([]interface{}, error) {
-	return k8sResourceToMql(k.MqlRuntime, "namespaces", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
-		ts := obj.GetCreationTimestamp()
+type mqlK8sNamespaceInternal struct {
+	lock sync.Mutex
+	obj  *corev1.Namespace
+}
 
-		manifest, err := convert.JsonToDict(resource)
+func initK8sNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initResource[*mqlK8sNamespace](runtime, args, func(k *mqlK8s) *plugin.TValue[[]interface{}] { return k.GetNamespaces() })
+}
+
+func (k *mqlK8s) namespaces() ([]interface{}, error) {
+	kp, err := k8sProvider(k.MqlRuntime.Connection)
+	if err != nil {
+		return nil, err
+	}
+
+	nss, err := kp.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := make([]interface{}, 0, len(nss))
+	for _, ns := range nss {
+		ts := ns.GetCreationTimestamp()
+
+		manifest, err := convert.JsonToDict(ns)
 		if err != nil {
 			return nil, err
 		}
 
-		return CreateResource(k.MqlRuntime, "k8s.namespace", map[string]*llx.RawData{
-			"id":       llx.StringData(objIdFromK8sObj(obj, objT)),
-			"uid":      llx.StringData(string(obj.GetUID())),
-			"name":     llx.StringData(obj.GetName()),
+		objT, err := meta.TypeAccessor(&ns)
+		if err != nil {
+			log.Error().Err(err).Msg("could not access object attributes")
+			return nil, err
+		}
+
+		r, err := CreateResource(k.MqlRuntime, "k8s.namespace", map[string]*llx.RawData{
+			"id":       llx.StringData(objIdFromK8sObj(&ns.ObjectMeta, objT)),
+			"uid":      llx.StringData(string(ns.UID)),
+			"name":     llx.StringData(ns.Name),
 			"created":  llx.TimeData(ts.Time),
 			"manifest": llx.DictData(manifest),
+			"kind":     llx.StringData(ns.Kind),
 		})
-	})
+		if err != nil {
+			return nil, err
+		}
+
+		r.(*mqlK8sNamespace).obj = &ns
+		resp = append(resp, r)
+	}
+	return resp, nil
 }
 
 func (k *mqlK8sNamespace) id() (string, error) {
 	return k.Id.Data, nil
+}
+
+func (k *mqlK8sNamespace) annotations() (map[string]interface{}, error) {
+	return convert.MapToInterfaceMap(k.obj.GetAnnotations()), nil
+}
+
+func (k *mqlK8sNamespace) labels() (map[string]interface{}, error) {
+	return convert.MapToInterfaceMap(k.obj.GetLabels()), nil
 }

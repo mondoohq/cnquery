@@ -151,6 +151,10 @@ func (c *Connection) AssetId() (string, error) {
 	return shared.NewPlatformId(hex.EncodeToString(h.Sum(nil))), nil
 }
 
+func (c *Connection) InventoryConfig() *inventory.Config {
+	return c.asset.Connections[0]
+}
+
 func (p *Connection) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
 	return []admissionv1.AdmissionReview{}, nil
 }

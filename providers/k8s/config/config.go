@@ -3,7 +3,10 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/k8s/resources"
+)
 
 var Config = plugin.Provider{
 	Name:    "k8s",
@@ -11,13 +14,27 @@ var Config = plugin.Provider{
 	Version: "9.0.0",
 	Connectors: []plugin.Connector{
 		{
-			Name:      "k8s",
-			Aliases:   []string{"kubernetes"},
-			Use:       "k8s (optional MANIFEST path)",
-			Short:     "a Kubernetes cluster or local manifest file(s).",
-			MinArgs:   0,
-			MaxArgs:   1,
-			Discovery: []string{},
+			Name:    "k8s",
+			Aliases: []string{"kubernetes"},
+			Use:     "k8s (optional MANIFEST path)",
+			Short:   "a Kubernetes cluster or local manifest file(s).",
+			MinArgs: 0,
+			MaxArgs: 1,
+			Discovery: []string{
+				resources.DiscoveryAuto,
+				resources.DiscoveryClusters,
+				resources.DiscoveryPods,
+				resources.DiscoveryJobs,
+				resources.DiscoveryCronJobs,
+				resources.DiscoveryStatefulSets,
+				resources.DiscoveryDeployments,
+				resources.DiscoveryReplicaSets,
+				resources.DiscoveryDaemonSets,
+				resources.DiscoveryContainerImages,
+				resources.DiscoveryAdmissionReviews,
+				resources.DiscoveryIngresses,
+				resources.DiscoveryNamespaces,
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:    "context",

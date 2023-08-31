@@ -18,7 +18,6 @@ import (
 
 type Connection struct {
 	shared.ManifestParser
-	runtime   string
 	id        uint32
 	asset     *inventory.Asset
 	namespace string
@@ -43,6 +42,9 @@ func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Conne
 	}
 
 	res, err := c.AdmissionReviews()
+	if err != nil {
+		return nil, err
+	}
 
 	for _, r := range res {
 		// For each admission we want to also parse the object as an individual asset so we
@@ -70,6 +72,10 @@ func (p *Connection) ID() uint32 {
 
 func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
+}
+
+func (c *Connection) InventoryConfig() *inventory.Config {
+	return c.asset.Connections[0]
 }
 
 func (c *Connection) AssetId() (string, error) {

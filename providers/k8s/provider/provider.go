@@ -31,8 +31,17 @@ func Init() *Service {
 }
 
 func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
-	// TODO: parse me...
-	return &inventory.Discovery{Targets: []string{"auto"}}
+	var targets []string
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		targets = make([]string, 0, len(x.Array))
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			targets = append(targets, entry)
+		}
+	} else {
+		targets = []string{"auto"}
+	}
+	return &inventory.Discovery{Targets: targets}
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
@@ -99,13 +108,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	// TODO: discovery of related assets and use them in the inventory below
+	inventory, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
 
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -164,6 +176,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return conn, err
+}
+
+func (s *Service) discover(conn shared.Connection) (*inventory.Inventory, error) {
+	if conn.InventoryConfig().Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime)
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {

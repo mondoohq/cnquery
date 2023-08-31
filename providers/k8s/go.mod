@@ -6,11 +6,13 @@ go 1.20
 
 require (
 	github.com/cockroachdb/errors v1.10.0
+	github.com/gobwas/glob v0.2.3
 	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery v0.0.0-20230817085602-5cf8b3f7a3f4
+	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 	k8s.io/api v0.28.0
 	k8s.io/apiextensions-apiserver v0.28.0
 	k8s.io/apimachinery v0.28.0
