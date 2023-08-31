@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 )
@@ -84,12 +85,12 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			for _, instance := range ssminstances {
 				mqlInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ssm.instance",
 					map[string]*llx.RawData{
-						"instanceId":   llx.StringData(toString(instance.InstanceId)),
+						"instanceId":   llx.StringData(convert.ToString(instance.InstanceId)),
 						"pingStatus":   llx.StringData(string(instance.PingStatus)),
-						"ipAddress":    llx.StringData(toString(instance.IPAddress)),
-						"platformName": llx.StringData(toString(instance.PlatformName)),
+						"ipAddress":    llx.StringData(convert.ToString(instance.IPAddress)),
+						"platformName": llx.StringData(convert.ToString(instance.PlatformName)),
 						"region":       llx.StringData(region),
-						"arn":          llx.StringData(ssmInstanceArn(conn.AccountId(), region, toString(instance.InstanceId))),
+						"arn":          llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToString(instance.InstanceId))),
 					})
 				if err != nil {
 					return nil, err
@@ -178,7 +179,7 @@ func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

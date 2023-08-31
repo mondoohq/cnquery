@@ -83,8 +83,8 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		}
 		mqlS3Bucket, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
-				"name":     llx.StringData(toString(bucket.Name)),
-				"arn":      llx.StringData(fmt.Sprintf(s3ArnPattern, toString(bucket.Name))),
+				"name":     llx.StringData(convert.ToString(bucket.Name)),
+				"arn":      llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
 				"exists":   llx.BoolData(true),
 				"location": llx.StringData(region),
 			})
@@ -188,7 +188,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		mqlS3BucketPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
 				"name":     llx.StringData(bucketname),
-				"document": llx.StringData(toString(policy.Policy)),
+				"document": llx.StringData(convert.ToString(policy.Policy)),
 			})
 		if err != nil {
 			return nil, err
@@ -226,7 +226,7 @@ func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for i := range tags.TagSet {
 		tag := tags.TagSet[i]
-		res[toString(tag.Key)] = toString(tag.Value)
+		res[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 	}
 
 	return res, nil
@@ -289,11 +289,11 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		grant := acl.Grants[i]
 
 		grantee := map[string]interface{}{
-			"id":           llx.StringData(toString(grant.Grantee.ID)),
-			"name":         llx.StringData(toString(grant.Grantee.DisplayName)),
-			"emailAddress": llx.StringData(toString(grant.Grantee.EmailAddress)),
+			"id":           llx.StringData(convert.ToString(grant.Grantee.ID)),
+			"name":         llx.StringData(convert.ToString(grant.Grantee.DisplayName)),
+			"emailAddress": llx.StringData(convert.ToString(grant.Grantee.EmailAddress)),
 			"type":         llx.StringData(string(grant.Grantee.Type)),
-			"uri":          llx.StringData(toString(grant.Grantee.URI)),
+			"uri":          llx.StringData(convert.ToString(grant.Grantee.URI)),
 		}
 		if err != nil {
 			return nil, err
@@ -359,8 +359,8 @@ func (a *mqlAwsS3Bucket) owner() (map[string]interface{}, error) {
 	}
 
 	res := map[string]interface{}{}
-	res["id"] = toString(acl.Owner.ID)
-	res["name"] = toString(acl.Owner.DisplayName)
+	res["id"] = convert.ToString(acl.Owner.ID)
+	res["name"] = convert.ToString(acl.Owner.DisplayName)
 
 	return res, nil
 }
@@ -379,7 +379,7 @@ func (a *mqlAwsS3Bucket) public() (bool, error) {
 
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
-		if grant.Grantee.Type == s3types.TypeGroup && (toString(grant.Grantee.URI) == s3AuthenticatedUsersGroup || toString(grant.Grantee.URI) == s3AllUsersGroup) {
+		if grant.Grantee.Type == s3types.TypeGroup && (convert.ToString(grant.Grantee.URI) == s3AuthenticatedUsersGroup || convert.ToString(grant.Grantee.URI) == s3AllUsersGroup) {
 			return true, nil
 		}
 	}
@@ -446,11 +446,11 @@ func (a *mqlAwsS3Bucket) logging() (map[string]interface{}, error) {
 
 	if logging != nil && logging.LoggingEnabled != nil {
 		if logging.LoggingEnabled.TargetPrefix != nil {
-			res["TargetPrefix"] = toString(logging.LoggingEnabled.TargetPrefix)
+			res["TargetPrefix"] = convert.ToString(logging.LoggingEnabled.TargetPrefix)
 		}
 
 		if logging.LoggingEnabled.TargetBucket != nil {
-			res["TargetBucket"] = toString(logging.LoggingEnabled.TargetBucket)
+			res["TargetBucket"] = convert.ToString(logging.LoggingEnabled.TargetBucket)
 		}
 
 		// it is becoming a more complex object similar to aws.s3.bucket.grant
@@ -580,11 +580,11 @@ func (a *mqlAwsS3Bucket) staticWebsiteHosting() (map[string]interface{}, error) 
 
 	if website != nil {
 		if website.ErrorDocument != nil {
-			res["ErrorDocument"] = toString(website.ErrorDocument.Key)
+			res["ErrorDocument"] = convert.ToString(website.ErrorDocument.Key)
 		}
 
 		if website.IndexDocument != nil {
-			res["IndexDocument"] = toString(website.IndexDocument.Suffix)
+			res["IndexDocument"] = convert.ToString(website.IndexDocument.Suffix)
 		}
 	}
 

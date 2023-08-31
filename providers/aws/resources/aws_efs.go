@@ -72,17 +72,17 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 				for i := range describeFileSystemsRes.FileSystems {
 					fs := describeFileSystemsRes.FileSystems[i]
 					args := map[string]*llx.RawData{
-						"id":        llx.StringData(toString(fs.FileSystemId)),
-						"arn":       llx.StringData(toString(fs.FileSystemArn)),
-						"name":      llx.StringData(toString(fs.Name)),
-						"encrypted": llx.BoolData(toBool(fs.Encrypted)),
+						"id":        llx.StringData(convert.ToString(fs.FileSystemId)),
+						"arn":       llx.StringData(convert.ToString(fs.FileSystemArn)),
+						"name":      llx.StringData(convert.ToString(fs.Name)),
+						"encrypted": llx.BoolData(convert.ToBool(fs.Encrypted)),
 						"region":    llx.StringData(regionVal),
 						"tags":      llx.MapData(efsTagsToMap(fs.Tags), types.String),
 					}
 					// add kms key if there is one
 					if fs.KmsKeyId != nil {
 						mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key", map[string]*llx.RawData{
-							"arn": llx.StringData(toString(fs.KmsKeyId)),
+							"arn": llx.StringData(convert.ToString(fs.KmsKeyId)),
 						})
 						if err != nil {
 							log.Error().Err(err).Msg("cannot create kms key resource")
@@ -110,7 +110,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 }
 
 func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
-	return &mqlAwsKmsKey{}, nil
+	return a.GetKmsKey().Data, nil
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {
@@ -145,7 +145,7 @@ func efsTagsToMap(tags []efstypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

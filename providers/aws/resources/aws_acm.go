@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -70,7 +71,7 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 				for _, cert := range certs.CertificateSummaryList {
 					mqlCert, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.acm.certificate",
 						map[string]*llx.RawData{
-							"arn": llx.StringData(toString(cert.CertificateArn)),
+							"arn": llx.StringData(convert.ToString(cert.CertificateArn)),
 						})
 					if err != nil {
 						return nil, err
@@ -124,9 +125,9 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	args["notBefore"] = llx.TimeData(toTime(certDetails.Certificate.NotBefore))
 	args["notAfter"] = llx.TimeData(toTime(certDetails.Certificate.NotAfter))
 	args["createdAt"] = llx.TimeData(toTime(certDetails.Certificate.CreatedAt))
-	args["domainName"] = llx.StringData(toString(certDetails.Certificate.DomainName))
+	args["domainName"] = llx.StringData(convert.ToString(certDetails.Certificate.DomainName))
 	args["status"] = llx.StringData(string(certDetails.Certificate.Status))
-	args["subject"] = llx.StringData(toString(certDetails.Certificate.Subject))
+	args["subject"] = llx.StringData(convert.ToString(certDetails.Certificate.Subject))
 	args["tags"] = llx.MapData(CertTagsToMapTags(certTags.Tags), types.String)
 	return args, nil, nil
 }
@@ -157,7 +158,7 @@ func CertTagsToMapTags(tags []acmtypes.Tag) map[string]interface{} {
 // 	if cert.Certificate == nil {
 // 		return nil, nil
 // 	}
-// 	parsedCert, err := ParseCertsFromPEM(strings.NewReader(toString(cert.Certificate)))
+// 	parsedCert, err := ParseCertsFromPEM(strings.NewReader(convert.ToString(cert.Certificate)))
 // 	if err != nil {
 // 		return nil, err
 // 	}

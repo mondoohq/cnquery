@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -113,10 +114,10 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 				r := repoResp.Repositories[i]
 				mqlRepoResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.repository",
 					map[string]*llx.RawData{
-						"arn":        llx.StringData(toString(r.RepositoryArn)),
-						"name":       llx.StringData(toString(r.RepositoryName)),
-						"uri":        llx.StringData(toString(r.RepositoryUri)),
-						"registryId": llx.StringData(toString(r.RegistryId)),
+						"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
+						"name":       llx.StringData(convert.ToString(r.RepositoryName)),
+						"uri":        llx.StringData(convert.ToString(r.RepositoryUri)),
+						"registryId": llx.StringData(convert.ToString(r.RegistryId)),
 						"public":     llx.BoolData(false),
 						"region":     llx.StringData(region),
 					})
@@ -161,13 +162,13 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"digest":     llx.StringData(toString(image.ImageDigest)),
-					"mediaType":  llx.StringData(toString(image.ImageManifestMediaType)),
+					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
+					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
 					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringData(toString(image.RegistryId)),
+					"registryId": llx.StringData(convert.ToString(image.RegistryId)),
 					"repoName":   llx.StringData(name),
 					"region":     llx.StringData(region),
-					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: toString(image.RegistryId), RepoName: name, Digest: toString(image.ImageDigest)})),
+					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
 					"uri":        llx.StringData(uri),
 				})
 			if err != nil {
@@ -193,13 +194,13 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"digest":     llx.StringData(toString(image.ImageDigest)),
-					"mediaType":  llx.StringData(toString(image.ImageManifestMediaType)),
+					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
+					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
 					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringData(toString(image.RegistryId)),
+					"registryId": llx.StringData(convert.ToString(image.RegistryId)),
 					"repoName":   llx.StringData(name),
 					"region":     llx.StringData(region),
-					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: toString(image.RegistryId), RepoName: name, Digest: toString(image.ImageDigest)})),
+					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
 					"uri":        llx.StringData(uri),
 				})
 			if err != nil {
@@ -277,10 +278,10 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 		r := repoResp.Repositories[i]
 		mqlRepoResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.repository",
 			map[string]*llx.RawData{
-				"arn":        llx.StringData(toString(r.RepositoryArn)),
-				"name":       llx.StringData(toString(r.RepositoryName)),
-				"uri":        llx.StringData(toString(r.RepositoryUri)),
-				"registryId": llx.StringData(toString(r.RegistryId)),
+				"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
+				"name":       llx.StringData(convert.ToString(r.RepositoryName)),
+				"uri":        llx.StringData(convert.ToString(r.RepositoryUri)),
+				"registryId": llx.StringData(convert.ToString(r.RegistryId)),
 				"public":     llx.BoolData(true),
 				"region":     llx.StringData("us-east-1"),
 			})

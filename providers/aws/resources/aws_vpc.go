@@ -22,10 +22,6 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-const (
-	vpcArnPattern = "arn:aws:vpc:%s:%s:id/%s"
-)
-
 func (a *mqlAwsVpc) id() (string, error) {
 	return a.GetArn().Data, nil
 }
@@ -84,10 +80,10 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 
 					mqlVpc, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":       llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), toString(v.VpcId))),
-							"id":        llx.StringData(toString(v.VpcId)),
+							"arn":       llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
+							"id":        llx.StringData(convert.ToString(v.VpcId)),
 							"state":     llx.StringData(string(v.State)),
-							"isDefault": llx.BoolData(toBool(v.IsDefault)),
+							"isDefault": llx.BoolData(convert.ToBool(v.IsDefault)),
 							"region":    llx.StringData(regionVal),
 							"tags":      llx.MapData(Ec2TagsToMap(v.Tags), types.String),
 						})
@@ -128,10 +124,10 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 		for _, flowLog := range flowLogsRes.FlowLogs {
 			mqlFlowLog, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
 				map[string]*llx.RawData{
-					"id":     llx.StringData(toString(flowLog.FlowLogId)),
+					"id":     llx.StringData(convert.ToString(flowLog.FlowLogId)),
 					"vpc":    llx.StringData(vpc),
 					"region": llx.StringData(a.Region.Data),
-					"status": llx.StringData(toString(flowLog.FlowLogStatus)),
+					"status": llx.StringData(convert.ToString(flowLog.FlowLogStatus)),
 					"tags":   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
 				},
 			)
@@ -172,7 +168,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			}
 			mqlRouteTable, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc.routetable",
 				map[string]*llx.RawData{
-					"id":     llx.StringData(toString(routeTable.RouteTableId)),
+					"id":     llx.StringData(convert.ToString(routeTable.RouteTableId)),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
 				})
 			if err != nil {

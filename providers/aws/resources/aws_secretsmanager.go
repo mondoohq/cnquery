@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -73,9 +74,9 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 				for _, secret := range secrets.SecretList {
 					mqlSecret, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.secretsmanager.secret",
 						map[string]*llx.RawData{
-							"arn":             llx.StringData(toString(secret.ARN)),
-							"name":            llx.StringData(toString(secret.Name)),
-							"rotationEnabled": llx.BoolData(toBool(secret.RotationEnabled)),
+							"arn":             llx.StringData(convert.ToString(secret.ARN)),
+							"name":            llx.StringData(convert.ToString(secret.Name)),
+							"rotationEnabled": llx.BoolData(convert.ToBool(secret.RotationEnabled)),
 							"tags":            llx.MapData(secretTagsToMap(secret.Tags), types.String),
 						})
 					if err != nil {
@@ -101,7 +102,7 @@ func secretTagsToMap(tags []secretstypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

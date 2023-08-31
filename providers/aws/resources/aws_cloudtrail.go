@@ -111,36 +111,37 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 
 				// only include trail if this region is the home region for the trail
 				// we do this to avoid getting duped results from multiregion trails
-				if regionVal != toString(trail.HomeRegion) {
+				if regionVal != convert.ToString(trail.HomeRegion) {
 					continue
 				}
 				args := map[string]*llx.RawData{
-					"arn":                        llx.StringData(toString(trail.TrailARN)),
-					"name":                       llx.StringData(toString(trail.Name)),
-					"isMultiRegionTrail":         llx.BoolData(toBool(trail.IsMultiRegionTrail)),
-					"isOrganizationTrail":        llx.BoolData(toBool(trail.IsOrganizationTrail)),
-					"logFileValidationEnabled":   llx.BoolData(toBool(trail.LogFileValidationEnabled)),
-					"includeGlobalServiceEvents": llx.BoolData(toBool(trail.IncludeGlobalServiceEvents)),
-					"snsTopicARN":                llx.StringData(toString(trail.SnsTopicARN)),
-					"cloudWatchLogsRoleArn":      llx.StringData(toString(trail.CloudWatchLogsRoleArn)),
-					"region":                     llx.StringData(toString(trail.HomeRegion)),
+					"arn":                        llx.StringData(convert.ToString(trail.TrailARN)),
+					"name":                       llx.StringData(convert.ToString(trail.Name)),
+					"isMultiRegionTrail":         llx.BoolData(convert.ToBool(trail.IsMultiRegionTrail)),
+					"isOrganizationTrail":        llx.BoolData(convert.ToBool(trail.IsOrganizationTrail)),
+					"logFileValidationEnabled":   llx.BoolData(convert.ToBool(trail.LogFileValidationEnabled)),
+					"includeGlobalServiceEvents": llx.BoolData(convert.ToBool(trail.IncludeGlobalServiceEvents)),
+					"snsTopicARN":                llx.StringData(convert.ToString(trail.SnsTopicARN)),
+					"cloudWatchLogsRoleArn":      llx.StringData(convert.ToString(trail.CloudWatchLogsRoleArn)),
+					"region":                     llx.StringData(convert.ToString(trail.HomeRegion)),
 				}
 
 				// trail.S3BucketName
 				if trail.S3BucketName != nil {
 					mqlAwsS3Bucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
-						map[string]*llx.RawData{"name": llx.StringData(toString(trail.S3BucketName))},
+						map[string]*llx.RawData{"name": llx.StringData(convert.ToString(trail.S3BucketName))},
 					)
 					if err != nil {
-						return nil, err
+						args["s3bucket"] = llx.NilData
+					} else {
+						args["s3bucket"] = llx.ResourceData(mqlAwsS3Bucket, mqlAwsS3Bucket.MqlName())
 					}
-					args["s3bucket"] = llx.ResourceData(mqlAwsS3Bucket, mqlAwsS3Bucket.MqlName())
 				}
 
 				// add kms key if there is one
 				if trail.KmsKeyId != nil {
 					mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-						map[string]*llx.RawData{"arn": llx.StringData(toString(trail.KmsKeyId))},
+						map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(trail.KmsKeyId))},
 					)
 					// means the key does not exist or we have no access to it
 					// dont err out, just assign nil
@@ -153,7 +154,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 				}
 				if trail.CloudWatchLogsLogGroupArn != nil {
 					mqlLoggroup, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
-						map[string]*llx.RawData{"arn": llx.StringData(toString(trail.CloudWatchLogsLogGroupArn))},
+						map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(trail.CloudWatchLogsLogGroupArn))},
 					)
 					// means the log group does not exist or we have no access to it
 					// dont err out, just assign nil
@@ -180,18 +181,15 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 }
 
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
-	// no s3 bucket on the trail object
-	return &mqlAwsS3Bucket{}, nil
+	return a.GetS3bucket().Data, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
-	// no log group on the trail object
-	return &mqlAwsCloudwatchLoggroup{}, nil
+	return a.GetLogGroup().Data, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) kmsKey() (*mqlAwsKmsKey, error) {
-	// no key id on the trail object
-	return &mqlAwsKmsKey{}, nil
+	return &mqlAwsKmsKey{}, nil // TODO: @Dom help why do i get a stack overflow if i make this anything other than this empty object what am i doing wrong
 }
 
 func (a *mqlAwsCloudtrailTrail) id() (string, error) {

@@ -75,8 +75,8 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 			for _, v := range vaults.BackupVaultList {
 				mqlGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.backup.vault",
 					map[string]*llx.RawData{
-						"arn":  llx.StringData(toString(v.BackupVaultArn)),
-						"name": llx.StringData(toString(v.BackupVaultName)),
+						"arn":  llx.StringData(convert.ToString(v.BackupVaultArn)),
+						"name": llx.StringData(convert.ToString(v.BackupVaultName)),
 					})
 				if err != nil {
 					return nil, err
@@ -122,15 +122,15 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]interface{}, error) {
 			}
 			mqlRP, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
 				map[string]*llx.RawData{
-					"arn":              llx.StringData(toString(rp.RecoveryPointArn)),
-					"resourceType":     llx.StringData(toString(rp.ResourceType)),
+					"arn":              llx.StringData(convert.ToString(rp.RecoveryPointArn)),
+					"resourceType":     llx.StringData(convert.ToString(rp.ResourceType)),
 					"createdBy":        llx.MapData(createdBy, types.String),
-					"iamRoleArn":       llx.StringData(toString(rp.IamRoleArn)),
+					"iamRoleArn":       llx.StringData(convert.ToString(rp.IamRoleArn)),
 					"status":           llx.StringData(string(rp.Status)),
 					"creationDate":     llx.TimeData(toTime(rp.CreationDate)),
 					"completionDate":   llx.TimeData(toTime(rp.CompletionDate)),
-					"encryptionKeyArn": llx.StringData(toString(rp.EncryptionKeyArn)),
-					"isEncrypted":      llx.BoolData(toBool(&rp.IsEncrypted)),
+					"encryptionKeyArn": llx.StringData(convert.ToString(rp.EncryptionKeyArn)),
+					"isEncrypted":      llx.BoolData(convert.ToBool(&rp.IsEncrypted)),
 				})
 			if err != nil {
 				return nil, err

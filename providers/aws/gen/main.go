@@ -5,7 +5,7 @@ package main
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/cnquery/providers/core/config"
+	"go.mondoo.com/cnquery/providers/aws/config"
 )
 
 func main() {

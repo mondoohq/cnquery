@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -69,7 +70,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 				// the arn is not returned until we get to the describe call
 				mqlDomain, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.es.domain",
 					map[string]*llx.RawData{
-						"name":   llx.StringData(toString(domain.DomainName)),
+						"name":   llx.StringData(convert.ToString(domain.DomainName)),
 						"region": llx.StringData(regionVal),
 					})
 				if err != nil {
@@ -119,10 +120,10 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if err != nil {
 		return nil, nil, err
 	}
-	args["encryptionAtRestEnabled"] = llx.BoolData(toBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled))
-	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(toBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled))
-	args["endpoint"] = llx.StringData(toString(domainDetails.DomainStatus.Endpoint))
-	args["arn"] = llx.StringData(toString(domainDetails.DomainStatus.ARN))
+	args["encryptionAtRestEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled))
+	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled))
+	args["endpoint"] = llx.StringData(convert.ToString(domainDetails.DomainStatus.Endpoint))
+	args["arn"] = llx.StringData(convert.ToString(domainDetails.DomainStatus.ARN))
 	args["tags"] = llx.MapData(tags, types.String)
 	return args, nil, nil
 }

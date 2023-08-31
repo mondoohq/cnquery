@@ -69,15 +69,15 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 			for _, r := range configRecorders.ConfigurationRecorders {
 				var recording bool
 				var lastStatus string
-				name := getName(toString(r.Name), regionVal)
+				name := getName(convert.ToString(r.Name), regionVal)
 				if val, ok := recorderStatusMap[name]; ok {
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
 				mqlRecorder, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
-						"name":                       llx.StringData(toString(r.Name)),
-						"roleArn":                    llx.StringData(toString(r.RoleARN)),
+						"name":                       llx.StringData(convert.ToString(r.Name)),
+						"roleArn":                    llx.StringData(convert.ToString(r.RoleARN)),
 						"allSupported":               llx.BoolData(r.RecordingGroup.AllSupported),
 						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
 						"recording":                  llx.BoolData(recording),
@@ -110,7 +110,7 @@ func (a *mqlAwsConfig) describeConfigRecorderStatus(svc *configservice.Client, r
 		return statusMap, err
 	}
 	for _, r := range configRecorderStatus.ConfigurationRecordersStatus {
-		name := getName(toString(r.Name), regionVal)
+		name := getName(convert.ToString(r.Name), regionVal)
 		statusMap[name] = recorder{recording: r.Recording, lastStatus: string(r.LastStatus)}
 	}
 	return statusMap, nil
@@ -172,7 +172,7 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 				mqlRule, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.config.rule",
 					map[string]*llx.RawData{
-						"arn":    llx.StringData(toString(r.ConfigRuleArn)),
+						"arn":    llx.StringData(convert.ToString(r.ConfigRuleArn)),
 						"state":  llx.StringData(string(r.ConfigRuleState)),
 						"source": llx.MapData(jsonSource, types.Any),
 					})

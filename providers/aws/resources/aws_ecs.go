@@ -188,13 +188,13 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	args["name"] = llx.StringData(toString(c.ClusterName))
+	args["name"] = llx.StringData(convert.ToString(c.ClusterName))
 	args["tags"] = llx.MapData(ecsTags(c.Tags), types.String)
 	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
 	args["pendingTasksCount"] = llx.IntData(int64(c.PendingTasksCount))
 	args["registeredContainerInstancesCount"] = llx.IntData(int64(c.RegisteredContainerInstancesCount))
 	args["configuration"] = llx.MapData(configuration, types.String)
-	args["status"] = llx.StringData(toString(c.Status))
+	args["status"] = llx.StringData(convert.ToString(c.Status))
 	return args, nil, nil
 }
 
@@ -232,16 +232,16 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 			for _, ci := range containerInstancesDetail.ContainerInstances {
 				// container instance assets
 				args := map[string]*llx.RawData{
-					"arn":              llx.StringData(toString(ci.ContainerInstanceArn)),
+					"arn":              llx.StringData(convert.ToString(ci.ContainerInstanceArn)),
 					"agentConnected":   llx.BoolData(ci.AgentConnected),
-					"id":               llx.StringData(toString(ci.Ec2InstanceId)),
-					"capacityProvider": llx.StringData(toString(ci.CapacityProviderName)),
+					"id":               llx.StringData(convert.ToString(ci.Ec2InstanceId)),
+					"capacityProvider": llx.StringData(convert.ToString(ci.CapacityProviderName)),
 					"region":           llx.StringData(region),
 				}
-				if strings.HasPrefix(toString(ci.Ec2InstanceId), "i-") {
+				if strings.HasPrefix(convert.ToString(ci.Ec2InstanceId), "i-") {
 					mqlInstanceResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.instance",
 						map[string]*llx.RawData{
-							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), toString(ci.Ec2InstanceId))),
+							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), convert.ToString(ci.Ec2InstanceId))),
 						})
 					if err == nil && mqlInstanceResource != nil {
 						// mqlInstance := mqlInstanceResource.(AwsEc2Instance)
@@ -376,9 +376,9 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	args["connectivity"] = llx.StringData(string(t.Connectivity))
-	args["lastStatus"] = llx.StringData(toString(t.LastStatus))
-	args["platformFamily"] = llx.StringData(toString(t.PlatformFamily))
-	args["platformVersion"] = llx.StringData(toString(t.PlatformVersion))
+	args["lastStatus"] = llx.StringData(convert.ToString(t.LastStatus))
+	args["platformFamily"] = llx.StringData(convert.ToString(t.PlatformFamily))
+	args["platformVersion"] = llx.StringData(convert.ToString(t.PlatformVersion))
 	args["tags"] = llx.MapData(ecsTags(t.Tags), types.String)
 
 	containers := []interface{}{}
@@ -387,11 +387,11 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 	for _, c := range t.Containers {
 		cmds := []interface{}{}
-		for i := range containerCommandMap[toString(c.Name)] {
-			cmds = append(cmds, containerCommandMap[toString(c.Name)][i])
+		for i := range containerCommandMap[convert.ToString(c.Name)] {
+			cmds = append(cmds, containerCommandMap[convert.ToString(c.Name)][i])
 		}
 		publicIp := getContainerIP(ctx, conn, t.Attachments, c, region)
-		name := toString(c.Name)
+		name := convert.ToString(c.Name)
 		if publicIp != "" {
 			name = name + "-" + publicIp
 		}
@@ -401,18 +401,18 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 				"name": llx.StringData(name),
 				// "platformFamily", pf,
 				// "platformVersion", pv,
-				"status":            llx.StringData(toString(c.LastStatus)),
+				"status":            llx.StringData(convert.ToString(c.LastStatus)),
 				"publicIp":          llx.StringData(publicIp),
-				"arn":               llx.StringData(toString(c.ContainerArn)),
-				"logDriver":         llx.StringData(containerLogDriverMap[toString(c.Name)]),
-				"image":             llx.StringData(toString(c.Image)),
+				"arn":               llx.StringData(convert.ToString(c.ContainerArn)),
+				"logDriver":         llx.StringData(containerLogDriverMap[convert.ToString(c.Name)]),
+				"image":             llx.StringData(convert.ToString(c.Image)),
 				"clusterName":       llx.StringData(clusterName),
-				"taskDefinitionArn": llx.StringData(toString(taskDefinitionArn)),
+				"taskDefinitionArn": llx.StringData(convert.ToString(taskDefinitionArn)),
 				"region":            llx.StringData(region),
 				"command":           llx.ArrayData(cmds, types.Any),
-				"taskArn":           llx.StringData(toString(t.TaskArn)),
-				"runtimeId":         llx.StringData(toString(c.RuntimeId)),
-				"containerName":     llx.StringData(toString(c.Name)),
+				"taskArn":           llx.StringData(convert.ToString(t.TaskArn)),
+				"runtimeId":         llx.StringData(convert.ToString(c.RuntimeId)),
+				"containerName":     llx.StringData(convert.ToString(c.Name)),
 			})
 		if err != nil {
 			return args, nil, err

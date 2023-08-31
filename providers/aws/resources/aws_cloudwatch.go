@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -77,8 +78,8 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 					for _, d := range metric.Dimensions {
 						mqlDimension, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metricdimension",
 							map[string]*llx.RawData{
-								"name":  llx.StringData(toString(d.Name)),
-								"value": llx.StringData(toString(d.Value)),
+								"name":  llx.StringData(convert.ToString(d.Name)),
+								"value": llx.StringData(convert.ToString(d.Value)),
 							})
 						if err != nil {
 							return nil, err
@@ -88,8 +89,8 @@ func (a *mqlAwsCloudwatch) getMetrics(conn *connection.AwsConnection) []*jobpool
 
 					mqlMetric, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metric",
 						map[string]*llx.RawData{
-							"name":       llx.StringData(toString(metric.MetricName)),
-							"namespace":  llx.StringData(toString(metric.Namespace)),
+							"name":       llx.StringData(convert.ToString(metric.MetricName)),
+							"namespace":  llx.StringData(convert.ToString(metric.Namespace)),
 							"region":     llx.StringData(regionVal),
 							"dimensions": llx.ArrayData(dimensions, types.Resource("aws.cloudwatch.metricdimension")),
 						})
@@ -186,8 +187,8 @@ func initAwsCloudwatchMetric(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	for _, d := range metric.Dimensions {
 		mqlDimension, err := runtime.CreateResource(runtime, "aws.cloudwatch.metricdimension",
 			map[string]*llx.RawData{
-				"name":  llx.StringData(toString(d.Name)),
-				"value": llx.StringData(toString(d.Value)),
+				"name":  llx.StringData(convert.ToString(d.Name)),
+				"value": llx.StringData(convert.ToString(d.Value)),
 			})
 		if err != nil {
 			return args, nil, err
@@ -233,8 +234,8 @@ func (a *mqlAwsCloudwatchMetric) dimensions() ([]interface{}, error) {
 	for _, d := range metric.Dimensions {
 		mqlDimension, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metricdimension",
 			map[string]*llx.RawData{
-				"name":  llx.StringData(toString(d.Name)),
-				"value": llx.StringData(toString(d.Value)),
+				"name":  llx.StringData(convert.ToString(d.Name)),
+				"value": llx.StringData(convert.ToString(d.Value)),
 			})
 		if err != nil {
 			return nil, err
@@ -304,10 +305,10 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 		mqlDatapoint, err := runtime.CreateResource(runtime, "aws.cloudwatch.metric.datapoint",
 			map[string]*llx.RawData{
 				"timestamp": llx.TimeData(toTime(datapoint.Timestamp)),
-				"maximum":   llx.FloatData(toFloat64(datapoint.Maximum)),
-				"minimum":   llx.FloatData(toFloat64(datapoint.Minimum)),
-				"average":   llx.FloatData(toFloat64(datapoint.Average)),
-				"sum":       llx.FloatData(toFloat64(datapoint.Sum)),
+				"maximum":   llx.FloatData(convert.ToFloat64(datapoint.Maximum)),
+				"minimum":   llx.FloatData(convert.ToFloat64(datapoint.Minimum)),
+				"average":   llx.FloatData(convert.ToFloat64(datapoint.Average)),
+				"sum":       llx.FloatData(convert.ToFloat64(datapoint.Sum)),
 				"unit":      llx.StringData(string(datapoint.Unit)),
 			})
 		if err != nil {
@@ -320,7 +321,7 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 		return args, nil, err
 	}
 
-	args["label"] = llx.StringData(toString(statsResp.Label))
+	args["label"] = llx.StringData(convert.ToString(statsResp.Label))
 	args["datapoints"] = llx.ArrayData(datapoints, types.Resource("aws.cloudwatch.metric.datapoint"))
 	args["name"] = llx.StringData(name)
 	args["namespace"] = llx.StringData(namespace)
@@ -369,10 +370,10 @@ func (a *mqlAwsCloudwatchMetric) statistics() (*mqlAwsCloudwatchMetricstatistics
 			map[string]*llx.RawData{
 				"id":        llx.StringData(formatDatapointId(datapoint)),
 				"timestamp": llx.TimeData(toTime(datapoint.Timestamp)),
-				"maximum":   llx.FloatData(toFloat64(datapoint.Maximum)),
-				"minimum":   llx.FloatData(toFloat64(datapoint.Minimum)),
-				"average":   llx.FloatData(toFloat64(datapoint.Average)),
-				"sum":       llx.FloatData(toFloat64(datapoint.Sum)),
+				"maximum":   llx.FloatData(convert.ToFloat64(datapoint.Maximum)),
+				"minimum":   llx.FloatData(convert.ToFloat64(datapoint.Minimum)),
+				"average":   llx.FloatData(convert.ToFloat64(datapoint.Average)),
+				"sum":       llx.FloatData(convert.ToFloat64(datapoint.Sum)),
 				"unit":      llx.StringData(string(datapoint.Unit)),
 			})
 		if err != nil {
@@ -382,7 +383,7 @@ func (a *mqlAwsCloudwatchMetric) statistics() (*mqlAwsCloudwatchMetricstatistics
 	}
 	mqlStat, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metricstatistics",
 		map[string]*llx.RawData{
-			"label":      llx.StringData(toString(statsResp.Label)),
+			"label":      llx.StringData(convert.ToString(statsResp.Label)),
 			"datapoints": llx.ArrayData(datapoints, types.Resource("aws.cloudwatch.metric.datapoint")),
 			"name":       llx.StringData(metricName),
 			"namespace":  llx.StringData(namespace),
@@ -431,7 +432,7 @@ func (a *mqlAwsCloudwatchMetric) alarms() ([]interface{}, error) {
 	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
 		mqlAlarm, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
-			map[string]*llx.RawData{"arn": llx.StringData(toString(alarm.AlarmArn))})
+			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(alarm.AlarmArn))})
 		if err != nil {
 			return nil, err
 		}
@@ -526,15 +527,15 @@ func (a *mqlAwsCloudwatch) getAlarms(conn *connection.AwsConnection) []*jobpool.
 
 					mqlAlarm, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
 						map[string]*llx.RawData{
-							"arn":                     llx.StringData(toString(alarm.AlarmArn)),
-							"metricName":              llx.StringData(toString(alarm.MetricName)),
-							"metricNamespace":         llx.StringData(toString(alarm.Namespace)),
+							"arn":                     llx.StringData(convert.ToString(alarm.AlarmArn)),
+							"metricName":              llx.StringData(convert.ToString(alarm.MetricName)),
+							"metricNamespace":         llx.StringData(convert.ToString(alarm.Namespace)),
 							"region":                  llx.StringData(regionVal),
 							"state":                   llx.StringData(string(alarm.StateValue)),
-							"stateReason":             llx.StringData(toString(alarm.StateReason)),
+							"stateReason":             llx.StringData(convert.ToString(alarm.StateReason)),
 							"insufficientDataActions": llx.ArrayData(insuffActions, types.Resource("aws.sns.topic")),
 							"okActions":               llx.ArrayData(okActions, types.Resource("aws.sns.topic")),
-							"name":                    llx.StringData(toString(alarm.AlarmName)),
+							"name":                    llx.StringData(convert.ToString(alarm.AlarmName)),
 							"actions":                 llx.ArrayData(actions, types.Resource("aws.sns.topic")),
 						})
 					if err != nil {
@@ -604,15 +605,15 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 				}
 				args := make(map[string]*llx.RawData)
 				for _, loggroup := range logGroups.LogGroups {
-					args["arn"] = llx.StringData(toString(loggroup.Arn))
-					args["name"] = llx.StringData(toString(loggroup.LogGroupName))
+					args["arn"] = llx.StringData(convert.ToString(loggroup.Arn))
+					args["name"] = llx.StringData(convert.ToString(loggroup.LogGroupName))
 					args["region"] = llx.StringData(regionVal)
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
 						mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(toString(loggroup.KmsKeyId)),
+								"arn": llx.StringData(convert.ToString(loggroup.KmsKeyId)),
 							})
 						if err != nil {
 							return nil, err
@@ -620,6 +621,8 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 
 						mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
 						args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
+					} else {
+						args["kmsKey"] = llx.NilData
 					}
 
 					mqlLogGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup", args)
@@ -671,7 +674,6 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 }
 
 func (s *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
-	// no key id on the log group object
 	return &mqlAwsKmsKey{}, nil
 }
 
@@ -708,8 +710,8 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]interface{}, error) {
 			for _, mt := range m.MetricTransformations {
 				mqlAwsMetric, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.metric",
 					map[string]*llx.RawData{
-						"name":      llx.StringData(toString(mt.MetricName)),
-						"namespace": llx.StringData(toString(mt.MetricNamespace)),
+						"name":      llx.StringData(convert.ToString(mt.MetricName)),
+						"namespace": llx.StringData(convert.ToString(mt.MetricNamespace)),
 						"region":    llx.StringData(region),
 					})
 				if err != nil {
@@ -719,9 +721,9 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]interface{}, error) {
 			}
 			mqlAwsLogGroupMetricFilters, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup.metricsfilter",
 				map[string]*llx.RawData{
-					"id":            llx.StringData(groupName + "/" + region + "/" + toString(m.FilterName)),
-					"filterName":    llx.StringData(toString(m.FilterName)),
-					"filterPattern": llx.StringData(toString(m.FilterPattern)),
+					"id":            llx.StringData(groupName + "/" + region + "/" + convert.ToString(m.FilterName)),
+					"filterName":    llx.StringData(convert.ToString(m.FilterName)),
+					"filterPattern": llx.StringData(convert.ToString(m.FilterPattern)),
 					"metrics":       llx.ArrayData(mqlCloudwatchMetrics, types.Resource("aws.cloudwatch.metric")),
 				})
 			if err != nil {

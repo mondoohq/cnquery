@@ -79,7 +79,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 						// NOTE: this will create the resource and determine the data in its init method
 						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId))),
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(dbInstance.VpcSecurityGroups[i].VpcSecurityGroupId))),
 							})
 						if err != nil {
 							return nil, err
@@ -89,23 +89,23 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 
 					mqlDBInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
 						map[string]*llx.RawData{
-							"arn":                           llx.StringData(toString(dbInstance.DBInstanceArn)),
-							"name":                          llx.StringData(toString(dbInstance.DBName)),
+							"arn":                           llx.StringData(convert.ToString(dbInstance.DBInstanceArn)),
+							"name":                          llx.StringData(convert.ToString(dbInstance.DBName)),
 							"backupRetentionPeriod":         llx.IntData(int64(dbInstance.BackupRetentionPeriod)),
 							"storageEncrypted":              llx.BoolData(dbInstance.StorageEncrypted),
 							"region":                        llx.StringData(regionVal),
 							"publiclyAccessible":            llx.BoolData(dbInstance.PubliclyAccessible),
 							"enabledCloudwatchLogsExports":  llx.ArrayData(stringSliceInterface, types.String),
-							"enhancedMonitoringResourceArn": llx.StringData(toString(dbInstance.EnhancedMonitoringResourceArn)),
+							"enhancedMonitoringResourceArn": llx.StringData(convert.ToString(dbInstance.EnhancedMonitoringResourceArn)),
 							"multiAZ":                       llx.BoolData(dbInstance.MultiAZ),
-							"id":                            llx.StringData(toString(dbInstance.DBInstanceIdentifier)),
+							"id":                            llx.StringData(convert.ToString(dbInstance.DBInstanceIdentifier)),
 							"deletionProtection":            llx.BoolData(dbInstance.DeletionProtection),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
-							"dbInstanceClass":               llx.StringData(toString(dbInstance.DBInstanceClass)),
-							"dbInstanceIdentifier":          llx.StringData(toString(dbInstance.DBInstanceIdentifier)),
-							"engine":                        llx.StringData(toString(dbInstance.Engine)),
+							"dbInstanceClass":               llx.StringData(convert.ToString(dbInstance.DBInstanceClass)),
+							"dbInstanceIdentifier":          llx.StringData(convert.ToString(dbInstance.DBInstanceIdentifier)),
+							"engine":                        llx.StringData(convert.ToString(dbInstance.Engine)),
 							"securityGroups":                llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"status":                        llx.StringData(toString(dbInstance.DBInstanceStatus)),
+							"status":                        llx.StringData(convert.ToString(dbInstance.DBInstanceStatus)),
 						})
 					if err != nil {
 						return nil, err
@@ -130,7 +130,7 @@ func rdsTagsToMap(tags []rdstypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 
@@ -224,7 +224,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					// for _, instance := range cluster.DBClusterMembers {
 					// 	mqlInstance, err := NewResource(a.MqlRuntime, "aws.rds.dbinstance",
 					// 		map[string]*llx.RawData{
-					// 			"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, regionVal, conn, conn.AccountId(), toString(instance.DBInstanceIdentifier))),
+					// 			"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, regionVal, conn, conn.AccountId(), convert.ToString(instance.DBInstanceIdentifier))),
 					// 		})
 					// 	if err != nil {
 					// 		return nil, err
@@ -233,9 +233,9 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					// }
 					mqlDbCluster, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(toString(cluster.DBClusterArn)),
+							"arn":    llx.StringData(convert.ToString(cluster.DBClusterArn)),
 							"region": llx.StringData(regionVal),
-							"id":     llx.StringData(toString(cluster.DBClusterIdentifier)),
+							"id":     llx.StringData(convert.ToString(cluster.DBClusterIdentifier)),
 							// "members": mqlRdsDbInstances,
 							"tags": llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
 						})
@@ -275,9 +275,9 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 		for _, snapshot := range snapshots.DBClusterSnapshots {
 			mqlDbSnapshot, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
-					"arn":               llx.StringData(toString(snapshot.DBClusterSnapshotArn)),
-					"id":                llx.StringData(toString(snapshot.DBClusterSnapshotIdentifier)),
-					"type":              llx.StringData(toString(snapshot.SnapshotType)),
+					"arn":               llx.StringData(convert.ToString(snapshot.DBClusterSnapshotArn)),
+					"id":                llx.StringData(convert.ToString(snapshot.DBClusterSnapshotIdentifier)),
+					"type":              llx.StringData(convert.ToString(snapshot.SnapshotType)),
 					"region":            llx.StringData(region),
 					"encrypted":         llx.BoolData(snapshot.StorageEncrypted),
 					"isClusterSnapshot": llx.BoolData(true),
@@ -314,9 +314,9 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 		for _, snapshot := range snapshots.DBSnapshots {
 			mqlDbSnapshot, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
-					"arn":               llx.StringData(toString(snapshot.DBSnapshotArn)),
-					"id":                llx.StringData(toString(snapshot.DBSnapshotIdentifier)),
-					"type":              llx.StringData(toString(snapshot.SnapshotType)),
+					"arn":               llx.StringData(convert.ToString(snapshot.DBSnapshotArn)),
+					"id":                llx.StringData(convert.ToString(snapshot.DBSnapshotIdentifier)),
+					"type":              llx.StringData(convert.ToString(snapshot.SnapshotType)),
 					"region":            llx.StringData(region),
 					"encrypted":         llx.BoolData(snapshot.Encrypted),
 					"isClusterSnapshot": llx.BoolData(false),

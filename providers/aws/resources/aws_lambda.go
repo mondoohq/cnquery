@@ -77,7 +77,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					var dlqTarget string
 					if function.DeadLetterConfig != nil {
-						dlqTarget = toString(function.DeadLetterConfig.TargetArn)
+						dlqTarget = convert.ToString(function.DeadLetterConfig.TargetArn)
 					}
 					tags := make(map[string]interface{})
 					tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
@@ -88,8 +88,8 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					mqlFunc, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
-							"arn":          llx.StringData(toString(function.FunctionArn)),
-							"name":         llx.StringData(toString(function.FunctionName)),
+							"arn":          llx.StringData(convert.ToString(function.FunctionArn)),
+							"name":         llx.StringData(convert.ToString(function.FunctionName)),
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
 							"region":       llx.StringData(regionVal),
@@ -164,7 +164,7 @@ func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
 	}
 	if functionConcurrency.ReservedConcurrentExecutions != nil {
-		return toInt64From32(functionConcurrency.ReservedConcurrentExecutions), nil
+		return convert.ToInt64From32(functionConcurrency.ReservedConcurrentExecutions), nil
 	}
 
 	return 0, nil

@@ -77,17 +77,17 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 				for _, cluster := range clusters.Clusters {
 					var names []interface{}
 					for _, group := range cluster.ClusterParameterGroups {
-						names = append(names, toString(group.ParameterGroupName))
+						names = append(names, convert.ToString(group.ParameterGroupName))
 					}
 					mqlDBInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.redshift.cluster",
 						map[string]*llx.RawData{
-							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), toString(cluster.ClusterIdentifier))),
-							"name":                             llx.StringData(toString(cluster.ClusterIdentifier)),
+							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToString(cluster.ClusterIdentifier))),
+							"name":                             llx.StringData(convert.ToString(cluster.ClusterIdentifier)),
 							"region":                           llx.StringData(regionVal),
 							"encrypted":                        llx.BoolData(cluster.Encrypted),
-							"nodeType":                         llx.StringData(toString(cluster.NodeType)),
+							"nodeType":                         llx.StringData(convert.ToString(cluster.NodeType)),
 							"allowVersionUpgrade":              llx.BoolData(cluster.AllowVersionUpgrade),
-							"preferredMaintenanceWindow":       llx.StringData(toString(cluster.PreferredMaintenanceWindow)),
+							"preferredMaintenanceWindow":       llx.StringData(convert.ToString(cluster.PreferredMaintenanceWindow)),
 							"automatedSnapshotRetentionPeriod": llx.IntData(int64(cluster.AutomatedSnapshotRetentionPeriod)),
 							"publiclyAccessible":               llx.BoolData(cluster.PubliclyAccessible),
 							"clusterParameterGroupNames":       llx.ArrayData(names, types.String),
@@ -116,7 +116,7 @@ func redshiftTagsToMap(tags []redshifttypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

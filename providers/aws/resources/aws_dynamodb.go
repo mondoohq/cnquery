@@ -222,8 +222,8 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 	for _, table := range listGlobalTablesResp.GlobalTables {
 		mqlTable, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
 			map[string]*llx.RawData{
-				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), toString(table.GlobalTableName))),
-				"name": llx.StringData(toString(table.GlobalTableName)),
+				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToString(table.GlobalTableName))),
+				"name": llx.StringData(convert.ToString(table.GlobalTableName)),
 			})
 		if err != nil {
 			return nil, err
@@ -317,7 +317,7 @@ func dynamoDBTagsToMap(tags []ddtypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

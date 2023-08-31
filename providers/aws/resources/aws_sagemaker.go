@@ -76,8 +76,8 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 					}
 					mqlEndpoint, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(toString(endpoint.EndpointArn)),
-							"name":   llx.StringData(toString(endpoint.EndpointName)),
+							"arn":    llx.StringData(convert.ToString(endpoint.EndpointArn)),
+							"name":   llx.StringData(convert.ToString(endpoint.EndpointName)),
 							"region": llx.StringData(regionVal),
 							"tags":   llx.MapData(tags, types.String),
 						})
@@ -163,8 +163,8 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					}
 					mqlEndpoint, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(toString(instance.NotebookInstanceArn)),
-							"name":   llx.StringData(toString(instance.NotebookInstanceName)),
+							"arn":    llx.StringData(convert.ToString(instance.NotebookInstanceArn)),
+							"name":   llx.StringData(convert.ToString(instance.NotebookInstanceName)),
 							"region": llx.StringData(regionVal),
 							"tags":   llx.MapData(tags, types.String),
 						})
@@ -234,13 +234,13 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 		return nil, err
 	}
 	args := map[string]*llx.RawData{
-		"arn":                  llx.StringData(toString(instanceDetails.NotebookInstanceArn)),
+		"arn":                  llx.StringData(convert.ToString(instanceDetails.NotebookInstanceArn)),
 		"directInternetAccess": llx.StringData(string(instanceDetails.DirectInternetAccess)),
 	}
 
 	if instanceDetails.KmsKeyId != nil && *instanceDetails.KmsKeyId != "" {
 		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-			map[string]*llx.RawData{"arn": llx.StringData(toString(instanceDetails.KmsKeyId))},
+			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(instanceDetails.KmsKeyId))},
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("cannot create kms key resource")
@@ -256,7 +256,7 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 }
 
 func (a *mqlAwsSagemakerNotebookinstanceDetails) kmsKey() (*mqlAwsKmsKey, error) {
-	return nil, nil
+	return &mqlAwsKmsKey{}, nil
 }
 
 func (a *mqlAwsSagemakerEndpoint) id() (string, error) {

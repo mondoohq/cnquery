@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	vpcArnPattern               = "arn:aws:vpc:%s:%s:id/%s"
 	elbv1LbArnPattern           = "arn:aws:elasticloadbalancing:%s:%s:loadbalancer/classic/%s"
 	cloudwatchAlarmArnPattern   = "arn:aws:cloudwatch:%s:%s:metricalarm/%s/%s"
 	ec2InstanceArnPattern       = "arn:aws:ec2:%s:%s:instance/%s"
@@ -63,20 +64,6 @@ func Is400AccessDeniedError(err error) bool {
 	return false
 }
 
-func toBool(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
-}
-
-func toString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
 func toTime(s *time.Time) time.Time {
 	if s == nil {
 		return time.Time{}
@@ -90,27 +77,6 @@ func strMapToInterface(m map[string]string) map[string]interface{} {
 		res[k] = v
 	}
 	return res
-}
-
-func toInt64From32(i *int32) int64 {
-	if i == nil {
-		return int64(0)
-	}
-	return int64(*i)
-}
-
-func toIntFrom32(i *int32) int {
-	if i == nil {
-		return 0
-	}
-	return int(*i)
-}
-
-func toFloat64(i *float64) float64 {
-	if i == nil {
-		return float64(0)
-	}
-	return *i
 }
 
 func toInterfaceArr(a []string) []interface{} {

@@ -147,11 +147,11 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 
 					cacheNodes := []interface{}{}
 					for i := range cluster.CacheNodes {
-						cacheNodes = append(cacheNodes, toString(cluster.CacheNodes[i].CacheNodeId))
+						cacheNodes = append(cacheNodes, convert.ToString(cluster.CacheNodes[i].CacheNodeId))
 					}
 					cacheSecurityGroups := []interface{}{}
 					for i := range cluster.CacheSecurityGroups {
-						cacheSecurityGroups = append(cacheSecurityGroups, toString(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
+						cacheSecurityGroups = append(cacheSecurityGroups, convert.ToString(cluster.CacheSecurityGroups[i].CacheSecurityGroupName))
 					}
 					logDeliveryConfigurations, err := convert.JsonToDictSlice(cluster.LogDeliveryConfigurations)
 					if err != nil {
@@ -159,7 +159,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 					}
 					var notificationConfiguration string
 					if cluster.NotificationConfiguration != nil {
-						notificationConfiguration = toString(cluster.NotificationConfiguration.TopicArn)
+						notificationConfiguration = convert.ToString(cluster.NotificationConfiguration.TopicArn)
 					}
 
 					sgs := []interface{}{}
@@ -167,7 +167,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 						sg := cluster.SecurityGroups[i]
 						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
 							map[string]*llx.RawData{
-								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), toString(sg.SecurityGroupId))),
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(sg.SecurityGroupId))),
 							})
 						if err != nil {
 							return nil, err
@@ -177,32 +177,32 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 
 					mqlCluster, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elasticache.cluster",
 						map[string]*llx.RawData{
-							"arn":                       llx.StringData(toString(cluster.ARN)),
-							"atRestEncryptionEnabled":   llx.BoolData(toBool(cluster.AtRestEncryptionEnabled)),
-							"authTokenEnabled":          llx.BoolData(toBool(cluster.AuthTokenEnabled)),
+							"arn":                       llx.StringData(convert.ToString(cluster.ARN)),
+							"atRestEncryptionEnabled":   llx.BoolData(convert.ToBool(cluster.AtRestEncryptionEnabled)),
+							"authTokenEnabled":          llx.BoolData(convert.ToBool(cluster.AuthTokenEnabled)),
 							"authTokenLastModifiedDate": llx.TimeData(toTime(cluster.AuthTokenLastModifiedDate)),
 							"autoMinorVersionUpgrade":   llx.BoolData(cluster.AutoMinorVersionUpgrade),
 							"cacheClusterCreateTime":    llx.TimeData(toTime(cluster.CacheClusterCreateTime)),
-							"cacheClusterId":            llx.StringData(toString(cluster.CacheClusterId)),
-							"cacheClusterStatus":        llx.StringData(toString(cluster.CacheClusterStatus)),
-							"cacheNodeType":             llx.StringData(toString(cluster.CacheNodeType)),
+							"cacheClusterId":            llx.StringData(convert.ToString(cluster.CacheClusterId)),
+							"cacheClusterStatus":        llx.StringData(convert.ToString(cluster.CacheClusterStatus)),
+							"cacheNodeType":             llx.StringData(convert.ToString(cluster.CacheNodeType)),
 							"cacheNodes":                llx.ArrayData(cacheNodes, types.String),
 							"cacheSecurityGroups":       llx.ArrayData(cacheSecurityGroups, types.String),
-							"cacheSubnetGroupName":      llx.StringData(toString(cluster.CacheSubnetGroupName)),
-							"clientDownloadLandingPage": llx.StringData(toString(cluster.ClientDownloadLandingPage)),
-							"nodeType":                  llx.StringData(toString(cluster.CacheNodeType)),
-							"engine":                    llx.StringData(toString(cluster.Engine)),
-							"engineVersion":             llx.StringData(toString(cluster.EngineVersion)),
+							"cacheSubnetGroupName":      llx.StringData(convert.ToString(cluster.CacheSubnetGroupName)),
+							"clientDownloadLandingPage": llx.StringData(convert.ToString(cluster.ClientDownloadLandingPage)),
+							"nodeType":                  llx.StringData(convert.ToString(cluster.CacheNodeType)),
+							"engine":                    llx.StringData(convert.ToString(cluster.Engine)),
+							"engineVersion":             llx.StringData(convert.ToString(cluster.EngineVersion)),
 							"ipDiscovery":               llx.StringData(string(cluster.IpDiscovery)),
 							"logDeliveryConfigurations": llx.ArrayData(logDeliveryConfigurations, types.Any),
 							"networkType":               llx.StringData(string(cluster.NetworkType)),
 							"notificationConfiguration": llx.StringData(notificationConfiguration),
-							"numCacheNodes":             llx.IntData(toInt64From32(cluster.NumCacheNodes)),
-							"preferredAvailabilityZone": llx.StringData(toString(cluster.PreferredAvailabilityZone)),
+							"numCacheNodes":             llx.IntData(convert.ToInt64From32(cluster.NumCacheNodes)),
+							"preferredAvailabilityZone": llx.StringData(convert.ToString(cluster.PreferredAvailabilityZone)),
 							"region":                    llx.StringData(regionVal),
 							"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"snapshotRetentionLimit":    llx.IntData(toInt64From32(cluster.SnapshotRetentionLimit)),
-							"transitEncryptionEnabled":  llx.BoolData(toBool(cluster.TransitEncryptionEnabled)),
+							"snapshotRetentionLimit":    llx.IntData(convert.ToInt64From32(cluster.SnapshotRetentionLimit)),
+							"transitEncryptionEnabled":  llx.BoolData(convert.ToBool(cluster.TransitEncryptionEnabled)),
 							"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
 						})
 					if err != nil {

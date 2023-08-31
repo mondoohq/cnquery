@@ -135,13 +135,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AwsConnection) error {
 	asset.Id = conn.Conf.Type + "://" + conn.AccountId()
 	asset.Name = conn.Conf.Host
-	asset.Platform = &inventory.Platform{
-		Name:   "aws",
-		Family: []string{"aws"},
-		Kind:   "api",
-		Title:  "Amazon Web Services",
-	}
+	asset.Platform = conn.PlatformInfo("aws")
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + conn.AccountId()}
+
 	return nil
 }
 

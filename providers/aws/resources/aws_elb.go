@@ -71,11 +71,11 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					}
 					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), toString(lb.LoadBalancerName))),
+							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
-							"dnsName":              llx.StringData(toString(lb.DNSName)),
-							"name":                 llx.StringData(toString(lb.LoadBalancerName)),
-							"scheme":               llx.StringData(toString(lb.Scheme)),
+							"dnsName":              llx.StringData(convert.ToString(lb.DNSName)),
+							"name":                 llx.StringData(convert.ToString(lb.LoadBalancerName)),
+							"scheme":               llx.StringData(convert.ToString(lb.Scheme)),
 						})
 					if err != nil {
 						return nil, err
@@ -144,9 +144,9 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 				for _, lb := range lbs.LoadBalancers {
 					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":     llx.StringData(toString(lb.LoadBalancerArn)),
-							"dnsName": llx.StringData(toString(lb.DNSName)),
-							"name":    llx.StringData(toString(lb.LoadBalancerName)),
+							"arn":     llx.StringData(convert.ToString(lb.LoadBalancerArn)),
+							"dnsName": llx.StringData(convert.ToString(lb.DNSName)),
+							"name":    llx.StringData(convert.ToString(lb.LoadBalancerName)),
 							"scheme":  llx.StringData(string(lb.Scheme)),
 						})
 					if err != nil {

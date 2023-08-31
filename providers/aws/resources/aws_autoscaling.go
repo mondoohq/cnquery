@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -76,10 +77,10 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					}
 					mqlGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
-							"arn":               llx.StringData(toString(group.AutoScalingGroupARN)),
-							"name":              llx.StringData(toString(group.AutoScalingGroupName)),
+							"arn":               llx.StringData(convert.ToString(group.AutoScalingGroupARN)),
+							"name":              llx.StringData(convert.ToString(group.AutoScalingGroupName)),
 							"loadBalancerNames": llx.ArrayData(lbNames, types.String),
-							"healthCheckType":   llx.StringData(toString(group.HealthCheckType)),
+							"healthCheckType":   llx.StringData(convert.ToString(group.HealthCheckType)),
 							"tags":              llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
 						})
 					if err != nil {
@@ -105,7 +106,7 @@ func autoscalingTagsToMap(tags []ec2types.TagDescription) map[string]interface{}
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 
@@ -68,8 +69,8 @@ func (a *mqlAwsAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) []*j
 				for _, analyzer := range analyzers.Analyzers {
 					mqlAnalyzer, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.accessanalyzer.analyzer",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(toString(analyzer.Arn)),
-							"name":   llx.StringData(toString(analyzer.Name)),
+							"arn":    llx.StringData(convert.ToString(analyzer.Arn)),
+							"name":   llx.StringData(convert.ToString(analyzer.Name)),
 							"status": llx.StringData(string(analyzer.Status)),
 							"type":   llx.StringData(string(analyzer.Type)),
 							"tags":   llx.MapData(strMapToInterface(analyzer.Tags), types.String),

@@ -191,7 +191,7 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]int
 		res["PasswordReusePrevention"] = strconv.FormatInt(prp, 10)
 		res["RequireLowercaseCharacters"] = passwordPolicy.RequireLowercaseCharacters
 		res["MaxPasswordAge"] = strconv.FormatInt(mpa, 10)
-		res["HardExpiry"] = toBool(passwordPolicy.HardExpiry)
+		res["HardExpiry"] = convert.ToBool(passwordPolicy.HardExpiry)
 		res["RequireNumbers"] = passwordPolicy.RequireNumbers
 		res["MinimumPasswordLength"] = strconv.FormatInt(mpl, 10)
 	}
@@ -256,7 +256,7 @@ func iamTagsToMap(tags []iamtypes.Tag) map[string]interface{} {
 		tagsMap := map[string]interface{}{}
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 
@@ -270,9 +270,9 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 
 	return a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.user",
 		map[string]*llx.RawData{
-			"arn":              llx.StringData(toString(usr.Arn)),
-			"id":               llx.StringData(toString(usr.UserId)),
-			"name":             llx.StringData(toString(usr.UserName)),
+			"arn":              llx.StringData(convert.ToString(usr.Arn)),
+			"id":               llx.StringData(convert.ToString(usr.UserId)),
+			"name":             llx.StringData(convert.ToString(usr.UserName)),
 			"createDate":       llx.TimeData(toTime(usr.CreateDate)),
 			"passwordLastUsed": llx.TimeData(toTime(usr.PasswordLastUsed)),
 			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
@@ -300,7 +300,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 		usr := device.User
 		if usr != nil {
 			mqlAwsIamUser, err = NewResource(a.MqlRuntime, "aws.iam.user", map[string]*llx.RawData{
-				"arn": llx.StringData(toString(usr.Arn)),
+				"arn": llx.StringData(convert.ToString(usr.Arn)),
 			})
 			if err != nil {
 				return nil, err
@@ -309,7 +309,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 
 		mqlAwsIamMfaDevice, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice",
 			map[string]*llx.RawData{
-				"serialNumber": llx.StringData(toString(device.SerialNumber)),
+				"serialNumber": llx.StringData(convert.ToString(device.SerialNumber)),
 				"enableDate":   llx.TimeData(toTime(device.EnableDate)),
 				"user":         llx.ResourceData(mqlAwsIamUser, mqlAwsIamUser.MqlName()),
 			})
@@ -331,12 +331,12 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 		// therefore we pass the information in, so that MQL does not have to resolve it again
 		mqlAwsIamPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policy",
 			map[string]*llx.RawData{
-				"arn":             llx.StringData(toString(policy.Arn)),
-				"id":              llx.StringData(toString(policy.PolicyId)),
-				"name":            llx.StringData(toString(policy.PolicyName)),
-				"description":     llx.StringData(toString(policy.Description)),
+				"arn":             llx.StringData(convert.ToString(policy.Arn)),
+				"id":              llx.StringData(convert.ToString(policy.PolicyId)),
+				"name":            llx.StringData(convert.ToString(policy.PolicyName)),
+				"description":     llx.StringData(convert.ToString(policy.Description)),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
-				"attachmentCount": llx.IntData(toInt64From32(policy.AttachmentCount)),
+				"attachmentCount": llx.IntData(convert.ToInt64From32(policy.AttachmentCount)),
 				"createDate":      llx.TimeData(toTime(policy.CreateDate)),
 				"updateDate":      llx.TimeData(toTime(policy.UpdateDate)),
 			})
@@ -433,10 +433,10 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 
 			mqlAwsIamRole, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.role",
 				map[string]*llx.RawData{
-					"arn":         llx.StringData(toString(role.Arn)),
-					"id":          llx.StringData(toString(role.RoleId)),
-					"name":        llx.StringData(toString(role.RoleName)),
-					"description": llx.StringData(toString(role.Description)),
+					"arn":         llx.StringData(convert.ToString(role.Arn)),
+					"id":          llx.StringData(convert.ToString(role.RoleId)),
+					"name":        llx.StringData(convert.ToString(role.RoleName)),
+					"description": llx.StringData(convert.ToString(role.Description)),
 					"tags":        llx.MapData(iamTagsToMap(role.Tags), types.String),
 					"createDate":  llx.TimeData(toTime(role.CreateDate)),
 				})
@@ -477,8 +477,8 @@ func (a *mqlAwsIam) groups() ([]interface{}, error) {
 
 			mqlAwsIamGroup, err := NewResource(a.MqlRuntime, "aws.iam.group",
 				map[string]*llx.RawData{
-					"arn":  llx.StringData(toString(grp.Arn)),
-					"name": llx.StringData(toString(grp.GroupName)),
+					"arn":  llx.StringData(convert.ToString(grp.Arn)),
+					"name": llx.StringData(convert.ToString(grp.GroupName)),
 				})
 			if err != nil {
 				return nil, err
@@ -724,9 +724,9 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		}
 
 		usr := resp.User
-		args["arn"] = llx.StringData(toString(usr.Arn))
-		args["id"] = llx.StringData(toString(usr.UserId))
-		args["name"] = llx.StringData(toString(usr.UserName))
+		args["arn"] = llx.StringData(convert.ToString(usr.Arn))
+		args["id"] = llx.StringData(convert.ToString(usr.UserId))
+		args["name"] = llx.StringData(convert.ToString(usr.UserName))
 		args["createDate"] = llx.TimeData(toTime(usr.CreateDate))
 		args["passwordLastUsed"] = llx.TimeData(toTime(usr.PasswordLastUsed))
 		args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
@@ -827,7 +827,7 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
 
 			mqlAwsIamPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policy",
-				map[string]*llx.RawData{"arn": llx.StringData(toString(attachedPolicy.PolicyArn))},
+				map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(attachedPolicy.PolicyArn))},
 			)
 			if err != nil {
 				return nil, err
@@ -878,7 +878,7 @@ func (a *mqlAwsIamPolicy) name() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return toString(policy.PolicyName), nil
+	return convert.ToString(policy.PolicyName), nil
 }
 
 func (a *mqlAwsIamPolicy) description() (string, error) {
@@ -888,7 +888,7 @@ func (a *mqlAwsIamPolicy) description() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return toString(policy.Description), nil
+	return convert.ToString(policy.Description), nil
 }
 
 func (a *mqlAwsIamPolicy) isAttachable() (bool, error) {
@@ -908,7 +908,7 @@ func (a *mqlAwsIamPolicy) attachmentCount() (int64, error) {
 	if err != nil {
 		return int64(0), err
 	}
-	return toInt64From32(policy.AttachmentCount), nil
+	return convert.ToInt64From32(policy.AttachmentCount), nil
 }
 
 func (a *mqlAwsIamPolicy) createDate() (*time.Time, error) {
@@ -1013,7 +1013,7 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
 
 		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.user",
 			map[string]*llx.RawData{
-				"name": llx.StringData(toString(usr.UserName)),
+				"name": llx.StringData(convert.ToString(usr.UserName)),
 			})
 		if err != nil {
 			return nil, err
@@ -1036,7 +1036,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
 		role := entities.PolicyRoles[i]
 
 		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.role",
-			map[string]*llx.RawData{"name": llx.StringData(toString(role.RoleName))},
+			map[string]*llx.RawData{"name": llx.StringData(convert.ToString(role.RoleName))},
 		)
 		if err != nil {
 			return nil, err
@@ -1061,7 +1061,7 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]interface{}, error) {
 
 		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.group",
 			map[string]*llx.RawData{
-				"name": llx.StringData(toString(group.GroupName)),
+				"name": llx.StringData(convert.ToString(group.GroupName)),
 			})
 		if err != nil {
 			return nil, err
@@ -1091,7 +1091,7 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 			mqlAwsIamPolicyVersion, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policyversion",
 				map[string]*llx.RawData{
 					"arn":              llx.StringData(arn),
-					"versionId":        llx.StringData(toString(policyversion.VersionId)),
+					"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),
 					"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
 					"createDate":       llx.TimeData(toTime(policyversion.CreateDate)),
 				})
@@ -1124,7 +1124,7 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 		mqlAwsIamPolicyVersion, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policyversion",
 			map[string]*llx.RawData{
 				"arn":              llx.StringData(arn),
-				"versionId":        llx.StringData(toString(policyversion.VersionId)),
+				"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),
 				"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
 				"createDate":       llx.TimeData(toTime(policyversion.CreateDate)),
 			})
@@ -1206,10 +1206,10 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		}
 
 		role := resp.Role
-		args["arn"] = llx.StringData(toString(role.Arn))
-		args["id"] = llx.StringData(toString(role.RoleId))
-		args["name"] = llx.StringData(toString(role.RoleName))
-		args["description"] = llx.StringData(toString(role.Description))
+		args["arn"] = llx.StringData(convert.ToString(role.Arn))
+		args["id"] = llx.StringData(convert.ToString(role.RoleId))
+		args["name"] = llx.StringData(convert.ToString(role.RoleName))
+		args["description"] = llx.StringData(convert.ToString(role.Description))
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
 		args["createDate"] = llx.TimeData(toTime(role.CreateDate))
 		return args, nil, nil
@@ -1251,13 +1251,13 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		}
 		usernames := []interface{}{}
 		for _, user := range resp.Users {
-			usernames = append(usernames, toString(user.UserName))
+			usernames = append(usernames, convert.ToString(user.UserName))
 		}
 
 		grp := resp.Group
-		args["arn"] = llx.StringData(toString(grp.Arn))
-		args["id"] = llx.StringData(toString(grp.GroupId))
-		args["name"] = llx.StringData(toString(grp.GroupName))
+		args["arn"] = llx.StringData(convert.ToString(grp.Arn))
+		args["id"] = llx.StringData(convert.ToString(grp.GroupId))
+		args["name"] = llx.StringData(convert.ToString(grp.GroupName))
 		args["createDate"] = llx.TimeData(toTime(grp.CreateDate))
 		args["usernames"] = llx.ArrayData(usernames, types.String)
 		return args, nil, nil
@@ -1290,7 +1290,7 @@ func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
 		}
 
 		for i := range userGroups.Groups {
-			res = append(res, toString(userGroups.Groups[i].GroupName))
+			res = append(res, convert.ToString(userGroups.Groups[i].GroupName))
 		}
 		if !userGroups.IsTruncated {
 			break

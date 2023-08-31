@@ -62,7 +62,7 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		Platform: &inventory.Platform{
 			Name:    info.Name,
 			Title:   info.Title,
-			Kind:    "KIND_AWS_OBJECT",
+			Kind:    "aws-object",
 			Runtime: "AWS",
 		},
 		Labels:      mqlObject.labels,

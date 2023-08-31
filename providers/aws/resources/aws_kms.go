@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -59,16 +60,15 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-						return res, nil
 					}
-					return nil, err
+					continue
 				}
 
 				for _, key := range keyList.Keys {
 					mqlRecorder, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.kms.key",
 						map[string]*llx.RawData{
-							"id":     llx.StringData(toString(key.KeyId)),
-							"arn":    llx.StringData(toString(key.KeyArn)),
+							"id":     llx.StringData(convert.ToString(key.KeyId)),
+							"arn":    llx.StringData(convert.ToString(key.KeyArn)),
 							"region": llx.StringData(regionVal),
 						})
 					if err != nil {
@@ -136,9 +136,14 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	if r == nil {
 		return nil, nil, errors.New("arn required to fetch aws kms key")
 	}
-	arn, ok := r.Value.(string)
+	a, ok := r.Value.(string)
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New("invalid arn")
+	}
+	arnVal, err := arn.Parse(a)
+	if arnVal.AccountID != runtime.Connection.(*connection.AwsConnection).AccountId() {
+		// sometimes there are references to keys in other accounts, like the master account of an org
+		return nil, nil, errors.New("no access to key")
 	}
 
 	obj, err := runtime.CreateResource(runtime, "aws.kms", map[string]*llx.RawData{})
@@ -154,9 +159,9 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 	for i := range rawResources {
 		key := rawResources[i].(*mqlAwsKmsKey)
-		if key.Arn.Data == arn {
+		if key.Arn.Data == a {
 			return args, key, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("key not found")
 }

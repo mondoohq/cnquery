@@ -128,8 +128,8 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	if err != nil {
 		return nil, nil, err
 	}
-	args["arn"] = llx.StringData(toString(project.Arn))
-	args["description"] = llx.StringData(toString(project.Description))
+	args["arn"] = llx.StringData(convert.ToString(project.Arn))
+	args["description"] = llx.StringData(convert.ToString(project.Description))
 	args["environment"] = llx.MapData(jsonEnv, types.String)
 	args["source"] = llx.MapData(jsonSource, types.String)
 	args["tags"] = llx.MapData(cbTagsToMap(project.Tags), types.String)
@@ -142,7 +142,7 @@ func cbTagsToMap(tags []cbtypes.Tag) map[string]interface{} {
 	if len(tags) > 0 {
 		for i := range tags {
 			tag := tags[i]
-			tagsMap[toString(tag.Key)] = toString(tag.Value)
+			tagsMap[convert.ToString(tag.Key)] = convert.ToString(tag.Value)
 		}
 	}
 

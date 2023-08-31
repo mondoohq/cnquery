@@ -317,7 +317,7 @@ providers/gomodtidy:
 	@$(call gomodtidyProvider, providers/k8s)
 	@$(call gomodtidyProvider, providers/azure)
 	@$(call gomodtidyProvider, providers/ms365)
-	@$(call testGpModProvider, providers/aws)
+	@$(call gomodtidyProvider, providers/aws)
 
 
 lr/test:

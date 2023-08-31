@@ -52,11 +52,11 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 					o := d.Origins.Items[i]
 					mqlAwsCloudfrontOrigin, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
-							"domainName":         llx.StringData(toString(o.DomainName)),
-							"id":                 llx.StringData(toString(o.Id)),
-							"connectionAttempts": llx.IntData(toInt64From32(o.ConnectionAttempts)),
-							"connectionTimeout":  llx.IntData(toInt64From32(o.ConnectionTimeout)),
-							"originPath":         llx.StringData(toString(o.OriginPath)),
+							"domainName":         llx.StringData(convert.ToString(o.DomainName)),
+							"id":                 llx.StringData(convert.ToString(o.Id)),
+							"connectionAttempts": llx.IntData(convert.ToInt64From32(o.ConnectionAttempts)),
+							"connectionTimeout":  llx.IntData(convert.ToInt64From32(o.ConnectionTimeout)),
+							"originPath":         llx.StringData(convert.ToString(o.OriginPath)),
 							"account":            llx.StringData(conn.AccountId()),
 						})
 					if err != nil {
@@ -77,9 +77,9 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				return nil, err
 			}
 			args := map[string]*llx.RawData{
-				"arn":                  llx.StringData(toString(d.ARN)),
-				"status":               llx.StringData(toString(d.Status)),
-				"domainName":           llx.StringData(toString(d.DomainName)),
+				"arn":                  llx.StringData(convert.ToString(d.ARN)),
+				"status":               llx.StringData(convert.ToString(d.Status)),
+				"domainName":           llx.StringData(convert.ToString(d.DomainName)),
 				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
 				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
@@ -129,19 +129,19 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 				stage = string(metadata.Stage)
 			}
 			if config := funct.FunctionConfig; config != nil {
-				comment = toString(config.Comment)
+				comment = convert.ToString(config.Comment)
 				runtime = string(config.Runtime)
 			}
 
 			args := map[string]*llx.RawData{
-				"name":             llx.StringData(toString(funct.Name)),
-				"status":           llx.StringData(toString(funct.Status)),
+				"name":             llx.StringData(convert.ToString(funct.Name)),
+				"status":           llx.StringData(convert.ToString(funct.Status)),
 				"lastModifiedTime": llx.TimeData(toTime(lmTime)),
 				"createdTime":      llx.TimeData(toTime(crTime)),
 				"stage":            llx.StringData(stage),
 				"comment":          llx.StringData(comment),
 				"runtime":          llx.StringData(runtime),
-				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), toString(funct.Name))),
+				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), convert.ToString(funct.Name))),
 			}
 
 			mqlAwsCloudfrontDist, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudfront.function", args)
