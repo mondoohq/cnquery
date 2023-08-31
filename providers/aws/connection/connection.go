@@ -24,6 +24,7 @@ type AwsConnection struct {
 	accountId        string
 	clientcache      ClientsCache
 	awsConfigOptions []func(*config.LoadOptions) error
+	profile          string
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
@@ -31,7 +32,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 	}
-	opts := parseFlagsForConnectionOptions(asset.Options)
+	opts, profile := parseFlagsForConnectionOptions(asset.Options)
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -66,10 +67,11 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.asset = asset
 	c.cfg = cfg
 	c.accountId = *identity.Account
+	c.profile = profile
 	return c, nil
 }
 
-func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
+func parseFlagsForConnectionOptions(m map[string]string) ([]ConnectionOption, string) {
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {
 		o = append(o, WithEndpoint(apiEndpoint))
@@ -91,7 +93,7 @@ func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
 		externalId := m["external-id"]
 		o = append(o, WithAssumeRole(cfg, role, externalId))
 	}
-	return o
+	return o, m["profile"]
 }
 
 type ConnectionOption func(charp *AwsConnection)
@@ -166,6 +168,10 @@ func (p *AwsConnection) Asset() *inventory.Asset {
 
 func (p *AwsConnection) AccountId() string {
 	return p.accountId
+}
+
+func (p *AwsConnection) Profile() string {
+	return p.profile
 }
 
 func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {

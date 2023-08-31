@@ -45,6 +45,10 @@ const (
 
 var All = []string{
 	DiscoveryAccounts,
+	DiscoveryInstances,
+	DiscoverySSMInstances,
+	DiscoveryECR,
+	DiscoveryECS,
 }
 
 var Auto = []string{
@@ -92,6 +96,12 @@ var Config = plugin.Provider{
 				DiscoveryAccounts,
 				DiscoveryAll,
 				DiscoveryAuto,
+
+				DiscoveryInstances,
+				DiscoverySSMInstances,
+				DiscoveryECR,
+				DiscoveryECS,
+
 				DiscoveryResources,
 				DiscoveryS3Buckets,
 				DiscoveryCloudtrailTrails,
