@@ -3,88 +3,17 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-
-// Discovery Flags
-const (
-	DiscoveryInstances    = "instances"
-	DiscoverySSMInstances = "ssm-instances"
-	DiscoveryECR          = "ecr"
-	DiscoveryECS          = "ecs"
-
-	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everrrything
-	DiscoveryAuto = "auto" // just the account for now
-
-	// API scan
-	DiscoveryAccounts                   = "accounts"
-	DiscoveryResources                  = "resources"          // all the resources
-	DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
-	DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
-	DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
-	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // need policy + dedup story
-	DiscoveryS3Buckets                  = "s3-buckets"
-	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
-	DiscoveryRdsDbInstances             = "rds-dbinstances"
-	DiscoveryVPCs                       = "vpcs"
-	DiscoverySecurityGroups             = "security-groups"
-	DiscoveryIAMUsers                   = "iam-users"
-	DiscoveryIAMGroups                  = "iam-groups"
-	DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
-	DiscoveryLambdaFunctions            = "lambda-functions"
-	DiscoveryDynamoDBTables             = "dynamodb-tables"
-	DiscoveryRedshiftClusters           = "redshift-clusters"
-	DiscoveryVolumes                    = "ec2-volumes"
-	DiscoverySnapshots                  = "ec2-snapshots"
-	DiscoveryEFSFilesystems             = "efs-filesystems"
-	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"
-	DiscoveryELBLoadBalancers           = "elb-loadbalancers"
-	DiscoveryESDomains                  = "es-domains"
-	DiscoveryKMSKeys                    = "kms-keys"
-	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/aws/provider"
 )
 
-var All = []string{
-	DiscoveryAccounts,
-	DiscoveryInstances,
-	DiscoverySSMInstances,
-	DiscoveryECR,
-	DiscoveryECS,
-}
-
-var Auto = []string{
-	DiscoveryAccounts,
-}
-
-var AllAPIResources = []string{
-	// DiscoveryECSContainersAPI,
-	// DiscoveryECRImageAPI,
-	// DiscoveryEC2InstanceAPI,
-	// DiscoverySSMInstanceAPI,
-	DiscoveryS3Buckets,
-	DiscoveryCloudtrailTrails,
-	DiscoveryRdsDbInstances,
-	DiscoveryVPCs,
-	DiscoverySecurityGroups,
-	DiscoveryIAMUsers,
-	DiscoveryIAMGroups,
-	DiscoveryCloudwatchLoggroups,
-	DiscoveryLambdaFunctions,
-	DiscoveryDynamoDBTables,
-	DiscoveryRedshiftClusters,
-	DiscoveryVolumes,
-	DiscoverySnapshots,
-	DiscoveryEFSFilesystems,
-	DiscoveryAPIGatewayRestAPIs,
-	DiscoveryELBLoadBalancers,
-	DiscoveryESDomains,
-	DiscoveryKMSKeys,
-	DiscoverySagemakerNotebookInstances,
-}
-
 var Config = plugin.Provider{
-	Name:    "aws",
-	ID:      "go.mondoo.com/cnquery/providers/aws",
-	Version: "9.0.0",
+	Name:            "aws",
+	ID:              "go.mondoo.com/cnquery/providers/aws",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "aws",
@@ -93,35 +22,35 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 0,
 			Discovery: []string{
-				DiscoveryAccounts,
-				DiscoveryAll,
-				DiscoveryAuto,
+				connection.DiscoveryAccounts,
+				connection.DiscoveryAll,
+				connection.DiscoveryAuto,
 
-				DiscoveryInstances,
-				DiscoverySSMInstances,
-				DiscoveryECR,
-				DiscoveryECS,
+				connection.DiscoveryInstances,
+				connection.DiscoverySSMInstances,
+				connection.DiscoveryECR,
+				connection.DiscoveryECS,
 
-				DiscoveryResources,
-				DiscoveryS3Buckets,
-				DiscoveryCloudtrailTrails,
-				DiscoveryRdsDbInstances,
-				DiscoveryVPCs,
-				DiscoverySecurityGroups,
-				DiscoveryIAMUsers,
-				DiscoveryIAMGroups,
-				DiscoveryCloudwatchLoggroups,
-				DiscoveryLambdaFunctions,
-				DiscoveryDynamoDBTables,
-				DiscoveryRedshiftClusters,
-				DiscoveryVolumes,
-				DiscoverySnapshots,
-				DiscoveryEFSFilesystems,
-				DiscoveryAPIGatewayRestAPIs,
-				DiscoveryELBLoadBalancers,
-				DiscoveryESDomains,
-				DiscoveryKMSKeys,
-				DiscoverySagemakerNotebookInstances,
+				connection.DiscoveryResources,
+				connection.DiscoveryS3Buckets,
+				connection.DiscoveryCloudtrailTrails,
+				connection.DiscoveryRdsDbInstances,
+				connection.DiscoveryVPCs,
+				connection.DiscoverySecurityGroups,
+				connection.DiscoveryIAMUsers,
+				connection.DiscoveryIAMGroups,
+				connection.DiscoveryCloudwatchLoggroups,
+				connection.DiscoveryLambdaFunctions,
+				connection.DiscoveryDynamoDBTables,
+				connection.DiscoveryRedshiftClusters,
+				connection.DiscoveryVolumes,
+				connection.DiscoverySnapshots,
+				connection.DiscoveryEFSFilesystems,
+				connection.DiscoveryAPIGatewayRestAPIs,
+				connection.DiscoveryELBLoadBalancers,
+				connection.DiscoveryESDomains,
+				connection.DiscoveryKMSKeys,
+				connection.DiscoverySagemakerNotebookInstances,
 			},
 			Flags: []plugin.Flag{
 				{

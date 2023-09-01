@@ -1,3 +1,6 @@
+import "../../network/resources/network.lr"
+
+
 option provider = "go.mondoo.com/cnquery/providers/aws"
 option go_package = "go.mondoo.com/cnquery/providers/aws/resources"
 
@@ -455,7 +458,7 @@ private aws.acm.certificate @defaults("arn domainName") {
   // Name of entity associated with pubkey in cert
   subject string
   // Retrieves an Amazon-issued certificate and its certificate chain
-  // certificate() certificate
+  certificate() network.certificate
   // Tags associated with the certificate
   tags map[string]string
 }

@@ -510,10 +510,10 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 		if res != nil {
 			id := name+"\x00"+res.MqlID()
-			if x, ok := runtime.Resources[id]; ok {
+			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
-			runtime.Resources[id] = res
+			runtime.Resources.Set(id, res)
 			return res, nil
 		}
 
@@ -526,11 +526,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 	}
 
 	id := name+"\x00"+res.MqlID()
-	if x, ok := runtime.Resources[id]; ok {
+	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
 
-	runtime.Resources[id] = res
+	runtime.Resources.Set(id, res)
 	return res, nil
 }
 
@@ -549,11 +549,11 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 	}
 
 	id := name+"\x00"+res.MqlID()
-	if x, ok := runtime.Resources[id]; ok {
+	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
 
-	runtime.Resources[id] = res
+	runtime.Resources.Set(id, res)
 	return res, nil
 }
 
@@ -1037,6 +1037,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.acm.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcmCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetCertificate()).ToDataRes(types.Resource("certificate"))
 	},
 	"aws.acm.certificate.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcmCertificate).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -3309,6 +3312,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.acm.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAcmCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).Certificate, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
 		return
 	},
 	"aws.acm.certificate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8192,6 +8199,7 @@ type mqlAwsAcmCertificate struct {
 	DomainName plugin.TValue[string]
 	Status plugin.TValue[string]
 	Subject plugin.TValue[string]
+	Certificate plugin.TValue[plugin.Resource]
 	Tags plugin.TValue[map[string]interface{}]
 }
 
@@ -8258,6 +8266,22 @@ func (c *mqlAwsAcmCertificate) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsAcmCertificate) GetSubject() *plugin.TValue[string] {
 	return &c.Subject
+}
+
+func (c *mqlAwsAcmCertificate) GetCertificate() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.Certificate, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.acm.certificate", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		return c.certificate()
+	})
 }
 
 func (c *mqlAwsAcmCertificate) GetTags() *plugin.TValue[map[string]interface{}] {

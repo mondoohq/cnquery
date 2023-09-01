@@ -25,6 +25,7 @@ type AwsConnection struct {
 	clientcache      ClientsCache
 	awsConfigOptions []func(*config.LoadOptions) error
 	profile          string
+	PlatformOverride string
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
@@ -43,10 +44,6 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	if cfg.Region == "" {
 		log.Info().Msg("no AWS region found, using us-east-1")
 		cfg.Region = "us-east-1" // in case the user has no region set, default to us-east-1
-	}
-	asset.Platform = &inventory.Platform{
-		Title: "aws",
-		Name:  "aws",
 	}
 	// gather information about the aws account
 	cfgCopy := cfg.Copy()

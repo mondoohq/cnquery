@@ -49,9 +49,9 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		log.Error().Err(err).Msg("missing values in mql object to asset translation")
 		return nil
 	}
-	info, err := getTitleFamily(mqlObject.awsObject)
-	if err != nil {
-		log.Error().Err(err).Msg("missing runtime info")
+	platformName := getPlatformName(mqlObject.awsObject)
+	if platformName == "" {
+		log.Error().Err(errors.New("could not fetch platform info for object")).Msg("missing runtime info")
 		return nil
 	}
 	platformid := MondooObjectID(mqlObject.awsObject)
@@ -60,15 +60,17 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 	return &inventory.Asset{
 		PlatformIds: []string{platformid, mqlObject.awsObject.arn},
 		Name:        mqlObject.name,
-		Platform: &inventory.Platform{
-			Name:    info.Name,
-			Title:   info.Title,
-			Kind:    "aws-object",
-			Runtime: "AWS",
-		},
+		Platform:    connection.GetPlatformForObject(platformName),
 		Labels:      mqlObject.labels,
-		Connections: []*inventory.Config{conn.Conf},
+		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
 	}
+}
+
+func cloneInventoryConf(invConf *inventory.Config) *inventory.Config {
+	invConfClone := invConf.Clone()
+	// We do not want to run discovery again for the already discovered assets
+	invConfClone.Discover = &inventory.Discovery{}
+	return invConfClone
 }
 
 func validate(m mqlObject) error {
@@ -90,100 +92,100 @@ func validate(m mqlObject) error {
 	return nil
 }
 
-func getTitleFamily(awsObject awsObject) (*inventory.Platform, error) {
+func getPlatformName(awsObject awsObject) string {
 	switch awsObject.service {
 	case "s3":
 		if awsObject.objectType == "bucket" {
-			return &inventory.Platform{Title: "AWS S3 Bucket", Name: "aws-s3-bucket"}, nil
+			return "aws-s3-bucket"
 		}
 	case "cloudtrail":
 		if awsObject.objectType == "trail" {
-			return &inventory.Platform{Title: "AWS CloudTrail Trail", Name: "aws-cloudtrail-trail"}, nil
+			return "aws-cloudtrail-trail"
 		}
 	case "rds":
 		if awsObject.objectType == "dbinstance" {
-			return &inventory.Platform{Title: "AWS RDS DB Instance", Name: "aws-rds-dbinstance"}, nil
+			return "aws-rds-dbinstance"
 		}
 	case "dynamodb":
 		if awsObject.objectType == "table" {
-			return &inventory.Platform{Title: "AWS DynamoDB Table", Name: "aws-dynamodb-table"}, nil
+			return "aws-dynamodb-table"
 		}
 	case "redshift":
 		if awsObject.objectType == "cluster" {
-			return &inventory.Platform{Title: "AWS Redshift Cluster", Name: "aws-redshift-cluster"}, nil
+			return "aws-redshift-cluster"
 		}
 	case "vpc":
 		if awsObject.objectType == "vpc" {
-			return &inventory.Platform{Title: "AWS VPC", Name: "aws-vpc"}, nil
+			return "aws-vpc"
 		}
 	case "ec2":
 		switch awsObject.objectType {
 		case "securitygroup":
-			return &inventory.Platform{Title: "AWS Security Group", Name: "aws-security-group"}, nil
+			return "aws-security-group"
 		case "volume":
-			return &inventory.Platform{Title: "AWS EC2 Volume", Name: "aws-ec2-volume"}, nil
+			return "aws-ec2-volume"
 		case "snapshot":
-			return &inventory.Platform{Title: "AWS EC2 Snapshot", Name: "aws-ec2-snapshot"}, nil
+			return "aws-ec2-snapshot"
 		case "instance":
-			return &inventory.Platform{Title: "AWS EC2 Instance", Name: "aws-ec2-instance"}, nil
+			return "aws-ec2-instance"
 		}
 	case "iam":
 		switch awsObject.objectType {
 		case "user":
-			return &inventory.Platform{Title: "AWS IAM User", Name: "aws-iam-user"}, nil
+			return "aws-iam-user"
 
 		case "group":
-			return &inventory.Platform{Title: "AWS IAM Group", Name: "aws-iam-group"}, nil
+			return "aws-iam-group"
 		}
 	case "cloudwatch":
 		if awsObject.objectType == "loggroup" {
-			return &inventory.Platform{Title: "AWS CloudWatch Log Group", Name: "aws-cloudwatch-loggroup"}, nil
+			return "aws-cloudwatch-loggroup"
 		}
 	case "lambda":
 		if awsObject.objectType == "function" {
-			return &inventory.Platform{Title: "AWS Lambda Function", Name: "aws-lambda-function"}, nil
+			return "aws-lambda-function"
 		}
 	case "ecs":
 		if awsObject.objectType == "container" {
-			return &inventory.Platform{Title: "AWS ECS Container", Name: "aws-ecs-container"}, nil
+			return "aws-ecs-container"
 		}
 		if awsObject.objectType == "instance" {
-			return &inventory.Platform{Title: "AWS ECS Container Instance", Name: "aws-ecs-instance"}, nil
+			return "aws-ecs-instance"
 		}
 	case "efs":
 		if awsObject.objectType == "filesystem" {
-			return &inventory.Platform{Title: "AWS EFS Filesystem", Name: "aws-efs-filesystem"}, nil
+			return "aws-efs-filesystem"
 		}
 	case "gateway":
 		if awsObject.objectType == "restapi" {
-			return &inventory.Platform{Title: "AWS Gateway REST API", Name: "aws-gateway-restapi"}, nil
+			return "aws-gateway-restapi"
 		}
 	case "elb":
 		if awsObject.objectType == "loadbalancer" {
-			return &inventory.Platform{Title: "AWS ELB Load Balancer", Name: "aws-elb-loadbalancer"}, nil
+			return "aws-elb-loadbalancer"
 		}
 	case "es":
 		if awsObject.objectType == "domain" {
-			return &inventory.Platform{Title: "AWS ES Domain", Name: "aws-es-domain"}, nil
+			return "aws-es-domain"
 		}
 	case "kms":
 		if awsObject.objectType == "key" {
-			return &inventory.Platform{Title: "AWS KMS Key", Name: "aws-kms-key"}, nil
+			return "aws-kms-key"
 		}
 	case "sagemaker":
 		if awsObject.objectType == "notebookinstance" {
-			return &inventory.Platform{Title: "AWS SageMaker Notebook Instance", Name: "aws-sagemaker-notebookinstance"}, nil
+			return "aws-sagemaker-notebookinstance"
 		}
 	case "ssm":
 		if awsObject.objectType == "instance" {
-			return &inventory.Platform{Title: "AWS SSM Instance", Name: "aws-ssm-instance"}, nil
+			return "aws-ssm-instance"
 		}
 	case "ecr":
 		if awsObject.objectType == "image" {
-			return &inventory.Platform{Title: "AWS ECR Image", Name: "aws-ecr-image"}, nil
+			return "aws-ecr-image"
 		}
 	}
-	return nil, errors.Newf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType)
+	return ""
 }
 
 func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *inventory.Asset {
@@ -199,7 +201,7 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	return &inventory.Asset{
 		PlatformIds: []string{id},
 		Name:        name,
-		Platform:    &inventory.Platform{Name: "aws", Runtime: "aws"},
+		Platform:    connection.GetPlatformForObject(""),
 		Connections: []*inventory.Config{conn.Conf},
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/aws/config"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 	"go.mondoo.com/cnquery/utils/stringx"
 )
@@ -45,17 +44,17 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 func handleTargets(targets []string) []string {
 	if len(targets) == 0 {
 		// default to auto if none defined
-		return []string{config.DiscoveryAccounts}
+		return []string{connection.DiscoveryAccounts}
 	}
-	if stringx.Contains(targets, config.DiscoveryAll) {
-		return config.All
+	if stringx.Contains(targets, connection.DiscoveryAll) {
+		return connection.All
 	}
-	if stringx.Contains(targets, config.DiscoveryAuto) {
-		return config.Auto
+	if stringx.Contains(targets, connection.DiscoveryAuto) {
+		return connection.Auto
 	}
-	if stringx.Contains(targets, config.DiscoveryResources) {
-		targets = remove(targets, config.DiscoveryResources)
-		targets = append(targets, config.AllAPIResources...)
+	if stringx.Contains(targets, connection.DiscoveryResources) {
+		targets = remove(targets, connection.DiscoveryResources)
+		targets = append(targets, connection.AllAPIResources...)
 	}
 	return targets
 }
@@ -65,10 +64,10 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 	accountId := awsAccount.Id.Data
 	assetList := []*inventory.Asset{}
 	switch target {
-	case config.DiscoveryAccounts:
+	case connection.DiscoveryAccounts:
 		assetList = append(assetList, accountAsset(conn, awsAccount))
 
-	case config.DiscoveryInstances:
+	case connection.DiscoveryInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -85,7 +84,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
 			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId))
 		}
-	case config.DiscoverySSMInstances:
+	case connection.DiscoverySSMInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -120,7 +119,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			instance := ins.Data[i].(*mqlAwsSsmInstance)
 			assetList = append(assetList, addConnectionInfoToSSMAsset(instance, accountId, conn.Profile()))
 		}
-	case config.DiscoveryECR:
+	case connection.DiscoveryECR:
 		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -137,7 +136,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			a := images.Data[i].(*mqlAwsEcrImage)
 			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn.Profile()))
 		}
-	case config.DiscoveryECS:
+	case connection.DiscoveryECS:
 		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -154,11 +153,11 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			a := containers.Data[i].(*mqlAwsEcsContainer)
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(a))
 		}
-	// case config.DiscoveryECSContainersAPI:
-	// case config.DiscoveryECRImageAPI:
-	// case config.DiscoveryEC2InstanceAPI:
-	// case config.DiscoverySSMInstanceAPI:
-	case config.DiscoveryS3Buckets:
+	// case connection.DiscoveryECSContainersAPI:
+	// case connection.DiscoveryECRImageAPI:
+	// case connection.DiscoveryEC2InstanceAPI:
+	// case connection.DiscoverySSMInstanceAPI:
+	case connection.DiscoveryS3Buckets:
 		res, err := NewResource(runtime, "aws.s3", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -184,7 +183,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryCloudtrailTrails:
+	case connection.DiscoveryCloudtrailTrails:
 		res, err := NewResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -209,7 +208,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryRdsDbInstances:
+	case connection.DiscoveryRdsDbInstances:
 		res, err := NewResource(runtime, "aws.rds", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -235,7 +234,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryVPCs:
+	case connection.DiscoveryVPCs:
 		res, err := NewResource(runtime, "aws", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -261,7 +260,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoverySecurityGroups:
+	case connection.DiscoverySecurityGroups:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -287,7 +286,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryIAMGroups:
+	case connection.DiscoveryIAMGroups:
 		res, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -313,7 +312,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryCloudwatchLoggroups:
+	case connection.DiscoveryCloudwatchLoggroups:
 		res, err := NewResource(runtime, "aws.cloudwatch", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -339,7 +338,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryLambdaFunctions:
+	case connection.DiscoveryLambdaFunctions:
 		res, err := NewResource(runtime, "aws.lambda", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -365,7 +364,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryDynamoDBTables:
+	case connection.DiscoveryDynamoDBTables:
 		res, err := NewResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -408,7 +407,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryIAMUsers:
+	case connection.DiscoveryIAMUsers:
 		res, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -434,7 +433,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryRedshiftClusters:
+	case connection.DiscoveryRedshiftClusters:
 		res, err := NewResource(runtime, "aws.redshift", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -460,7 +459,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryVolumes:
+	case connection.DiscoveryVolumes:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -486,7 +485,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoverySnapshots:
+	case connection.DiscoverySnapshots:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -512,7 +511,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryEFSFilesystems:
+	case connection.DiscoveryEFSFilesystems:
 		res, err := NewResource(runtime, "aws.efs", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -538,7 +537,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryAPIGatewayRestAPIs:
+	case connection.DiscoveryAPIGatewayRestAPIs:
 		res, err := NewResource(runtime, "aws.apigateway", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -564,7 +563,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryELBLoadBalancers:
+	case connection.DiscoveryELBLoadBalancers:
 		res, err := NewResource(runtime, "aws.elb", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -594,7 +593,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryESDomains:
+	case connection.DiscoveryESDomains:
 		res, err := NewResource(runtime, "aws.es", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -620,7 +619,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoveryKMSKeys:
+	case connection.DiscoveryKMSKeys:
 		res, err := NewResource(runtime, "aws.kms", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
@@ -645,7 +644,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
-	case config.DiscoverySagemakerNotebookInstances:
+	case connection.DiscoverySagemakerNotebookInstances:
 		res, err := NewResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err

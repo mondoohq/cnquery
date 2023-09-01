@@ -233,85 +233,85 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 				for i := range securityGroups.SecurityGroups {
 					group := securityGroups.SecurityGroups[i]
 
-					// mqlIpPermissions := []interface{}{}
-					// for p := range group.IpPermissions {
-					// 	permission := group.IpPermissions[p]
+					mqlIpPermissions := []interface{}{}
+					for p := range group.IpPermissions {
+						permission := group.IpPermissions[p]
 
-					// 	ipRanges := []interface{}{}
-					// 	for r := range permission.IpRanges {
-					// 		iprange := permission.IpRanges[r]
-					// 		if iprange.CidrIp != nil {
-					// 			ipRanges = append(ipRanges, *iprange.CidrIp)
-					// 		}
-					// 	}
+						ipRanges := []interface{}{}
+						for r := range permission.IpRanges {
+							iprange := permission.IpRanges[r]
+							if iprange.CidrIp != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIp)
+							}
+						}
 
-					// 	ipv6Ranges := []interface{}{}
-					// 	for r := range permission.Ipv6Ranges {
-					// 		iprange := permission.Ipv6Ranges[r]
-					// 		if iprange.CidrIpv6 != nil {
-					// 			ipRanges = append(ipRanges, *iprange.CidrIpv6)
-					// 		}
-					// 	}
-					// 	mqlSecurityGroupIpPermission, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
-					// 		map[string]*llx.RawData{
-					// 			"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p)),
-					// 			"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
-					// 			"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
-					// 			"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
-					// 			"ipRanges":   llx.ArrayData(ipRanges, types.Any),
-					// 			"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
-					// 		})
-					// 	if err != nil {
-					// 		return nil, err
-					// 	}
+						ipv6Ranges := []interface{}{}
+						for r := range permission.Ipv6Ranges {
+							iprange := permission.Ipv6Ranges[r]
+							if iprange.CidrIpv6 != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIpv6)
+							}
+						}
+						mqlSecurityGroupIpPermission, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
+							map[string]*llx.RawData{
+								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p)),
+								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
+								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
+								"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
+								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
+								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
+							})
+						if err != nil {
+							return nil, err
+						}
 
-					// 	mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
-					// }
+						mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
+					}
 
-					// mqlIpPermissionsEgress := []interface{}{}
-					// for p := range group.IpPermissionsEgress {
-					// 	permission := group.IpPermissionsEgress[p]
+					mqlIpPermissionsEgress := []interface{}{}
+					for p := range group.IpPermissionsEgress {
+						permission := group.IpPermissionsEgress[p]
 
-					// 	ipRanges := []interface{}{}
-					// 	for r := range permission.IpRanges {
-					// 		iprange := permission.IpRanges[r]
-					// 		if iprange.CidrIp != nil {
-					// 			ipRanges = append(ipRanges, *iprange.CidrIp)
-					// 		}
-					// 	}
+						ipRanges := []interface{}{}
+						for r := range permission.IpRanges {
+							iprange := permission.IpRanges[r]
+							if iprange.CidrIp != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIp)
+							}
+						}
 
-					// 	ipv6Ranges := []interface{}{}
-					// 	for r := range permission.Ipv6Ranges {
-					// 		iprange := permission.Ipv6Ranges[r]
-					// 		if iprange.CidrIpv6 != nil {
-					// 			ipRanges = append(ipRanges, *iprange.CidrIpv6)
-					// 		}
-					// 	}
-					// 	mqlSecurityGroupIpPermission, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
-					// 		map[string]*llx.RawData{
-					// 			"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p) + "-egress"),
-					// 			"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
-					// 			"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
-					// 			"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
-					// 			"ipRanges":   llx.ArrayData(ipRanges, types.Any),
-					// 			"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
-					// 		})
-					// 	if err != nil {
-					// 		return nil, err
-					// 	}
+						ipv6Ranges := []interface{}{}
+						for r := range permission.Ipv6Ranges {
+							iprange := permission.Ipv6Ranges[r]
+							if iprange.CidrIpv6 != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIpv6)
+							}
+						}
+						mqlSecurityGroupIpPermission, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
+							map[string]*llx.RawData{
+								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p) + "-egress"),
+								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
+								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
+								"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
+								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
+								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
+							})
+						if err != nil {
+							return nil, err
+						}
 
-					// 	mqlIpPermissionsEgress = append(mqlIpPermissionsEgress, mqlSecurityGroupIpPermission)
-					// }
+						mqlIpPermissionsEgress = append(mqlIpPermissionsEgress, mqlSecurityGroupIpPermission)
+					}
 
 					args := map[string]*llx.RawData{
-						"arn":         llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(group.GroupId))),
-						"id":          llx.StringData(convert.ToString(group.GroupId)),
-						"name":        llx.StringData(convert.ToString(group.GroupName)),
-						"description": llx.StringData(convert.ToString(group.Description)),
-						"tags":        llx.MapData(Ec2TagsToMap(group.Tags), types.String),
-						// "ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Resource("aws.ec2.securitygroup.ippermission")),
-						// "ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Resource("aws.ec2.securitygroup.ippermission")),
-						"region": llx.StringData(regionVal),
+						"arn":                 llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(group.GroupId))),
+						"id":                  llx.StringData(convert.ToString(group.GroupId)),
+						"name":                llx.StringData(convert.ToString(group.GroupName)),
+						"description":         llx.StringData(convert.ToString(group.Description)),
+						"tags":                llx.MapData(Ec2TagsToMap(group.Tags), types.String),
+						"ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Resource("aws.ec2.securitygroup.ippermission")),
+						"ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Resource("aws.ec2.securitygroup.ippermission")),
+						"region":              llx.StringData(regionVal),
 					}
 
 					mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",

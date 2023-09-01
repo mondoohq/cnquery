@@ -136,7 +136,6 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to asset")
 	}
-
 	log.Info().Msgf("connected to %s", runtime.Provider.Connection.Asset.Platform.Title)
 
 	// when we close the shell, we need to close the backend and store the recording

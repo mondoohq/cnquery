@@ -142,32 +142,32 @@ func CertTagsToMapTags(tags []acmtypes.Tag) map[string]interface{} {
 	return mapTags
 }
 
-// func (a *mqlAwsAcmCertificate) certificate() (*mqlCertificate, error) {
-// 	certArn := a.Arn.Data
-// 	region, err := GetRegionFromArn(certArn)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-// 	svc := conn.Acm(region)
-// 	ctx := context.Background()
-// 	cert, err := svc.GetCertificate(ctx, &acm.GetCertificateInput{CertificateArn: &certArn})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if cert.Certificate == nil {
-// 		return nil, nil
-// 	}
-// 	parsedCert, err := ParseCertsFromPEM(strings.NewReader(convert.ToString(cert.Certificate)))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	mqlCerts, err := CertificatesToMqlCertificates(a.MqlRuntime, parsedCert)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if len(mqlCerts) == 1 {
-// 		return mqlCerts[0].(*mqlCertificate), nil
-// 	}
-// 	return nil, nil
-// }
+func (a *mqlAwsAcmCertificate) certificate() (plugin.Resource, error) {
+	certArn := a.Arn.Data
+	region, err := GetRegionFromArn(certArn)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Acm(region)
+	ctx := context.Background()
+	cert, err := svc.GetCertificate(ctx, &acm.GetCertificateInput{CertificateArn: &certArn})
+	if err != nil {
+		return nil, err
+	}
+	if cert.Certificate == nil {
+		return nil, nil
+	}
+	certificates, err := a.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
+		"pem": llx.StringData(*cert.Certificate),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := a.MqlRuntime.GetSharedData("certificates", certificates.MqlID(), "list")
+	if err != nil {
+		return nil, err
+	}
+	return list.Value.([]interface{})[0].(plugin.Resource), nil
+}

@@ -15,6 +15,11 @@ import (
 	"go.mondoo.com/cnquery/providers/aws/resources"
 )
 
+const (
+	defaultConnection uint32 = 1
+	ConnectionType           = "aws"
+)
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
@@ -75,13 +80,21 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	// // We only need to run the detection step when we don't have any asset information yet.
+	// We only need to run the detection step when we don't have any asset information yet.
 	if req.Asset.Platform == nil {
 		if err := s.detect(req.Asset, conn); err != nil {
 			return nil, err
 		}
 	}
-	inventory, err := s.discover(conn)
+	inventory := &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{req.Asset},
+		},
+	}
+
+	conn.PlatformOverride = req.Asset.Platform.Name
+
+	inventory, err = s.discover(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +135,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
-		Resources:      map[string]plugin.Resource{},
 		Callback:       callback,
 		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,
@@ -135,7 +147,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AwsConnection) error {
 	asset.Id = conn.Conf.Type + "://" + conn.AccountId()
 	asset.Name = conn.Conf.Host
-	asset.Platform = conn.PlatformInfo("aws")
+	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + conn.AccountId()}
 
 	return nil
@@ -161,7 +173,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 		}, nil
 	}
 
-	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
 	if !ok {
 		// Note: Since resources are internally always created, there are only very
 		// few cases where we arrive here:
