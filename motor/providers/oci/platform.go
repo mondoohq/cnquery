@@ -9,7 +9,7 @@ func (p *Provider) Identifier() (string, error) {
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 	return &platform.Platform{
 		Name:    "oci",
-		Title:   "Oracle Cloud Infrastructure",
+		Title:   "Oracle Cloud Infrastructure Tenancy",
 		Runtime: p.Runtime(),
 		Kind:    p.Kind(),
 		Family:  []string{"oci"},
