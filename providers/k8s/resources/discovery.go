@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/types"
 	"golang.org/x/exp/slices"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -86,8 +87,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		Assets: []*inventory.Asset{},
 	}}
 
-	invConfig := conn.InventoryConfig().Clone()
-	invConfig.Discover = nil // we don't want to run discovery again for any other assets
+	invConfig := conn.InventoryConfig()
 
 	res, err := runtime.CreateResource(runtime, "k8s", nil)
 	if err != nil {
@@ -119,11 +119,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				PlatformIds: []string{assetId},
 				Name:        conn.Name(),
 				Platform:    conn.Platform(),
-				Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 			})
 		}
 
-		assets, err := discoverAssets(conn, invConfig, assetId, k8s, nsFilter, false)
+		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, false)
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +141,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
 
 			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, true)
+			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, true)
 			if err != nil {
 				return nil, err
 			}
@@ -153,6 +153,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 }
 
 func discoverAssets(
+	runtime *plugin.Runtime,
 	conn shared.Connection,
 	invConfig *inventory.Config,
 	clusterId string,
@@ -234,6 +235,13 @@ func discoverAssets(
 			}
 			assets = append(assets, list...)
 		}
+		if target == DiscoveryContainerImages || target == DiscoveryAuto {
+			list, err = discoverContainerImages(runtime, invConfig, clusterId, k8s, nsFilter)
+			if err != nil {
+				return nil, err
+			}
+			assets = append(assets, list...)
+		}
 	}
 	return assets, nil
 }
@@ -267,7 +275,7 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 				Title: "Kubernetes Pod, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -302,7 +310,7 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 				Title: "Kubernetes Job, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -337,7 +345,7 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 				Title: "Kubernetes CronJob, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -372,7 +380,7 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 				Title: "Kubernetes StatefulSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -407,7 +415,7 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 				Title: "Kubernetes Deployment, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -442,7 +450,7 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 				Title: "Kubernetes ReplicaSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -477,7 +485,7 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 				Title: "Kubernetes DaemonSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -535,7 +543,7 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 				Title: "Kubernetes Ingress, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -579,9 +587,58 @@ func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clu
 				Title: "Kubernetes Namespace, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
 	}
+	return assetList, nil
+}
+
+func discoverContainerImages(runtime *plugin.Runtime, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+	pods := k8s.GetPods()
+	if pods.Error != nil {
+		return nil, pods.Error
+	}
+
+	runningImages := make(map[string]ContainerImage)
+	for _, p := range pods.Data {
+		pod := p.(*mqlK8sPod)
+
+		if skip := nsFilter.skipNamespace(pod.Namespace.Data); skip {
+			continue
+		}
+
+		podImages := UniqueImagesForPod(*pod.obj, runtime)
+		runningImages = types.MergeMaps(runningImages, podImages)
+	}
+
+	assetList := make([]*inventory.Asset, 0, len(runningImages))
+	for _, i := range runningImages {
+		assetList = append(assetList, &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type: "docker-image",
+					Host: i.resolvedImage,
+				},
+			},
+		})
+	}
+
+	// Convert the container images to assets.
+	// assets := make(map[string]*inventory.Asset)
+	// for _, i := range runningImages {
+	// 	a, err := newPodImageAsset(i)
+	// 	if err != nil {
+	// 		log.Error().Err(err).Msg("failed to convert container image to asset")
+	// 		continue
+	// 	}
+
+	// 	// It is still possible to have unique images at this point. There might be
+	// 	// multiple image tags that actually point to the same digest. If we are scanning
+	// 	// a manifest, where there is no container status, we can only know that the 2 images
+	// 	// are identical after we resolve them with the container registry.
+	// 	assets[a.Labels["docker.io/digest"]] = a
+	// 	log.Debug().Str("name", a.Name).Str("image", a.Connections[0].Host).Msg("resolved pod")
+	// }
 	return assetList, nil
 }
 
@@ -726,4 +783,11 @@ func createPlatformData(objectKind, runtime string) (*inventory.Platform, error)
 		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}
 	return platformData, nil
+}
+
+func cloneConfig(invConf *inventory.Config) *inventory.Config {
+	invConfClone := invConf.Clone()
+	// We do not want to run discovery again for the already discovered assets
+	invConfClone.Discover = &inventory.Discovery{}
+	return invConfClone
 }
