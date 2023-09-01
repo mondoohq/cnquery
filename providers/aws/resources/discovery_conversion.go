@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -462,78 +463,48 @@ func mapContainerInstanceState(status *string) inventory.State {
 	}
 }
 
-func addConnectionInfoToECSContainerInstanceAsset(containerInstance *mqlAwsEcsInstance) *inventory.Asset {
-	a := &inventory.Asset{}
-
-	// if asset == nil {
-	// 	return nil
-	// }
-	// if strings.HasPrefix(asset.Id, "i-") {
-	// 	ec2i, err := NewEc2Discovery(ecs.mqlDiscovery, ecs.providerConfig, ecs.account)
-	// 	if err == nil {
-	// 		return ec2i.addConnectionInfoToEc2Asset(asset)
-	// 	}
-	// }
-	// asset.Connections = []*providers.Config{{
-	// 	Backend: providers.ProviderType_SSH, // fallback to ssh
-	// 	Options: map[string]string{
-	// 		"region": asset.Labels[RegionLabel],
-	// 	},
-	// }}
-	// if len(ecs.PassInLabels) > 0 {
-	// 	for k, v := range ecs.PassInLabels {
-	// 		asset.Labels[k] = v
-	// 	}
-	// }
-	return a
-}
-
 func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer) *inventory.Asset {
 	a := &inventory.Asset{}
-	// runtimeId := asset.Labels[RuntimeIdLabel]
-	// if runtimeId == "" {
-	// 	return nil
-	// }
-	// state := asset.Labels[StateLabel]
-	// containerArn := asset.Labels[ArnLabel]
-	// taskArn := asset.Labels[TaskDefinitionArnLabel]
-	// publicIp := asset.Labels[common.IPLabel]
-	// region := asset.Labels[RegionLabel]
 
-	// asset.PlatformIds = []string{containerid.MondooContainerID(runtimeId), awsecsid.MondooECSContainerID(containerArn)}
-	// asset.Platform = &platform.Platform{
-	// 	Kind:    providers.Kind_KIND_CONTAINER,
-	// 	Runtime: providers.RUNTIME_AWS_ECS,
-	// }
-	// asset.State = mapContainerState(state)
-	// taskId := ""
-	// if arn.IsARN(taskArn) {
-	// 	if parsed, err := arn.Parse(taskArn); err == nil {
-	// 		if taskIds := strings.Split(parsed.Resource, "/"); len(taskIds) > 1 {
-	// 			taskId = taskIds[len(taskIds)-1]
-	// 		}
-	// 	}
-	// }
+	runtimeId := container.RuntimeId.Data
+	if runtimeId == "" {
+		return nil
+	}
+	state := container.Status.Data
+	containerArn := container.Arn.Data
+	taskArn := container.TaskArn.Data
+	publicIp := container.GetPublicIp().Data
+	region := container.Region.Data
 
-	// if publicIp != "" {
-	// 	asset.Connections = []*providers.Config{{
-	// 		Backend: providers.ProviderType_SSH, // looking into ecs-exec for this, if we leave this out the scan assumes its local
-	// 		Host:    publicIp,
-	// 		Options: map[string]string{
-	// 			"region":      region,
-	// 			ContainerName: asset.Labels[ContainerName],
-	// 			TaskId:        taskId,
-	// 		},
-	// 	}}
-	// } else {
-	// 	log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
-	// }
+	a.Name = container.Name.Data
+	a.PlatformIds = []string{containerid.MondooContainerID(runtimeId), MondooECSContainerID(containerArn)}
+	a.Platform = &inventory.Platform{
+		Kind:    "container",
+		Runtime: "aws_ecs",
+	}
+	a.State = mapContainerState(state)
+	taskId := ""
+	if arn.IsARN(taskArn) {
+		if parsed, err := arn.Parse(taskArn); err == nil {
+			if taskIds := strings.Split(parsed.Resource, "/"); len(taskIds) > 1 {
+				taskId = taskIds[len(taskIds)-1]
+			}
+		}
+	}
 
-	// if len(ecs.PassInLabels) > 0 {
-	// 	for k, v := range ecs.PassInLabels {
-	// 		asset.Labels[k] = v
-	// 	}
-	// }
+	if publicIp != "" {
+		a.Connections = []*inventory.Config{{
+			Backend: "ssh",
+			Host:    publicIp,
+			Options: map[string]string{
+				"region":         region,
+				"container_name": container.Name.Data,
+				"task_id":        taskId,
+			},
+		}}
+	} else {
+		log.Warn().Str("asset", a.Name).Msg("no public ip address found")
+	}
 
 	return a
 }
@@ -556,4 +527,16 @@ func mapContainerState(state string) inventory.State {
 		log.Warn().Str("state", state).Msg("unknown container state")
 		return inventory.State_STATE_UNKNOWN
 	}
+}
+
+func MondooECSContainerID(containerArn string) string {
+	var account, region, id string
+	if arn.IsARN(containerArn) {
+		if p, err := arn.Parse(containerArn); err == nil {
+			account = p.AccountID
+			region = p.Region
+			id = p.Resource
+		}
+	}
+	return "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/" + account + "/regions/" + region + "/" + id
 }

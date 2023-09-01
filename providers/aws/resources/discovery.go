@@ -137,7 +137,23 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			a := images.Data[i].(*mqlAwsEcrImage)
 			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn.Profile()))
 		}
-	// case config.DiscoveryECS:
+	case config.DiscoveryECS:
+		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ecs := res.(*mqlAwsEcs)
+
+		containers := ecs.GetContainers()
+		if containers == nil {
+			return assetList, nil
+		}
+
+		for i := range containers.Data {
+			a := containers.Data[i].(*mqlAwsEcsContainer)
+			assetList = append(assetList, addConnectionInfoToECSContainerAsset(a))
+		}
 	// case config.DiscoveryECSContainersAPI:
 	// case config.DiscoveryECRImageAPI:
 	// case config.DiscoveryEC2InstanceAPI:
