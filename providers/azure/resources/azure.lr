@@ -109,6 +109,8 @@ azure.subscription.compute.vm @defaults("id name location ") {
   osDisk() azure.subscription.compute.disk
   // VM compute data disk
   dataDisks() []azure.subscription.compute.disk
+  // VM public IP addresses
+  publicIpAddresses() []azure.subscription.network.ipAddress
 }
 
 // Azure Disk Resource

@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/providers/azure/config"
 	"go.mondoo.com/cnquery/providers/azure/connection"
 	"go.mondoo.com/cnquery/providers/azure/resources"
 )
@@ -69,17 +70,31 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		})
 	}
 	config := &inventory.Config{
-		Type: "azure",
-		// TODO: add support for resources-as-assets
-		Discover:    &inventory.Discovery{Targets: []string{"auto"}},
+		Type:        "azure",
+		Discover:    parseDiscover(flags),
 		Credentials: creds,
 		Options:     opts,
 	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{config},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
+	var targets []string
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		targets = make([]string, 0, len(x.Array))
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			targets = append(targets, entry)
+		}
+	} else {
+		targets = []string{config.DiscoveryAuto}
+	}
+	return &inventory.Discovery{Targets: targets}
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -99,12 +114,17 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	// TODO: discovery of related assets and use them in the inventory below
+	// discovery assets for further scanning
+	inventory, err := s.discover(conn, conn.Conf)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -150,20 +170,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AzureConnection) error {
-	// TODO: do we have to change this if we're connecting to a VM in the future?
-	// it might have the same ID as other VMs in the same subscription
-	asset.Id = conn.PlatformId()
-	asset.PlatformIds = append(asset.PlatformIds, conn.PlatformId())
-	// TODO: we gotta move this elsewhere once we start connecting to other assets.
-	asset.Name = "Azure subscription " + conn.SubName()
-	asset.Platform = &inventory.Platform{
-		Name:    "azure",
-		Runtime: "azure",
-		Family:  []string{""},
-		Kind:    "api",
-		Title:   "Microsoft Azure",
-	}
-
+	// TODO: what do i put here
 	return nil
 }
 
@@ -216,4 +223,18 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 
 func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	return nil, errors.New("not yet implemented")
+}
+
+func (s *Service) discover(conn *connection.AzureConnection, conf *inventory.Config) (*inventory.Inventory, error) {
+	if conn.Conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime, conf)
 }

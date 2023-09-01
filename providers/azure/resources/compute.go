@@ -10,6 +10,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
@@ -313,4 +314,132 @@ func (a *mqlAzureSubscriptionComputeVm) id() (string, error) {
 
 func (a *mqlAzureSubscriptionComputeDisk) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionComputeVm) publicIpAddresses() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	token := conn.Token()
+	resourceId, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	subId := resourceId.SubscriptionID
+	props := a.GetProperties()
+	if props.Error != nil {
+		return nil, props.Error
+	}
+
+	propsDict := (props.Data).(map[string]interface{})
+	networkInterface, ok := propsDict["networkProfile"]
+	if !ok {
+		return nil, errors.New("cannot find network profile on vm, not retrieving ip addresses")
+	}
+	var networkInterfaces compute.NetworkProfile
+
+	data, err := json.Marshal(networkInterface)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(data), &networkInterfaces)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+
+	ctx := context.Background()
+	nicClient, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	ipClient, err := network.NewPublicIPAddressesClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, iface := range networkInterfaces.NetworkInterfaces {
+		resource, err := ParseResourceID(*iface.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := resource.Component("networkInterfaces")
+		if err != nil {
+			return nil, err
+		}
+		networkInterface, err := nicClient.Get(ctx, resource.ResourceGroup, name, &network.InterfacesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, config := range networkInterface.Interface.Properties.IPConfigurations {
+			ip := config.Properties.PublicIPAddress
+			if ip != nil {
+				publicIPID := *ip.ID
+				publicIpResource, err := ParseResourceID(publicIPID)
+				if err != nil {
+					return nil, errors.New("invalid network information for resource " + publicIPID)
+				}
+
+				ipAddrName, err := publicIpResource.Component("publicIPAddresses")
+				if err != nil {
+					return nil, errors.New("invalid network information for resource " + publicIPID)
+				}
+				ipAddress, err := ipClient.Get(ctx, publicIpResource.ResourceGroup, ipAddrName, &network.PublicIPAddressesClientGetOptions{})
+				if err != nil {
+					return nil, err
+				}
+				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.network.ipAddress",
+					map[string]*llx.RawData{
+						"id":        llx.StringData(convert.ToString(ipAddress.ID)),
+						"name":      llx.StringData(convert.ToString(ipAddress.Name)),
+						"location":  llx.StringData(convert.ToString(ipAddress.Location)),
+						"tags":      llx.MapData(convert.PtrMapStrToInterface(ipAddress.Tags), types.String),
+						"ipAddress": llx.StringData(convert.ToString(ipAddress.Properties.IPAddress)),
+						"type":      llx.StringData(convert.ToString(ipAddress.Type)),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlIpAddress)
+			}
+		}
+	}
+
+	return res, nil
+}
+
+func initAzureSubscriptionComputeVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure compute vm instance")
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.compute", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := res.(*mqlAzureSubscriptionCompute)
+	vms := computeSvc.GetVms()
+	if vms.Error != nil {
+		return nil, nil, vms.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range vms.Data {
+		vm := entry.(*mqlAzureSubscriptionComputeVm)
+		if vm.Id.Data == id {
+			return args, vm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure compute instance does not exist")
 }

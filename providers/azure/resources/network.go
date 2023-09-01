@@ -485,3 +485,41 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	}
 	return res
 }
+
+func initAzureSubscriptionNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure network security group")
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.network", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	network := res.(*mqlAzureSubscriptionNetwork)
+	secGrps := network.GetSecurityGroups()
+	if secGrps.Error != nil {
+		return nil, nil, secGrps.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range secGrps.Data {
+		secGrp := entry.(*mqlAzureSubscriptionNetworkSecurityGroup)
+		if secGrp.Id.Data == id {
+			return args, secGrp, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure network security group does not exist")
+}

@@ -490,3 +490,41 @@ func (a *mqlAzureSubscriptionKeyVaultSecret) versions() ([]interface{}, error) {
 
 	return res, nil
 }
+
+func initAzureSubscriptionKeyVaultVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure key vault")
+	}
+
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.keyVault", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	kv := res.(*mqlAzureSubscriptionKeyVault)
+	vaults := kv.GetVaults()
+	if vaults.Error != nil {
+		return nil, nil, vaults.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range vaults.Data {
+		vault := entry.(*mqlAzureSubscriptionKeyVaultVault)
+		if vault.Id.Data == id {
+			return args, vault, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure key vault does not exist")
+}

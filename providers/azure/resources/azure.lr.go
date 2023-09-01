@@ -39,7 +39,7 @@ func init() {
 			Create: createAzureSubscriptionCompute,
 		},
 		"azure.subscription.compute.vm": {
-			// to override args, implement: initAzureSubscriptionComputeVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionComputeVm,
 			Create: createAzureSubscriptionComputeVm,
 		},
 		"azure.subscription.compute.disk": {
@@ -63,7 +63,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkBastionHost,
 		},
 		"azure.subscription.network.securityGroup": {
-			// to override args, implement: initAzureSubscriptionNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionNetworkSecurityGroup,
 			Create: createAzureSubscriptionNetworkSecurityGroup,
 		},
 		"azure.subscription.network.securityrule": {
@@ -83,7 +83,7 @@ func init() {
 			Create: createAzureSubscriptionStorage,
 		},
 		"azure.subscription.storage.account": {
-			// to override args, implement: initAzureSubscriptionStorageAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionStorageAccount,
 			Create: createAzureSubscriptionStorageAccount,
 		},
 		"azure.subscription.storage.account.dataProtection": {
@@ -107,7 +107,7 @@ func init() {
 			Create: createAzureSubscriptionStorageAccountServicePropertiesLogging,
 		},
 		"azure.subscription.storage.account.container": {
-			// to override args, implement: initAzureSubscriptionStorageAccountContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionStorageAccountContainer,
 			Create: createAzureSubscriptionStorageAccountContainer,
 		},
 		"azure.subscription.web": {
@@ -131,7 +131,7 @@ func init() {
 			Create: createAzureSubscriptionSql,
 		},
 		"azure.subscription.sql.server": {
-			// to override args, implement: initAzureSubscriptionSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionSqlServer,
 			Create: createAzureSubscriptionSqlServer,
 		},
 		"azure.subscription.sql.server.vulnerabilityassessmentsettings": {
@@ -155,7 +155,7 @@ func init() {
 			Create: createAzureSubscriptionPostgreSql,
 		},
 		"azure.subscription.postgreSql.server": {
-			// to override args, implement: initAzureSubscriptionPostgreSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionPostgreSqlServer,
 			Create: createAzureSubscriptionPostgreSqlServer,
 		},
 		"azure.subscription.postgreSql.database": {
@@ -179,7 +179,7 @@ func init() {
 			Create: createAzureSubscriptionMySql,
 		},
 		"azure.subscription.mySql.server": {
-			// to override args, implement: initAzureSubscriptionMySqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionMySqlServer,
 			Create: createAzureSubscriptionMySqlServer,
 		},
 		"azure.subscription.mySql.database": {
@@ -195,7 +195,7 @@ func init() {
 			Create: createAzureSubscriptionMariaDb,
 		},
 		"azure.subscription.mariaDb.server": {
-			// to override args, implement: initAzureSubscriptionMariaDbServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionMariaDbServer,
 			Create: createAzureSubscriptionMariaDbServer,
 		},
 		"azure.subscription.mariaDb.database": {
@@ -215,7 +215,7 @@ func init() {
 			Create: createAzureSubscriptionKeyVault,
 		},
 		"azure.subscription.keyVault.vault": {
-			// to override args, implement: initAzureSubscriptionKeyVaultVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAzureSubscriptionKeyVaultVault,
 			Create: createAzureSubscriptionKeyVaultVault,
 		},
 		"azure.subscription.keyVault.key": {
@@ -478,6 +478,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.compute.vm.dataDisks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeVm).GetDataDisks()).ToDataRes(types.Array(types.Resource("azure.subscription.compute.disk")))
+	},
+	"azure.subscription.compute.vm.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeVm).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.network.ipAddress")))
 	},
 	"azure.subscription.compute.disk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeDisk).GetId()).ToDataRes(types.String)
@@ -1984,6 +1987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.compute.vm.dataDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeVm).DataDisks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.compute.vm.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeVm).PublicIpAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.compute.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4429,6 +4436,7 @@ type mqlAzureSubscriptionComputeVm struct {
 	Extensions plugin.TValue[[]interface{}]
 	OsDisk plugin.TValue[*mqlAzureSubscriptionComputeDisk]
 	DataDisks plugin.TValue[[]interface{}]
+	PublicIpAddresses plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionComputeVm creates a new instance of this resource
@@ -4527,6 +4535,22 @@ func (c *mqlAzureSubscriptionComputeVm) GetDataDisks() *plugin.TValue[[]interfac
 		}
 
 		return c.dataDisks()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeVm) GetPublicIpAddresses() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PublicIpAddresses, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.compute.vm", c.__id, "publicIpAddresses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.publicIpAddresses()
 	})
 }
 

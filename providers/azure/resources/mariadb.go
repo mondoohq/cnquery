@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -216,4 +217,41 @@ func (a *mqlAzureSubscriptionMariaDbServer) configuration() ([]interface{}, erro
 		}
 	}
 	return res, nil
+}
+
+func initAzureSubscriptionMariaDbServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure mariadb server")
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.mariaDb", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	mariadb := res.(*mqlAzureSubscriptionMariaDb)
+	servers := mariadb.GetServers()
+	if servers.Error != nil {
+		return nil, nil, servers.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range servers.Data {
+		vm := entry.(*mqlAzureSubscriptionMariaDbServer)
+		if vm.Id.Data == id {
+			return args, vm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure mariadb server does not exist")
 }

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -227,4 +228,41 @@ func (a *mqlAzureSubscriptionPostgreSqlServer) configuration() ([]interface{}, e
 	}
 
 	return res, nil
+}
+
+func initAzureSubscriptionPostgreSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["id"] = llx.StringData(ids.id)
+		}
+	}
+
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure postgresql server")
+	}
+	conn := runtime.Connection.(*connection.AzureConnection)
+	res, err := NewResource(runtime, "azure.subscription.postgreSql", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	postgreSql := res.(*mqlAzureSubscriptionPostgreSql)
+	servers := postgreSql.GetServers()
+	if servers.Error != nil {
+		return nil, nil, servers.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range servers.Data {
+		vm := entry.(*mqlAzureSubscriptionPostgreSqlServer)
+		if vm.Id.Data == id {
+			return args, vm, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure postgresql server does not exist")
 }
