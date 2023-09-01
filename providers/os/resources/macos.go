@@ -1,32 +1,27 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package os
+package resources
 
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/core/plist"
-	"go.mondoo.com/cnquery/resources/packs/os/macos"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/resources/macos"
+	"howett.net/plist"
 )
 
-func (m *mqlMacos) id() (string, error) {
-	return "macos", nil
-}
-
-func (m *mqlMacos) GetUserPreferences() (map[string]interface{}, error) {
-	osProvider, err := osProvider(m.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
+func (m *mqlMacos) userPreferences() (map[string]interface{}, error) {
+	conn := m.MqlRuntime.Connection.(shared.Connection)
 
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(osProvider).UserPreferences()
+	preferences, err := macos.NewPreferences(conn).UserPreferences()
 	if err != nil {
 		return nil, err
 	}
@@ -37,45 +32,35 @@ func (m *mqlMacos) GetUserPreferences() (map[string]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMacos) GetUserHostPreferences() (map[string]interface{}, error) {
-	osProvider, err := osProvider(m.MotorRuntime.Motor)
+func (m *mqlMacos) userHostPreferences() (map[string]interface{}, error) {
+	conn := m.MqlRuntime.Connection.(shared.Connection)
+
+	preferences, err := macos.NewPreferences(conn).UserHostPreferences()
 	if err != nil {
 		return nil, err
 	}
 
 	res := map[string]interface{}{}
-	preferences, err := macos.NewPreferences(osProvider).UserHostPreferences()
-	if err != nil {
-		return nil, err
-	}
-
 	for k := range preferences {
 		res[k] = preferences[k]
 	}
 	return res, nil
 }
 
-func (m *mqlMacos) GetGlobalAccountPolicies() (map[string]interface{}, error) {
-	osProvider, err := osProvider(m.MotorRuntime.Motor)
+func (m *mqlMacos) globalAccountPolicies() (map[string]interface{}, error) {
+	conn := m.MqlRuntime.Connection.(shared.Connection)
+
+	cmd, err := conn.RunCommand("pwpolicy -getaccountpolicies")
 	if err != nil {
 		return nil, err
 	}
 
-	cmd, err := osProvider.RunCommand("pwpolicy -getaccountpolicies")
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	return plist.Decode(bytes.NewReader(data))
-}
-
-func (m *mqlMacosTimemachine) id() (string, error) {
-	return "macos.timemachine", nil
+	return Decode(bytes.NewReader(data))
 }
 
 // GetPreferences returns the time machine preferences
@@ -86,13 +71,10 @@ func (m *mqlMacosTimemachine) id() (string, error) {
 // sudo permissions cannot access the file. Instead we need to call
 // defaults read /Library/Preferences/com.apple.TimeMachine.plist which has FDA
 // see https://developer.apple.com/forums/thread/108348
-func (m *mqlMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
-	osProvider, err := osProvider(m.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
+func (m *mqlMacosTimemachine) preferences() (map[string]interface{}, error) {
+	conn := m.MqlRuntime.Connection.(shared.Connection)
 
-	cmd, err := osProvider.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
+	cmd, err := conn.RunCommand("defaults read /Library/Preferences/com.apple.TimeMachine.plist")
 	if err != nil {
 		return nil, err
 	}
@@ -112,25 +94,18 @@ func (m *mqlMacosTimemachine) GetPreferences() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return plist.Decode(bytes.NewReader(buf.Bytes()))
-}
-
-func (m *mqlMacosSystemsetup) id() (string, error) {
-	return "macos.systemsetup", nil
+	return Decode(bytes.NewReader(buf.Bytes()))
 }
 
 func (m *mqlMacosSystemsetup) runCmd(command string) (string, error) {
-	osProvider, err := osProvider(m.MotorRuntime.Motor)
+	conn := m.MqlRuntime.Connection.(shared.Connection)
+
+	cmd, err := conn.RunCommand(command)
 	if err != nil {
 		return "", err
 	}
 
-	cmd, err := osProvider.RunCommand(command)
-	if err != nil {
-		return "", err
-	}
-
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return "", err
 	}
@@ -144,110 +119,128 @@ func (m *mqlMacosSystemsetup) runCmd(command string) (string, error) {
 	return string(data), nil
 }
 
-func (m *mqlMacosSystemsetup) GetDate() (string, error) {
+func (m *mqlMacosSystemsetup) date() (string, error) {
 	data, err := m.runCmd("systemsetup -getdate")
 	return macos.SystemSetupCmdOutput{}.ParseDate(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetTime() (string, error) {
+func (m *mqlMacosSystemsetup) time() (string, error) {
 	data, err := m.runCmd("systemsetup -gettime")
 	return macos.SystemSetupCmdOutput{}.ParseTime(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetTimeZone() (string, error) {
+func (m *mqlMacosSystemsetup) timeZone() (string, error) {
 	data, err := m.runCmd("systemsetup -gettimezone")
 	return macos.SystemSetupCmdOutput{}.ParseTimeZone(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetUsingNetworkTime() (string, error) {
+func (m *mqlMacosSystemsetup) usingNetworkTime() (string, error) {
 	data, err := m.runCmd("systemsetup -getusingnetworktime")
 	return macos.SystemSetupCmdOutput{}.ParseUsingNetworktTime(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetNetworkTimeServer() (string, error) {
+func (m *mqlMacosSystemsetup) networkTimeServer() (string, error) {
 	data, err := m.runCmd("systemsetup -getnetworktimeserver")
 	return macos.SystemSetupCmdOutput{}.ParseNetworkTimeServer(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetSleep() ([]interface{}, error) {
+func (m *mqlMacosSystemsetup) sleep() ([]interface{}, error) {
 	data, err := m.runCmd("systemsetup -getsleep")
-	return core.StrSliceToInterface(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
+	return convert.SliceAnyToInterface(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
 }
 
-func (m *mqlMacosSystemsetup) GetDisplaySleep() (string, error) {
+func (m *mqlMacosSystemsetup) displaySleep() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisplaysleep")
 	return macos.SystemSetupCmdOutput{}.ParseDisplaySleep(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetHarddiskSleep() (string, error) {
+func (m *mqlMacosSystemsetup) harddiskSleep() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisplaysleep")
 	return macos.SystemSetupCmdOutput{}.ParseHardDiskSleep(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetWakeOnModem() (string, error) {
+func (m *mqlMacosSystemsetup) wakeOnModem() (string, error) {
 	data, err := m.runCmd("systemsetup -getwakeonmodem")
 	return macos.SystemSetupCmdOutput{}.ParseWakeOnModem(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetWakeOnNetworkAccess() (string, error) {
+func (m *mqlMacosSystemsetup) wakeOnNetworkAccess() (string, error) {
 	data, err := m.runCmd("systemsetup -getwakeonnetworkaccess")
 	return macos.SystemSetupCmdOutput{}.ParseWakeOnNetwork(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetRestartPowerFailure() (string, error) {
+func (m *mqlMacosSystemsetup) restartPowerFailure() (string, error) {
 	data, err := m.runCmd("systemsetup -getrestartpowerfailure")
 	return macos.SystemSetupCmdOutput{}.ParseRestartPowerFailure(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetRestartFreeze() (string, error) {
+func (m *mqlMacosSystemsetup) restartFreeze() (string, error) {
 	data, err := m.runCmd("systemsetup -getrestartfreeze")
 	return macos.SystemSetupCmdOutput{}.ParseRestartFreeze(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetAllowPowerButtonToSleepComputer() (string, error) {
+func (m *mqlMacosSystemsetup) allowPowerButtonToSleepComputer() (string, error) {
 	data, err := m.runCmd("systemsetup -getallowpowerbuttontosleepcomputer")
 	return macos.SystemSetupCmdOutput{}.ParseAllowPowerButtonToSleep(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetRemoteLogin() (string, error) {
+func (m *mqlMacosSystemsetup) remoteLogin() (string, error) {
 	data, err := m.runCmd("systemsetup -getremotelogin")
 	return macos.SystemSetupCmdOutput{}.ParseRemoteLogin(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetRemoteAppleEvents() (string, error) {
+func (m *mqlMacosSystemsetup) remoteAppleEvents() (string, error) {
 	data, err := m.runCmd("systemsetup -getremoteappleevents")
 	return macos.SystemSetupCmdOutput{}.ParseRemoteAppleEvents(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetComputerName() (string, error) {
+func (m *mqlMacosSystemsetup) computerName() (string, error) {
 	data, err := m.runCmd("systemsetup -getcomputername")
 	return macos.SystemSetupCmdOutput{}.ParseComputerName(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetLocalSubnetName() (string, error) {
+func (m *mqlMacosSystemsetup) localSubnetName() (string, error) {
 	data, err := m.runCmd("systemsetup -getlocalsubnetname")
 	return macos.SystemSetupCmdOutput{}.ParseLocalSubnetname(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetStartupDisk() (string, error) {
+func (m *mqlMacosSystemsetup) startupDisk() (string, error) {
 	data, err := m.runCmd("systemsetup -getstartupdisk")
 	return data, err
 }
 
-func (m *mqlMacosSystemsetup) GetWaitForStartupAfterPowerFailure() (string, error) {
+func (m *mqlMacosSystemsetup) waitForStartupAfterPowerFailure() (string, error) {
 	data, err := m.runCmd("systemsetup -getwaitforstartupafterpowerfailure")
 	return macos.SystemSetupCmdOutput{}.ParseWaitForStartupAfterPowerFailure(data), err
 }
 
-func (m *mqlMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() (string, error) {
+func (m *mqlMacosSystemsetup) disableKeyboardWhenEnclosureLockIsEngaged() (string, error) {
 	data, err := m.runCmd("systemsetup -getdisablekeyboardwhenenclosurelockisengaged")
 	return macos.SystemSetupCmdOutput{}.ParseDisableKeyboardWhenEnclosureLockIsEngaged(data), err
 }
 
-func (m *mqlMacosSecurity) id() (string, error) {
-	return "macos.security", nil
-}
+func Decode(r io.ReadSeeker) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	decoder := plist.NewDecoder(r)
+	err := decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
 
-func (m *mqlMacosSecurity) GetAuthorizationDB() (map[string]interface{}, error) {
-	return nil, errors.New("the implementation is deprecated")
+	// NOTE: we need to do the extra conversion here to make sure we use supported
+	// values by our dict structure: string, float64, int64
+	// plist also uses uint64 heavily which we do not support
+	// TODO: we really do not want to use the poor-man's json conversion version
+	jsondata, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var dataJson map[string]interface{}
+	err = json.Unmarshal(jsondata, &dataJson)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataJson, nil
 }

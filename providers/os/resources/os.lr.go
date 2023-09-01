@@ -338,6 +338,22 @@ func init() {
 			Init: initPythonPackage,
 			Create: createPythonPackage,
 		},
+		"macos": {
+			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacos,
+		},
+		"macos.alf": {
+			Init: initMacosAlf,
+			Create: createMacosAlf,
+		},
+		"macos.timemachine": {
+			// to override args, implement: initMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosTimemachine,
+		},
+		"macos.systemsetup": {
+			// to override args, implement: initMacosSystemsetup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMacosSystemsetup,
+		},
 	}
 }
 
@@ -1488,6 +1504,111 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
+	},
+	"macos.userPreferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacos).GetUserPreferences()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"macos.userHostPreferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacos).GetUserHostPreferences()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"macos.globalAccountPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacos).GetGlobalAccountPolicies()).ToDataRes(types.Dict)
+	},
+	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetAllowDownloadSignedEnabled()).ToDataRes(types.Int)
+	},
+	"macos.alf.allowSignedEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetAllowSignedEnabled()).ToDataRes(types.Int)
+	},
+	"macos.alf.firewallUnload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetFirewallUnload()).ToDataRes(types.Int)
+	},
+	"macos.alf.globalState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetGlobalState()).ToDataRes(types.Int)
+	},
+	"macos.alf.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetLoggingEnabled()).ToDataRes(types.Int)
+	},
+	"macos.alf.loggingOption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetLoggingOption()).ToDataRes(types.Int)
+	},
+	"macos.alf.stealthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetStealthEnabled()).ToDataRes(types.Int)
+	},
+	"macos.alf.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetVersion()).ToDataRes(types.String)
+	},
+	"macos.alf.exceptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetExceptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"macos.alf.explicitAuths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetExplicitAuths()).ToDataRes(types.Array(types.String))
+	},
+	"macos.alf.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosAlf).GetApplications()).ToDataRes(types.Array(types.Dict))
+	},
+	"macos.timemachine.preferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosTimemachine).GetPreferences()).ToDataRes(types.Dict)
+	},
+	"macos.systemsetup.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetDate()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetTime()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.timeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetTimeZone()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.usingNetworkTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetUsingNetworkTime()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.networkTimeServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetNetworkTimeServer()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.sleep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetSleep()).ToDataRes(types.Array(types.String))
+	},
+	"macos.systemsetup.displaySleep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetDisplaySleep()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.harddiskSleep": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetHarddiskSleep()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.wakeOnModem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetWakeOnModem()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.wakeOnNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetWakeOnNetworkAccess()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.restartPowerFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetRestartPowerFailure()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.restartFreeze": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetRestartFreeze()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.allowPowerButtonToSleepComputer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetAllowPowerButtonToSleepComputer()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.remoteLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetRemoteLogin()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.remoteAppleEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetRemoteAppleEvents()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.computerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetComputerName()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.localSubnetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetLocalSubnetName()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.startupDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetStartupDisk()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.waitForStartupAfterPowerFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetWaitForStartupAfterPowerFailure()).ToDataRes(types.String)
+	},
+	"macos.systemsetup.disableKeyboardWhenEnclosureLockIsEngaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMacosSystemsetup).GetDisableKeyboardWhenEnclosureLockIsEngaged()).ToDataRes(types.String)
 	},
 }
 
@@ -3263,6 +3384,162 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"python.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Dependencies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMacos).__id, ok = v.Value.(string)
+			return
+		},
+	"macos.userPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacos).UserPreferences, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.userHostPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacos).UserHostPreferences, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.globalAccountPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacos).GlobalAccountPolicies, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.alf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMacosAlf).__id, ok = v.Value.(string)
+			return
+		},
+	"macos.alf.allowDownloadSignedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).AllowDownloadSignedEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.allowSignedEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).AllowSignedEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.firewallUnload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).FirewallUnload, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.globalState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).GlobalState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).LoggingEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.loggingOption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).LoggingOption, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.stealthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).StealthEnabled, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"macos.alf.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.alf.exceptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).Exceptions, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.alf.explicitAuths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).ExplicitAuths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.alf.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosAlf).Applications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.timemachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMacosTimemachine).__id, ok = v.Value.(string)
+			return
+		},
+	"macos.timemachine.preferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosTimemachine).Preferences, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMacosSystemsetup).__id, ok = v.Value.(string)
+			return
+		},
+	"macos.systemsetup.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).Date, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).Time, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.timeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).TimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.usingNetworkTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).UsingNetworkTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.networkTimeServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).NetworkTimeServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.sleep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).Sleep, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.displaySleep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).DisplaySleep, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.harddiskSleep": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).HarddiskSleep, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.wakeOnModem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).WakeOnModem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.wakeOnNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).WakeOnNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.restartPowerFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).RestartPowerFailure, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.restartFreeze": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).RestartFreeze, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.allowPowerButtonToSleepComputer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).AllowPowerButtonToSleepComputer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.remoteLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).RemoteLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.remoteAppleEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).RemoteAppleEvents, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.computerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).ComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.localSubnetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).LocalSubnetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.startupDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).StartupDisk, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.waitForStartupAfterPowerFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).WaitForStartupAfterPowerFailure, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"macos.systemsetup.disableKeyboardWhenEnclosureLockIsEngaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMacosSystemsetup).DisableKeyboardWhenEnclosureLockIsEngaged, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -9646,5 +9923,384 @@ func (c *mqlPythonPackage) GetDependencies() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.dependencies()
+	})
+}
+
+// mqlMacos for the macos resource
+type mqlMacos struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMacosInternal it will be used here
+	UserPreferences plugin.TValue[map[string]interface{}]
+	UserHostPreferences plugin.TValue[map[string]interface{}]
+	GlobalAccountPolicies plugin.TValue[interface{}]
+}
+
+// createMacos creates a new instance of this resource
+func createMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacos{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacos) MqlName() string {
+	return "macos"
+}
+
+func (c *mqlMacos) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacos) GetUserPreferences() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.UserPreferences, func() (map[string]interface{}, error) {
+		return c.userPreferences()
+	})
+}
+
+func (c *mqlMacos) GetUserHostPreferences() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.UserHostPreferences, func() (map[string]interface{}, error) {
+		return c.userHostPreferences()
+	})
+}
+
+func (c *mqlMacos) GetGlobalAccountPolicies() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.GlobalAccountPolicies, func() (interface{}, error) {
+		return c.globalAccountPolicies()
+	})
+}
+
+// mqlMacosAlf for the macos.alf resource
+type mqlMacosAlf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMacosAlfInternal it will be used here
+	AllowDownloadSignedEnabled plugin.TValue[int64]
+	AllowSignedEnabled plugin.TValue[int64]
+	FirewallUnload plugin.TValue[int64]
+	GlobalState plugin.TValue[int64]
+	LoggingEnabled plugin.TValue[int64]
+	LoggingOption plugin.TValue[int64]
+	StealthEnabled plugin.TValue[int64]
+	Version plugin.TValue[string]
+	Exceptions plugin.TValue[[]interface{}]
+	ExplicitAuths plugin.TValue[[]interface{}]
+	Applications plugin.TValue[[]interface{}]
+}
+
+// createMacosAlf creates a new instance of this resource
+func createMacosAlf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosAlf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.alf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosAlf) MqlName() string {
+	return "macos.alf"
+}
+
+func (c *mqlMacosAlf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosAlf) GetAllowDownloadSignedEnabled() *plugin.TValue[int64] {
+	return &c.AllowDownloadSignedEnabled
+}
+
+func (c *mqlMacosAlf) GetAllowSignedEnabled() *plugin.TValue[int64] {
+	return &c.AllowSignedEnabled
+}
+
+func (c *mqlMacosAlf) GetFirewallUnload() *plugin.TValue[int64] {
+	return &c.FirewallUnload
+}
+
+func (c *mqlMacosAlf) GetGlobalState() *plugin.TValue[int64] {
+	return &c.GlobalState
+}
+
+func (c *mqlMacosAlf) GetLoggingEnabled() *plugin.TValue[int64] {
+	return &c.LoggingEnabled
+}
+
+func (c *mqlMacosAlf) GetLoggingOption() *plugin.TValue[int64] {
+	return &c.LoggingOption
+}
+
+func (c *mqlMacosAlf) GetStealthEnabled() *plugin.TValue[int64] {
+	return &c.StealthEnabled
+}
+
+func (c *mqlMacosAlf) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMacosAlf) GetExceptions() *plugin.TValue[[]interface{}] {
+	return &c.Exceptions
+}
+
+func (c *mqlMacosAlf) GetExplicitAuths() *plugin.TValue[[]interface{}] {
+	return &c.ExplicitAuths
+}
+
+func (c *mqlMacosAlf) GetApplications() *plugin.TValue[[]interface{}] {
+	return &c.Applications
+}
+
+// mqlMacosTimemachine for the macos.timemachine resource
+type mqlMacosTimemachine struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMacosTimemachineInternal it will be used here
+	Preferences plugin.TValue[interface{}]
+}
+
+// createMacosTimemachine creates a new instance of this resource
+func createMacosTimemachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosTimemachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.timemachine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosTimemachine) MqlName() string {
+	return "macos.timemachine"
+}
+
+func (c *mqlMacosTimemachine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosTimemachine) GetPreferences() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Preferences, func() (interface{}, error) {
+		return c.preferences()
+	})
+}
+
+// mqlMacosSystemsetup for the macos.systemsetup resource
+type mqlMacosSystemsetup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMacosSystemsetupInternal it will be used here
+	Date plugin.TValue[string]
+	Time plugin.TValue[string]
+	TimeZone plugin.TValue[string]
+	UsingNetworkTime plugin.TValue[string]
+	NetworkTimeServer plugin.TValue[string]
+	Sleep plugin.TValue[[]interface{}]
+	DisplaySleep plugin.TValue[string]
+	HarddiskSleep plugin.TValue[string]
+	WakeOnModem plugin.TValue[string]
+	WakeOnNetworkAccess plugin.TValue[string]
+	RestartPowerFailure plugin.TValue[string]
+	RestartFreeze plugin.TValue[string]
+	AllowPowerButtonToSleepComputer plugin.TValue[string]
+	RemoteLogin plugin.TValue[string]
+	RemoteAppleEvents plugin.TValue[string]
+	ComputerName plugin.TValue[string]
+	LocalSubnetName plugin.TValue[string]
+	StartupDisk plugin.TValue[string]
+	WaitForStartupAfterPowerFailure plugin.TValue[string]
+	DisableKeyboardWhenEnclosureLockIsEngaged plugin.TValue[string]
+}
+
+// createMacosSystemsetup creates a new instance of this resource
+func createMacosSystemsetup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMacosSystemsetup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("macos.systemsetup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMacosSystemsetup) MqlName() string {
+	return "macos.systemsetup"
+}
+
+func (c *mqlMacosSystemsetup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMacosSystemsetup) GetDate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Date, func() (string, error) {
+		return c.date()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetTime() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Time, func() (string, error) {
+		return c.time()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetTimeZone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TimeZone, func() (string, error) {
+		return c.timeZone()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetUsingNetworkTime() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UsingNetworkTime, func() (string, error) {
+		return c.usingNetworkTime()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetNetworkTimeServer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NetworkTimeServer, func() (string, error) {
+		return c.networkTimeServer()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetSleep() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Sleep, func() ([]interface{}, error) {
+		return c.sleep()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetDisplaySleep() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DisplaySleep, func() (string, error) {
+		return c.displaySleep()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetHarddiskSleep() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HarddiskSleep, func() (string, error) {
+		return c.harddiskSleep()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetWakeOnModem() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WakeOnModem, func() (string, error) {
+		return c.wakeOnModem()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetWakeOnNetworkAccess() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WakeOnNetworkAccess, func() (string, error) {
+		return c.wakeOnNetworkAccess()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetRestartPowerFailure() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestartPowerFailure, func() (string, error) {
+		return c.restartPowerFailure()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetRestartFreeze() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RestartFreeze, func() (string, error) {
+		return c.restartFreeze()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetAllowPowerButtonToSleepComputer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AllowPowerButtonToSleepComputer, func() (string, error) {
+		return c.allowPowerButtonToSleepComputer()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetRemoteLogin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RemoteLogin, func() (string, error) {
+		return c.remoteLogin()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetRemoteAppleEvents() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RemoteAppleEvents, func() (string, error) {
+		return c.remoteAppleEvents()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetComputerName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ComputerName, func() (string, error) {
+		return c.computerName()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetLocalSubnetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LocalSubnetName, func() (string, error) {
+		return c.localSubnetName()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetStartupDisk() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StartupDisk, func() (string, error) {
+		return c.startupDisk()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetWaitForStartupAfterPowerFailure() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WaitForStartupAfterPowerFailure, func() (string, error) {
+		return c.waitForStartupAfterPowerFailure()
+	})
+}
+
+func (c *mqlMacosSystemsetup) GetDisableKeyboardWhenEnclosureLockIsEngaged() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DisableKeyboardWhenEnclosureLockIsEngaged, func() (string, error) {
+		return c.disableKeyboardWhenEnclosureLockIsEngaged()
 	})
 }

@@ -9,12 +9,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 func TestSystemSetup(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/systemsetup.toml")
+	mock, err := mock.New("./testdata/systemsetup.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "macos",
+			Version: "13.0",
+			Family:  []string{"macos"},
+		},
+	})
 	require.NoError(t, err)
 
 	so := SystemSetupCmdOutput{}
@@ -39,8 +46,8 @@ func TestSystemSetup(t *testing.T) {
 	assert.Equal(t, "No", so.ParseDisableKeyboardWhenEnclosureLockIsEngaged(mustRunCmd(mock, "systemsetup -getdisablekeyboardwhenenclosurelockisengaged")))
 }
 
-func mustRunCmd(t os_provider.OperatingSystemProvider, command string) string {
-	cmd, err := t.RunCommand(command)
+func mustRunCmd(c shared.Connection, command string) string {
+	cmd, err := c.RunCommand(command)
 	if err != nil {
 		panic(err)
 	}

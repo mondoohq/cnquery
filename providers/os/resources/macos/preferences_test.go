@@ -8,15 +8,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestPreferences(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/user_preferences.toml")
+	mock, err := mock.New("./testdata/user_preferences.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "macos",
+			Version: "13.0",
+			Family:  []string{"macos"},
+		},
+	})
 	require.NoError(t, err)
 
 	prefs := &Preferences{
-		provider: mock,
+		connection: mock,
 	}
 
 	preferences, err := prefs.UserHostPreferences()

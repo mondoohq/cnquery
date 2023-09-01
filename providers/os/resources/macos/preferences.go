@@ -7,11 +7,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"howett.net/plist"
 )
 
@@ -22,14 +20,14 @@ const (
 	userDomainPreferences        = "defaults export %s -"
 )
 
-func NewPreferences(p os.OperatingSystemProvider) *Preferences {
+func NewPreferences(c shared.Connection) *Preferences {
 	return &Preferences{
-		provider: p,
+		connection: c,
 	}
 }
 
 type Preferences struct {
-	provider os.OperatingSystemProvider
+	connection shared.Connection
 }
 
 func (p *Preferences) UserPreferences() (map[string]map[string]interface{}, error) {
@@ -41,7 +39,7 @@ func (p *Preferences) UserHostPreferences() (map[string]map[string]interface{}, 
 }
 
 func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[string]map[string]interface{}, error) {
-	c, err := p.provider.RunCommand(domainCmd)
+	c, err := p.connection.RunCommand(domainCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +54,7 @@ func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[
 	for i := range domains {
 		domain := domains[i]
 
-		c, err := p.provider.RunCommand(fmt.Sprintf(preferencesCmd, domain))
+		c, err := p.connection.RunCommand(fmt.Sprintf(preferencesCmd, domain))
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +71,7 @@ func (p *Preferences) preferences(domainCmd string, preferencesCmd string) (map[
 }
 
 func ParseDomains(r io.Reader) ([]string, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +88,7 @@ func ParsePreferences(input io.Reader) (map[string]interface{}, error) {
 	var r io.ReadSeeker
 	r, ok := input.(io.ReadSeeker)
 	if !ok {
-		data, err := ioutil.ReadAll(input)
+		data, err := io.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}
