@@ -86,7 +86,8 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		Assets: []*inventory.Asset{},
 	}}
 
-	invConfig := conn.InventoryConfig()
+	invConfig := conn.InventoryConfig().Clone()
+	invConfig.Discover = nil // we don't want to run discovery again for any other assets
 
 	res, err := runtime.CreateResource(runtime, "k8s", nil)
 	if err != nil {
@@ -118,7 +119,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				PlatformIds: []string{assetId},
 				Name:        conn.Name(),
 				Platform:    conn.Platform(),
-				Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+				Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 			})
 		}
 
@@ -266,7 +267,7 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 				Title: "Kubernetes Pod, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -301,7 +302,7 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 				Title: "Kubernetes Job, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -336,7 +337,7 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 				Title: "Kubernetes CronJob, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -371,7 +372,7 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 				Title: "Kubernetes StatefulSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -406,7 +407,7 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 				Title: "Kubernetes Deployment, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -441,7 +442,7 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 				Title: "Kubernetes ReplicaSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -476,7 +477,7 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 				Title: "Kubernetes DaemonSet, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -534,7 +535,7 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 				Title: "Kubernetes Ingress, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
@@ -578,7 +579,7 @@ func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clu
 				Title: "Kubernetes Namespace, Kubernetes Cluster",
 			},
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig}, // pass-in the parent connection config TODO: clone the config
+			Connections: []*inventory.Config{invConfig.Clone()}, // pass-in the parent connection config
 		})
 	}
 	return assetList, nil
