@@ -201,9 +201,7 @@ func TestResource_File_Permissions(t *testing.T) {
 		},
 	}
 
-	runtime := &plugin.Runtime{
-		Resources: map[string]plugin.Resource{},
-	}
+	runtime := &plugin.Runtime{}
 
 	for _, tc := range testCases {
 		if !tc.focus {
