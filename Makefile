@@ -68,6 +68,7 @@ define buildProvider
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
+	./lr docs yaml ${$@_HOME}/resources/${$@_NAME}.lr --docs-file ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
