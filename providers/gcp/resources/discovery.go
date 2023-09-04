@@ -6,9 +6,23 @@ package resources
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/gcp/config"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"golang.org/x/exp/slices"
+)
+
+const (
+	// Discovery flags
+	DiscoveryOrganization       = "organization"
+	DiscoveryFolders            = "folders"
+	DiscoveryInstances          = "instances"
+	DiscoveryProjects           = "projects"
+	DiscoveryComputeImages      = "compute-images"
+	DiscoveryComputeNetworks    = "compute-networks"
+	DiscoveryComputeSubnetworks = "compute-subnetworks"
+	DiscoveryComputeFirewalls   = "compute-firewalls"
+	DiscoveryGkeClusters        = "gke-clusters"
+	DiscoveryStorageBuckets     = "storage-buckets"
+	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 )
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
@@ -51,7 +65,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			in.Spec.Assets = append(in.Spec.Assets, list...)
 		}
 
-		if slices.Contains(conn.Conf.Discover.Targets, config.DiscoveryProjects) {
+		if slices.Contains(conn.Conf.Discover.Targets, DiscoveryProjects) {
 			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
 				PlatformIds: []string{
 					connection.NewProjectPlatformID(gcpProject.Id.Data),
@@ -73,7 +87,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization, target string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
 	switch target {
-	case config.DiscoveryProjects:
+	case DiscoveryProjects:
 		projects := gcpOrg.GetProjects()
 		if projects.Error != nil {
 			return nil, projects.Error
@@ -114,7 +128,7 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, target string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
 	switch target {
-	case config.DiscoveryInstances:
+	case DiscoveryInstances:
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -158,7 +172,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 			})
 		}
 
-	case config.DiscoveryComputeImages:
+	case DiscoveryComputeImages:
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -187,7 +201,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryComputeNetworks:
+	case DiscoveryComputeNetworks:
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -211,7 +225,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryComputeSubnetworks:
+	case DiscoveryComputeSubnetworks:
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -239,7 +253,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryComputeFirewalls:
+	case DiscoveryComputeFirewalls:
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -263,7 +277,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryGkeClusters:
+	case DiscoveryGkeClusters:
 		gke := gcpProject.GetGke()
 		if gke.Error != nil {
 			return nil, gke.Error
@@ -287,7 +301,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryStorageBuckets:
+	case DiscoveryStorageBuckets:
 		storage := gcpProject.GetStorage()
 		if storage.Error != nil {
 			return nil, storage.Error
@@ -311,7 +325,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
 			})
 		}
-	case config.DiscoveryBigQueryDatasets:
+	case DiscoveryBigQueryDatasets:
 		bq := gcpProject.GetBigquery()
 		if bq.Error != nil {
 			return nil, bq.Error
