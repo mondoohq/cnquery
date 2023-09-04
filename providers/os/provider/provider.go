@@ -290,7 +290,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
-		Resources:      map[string]plugin.Resource{},
 		Callback:       callback,
 		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,
@@ -320,7 +319,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 		}, nil
 	}
 
-	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
 	if !ok {
 		// Note: Since resources are internally always created, there are only very
 		// few cases where we arrive here:
@@ -363,7 +362,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 			continue
 		}
 
-		resource, ok := runtime.Resources[info.Name+"\x00"+info.Id]
+		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
 		if !ok {
 			resource, err = resources.CreateResource(runtime, info.Name, args)
 			if err != nil {
@@ -371,7 +370,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 				continue
 			}
 
-			runtime.Resources[info.Name+"\x00"+info.Id] = resource
+			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
 		} else {
 			if err := resources.SetAllData(resource, args); err != nil {
 				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())

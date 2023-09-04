@@ -1,5 +1,7 @@
 module go.mondoo.com/cnquery/providers/azure
 
+replace go.mondoo.com/cnquery => ../..
+
 go 1.20
 
 require (
@@ -30,7 +32,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20230831105556-e55e02454e1b
+	go.mondoo.com/cnquery v0.0.0-00010101000000-000000000000
 )
 
 require (

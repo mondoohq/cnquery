@@ -9,11 +9,12 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/syncx"
 )
 
 type Runtime struct {
 	Connection     Connection
-	Resources      map[string]Resource
+	Resources      syncx.Map[Resource]
 	Callback       ProviderCallback
 	HasRecording   bool
 	CreateResource CreateNamedResource
@@ -253,7 +254,7 @@ func PrimitiveArgsToRawDataArgs(pargs map[string]*llx.Primitive, runtime *Runtim
 		if typ := types.Type(v.Type); typ.IsResource() {
 			name := typ.ResourceName()
 			id := string(v.Value)
-			resource := runtime.Resources[name+"\x00"+id]
+			resource, _ := runtime.Resources.Get(name + "\x00" + id)
 			if resource != nil {
 				res[k] = llx.ResourceData(resource, name)
 				continue
