@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -531,11 +532,8 @@ func (p *Provider) binPath() string {
 
 func (p Providers) ForConnection(name string) *Provider {
 	for _, provider := range p {
-		for i := range provider.Connectors {
-			connector := provider.Connectors[i]
-			if connector.Name == name {
-				return provider
-			}
+		if slices.Contains(provider.ConnectionTypes, name) {
+			return provider
 		}
 	}
 

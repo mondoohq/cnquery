@@ -5,13 +5,15 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/provider"
 	"go.mondoo.com/cnquery/providers/gcp/resources"
 )
 
 var Config = plugin.Provider{
-	Name:    "gcp",
-	ID:      "go.mondoo.com/cnquery/providers/gcp",
-	Version: "9.0.0",
+	Name:            "gcp",
+	ID:              "go.mondoo.com/cnquery/providers/gcp",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gcp",

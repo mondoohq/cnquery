@@ -20,6 +20,8 @@ import (
 	"go.mondoo.com/cnquery/providers/oci/resources"
 )
 
+const ConnectionType = "oci"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32

@@ -19,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/providers/google-workspace/resources"
 )
 
+const ConnectionType = "google-workspace"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32

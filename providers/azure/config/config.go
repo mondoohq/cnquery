@@ -5,13 +5,15 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/azure/provider"
 	"go.mondoo.com/cnquery/providers/azure/resources"
 )
 
 var Config = plugin.Provider{
-	Name:    "azure",
-	ID:      "go.mondoo.com/cnquery/providers/azure",
-	Version: "9.0.0",
+	Name:            "azure",
+	ID:              "go.mondoo.com/cnquery/providers/azure",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "azure",

@@ -13,10 +13,11 @@ import (
 )
 
 type Provider struct {
-	Name       string
-	ID         string
-	Version    string
-	Connectors []Connector
+	Name            string
+	ID              string
+	Version         string
+	ConnectionTypes []string
+	Connectors      []Connector
 }
 
 type Connector struct {

@@ -3,12 +3,16 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/arista/provider"
+)
 
 var Config = plugin.Provider{
-	Name:    "arista",
-	ID:      "go.mondoo.com/cnquery/providers/arista",
-	Version: "9.0.0",
+	Name:            "arista",
+	ID:              "go.mondoo.com/cnquery/providers/arista",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:      "arista",

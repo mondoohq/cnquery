@@ -16,6 +16,12 @@ import (
 	"go.mondoo.com/cnquery/providers/terraform/resources"
 )
 
+const (
+	StateConnectionType = "state"
+	PlanConnectionType  = "plan"
+	HclConnectionType   = "hcl"
+)
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
@@ -121,20 +127,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case "hcl":
+	case HclConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewHclConnection(s.lastConnectionID, asset)
 		if err != nil {
 			return nil, err
 		}
 
-	case "state":
+	case StateConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewStateConnection(s.lastConnectionID, asset)
 		if err != nil {
 			return nil, err
 		}
-	case "plan":
+	case PlanConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewPlanConnection(s.lastConnectionID, asset)
 		if err != nil {

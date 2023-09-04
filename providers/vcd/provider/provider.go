@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/cnquery/providers/vcd/resources"
 )
 
+const ConnectionType = "vcd"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32

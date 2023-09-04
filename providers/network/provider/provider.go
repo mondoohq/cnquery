@@ -18,7 +18,10 @@ import (
 	"go.mondoo.com/cnquery/providers/network/resources/domain"
 )
 
-const defaultConnection uint32 = 1
+const (
+	defaultConnection uint32 = 1
+	ConnectionType           = "host"
+)
 
 // This is a small selection of common ports that are supported.
 // Outside of this range, users will have to specify ports explicitly.

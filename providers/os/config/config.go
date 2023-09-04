@@ -3,12 +3,29 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/os/provider"
+)
 
 var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/cnquery/providers/os",
 	Version: "9.0.0",
+	ConnectionTypes: []string{
+		provider.LocalConnectionType,
+		provider.SshConnectionType,
+		provider.MockConnectionType,
+		provider.TarConnectionType,
+		provider.DockerSnapshotConnectionType,
+		provider.VagrantConnectionType,
+		provider.DockerImageConnectionType,
+		provider.DockerContainerConnectionType,
+		provider.DockerRegistryConnectionType,
+		provider.ContainerRegistryConnectionType,
+		provider.RegistryImageConnectionType,
+		provider.FilesystemConnectionType,
+	},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "local",

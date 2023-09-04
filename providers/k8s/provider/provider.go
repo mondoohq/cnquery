@@ -19,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/resources"
 )
 
+const ConnectionType = "k8s"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32

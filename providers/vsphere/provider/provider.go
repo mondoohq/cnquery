@@ -19,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/providers/vsphere/resources"
 )
 
+const ConnectionType = "vsphere"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
