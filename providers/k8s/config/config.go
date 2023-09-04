@@ -5,13 +5,15 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/k8s/provider"
 	"go.mondoo.com/cnquery/providers/k8s/resources"
 )
 
 var Config = plugin.Provider{
-	Name:    "k8s",
-	ID:      "go.mondoo.com/cnquery/providers/k8s",
-	Version: "9.0.0",
+	Name:            "k8s",
+	ID:              "go.mondoo.com/cnquery/providers/k8s",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "k8s",

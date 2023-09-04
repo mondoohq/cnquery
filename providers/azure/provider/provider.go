@@ -17,7 +17,10 @@ import (
 	"go.mondoo.com/cnquery/providers/azure/resources"
 )
 
-const defaultConnection uint32 = 1
+const (
+	defaultConnection uint32 = 1
+	ConnectionType           = "azure"
+)
 
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime

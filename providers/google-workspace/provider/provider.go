@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -18,6 +20,8 @@ import (
 	"go.mondoo.com/cnquery/providers/google-workspace/connection"
 	"go.mondoo.com/cnquery/providers/google-workspace/resources"
 )
+
+const ConnectionType = "google-workspace"
 
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime

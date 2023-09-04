@@ -3,12 +3,16 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/oci/provider"
+)
 
 var Config = plugin.Provider{
-	Name:    "oci",
-	ID:      "go.mondoo.com/cnquery/providers/oci",
-	Version: "9.0.0",
+	Name:            "oci",
+	ID:              "go.mondoo.com/cnquery/providers/oci",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:      "oci",

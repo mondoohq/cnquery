@@ -3,18 +3,22 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/ipmi/provider"
+)
 
 var Config = plugin.Provider{
-	Name:    "ipmi",
-	ID:      "go.mondoo.com/cnquery/providers/ipmi",
-	Version: "9.0.0",
+	Name:            "ipmi",
+	ID:              "go.mondoo.com/cnquery/providers/ipmi",
+	Version:         "9.0.0",
+	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:      "ipmi",
 			Use:       "ipmi",
 			Short:     "Ipmi",
-			Discovery: []string{},
+			Discovery: []string{provider.ConnectionType},
 			Flags: []plugin.Flag{
 				{
 					Long:        "ask-pass",

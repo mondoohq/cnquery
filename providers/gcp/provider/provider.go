@@ -19,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/providers/gcp/resources"
 )
 
+const ConnectionType = "gcp"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32

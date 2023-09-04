@@ -16,7 +16,10 @@ import (
 	"go.mondoo.com/cnquery/providers/ms365/resources"
 )
 
-const defaultConnection uint32 = 1
+const (
+	defaultConnection uint32 = 1
+	ConnectionType           = "ms365"
+)
 
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
@@ -125,7 +128,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
-		Resources:      map[string]plugin.Resource{},
+		Resources:      syncx.Map[string]plugin.Resource{},
 		Callback:       callback,
 		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,

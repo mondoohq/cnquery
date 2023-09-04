@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -17,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/providers/equinix/connection"
 	"go.mondoo.com/cnquery/providers/equinix/resources"
 )
+
+const ConnectionType = "equinix"
 
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime

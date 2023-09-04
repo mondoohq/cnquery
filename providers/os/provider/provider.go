@@ -22,6 +22,21 @@ import (
 	"go.mondoo.com/cnquery/providers/os/resources/discovery/container_registry"
 )
 
+const (
+	LocalConnectionType             = "local"
+	SshConnectionType               = "ssh"
+	MockConnectionType              = "mock"
+	TarConnectionType               = "tar"
+	DockerSnapshotConnectionType    = "docker-snapshot"
+	VagrantConnectionType           = "vagrant"
+	DockerImageConnectionType       = "docker-image"
+	DockerContainerConnectionType   = "docker-container"
+	DockerRegistryConnectionType    = "docker-registry"
+	ContainerRegistryConnectionType = "container-registry"
+	RegistryImageConnectionType     = "registry-image"
+	FilesystemConnectionType        = "filesystem"
+)
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
@@ -218,27 +233,27 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case "local":
+	case LocalConnectionType:
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
 
-	case "ssh":
+	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
 
-	case "mock":
+	case MockConnectionType:
 		s.lastConnectionID++
 		conn, err = mock.New("", asset)
 
-	case "tar":
+	case TarConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
 
-	case "docker-snapshot":
+	case DockerSnapshotConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
 
-	case "vagrant":
+	case VagrantConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
@@ -251,23 +266,23 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-	case "docker-image":
+	case DockerImageConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerContainerImageConnection(s.lastConnectionID, conf, asset)
 
-	case "docker-container":
+	case DockerContainerConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
 
-	case "docker-registry", "container-registry":
+	case DockerRegistryConnectionType, ContainerRegistryConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
-	case "registry-image":
+	case RegistryImageConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
-	case "filesystem":
+	case FilesystemConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
 

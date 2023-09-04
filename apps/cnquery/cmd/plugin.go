@@ -119,6 +119,9 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
+		if err := runtime.DetectProvider(connectAsset); err != nil {
+			return err
+		}
 		err := runtime.Connect(&pp.ConnectReq{
 			Features: config.Features,
 			Asset:    connectAsset,

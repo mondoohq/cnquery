@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -16,6 +18,10 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/arista/connection"
 	"go.mondoo.com/cnquery/providers/arista/resources"
+)
+
+const (
+	ConnectionType = "arista"
 )
 
 type Service struct {

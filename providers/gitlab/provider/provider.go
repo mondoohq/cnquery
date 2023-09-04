@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/cnquery/providers/gitlab/resources"
 )
 
+const ConnectionType = "gitlab"
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
