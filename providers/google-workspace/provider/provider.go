@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
