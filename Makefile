@@ -66,11 +66,11 @@ define buildProvider
 	$(eval $@_DIST = "${$@_HOME}"/dist)
 	$(eval $@_DIST_BIN = "./dist/${$@_NAME}")
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
-	echo "--> [${$@_NAME}] generate CLI json"
-	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
 	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
+	echo "--> [${$@_NAME}] generate CLI json"
+	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
 	cd ${$@_HOME} && go build -o ${$@_DIST_BIN} ./main.go
 endef
