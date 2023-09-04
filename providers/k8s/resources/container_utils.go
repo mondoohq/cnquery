@@ -40,9 +40,7 @@ func ResolveUniqueContainerImagesFromStatus(cs []v1.ContainerStatus, ps []v1.Sec
 func ResolveContainerImageFromStatus(containerStatus v1.ContainerStatus) (string, string) {
 	image := containerStatus.Image
 	resolvedImage := containerStatus.ImageID
-	if strings.HasPrefix(resolvedImage, DockerPullablePrefix) {
-		resolvedImage = strings.TrimPrefix(resolvedImage, DockerPullablePrefix)
-	}
+	resolvedImage = strings.TrimPrefix(resolvedImage, DockerPullablePrefix)
 
 	// stopped pods may not include the resolved image
 	// pods with imagePullPolicy: Never do not have a proper ImageId value as it contains only the

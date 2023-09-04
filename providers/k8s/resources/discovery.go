@@ -616,7 +616,7 @@ func discoverContainerImages(runtime *plugin.Runtime, invConfig *inventory.Confi
 		assetList = append(assetList, &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type: "docker-image",
+					Type: "registry-image",
 					Host: i.resolvedImage,
 				},
 			},
