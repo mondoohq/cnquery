@@ -39,7 +39,6 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	s.lastConnectionID++
 	connID := s.lastConnectionID
 	runtime := &plugin.Runtime{
-		Resources:    map[string]plugin.Resource{},
 		Callback:     callback,
 		HasRecording: req.HasRecording,
 	}
@@ -90,7 +89,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 		}, nil
 	}
 
-	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
 	if !ok {
 		return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
 	}
@@ -114,7 +113,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 			continue
 		}
 
-		resource, ok := runtime.Resources[info.Name+"\x00"+info.Id]
+		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
 		if !ok {
 			resource, err = resources.CreateResource(runtime, info.Name, args)
 			if err != nil {
@@ -122,7 +121,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 				continue
 			}
 
-			runtime.Resources[info.Name+"\x00"+info.Id] = resource
+			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
 		}
 
 		for k, v := range args {

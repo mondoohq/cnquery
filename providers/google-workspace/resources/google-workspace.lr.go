@@ -90,10 +90,10 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 
 		if res != nil {
 			id := name+"\x00"+res.MqlID()
-			if x, ok := runtime.Resources[id]; ok {
+			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
-			runtime.Resources[id] = res
+			runtime.Resources.Set(id, res)
 			return res, nil
 		}
 
@@ -106,11 +106,11 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 	}
 
 	id := name+"\x00"+res.MqlID()
-	if x, ok := runtime.Resources[id]; ok {
+	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
 
-	runtime.Resources[id] = res
+	runtime.Resources.Set(id, res)
 	return res, nil
 }
 
@@ -129,11 +129,11 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 	}
 
 	id := name+"\x00"+res.MqlID()
-	if x, ok := runtime.Resources[id]; ok {
+	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
 
-	runtime.Resources[id] = res
+	runtime.Resources.Set(id, res)
 	return res, nil
 }
 
