@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/azure/config"
 	"go.mondoo.com/cnquery/providers/azure/connection"
 	"go.mondoo.com/cnquery/providers/azure/resources"
 )
@@ -93,7 +92,7 @@ func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
 			targets = append(targets, entry)
 		}
 	} else {
-		targets = []string{config.DiscoveryAuto}
+		targets = []string{resources.DiscoveryAuto}
 	}
 	return &inventory.Discovery{Targets: targets}
 }

@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/azure/config"
 	"go.mondoo.com/cnquery/providers/azure/connection"
 	"go.mondoo.com/cnquery/utils/stringx"
 
@@ -22,6 +21,21 @@ const (
 	SubscriptionLabel = "azure.mondoo.com/subscription"
 	RegionLabel       = "mondoo.com/region"
 	InstanceLabel     = "mondoo.com/instance"
+
+	DiscoveryAuto          = "auto"
+	DiscoveryAll           = "all"
+	DiscoverySubscriptions = "subscriptions"
+	DiscoveryInstances     = "instances"
+	// TODO: this probably needs some more work on the linking to its OS counterpart side
+	DiscoveryInstancesApi      = "instances-api"
+	DiscoverySqlServers        = "sql-servers"
+	DiscoveryPostgresServers   = "postgres-servers"
+	DiscoveryMySqlServers      = "mysql-servers"
+	DiscoveryMariaDbServers    = "mariadb-servers"
+	DiscoveryStorageAccounts   = "storage-accounts"
+	DiscoveryStorageContainers = "storage-containers"
+	DiscoveryKeyVaults         = "keyvaults-vaults"
+	DiscoverySecurityGroups    = "security-groups"
 )
 
 type azureObject struct {
@@ -73,76 +87,76 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, sub)}
 	}
 
-	if stringx.ContainsAnyOf(targets, config.DiscoverySubscriptions, config.DiscoveryAll, config.DiscoveryAuto) {
+	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions, DiscoveryAll, DiscoveryAuto) {
 		// we've already discovered those, simply add them as assets
 		for _, s := range subsWithConfigs {
 			assets = append(assets, subToAsset(s.sub, s.conf))
 		}
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryInstances, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryInstances, DiscoveryAll) {
 		vms, err := discoverInstances(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryInstancesApi, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryInstancesApi, DiscoveryAll) {
 		vms, err := discoverInstancesApi(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoverySqlServers, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoverySqlServers, DiscoveryAll) {
 		sqlServers, err := discoverSqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, sqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryMySqlServers, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryMySqlServers, DiscoveryAll) {
 		mySqlServers, err := discoverMySqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, mySqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryPostgresServers, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryPostgresServers, DiscoveryAll) {
 		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, postgresServers...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryMariaDbServers, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryMariaDbServers, DiscoveryAll) {
 		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, mariaDbServers...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryStorageAccounts, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryStorageAccounts, DiscoveryAll) {
 		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, accs...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryStorageContainers, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers, DiscoveryAll) {
 		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, containers...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoverySecurityGroups, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoverySecurityGroups, DiscoveryAll) {
 		secGrps, err := discoverSecurityGroups(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, secGrps...)
 	}
-	if stringx.ContainsAnyOf(targets, config.DiscoveryKeyVaults, config.DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, DiscoveryKeyVaults, DiscoveryAll) {
 		kvs, err := discoverVaults(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err

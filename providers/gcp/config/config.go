@@ -3,21 +3,9 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-
-const (
-	// Discovery flags
-	DiscoveryOrganization       = "organization"
-	DiscoveryFolders            = "folders"
-	DiscoveryInstances          = "instances"
-	DiscoveryProjects           = "projects"
-	DiscoveryComputeImages      = "compute-images"
-	DiscoveryComputeNetworks    = "compute-networks"
-	DiscoveryComputeSubnetworks = "compute-subnetworks"
-	DiscoveryComputeFirewalls   = "compute-firewalls"
-	DiscoveryGkeClusters        = "gke-clusters"
-	DiscoveryStorageBuckets     = "storage-buckets"
-	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/resources"
 )
 
 var Config = plugin.Provider{
@@ -30,17 +18,17 @@ var Config = plugin.Provider{
 			Use:   "gcp",
 			Short: "GCP Cloud",
 			Discovery: []string{
-				DiscoveryOrganization,
-				DiscoveryFolders,
-				DiscoveryInstances,
-				DiscoveryProjects,
-				DiscoveryComputeImages,
-				DiscoveryComputeNetworks,
-				DiscoveryComputeSubnetworks,
-				DiscoveryComputeFirewalls,
-				DiscoveryGkeClusters,
-				DiscoveryStorageBuckets,
-				DiscoveryBigQueryDatasets,
+				resources.DiscoveryOrganization,
+				resources.DiscoveryFolders,
+				resources.DiscoveryInstances,
+				resources.DiscoveryProjects,
+				resources.DiscoveryComputeImages,
+				resources.DiscoveryComputeNetworks,
+				resources.DiscoveryComputeSubnetworks,
+				resources.DiscoveryComputeFirewalls,
+				resources.DiscoveryGkeClusters,
+				resources.DiscoveryStorageBuckets,
+				resources.DiscoveryBigQueryDatasets,
 			},
 			Flags: []plugin.Flag{
 				{
