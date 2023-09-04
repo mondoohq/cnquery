@@ -402,8 +402,6 @@ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-go.mondoo.com/cnquery v0.0.0-20230831105556-e55e02454e1b h1:xs6LFjJUy3b3rsYEuB5kTb8PyICKqqUtZibdNwAbcaI=
-go.mondoo.com/cnquery v0.0.0-20230831105556-e55e02454e1b/go.mod h1:z8YoSdh1L5IWn+tmZeCJOlN4z6jy/BYRk7eB/NS8+Xo=
 go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f h1:l8N+cU5Ul8+NzC3DtyjrUqpzSDpPQDnGqvxpwMz7CMw=
 go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f/go.mod h1:3YKcqFrlPgaB4FZ4EoLgdmRtwMQdO7RoAkZYFn+F1eY=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
