@@ -117,7 +117,49 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	for i := range filteredAssets {
+	for _, asset := range filteredAssets {
+		// If the assets have platform IDs, then we have already connected to them via the
+		// current provider.
+		if len(asset.PlatformIds) > 0 {
+			continue
+		}
+
+		// Make sure the provider for the asset is present
+		if err := runtime.DetectProvider(asset); err != nil {
+			return err
+		}
+
+		err := runtime.Connect(&pp.ConnectReq{
+			Features: config.Features,
+			Asset:    asset,
+			Upstream: upstreamConfig,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO: filter unique assets by platform ID
+	uniqueAssets := []*inventory.Asset{}
+	platformIds := map[string]struct{}{}
+	for _, asset := range filteredAssets {
+		found := false
+		for _, platformId := range asset.PlatformIds {
+			if _, ok := platformIds[platformId]; ok {
+				found = true
+			}
+		}
+		if found {
+			continue
+		}
+
+		uniqueAssets = append(uniqueAssets, asset)
+		for _, platformId := range asset.PlatformIds {
+			platformIds[platformId] = struct{}{}
+		}
+	}
+
+	for i := range uniqueAssets {
 		connectAsset := filteredAssets[i]
 		if err := runtime.DetectProvider(connectAsset); err != nil {
 			return err

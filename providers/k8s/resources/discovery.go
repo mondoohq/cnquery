@@ -623,22 +623,6 @@ func discoverContainerImages(runtime *plugin.Runtime, invConfig *inventory.Confi
 		})
 	}
 
-	// Convert the container images to assets.
-	// assets := make(map[string]*inventory.Asset)
-	// for _, i := range runningImages {
-	// 	a, err := newPodImageAsset(i)
-	// 	if err != nil {
-	// 		log.Error().Err(err).Msg("failed to convert container image to asset")
-	// 		continue
-	// 	}
-
-	// 	// It is still possible to have unique images at this point. There might be
-	// 	// multiple image tags that actually point to the same digest. If we are scanning
-	// 	// a manifest, where there is no container status, we can only know that the 2 images
-	// 	// are identical after we resolve them with the container registry.
-	// 	assets[a.Labels["docker.io/digest"]] = a
-	// 	log.Debug().Str("name", a.Name).Str("image", a.Connections[0].Host).Msg("resolved pod")
-	// }
 	return assetList, nil
 }
 
