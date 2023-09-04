@@ -110,25 +110,3 @@ var Config = plugin.Provider{
 		},
 	},
 }
-
-// func Ms365ProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:     "ms365",
-// 		Aliases: []string{"microsoft365"},
-// 		Short:   docs.GetShort("ms365"),
-// 		Long:    docs.GetLong("ms365"),
-// 		Args:    cobra.ExactArgs(0),
-// 		PreRun:  preRun,
-// 		Run:     runFn,
-// 	}
-// 	commonCmdFlags(cmd)
-// 	cmd.Flags().String("tenant-id", "", "directory (tenant) ID of the service principal")
-// 	cmd.MarkFlagRequired("tenant-id")
-// 	cmd.Flags().String("client-id", "", "application (client) ID of the service principal")
-// 	cmd.MarkFlagRequired("client-id")
-// 	cmd.Flags().String("client-secret", "", "secret for application")
-// 	cmd.Flags().String("certificate-path", "", "Path (in PKCS #12/PFX or PEM format) to the authentication certificate")
-// 	cmd.Flags().String("certificate-secret", "", "passphrase for certificate file")
-// 	cmd.Flags().String("datareport", "", "set the MS365 datareport for the scan")
-// 	return cmd
-// }

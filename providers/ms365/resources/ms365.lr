@@ -1,27 +1,5 @@
-// Copyright (c) Mondoo, Inc.
-// SPDX-License-Identifier: BUSL-1.1
-
-import "../core/core.lr"
-
-option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
-
-alias msgraph.beta = microsoft
-alias msgraph.beta.user = microsoft.user
-alias msgraph.beta.group = microsoft.group
-alias msgraph.beta.domain = microsoft.domain
-alias msgraph.beta.application = microsoft.application
-alias msgraph.beta.serviceprincipal = microsoft.serviceprincipal
-alias msgraph.beta.organization = microsoft.organization
-alias msgraph.beta.domaindnsrecord = microsoft.domaindnsrecord
-alias msgraph.beta.security = microsoft.security
-alias msgraph.beta.security.securityscore = microsoft.security.securityscore
-alias msgraph.beta.policies = microsoft.policies
-alias msgraph.beta.rolemanagement = microsoft.rolemanagement
-alias msgraph.beta.rolemanagement.roledefinition = microsoft.rolemanagement.roledefinition
-alias msgraph.beta.rolemanagement.roleassignment = microsoft.rolemanagement.roleassignment
-alias msgraph.beta.devicemanagement = microsoft.devicemanagement
-alias msgraph.beta.devicemanagement.deviceconfiguration = microsoft.devicemanagement.deviceconfiguration
-alias msgraph.beta.devicemanagement.devicecompliancepolicy = microsoft.devicemanagement.devicecompliancepolicy
+option provider = "go.mondoo.com/cnquery/providers/ms365"
+option go_package = "go.mondoo.com/cnquery/providers/ms365/resources"
 
 // Microsoft
 microsoft {

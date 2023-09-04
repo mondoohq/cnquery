@@ -12,9 +12,8 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/azure/config"
-	"go.mondoo.com/cnquery/providers/azure/connection"
-	"go.mondoo.com/cnquery/providers/azure/resources"
+	"go.mondoo.com/cnquery/providers/ms365/connection"
+	"go.mondoo.com/cnquery/providers/ms365/resources"
 )
 
 const defaultConnection uint32 = 1
@@ -36,9 +35,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	tenantId := flags["tenant-id"]
 	clientId := flags["client-id"]
 	clientSecret := flags["client-secret"]
-	subscriptionId := flags["subscription"]
-	subscriptions := flags["subscriptions"]
-	subscriptionsToExclude := flags["subscriptions-exclude"]
 	certificatePath := flags["certificate-path"]
 	certificateSecret := flags["certificate-secret"]
 
@@ -47,15 +43,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	opts["tenant-id"] = string(tenantId.Value)
 	opts["client-id"] = string(clientId.Value)
-	if len(subscriptionId.Value) > 0 {
-		opts["subscriptions"] = string(subscriptionId.Value)
-	}
-	if len(subscriptions.Value) > 0 {
-		opts["subscriptions"] = string(subscriptions.Value)
-	}
-	if len(subscriptionsToExclude.Value) > 0 {
-		opts["subscriptions-exclude"] = string(subscriptionsToExclude.Value)
-	}
 
 	if len(clientSecret.Value) > 0 {
 		creds = append(creds, &vault.Credential{
@@ -70,31 +57,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		})
 	}
 	config := &inventory.Config{
-		Type:        "azure",
-		Discover:    parseDiscover(flags),
+		Type:        "ms365",
+		Discover:    &inventory.Discovery{Targets: []string{"auto"}},
 		Credentials: creds,
 		Options:     opts,
 	}
-
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{config},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
-}
-
-func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
-	var targets []string
-	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
-		targets = make([]string, 0, len(x.Array))
-		for i := range x.Array {
-			entry := string(x.Array[i].Value)
-			targets = append(targets, entry)
-		}
-	} else {
-		targets = []string{config.DiscoveryAuto}
-	}
-	return &inventory.Discovery{Targets: targets}
 }
 
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
@@ -120,6 +92,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
+	// TODO: discovery of related assets and use them in the inventory below
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
@@ -128,7 +101,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.AzureConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.Ms365Connection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
@@ -136,7 +109,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 	s.lastConnectionID++
-	conn, err := connection.NewAzureConnection(s.lastConnectionID, asset, conf)
+	conn, err := connection.NewMs365Connection(s.lastConnectionID, asset, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +135,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.AzureConnection) error {
-	// TODO: what do i put here
+func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connection) error {
+	asset.Id = conn.PlatformId()
+	asset.PlatformIds = append(asset.PlatformIds, conn.PlatformId())
+	asset.Platform = &inventory.Platform{
+		Name:    "ms365",
+		Runtime: "ms365",
+		Family:  []string{""},
+		Kind:    "api",
+		Title:   "Microsoft Azure",
+	}
+
 	return nil
 }
 
@@ -218,16 +200,36 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	return nil, errors.New("not yet implemented")
 }
 
-func (s *Service) discover(conn *connection.AzureConnection, conf *inventory.Config) (*inventory.Inventory, error) {
+func (s *Service) discover(conn *connection.Ms365Connection, conf *inventory.Config) (*inventory.Inventory, error) {
 	if conn.Conf.Discover == nil {
 		return nil, nil
 	}
 
-	runtime, ok := s.runtimes[conn.ID()]
+	_, ok := s.runtimes[conn.ID()]
 	if !ok {
 		// no connection found, this should never happen
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
 	}
 
-	return resources.Discover(runtime, conf)
+	identifier := conn.PlatformId()
+	tenantAsset := &inventory.Asset{
+		PlatformIds: []string{identifier},
+		Name:        "Microsoft 365 tenant " + conn.TenantId(),
+		Platform: &inventory.Platform{
+			Name:    "microsoft365",
+			Title:   "Microsoft 365",
+			Runtime: "ms-graph",
+			Kind:    "api",
+		},
+		Connections: []*inventory.Config{conf.Clone()}, // pass-in the current config
+		Labels: map[string]string{
+			"azure.com/tenant": conn.TenantId(),
+		},
+		State: inventory.State_STATE_ONLINE,
+	}
+	inventory := &inventory.Inventory{
+		Spec: &inventory.InventorySpec{Assets: []*inventory.Asset{tenantAsset}},
+	}
+
+	return inventory, nil
 }
