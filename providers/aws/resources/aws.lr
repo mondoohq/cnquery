@@ -629,7 +629,7 @@ private aws.ecs.instance {
   // Capacity Provider associated with the container instance
   capacityProvider string
   // If container instance is EC2 instance, this is the EC2 instance resource
-  // ec2Instance() aws.ec2.instance
+  ec2Instance() aws.ec2.instance
   // Region for the container instance
   region string
 }

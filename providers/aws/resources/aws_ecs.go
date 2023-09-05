@@ -81,9 +81,9 @@ func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
 	return containerInstances, nil
 }
 
-// func (a *mqlAwsEcsInstance) GetEc2Instance() ([]interface{}, error) {
-// 	return nil, nil
-// }
+func (a *mqlAwsEcsInstance) ec2Instance() (*mqlAwsEc2Instance, error) {
+	return nil, nil
+}
 
 func (a *mqlAwsEcs) clusters() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -244,8 +244,8 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), convert.ToString(ci.Ec2InstanceId))),
 						})
 					if err == nil && mqlInstanceResource != nil {
-						// mqlInstance := mqlInstanceResource.(AwsEc2Instance)
-						// args["ec2Instance"] = mqlInstance
+						mqlInstance := mqlInstanceResource.(*mqlAwsEc2Instance)
+						args["ec2Instance"] = llx.ResourceData(mqlInstance, mqlInstance.MqlName())
 					}
 				}
 

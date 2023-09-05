@@ -99,8 +99,10 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil {
-				assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn.Profile()))
+			if instance.GetSsm() != nil {
+				if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil && s == "Online" {
+					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn.Profile()))
+				}
 			}
 		}
 		res, err = NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
@@ -152,6 +154,18 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 		for i := range containers.Data {
 			a := containers.Data[i].(*mqlAwsEcsContainer)
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(a))
+		}
+		containerInst := ecs.GetContainerInstances()
+		if containerInst == nil {
+			return assetList, nil
+		}
+
+		for i := range containerInst.Data {
+			if a, ok := containerInst.Data[i].(*mqlAwsEc2Instance); ok {
+				assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId))
+			} else if b, ok := containerInst.Data[i].(*mqlAwsEcsInstance); ok {
+				assetList = append(assetList, addConnectionInfoToECSContainerInstanceAsset(b, accountId, conn))
+			}
 		}
 	// case connection.DiscoveryECSContainersAPI:
 	// case connection.DiscoveryECRImageAPI:

@@ -1203,6 +1203,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.instance.capacityProvider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetCapacityProvider()).ToDataRes(types.String)
 	},
+	"aws.ecs.instance.ec2Instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsInstance).GetEc2Instance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
 	"aws.ecs.instance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetRegion()).ToDataRes(types.String)
 	},
@@ -3592,6 +3595,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ecs.instance.capacityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsInstance).CapacityProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.instance.ec2Instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsInstance).Ec2Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9308,6 +9315,7 @@ type mqlAwsEcsInstance struct {
 	Id plugin.TValue[string]
 	Arn plugin.TValue[string]
 	CapacityProvider plugin.TValue[string]
+	Ec2Instance plugin.TValue[*mqlAwsEc2Instance]
 	Region plugin.TValue[string]
 }
 
@@ -9362,6 +9370,22 @@ func (c *mqlAwsEcsInstance) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsInstance) GetCapacityProvider() *plugin.TValue[string] {
 	return &c.CapacityProvider
+}
+
+func (c *mqlAwsEcsInstance) GetEc2Instance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Ec2Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.instance", c.__id, "ec2Instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.ec2Instance()
+	})
 }
 
 func (c *mqlAwsEcsInstance) GetRegion() *plugin.TValue[string] {

@@ -512,6 +512,24 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer) *invent
 	return a
 }
 
+func addConnectionInfoToECSContainerInstanceAsset(inst *mqlAwsEcsInstance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
+	m := mqlObject{
+		name: inst.Id.Data, labels: map[string]string{},
+		awsObject: awsObject{
+			account: accountId, region: inst.Region.Data, arn: inst.Arn.Data,
+			id: inst.Id.Data, service: "ecs", objectType: "instance",
+		},
+	}
+	a := MqlObjectToAsset(accountId, m, conn)
+	a.Connections = []*inventory.Config{{
+		Backend: "ssh", // fallback to ssh
+		Options: map[string]string{
+			"region": inst.Region.Data,
+		},
+	}}
+	return a
+}
+
 func mapContainerState(state string) inventory.State {
 	switch strings.ToLower(state) {
 	case "running":
