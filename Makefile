@@ -161,6 +161,7 @@ providers/build: providers/build/core \
 	providers/build/gcp \
 	providers/build/k8s \
 	providers/build/azure \
+	providers/build/ms365 \
 	providers/build/aws
 
 providers/build/core: providers/lr

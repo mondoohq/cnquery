@@ -128,7 +128,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
-		Resources:      syncx.Map[string]plugin.Resource{},
 		Callback:       callback,
 		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,
@@ -172,7 +171,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 		}, nil
 	}
 
-	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
 	if !ok {
 		// Note: Since resources are internally always created, there are only very
 		// few cases where we arrive here:
