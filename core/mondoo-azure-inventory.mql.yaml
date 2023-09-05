@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-asset-inventory-azure
     name: Azure Asset Inventory Pack
-    version: 1.0.1
+    version: 1.1.0
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -13,7 +13,7 @@ packs:
         The Azure Asset Inventory by Mondoo query pack retrieves information about Azure subscriptions for asset inventory.
     filters:
       asset.platform == "azure"
-      platform.kind == "api"
+      asset.kind == "api"
     queries:
       - uid: mondoo-asset-inventory-azure-subscription-id
         title: Retrieve Azure subscription ID
@@ -32,7 +32,7 @@ packs:
         docs:
           desc: |
             This query retrieves data for all Role definitions in the subscription
-        mql: azure.subscription.authorizationService.roleDefinitions
+        mql: azure.subscription.authorization.roleDefinitions
       - uid: mondoo-asset-inventory-azure-cloudDefender
         title: Retrieve data for all Azure CloudDefender
         docs:
