@@ -1,0 +1,1815 @@
+import "../../network/resources/network.lr"
+
+
+option provider = "go.mondoo.com/cnquery/providers/aws"
+option go_package = "go.mondoo.com/cnquery/providers/aws/resources"
+
+// AWS Resource
+aws @defaults("account.id") {
+  // List of `aws.vpc` objects representing all VPCs in the account across all enabled regions
+  vpcs() []aws.vpc
+  // List of all enabled regions in the account
+  regions() []string
+}
+
+// AWS Account
+aws.account @defaults("id") {
+  // Account ID
+  id string
+  // Account Aliases
+  aliases() []string
+  // Information about the associated organization if any
+  organization() aws.organization
+}
+
+// AWS Organization resource
+aws.organization @defaults("arn masterAccountEmail") {
+  // ARN of the organization
+  arn string
+  // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
+  featureSet string
+  // ID of the organization's master account
+  masterAccountId string
+  // Email owner of the organization's master account
+  masterAccountEmail string
+}
+
+// Amazon Virtual Private Cloud (VPC)
+private aws.vpc @defaults("arn isDefault") {
+  // ARN of the VPC
+  arn string
+  // ID of the VPC
+  id string
+  // State of the VPC (pending or available)
+  state string
+  // Whether the VPC is the default one
+  isDefault bool
+  // Region the VPC exists in
+  region string
+  // A list of flowlogs for the VPC
+  flowLogs() []aws.vpc.flowlog
+  // List of route tables for the VPC
+  routeTables() []aws.vpc.routetable
+  // Tags on the VPC
+  tags map[string]string
+}
+
+// Amazon Virtual Private Cloud (VPC) Route Table
+private aws.vpc.routetable @defaults("id") {
+  // Unique ID of the route table
+  id string
+  // A list of route descriptions
+  routes []dict
+}
+
+// Amazon Virtual Private Cloud (VPC) Flow Log
+private aws.vpc.flowlog @defaults("id region status") {
+  // Unique ID of the flow log
+  id string
+  // VPC the flow log exists in
+  vpc string
+  // Region the flow log exists in
+  region string
+  // Status of the flow log
+  status string
+  // Tags on the flow log
+  tags map[string]string
+}
+
+// AWS IAM Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
+aws.accessAnalyzer {
+  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account 
+  analyzers() []aws.accessanalyzer.analyzer
+}
+
+
+// AWS IAM Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
+private aws.accessanalyzer.analyzer @defaults("arn status") {
+  // ARN for the analyzer
+  arn string
+  // Name for the analyzer
+  name string
+  // Status of the analyzer
+  status string
+  // Type of analyzer (ACCOUNT or ORGANIZATION)
+  type string
+  // Tags for the Analyzer
+  tags map[string]string
+}
+
+// AWS Elastic File System (EFS) Service
+aws.efs {
+  // A list of filesystems managed by the service
+  filesystems() []aws.efs.filesystem
+}
+
+// AWS Elastic File System (EFS) Filesystem
+private aws.efs.filesystem @defaults("name arn") {
+  // Name of the filesystem
+  name string
+  // ID of the filesystem
+  id string
+  // ARN of the filesystem
+  arn string
+  // Denotes whether or not the filesystem id encrypted
+  encrypted bool
+  // KMS key used for encryption of the filesystem
+  kmsKey() aws.kms.key
+  // Backup policy for the filesystem
+  backupPolicy() dict
+  // Region in which the filesystem exists
+  region string
+  // Tags for the filesystem
+  tags map[string]string
+}
+
+// AWS Key Management Service (KMS)
+aws.kms {
+  // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
+  keys() []aws.kms.key
+}
+
+// AWS Key Management Service (KMS) Key
+private aws.kms.key @defaults("arn") {
+  // Unique identifier for the key
+  id string
+  // ARN of the key
+  arn string
+  // Region the key lives in
+  region string
+  // Bool that specifies whether key rotation is enabled
+  keyRotationEnabled() bool
+  // Metadata for the key
+  metadata() dict
+}
+
+
+// AWS service to create and manage permissions for users and groups
+aws.iam {
+  // List of IAM users in the account
+  users() []aws.iam.user
+  // List of IAM roles in the account
+  roles() []aws.iam.role
+  // List of IAM groups in the account
+  groups() []aws.iam.group
+  // List of IAM policies in the account
+  policies() []aws.iam.policy
+  // List of IAM policies attached to a user, role, or group
+  attachedPolicies() []aws.iam.policy
+  // IAM credential report
+  credentialReport() []aws.iam.usercredentialreportentry
+  // IAM account password policy for the account
+  accountPasswordPolicy() dict
+  // IAM account summary
+  accountSummary() map[string]int
+  // List of virtual mfs devices associated with the account
+  virtualMfaDevices() []aws.iam.virtualmfadevice
+  // List of server certificates stored in IAM
+  serverCertificates() []dict
+}
+
+// Entry in AWS IAM credential report
+private aws.iam.usercredentialreportentry @defaults("arn") {
+  init(properties map[string]string)
+  // properties on the IAM user credential report
+  properties map[string]string
+
+  // ARN for the credential report
+  arn() string
+
+  // Denotes if the access key is active
+  accessKey1Active() bool
+  // Time when key was last rotated
+  accessKey1LastRotated() time
+  // Time when key was last used
+  accessKey1LastUsedDate() time
+  // Region in which the key was last used
+  accessKey1LastUsedRegion() string
+  // Service that last used the key
+  accessKey1LastUsedService() string
+
+  // Denotes if the access key is active
+  accessKey2Active() bool
+  // Time when key was last rotated
+  accessKey2LastRotated() time
+  // Time when key was last used
+  accessKey2LastUsedDate() time
+  // Region in which the key was last used
+  accessKey2LastUsedRegion() string
+  // Service that last used the key
+  accessKey2LastUsedService() string
+
+  // Denotes if the cert is active
+  cert1Active() bool
+  // Time when the cert was last rotated
+  cert1LastRotated() time
+
+  // Denotes if the cert is active
+  cert2Active() bool
+  // Time when the cert was last rotated
+  cert2LastRotated() time
+
+  // Denotes if mfa is active in the account
+  mfaActive() bool
+  // Denotes if passwords are enabled 
+  passwordEnabled() bool
+  // Time when the password was last changed
+  passwordLastChanged() time
+  // Time when the password was last used
+  passwordLastUsed() time
+  // Next time when the password should rotate
+  passwordNextRotation() time
+
+  // IAM user
+  user() aws.iam.user
+  // Time when user was created
+  userCreationTime() time
+}
+
+// AWS IAM User
+private aws.iam.user @defaults("arn name") {
+  // ARN of the IAM user 
+  arn string
+  // ID of the IAM user
+  id string
+  // Name of the user
+  name string
+  // Time when user was created
+  createDate time
+  // Time when password was last used
+  passwordLastUsed time
+  // Tags for the IAM user
+  tags map[string]string
+  // List of inline policies attached to the user
+  policies() []string
+  // List of managed policies attached to the user
+  attachedPolicies() []aws.iam.policy
+  // List of group ARNs that the user belongs to
+  groups() []string
+  // List of access keys metadata associated with the user
+  accessKeys() []dict
+}
+
+// AWS IAM Policy
+private aws.iam.policy @defaults("arn name") {
+  // ARN of the policy
+  arn string
+  // ID of the policy
+  id string
+  // Name of the policy
+  name() string
+  // Description of the policy
+  description() string
+  // Denotes if the policy can be attached
+  isAttachable() bool
+  // The number of principal entities (users, groups, and roles) that the policy is attached to
+  attachmentCount() int
+  // Time when the policy was created
+  createDate() time
+  // Time when the policy was updated
+  updateDate() time
+  // Scope of the policy
+  scope() string
+  // List of versions for the policy
+  versions() []aws.iam.policyversion
+  // Default version of the policy
+  defaultVersion() aws.iam.policyversion
+
+  // List of users attached to the policy
+  attachedUsers() []aws.iam.user
+  // List of roles attached to the policy
+  attachedRoles() []aws.iam.role
+  // List of groups attached to the policy
+  attachedGroups() []aws.iam.group
+}
+
+// AWS IAM Policy Version
+private aws.iam.policyversion @defaults("arn isDefaultVersion") {
+  // ARN of the policy version
+  arn string
+  // Version ID
+  versionId string
+  // Denotes if this version is the policy default version
+  isDefaultVersion bool
+  // JSON statements for this policy version
+  document() dict
+  // Time when this policy version was created
+  createDate time
+}
+
+// AWS IAM Role
+private aws.iam.role @defaults("arn name") {
+  // ARN of the role
+  arn string
+  // ID of the role
+  id string
+  // Name of the role
+  name string
+  // Description of the role
+  description string
+  // Tags associated with the role
+  tags map[string]string
+  // Time when the role was created
+  createDate time
+}
+
+// AWS IAM Group
+private aws.iam.group @defaults("arn name") {
+  // ARN of the group
+  arn string
+  // ID of the group
+  id string
+  // Name of the group
+  name string
+  // Time when the group was created
+  createDate time
+  // List of usernames that belong to the group
+  usernames []string
+}
+
+// AWS IAM Virtual MFA Device
+private aws.iam.virtualmfadevice @defaults("serialNumber") {
+  // Serial number for the MFA device
+  serialNumber string
+  // Time when the MFA device was enabled
+  enableDate time
+  // User associated with the MFA device
+  user aws.iam.user
+}
+
+// AWS SageMaker
+aws.sagemaker {
+  // List of SageMaker endpoints
+  endpoints() []aws.sagemaker.endpoint
+  // List of SageMaker notebook instances
+  notebookInstances() []aws.sagemaker.notebookinstance
+}
+
+// AWS SageMaker Notebook Instance
+private aws.sagemaker.notebookinstance @defaults("arn name") {
+  // ARN for the notebook instance
+  arn string
+  // Name of the notebook instance
+  name string
+  // Details about the notebook 
+  details() aws.sagemaker.notebookinstance.details
+  // Region where the notebook instance exists
+  region string
+  // Tags for the notebook instance
+  tags map[string]string
+}
+
+// AWS SageMaker Notebook Instance Details
+private aws.sagemaker.notebookinstance.details @defaults("arn") {
+  // ARN for the notebook instance
+  arn string
+  // KMS key used to encrypt data
+  kmsKey() aws.kms.key
+  // Denotes whether SageMaker provides internet access to the instance
+  directInternetAccess string
+}
+
+// AWS SageMaker Endpoint
+private aws.sagemaker.endpoint @defaults("arn name") {
+  // ARN for the endpoint
+  arn string
+  // Name of the endpoint
+  name string
+  // Configuration information for the endpoint
+  config() dict
+  // Region where the endpoint exists
+  region string
+  // Tags for the endpoint
+  tags map[string]string
+}
+
+// AWS Simple Notification Service (SNS)
+aws.sns {
+  // List of SNS topics
+  topics() []aws.sns.topic
+}
+
+// AWS Simple Notification Service (SNS) Topic
+private aws.sns.topic @defaults("arn") {
+  // SNS topic ARN
+  arn string
+  // Region where the SNS topic exists
+  region string
+  // List of subscriptions associated with the topic ARN
+  subscriptions() []aws.sns.subscription 
+  // Attributes for the SNS topic, including KMS ID if any
+  attributes() dict
+  // Tags for the topic
+  tags() map[string]string
+}
+
+// AWS Simple Notification Service (SNS) Subscription
+private aws.sns.subscription @defaults("arn") {
+  // ARN of the subscription
+  arn string
+  // Protocol value for the subscription
+  protocol string
+}
+
+// AWS Elasticsearch Service
+aws.es {
+  // List of Elasticsearch domains
+  domains() []aws.es.domain
+}
+
+// Amazon Elasticsearch Service Domain
+private aws.es.domain @defaults("arn name") {
+  // ARN for the Elasticsearch domain
+  arn string
+  // Denotes whether encryption at rest is enabled
+  encryptionAtRestEnabled bool
+  // Denoted whether node to node encryption is enabled
+  nodeToNodeEncryptionEnabled bool
+  // Name of the Elasticsearch domain
+  name string
+  // Endpoint used to submit index and search requests
+  endpoint string
+  // Region where the domain exists
+  region string
+  // Tags for the domain
+  tags map[string]string
+}
+
+// AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
+aws.acm {
+  // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
+  certificates() []aws.acm.certificate
+}
+
+// AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
+private aws.acm.certificate @defaults("arn domainName") {
+  // ARN for the certificate
+  arn string
+  // Time before which the certificate is not valid
+  notBefore time
+  // Time after which the certificate is not valid
+  notAfter time
+  // Time at which the cert was requested
+  createdAt time
+  // FQDN for the certificate
+  domainName string
+  // Status of the certificate (issued, expired, revoked, etc.)
+  status string
+  // Name of entity associated with pubkey in cert
+  subject string
+  // Retrieves an Amazon-issued certificate and its certificate chain
+  certificate() network.certificate
+  // Tags associated with the certificate
+  tags map[string]string
+}
+
+// AWS Auto Scaling
+aws.autoscaling {
+  // List of autoscaling groups across the account
+  groups() []aws.autoscaling.group
+}
+
+// AWS Auto Scaling Group
+private aws.autoscaling.group @defaults("arn name") {
+  // ARN for the autoscaling group
+  arn string
+  // Name of the group
+  name string
+  // List of load balancer names associated with the group
+  loadBalancerNames []string
+  // Health check type used by the group (ELB or EC2)
+  healthCheckType string
+  // Tags for the asg
+  tags map[string]string
+}
+
+// AWS Elastic Load Balancing
+aws.elb {
+  // List of classic load balancers
+  classicLoadBalancers() []aws.elb.loadbalancer
+  // List of application, gateway, and network load balancers (elbv2)
+  loadBalancers() []aws.elb.loadbalancer
+}
+
+// AWS Elastic Load Balancing Load Balancer
+private aws.elb.loadbalancer @defaults("arn name") {
+  // ARN for the load balancer
+  arn string
+  // DNS name for the load balancer
+  dnsName string
+  // List of listener configurations for the load balancer
+  listenerDescriptions() []dict
+  // User specified name for the load balancer
+  name string
+  // Scheme for the lb (internet-facing vs. internal)
+  scheme string
+  // A list of attributes for the load balancer
+  attributes() []dict
+}
+
+// AWS CodeBuild for building and testing code
+aws.codebuild {
+  // List of build projects
+  projects() []aws.codebuild.project
+}
+
+// AWS CodeBuild Project
+private aws.codebuild.project @defaults("arn name") {
+  // ARN for the project
+  arn string
+  // Description of the project
+  description string
+  // Name of the project
+  name string
+  // Build environment information about the project
+  environment dict
+  // Region where the project exists
+  region string
+  // Source used for the build project
+  source dict
+  // Tags for the project
+  tags map[string]string
+}
+
+// Amazon GuardDuty for threat detection
+aws.guardduty {
+  // List of GuardDuty detectors
+  detectors() []aws.guardduty.detector
+}
+
+// Amazon GuardDuty Detector
+private aws.guardduty.detector @defaults("id region") {
+  // Unique ID for the detector
+  id string
+  // Region for the detector
+  region string
+  // Status of the detector (ENABLED or DISABLED)
+  status string
+  // Publishing frequency for the detector
+  findingPublishingFrequency string
+  // List of unarchivedFindings found by the detector
+  unarchivedFindings() []dict
+}
+
+// AWS Security Hub
+aws.securityhub {
+  // List of Security Hubs in the account
+  hubs() []aws.securityhub.hub
+}
+
+// AWS Security Hub
+private aws.securityhub.hub @defaults("arn") {
+  // ARN for the Security Hub
+  arn string
+  // Date and time when the hub was enabled
+  subscribedAt string
+}
+
+// AWS Secrets Manager
+aws.secretsmanager {
+  // List of secrets
+  secrets() []aws.secretsmanager.secret
+}
+
+// AWS Secrets Manager Secret
+private aws.secretsmanager.secret @defaults("arn name") {
+  // ARN for the secret
+  arn string
+  // Denotes whether rotation is enabled for the secret
+  rotationEnabled bool
+  // Name of the secret
+  name string
+  // Tags for the secret
+  tags map[string]string
+}
+
+
+// Amazon Elastic Container Service (ECS)
+aws.ecs {
+  // List of AWS ECS Clusters
+  clusters() []aws.ecs.cluster
+  // List of AWS ECS Containers
+  containers() []aws.ecs.container
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
+}
+
+// Amazon ECS Cluster
+private aws.ecs.cluster {
+  // ARN of the ECS cluster
+  arn string
+  // Name of the ECS cluster
+  name string
+  // Tags of the ECS cluster
+  tags map[string]string
+  // Count of running tasks in the cluster
+  runningTasksCount int
+  // Count of pending tasks in the cluster
+  pendingTasksCount int
+  // Count of container instances registered to the cluster
+  registeredContainerInstancesCount int
+  // Configuration for the cluster
+  configuration dict
+  // Status of the cluster
+  status string
+  // List of AWS ECS Task Definitions
+  tasks() []aws.ecs.task
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
+}
+
+// AWS ECS Container Instance
+private aws.ecs.instance {
+  // True if agent is connected to ECS
+  agentConnected bool
+  // Id for the container instance
+  id string
+  // ARN for the container instance
+  arn string
+  // Capacity Provider associated with the container instance
+  capacityProvider string
+  // If container instance is EC2 instance, this is the EC2 instance resource
+  // ec2Instance() aws.ec2.instance
+  // Region for the container instance
+  region string
+}
+
+// Amazon ECS Task
+private aws.ecs.task {
+  // ARN of the ECS Task
+  arn string
+  // Cluster associated with the ECS Task
+  clusterName string
+  // Connectivity status of the ECS Task
+  connectivity dict
+  // Last reported status for the ECS Task 
+  lastStatus string
+  // Platform Family assigned to the ECS Task
+  platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
+  // User-defined tags associated with the ECS Task
+  tags map[string]string
+  // List of AWS ECS Containers
+  containers []aws.ecs.container
+}
+
+// Amazon ECS Container 
+private aws.ecs.container {
+  // Name of the ECS Container + IP for unique identification
+  name string
+  // ARN of the ECS Container
+  arn string
+  // PublicIP for the ECS Container
+  publicIp string
+  // Image used for the ECS Container
+  image string
+  // Cluster associated with the ECS Container
+  clusterName string
+  // ARN for the task definition associated with the ECS Container
+  taskDefinitionArn string
+  // logDriver setting for the ECS Container
+  logDriver string
+  // Platform Family associated with the ECS Container
+  platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
+  // Status of the ECS Container
+  status string
+  // Region where the ECS Container is located
+  region string
+  // Command used to start the container
+  command []string
+  // ARN for the task used to create the container
+  taskArn string
+  // Runtime id for the container
+  runtimeId string
+  // Name of the ECS Container
+  containerName string
+}
+
+// Amazon EMR
+aws.emr {
+  // List of EMR clusters
+  clusters() []aws.emr.cluster
+}
+
+// Amazon EMR Cluster
+private aws.emr.cluster @defaults("arn") {
+  // ARN for the cluster
+  arn string
+  // Name of the cluster
+  name string
+  // An approximation of the cost of the cluster, represented in m1.small/hours
+  normalizedInstanceHours int
+  // ARN of outpost where cluster is launched
+  outpostArn string
+  // Details about the current status of the cluster
+  status dict
+  // List of master instances for the cluster
+  masterInstances() []dict
+  // EMR cluster ID
+  id string
+  // Tags for the cluster
+  tags map[string]string
+}
+
+// Amazon CloudWatch
+aws.cloudwatch {
+  // List of CloudWatch log groups
+  logGroups() []aws.cloudwatch.loggroup
+  // List of CloudWatch alarms
+  alarms() []aws.cloudwatch.metricsalarm
+  // List of CloudWatch metrics
+  metrics() []aws.cloudwatch.metric
+}
+
+// Amazon CloudWatch Metrics Alarm
+private aws.cloudwatch.metricsalarm @defaults("arn") {
+  // ARN for the metric alarm
+  arn string
+  // Metric name associated with the alarm
+  metricName string
+  // Metric namespace associated with the alarm
+  metricNamespace string
+  // Region where the alarm exists
+  region string
+  // List of alarm actions (SNS topic ARNs) associated with the alarm
+  actions []aws.sns.topic
+  // State of the alarm
+  state string
+  // Description of the reason for the state
+  stateReason string
+  // List of snsTopic ARNs to be triggered for insufficientDataActions
+  insufficientDataActions []aws.sns.topic
+  // List of snsTopic ARNs to be triggered for okActions
+  okActions []aws.sns.topic
+  // Name of the alarm
+  name string
+}
+
+// Amazon CloudWatch Metric
+private aws.cloudwatch.metric @defaults("name region") {
+  // Name of the metric
+  name string
+  // Namespace for the metric
+  namespace string
+  // Region where the metric exists
+  region string
+  // List of CloudWatch metric alarms for the metric
+  alarms() []aws.cloudwatch.metricsalarm
+  // Dimensions that apply to the metric
+  dimensions() []aws.cloudwatch.metricdimension
+  // Statistics for the metric
+  statistics() aws.cloudwatch.metricstatistics 
+}
+
+// Amazon CloudWatch Metric Dimension
+aws.cloudwatch.metricdimension @defaults("name value") {
+  // Name of the dimension
+  name string
+  // Value of the dimension
+  value string
+}
+
+// Amazon CloudWatch Metric Statistics
+aws.cloudwatch.metricstatistics @defaults("name region") {
+  init(namespace string, region string, name string)
+  // Namespace for the metric
+  namespace string
+  // Name for the metric
+  name string
+  // Region for the metrics
+  region string
+  // Label for the statistics
+  label string
+  // Datapoints for the statistic over the last 24 hours in hour intervals
+  datapoints []aws.cloudwatch.metric.datapoint
+}
+
+// Amazon CloudWatch Metric Datapoint
+private aws.cloudwatch.metric.datapoint @defaults("id") {
+  // Unique identifier for the datapoint
+  id string
+  // Timestamp of the metric datapoint
+  timestamp time
+  // Maximum value for the statistic
+  maximum float
+  // Minimum value for the statistic
+  minimum float
+  // Average value for the statistic
+  average float
+  // Sum value for the statistic
+  sum float
+  // Unit of the statistic
+  unit string
+}
+
+// Amazon CloudWatch Log Group
+private aws.cloudwatch.loggroup @defaults("arn") {
+  // ARN of the log group
+  arn string
+  // Name of the log group
+  name string
+  // List of metric filters associated with the log group
+  metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
+  // KMS key used for log encryption
+  kmsKey() aws.kms.key
+  // Region where the loggroup is stored
+  region string
+}
+
+// Amazon CloudWatch Log Group Metrics Filter
+private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
+  // Unique ID for the metric
+  id string
+  // Filter name associated with metric
+  filterName string
+  // Filter pattern associated with the metric
+  filterPattern string
+  // List of CloudWatch metrics
+  metrics []aws.cloudwatch.metric
+}
+
+// Amazon CloudFront
+aws.cloudfront {
+  // List of CloudFront distributions
+  distributions() []aws.cloudfront.distribution
+  // List of CloudFront functions
+  functions() []aws.cloudfront.function
+}
+
+// Amazon CloudFront Distribution
+private aws.cloudfront.distribution {
+  // ARN of the CloudFront distribution
+  arn string
+  // Status of the distribution
+  status string
+  // Domain Name of the distribution
+  domainName string
+  // Contains details on the origins of this distribution
+  origins []aws.cloudfront.distribution.origin
+  // Describes the default cache behavior for the distribution
+  defaultCacheBehavior dict
+  // All cache behaviors for the distribution
+  cacheBehaviors []dict
+}
+
+// Amazon CloudFront Distribution Origin
+private aws.cloudfront.distribution.origin {
+  // Domain name for the origin
+  domainName string
+  // Unique id for the origin
+  id string
+  // Number of times CloudFront attempts to connect
+  connectionAttempts int
+  // Number of seconds CloudFront wants when attempting a connection
+  connectionTimeout int
+  // Path that CloudFront appends to original domain
+  originPath string
+  // Account id where the origin exists
+  account string
+}
+
+// Amazon CloudFront Function
+private aws.cloudfront.function {
+  // Name of the CloudFront function
+  name string
+  // Status of the CloudFront function
+  status string
+  // ARN of the CloudFront function
+  arn string
+  // Date and time when function was last updated
+  lastModifiedTime time
+  // Date and time when function was created
+  createdTime time
+  // Stage that the function is in
+  stage string
+  // Comment to describe the function
+  comment string
+  // Runtime environment for the function
+  runtime string
+}
+
+// AWS CloudTrail
+aws.cloudtrail {
+  // List of CloudTrail trails associated with the account
+  trails() []aws.cloudtrail.trail
+}
+
+// AWS CloudTrail Trail
+private aws.cloudtrail.trail @defaults("arn") {
+  // ARN of the trail
+  arn string
+  // Name of the trail
+  name string
+  // KMS key used to encrypt the logs
+  kmsKey() aws.kms.key
+  // Specifies if trail exists only in one region or multiple
+  isMultiRegionTrail bool
+  // Whether trail is organization trail (logs events for mgmt and member accts of org)
+  isOrganizationTrail bool
+  // Whether log file validation is enabled
+  logFileValidationEnabled bool
+  // True if api calls from global services are included
+  includeGlobalServiceEvents bool
+  // S3 bucket where trail files are delivered
+  s3bucket() aws.s3.bucket
+  // ARN of the SNS topic that the trail uses to send notifications
+  snsTopicARN string
+  // JSON list of information about the trail
+  status() dict
+  // Log group to which trail files will be delivered
+  logGroup() aws.cloudwatch.loggroup
+  // Role for logs endpoint to assume when writing to log group
+  cloudWatchLogsRoleArn string
+  // Settings for the trail's configured event selectors
+  eventSelectors() []dict
+  // Region in which the trail was created (home region)
+  region string
+}
+
+// Amazon S3 Bucket Control
+aws.s3control {
+  // Account level public access configuration for S3
+  accountPublicAccessBlock() dict
+}
+
+// Amazon S3 Cloud Object Storage
+aws.s3 {
+  // List of S3 buckets across the account
+  buckets() []aws.s3.bucket
+}
+
+// Amazon S3 Bucket
+private aws.s3.bucket @defaults("arn") {
+  // ARN of the bucket
+  arn string
+  // Name of the bucket
+  name string
+  // Policy associated with the bucket
+  policy() aws.s3.bucket.policy
+  // Tags for the bucket
+  tags() map[string]string
+  // List of access control grants associated with the bucket
+  acl() []aws.s3.bucket.grant
+  // Owner for the bucket
+  owner() map[string]string
+  // Denotes if bucket is public
+  public() bool
+  // List of cors information for the bucket
+  cors() []aws.s3.bucket.corsrule
+  // Location of the bucket
+  location() string
+  // Versioning state and mfa delete status of bucket
+  versioning() map[string]string
+  // Logging status and user perms for bucket logging status
+  logging() map[string]string
+  // Website configuration for a bucket
+  staticWebsiteHosting() map[string]string
+  // Denotes whether bucket is locked by default
+  defaultLock() string
+  // Bucket cross-region replication configuration
+  replication() dict
+  // Bucket encryption configuration
+  encryption() dict
+  // Public access block configuration for the bucket
+  publicAccessBlock() dict
+  // False if the bucket no longer exists (stale reference)
+  exists bool
+}
+
+// Amazon S3 Bucket Grant
+private aws.s3.bucket.grant @defaults("name permission") {
+  // ID of the bucket grant
+  id string
+  // Name for the bucket grant
+  name string
+  // Permission associated with the grant
+  permission string
+  // Grantee associated with the grant
+  grantee map[string]string
+}
+
+// Amazon S3 Bucket CORS Rule
+private aws.s3.bucket.corsrule @defaults("name") {
+  // Name of the rule
+  name string
+  // List of allowed headers
+  allowedHeaders []string
+  // List of allowed methods (GET, POST, PUT, etc.)
+  allowedMethods []string
+  // List of origins from which the bucket can be accessed
+  allowedOrigins []string
+  // List of exposed response headers  
+  exposeHeaders []string
+  // Time in seconds that browser caches preflight response
+  maxAgeSeconds int
+}
+
+// Amazon S3 Bucket Policy
+private aws.s3.bucket.policy @defaults("name version") {
+  // Name for the policy
+  name string
+  // Document for the policy
+  document string
+  // Version of the policy
+  version() string
+  // Unique ID for the policy
+  id string
+  // List of statements for the policy
+  statements() []dict
+}
+
+
+// AWS Application Autoscaling
+aws.applicationAutoscaling @defaults("namespace") {
+  init(namespace string)
+  // Service namespace to query for application autoscaling
+  namespace string
+  // List of scalable targets belonging to the service namespace
+  scalableTargets() []aws.applicationautoscaling.target
+}
+
+// AWS Application Autoscaling Target
+private aws.applicationautoscaling.target @defaults("arn") {
+  // Namespace for the target
+  namespace string
+  // ARN of the autoscaling target
+  arn string
+  // Scalable dimension for the target
+  scalableDimension string
+  // Min capacity set for the autoscaling
+  minCapacity int
+  // Max capacity set for the autoscaling
+  maxCapacity int 
+  // suspendedState for the autoscaling target
+  suspendedState dict
+}
+
+// AWS Backup
+aws.backup {
+  // List of vaults for the service
+  vaults() []aws.backup.vault
+}
+
+// AWS Backup Vault
+private aws.backup.vault @defaults("arn") {
+  // ARN of the vault
+  arn string
+  // Name of the vault
+  name string
+  // List of recovery points stored in the backup vault
+  recoveryPoints() []aws.backup.vaultRecoveryPoint
+}
+
+// AWS Backup Vault Recovery Point
+private aws.backup.vaultRecoveryPoint @defaults("arn") {
+  // ARN of the recovery point
+  arn string
+  // Resource type for the recovery point, e.g. "EFS" or "DynamoDB"
+  resourceType string
+  // Information about who created the recovery point
+  createdBy dict
+  // ARN of the IAM role used to create the recovery point
+  iamRoleArn string
+  // Status of the recovery point
+  status string
+  // Date the recovery point was created
+  creationDate time
+  // Date the recovery point completed
+  completionDate time
+  // ARN of the key used to encrypt the recovery point
+  encryptionKeyArn string
+  // True if the recovery point is encrypted
+  isEncrypted bool
+}
+
+// Amazon DynamoDB
+aws.dynamodb {
+  // List of backups for DynamoDB
+  backups() []dict
+  // List of global tables for DynamoDB
+  globalTables() []aws.dynamodb.globaltable
+  // List of tables for DynamoDB
+  tables() []aws.dynamodb.table
+  // List of DynamoDB settings across all regions
+  limits() []aws.dynamodb.limit
+}
+
+// Amazon DynamoDB Limits
+private aws.dynamodb.limit @defaults("arn") {
+  // ARN representing the account + region where the limit applies 
+  arn string
+  // Region where the limits apply
+  region string
+  // Account max read limit
+  accountMaxRead int
+  // Account max write limit
+  accountMaxWrite int
+  // Table max read limit
+  tableMaxRead int
+  // Table max write limit
+  tableMaxWrite int
+}
+
+// Amazon DynamoDB Global Table
+private aws.dynamodb.globaltable @defaults("arn") {
+  // ARN for the global table
+  arn string
+  // Table name
+  name string
+  // List of replica settings for the table
+  replicaSettings() []dict
+}
+
+// Amazon DynamoDB Table
+private aws.dynamodb.table @defaults("arn") {
+  // ARN for the table
+  arn string
+  // Table name
+  name string
+  // Region where the table exists
+  region string
+  // Backups for the table
+  backups() []dict
+  // Description of server side encryption for the table
+  sseDescription dict
+  // Provisioned throughput settings for the table
+  provisionedThroughput dict
+  // Continuous backups and point in time recovery settings for the table
+  continuousBackups() dict
+  // Tags for the table
+  tags() map[string]string
+}
+
+// Amazon Relational Database Service (RDS)
+aws.rds {
+  // List of database instances
+  dbInstances() []aws.rds.dbinstance
+  // List of RDS database clusters
+  dbClusters() []aws.rds.dbcluster
+}
+
+// Amazon RDS Database Cluster
+private aws.rds.dbcluster @defaults("arn") {
+  // ARN for the database cluster
+  arn string
+  // Region where the database cluster exists
+  region string
+  // Identifier for the database cluster
+  id string
+  // List of database instances that belong to the cluster
+  members []aws.rds.dbinstance
+  // List of snapshots for the cluster
+  snapshots() []aws.rds.snapshot
+  // Tags for the database cluster
+  tags map[string]string
+}
+
+// Amazon RDS Snapshot
+private aws.rds.snapshot @defaults("arn") {
+  // ARN of the snapshot
+  arn string
+  // ID of the snapshot
+  id string
+  // Attribute values that describe permissions to restore the snapshot
+  attributes() []dict
+  // Type of snapshot (manual, automated)
+  type string
+  // Denotes whether or not snapshot is encrypted
+  encrypted bool
+  // Region where the snapshot exists
+  region string
+  // True if snapshot is for cluster
+  isClusterSnapshot bool
+  // Tags for the snapshot
+  tags map[string]string
+}
+
+// Amazon RDS Database Instance
+private aws.rds.dbinstance @defaults("arn") {
+  // ARN for the database instance
+  arn string
+  // Name of the database instance
+  name string
+  // Number of days for which automated snapshots are retained
+  backupRetentionPeriod int
+  // List of snapshots for the database instance
+  snapshots() []aws.rds.snapshot
+  // Denotes whether the instance is encrypted
+  storageEncrypted bool
+  // Region where the instance exists
+  region string
+  // Denotes whether or not the instance is publicly accessible
+  publiclyAccessible bool
+  // List of log types the instance is configured to export to cloudwatch logs
+  enabledCloudwatchLogsExports []string
+  // Indicates if deletion protection is enabled
+  deletionProtection bool
+  // Specifies whether the instance is a multi az deployment
+  multiAZ bool
+  // Identifier for the database instance
+  id string
+  // ARN of the CloudWatch log stream that receives the enhanced monitoring metrics data
+  enhancedMonitoringResourceArn string
+  // Tags for the database instance
+  tags map[string]string
+  // Name of the compute and memory capacity class of the DB instance
+  dbInstanceClass string
+  // User-supplied unique key that identifies a DB instance
+  dbInstanceIdentifier string
+  // Name of the database engine for this DB instance
+  engine string
+  // List of VPC security group elements that the DB instance belongs to
+  securityGroups []aws.ec2.securitygroup
+  // Current state of this database
+  status string
+}
+
+
+// Amazon ElastiCache
+aws.elasticache {
+    // Deprecated. Use `cacheClusters` instead.
+  clusters() []dict
+  // List of clusters
+  cacheClusters() []aws.elasticache.cluster
+}
+
+// Amazon ElastiCache Cluster
+private aws.elasticache.cluster @defaults("arn") {
+  // ARN for the cluster
+  arn string
+  // Denotes whether or not the cluster has at rest encryption enabled
+  atRestEncryptionEnabled bool
+  // Denotes whether Redis authentication tokens, or passwords, enable Redis to require a password before allowing clients to run commands
+  authTokenEnabled bool
+  // Date and time auth token was last modified
+  authTokenLastModifiedDate time 
+  // Denotes whether cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
+  autoMinorVersionUpgrade bool
+  // The date and time when the cluster was created.
+  cacheClusterCreateTime time 
+  // The user-supplied identifier of the cluster. This identifier is a unique key that identifies a cluster. 
+  cacheClusterId string 
+  // The current state of the cluster, one of the following values: available , creating , deleted , deleting , incompatible-network , modifying , rebooting cluster nodes , restore-failed , or snapshotting
+  cacheClusterStatus string
+  // The name of the compute and memory capacity node type for the cluster.
+  cacheNodeType string
+  // A list of cache nodes that are members of the cluster.
+  cacheNodes []string
+  // A list of cache security group elements, composed of name and status sub-elements.
+  cacheSecurityGroups []string
+  // The name of the cache subnet group associated with the cluster.
+  cacheSubnetGroupName string
+  // The URL of the web page where you can download the latest ElastiCache client library.
+  clientDownloadLandingPage string 
+  // The node type for the nodes in the cluster
+  nodeType string
+  // The name of the cache engine (memcached or redis ) to be used for this cluster.
+  engine string
+  // The version of the cache engine that is used in this cluster.
+  engineVersion string 
+  // The network type associated with the cluster, either ipv4 or ipv6
+  ipDiscovery string
+  // The log delivery configurations being modified
+  logDeliveryConfigurations []dict
+  // The supported network connection type for the cluster. Must be either ipv4 | ipv6 | dual_stack.
+  networkType string
+  // Describes a notification topic and its status.
+  notificationConfiguration string
+  // The number of cache nodes in the cluster.
+  numCacheNodes int 
+  // The name of the Availability Zone in which the cluster is located or "Multiple" if the cache nodes are located in different Availability Zones.
+  preferredAvailabilityZone string
+  // Region where the cluster exists
+  region string
+  // A list of VPC Security Groups associated with the cluster.
+  securityGroups []aws.ec2.securitygroup
+  // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them.
+  snapshotRetentionLimit int 
+  // A flag that enables in-transit encryption when set to true
+  transitEncryptionEnabled bool
+  // A setting that allows you to migrate your clients to use in-transit encryption, with no downtime.
+  transitEncryptionMode string
+}
+
+// Amazon Redshift
+aws.redshift {
+  // List of clusters
+  clusters() []aws.redshift.cluster
+}
+
+// Amazon Redshift Cluster
+private aws.redshift.cluster @defaults("arn") {
+  // ARN for the cluster
+  arn string
+  // Denotes whether or not the cluster is encrypted
+  encrypted bool
+  // The node type for the nodes in the cluster
+  nodeType string
+  // Denotes whether major upgrades will be applied automatically
+  allowVersionUpgrade bool
+  // Weekly time range for system maintenance (in UTC)
+  preferredMaintenanceWindow string
+  // Number of days automatic cluster snapshots are retained
+  automatedSnapshotRetentionPeriod int
+  // Denotes whether or not cluster is publicly accessible
+  publiclyAccessible bool
+  // Detailed list of parameters for each parameter group name
+  parameters() []dict
+  // Logging configuration for the cluster
+  logging() dict
+  // Name of the initial database created when cluster was created
+  name string
+  // Region where the cluster exists
+  region string
+  // List of cluster parameter group names
+  clusterParameterGroupNames []string
+  // Tags for the cluster
+  tags map[string]string
+}
+
+// AWS Elastic Container Registry
+aws.ecr {
+  // List of private repositories
+  privateRepositories() []aws.ecr.repository
+  // List of public repositories associated with the AWS account
+  publicRepositories() []aws.ecr.repository
+  // List of images
+  images() []aws.ecr.image
+}
+
+// AWS Elastic Container Registry Repository
+private aws.ecr.repository {
+  // ARN of the repository
+  arn string
+  // Name of the repository
+  name string
+  // URI of the repository, used for push/pull operations
+  uri string
+  // AWS Account ID associated with public registry for this repository
+  registryId string
+  // Denotes whether or not the repository is public
+  public bool
+  // List of images in the repository
+  images() []aws.ecr.image
+  // Region where the image is stored
+  region string
+}
+
+// AWS Elastic Container Registry Image
+private aws.ecr.image {
+  // SHA256 of the image manifest
+  digest string
+  // Type of image manifest
+  mediaType string
+  // List of tags associated with image
+  tags []string
+  // AWS Account ID associated with public registry for this image
+  registryId string
+  // Name of the repository for the image
+  repoName string
+  // Region where the ECR image is located
+  region string
+  // ARN for the image
+  arn string
+  // uri for the image repository
+  uri string
+}
+
+// AWS Database Migration Service (DMS)
+aws.dms {
+  // List of DMS replication instances
+  replicationInstances() []dict
+}
+
+// AWS API Gateway
+aws.apigateway {
+  // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
+  restApis() []aws.apigateway.restapi
+}
+
+// Amazon API Gateway REST API
+private aws.apigateway.restapi @defaults("arn") {
+  // ARN for the REST API
+  arn string
+  // Unique ID for the REST API
+  id string
+  // Name for the REST API
+  name string
+  // Time when the REST API was created
+  createdDate time
+  // Description for the REST API
+  description string
+  // Stages for the REST API
+  stages() []aws.apigateway.stage
+  // Region where the REST API exists
+  region string
+  // Tags for the REST API
+  tags map[string]string
+}
+
+// Amazon API Gateway REST API Stages
+private aws.apigateway.stage @defaults("arn") {
+  // ARN for the REST API stage
+  arn string
+  // Name for the stage
+  name string
+  // Bool that denotes if tracing is enabled for the stage
+  tracingEnabled bool
+  // Description for the stage
+  description string
+  // ID of the deployment the stage is attached to
+  deploymentId string
+  // Method settings for the stage
+  methodSettings dict
+}
+
+// AWS Lambda
+aws.lambda {
+  // List of lambda functions across all regions in the account
+  functions() []aws.lambda.function
+}
+
+// AWS Lambda Function
+private aws.lambda.function @defaults("arn") {
+  // ARN of the function
+  arn string
+  // Name of the function
+  name string
+  // Concurrency limit for the function
+  concurrency() int
+  // Target ARN of the DeadLetterQueue config
+  dlqTargetArn string
+  // Policy for the function
+  policy() dict
+  // VPC configuration for the lambda function
+  vpcConfig dict
+  // Region where the function exists
+  region string
+  // Tags for the function
+  tags map[string]string
+}
+
+// Amazon Systems Manager
+aws.ssm {
+  instances() []aws.ssm.instance
+}
+
+// Amazon SSM Instance
+private aws.ssm.instance {
+  // Instance ID for the SSM Instance
+  instanceId string
+  // Ping Status (e.g. online) for the SSM Instance
+  pingStatus string
+  // IP Address for the SSM Instance
+  ipAddress string
+  // Platform Name for the SSM Instance, as described by AWS
+  platformName string
+  // Region for the SSM Instance
+  region string
+  // ARN for the SSM Instance
+  arn string
+  // Tags for the SSM Instance
+  tags() map[string]string
+}
+
+// Amazon EC2
+aws.ec2 {
+  // List of security groups available to the account
+  securityGroups() []aws.ec2.securitygroup 
+  // List of instances across the AWS account (all regions)
+  instances() []aws.ec2.instance
+  // map[region]boolean used to denote if ebs encryption is on by default per region
+  ebsEncryptionByDefault() map[string]bool
+  // List of volumes across the AWS account
+  volumes() []aws.ec2.volume
+  // List of snapshots across the account
+  snapshots() []aws.ec2.snapshot
+  // List of internet gateways
+  internetGateways() []aws.ec2.internetgateway
+  // List of VPN connections 
+  vpnConnections() []aws.ec2.vpnconnection
+  // List of network ACLs 
+  networkAcls() []aws.ec2.networkacl
+  // List of keypairs for the account
+  keypairs() []aws.ec2.keypair
+}
+
+// Amazon EC2 Network ACL
+private aws.ec2.networkacl @defaults("arn") {
+  // ARN for the network ACL
+  arn string
+  // ID for the network ACL 
+  id string
+  // Region for the network ACL 
+  region string
+  // Entries for the network ACL
+  entries() []aws.ec2.networkacl.entry
+}
+
+// Amazon EC2 Network ACL Entry
+private aws.ec2.networkacl.entry {
+  // Denotes whether this is an entry for egress rules
+  egress bool
+  // Allow or deny
+  ruleAction string
+  // Port range for the ACL entry
+  portRange() aws.ec2.networkacl.entry.portrange
+  // ID for the ACL entry rule
+  id string
+}
+
+// Amazon EC2 Network ACL Entry Port Range
+private aws.ec2.networkacl.entry.portrange {
+  // Starting port for port range
+  from int
+  // Ending port for port range
+  to int
+  // ID for the entry port range
+  id string
+}
+
+// Amazon EC2 VPN Connection
+private aws.ec2.vpnconnection @defaults("arn") {
+  // ARN for the VPN connection
+  arn string
+  // List of telemetry data for the VPN
+  vgwTelemetry []aws.ec2.vgwtelemetry
+}
+
+// Amazon EC2 VPN Tunnel Telemetry
+private aws.ec2.vgwtelemetry {
+  // Outside IP address
+  outsideIpAddress string
+  // VPN Tunnel status
+  status string
+  // VPN Tunnel status message
+  statusMessage string
+}
+
+// Amazon EC2 Internet Gateway
+private aws.ec2.internetgateway @defaults("arn") {
+  // ARN for the gateway
+  arn string
+  // ID for the gateway
+  id string
+  // VPC attachments
+  attachments []dict
+}
+
+// Amazon EC2 Snapshot
+private aws.ec2.snapshot @defaults("arn") {
+  // ARN for the snapshot
+  arn string
+  // ID for the snapshot
+  id string
+  // Region where the snapshot exists
+  region string
+  // Users/groups that have the permissions for creating volumes from the snapshot
+  createVolumePermission() []dict
+  // ID of the volume used to create the snapshot
+  volumeId string
+  // Time when the snapshot was initiated
+  startTime time
+  // Tags for the snapshot
+  tags map[string]string
+  // State of the snapshot (pending, completed, error, recoverable, or recovering)
+  state string
+} 
+
+// Amazon EC2 Volume
+private aws.ec2.volume @defaults("arn encrypted state") {
+  // ARN for the EC2 volume
+  arn string
+  // ID of the EC2 volume
+  id string
+  // Information about the volume attachments
+  attachments []dict
+  // Denotes whether volume is encrypted
+  encrypted bool
+  // State of the volume (creating, available, in-use, etc.) 
+  state string
+  // A map of tags associated with the ebs volume
+  tags map[string]string
+  // Availability Zone in which the volume was created
+  availabilityZone string
+  // EBS volume type (gp2, gp3, io1, io2, st1, sc1, or standard)
+  volumeType string
+  // Time the volume was created
+  createTime time
+  // Region where the EC2 volume is stored
+  region string
+}
+
+// Amazon EC2 Instance
+private aws.ec2.instance @defaults("arn state") {
+  // ARN for the instance
+  arn string
+  // Instance id for the instance
+  instanceId string
+  // Indicates whether detailed monitoring is enabled
+  detailedMonitoring string
+  // Region where the instance exists
+  region string
+  // Public IP for instance
+  publicIp string
+  // Amazon Systems Manager information for the instance
+  ssm() dict
+  // VPC associated with the instance
+  vpc() aws.vpc
+  // A value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
+  httpTokens string
+  // Patch state information about the instance
+  patchState() dict
+  // State of the instance (pending, running, stopping, stopped, rebooting, or terminated)
+  state string
+  // List of devices attached to the instance (e.g. ebs volume)
+  deviceMappings []aws.ec2.instance.device
+  // List of security groups (ids) associated with the instance
+  securityGroups []aws.ec2.securitygroup
+  // Platform details 
+  platformDetails string
+  // Public dns name for the instance
+  publicDnsName string
+  // The status of the specified instance
+  instanceStatus() dict
+  // Reason for the most recent state transition
+  stateReason dict
+  // Reason for the most recent state transition
+  stateTransitionReason string
+  // Denotes whether or not instance has ebs optimization turned on
+  ebsOptimized bool
+  // Instance type, e.g. t2.micro
+  instanceType string
+  // Tags on the instance
+  tags map[string]string
+  // Image that was used for the instance
+  image aws.ec2.image
+  // Launch time of the instance
+  launchTime time
+  // Private IP address for the instance
+  privateIp string
+  // Private DNS name for the instance
+  privateDnsName string
+  // Keypair associated with the instance
+  keypair() aws.ec2.keypair
+}
+
+// Amazon EC2 Key Pair
+private aws.ec2.keypair @defaults("arn name") {
+  // ARN of the key pair
+  arn string
+  // Fingerprint for the key pair
+  fingerprint string
+  // Name of the key pair
+  name string
+  // Type of key (e.g. RSA)
+  type string
+  // Tags for the key pair
+  tags map[string]string
+  // Region where the key pair exists
+  region string
+}
+
+// Amazon EC2 Image (AMI)
+private aws.ec2.image @defaults("arn") {
+  // ARN for the AMI
+  arn string
+  // ID of the image
+  id string
+  // Name for the image
+  name string
+  // Architecture associated with the image
+  architecture string
+  // AWS account id of the image owner
+  ownerId string
+  // Alias for the image owner
+  ownerAlias string
+}
+
+// Amazon EC2 Instance Device
+private aws.ec2.instance.device {
+  // Boolean to denote whether volume should be deleted on instance termination
+  deleteOnTermination bool
+  // Status of the device
+  status string
+  // Volume id for the device
+  volumeId string
+  // Name for the device
+  deviceName string
+}
+
+// Amazon EC2 Security Group
+private aws.ec2.securitygroup @defaults("arn") {
+  // Security group arn
+  arn string
+  // Security group id
+  id string
+  // Name of the security group
+  name string
+  // Description of the security group
+  description string
+  // A map of tags associated with the security group
+  tags map[string]string
+  // VPC associated with the security group
+  vpc aws.vpc
+  // IP permissions (ingress) for the security group
+  ipPermissions []aws.ec2.securitygroup.ippermission
+  // IP permissions (egress) for the security group
+  ipPermissionsEgress []aws.ec2.securitygroup.ippermission
+  // Region associated with the security group
+  region string
+  // Bool to denote if security group is attached to Amazon Elastic Compute Cloud
+  isAttachedToNetworkInterface() bool
+}
+
+// Amazon EC2 Security Group IP Permission
+private aws.ec2.securitygroup.ippermission @defaults("id") {
+  // Unique ID for the IP permission
+  id string
+  // Start of port range for TCP/UDP protocols
+  fromPort int
+  // End of port range for TCP/UDP protocols
+  toPort int
+  // IP protocol name
+  ipProtocol string
+  // IPv4 ranges
+  ipRanges []string
+  // IPv6 ranges
+  ipv6Ranges []string
+}
+
+
+// AWS Config
+aws.config {
+  // List of configuration recorders for each region in the account
+  recorders() []aws.config.recorder
+  // List of AWS Config rules
+  rules() []aws.config.rule
+}
+
+// AWS Config Rule
+private aws.config.rule @defaults("arn state") {
+  // ARN for the config rule
+  arn string
+  // State of the rule
+  state string
+  // Rule identifier that causes function to eval resources
+  source dict
+}
+
+// AWS Config Recorder
+private aws.config.recorder @defaults("name region") {
+  // Name of the recorder
+  name string
+  // ARN of the IAM role used to describe the AWS resources associated with the account
+  roleArn string
+  // Recording config changes for every supported type of regional resource
+  allSupported bool
+  // Recording all supported types of global resources with the resources that it records
+  includeGlobalResourceTypes bool
+  // Whether or not the recorder is currently recording
+  recording bool
+  // Last (previous) status of the recorder
+  lastStatus string
+  // Region for the recorder
+  region string
+}
+
+// Amazon Elastic Kubernetes Service (EKS)
+aws.eks {
+  // EKS clusters
+  clusters() []aws.eks.cluster
+}
+
+// Amazon EKS Cluster
+private aws.eks.cluster @defaults("arn version status") {
+  // Name of the cluster
+  name string
+  // ARN of the cluster
+  arn string
+  // Region for the cluster
+  region string
+  // A map of tags associated with the cluster
+  tags map[string]string
+  // The endpoint of Kubernetes API server
+  endpoint string
+  // Kubernetes server version
+  version string
+  // Amazon EKS cluster version
+  platformVersion string
+  // Cluster Status
+  status string
+  // Encryption configuration for the cluster
+  encryptionConfig []dict
+  // Cluster logging configuration
+  logging dict
+  // Kubernetes network configuration
+  networkConfig dict
+  //  VPC configuration
+  resourcesVpcConfig dict
+  // Cluster creation timestamp
+  createdAt time
+}

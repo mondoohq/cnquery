@@ -174,15 +174,16 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}); err != nil {
 			return nil, false, err
 		}
+		log.Debug().Msgf("adding %d asset(s)", len(runtime.Provider.Connection.Inventory.Spec.Assets))
+		assets = append(assets, runtime.Provider.Connection.Inventory.Spec.Assets...)
 
-		// TODO: grab full discovered inventory from: runtime.Provider.Connection.Inventory
 		// TODO: we want to keep better track of errors, since there may be
 		// multiple assets coming in. It's annoying to abort the scan if we get one
 		// error at this stage.
 
 		// we grab the asset from the connection, because it contains all the
 		// detected metadata (and IDs)
-		assets = append(assets, runtime.Provider.Connection.Asset)
+		// assets = append(assets, runtime.Provider.Connection.Asset)
 		runtimes = append(runtimes, runtime)
 	}
 
