@@ -195,8 +195,9 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 		alias = aliases.Data[0].(string)
 	}
 	name := AssembleIntegrationName(alias, awsAccount.Id.Data)
+	justId := strings.TrimPrefix(awsAccount.Id.Data, "aws.account/")
 
-	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + awsAccount.Id.Data
+	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + justId
 
 	return &inventory.Asset{
 		PlatformIds: []string{id},
