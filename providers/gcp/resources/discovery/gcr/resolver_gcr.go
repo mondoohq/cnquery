@@ -1,16 +1,14 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package gcp
+package gcr
 
 import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 type GcrResolver struct{}
@@ -20,18 +18,19 @@ func (r *GcrResolver) Name() string {
 }
 
 func (r *GcrResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll}
+	return []string{"auto", "all"}
 }
 
-func (r *GcrResolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
-	repository := t.Host
+// func (r *GcrResolver) Resolve(ctx context.Context, root *inventory.Asset, t *inventory.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*inventory.Asset, error) {
+func (r *GcrResolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
+	resolved := []*inventory.Asset{}
+	repository := conf.Host
 
 	log.Debug().Str("registry", repository).Msg("fetch meta information from gcr registry")
 	gcrImages := NewGCRImages()
 	assetList, err := gcrImages.ListRepository(repository, true)
 	if err != nil {
-		log.Error().Err(err).Msg("could not fetch k8s images")
+		log.Error().Err(err).Msg("could not fetch gcr images")
 		return nil, err
 	}
 

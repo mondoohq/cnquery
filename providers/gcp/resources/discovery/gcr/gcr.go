@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package gcp
+package gcr
 
 import (
 	"context"
@@ -9,13 +9,10 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/motor/motorid/containerid"
-
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/google"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/id/containerid"
 	"google.golang.org/api/cloudresourcemanager/v1"
 )
 
@@ -30,7 +27,7 @@ func (a *GcrImages) Name() string {
 }
 
 // lists a repository like "gcr.io/mondoo-base-infra"
-func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.Asset, error) {
+func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*inventory.Asset, error) {
 	repo, err := name.NewRepository(repository)
 	if err != nil {
 		log.Fatalln(err)
@@ -41,7 +38,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 		log.Fatalf("getting auth for %q: %v", repository, err)
 	}
 
-	imgs := []*asset.Asset{}
+	imgs := []*inventory.Asset{}
 
 	toAssetFunc := func(repo name.Repository, tags *google.Tags, err error) error {
 		if err != nil {
@@ -52,21 +49,22 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 			repoURL := repo.String()
 			imageUrl := repoURL + "@" + digest
 
-			asset := &asset.Asset{
+			asset := &inventory.Asset{
 				PlatformIds: []string{MondooContainerImageID(digest)},
 				Name:        containerid.ShortContainerImageID(digest),
-				Platform: &platform.Platform{
-					Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
-					Runtime: providers.RUNTIME_GCP_GCR,
+				Platform: &inventory.Platform{
+					Kind:    "container-image",
+					Runtime: "gcp-gcr",
 				},
 
-				Connections: []*providers.Config{
+				Connections: []*inventory.Config{
 					{
-						Backend: providers.ProviderType_CONTAINER_REGISTRY,
+						Backend: "cr",
+						Type:    "container-registry",
 						Host:    imageUrl,
 					},
 				},
-				State:  asset.State_STATE_ONLINE,
+				State:  inventory.State_STATE_ONLINE,
 				Labels: make(map[string]string),
 			}
 
@@ -112,13 +110,8 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 }
 
 // List uses your GCP credentials to iterate over all your projects to identify potential repos
-func (a *GcrImages) List() ([]*asset.Asset, error) {
-	assets := []*asset.Asset{}
-	// repoAssets, err := a.ListRepository("index.docker.io/mondoo/client", false)
-	// if err == nil && repoAssets != nil {
-	// 	assets = append(assets, repoAssets...)
-	// }
-	// return assets, nil
+func (a *GcrImages) List() ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
 
 	resSrv, err := cloudresourcemanager.NewService(context.Background())
 	if err != nil {

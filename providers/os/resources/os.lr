@@ -980,7 +980,7 @@ registrykey.property @defaults("path name") {
 }
 
 // Container Image
-container.image {
+container.image @defaults("name") {
   // Image reference
   reference string
   // Fully-qualified reference name

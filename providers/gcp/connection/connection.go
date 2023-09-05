@@ -5,6 +5,7 @@ package connection
 
 import (
 	"errors"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -18,6 +19,7 @@ const (
 	Project
 	Organization
 	Folder
+	Gcr
 )
 
 type GcpConnection struct {
@@ -59,8 +61,8 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 	var resourceType ResourceType
 	var resourceID string
-	if conf.Options["project-id"] != "" {
-		resourceType = Project
+	if _, ok := conf.Options["repository"]; ok {
+		resourceType = Gcr
 		resourceID = conf.Options["project-id"]
 
 		// FIXME: DEPRECATED, remove in v8.0 vv
@@ -77,6 +79,9 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	} else if conf.Options["folder-id"] != "" {
 		resourceType = Folder
 		resourceID = conf.Options["folder-id"]
+	} else if conf.Options["project-id"] != "" {
+		resourceType = Project
+		resourceID = conf.Options["project-id"]
 	}
 
 	var override string
@@ -97,7 +102,7 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 			log.Error().Err(err).Msgf("could not find or have no access to organization %s", resourceID)
 			return nil, err
 		}
-	case Project:
+	case Project, Gcr:
 		_, err := conn.GetProject(resourceID)
 		if err != nil {
 			log.Error().Err(err).Msgf("could not find or have no access to project %s", resourceID)

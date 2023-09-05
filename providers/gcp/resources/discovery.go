@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"context"
+
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
@@ -77,6 +79,22 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			return nil, err
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
+	} else if conn.ResourceType() == connection.Gcr {
+		conf := conn.Conf
+		repository := "gcr.io/" + conf.Options["project-id"]
+		if conf.Options["repository"] != "" {
+			repository += "/" + conf.Options["repository"]
+		}
+		conf.Host = repository
+
+		resolver := &gcr.GcrResolver{}
+		assets, err := resolver.Resolve(context.Background(), nil, conf, nil)
+		if err != nil {
+			return nil, err
+		}
+		in.Spec.Assets = append(in.Spec.Assets, assets...)
+		// FIXME: This is a workaround to not double-resolve the GCR repository
+		conn.Conf.Discover = nil
 	}
 
 	return in, nil

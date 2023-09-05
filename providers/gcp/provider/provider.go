@@ -128,6 +128,23 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Discover.Targets = []string{resources.DiscoveryAuto}
 	}
 
+	switch req.Args[0] {
+	case "org":
+		conf.Options["organization-id"] = req.Args[1]
+	case "project":
+		conf.Options["project-id"] = req.Args[1]
+	case "folder":
+		conf.Options["folder-id"] = req.Args[1]
+	case "gcr":
+		conf.Options["project-id"] = req.Args[1]
+		conf.Options["repository"] = string(flags["repository"].Value)
+		conf.Runtime = "gcp-gcr"
+	}
+
+	asset := inventory.Asset{
+		Connections: []*inventory.Config{conf},
+	}
+
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
