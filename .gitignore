@@ -13,3 +13,4 @@ gha-creds-*.json
 providers/*/dist
 providers/*/resources/*.resources.json
 providers/*/resources/*.manifest.json
+!providers/core/resources/*.resources.json
