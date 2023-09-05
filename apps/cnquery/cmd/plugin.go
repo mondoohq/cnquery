@@ -91,15 +91,15 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	assetList := runtime.Provider.Connection.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
-	filteredAssets := []*inventory.Asset{}
+	assetCandidates := []*inventory.Asset{}
 	if len(assetList) > 1 && conf.PlatformId != "" {
 		filteredAsset, err := filterAssetByPlatformID(assetList, conf.PlatformId)
 		if err != nil {
 			return err
 		}
-		filteredAssets = append(filteredAssets, filteredAsset)
+		assetCandidates = append(assetCandidates, filteredAsset)
 	} else {
-		filteredAssets = assetList
+		assetCandidates = assetList
 	}
 
 	if conf.Format == "json" {
@@ -117,50 +117,13 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	for _, asset := range filteredAssets {
-		// If the assets have platform IDs, then we have already connected to them via the
-		// current provider.
-		if len(asset.PlatformIds) > 0 {
-			continue
-		}
-
-		// Make sure the provider for the asset is present
-		if err := runtime.DetectProvider(asset); err != nil {
-			return err
-		}
-
-		err := runtime.Connect(&pp.ConnectReq{
-			Features: config.Features,
-			Asset:    asset,
-			Upstream: upstreamConfig,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO: filter unique assets by platform ID
-	uniqueAssets := []*inventory.Asset{}
-	platformIds := map[string]struct{}{}
-	for _, asset := range filteredAssets {
-		found := false
-		for _, platformId := range asset.PlatformIds {
-			if _, ok := platformIds[platformId]; ok {
-				found = true
-			}
-		}
-		if found {
-			continue
-		}
-
-		uniqueAssets = append(uniqueAssets, asset)
-		for _, platformId := range asset.PlatformIds {
-			platformIds[platformId] = struct{}{}
-		}
+	uniqueAssets, err := providers.ProcessAssetCandidates(runtime, assetCandidates, upstreamConfig)
+	if err != nil {
+		return err
 	}
 
 	for i := range uniqueAssets {
-		connectAsset := filteredAssets[i]
+		connectAsset := uniqueAssets[i]
 		if err := runtime.DetectProvider(connectAsset); err != nil {
 			return err
 		}
@@ -203,7 +166,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			sh.PrintResults(code, results)
 		} else {
 			reporter.BundleResultsToJSON(code, results, out)
-			if len(filteredAssets) != i+1 {
+			if len(uniqueAssets) != i+1 {
 				out.WriteString(",")
 			}
 		}
