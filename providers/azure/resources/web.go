@@ -107,7 +107,7 @@ func (a *mqlAzureSubscriptionWeb) apps() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.web.apsite",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.web.appsite",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(entry.ID)),
 					"name":       llx.StringData(convert.ToString(entry.Name)),
