@@ -252,7 +252,7 @@ func LatestVersion(name string) (string, error) {
 	}
 
 	if latestVersion == "" {
-		return "", errors.New("cannot find '" + name + "' in available upstream providers")
+		return "", errors.New("cannot determine latest version of provider '" + name + "'")
 	}
 	return latestVersion, nil
 }

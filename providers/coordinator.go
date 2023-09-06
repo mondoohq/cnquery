@@ -170,7 +170,10 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 
 	latest, err := LatestVersion(provider.Name)
 	if err != nil {
-		return nil, err
+		log.Warn().Msg(err.Error())
+		// we can just continue with the existing provider, no need to error up,
+		// the warning is enough since we are still functional
+		return provider, nil
 	}
 
 	semver := semver.Parser{}
