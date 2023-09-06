@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
@@ -262,6 +263,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 		if err != nil {
 			return nil, err
 		}
+		log.Debug().Msgf("fetching metadata for table %s", table.FullyQualifiedName())
 
 		metadata, err := table.Metadata(ctx)
 		if err != nil {
