@@ -99,33 +99,21 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
 
-	assetCandidates := res.Inventory.Spec.Assets
-	log.Debug().Msgf("resolved %d assets", len(assetCandidates))
-
-	assetList, err := providers.ProcessAssetCandidates(runtime, assetCandidates, conf.UpstreamConfig)
+	assets, err := providers.ProcessAssetCandidates(runtime, res, conf.UpstreamConfig, conf.PlatformID)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not load asset information")
+		log.Fatal().Err(err).Msg("could not process assets")
 	}
-	log.Debug().Msgf("resolved %d unique assets", len(assetList))
-
-	if len(assetList) == 0 {
+	if len(assets) == 0 {
 		log.Fatal().Msg("could not find an asset that we can connect to")
 	}
 
-	var connectAsset *inventory.Asset
-	if len(assetList) == 1 {
-		connectAsset = assetList[0]
-	} else if len(assetList) > 1 && conf.PlatformID != "" {
-		connectAsset, err = filterAssetByPlatformID(assetList, conf.PlatformID)
-		if err != nil {
-			log.Fatal().Err(err).Send()
-		}
-	} else if len(assetList) > 1 {
+	connectAsset := assets[0]
+	if len(assets) > 1 {
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 		if isTTY {
-			connectAsset = components.AssetSelect(assetList)
+			connectAsset = components.AssetSelect(assets)
 		} else {
-			fmt.Println(components.AssetList(theme.OperatingSystemTheme, assetList))
+			fmt.Println(components.AssetList(theme.OperatingSystemTheme, assets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}

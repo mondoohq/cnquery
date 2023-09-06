@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -21,7 +20,6 @@ import (
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
@@ -112,23 +110,6 @@ func initLogger(cmd *cobra.Command) {
 		level = "debug"
 	}
 	logger.Set(level)
-}
-
-func filterAssetByPlatformID(assetList []*inventory.Asset, selectionID string) (*inventory.Asset, error) {
-	var foundAsset *inventory.Asset
-	for i := range assetList {
-		assetObj := assetList[i]
-		for j := range assetObj.PlatformIds {
-			if assetObj.PlatformIds[j] == selectionID {
-				return assetObj, nil
-			}
-		}
-	}
-
-	if foundAsset == nil {
-		return nil, errors.New("could not find an asset with the provided identifier: " + selectionID)
-	}
-	return foundAsset, nil
 }
 
 func defaultRangerPlugins(sysInfo *sysinfo.SystemInfo, features cnquery.Features) []ranger.ClientPlugin {
