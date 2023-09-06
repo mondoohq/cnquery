@@ -47,7 +47,7 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	// the remaining CLI. Probably an opportunity to optimize in the future,
 	// but fine for now to do it all.
 
-	attacheProviders(existing, commands)
+	attachProviders(existing, commands)
 	return nil
 }
 
@@ -90,7 +90,7 @@ func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command)
 	return action, autoUpdate
 }
 
-func attacheProviders(existing providers.Providers, commands []*Command) {
+func attachProviders(existing providers.Providers, commands []*Command) {
 	for i := range commands {
 		attachProvidersToCmd(existing, commands[i])
 	}

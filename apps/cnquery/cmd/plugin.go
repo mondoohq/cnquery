@@ -91,15 +91,15 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	assetList := runtime.Provider.Connection.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
-	filteredAssets := []*inventory.Asset{}
+	assetCandidates := []*inventory.Asset{}
 	if len(assetList) > 1 && conf.PlatformId != "" {
 		filteredAsset, err := filterAssetByPlatformID(assetList, conf.PlatformId)
 		if err != nil {
 			return err
 		}
-		filteredAssets = append(filteredAssets, filteredAsset)
+		assetCandidates = append(assetCandidates, filteredAsset)
 	} else {
-		filteredAssets = assetList
+		assetCandidates = assetList
 	}
 
 	if conf.Format == "json" {
@@ -117,8 +117,13 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	for i := range filteredAssets {
-		connectAsset := filteredAssets[i]
+	uniqueAssets, err := providers.ProcessAssetCandidates(runtime, assetCandidates, upstreamConfig)
+	if err != nil {
+		return err
+	}
+
+	for i := range uniqueAssets {
+		connectAsset := uniqueAssets[i]
 		if err := runtime.DetectProvider(connectAsset); err != nil {
 			return err
 		}
@@ -161,7 +166,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			sh.PrintResults(code, results)
 		} else {
 			reporter.BundleResultsToJSON(code, results, out)
-			if len(filteredAssets) != i+1 {
+			if len(uniqueAssets) != i+1 {
 				out.WriteString(",")
 			}
 		}

@@ -99,8 +99,14 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
 
-	assetList := res.Inventory.Spec.Assets
-	log.Debug().Msgf("resolved %d assets", len(assetList))
+	assetCandidates := res.Inventory.Spec.Assets
+	log.Debug().Msgf("resolved %d assets", len(assetCandidates))
+
+	assetList, err := providers.ProcessAssetCandidates(runtime, assetCandidates, conf.UpstreamConfig)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not load asset information")
+	}
+	log.Debug().Msgf("resolved %d unique assets", len(assetList))
 
 	if len(assetList) == 0 {
 		log.Fatal().Msg("could not find an asset that we can connect to")
