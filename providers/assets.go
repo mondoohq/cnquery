@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -11,9 +12,25 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
-func ProcessAssetCandidates(runtime *Runtime, assetCandidates []*inventory.Asset, upstreamConfig *upstream.UpstreamConfig) ([]*inventory.Asset, error) {
+func ProcessAssetCandidates(runtime *Runtime, connectRes *pp.ConnectRes, upstreamConfig *upstream.UpstreamConfig, platformID string) ([]*inventory.Asset, error) {
+	var assetCandidates []*inventory.Asset
+	if connectRes.Inventory == nil || connectRes.Inventory.Spec == nil {
+		return []*inventory.Asset{connectRes.Asset}, nil
+	} else {
+		assetCandidates = connectRes.Inventory.Spec.Assets
+	}
+	log.Debug().Msgf("resolved %d assets", len(assetCandidates))
+
 	if err := detectAssets(runtime, assetCandidates, upstreamConfig); err != nil {
 		return nil, err
+	}
+
+	if platformID != "" {
+		res, err := filterAssetByPlatformID(assetCandidates, platformID)
+		if err != nil {
+			return nil, err
+		}
+		return []*inventory.Asset{res}, nil
 	}
 
 	return filterUniqueAssets(assetCandidates), nil
@@ -46,6 +63,23 @@ func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstream
 		assetCandidates[i] = runtime.Provider.Connection.Asset
 	}
 	return nil
+}
+
+func filterAssetByPlatformID(assetList []*inventory.Asset, selectionID string) (*inventory.Asset, error) {
+	var foundAsset *inventory.Asset
+	for i := range assetList {
+		assetObj := assetList[i]
+		for j := range assetObj.PlatformIds {
+			if assetObj.PlatformIds[j] == selectionID {
+				return assetObj, nil
+			}
+		}
+	}
+
+	if foundAsset == nil {
+		return nil, errors.New("could not find an asset with the provided identifier: " + selectionID)
+	}
+	return foundAsset, nil
 }
 
 // filterUniqueAssets filters assets with duplicate platform IDs

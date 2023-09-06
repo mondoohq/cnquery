@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/shared"
@@ -88,20 +87,6 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return err
 	}
 
-	assetList := runtime.Provider.Connection.Inventory.Spec.Assets
-	log.Debug().Msgf("resolved %d assets", len(assetList))
-
-	assetCandidates := []*inventory.Asset{}
-	if len(assetList) > 1 && conf.PlatformId != "" {
-		filteredAsset, err := filterAssetByPlatformID(assetList, conf.PlatformId)
-		if err != nil {
-			return err
-		}
-		assetCandidates = append(assetCandidates, filteredAsset)
-	} else {
-		assetCandidates = assetList
-	}
-
 	if conf.Format == "json" {
 		out.WriteString("[")
 	}
@@ -117,13 +102,13 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	uniqueAssets, err := providers.ProcessAssetCandidates(runtime, assetCandidates, upstreamConfig)
+	assets, err := providers.ProcessAssetCandidates(runtime, runtime.Provider.Connection, upstreamConfig, conf.PlatformId)
 	if err != nil {
 		return err
 	}
 
-	for i := range uniqueAssets {
-		connectAsset := uniqueAssets[i]
+	for i := range assets {
+		connectAsset := assets[i]
 		if err := runtime.DetectProvider(connectAsset); err != nil {
 			return err
 		}
@@ -166,7 +151,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			sh.PrintResults(code, results)
 		} else {
 			reporter.BundleResultsToJSON(code, results, out)
-			if len(uniqueAssets) != i+1 {
+			if len(assets) != i+1 {
 				out.WriteString(",")
 			}
 		}
