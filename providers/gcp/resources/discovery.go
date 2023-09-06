@@ -7,11 +7,13 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"golang.org/x/exp/slices"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 const (
 	// Discovery flags
+	DiscoveryAuto               = "auto"
+	DiscoveryAll                = "all"
 	DiscoveryOrganization       = "organization"
 	DiscoveryFolders            = "folders"
 	DiscoveryInstances          = "instances"
@@ -55,17 +57,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 
 		gcpProject := res.(*mqlGcpProject)
-
-		for i := range conn.Conf.Discover.Targets {
-			target := conn.Conf.Discover.Targets[i]
-			list, err := discoverProject(conn, gcpProject, target)
-			if err != nil {
-				return nil, err
-			}
-			in.Spec.Assets = append(in.Spec.Assets, list...)
-		}
-
-		if slices.Contains(conn.Conf.Discover.Targets, DiscoveryProjects) {
+		if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
 			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
 				PlatformIds: []string{
 					connection.NewProjectPlatformID(gcpProject.Id.Data),
@@ -76,9 +68,15 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Title: "GCP Project " + gcpProject.Name.Data,
 				},
 				Labels:      map[string]string{},
-				Connections: conn.Asset().Connections,
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)},
 			})
 		}
+
+		list, err := discoverProject(conn, gcpProject)
+		if err != nil {
+			return nil, err
+		}
+		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
 
 	return in, nil
@@ -86,8 +84,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization, target string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
-	switch target {
-	case DiscoveryProjects:
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
 		projects := gcpOrg.GetProjects()
 		if projects.Error != nil {
 			return nil, projects.Error
@@ -125,10 +122,9 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 	return assetList, nil
 }
 
-func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, target string) ([]*inventory.Asset, error) {
+func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
-	switch target {
-	case DiscoveryInstances:
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryInstances) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -168,11 +164,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 				},
 				Labels: labels,
 				// TODO: the current connection handling does not work well for instances
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-
-	case DiscoveryComputeImages:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeImages) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -198,10 +194,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Compute Image",
 				},
 				Labels:      labels,
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryComputeNetworks:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeNetworks) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -222,10 +219,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Compute Network",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryComputeSubnetworks:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeSubnetworks) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -250,10 +248,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Compute Subnetwork",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryComputeFirewalls:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeFirewalls) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -274,10 +273,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Compute Firewall",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryGkeClusters:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryGkeClusters) {
 		gke := gcpProject.GetGke()
 		if gke.Error != nil {
 			return nil, gke.Error
@@ -298,10 +298,11 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Container Cluster",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryStorageBuckets:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryStorageBuckets) {
 		storage := gcpProject.GetStorage()
 		if storage.Error != nil {
 			return nil, storage.Error
@@ -322,33 +323,42 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Title: "GCP Storage Bucket",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
-	case DiscoveryBigQueryDatasets:
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryBigQueryDatasets) {
 		bq := gcpProject.GetBigquery()
 		if bq.Error != nil {
 			return nil, bq.Error
 		}
 		datasets := bq.Data.GetDatasets()
-		if datasets != nil {
+		if datasets.Error != nil {
 			return nil, datasets.Error
 		}
 		for i := range datasets.Data {
 			dataset := datasets.Data[i].(*mqlGcpProjectBigqueryServiceDataset)
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{
-					connection.NewResourcePlatformID("bigquery", gcpProject.Id.Data, dataset.GetLocation().Data, "dataset", dataset.Name.Data),
+					connection.NewResourcePlatformID("bigquery", gcpProject.Id.Data, dataset.GetLocation().Data, "dataset", dataset.Id.Data),
 				},
-				Name: dataset.Name.Data,
+				Name: dataset.Id.Data,
 				Platform: &inventory.Platform{
 					Name:  "gcp-bigquery-dataset",
 					Title: "GCP BigQuery Dataset",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone()}, // pass-in the parent connection config
+				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
 			})
 		}
 	}
+
 	return assetList, nil
+}
+
+func cloneConfig(invConf *inventory.Config) *inventory.Config {
+	invConfClone := invConf.Clone()
+	// We do not want to run discovery again for the already discovered assets
+	invConfClone.Discover = &inventory.Discovery{}
+	return invConfClone
 }

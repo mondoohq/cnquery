@@ -20,6 +20,8 @@ var Config = plugin.Provider{
 			Use:   "gcp",
 			Short: "GCP Cloud",
 			Discovery: []string{
+				resources.DiscoveryAll,
+				resources.DiscoveryAuto,
 				resources.DiscoveryOrganization,
 				resources.DiscoveryFolders,
 				resources.DiscoveryInstances,

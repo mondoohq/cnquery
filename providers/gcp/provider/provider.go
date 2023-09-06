@@ -124,6 +124,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			entry := string(x.Array[i].Value)
 			conf.Discover.Targets = append(conf.Discover.Targets, entry)
 		}
+	} else {
+		conf.Discover.Targets = []string{resources.DiscoveryAuto}
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
