@@ -20,7 +20,8 @@ func ProcessAssetCandidates(runtime *Runtime, assetCandidates []*inventory.Asset
 
 // detectAssets connects to all assets that do not have a platform ID yet
 func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstreamConfig *upstream.UpstreamConfig) error {
-	for _, asset := range assetCandidates {
+	for i := range assetCandidates {
+		asset := assetCandidates[i]
 		// If the assets have platform IDs, then we have already connected to them via the
 		// current provider.
 		if len(asset.PlatformIds) > 0 {
@@ -40,6 +41,8 @@ func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstream
 		if err != nil {
 			return err
 		}
+		// Use the updated asset
+		assetCandidates[i] = runtime.Provider.Connection.Asset
 	}
 	return nil
 }
