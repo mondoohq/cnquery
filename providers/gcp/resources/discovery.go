@@ -5,11 +5,16 @@ package resources
 
 import (
 	"context"
+	"sync"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/google"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"go.mondoo.com/cnquery/utils/stringx"
+	"google.golang.org/api/cloudresourcemanager/v3"
 )
 
 const (
@@ -87,8 +92,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		}
 		conf.Host = repository
 
-		resolver := &gcr.GcrResolver{}
-		assets, err := resolver.Resolve(context.Background(), nil, conf, nil)
+		assets, err := resolveGcr(context.Background(), conf)
 		if err != nil {
 			return nil, err
 		}
@@ -379,4 +383,128 @@ func cloneConfig(invConf *inventory.Config) *inventory.Config {
 	// We do not want to run discovery again for the already discovered assets
 	invConfClone.Discover = &inventory.Discovery{}
 	return invConfClone
+}
+
+func resolveGcr(ctx context.Context, conf *inventory.Config) ([]*inventory.Asset, error) {
+	resolved := []*inventory.Asset{}
+	repository := conf.Host
+
+	log.Debug().Str("registry", repository).Msg("fetch meta information from gcr registry")
+	gcrImages := NewGCRImages()
+	assetList, err := gcrImages.ListRepository(repository, true)
+	if err != nil {
+		log.Error().Err(err).Msg("could not fetch gcr images")
+		return nil, err
+	}
+
+	for i := range assetList {
+		log.Debug().Str("name", assetList[i].Name).Str("image", assetList[i].Connections[0].Host+assetList[i].Connections[0].Path).Msg("resolved image")
+		resolved = append(resolved, assetList[i])
+	}
+
+	return resolved, nil
+}
+
+func NewGCRImages() *GcrImages {
+	return &GcrImages{}
+}
+
+type GcrImages struct{}
+
+func (a *GcrImages) Name() string {
+	return "GCP Container Registry Discover"
+}
+
+// lists a repository like "gcr.io/mondoo-base-infra"
+func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*inventory.Asset, error) {
+	repo, err := name.NewRepository(repository)
+	if err != nil {
+		log.Fatal().Err(err).Str("repository", repository).Msg("could not create repository")
+	}
+
+	auth, err := google.Keychain.Resolve(repo.Registry)
+	if err != nil {
+		log.Fatal().Err(err).Str("repository", repository).Msg("failed to get auth for repository")
+	}
+
+	imgs := []*inventory.Asset{}
+
+	toAssetFunc := func(repo name.Repository, tags *google.Tags, err error) error {
+		if err != nil {
+			return err
+		}
+
+		for digest := range tags.Manifests {
+			repoURL := repo.String()
+			imageUrl := repoURL + "@" + digest
+
+			asset := &inventory.Asset{
+				Connections: []*inventory.Config{
+					{
+						Type: "container-registry",
+						Host: imageUrl,
+					},
+				},
+			}
+			imgs = append(imgs, asset)
+		}
+		return nil
+	}
+
+	// walk nested repos
+	if recursive {
+		err := google.Walk(repo, toAssetFunc, google.WithAuth(auth))
+		if err != nil {
+			return nil, err
+		}
+		return imgs, nil
+	}
+
+	// NOTE: since we're not recursing, we ignore tags.Children
+	tags, err := google.List(repo, google.WithAuth(auth))
+	if err != nil {
+		return nil, err
+	}
+
+	err = toAssetFunc(repo, tags, nil)
+	if err != nil {
+		return nil, err
+	}
+	return imgs, nil
+}
+
+// List uses your GCP credentials to iterate over all your projects to identify potential repos
+func (a *GcrImages) List() ([]*inventory.Asset, error) {
+	assets := []*inventory.Asset{}
+
+	resSrv, err := cloudresourcemanager.NewService(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	projectsResp, err := resSrv.Projects.List().Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(projectsResp.Projects))
+	mux := &sync.Mutex{}
+	for i := range projectsResp.Projects {
+
+		project := projectsResp.Projects[i].Name
+		go func() {
+			repoAssets, err := a.ListRepository("gcr.io/"+project, true)
+			if err == nil && repoAssets != nil {
+				mux.Lock()
+				assets = append(assets, repoAssets...)
+				mux.Unlock()
+			}
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+	return assets, nil
 }
