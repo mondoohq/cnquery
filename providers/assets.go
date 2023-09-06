@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -56,6 +57,8 @@ func filterUniqueAssets(assetCandidates []*inventory.Asset) []*inventory.Asset {
 		for _, platformId := range asset.PlatformIds {
 			if _, ok := platformIds[platformId]; ok {
 				found = true
+				log.Debug().Msgf("skipping asset %s with duplicate platform ID %s", asset.Name, platformId)
+				break
 			}
 		}
 		if found {
