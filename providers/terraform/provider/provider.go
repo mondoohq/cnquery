@@ -116,6 +116,13 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
+// Shutdown is automatically called when the shell closes.
+// It is not necessary to implement this method.
+// If you want to do some cleanup, you can do it here.
+func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	return &plugin.ShutdownRes{}, nil
+}
+
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.Connection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")

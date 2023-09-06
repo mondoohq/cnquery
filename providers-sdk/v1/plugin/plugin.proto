@@ -38,6 +38,12 @@ message ConnectRes {
   Inventory inventory = 4;
 }
 
+message ShutdownReq {
+}
+
+message ShutdownRes {
+}
+
 message DataReq {
   uint32 connection = 1;
   string resource = 3;
@@ -71,6 +77,7 @@ message StoreRes {}
 service ProviderPlugin {
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (ConnectRes);
+  rpc Shutdown(ShutdownReq) returns (ShutdownRes);
   rpc GetData(DataReq) returns (DataRes);
   rpc StoreData(StoreReq) returns (StoreRes);
 }

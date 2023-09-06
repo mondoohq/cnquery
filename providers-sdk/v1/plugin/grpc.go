@@ -50,6 +50,10 @@ func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*Conne
 	return res, err
 }
 
+func (m *GRPCClient) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
+	return m.client.Shutdown(context.Background(), req)
+}
+
 func (m *GRPCClient) GetData(req *DataReq) (*DataRes, error) {
 	return m.client.GetData(context.Background(), req)
 }

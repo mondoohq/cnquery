@@ -6,6 +6,7 @@ package providers
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
@@ -16,6 +17,8 @@ import (
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/cnquery/utils/multierr"
 )
+
+const defaultShutdownTimeout = time.Duration(time.Second * 120)
 
 // Runtimes are associated with one asset and carry all providers
 // and open connections for that asset.
@@ -31,13 +34,20 @@ type Runtime struct {
 	// providers for with open connections
 	providers map[string]*ConnectedProvider
 	// schema aggregates all resources executable on this asset
-	schema   extensibleSchema
-	isClosed bool
+	schema          extensibleSchema
+	isClosed        bool
+	shutdownTimeout time.Duration
 }
 
 type ConnectedProvider struct {
 	Instance   *RunningProvider
 	Connection *plugin.ConnectRes
+}
+
+func (c *coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime {
+	runtime := c.NewRuntime()
+	runtime.shutdownTimeout = timeout
+	return runtime
 }
 
 func (c *coordinator) NewRuntime() *Runtime {
@@ -50,13 +60,27 @@ func (c *coordinator) NewRuntime() *Runtime {
 				Resources: map[string]*resources.ResourceInfo{},
 			},
 		},
-		Recording: nullRecording{},
+		Recording:       nullRecording{},
+		shutdownTimeout: defaultShutdownTimeout,
 	}
 	res.schema.runtime = res
 
 	// TODO: do this dynamically in the future
 	res.schema.loadAllSchemas()
 	return res
+}
+
+type shutdownResult struct {
+	Response *plugin.ShutdownRes
+	Error    error
+}
+
+func (r *Runtime) tryShutdown() shutdownResult {
+	resp, err := r.Provider.Instance.Plugin.Shutdown(&plugin.ShutdownReq{})
+	return shutdownResult{
+		Response: resp,
+		Error:    err,
+	}
 }
 
 func (r *Runtime) Close() {
@@ -69,8 +93,20 @@ func (r *Runtime) Close() {
 		log.Error().Err(err).Msg("failed to save recording")
 	}
 
-	// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
-	// r.coordinator.Close(r.Provider.Instance)
+	response := make(chan shutdownResult, 1)
+	go func() {
+		response <- r.tryShutdown()
+	}()
+	select {
+	case <-time.After(r.shutdownTimeout):
+		log.Error().Str("provider", r.Provider.Instance.Name).Msg("timed out shutting down the provider")
+	case result := <-response:
+		if result.Error != nil {
+			log.Error().Err(result.Error).Msg("failed to shutdown the provider")
+		}
+	}
+
+	r.coordinator.Close(r.Provider.Instance)
 	r.schema.Close()
 }
 
