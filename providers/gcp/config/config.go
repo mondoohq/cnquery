@@ -42,18 +42,6 @@ var Config = plugin.Provider{
 					Desc:    "The path to the service account credentials to access the APIs with",
 				},
 				{
-					Long:    "project-id",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "specify the GCP project ID where the target instance is located (only used for snapshots)",
-				},
-				{
-					Long:    "zone",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "specify the GCP zone where the target instance is located (only used for snapshots)",
-				},
-				{
 					Long:    "repository",
 					Type:    plugin.FlagType_String,
 					Default: "",
