@@ -35,7 +35,8 @@ type awsObject struct {
 }
 
 func MondooObjectID(awsObject awsObject) string {
-	return "//platformid.api.mondoo.app/runtime/aws/" + awsObject.service + "/v1/accounts/" + awsObject.account + "/regions/" + awsObject.region + "/" + awsObject.objectType + "/" + awsObject.id
+	accountId := trimAwsAccountIdToJustId(awsObject.account)
+	return "//platformid.api.mondoo.app/runtime/aws/" + awsObject.service + "/v1/accounts/" + accountId + "/regions/" + awsObject.region + "/" + awsObject.objectType + "/" + awsObject.id
 }
 
 func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsConnection) *inventory.Asset {
@@ -194,8 +195,8 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	if len(aliases.Data) > 0 {
 		alias = aliases.Data[0].(string)
 	}
-	name := AssembleIntegrationName(alias, awsAccount.Id.Data)
-	justId := strings.TrimPrefix(awsAccount.Id.Data, "aws.account/")
+	justId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
+	name := AssembleIntegrationName(alias, justId)
 
 	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + justId
 
@@ -207,8 +208,12 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	}
 }
 
+func trimAwsAccountIdToJustId(id string) string {
+	return strings.TrimPrefix(id, "aws.account/")
+}
+
 func AssembleIntegrationName(alias string, id string) string {
-	justId := strings.TrimPrefix(id, "aws.account/")
+	justId := trimAwsAccountIdToJustId(id)
 	if alias == "" {
 		return fmt.Sprintf("AWS Account %s", justId)
 	}
