@@ -130,5 +130,5 @@ func (c *GithubConnection) Repository() (*github.Repository, error) {
 		repo, _, err := c.Client().Repositories.Get(context.Background(), ownerId, repoId)
 		return repo, err
 	}
-	return nil, errors.New("no user provided")
+	return nil, errors.New("no repository provided")
 }
