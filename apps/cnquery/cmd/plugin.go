@@ -109,10 +109,12 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range assets {
 		connectAsset := assets[i]
-		if err := runtime.DetectProvider(connectAsset); err != nil {
+		// FIXME: I assume we need to transfer settings like recording, etc. to the new runtime
+		connectAssetRuntime := providers.Coordinator.NewRuntime()
+		if err := connectAssetRuntime.DetectProvider(connectAsset); err != nil {
 			return err
 		}
-		err := runtime.Connect(&pp.ConnectReq{
+		err := connectAssetRuntime.Connect(&pp.ConnectReq{
 			Features: config.Features,
 			Asset:    connectAsset,
 			Upstream: upstreamConfig,
@@ -136,7 +138,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
-		sh, err := shell.New(runtime, shellOptions...)
+		sh, err := shell.New(connectAssetRuntime, shellOptions...)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize the shell")
 		}

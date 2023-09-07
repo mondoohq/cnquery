@@ -17,6 +17,8 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
+	// osconf "go.mondoo.com/cnquery/providers/os/config"
+	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 var BuiltinCoreID = coreconf.Config.ID
@@ -68,6 +70,7 @@ var builtinProviders = map[string]*builtinProvider{
 	// 	Config: &networkconf.Config,
 	// },
 	// k8sconf.Config.ID: {
+	//  Runtime: &RunningProvider{
 	// 		Name:     k8sconf.Config.Name,
 	// 		ID:       k8sconf.Config.ID,
 	// 		Plugin:   k8s.Init(),
@@ -77,6 +80,7 @@ var builtinProviders = map[string]*builtinProvider{
 	// 	Config: &k8sconf.Config,
 	// },
 	// azureconf.Config.ID: {
+	//  Runtime: &RunningProvider{
 	// 		Name:     azureconf.Config.Name,
 	// 		ID:       azureconf.Config.ID,
 	// 		Plugin:   azure.Init(),
