@@ -82,7 +82,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId))
+			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId, conn))
 		}
 	case connection.DiscoverySSMInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
@@ -119,7 +119,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsSsmInstance)
-			assetList = append(assetList, addConnectionInfoToSSMAsset(instance, accountId, conn.Profile()))
+			assetList = append(assetList, addConnectionInfoToSSMAsset(instance, accountId, conn))
 		}
 	case connection.DiscoveryECR:
 		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
@@ -152,8 +152,8 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 		}
 
 		for i := range containers.Data {
-			a := containers.Data[i].(*mqlAwsEcsContainer)
-			assetList = append(assetList, addConnectionInfoToECSContainerAsset(a))
+			c := containers.Data[i].(*mqlAwsEcsContainer)
+			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
 		}
 		containerInst := ecs.GetContainerInstances()
 		if containerInst == nil {
@@ -162,7 +162,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range containerInst.Data {
 			if a, ok := containerInst.Data[i].(*mqlAwsEc2Instance); ok {
-				assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId))
+				assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId, conn))
 			} else if b, ok := containerInst.Data[i].(*mqlAwsEcsInstance); ok {
 				assetList = append(assetList, addConnectionInfoToECSContainerInstanceAsset(b, accountId, conn))
 			}
