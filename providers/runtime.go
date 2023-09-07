@@ -69,7 +69,8 @@ func (r *Runtime) Close() {
 		log.Error().Err(err).Msg("failed to save recording")
 	}
 
-	r.coordinator.Close(r.Provider.Instance)
+	// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
+	// r.coordinator.Close(r.Provider.Instance)
 	r.schema.Close()
 }
 
