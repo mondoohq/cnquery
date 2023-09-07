@@ -87,7 +87,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 						sgs = append(sgs, mqlSg.(*mqlAwsEc2Securitygroup))
 					}
 
-					mqlDBInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
+					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.rds.dbinstance",
 						map[string]*llx.RawData{
 							"arn":                           llx.StringData(convert.ToString(dbInstance.DBInstanceArn)),
 							"name":                          llx.StringData(convert.ToString(dbInstance.DBName)),
@@ -172,7 +172,7 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	// load all rds db instances
-	obj, err := runtime.CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -231,7 +231,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					// 	}
 					// 	mqlRdsDbInstances = append(mqlRdsDbInstances, mqlInstance)
 					// }
-					mqlDbCluster, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
+					mqlDbCluster, err := CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToString(cluster.DBClusterArn)),
 							"region": llx.StringData(regionVal),
@@ -273,7 +273,7 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBClusterSnapshots {
-			mqlDbSnapshot, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.snapshot",
+			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
 					"arn":               llx.StringData(convert.ToString(snapshot.DBClusterSnapshotArn)),
 					"id":                llx.StringData(convert.ToString(snapshot.DBClusterSnapshotIdentifier)),
@@ -312,7 +312,7 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, snapshot := range snapshots.DBSnapshots {
-			mqlDbSnapshot, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.rds.snapshot",
+			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
 					"arn":               llx.StringData(convert.ToString(snapshot.DBSnapshotArn)),
 					"id":                llx.StringData(convert.ToString(snapshot.DBSnapshotIdentifier)),

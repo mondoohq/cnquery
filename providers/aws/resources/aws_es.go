@@ -68,7 +68,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 			for _, domain := range domains.DomainNames {
 				// note: the api returns name and region here, so we just use that.
 				// the arn is not returned until we get to the describe call
-				mqlDomain, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.es.domain",
+				mqlDomain, err := CreateResource(a.MqlRuntime, "aws.es.domain",
 					map[string]*llx.RawData{
 						"name":   llx.StringData(convert.ToString(domain.DomainName)),
 						"region": llx.StringData(regionVal),

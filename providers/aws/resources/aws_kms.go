@@ -65,7 +65,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 
 				for _, key := range keyList.Keys {
-					mqlRecorder, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.kms.key",
+					mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.kms.key",
 						map[string]*llx.RawData{
 							"id":     llx.StringData(convert.ToString(key.KeyId)),
 							"arn":    llx.StringData(convert.ToString(key.KeyArn)),
@@ -146,7 +146,7 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, errors.New("no access to key")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.kms", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.kms", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

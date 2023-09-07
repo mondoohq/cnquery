@@ -136,7 +136,7 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for i := range entries {
-		userEntry, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.usercredentialreportentry",
+		userEntry, err := CreateResource(a.MqlRuntime, "aws.iam.usercredentialreportentry",
 			map[string]*llx.RawData{"properties": llx.MapData(entries[i], types.String)},
 		)
 		if err != nil {
@@ -268,7 +268,7 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 		return nil, errors.New("no iam user provided")
 	}
 
-	return a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.user",
+	return CreateResource(a.MqlRuntime, "aws.iam.user",
 		map[string]*llx.RawData{
 			"arn":              llx.StringData(convert.ToString(usr.Arn)),
 			"id":               llx.StringData(convert.ToString(usr.UserId)),
@@ -307,7 +307,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 			}
 		}
 
-		mqlAwsIamMfaDevice, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice",
+		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice",
 			map[string]*llx.RawData{
 				"serialNumber": llx.StringData(convert.ToString(device.SerialNumber)),
 				"enableDate":   llx.TimeData(toTime(device.EnableDate)),
@@ -329,7 +329,7 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 		policy := policies[i]
 		// NOTE: here we have all the information about the policy already
 		// therefore we pass the information in, so that MQL does not have to resolve it again
-		mqlAwsIamPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policy",
+		mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
 			map[string]*llx.RawData{
 				"arn":             llx.StringData(convert.ToString(policy.Arn)),
 				"id":              llx.StringData(convert.ToString(policy.PolicyId)),
@@ -431,7 +431,7 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 		for i := range rolesResp.Roles {
 			role := rolesResp.Roles[i]
 
-			mqlAwsIamRole, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.role",
+			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, "aws.iam.role",
 				map[string]*llx.RawData{
 					"arn":         llx.StringData(convert.ToString(role.Arn)),
 					"id":          llx.StringData(convert.ToString(role.RoleId)),
@@ -677,7 +677,7 @@ func (a *mqlAwsIamUsercredentialreportentry) user() (*mqlAwsIamUser, error) {
 		return nil, nil
 	}
 
-	mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.user",
+	mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.user",
 		map[string]*llx.RawData{"name": llx.StringData(props["user"].(string))},
 	)
 	if err != nil {
@@ -826,7 +826,7 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 		for i := range userAttachedPolicies.AttachedPolicies {
 			attachedPolicy := userAttachedPolicies.AttachedPolicies[i]
 
-			mqlAwsIamPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policy",
+			mqlAwsIamPolicy, err := CreateResource(a.MqlRuntime, "aws.iam.policy",
 				map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(attachedPolicy.PolicyArn))},
 			)
 			if err != nil {
@@ -1011,7 +1011,7 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
 	for i := range entities.PolicyUsers {
 		usr := entities.PolicyUsers[i]
 
-		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.user",
+		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.user",
 			map[string]*llx.RawData{
 				"name": llx.StringData(convert.ToString(usr.UserName)),
 			})
@@ -1035,7 +1035,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
 	for i := range entities.PolicyRoles {
 		role := entities.PolicyRoles[i]
 
-		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.role",
+		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.role",
 			map[string]*llx.RawData{"name": llx.StringData(convert.ToString(role.RoleName))},
 		)
 		if err != nil {
@@ -1059,7 +1059,7 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]interface{}, error) {
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
-		mqlUser, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.group",
+		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.group",
 			map[string]*llx.RawData{
 				"name": llx.StringData(convert.ToString(group.GroupName)),
 			})
@@ -1088,7 +1088,7 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 		if policyversion.IsDefaultVersion {
-			mqlAwsIamPolicyVersion, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policyversion",
+			mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, "aws.iam.policyversion",
 				map[string]*llx.RawData{
 					"arn":              llx.StringData(arn),
 					"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),
@@ -1121,7 +1121,7 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 	for i := range policyVersions.Versions {
 		policyversion := policyVersions.Versions[i]
 
-		mqlAwsIamPolicyVersion, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.iam.policyversion",
+		mqlAwsIamPolicyVersion, err := CreateResource(a.MqlRuntime, "aws.iam.policyversion",
 			map[string]*llx.RawData{
 				"arn":              llx.StringData(arn),
 				"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),

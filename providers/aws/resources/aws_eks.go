@@ -106,7 +106,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
 				}
 
-				mqlFilesystem, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.eks.cluster", args)
+				mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.eks.cluster", args)
 				if err != nil {
 					return nil, err
 				}

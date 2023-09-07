@@ -74,7 +74,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
-				mqlRecorder, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.config.recorder",
+				mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
 						"name":                       llx.StringData(convert.ToString(r.Name)),
 						"roleArn":                    llx.StringData(convert.ToString(r.RoleARN)),
@@ -170,7 +170,7 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 				if err != nil {
 					return nil, err
 				}
-				mqlRule, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.config.rule",
+				mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.rule",
 					map[string]*llx.RawData{
 						"arn":    llx.StringData(convert.ToString(r.ConfigRuleArn)),
 						"state":  llx.StringData(string(r.ConfigRuleState)),

@@ -78,7 +78,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 				for i := range vpcs.Vpcs {
 					v := vpcs.Vpcs[i]
 
-					mqlVpc, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc",
+					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
 							"arn":       llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
 							"id":        llx.StringData(convert.ToString(v.VpcId)),
@@ -122,7 +122,7 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 		}
 
 		for _, flowLog := range flowLogsRes.FlowLogs {
-			mqlFlowLog, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
+			mqlFlowLog, err := CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
 				map[string]*llx.RawData{
 					"id":     llx.StringData(convert.ToString(flowLog.FlowLogId)),
 					"vpc":    llx.StringData(vpc),
@@ -166,7 +166,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlRouteTable, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.vpc.routetable",
+			mqlRouteTable, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable",
 				map[string]*llx.RawData{
 					"id":     llx.StringData(convert.ToString(routeTable.RouteTableId)),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
@@ -197,7 +197,7 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	}
 
 	// load all vpcs
-	obj, err := runtime.CreateResource(runtime, "aws", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

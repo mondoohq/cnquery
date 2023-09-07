@@ -41,7 +41,7 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.organization",
+	res, err := CreateResource(a.MqlRuntime, "aws.organization",
 		map[string]*llx.RawData{
 			"arn":                llx.StringData(convert.ToString(org.Organization.Arn)),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),

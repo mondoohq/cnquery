@@ -175,7 +175,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 						sgs = append(sgs, mqlSg)
 					}
 
-					mqlCluster, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elasticache.cluster",
+					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.elasticache.cluster",
 						map[string]*llx.RawData{
 							"arn":                       llx.StringData(convert.ToString(cluster.ARN)),
 							"atRestEncryptionEnabled":   llx.BoolData(convert.ToBool(cluster.AtRestEncryptionEnabled)),

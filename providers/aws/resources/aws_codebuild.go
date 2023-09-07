@@ -70,7 +70,7 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 				}
 
 				for _, project := range projects.Projects {
-					mqlProject, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.codebuild.project",
+					mqlProject, err := CreateResource(a.MqlRuntime, "aws.codebuild.project",
 						map[string]*llx.RawData{
 							"name":   llx.StringData(project),
 							"region": llx.StringData(regionVal),

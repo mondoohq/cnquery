@@ -79,7 +79,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 					for _, group := range cluster.ClusterParameterGroups {
 						names = append(names, convert.ToString(group.ParameterGroupName))
 					}
-					mqlDBInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.redshift.cluster",
+					mqlDBInstance, err := CreateResource(a.MqlRuntime, "aws.redshift.cluster",
 						map[string]*llx.RawData{
 							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToString(cluster.ClusterIdentifier))),
 							"name":                             llx.StringData(convert.ToString(cluster.ClusterIdentifier)),
@@ -144,7 +144,7 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	// load all rds db instances
-	obj, err := runtime.CreateResource(runtime, "aws.redshift", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.redshift", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

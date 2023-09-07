@@ -74,7 +74,7 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 					if err != nil {
 						return nil, err
 					}
-					mqlEndpoint, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint",
+					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToString(endpoint.EndpointArn)),
 							"name":   llx.StringData(convert.ToString(endpoint.EndpointName)),
@@ -161,7 +161,7 @@ func (a *mqlAwsSagemaker) getNotebookInstances(conn *connection.AwsConnection) [
 					if err != nil {
 						return nil, err
 					}
-					mqlEndpoint, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance",
+					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToString(instance.NotebookInstanceArn)),
 							"name":   llx.StringData(convert.ToString(instance.NotebookInstanceName)),
@@ -201,7 +201,7 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, errors.New("arn required to fetch sagemaker notebookinstance")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.sagemaker", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -248,7 +248,7 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 			args["kmsKey"] = llx.ResourceData(mqlKeyResource, mqlKeyResource.MqlName())
 		}
 	}
-	mqlInstanceDetails, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance.details", args)
+	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance.details", args)
 	if err != nil {
 		return nil, err
 	}

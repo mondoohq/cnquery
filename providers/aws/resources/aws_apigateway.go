@@ -70,7 +70,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 				}
 
 				for _, restApi := range restApisResp.Items {
-					mqlRestApi, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.apigateway.restapi",
+					mqlRestApi, err := CreateResource(a.MqlRuntime, "aws.apigateway.restapi",
 						map[string]*llx.RawData{
 							"arn":         llx.StringData(fmt.Sprintf(apiArnPattern, regionVal, conn.AccountId(), convert.ToString(restApi.Id))),
 							"id":          llx.StringData(convert.ToString(restApi.Id)),
@@ -113,7 +113,7 @@ func initAwsApigatewayRestapi(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return nil, nil, errors.New("arn required to fetch gateway restapi")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.apigateway", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.apigateway", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -153,7 +153,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlStage, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.apigateway.stage",
+		mqlStage, err := CreateResource(a.MqlRuntime, "aws.apigateway.stage",
 			map[string]*llx.RawData{
 				"arn":            llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToString(stage.StageName))),
 				"name":           llx.StringData(convert.ToString(stage.StageName)),

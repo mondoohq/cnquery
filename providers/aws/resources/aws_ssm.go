@@ -83,7 +83,7 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 
 			log.Debug().Str("account", conn.AccountId()).Str("region", region).Int("instance count", len(ssminstances)).Msg("found ec2 ssm instances")
 			for _, instance := range ssminstances {
-				mqlInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ssm.instance",
+				mqlInstance, err := CreateResource(a.MqlRuntime, "aws.ssm.instance",
 					map[string]*llx.RawData{
 						"instanceId":   llx.StringData(convert.ToString(instance.InstanceId)),
 						"pingStatus":   llx.StringData(string(instance.PingStatus)),
@@ -129,7 +129,7 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, errors.New("arn required to fetch ssm instance")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.ssm", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.ssm", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

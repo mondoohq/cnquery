@@ -65,7 +65,7 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 				}
 				return nil, err
 			}
-			mqlHub, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.securityhub.hub",
+			mqlHub, err := CreateResource(a.MqlRuntime, "aws.securityhub.hub",
 				map[string]*llx.RawData{
 					"arn":          llx.StringData(convert.ToString(secHub.HubArn)),
 					"subscribedAt": llx.StringData(convert.ToString(secHub.SubscribedAt)),
