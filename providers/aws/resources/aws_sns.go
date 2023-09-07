@@ -94,7 +94,7 @@ func (a *mqlAwsSns) getTopics(conn *connection.AwsConnection) []*jobpool.Job {
 					return nil, err
 				}
 				for _, topic := range topics.Topics {
-					mqlTopic, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sns.topic",
+					mqlTopic, err := CreateResource(a.MqlRuntime, "aws.sns.topic",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToString(topic.TopicArn)),
 							"region": llx.StringData(regionVal),
@@ -184,7 +184,7 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]interface{}, error) {
 			params.NextToken = nextToken
 		}
 		for _, sub := range subsByTopic.Subscriptions {
-			mqlSub, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.sns.subscription",
+			mqlSub, err := CreateResource(a.MqlRuntime, "aws.sns.subscription",
 				map[string]*llx.RawData{
 					"arn":      llx.StringData(convert.ToString(sub.SubscriptionArn)),
 					"protocol": llx.StringData(convert.ToString(sub.Protocol)),

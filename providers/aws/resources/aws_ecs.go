@@ -32,7 +32,7 @@ func (a *mqlAwsEcs) id() (string, error) {
 }
 
 func (a *mqlAwsEcs) containers() ([]interface{}, error) {
-	obj, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
+	obj, err := CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (a *mqlAwsEcs) containers() ([]interface{}, error) {
 }
 
 func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
-	obj, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
+	obj, err := CreateResource(a.MqlRuntime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 					"region":           llx.StringData(region),
 				}
 				if strings.HasPrefix(convert.ToString(ci.Ec2InstanceId), "i-") {
-					mqlInstanceResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ec2.instance",
+					mqlInstanceResource, err := CreateResource(a.MqlRuntime, "aws.ec2.instance",
 						map[string]*llx.RawData{
 							"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, region, conn.AccountId(), convert.ToString(ci.Ec2InstanceId))),
 						})
@@ -249,7 +249,7 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 					}
 				}
 
-				mqlEcsInstance, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecs.instance", args)
+				mqlEcsInstance, err := CreateResource(a.MqlRuntime, "aws.ecs.instance", args)
 				if err != nil {
 					return nil, err
 				}
@@ -297,7 +297,7 @@ func (a *mqlAwsEcsCluster) tasks() ([]interface{}, error) {
 			params.NextToken = nextToken
 		}
 		for _, task := range resp.TaskArns {
-			mqlTask, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecs.task",
+			mqlTask, err := CreateResource(a.MqlRuntime, "aws.ecs.task",
 				map[string]*llx.RawData{
 					"arn":         llx.StringData(task),
 					"clusterName": llx.StringData(name),
@@ -396,7 +396,7 @@ func initAwsEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			name = name + "-" + publicIp
 		}
 
-		mqlContainer, err := runtime.CreateResource(runtime, "aws.ecs.container",
+		mqlContainer, err := CreateResource(runtime, "aws.ecs.container",
 			map[string]*llx.RawData{
 				"name": llx.StringData(name),
 				// "platformFamily", pf,
@@ -433,7 +433,7 @@ func initAwsEcsContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
-	obj, err := runtime.CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.ecs", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

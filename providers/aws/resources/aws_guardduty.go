@@ -72,7 +72,7 @@ func (a *mqlAwsGuardduty) getDetectors(conn *connection.AwsConnection) []*jobpoo
 				}
 
 				for _, id := range detectors.DetectorIds {
-					mqlCluster, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.guardduty.detector",
+					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.guardduty.detector",
 						map[string]*llx.RawData{
 							"id":     llx.StringData(id),
 							"region": llx.StringData(regionVal),

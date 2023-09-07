@@ -81,7 +81,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		if region == "" {
 			region = "us-east-1"
 		}
-		mqlS3Bucket, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket",
+		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
 				"name":     llx.StringData(convert.ToString(bucket.Name)),
 				"arn":      llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
@@ -149,7 +149,7 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	name := splitArn[1]
 	log.Debug().Msgf("no bucket found for %s", arn)
-	mqlAwsS3Bucket, err := runtime.CreateResource(runtime, "aws.s3.bucket",
+	mqlAwsS3Bucket, err := CreateResource(runtime, "aws.s3.bucket",
 		map[string]*llx.RawData{
 			"arn":    llx.StringData(arn),
 			"name":   llx.StringData(name),
@@ -185,7 +185,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 
 	if policy != nil && policy.Policy != nil {
 		// create the policy resource
-		mqlS3BucketPolicy, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
+		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
 				"name":     llx.StringData(bucketname),
 				"document": llx.StringData(convert.ToString(policy.Policy)),
@@ -312,7 +312,7 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 			id = id + "/" + *grant.Grantee.ID
 		}
 
-		mqlBucketGrant, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket.grant",
+		mqlBucketGrant, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.grant",
 			map[string]*llx.RawData{
 				"id":         llx.StringData(id),
 				"name":       llx.StringData(bucketname),
@@ -408,7 +408,7 @@ func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range cors.CORSRules {
 		corsrule := cors.CORSRules[i]
-		mqlBucketCors, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.s3.bucket.corsrule",
+		mqlBucketCors, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.corsrule",
 			map[string]*llx.RawData{
 				"name":           llx.StringData(bucketname),
 				"allowedHeaders": llx.ArrayData(toInterfaceArr(corsrule.AllowedHeaders), types.String),

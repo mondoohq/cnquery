@@ -69,7 +69,7 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 					return nil, err
 				}
 				for _, cert := range certs.CertificateSummaryList {
-					mqlCert, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.acm.certificate",
+					mqlCert, err := CreateResource(a.MqlRuntime, "aws.acm.certificate",
 						map[string]*llx.RawData{
 							"arn": llx.StringData(convert.ToString(cert.CertificateArn)),
 						})

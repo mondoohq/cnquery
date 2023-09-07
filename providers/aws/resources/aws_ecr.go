@@ -37,7 +37,7 @@ func (a *mqlAwsEcrImage) id() (string, error) {
 }
 
 func (a *mqlAwsEcr) images() ([]interface{}, error) {
-	obj, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr", map[string]*llx.RawData{})
+	obj, err := CreateResource(a.MqlRuntime, "aws.ecr", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			}
 			for i := range repoResp.Repositories {
 				r := repoResp.Repositories[i]
-				mqlRepoResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.repository",
+				mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 					map[string]*llx.RawData{
 						"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
 						"name":       llx.StringData(convert.ToString(r.RepositoryName)),
@@ -160,7 +160,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			for i := range image.ImageTags {
 				tags = append(tags, image.ImageTags[i])
 			}
-			mqlImage, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.image",
+			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
 					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
 					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
@@ -192,7 +192,7 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			for i := range image.ImageTags {
 				tags = append(tags, image.ImageTags[i])
 			}
-			mqlImage, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.image",
+			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
 					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
 					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
@@ -243,7 +243,7 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, errors.New("arn required to fetch ecr image")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.ecr", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.ecr", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -276,7 +276,7 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 	}
 	for i := range repoResp.Repositories {
 		r := repoResp.Repositories[i]
-		mqlRepoResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.ecr.repository",
+		mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 			map[string]*llx.RawData{
 				"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
 				"name":       llx.StringData(convert.ToString(r.RepositoryName)),

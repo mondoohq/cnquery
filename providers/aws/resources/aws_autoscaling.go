@@ -75,7 +75,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
-					mqlGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.autoscaling.group",
+					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
 							"arn":               llx.StringData(convert.ToString(group.AutoScalingGroupARN)),
 							"name":              llx.StringData(convert.ToString(group.AutoScalingGroupName)),

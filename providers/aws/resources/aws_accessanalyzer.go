@@ -67,7 +67,7 @@ func (a *mqlAwsAccessAnalyzer) getAnalyzers(conn *connection.AwsConnection) []*j
 					return nil, err
 				}
 				for _, analyzer := range analyzers.Analyzers {
-					mqlAnalyzer, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.accessanalyzer.analyzer",
+					mqlAnalyzer, err := CreateResource(a.MqlRuntime, "aws.accessanalyzer.analyzer",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(convert.ToString(analyzer.Arn)),
 							"name":   llx.StringData(convert.ToString(analyzer.Name)),

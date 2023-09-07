@@ -90,7 +90,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 							args["kmsKey"] = llx.ResourceData(mqlKeyResource, mqlKeyResource.MqlName())
 						}
 					}
-					mqlFilesystem, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.efs.filesystem", args)
+					mqlFilesystem, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem", args)
 					if err != nil {
 						return nil, err
 					}

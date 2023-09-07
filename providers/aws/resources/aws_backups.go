@@ -73,7 +73,7 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 				return nil, err
 			}
 			for _, v := range vaults.BackupVaultList {
-				mqlGroup, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.backup.vault",
+				mqlGroup, err := CreateResource(a.MqlRuntime, "aws.backup.vault",
 					map[string]*llx.RawData{
 						"arn":  llx.StringData(convert.ToString(v.BackupVaultArn)),
 						"name": llx.StringData(convert.ToString(v.BackupVaultName)),
@@ -120,7 +120,7 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlRP, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
+			mqlRP, err := CreateResource(a.MqlRuntime, "aws.backup.vaultRecoveryPoint",
 				map[string]*llx.RawData{
 					"arn":              llx.StringData(convert.ToString(rp.RecoveryPointArn)),
 					"resourceType":     llx.StringData(convert.ToString(rp.ResourceType)),

@@ -96,7 +96,7 @@ func initDynamoDbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	// load all rds db instances
-	obj, err := runtime.CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -189,7 +189,7 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
 
-			mqlLimits, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.dynamodb.limit",
+			mqlLimits, err := CreateResource(a.MqlRuntime, "aws.dynamodb.limit",
 				map[string]*llx.RawData{
 					"arn":             llx.StringData(fmt.Sprintf(limitsArn, regionVal, conn.AccountId())),
 					"region":          llx.StringData(regionVal),
@@ -220,7 +220,7 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
-		mqlTable, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
+		mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
 			map[string]*llx.RawData{
 				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToString(table.GlobalTableName))),
 				"name": llx.StringData(convert.ToString(table.GlobalTableName)),
@@ -291,7 +291,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 					return nil, err
 				}
 
-				mqlTable, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.dynamodb.table",
+				mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
 					map[string]*llx.RawData{
 						"arn":                   llx.StringData(fmt.Sprintf(dynamoTableArnPattern, regionVal, conn.AccountId(), tableName)),
 						"name":                  llx.StringData(tableName),
@@ -354,7 +354,7 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return nil, nil, errors.New("arn required to fetch dynamodb table")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

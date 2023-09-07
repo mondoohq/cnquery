@@ -64,7 +64,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	log.Debug().Str("arn", arn).Msg("init cloudtrail trail with arn")
 
 	// load all s3 buckets
-	obj, err := runtime.CreateResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.cloudtrail", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +78,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return args, trail, nil
 		}
 	}
-	return args, &mqlAwsCloudtrailTrail{}, err
+	return args, nil, err
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
@@ -166,7 +166,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					}
 				}
 
-				mqlAwsCloudtrailTrail, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
+				mqlAwsCloudtrailTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
 				if err != nil {
 					return nil, err
 				}

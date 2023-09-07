@@ -69,7 +69,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					if err != nil {
 						return nil, err
 					}
-					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
 							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
@@ -142,7 +142,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
-					mqlLb, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
 							"arn":     llx.StringData(convert.ToString(lb.LoadBalancerArn)),
 							"dnsName": llx.StringData(convert.ToString(lb.DNSName)),
@@ -182,7 +182,7 @@ func initAwsElbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
 	}
 
-	obj, err := runtime.CreateResource(runtime, "aws.elb", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.elb", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

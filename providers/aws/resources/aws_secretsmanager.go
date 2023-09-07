@@ -72,7 +72,7 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {
-					mqlSecret, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.secretsmanager.secret",
+					mqlSecret, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret",
 						map[string]*llx.RawData{
 							"arn":             llx.StringData(convert.ToString(secret.ARN)),
 							"name":            llx.StringData(convert.ToString(secret.Name)),

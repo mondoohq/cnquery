@@ -86,7 +86,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 							tags[k] = v
 						}
 					}
-					mqlFunc, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.lambda.function",
+					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
 							"arn":          llx.StringData(convert.ToString(function.FunctionArn)),
 							"name":         llx.StringData(convert.ToString(function.FunctionName)),
@@ -129,7 +129,7 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	// load all rds db instances
-	obj, err := runtime.CreateResource(runtime, "aws.lambda", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "aws.lambda", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}

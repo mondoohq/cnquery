@@ -50,7 +50,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 			if or := d.Origins; or != nil {
 				for i := range d.Origins.Items {
 					o := d.Origins.Items[i]
-					mqlAwsCloudfrontOrigin, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
+					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
 							"domainName":         llx.StringData(convert.ToString(o.DomainName)),
 							"id":                 llx.StringData(convert.ToString(o.Id)),
@@ -85,7 +85,7 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
 			}
 
-			mqlAwsCloudfrontDist, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
+			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
 			if err != nil {
 				return nil, err
 			}
@@ -144,7 +144,7 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), convert.ToString(funct.Name))),
 			}
 
-			mqlAwsCloudfrontDist, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "aws.cloudfront.function", args)
+			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.function", args)
 			if err != nil {
 				return nil, err
 			}
