@@ -64,7 +64,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return &plugin.ConnectRes{
-		Id:   defaultConnection,
+		Id:   connID,
 		Name: "core",
 	}, nil
 }
