@@ -180,9 +180,15 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}); err != nil {
 			return nil, false, err
 		}
-		log.Debug().Msgf("adding %d asset(s)", len(runtime.Provider.Connection.Inventory.Spec.Assets))
-		assetCandidates = append(assetCandidates, runtime.Provider.Connection.Inventory.Spec.Assets...)
-
+		inventorySpec := runtime.Provider.Connection
+		if inventorySpec.Inventory != nil &&
+			inventorySpec.Inventory.Spec != nil &&
+			inventorySpec.Inventory.Spec.Assets != nil {
+			log.Debug().Msgf("adding %d discovered asset(s)", len(runtime.Provider.Connection.Inventory.Spec.Assets))
+			assetCandidates = append(assetCandidates, inventorySpec.Inventory.Spec.Assets...)
+		} else {
+			assetCandidates = append(assetCandidates, runtime.Provider.Connection.Asset)
+		}
 		// TODO: we want to keep better track of errors, since there may be
 		// multiple assets coming in. It's annoying to abort the scan if we get one
 		// error at this stage.
