@@ -11,6 +11,15 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
+const (
+	DiscoveryRepository   = "repository"
+	DiscoveryUser         = "user"
+	DiscoveryOrganization = "organization"
+	DiscoveryAll          = "all"
+)
+
+var All = []string{DiscoveryOrganization, DiscoveryRepository, DiscoveryUser}
+
 var (
 	GithubRepoPlatform = &inventory.Platform{
 		Name:    "github-repo",

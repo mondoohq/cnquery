@@ -31,7 +31,7 @@ func init() {
 			Create: createGitGpgSignature,
 		},
 		"github.organization": {
-			// to override args, implement: initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGithubOrganization,
 			Create: createGithubOrganization,
 		},
 		"github.user": {

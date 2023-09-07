@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -121,7 +122,6 @@ func (g *mqlGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-// func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, GithubRepository, error) {
 func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -241,7 +241,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	repoLicense, _, err := conn.Client().Repositories.License(context.Background(), ownerLogin, repoName)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
-			return nil, nil
+			return nil, errors.New("not found")
 		}
 		return nil, err
 	}
