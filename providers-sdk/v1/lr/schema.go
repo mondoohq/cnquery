@@ -74,8 +74,9 @@ func Schema(ast *LR) (*resources.Schema, error) {
 			child, ok := res.Resources[rem]
 			if !ok {
 				child = &resources.ResourceInfo{
-					Id:     rem,
-					Fields: map[string]*resources.Field{},
+					Id:          rem,
+					Fields:      map[string]*resources.Field{},
+					IsExtension: true,
 				}
 				res.Resources[rem] = child
 			}
@@ -183,15 +184,20 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		return nil, err
 	}
 
+	if init != nil && r.IsExtension {
+		return nil, errors.New("Resource '" + r.ID + "' as an init method AND is flagged as 'extends'. You cannot do both at the same time. Either this resource extends another or it is the root resource that gets extended.")
+	}
+
 	res := &resources.ResourceInfo{
-		Id:       r.ID,
-		Name:     r.ID,
-		Title:    r.title,
-		Desc:     r.desc,
-		Init:     init,
-		Private:  r.IsPrivate,
-		Fields:   fields,
-		Defaults: r.Defaults,
+		Id:          r.ID,
+		Name:        r.ID,
+		Title:       r.title,
+		Desc:        r.desc,
+		Init:        init,
+		Private:     r.IsPrivate,
+		IsExtension: r.IsExtension,
+		Fields:      fields,
+		Defaults:    r.Defaults,
 	}
 
 	if r.ListType != nil {

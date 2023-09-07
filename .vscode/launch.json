@@ -140,6 +140,16 @@
         "--log-level",
         "debug"
       ],
+    },
+    {
+      "name": "LR the os provider",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/providers-sdk/v1/lr/cli/main.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "go", "./providers/os/resources/os.lr", "--dist", "./providers/os/dist",
+      ],
     }
   ]
 }

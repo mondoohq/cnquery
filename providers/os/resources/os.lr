@@ -17,7 +17,7 @@ alias os.base.services = services
 alias os.unix.sshd = sshd
 alias k8s.kubelet = kubelet
 
-asset {
+extend asset {
   vulnerabilityReport() dict
 }
 

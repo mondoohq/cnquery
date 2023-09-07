@@ -10,6 +10,19 @@ func (s *Schema) Add(other *Schema) *Schema {
 
 	for k, v := range other.Resources {
 		if existing, ok := s.Resources[k]; ok {
+			// We will merge resources into it until we find one that is not extending.
+			// Technically, this should only happen with one resource and one only,
+			// i.e. the root resource. This is more of a protection.
+			if existing.IsExtension {
+				existing.IsExtension = v.IsExtension
+				existing.Provider = v.Provider
+				existing.Init = v.Init
+			} else if !v.IsExtension {
+				// TODO: clean up any resource that clashes right now. There are a few
+				// implicit extensions that cause this behavior at the moment.
+				// log.Warn().Str("resource", k).Msg("found a resource that is not flagged as `extends` properly")
+			}
+
 			if v.Title != "" {
 				existing.Title = v.Title
 			}
@@ -18,10 +31,6 @@ func (s *Schema) Add(other *Schema) *Schema {
 			}
 			if !v.Private {
 				existing.Private = false
-			}
-			if v.Init != nil {
-				existing.Init = v.Init
-				existing.Provider = v.Provider
 			}
 			if v.Defaults != "" {
 				existing.Defaults = v.Defaults
