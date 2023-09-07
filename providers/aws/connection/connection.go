@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type AwsConnection struct {
@@ -169,6 +170,10 @@ func (p *AwsConnection) AccountId() string {
 
 func (p *AwsConnection) Profile() string {
 	return p.profile
+}
+
+func (p *AwsConnection) Type() shared.ConnectionType {
+	return "aws"
 }
 
 func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {

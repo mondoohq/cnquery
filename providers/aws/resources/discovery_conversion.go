@@ -235,8 +235,8 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		name = labelName
 	}
 	asset.Name = name
-	// if there is a public ip, we assume ssh is an option
-	if instance.PublicIp.Data != "" {
+	// if there is a public ip & it is running, we assume ssh is an option
+	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
 		imageName := ""
 		if instance.GetImage().Data != nil {
 			imageName = instance.GetImage().Data.Name.Data
@@ -280,7 +280,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	return asset
 }
 
-func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, profile string) *inventory.Asset {
+func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.IdDetector = []string{"aws-ec2"}
@@ -294,10 +294,11 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 	}
 	asset.State = mapSmmManagedPingStateCode(ssm)
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
-	asset.Name = instance.InstanceId.Data
-	if name := asset.Labels["Name"]; name != "" {
-		asset.Name = name
+	name := instance.InstanceId.Data
+	if lname := asset.Labels["Name"]; name != "" {
+		name = lname
 	}
+	asset.Name = name
 	imageName := ""
 	if instance.GetImage().Data != nil {
 		imageName = instance.GetImage().Data.Name.Data
@@ -312,19 +313,29 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 	if instance.PublicIp.Data != "" {
 		host = instance.PublicIp.Data
 	}
-
-	asset.Connections = []*inventory.Config{{
-		Backend:     "ssh",
-		Host:        host,
-		Insecure:    true,
-		Runtime:     "aws_ec2",
-		Credentials: creds,
-		Options: map[string]string{
-			"region":   instance.Region.Data,
-			"profile":  profile,
-			"instance": instance.InstanceId.Data,
-		},
-	}}
+	if ssm == string(ssmtypes.PingStatusOnline) {
+		asset.Connections = []*inventory.Config{{
+			Backend:     "ssh",
+			Host:        host,
+			Insecure:    true,
+			Runtime:     "aws_ec2",
+			Credentials: creds,
+			Options: map[string]string{
+				"region":   instance.Region.Data,
+				"profile":  conn.Profile(),
+				"instance": instance.InstanceId.Data,
+			},
+		}}
+	} else {
+		asset = MqlObjectToAsset(accountId,
+			mqlObject{
+				name: name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
+				awsObject: awsObject{
+					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
+					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
+				},
+			}, conn)
+	}
 	return asset
 }
 
@@ -383,7 +394,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	}
 	asset.State = mapSmmManagedPingStateCode(instance.PingStatus.Data)
 
-	if strings.HasPrefix(instance.InstanceId.Data, "i-") {
+	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
 		creds[0].Type = vault.CredentialType_aws_ec2_ssm_session // this will only work for ec2 instances
 		asset.Connections = []*inventory.Config{{
 			Backend:     "ssh",
@@ -452,7 +463,8 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, profile string) *invento
 		tag := image.Tags.Data[i].(string)
 		imageTags = append(imageTags, tag)
 		a.Connections = append(a.Connections, &inventory.Config{
-			Backend: "container_image",
+			Type:    "registry-image",
+			Backend: "registry-image",
 			Host:    image.Uri.Data + ":" + tag,
 			Options: map[string]string{
 				"region":  image.Region.Data,

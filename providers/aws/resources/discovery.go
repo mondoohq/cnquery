@@ -101,7 +101,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
 			if instance.GetSsm() != nil {
 				if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil && s == "Online" {
-					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn.Profile()))
+					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn))
 				}
 			}
 		}

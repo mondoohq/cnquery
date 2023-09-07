@@ -29,6 +29,13 @@ type Connection interface {
 	Capabilities() Capabilities
 }
 
+type SimpleConnection interface {
+	ID() uint32
+	Name() string
+	Type() ConnectionType
+	Asset() *inventory.Asset
+}
+
 type Command struct {
 	Command    string
 	Stats      PerfStats
