@@ -66,7 +66,10 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		return errors.New("failed to detect OS")
 	}
 
-	detectors := mapDetectors(asset.IdDetector)
+	var detectors map[string]struct{}
+	if asset.Platform.Kind != "container-image" {
+		detectors = mapDetectors(asset.IdDetector)
+	}
 
 	if hasDetector(detectors, IdDetector_Hostname) {
 		if id, ok := hostname.Hostname(conn, asset.Platform); ok {

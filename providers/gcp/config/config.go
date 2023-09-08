@@ -41,6 +41,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "The path to the service account credentials to access the APIs with",
 				},
+				{
+					Long:    "repository",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "specify the GCR repository to scan (only used for gcr sub command)",
+				},
 			},
 		},
 	},
