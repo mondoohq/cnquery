@@ -719,6 +719,8 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				if mqlImage != nil {
 					args["image"] = llx.ResourceData(mqlImage, mqlImage.MqlName())
 				}
+			} else {
+				args["image"] = llx.NilData
 			}
 
 			// add vpc if there is one
@@ -731,9 +733,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 					return nil, err
 				}
 				if mqlVpcResource != nil {
-					mqlVpc := mqlVpcResource.(*mqlAwsVpc)
-					args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+					args["vpc"] = llx.ResourceData(mqlVpcResource, mqlVpcResource.MqlName())
 				}
+			} else {
+				args["vpc"] = llx.NilData
 			}
 
 			// only add a keypair if the ec2 instance has one attached
@@ -747,9 +750,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 					return nil, err
 				}
 				if mqlKeyPair != nil {
-					mqlKp := mqlKeyPair.(*mqlAwsEc2Keypair)
-					args["keypair"] = llx.ResourceData(mqlKp, mqlKp.MqlName())
+					args["keypair"] = llx.ResourceData(mqlKeyPair, mqlKeyPair.MqlName())
 				}
+			} else {
+				args["keypair"] = llx.NilData
 			}
 
 			mqlEc2Instance, err := CreateResource(a.MqlRuntime, "aws.ec2.instance", args)
@@ -874,11 +878,11 @@ func (a *mqlAwsEc2Instance) id() (string, error) {
 }
 
 func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
-	return a.GetVpc().Data, nil
+	return a.Vpc.Data, nil
 }
 
 func (a *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
-	return a.GetKeypair().Data, nil
+	return a.Keypair.Data, nil
 }
 
 func (a *mqlAwsEc2Instance) ssm() (interface{}, error) {

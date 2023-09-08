@@ -82,7 +82,7 @@ func (a *mqlAwsEcs) containerInstances() ([]interface{}, error) {
 }
 
 func (a *mqlAwsEcsInstance) ec2Instance() (*mqlAwsEc2Instance, error) {
-	return nil, nil
+	return a.Ec2Instance.Data, nil
 }
 
 func (a *mqlAwsEcs) clusters() ([]interface{}, error) {
@@ -247,6 +247,8 @@ func (a *mqlAwsEcsCluster) containerInstances() ([]interface{}, error) {
 						mqlInstance := mqlInstanceResource.(*mqlAwsEc2Instance)
 						args["ec2Instance"] = llx.ResourceData(mqlInstance, mqlInstance.MqlName())
 					}
+				} else {
+					args["ec2Instance"] = llx.NilData
 				}
 
 				mqlEcsInstance, err := CreateResource(a.MqlRuntime, "aws.ecs.instance", args)
