@@ -12,6 +12,7 @@ resources:
     fields:
       id: {}
       name: {}
+    is_private: true
     min_mondoo_version: latest
   opcua.node:
     fields:
@@ -30,6 +31,7 @@ resources:
       properties: {}
       unit: {}
       writeable: {}
+    is_private: true
     min_mondoo_version: latest
   opcua.server:
     fields:

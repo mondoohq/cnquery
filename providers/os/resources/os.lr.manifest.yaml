@@ -2,8 +2,49 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 resources:
+  asset:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
+  asset.eol:
+    fields:
+      date: {}
+      docsUrl: {}
+      productUrl: {}
+    min_mondoo_version: latest
+  audit.advisory:
+    fields:
+      description: {}
+      id: {}
+      modified: {}
+      mrn: {}
+      published: {}
+      title: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  audit.cve:
+    fields:
+      id: {}
+      modified: {}
+      mrn: {}
+      published: {}
+      state: {}
+      summary: {}
+      unscored: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  audit.cvss:
+    fields:
+      score: {}
+      vector: {}
+    is_private: true
+    min_mondoo_version: latest
   auditpol:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
     snippets:
     - query: auditpol { inclusionsetting exclusionsetting subcategory }
@@ -22,6 +63,22 @@ resources:
       subcategory: {}
       subcategoryguid: {}
     min_mondoo_version: 5.15.0
+  authorizedkeys:
+    fields:
+      content: {}
+      file: {}
+      list: {}
+      path: {}
+    min_mondoo_version: latest
+  authorizedkeys.entry:
+    fields:
+      file: {}
+      key: {}
+      label: {}
+      line: {}
+      options: {}
+      type: {}
+    min_mondoo_version: latest
   command:
     fields:
       command: {}
@@ -34,6 +91,8 @@ resources:
       identifier: {}
       identifierType: {}
       name: {}
+      reference:
+        min_mondoo_version: latest
       repository: {}
     min_mondoo_version: 5.31.0
   container.repository:
@@ -162,15 +221,6 @@ resources:
     platform:
       name:
       - equinix
-  files.find:
-    fields:
-      from: {}
-      name: {}
-      permissions: {}
-      regex: {}
-      type: {}
-      xdev: {}
-    min_mondoo_version: 5.15.0
   file:
     fields:
       basename: {}
@@ -206,11 +256,27 @@ resources:
       other_writeable: {}
       sgid: {}
       sticky: {}
+      string:
+        min_mondoo_version: latest
       suid: {}
       user_executable: {}
       user_readable: {}
       user_writeable: {}
     is_private: true
+    min_mondoo_version: 5.15.0
+  files:
+    fields: {}
+    min_mondoo_version: latest
+  files.find:
+    fields:
+      from: {}
+      list:
+        min_mondoo_version: latest
+      name: {}
+      permissions: {}
+      regex: {}
+      type: {}
+      xdev: {}
     min_mondoo_version: 5.15.0
   group:
     fields:
@@ -220,10 +286,13 @@ resources:
       sid: {}
     min_mondoo_version: 5.15.0
   groups:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
     snippets:
-    - query: groups.where(name == 'wheel').list { members.all( name != 'username') }
+    - query: groups.where(name == 'wheel').list { members.all( name != 'username')
+        }
       title: Ensure the user is not part of group
   ip6tables:
     fields:
@@ -272,6 +341,12 @@ resources:
       name: {}
       size: {}
     min_mondoo_version: 5.15.0
+  kubelet:
+    fields:
+      configFile: {}
+      configuration: {}
+      process: {}
+    min_mondoo_version: latest
   logindefs:
     fields:
       content: {}
@@ -279,7 +354,9 @@ resources:
       params: {}
     min_mondoo_version: 5.15.0
   lsblk:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
   lsblk.entry:
     fields:
@@ -374,8 +451,17 @@ resources:
     fields:
       preferences: {}
     min_mondoo_version: 5.15.0
+  mondoo.eol:
+    fields:
+      date: {}
+      product: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
   mount:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
     snippets:
     - query: mount.list { path device fstype options }
@@ -459,23 +545,6 @@ resources:
       restart: {}
       severity: {}
     min_mondoo_version: 6.19.0
-  pam.conf:
-    fields:
-      content: {}
-      entries: {}
-      files: {}
-      services: {}
-    min_mondoo_version: 5.15.0
-  pam.conf.serviceEntry:
-    fields:
-      control: {}
-      lineNumber: {}
-      module: {}
-      options: {}
-      pamType: {}
-      service: {}
-    is_private: true
-    min_mondoo_version: 5.15.0
   package:
     fields:
       arch: {}
@@ -494,12 +563,33 @@ resources:
     - query: package('git').installed
       title: Check if a package is installed
   packages:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
+  pam.conf:
+    fields:
+      content: {}
+      entries: {}
+      files: {}
+      services: {}
+    min_mondoo_version: 5.15.0
+  pam.conf.serviceEntry:
+    fields:
+      control: {}
+      lineNumber: {}
+      module: {}
+      options: {}
+      pamType: {}
+      service: {}
+    is_private: true
     min_mondoo_version: 5.15.0
   parse.certificates:
     fields:
       content: {}
       file: {}
+      list:
+        min_mondoo_version: latest
       path: {}
     min_mondoo_version: 5.15.0
     snippets:
@@ -526,6 +616,13 @@ resources:
       title: Parse JSON from string content
     - query: parse.json("/path/to/test.json").params
       title: Parse JSON from file
+  parse.openpgp:
+    fields:
+      content: {}
+      file: {}
+      list: {}
+      path: {}
+    min_mondoo_version: latest
   parse.plist:
     fields:
       content: {}
@@ -538,17 +635,41 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
-  process:
+  platform.advisories:
     fields:
-      command: {}
-      executable: {}
-      flags: {}
-      pid: {}
+      cvss: {}
+      list: {}
+      stats: {}
+    min_mondoo_version: latest
+  platform.cves:
+    fields:
+      cvss: {}
+      list: {}
+      stats: {}
+    min_mondoo_version: latest
+  platform.eol:
+    fields:
+      date: {}
+      docsUrl: {}
+      productUrl: {}
+    min_mondoo_version: latest
+  port:
+    fields:
+      address: {}
+      port: {}
+      process: {}
+      protocol: {}
+      remoteAddress: {}
+      remotePort: {}
       state: {}
-    min_mondoo_version: 5.15.0
-  processes:
-    fields: {}
-    min_mondoo_version: 5.15.0
+      tls: {}
+      user: {}
+    min_mondoo_version: latest
+  ports:
+    fields:
+      list: {}
+      listening: {}
+    min_mondoo_version: latest
   powershell:
     fields:
       exitcode: {}
@@ -569,6 +690,53 @@ resources:
           stderr == ''
         }
       title: Check the timezone
+  privatekey:
+    fields:
+      encrypted: {}
+      file: {}
+      path: {}
+      pem: {}
+    min_mondoo_version: latest
+  process:
+    fields:
+      command: {}
+      executable: {}
+      flags: {}
+      pid: {}
+      state: {}
+    min_mondoo_version: 5.15.0
+  processes:
+    fields:
+      list:
+        min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
+  python:
+    fields:
+      children: {}
+      packages: {}
+      path: {}
+      toplevel: {}
+    min_mondoo_version: latest
+  python.package:
+    fields:
+      author: {}
+      dependencies: {}
+      file: {}
+      id: {}
+      licences: {}
+      license: {}
+      licenses: {}
+      name: {}
+      path: {}
+      summary: {}
+      version: {}
+    min_mondoo_version: latest
+  python.packages:
+    fields:
+      "": {}
+      children: {}
+      packages: {}
+    min_mondoo_version: latest
   registrykey:
     fields:
       children: {}
@@ -593,6 +761,8 @@ resources:
     fields:
       content: {}
       files: {}
+      path:
+        min_mondoo_version: latest
       settings: {}
     min_mondoo_version: 5.15.0
   secpol:
@@ -616,10 +786,14 @@ resources:
       type: {}
     min_mondoo_version: 5.15.0
   services:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
   shadow:
-    fields: {}
+    fields:
+      list:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
   shadow.entry:
     fields:
@@ -641,6 +815,8 @@ resources:
       ciphers: {}
       content: {}
       file: {}
+      files:
+        min_mondoo_version: latest
       hostkeys: {}
       kexs: {}
       macs: {}
@@ -649,6 +825,23 @@ resources:
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
       title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
+  user:
+    fields:
+      authorizedkeys: {}
+      enabled: {}
+      gid: {}
+      group: {}
+      home: {}
+      name: {}
+      shell: {}
+      sid: {}
+      sshkeys: {}
+      uid: {}
+    min_mondoo_version: latest
+  users:
+    fields:
+      list: {}
+    min_mondoo_version: latest
   windows:
     fields:
       computerInfo: {}
@@ -770,7 +963,6 @@ resources:
       state: {}
       timestamp: {}
       type: {}
-    is_private: true
     min_mondoo_version: 5.35.0
   yaml.path:
     fields:
@@ -805,30 +997,3 @@ resources:
           enabled
         }
       title: Check if a yum repo is enabled
-  python:
-    fields:
-      children: {}
-      packages: {}
-      path: {}
-      toplevel: {}
-    min_mondoo_version: latest
-  python.package:
-    fields:
-      author: {}
-      dependencies: {}
-      file: {}
-      id: {}
-      licences: {}
-      license: {}
-      licenses: {}
-      name: {}
-      path: {}
-      summary: {}
-      version: {}
-    min_mondoo_version: latest
-  python.packages:
-    fields:
-      "": {}
-      children: {}
-      packages: {}
-    min_mondoo_version: latest

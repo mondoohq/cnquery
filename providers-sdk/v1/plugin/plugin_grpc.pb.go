@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	ProviderPlugin_ParseCLI_FullMethodName  = "/cnquery.providers.v1.ProviderPlugin/ParseCLI"
 	ProviderPlugin_Connect_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/Connect"
+	ProviderPlugin_Shutdown_FullMethodName  = "/cnquery.providers.v1.ProviderPlugin/Shutdown"
 	ProviderPlugin_GetData_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/GetData"
 	ProviderPlugin_StoreData_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/StoreData"
 )
@@ -34,6 +35,7 @@ const (
 type ProviderPluginClient interface {
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
+	Shutdown(ctx context.Context, in *ShutdownReq, opts ...grpc.CallOption) (*ShutdownRes, error)
 	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
 	StoreData(ctx context.Context, in *StoreReq, opts ...grpc.CallOption) (*StoreRes, error)
 }
@@ -64,6 +66,15 @@ func (c *providerPluginClient) Connect(ctx context.Context, in *ConnectReq, opts
 	return out, nil
 }
 
+func (c *providerPluginClient) Shutdown(ctx context.Context, in *ShutdownReq, opts ...grpc.CallOption) (*ShutdownRes, error) {
+	out := new(ShutdownRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_Shutdown_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *providerPluginClient) GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error) {
 	out := new(DataRes)
 	err := c.cc.Invoke(ctx, ProviderPlugin_GetData_FullMethodName, in, out, opts...)
@@ -88,6 +99,7 @@ func (c *providerPluginClient) StoreData(ctx context.Context, in *StoreReq, opts
 type ProviderPluginServer interface {
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*ConnectRes, error)
+	Shutdown(context.Context, *ShutdownReq) (*ShutdownRes, error)
 	GetData(context.Context, *DataReq) (*DataRes, error)
 	StoreData(context.Context, *StoreReq) (*StoreRes, error)
 	mustEmbedUnimplementedProviderPluginServer()
@@ -102,6 +114,9 @@ func (UnimplementedProviderPluginServer) ParseCLI(context.Context, *ParseCLIReq)
 }
 func (UnimplementedProviderPluginServer) Connect(context.Context, *ConnectReq) (*ConnectRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
+}
+func (UnimplementedProviderPluginServer) Shutdown(context.Context, *ShutdownReq) (*ShutdownRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Shutdown not implemented")
 }
 func (UnimplementedProviderPluginServer) GetData(context.Context, *DataReq) (*DataRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
@@ -158,6 +173,24 @@ func _ProviderPlugin_Connect_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProviderPlugin_Shutdown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ShutdownReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).Shutdown(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_Shutdown_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).Shutdown(ctx, req.(*ShutdownReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProviderPlugin_GetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DataReq)
 	if err := dec(in); err != nil {
@@ -208,6 +241,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Connect",
 			Handler:    _ProviderPlugin_Connect_Handler,
+		},
+		{
+			MethodName: "Shutdown",
+			Handler:    _ProviderPlugin_Shutdown_Handler,
 		},
 		{
 			MethodName: "GetData",

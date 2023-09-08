@@ -136,6 +136,7 @@ resources:
       netmask: {}
       operationKey: {}
       type: {}
+      urn: {}
     is_private: true
     min_mondoo_version: latest
   vcd.networkPool:

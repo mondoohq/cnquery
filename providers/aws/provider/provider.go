@@ -153,6 +153,13 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AwsConnection)
 	return nil
 }
 
+// Shutdown is automatically called when the shell closes.
+// It is not necessary to implement this method.
+// If you want to do some cleanup, you can do it here.
+func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	return &plugin.ShutdownRes{}, nil
+}
+
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {

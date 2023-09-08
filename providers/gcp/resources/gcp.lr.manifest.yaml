@@ -89,3 +89,1997 @@ resources:
       storageClass: {}
       updated: {}
     min_mondoo_version: 5.15.0
+  gcp.accessApprovalSettings:
+    fields:
+      activeKeyVersion: {}
+      ancestorHasActiveKeyVersion: {}
+      enrolledAncestor: {}
+      enrolledServices: {}
+      invalidKeyVersion: {}
+      notificationEmails: {}
+      resourcePath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.essentialContact:
+    fields:
+      email: {}
+      languageTag: {}
+      notificationCategories: {}
+      resourcePath: {}
+      validated: {}
+      validationState: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.folder:
+    fields:
+      created: {}
+      folders: {}
+      id: {}
+      name: {}
+      parentId: {}
+      projects: {}
+      state: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.folders:
+    fields:
+      children: {}
+      list: {}
+      parentId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.organization:
+    fields:
+      accessApprovalSettings: {}
+      folders: {}
+      iamPolicy: {}
+      id: {}
+      lifecycleState: {}
+      name: {}
+      projects: {}
+      state: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project:
+    fields:
+      accessApprovalSettings: {}
+      apiKeys: {}
+      bigquery: {}
+      cloudFunctions: {}
+      cloudRun: {}
+      commonInstanceMetadata: {}
+      compute: {}
+      createTime: {}
+      dataproc: {}
+      dns: {}
+      essentialContacts: {}
+      gke: {}
+      iam: {}
+      iamPolicy: {}
+      id: {}
+      kms: {}
+      labels: {}
+      lifecycleState: {}
+      logging: {}
+      monitoring: {}
+      name: {}
+      number: {}
+      parentId: {}
+      pubsub: {}
+      recommendations: {}
+      services: {}
+      sql: {}
+      state: {}
+      storage: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.apiKey:
+    fields:
+      annotations: {}
+      created: {}
+      deleted: {}
+      id: {}
+      keyString: {}
+      name: {}
+      projectId: {}
+      resourcePath: {}
+      restrictions: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.apiKey.restrictions:
+    fields:
+      androidKeyRestrictions: {}
+      apiTargets: {}
+      browserKeyRestrictions: {}
+      iosKeyRestrictions: {}
+      parentResourcePath: {}
+      serverKeyRestrictions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService:
+    fields:
+      datasets: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService.dataset:
+    fields:
+      access: {}
+      created: {}
+      description: {}
+      id: {}
+      kmsName: {}
+      labels: {}
+      location: {}
+      models: {}
+      modified: {}
+      name: {}
+      projectId: {}
+      routines: {}
+      tables: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService.dataset.accessEntry:
+    fields:
+      datasetId: {}
+      datasetRef: {}
+      entity: {}
+      entityType: {}
+      id: {}
+      role: {}
+      routineRef: {}
+      viewRef: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService.model:
+    fields:
+      created: {}
+      datasetId: {}
+      description: {}
+      expirationTime: {}
+      id: {}
+      kmsName: {}
+      labels: {}
+      location: {}
+      modified: {}
+      name: {}
+      projectId: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService.routine:
+    fields:
+      created: {}
+      datasetId: {}
+      description: {}
+      id: {}
+      language: {}
+      modified: {}
+      projectId: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.bigqueryService.table:
+    fields:
+      clusteringFields: {}
+      created: {}
+      datasetId: {}
+      description: {}
+      expirationTime: {}
+      externalDataConfig: {}
+      id: {}
+      kmsName: {}
+      labels: {}
+      location: {}
+      materializedView: {}
+      modified: {}
+      name: {}
+      numBytes: {}
+      numLongTermBytes: {}
+      numRows: {}
+      projectId: {}
+      rangePartitioning: {}
+      requirePartitionFilter: {}
+      schema: {}
+      snapshotTime: {}
+      timePartitioning: {}
+      type: {}
+      useLegacySQL: {}
+      viewQuery: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudFunction:
+    fields:
+      availableMemoryMb: {}
+      buildEnvVars: {}
+      buildId: {}
+      buildName: {}
+      buildWorkerPool: {}
+      description: {}
+      dockerRegistry: {}
+      dockerRepository: {}
+      egressSettings: {}
+      entryPoint: {}
+      envVars: {}
+      eventTrigger: {}
+      httpsTrigger: {}
+      ingressSettings: {}
+      kmsKeyName: {}
+      labels: {}
+      maxInstances: {}
+      minInstances: {}
+      name: {}
+      network: {}
+      projectId: {}
+      runtime: {}
+      secretEnvVars: {}
+      secretVolumes: {}
+      serviceAccountEmail: {}
+      sourceArchiveUrl: {}
+      sourceRepository: {}
+      sourceUploadUrl: {}
+      status: {}
+      timeout: {}
+      updated: {}
+      versionId: {}
+      vpcConnector: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService:
+    fields:
+      jobs: {}
+      operations: {}
+      projectId: {}
+      regions: {}
+      services: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.condition:
+    fields:
+      id: {}
+      lastTransitionTime: {}
+      message: {}
+      severity: {}
+      state: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.container:
+    fields:
+      args: {}
+      command: {}
+      env: {}
+      id: {}
+      image: {}
+      livenessProbe: {}
+      name: {}
+      ports: {}
+      resources: {}
+      startupProbe: {}
+      volumeMounts: {}
+      workingDir: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.container.probe:
+    fields:
+      failureThreshold: {}
+      httpGet: {}
+      id: {}
+      initialDelaySeconds: {}
+      periodSeconds: {}
+      tcpSocket: {}
+      timeoutSeconds: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.job:
+    fields:
+      annotations: {}
+      client: {}
+      clientVersion: {}
+      conditions: {}
+      created: {}
+      creator: {}
+      deleted: {}
+      executionCount: {}
+      expired: {}
+      generation: {}
+      id: {}
+      labels: {}
+      lastModifier: {}
+      launchStage: {}
+      name: {}
+      observedGeneration: {}
+      projectId: {}
+      reconciling: {}
+      region: {}
+      template: {}
+      terminalCondition: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.job.executionTemplate:
+    fields:
+      annotations: {}
+      id: {}
+      labels: {}
+      parallelism: {}
+      taskCount: {}
+      template: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.job.executionTemplate.taskTemplate:
+    fields:
+      containers: {}
+      encryptionKey: {}
+      executionEnvironment: {}
+      id: {}
+      maxRetries: {}
+      projectId: {}
+      serviceAccount: {}
+      serviceAccountEmail: {}
+      timeout: {}
+      volumes: {}
+      vpcAccess: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.operation:
+    fields:
+      done: {}
+      name: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.service:
+    fields:
+      annotations: {}
+      conditions: {}
+      created: {}
+      creator: {}
+      deleted: {}
+      description: {}
+      expired: {}
+      generation: {}
+      id: {}
+      ingress: {}
+      labels: {}
+      lastModifier: {}
+      latestCreatedRevision: {}
+      latestReadyRevision: {}
+      launchStage: {}
+      name: {}
+      observedGeneration: {}
+      projectId: {}
+      reconciling: {}
+      region: {}
+      template: {}
+      terminalCondition: {}
+      traffic: {}
+      trafficStatuses: {}
+      updated: {}
+      uri: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.cloudRunService.service.revisionTemplate:
+    fields:
+      annotations: {}
+      containers: {}
+      encryptionKey: {}
+      executionEnvironment: {}
+      id: {}
+      labels: {}
+      maxInstanceRequestConcurrency: {}
+      name: {}
+      projectId: {}
+      scaling: {}
+      serviceAccount: {}
+      serviceAccountEmail: {}
+      timeout: {}
+      volumes: {}
+      vpcAccess: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService:
+    fields:
+      addresses: {}
+      backendServices: {}
+      disks: {}
+      firewalls: {}
+      forwardingRules: {}
+      images: {}
+      instances: {}
+      machineTypes: {}
+      networks: {}
+      projectId: {}
+      regions: {}
+      routers: {}
+      snapshots: {}
+      subnetworks: {}
+      zones: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.address:
+    fields:
+      address: {}
+      addressType: {}
+      created: {}
+      description: {}
+      id: {}
+      ipVersion: {}
+      ipv6EndpointType: {}
+      name: {}
+      network: {}
+      networkTier: {}
+      networkUrl: {}
+      prefixLength: {}
+      purpose: {}
+      regionUrl: {}
+      resourceUrls: {}
+      status: {}
+      subnetwork: {}
+      subnetworkUrl: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.attachedDisk:
+    fields:
+      architecture: {}
+      autoDelete: {}
+      boot: {}
+      deviceName: {}
+      diskSizeGb: {}
+      forceAttach: {}
+      guestOsFeatures: {}
+      id: {}
+      index: {}
+      interface: {}
+      licenses: {}
+      mode: {}
+      projectId: {}
+      source: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.backendService:
+    fields:
+      affinityCookieTtlSec: {}
+      backends: {}
+      cdnPolicy: {}
+      circuitBreakers: {}
+      compressionMode: {}
+      connectionDraining: {}
+      connectionTrackingPolicy: {}
+      consistentHash: {}
+      created: {}
+      customRequestHeaders: {}
+      customResponseHeaders: {}
+      description: {}
+      edgeSecurityPolicy: {}
+      enableCDN: {}
+      failoverPolicy: {}
+      healthChecks: {}
+      iap: {}
+      id: {}
+      loadBalancingScheme: {}
+      localityLbPolicies: {}
+      localityLbPolicy: {}
+      logConfig: {}
+      maxStreamDuration: {}
+      name: {}
+      networkUrl: {}
+      portName: {}
+      protocol: {}
+      regionUrl: {}
+      securityPolicyUrl: {}
+      securitySettings: {}
+      serviceBindingUrls: {}
+      sessionAffinity: {}
+      timeoutSec: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.backendService.backend:
+    fields:
+      balancingMode: {}
+      capacityScaler: {}
+      description: {}
+      failover: {}
+      groupUrl: {}
+      id: {}
+      maxConnections: {}
+      maxConnectionsPerEndpoint: {}
+      maxConnectionsPerInstance: {}
+      maxRate: {}
+      maxRatePerEndpoint: {}
+      maxRatePerInstance: {}
+      maxUtilization: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.backendService.cdnPolicy:
+    fields:
+      bypassCacheOnRequestHeaders: {}
+      cacheKeyPolicy: {}
+      cacheMode: {}
+      clientTtl: {}
+      defaultTtl: {}
+      id: {}
+      maxTtl: {}
+      negativeCaching: {}
+      negativeCachingPolicy: {}
+      requestCoalescing: {}
+      serveWhileStale: {}
+      signedUrlCacheMaxAgeSec: {}
+      signedUrlKeyNames: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.disk:
+    fields:
+      architecture: {}
+      created: {}
+      description: {}
+      diskEncryptionKey: {}
+      guestOsFeatures: {}
+      id: {}
+      labels: {}
+      lastAttachTimestamp: {}
+      lastDetachTimestamp: {}
+      licenses: {}
+      locationHint: {}
+      name: {}
+      physicalBlockSizeBytes: {}
+      provisionedIops: {}
+      sizeGb: {}
+      status: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.firewall:
+    fields:
+      allowed: {}
+      created: {}
+      denied: {}
+      description: {}
+      destinationRanges: {}
+      direction: {}
+      disabled: {}
+      id: {}
+      name: {}
+      priority: {}
+      projectId: {}
+      sourceRanges: {}
+      sourceServiceAccounts: {}
+      sourceTags: {}
+      targetServiceAccounts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.forwardingRule:
+    fields:
+      allPorts: {}
+      allowGlobalAccess: {}
+      backendService: {}
+      created: {}
+      description: {}
+      id: {}
+      ipAddress: {}
+      ipProtocol: {}
+      ipVersion: {}
+      isMirroringCollector: {}
+      labels: {}
+      loadBalancingScheme: {}
+      metadataFilters: {}
+      name: {}
+      network: {}
+      networkTier: {}
+      networkUrl: {}
+      noAutomateDnsZone: {}
+      portRange: {}
+      ports: {}
+      regionUrl: {}
+      serviceDirectoryRegistrations: {}
+      serviceLabel: {}
+      serviceName: {}
+      subnetwork: {}
+      subnetworkUrl: {}
+      targetUrl: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.image:
+    fields:
+      architecture: {}
+      archiveSizeBytes: {}
+      created: {}
+      description: {}
+      diskSizeGb: {}
+      family: {}
+      id: {}
+      labels: {}
+      licenses: {}
+      name: {}
+      projectId: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.instance:
+    fields:
+      canIpForward: {}
+      confidentialInstanceConfig: {}
+      cpuPlatform: {}
+      created: {}
+      deletionProtection: {}
+      description: {}
+      disks: {}
+      enableDisplay: {}
+      enableIntegrityMonitoring: {}
+      enableSecureBoot: {}
+      enableVtpm: {}
+      fingerprint: {}
+      guestAccelerators: {}
+      hostname: {}
+      id: {}
+      keyRevocationActionType: {}
+      labels: {}
+      lastStartTimestamp: {}
+      lastStopTimestamp: {}
+      lastSuspendedTimestamp: {}
+      machineType: {}
+      metadata: {}
+      minCpuPlatform: {}
+      name: {}
+      networkInterfaces: {}
+      physicalHostResourceStatus: {}
+      privateIpv6GoogleAccess: {}
+      projectId: {}
+      reservationAffinity: {}
+      resourcePolicies: {}
+      scheduling: {}
+      serviceAccounts: {}
+      sourceMachineImage: {}
+      startRestricted: {}
+      status: {}
+      statusMessage: {}
+      tags: {}
+      totalEgressBandwidthTier: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.machineType:
+    fields:
+      created: {}
+      description: {}
+      guestCpus: {}
+      id: {}
+      isSharedCpu: {}
+      maximumPersistentDisks: {}
+      maximumPersistentDisksSizeGb: {}
+      memoryMb: {}
+      name: {}
+      projectId: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.network:
+    fields:
+      autoCreateSubnetworks: {}
+      created: {}
+      description: {}
+      enableUlaInternalIpv6: {}
+      gatewayIPv4: {}
+      id: {}
+      mode: {}
+      mtu: {}
+      name: {}
+      networkFirewallPolicyEnforcementOrder: {}
+      peerings: {}
+      projectId: {}
+      routingMode: {}
+      subnetworkUrls: {}
+      subnetworks: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.region:
+    fields:
+      created: {}
+      deprecated: {}
+      description: {}
+      id: {}
+      name: {}
+      quotas: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.router:
+    fields:
+      bgp: {}
+      bgpPeers: {}
+      created: {}
+      description: {}
+      encryptedInterconnectRouter: {}
+      id: {}
+      name: {}
+      nats: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.serviceaccount:
+    fields:
+      email: {}
+      scopes: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.snapshot:
+    fields:
+      architecture: {}
+      autoCreated: {}
+      chainName: {}
+      created: {}
+      creationSizeBytes: {}
+      description: {}
+      diskSizeGb: {}
+      downloadBytes: {}
+      id: {}
+      labels: {}
+      licenses: {}
+      name: {}
+      snapshotType: {}
+      status: {}
+      storageBytes: {}
+      storageBytesStatus: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.subnetwork:
+    fields:
+      created: {}
+      description: {}
+      enableFlowLogs: {}
+      externalIpv6Prefix: {}
+      fingerprint: {}
+      gatewayAddress: {}
+      id: {}
+      internalIpv6Prefix: {}
+      ipCidrRange: {}
+      ipv6AccessType: {}
+      ipv6CidrRange: {}
+      logConfig: {}
+      name: {}
+      privateIpGoogleAccess: {}
+      privateIpv6GoogleAccess: {}
+      projectId: {}
+      purpose: {}
+      region: {}
+      regionUrl: {}
+      role: {}
+      stackType: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.subnetwork.logConfig:
+    fields:
+      aggregationInterval: {}
+      enable: {}
+      filterExpression: {}
+      flowSampling: {}
+      id: {}
+      metadata: {}
+      metadataFields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.computeService.zone:
+    fields:
+      created: {}
+      description: {}
+      id: {}
+      name: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService:
+    fields:
+      clusters: {}
+      enabled: {}
+      projectId: {}
+      regions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster:
+    fields:
+      config: {}
+      labels: {}
+      metrics: {}
+      name: {}
+      projectId: {}
+      status: {}
+      statusHistory: {}
+      uuid: {}
+      virtualClusterConfig: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config:
+    fields:
+      autoscaling: {}
+      configBucket: {}
+      encryption: {}
+      endpoint: {}
+      gceCluster: {}
+      gkeCluster: {}
+      initializationActions: {}
+      lifecycle: {}
+      master: {}
+      metastore: {}
+      metrics: {}
+      parentResourcePath: {}
+      secondaryWorker: {}
+      security: {}
+      software: {}
+      tempBucket: {}
+      worker: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.gceCluster:
+    fields:
+      confidentialInstance: {}
+      id: {}
+      internalIpOnly: {}
+      metadata: {}
+      networkUri: {}
+      nodeGroupAffinity: {}
+      privateIpv6GoogleAccess: {}
+      projectId: {}
+      reservationAffinity: {}
+      serviceAccount: {}
+      serviceAccountEmail: {}
+      serviceAccountScopes: {}
+      shieldedInstanceConfig: {}
+      subnetworkUri: {}
+      tags: {}
+      zoneUri: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity:
+    fields:
+      consumeReservationType: {}
+      id: {}
+      key: {}
+      values: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig:
+    fields:
+      enableIntegrityMonitoring: {}
+      enableSecureBoot: {}
+      enableVtpm: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.gkeCluster:
+    fields:
+      gkeClusterTarget: {}
+      id: {}
+      nodePoolTarget: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.instance:
+    fields:
+      accelerators: {}
+      diskConfig: {}
+      id: {}
+      imageUri: {}
+      instanceNames: {}
+      instanceReferences: {}
+      isPreemptible: {}
+      machineTypeUri: {}
+      managedGroupConfig: {}
+      minCpuPlatform: {}
+      numInstances: {}
+      preemptibility: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.instance.diskConfig:
+    fields:
+      bootDiskSizeGb: {}
+      bootDiskType: {}
+      id: {}
+      localSsdInterface: {}
+      numLocalSsds: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.config.lifecycle:
+    fields:
+      autoDeleteTime: {}
+      autoDeleteTtl: {}
+      id: {}
+      idleDeleteTtl: {}
+      idleStartTime: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.status:
+    fields:
+      detail: {}
+      id: {}
+      started: {}
+      state: {}
+      substate: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dataprocService.cluster.virtualClusterConfig:
+    fields:
+      auxiliaryServices: {}
+      kubernetesCluster: {}
+      parentResourcePath: {}
+      stagingBucket: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dnsService:
+    fields:
+      managedZones: {}
+      policies: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dnsService.managedzone:
+    fields:
+      created: {}
+      description: {}
+      dnsName: {}
+      dnssecConfig: {}
+      id: {}
+      name: {}
+      nameServerSet: {}
+      nameServers: {}
+      projectId: {}
+      recordSets: {}
+      visibility: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dnsService.policy:
+    fields:
+      description: {}
+      enableInboundForwarding: {}
+      enableLogging: {}
+      id: {}
+      name: {}
+      networkNames: {}
+      networks: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.dnsService.recordset:
+    fields:
+      name: {}
+      projectId: {}
+      rrdatas: {}
+      signatureRrdatas: {}
+      ttl: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService:
+    fields:
+      clusters: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster:
+    fields:
+      addonsConfig: {}
+      autopilotEnabled: {}
+      binaryAuthorization: {}
+      clusterIpv4Cidr: {}
+      created: {}
+      currentMasterVersion: {}
+      databaseEncryption: {}
+      description: {}
+      enableKubernetesAlpha: {}
+      endpoint: {}
+      expirationTime: {}
+      id: {}
+      initialClusterVersion: {}
+      ipAllocationPolicy: {}
+      legacyAbac: {}
+      location: {}
+      locations: {}
+      loggingService: {}
+      masterAuth: {}
+      masterAuthorizedNetworksConfig: {}
+      monitoringService: {}
+      name: {}
+      network: {}
+      networkConfig: {}
+      nodePools: {}
+      privateClusterConfig: {}
+      projectId: {}
+      resourceLabels: {}
+      status: {}
+      subnetwork: {}
+      workloadIdentityConfig: {}
+      zone: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.addonsConfig:
+    fields:
+      cloudRunConfig: {}
+      configConnectorConfig: {}
+      dnsCacheConfig: {}
+      gcePersistentDiskCsiDriverConfig: {}
+      gcpFilestoreCsiDriverConfig: {}
+      gkeBackupAgentConfig: {}
+      horizontalPodAutoscaling: {}
+      httpLoadBalancing: {}
+      id: {}
+      kubernetesDashboard: {}
+      networkPolicyConfig: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.ipAllocationPolicy:
+    fields:
+      clusterIpv4CidrBlock: {}
+      clusterSecondaryRangeName: {}
+      createSubnetwork: {}
+      id: {}
+      ipv6AccessType: {}
+      nodeIpv4CidrBlock: {}
+      servicesIpv4CidrBlock: {}
+      servicesSecondaryRangeName: {}
+      stackType: {}
+      subnetworkName: {}
+      tpuIpv4CidrBlock: {}
+      useIpAliases: {}
+      useRoutes: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.networkConfig:
+    fields:
+      datapathProvider: {}
+      defaultSnatStatus: {}
+      dnsConfig: {}
+      enableIntraNodeVisibility: {}
+      enableL4IlbSubsetting: {}
+      id: {}
+      network: {}
+      networkPath: {}
+      privateIpv6GoogleAccess: {}
+      serviceExternalIpsConfig: {}
+      subnetwork: {}
+      subnetworkPath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool:
+    fields:
+      config: {}
+      id: {}
+      initialNodeCount: {}
+      instanceGroupUrls: {}
+      locations: {}
+      management: {}
+      name: {}
+      networkConfig: {}
+      status: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config:
+    fields:
+      accelerators: {}
+      advancedMachineFeatures: {}
+      bootDiskKmsKey: {}
+      confidentialNodes: {}
+      diskSizeGb: {}
+      diskType: {}
+      gcfsConfig: {}
+      gvnicConfig: {}
+      id: {}
+      imageType: {}
+      kubeletConfig: {}
+      labels: {}
+      linuxNodeConfig: {}
+      localSsdCount: {}
+      machineType: {}
+      metadata: {}
+      minCpuPlatform: {}
+      oauthScopes: {}
+      preemptible: {}
+      projectId: {}
+      sandboxConfig: {}
+      serviceAccount: {}
+      serviceAccountEmail: {}
+      shieldedInstanceConfig: {}
+      spot: {}
+      tags: {}
+      taints: {}
+      workloadMetadataMode: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.accelerator:
+    fields:
+      count: {}
+      gpuPartitionSize: {}
+      gpuSharingConfig: {}
+      id: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig:
+    fields:
+      id: {}
+      maxSharedClientsPerGpu: {}
+      strategy: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures:
+    fields:
+      id: {}
+      threadsPerCore: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.confidentialNodes:
+    fields:
+      enabled: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.gcfsConfig:
+    fields:
+      enabled: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.gvnicConfig:
+    fields:
+      enabled: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.kubeletConfig:
+    fields:
+      cpuCfsQuotaPeriod: {}
+      cpuManagerPolicy: {}
+      id: {}
+      podPidsLimit: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig:
+    fields:
+      id: {}
+      sysctls: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.nodeTaint:
+    fields:
+      effect: {}
+      id: {}
+      key: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.sandboxConfig:
+    fields:
+      id: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig:
+    fields:
+      enableIntegrityMonitoring: {}
+      enableSecureBoot: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.networkConfig:
+    fields:
+      id: {}
+      performanceConfig: {}
+      podIpv4CidrBlock: {}
+      podRange: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig:
+    fields:
+      id: {}
+      totalEgressBandwidthTier: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.iamService:
+    fields:
+      projectId: {}
+      serviceAccounts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.iamService.serviceAccount:
+    fields:
+      description: {}
+      disabled: {}
+      displayName: {}
+      email: {}
+      keys: {}
+      name: {}
+      oauth2ClientId: {}
+      projectId: {}
+      uniqueId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.iamService.serviceAccount.key:
+    fields:
+      disabled: {}
+      keyAlgorithm: {}
+      keyOrigin: {}
+      keyType: {}
+      name: {}
+      validAfterTime: {}
+      validBeforeTime: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService:
+    fields:
+      keyrings: {}
+      locations: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring:
+    fields:
+      created: {}
+      cryptokeys: {}
+      location: {}
+      name: {}
+      projectId: {}
+      resourcePath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring.cryptokey:
+    fields:
+      created: {}
+      cryptoKeyBackend: {}
+      destroyScheduledDuration: {}
+      iamPolicy: {}
+      importOnly: {}
+      labels: {}
+      name: {}
+      nextRotation: {}
+      primary: {}
+      purpose: {}
+      resourcePath: {}
+      rotationPeriod: {}
+      versionTemplate: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring.cryptokey.version:
+    fields:
+      algorithm: {}
+      attestation: {}
+      created: {}
+      destroyEventTime: {}
+      destroyed: {}
+      externalProtectionLevelOptions: {}
+      generated: {}
+      importFailureReason: {}
+      importJob: {}
+      importTime: {}
+      name: {}
+      protectionLevel: {}
+      reimportEligible: {}
+      resourcePath: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring.cryptokey.version.attestation:
+    fields:
+      certificateChains: {}
+      cryptoKeyVersionName: {}
+      format: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains:
+    fields:
+      caviumCerts: {}
+      cryptoKeyVersionName: {}
+      googleCardCerts: {}
+      googlePartitionCerts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions:
+    fields:
+      cryptoKeyVersionName: {}
+      ekmConnectionKeyPath: {}
+      externalKeyUri: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.loggingservice:
+    fields:
+      buckets: {}
+      metrics: {}
+      projectId: {}
+      sinks: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.loggingservice.bucket:
+    fields:
+      cmekSettings: {}
+      created: {}
+      description: {}
+      indexConfigs: {}
+      lifecycleState: {}
+      locked: {}
+      name: {}
+      projectId: {}
+      restrictedFields: {}
+      retentionDays: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.loggingservice.bucket.indexConfig:
+    fields:
+      created: {}
+      fieldPath: {}
+      id: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.loggingservice.metric:
+    fields:
+      alertPolicies: {}
+      description: {}
+      filter: {}
+      id: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.loggingservice.sink:
+    fields:
+      destination: {}
+      filter: {}
+      id: {}
+      includeChildren: {}
+      projectId: {}
+      storageBucket: {}
+      writerIdentity: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.monitoringService:
+    fields:
+      alertPolicies: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.monitoringService.alertPolicy:
+    fields:
+      alertStrategy: {}
+      combiner: {}
+      conditions: {}
+      created: {}
+      createdBy: {}
+      displayName: {}
+      documentation: {}
+      enabled: {}
+      labels: {}
+      name: {}
+      notificationChannelUrls: {}
+      projectId: {}
+      updated: {}
+      updatedBy: {}
+      validity: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService:
+    fields:
+      projectId: {}
+      snapshots: {}
+      subscriptions: {}
+      topics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.snapshot:
+    fields:
+      expiration: {}
+      name: {}
+      projectId: {}
+      topic: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.subscription:
+    fields:
+      config: {}
+      name: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.subscription.config:
+    fields:
+      ackDeadline: {}
+      expirationPolicy: {}
+      labels: {}
+      projectId: {}
+      pushConfig: {}
+      retainAckedMessages: {}
+      retentionDuration: {}
+      subscriptionName: {}
+      topic: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.subscription.config.pushconfig:
+    fields:
+      attributes: {}
+      configId: {}
+      endpoint: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.topic:
+    fields:
+      config: {}
+      name: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.topic.config:
+    fields:
+      kmsKeyName: {}
+      labels: {}
+      messageStoragePolicy: {}
+      projectId: {}
+      topicName: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.pubsubService.topic.config.messagestoragepolicy:
+    fields:
+      allowedPersistenceRegions: {}
+      configId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService:
+    fields:
+      instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance:
+    fields:
+      availableMaintenanceVersions: {}
+      backendType: {}
+      connectionName: {}
+      created: {}
+      currentDiskSize: {}
+      databaseInstalledVersion: {}
+      databaseVersion: {}
+      databases: {}
+      diskEncryptionConfiguration: {}
+      diskEncryptionStatus: {}
+      failoverReplica: {}
+      gceZone: {}
+      instanceType: {}
+      ipAddresses: {}
+      maintenanceVersion: {}
+      masterInstanceName: {}
+      maxDiskSize: {}
+      name: {}
+      project: {}
+      projectId: {}
+      region: {}
+      replicaNames: {}
+      serviceAccountEmailAddress: {}
+      settings: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.database:
+    fields:
+      charset: {}
+      collation: {}
+      instance: {}
+      name: {}
+      projectId: {}
+      sqlserverDatabaseDetails: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.ipMapping:
+    fields:
+      id: {}
+      ipAddress: {}
+      timeToRetire: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings:
+    fields:
+      activationPolicy: {}
+      activeDirectoryConfig: {}
+      availabilityType: {}
+      backupConfiguration: {}
+      collation: {}
+      connectorEnforcement: {}
+      crashSafeReplicationEnabled: {}
+      dataDiskSizeGb: {}
+      dataDiskType: {}
+      databaseFlags: {}
+      databaseReplicationEnabled: {}
+      deletionProtectionEnabled: {}
+      denyMaintenancePeriods: {}
+      insightsConfig: {}
+      instanceName: {}
+      ipConfiguration: {}
+      locationPreference: {}
+      maintenanceWindow: {}
+      passwordValidationPolicy: {}
+      pricingPlan: {}
+      projectId: {}
+      replicationType: {}
+      settingsVersion: {}
+      sqlServerAuditConfig: {}
+      storageAutoResize: {}
+      storageAutoResizeLimit: {}
+      tier: {}
+      timeZone: {}
+      userLabels: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings.backupconfiguration:
+    fields:
+      backupRetentionSettings: {}
+      binaryLogEnabled: {}
+      enabled: {}
+      id: {}
+      location: {}
+      pointInTimeRecoveryEnabled: {}
+      startTime: {}
+      transactionLogRetentionDays: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings.denyMaintenancePeriod:
+    fields:
+      endDate: {}
+      id: {}
+      startDate: {}
+      time: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings.ipConfiguration:
+    fields:
+      allocatedIpRange: {}
+      authorizedNetworks: {}
+      id: {}
+      ipv4Enabled: {}
+      privateNetwork: {}
+      requireSsl: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings.maintenanceWindow:
+    fields:
+      day: {}
+      hour: {}
+      id: {}
+      updateTrack: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.sqlService.instance.settings.passwordValidationPolicy:
+    fields:
+      complexity: {}
+      disallowUsernameSubstring: {}
+      enabledPasswordPolicy: {}
+      id: {}
+      minLength: {}
+      passwordChangeInterval: {}
+      reuseInterval: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.storageService:
+    fields:
+      buckets: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.project.storageService.bucket:
+    fields:
+      created: {}
+      iamConfiguration: {}
+      iamPolicy: {}
+      id: {}
+      labels: {}
+      location: {}
+      locationType: {}
+      name: {}
+      projectId: {}
+      projectNumber: {}
+      retentionPolicy: {}
+      storageClass: {}
+      updated: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.projects:
+    fields:
+      children: {}
+      list: {}
+      parentId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.recommendation:
+    fields:
+      additionalImpact: {}
+      category: {}
+      content: {}
+      id: {}
+      lastRefreshTime: {}
+      name: {}
+      primaryImpact: {}
+      priority: {}
+      projectId: {}
+      recommender: {}
+      state: {}
+      zoneName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.resourcemanager.binding:
+    fields:
+      id: {}
+      members: {}
+      role: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud
+  gcp.service:
+    fields:
+      enabled: {}
+      name: {}
+      parentName: {}
+      projectId: {}
+      state: {}
+      title: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - gcloud

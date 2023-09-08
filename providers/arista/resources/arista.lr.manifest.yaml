@@ -49,6 +49,7 @@ resources:
       name: {}
       physicalAddress: {}
       status: {}
+    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -58,6 +59,7 @@ resources:
       address: {}
       mtu: {}
       name: {}
+    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
@@ -74,6 +76,7 @@ resources:
       default: {}
       name: {}
       rules: {}
+    is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:

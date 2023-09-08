@@ -154,6 +154,7 @@ resources:
       name: {}
       osDisk: {}
       properties: {}
+      publicIpAddresses: {}
       tags: {}
       type: {}
     min_mondoo_version: latest
