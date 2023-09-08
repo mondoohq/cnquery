@@ -313,16 +313,19 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		})
 		if err != nil {
 			runtime.Close()
+			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to parse cli arguments")
 		}
 
 		if cliRes == nil {
 			runtime.Close()
+			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
 		}
 
 		run(cc, runtime, cliRes)
 		runtime.Close()
+		providers.Coordinator.Shutdown()
 	}
 
 	for i := range allFlags {
