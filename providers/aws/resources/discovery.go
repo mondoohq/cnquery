@@ -61,7 +61,7 @@ func handleTargets(targets []string) []string {
 
 func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string) ([]*inventory.Asset, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
-	accountId := awsAccount.Id.Data
+	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
 	assetList := []*inventory.Asset{}
 	switch target {
 	case connection.DiscoveryAccounts:
@@ -82,7 +82,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId))
+			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId, conn))
 		}
 	case connection.DiscoverySSMInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
@@ -99,8 +99,10 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil {
-				assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn.Profile()))
+			if instance.GetSsm() != nil {
+				if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil && s == "Online" {
+					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn))
+				}
 			}
 		}
 		res, err = NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
@@ -117,7 +119,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsSsmInstance)
-			assetList = append(assetList, addConnectionInfoToSSMAsset(instance, accountId, conn.Profile()))
+			assetList = append(assetList, addConnectionInfoToSSMAsset(instance, accountId, conn))
 		}
 	case connection.DiscoveryECR:
 		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
@@ -134,7 +136,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn.Profile()))
+			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn))
 		}
 	case connection.DiscoveryECS:
 		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
@@ -150,8 +152,20 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 		}
 
 		for i := range containers.Data {
-			a := containers.Data[i].(*mqlAwsEcsContainer)
-			assetList = append(assetList, addConnectionInfoToECSContainerAsset(a))
+			c := containers.Data[i].(*mqlAwsEcsContainer)
+			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
+		}
+		containerInst := ecs.GetContainerInstances()
+		if containerInst == nil {
+			return assetList, nil
+		}
+
+		for i := range containerInst.Data {
+			if a, ok := containerInst.Data[i].(*mqlAwsEc2Instance); ok {
+				assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId, conn))
+			} else if b, ok := containerInst.Data[i].(*mqlAwsEcsInstance); ok {
+				assetList = append(assetList, addConnectionInfoToECSContainerInstanceAsset(b, accountId, conn))
+			}
 		}
 	// case connection.DiscoveryECSContainersAPI:
 	// case connection.DiscoveryECRImageAPI:

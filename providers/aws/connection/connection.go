@@ -13,22 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type AwsConnection struct {
-	id               uint32
-	Conf             *inventory.Config
-	asset            *inventory.Asset
-	cfg              aws.Config
-	accountId        string
-	clientcache      ClientsCache
-	awsConfigOptions []func(*config.LoadOptions) error
-	profile          string
-	PlatformOverride string
+	id                uint32
+	Conf              *inventory.Config
+	asset             *inventory.Asset
+	cfg               aws.Config
+	accountId         string
+	clientcache       ClientsCache
+	awsConfigOptions  []func(*config.LoadOptions) error
+	profile           string
+	PlatformOverride  string
+	connectionOptions map[string]string
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
+	log.Debug().Msg("new aws connection")
 	// check flags for connection options
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
@@ -65,6 +69,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.cfg = cfg
 	c.accountId = *identity.Account
 	c.profile = asset.Options["profile"]
+	c.connectionOptions = asset.Options
 	return c, nil
 }
 
@@ -169,6 +174,30 @@ func (p *AwsConnection) AccountId() string {
 
 func (p *AwsConnection) Profile() string {
 	return p.profile
+}
+
+func (p *AwsConnection) ConnectionOptions() map[string]string {
+	return p.connectionOptions
+}
+
+func (p *AwsConnection) RunCommand(command string) (*shared.Command, error) {
+	return nil, errors.New("unimplemented")
+}
+
+func (p *AwsConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+	return shared.FileInfoDetails{}, errors.New("unimplemented")
+}
+
+func (p *AwsConnection) FileSystem() afero.Fs {
+	return nil
+}
+
+func (p *AwsConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_RunCommand // not true, update to nothing
+}
+
+func (p *AwsConnection) Type() shared.ConnectionType {
+	return "aws"
 }
 
 func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {

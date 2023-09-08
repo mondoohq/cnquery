@@ -178,7 +178,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			Asset:    resolvedAsset,
 			Upstream: upstream,
 		}); err != nil {
-			return nil, false, err
+			log.Error().Err(err).Msg("unable to connect to asset")
+			continue
 		}
 		inventorySpec := runtime.Provider.Connection
 		if inventorySpec.Inventory != nil &&
@@ -212,7 +213,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			Upstream: upstream,
 		})
 		if err != nil {
-			return nil, false, err
+			log.Error().Err(err).Msg("unable to connect to asset")
+			continue
 		}
 		assets = append(assets, &assetWithRuntime{
 			asset:   asset,

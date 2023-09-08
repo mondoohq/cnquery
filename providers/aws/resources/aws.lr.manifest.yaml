@@ -1,0 +1,1451 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  aws:
+    fields:
+      regions: {}
+      vpcs: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.accessAnalyzer:
+    fields:
+      analyzers: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.accessanalyzer.analyzer:
+    fields:
+      arn: {}
+      name: {}
+      status: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.account:
+    fields:
+      aliases: {}
+      id: {}
+      organization: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.acm:
+    fields:
+      certificates: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.acm.certificate:
+    fields:
+      arn: {}
+      certificate: {}
+      createdAt: {}
+      domainName: {}
+      notAfter: {}
+      notBefore: {}
+      status: {}
+      subject: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.apigateway:
+    fields:
+      restApis: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.apigateway.restapi:
+    fields:
+      arn: {}
+      createdDate: {}
+      description: {}
+      id: {}
+      name: {}
+      region: {}
+      stages: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.apigateway.stage:
+    fields:
+      arn: {}
+      deploymentId: {}
+      description: {}
+      methodSettings: {}
+      name: {}
+      tracingEnabled: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.applicationAutoscaling:
+    fields:
+      namespace: {}
+      scalableTargets: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.applicationautoscaling.target:
+    fields:
+      arn: {}
+      maxCapacity: {}
+      minCapacity: {}
+      namespace: {}
+      scalableDimension: {}
+      suspendedState: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.autoscaling:
+    fields:
+      groups: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.autoscaling.group:
+    fields:
+      arn: {}
+      healthCheckType: {}
+      loadBalancerNames: {}
+      name: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.backup:
+    fields:
+      vaults: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.backup.vault:
+    fields:
+      arn: {}
+      name: {}
+      recoveryPoints: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.backup.vaultRecoveryPoint:
+    fields:
+      arn: {}
+      completionDate: {}
+      createdBy: {}
+      creationDate: {}
+      encryptionKeyArn: {}
+      iamRoleArn: {}
+      isEncrypted: {}
+      resourceType: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudfront:
+    fields:
+      distributions: {}
+      functions: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudfront.distribution:
+    fields:
+      arn: {}
+      cacheBehaviors: {}
+      defaultCacheBehavior: {}
+      domainName: {}
+      origins: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudfront.distribution.origin:
+    fields:
+      account: {}
+      connectionAttempts: {}
+      connectionTimeout: {}
+      domainName: {}
+      id: {}
+      originPath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudfront.function:
+    fields:
+      arn: {}
+      comment: {}
+      createdTime: {}
+      lastModifiedTime: {}
+      name: {}
+      runtime: {}
+      stage: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudtrail:
+    fields:
+      trails: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudtrail.trail:
+    fields:
+      arn: {}
+      cloudWatchLogsRoleArn: {}
+      eventSelectors: {}
+      includeGlobalServiceEvents: {}
+      isMultiRegionTrail: {}
+      isOrganizationTrail: {}
+      kmsKey: {}
+      logFileValidationEnabled: {}
+      logGroup: {}
+      name: {}
+      region: {}
+      s3bucket: {}
+      snsTopicARN: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch:
+    fields:
+      alarms: {}
+      logGroups: {}
+      metrics: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.loggroup:
+    fields:
+      arn: {}
+      kmsKey: {}
+      metricsFilters: {}
+      name: {}
+      region: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.loggroup.metricsfilter:
+    fields:
+      filterName: {}
+      filterPattern: {}
+      id: {}
+      metrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.metric:
+    fields:
+      alarms: {}
+      dimensions: {}
+      name: {}
+      namespace: {}
+      region: {}
+      statistics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.metric.datapoint:
+    fields:
+      average: {}
+      id: {}
+      maximum: {}
+      minimum: {}
+      sum: {}
+      timestamp: {}
+      unit: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.metricdimension:
+    fields:
+      name: {}
+      value: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.metricsalarm:
+    fields:
+      actions: {}
+      arn: {}
+      insufficientDataActions: {}
+      metricName: {}
+      metricNamespace: {}
+      name: {}
+      okActions: {}
+      region: {}
+      state: {}
+      stateReason: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.cloudwatch.metricstatistics:
+    fields:
+      datapoints: {}
+      label: {}
+      name: {}
+      namespace: {}
+      region: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.codebuild:
+    fields:
+      projects: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.codebuild.project:
+    fields:
+      arn: {}
+      description: {}
+      environment: {}
+      name: {}
+      region: {}
+      source: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.config:
+    fields:
+      recorders: {}
+      rules: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.config.recorder:
+    fields:
+      allSupported: {}
+      includeGlobalResourceTypes: {}
+      lastStatus: {}
+      name: {}
+      recording: {}
+      region: {}
+      roleArn: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.config.rule:
+    fields:
+      arn: {}
+      source: {}
+      state: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.dms:
+    fields:
+      replicationInstances: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.dynamodb:
+    fields:
+      backups: {}
+      globalTables: {}
+      limits: {}
+      tables: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.dynamodb.globaltable:
+    fields:
+      arn: {}
+      name: {}
+      replicaSettings: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.dynamodb.limit:
+    fields:
+      accountMaxRead: {}
+      accountMaxWrite: {}
+      arn: {}
+      region: {}
+      tableMaxRead: {}
+      tableMaxWrite: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.dynamodb.table:
+    fields:
+      arn: {}
+      backups: {}
+      continuousBackups: {}
+      name: {}
+      provisionedThroughput: {}
+      region: {}
+      sseDescription: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2:
+    fields:
+      ebsEncryptionByDefault: {}
+      instances: {}
+      internetGateways: {}
+      keypairs: {}
+      networkAcls: {}
+      securityGroups: {}
+      snapshots: {}
+      volumes: {}
+      vpnConnections: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.image:
+    fields:
+      architecture: {}
+      arn: {}
+      id: {}
+      name: {}
+      ownerAlias: {}
+      ownerId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.instance:
+    fields:
+      arn: {}
+      detailedMonitoring: {}
+      deviceMappings: {}
+      ebsOptimized: {}
+      httpTokens: {}
+      image: {}
+      instanceId: {}
+      instanceStatus: {}
+      instanceType: {}
+      keypair: {}
+      launchTime: {}
+      patchState: {}
+      platformDetails: {}
+      privateDnsName: {}
+      privateIp: {}
+      publicDnsName: {}
+      publicIp: {}
+      region: {}
+      securityGroups: {}
+      ssm: {}
+      state: {}
+      stateReason: {}
+      stateTransitionReason: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.instance.device:
+    fields:
+      deleteOnTermination: {}
+      deviceName: {}
+      status: {}
+      volumeId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.internetgateway:
+    fields:
+      arn: {}
+      attachments: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.keypair:
+    fields:
+      arn: {}
+      fingerprint: {}
+      name: {}
+      region: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl:
+    fields:
+      arn: {}
+      entries: {}
+      id: {}
+      region: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl.entry:
+    fields:
+      egress: {}
+      id: {}
+      portRange: {}
+      ruleAction: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl.entry.portrange:
+    fields:
+      from: {}
+      id: {}
+      to: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.securitygroup:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      ipPermissions: {}
+      ipPermissionsEgress: {}
+      isAttachedToNetworkInterface: {}
+      name: {}
+      region: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.securitygroup.ippermission:
+    fields:
+      fromPort: {}
+      id: {}
+      ipProtocol: {}
+      ipRanges: {}
+      ipv6Ranges: {}
+      toPort: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.snapshot:
+    fields:
+      arn: {}
+      createVolumePermission: {}
+      id: {}
+      region: {}
+      startTime: {}
+      state: {}
+      tags: {}
+      volumeId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.vgwtelemetry:
+    fields:
+      outsideIpAddress: {}
+      status: {}
+      statusMessage: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.volume:
+    fields:
+      arn: {}
+      attachments: {}
+      availabilityZone: {}
+      createTime: {}
+      encrypted: {}
+      id: {}
+      region: {}
+      state: {}
+      tags: {}
+      volumeType: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ec2.vpnconnection:
+    fields:
+      arn: {}
+      vgwTelemetry: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecr:
+    fields:
+      images: {}
+      privateRepositories: {}
+      publicRepositories: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecr.image:
+    fields:
+      arn: {}
+      digest: {}
+      mediaType: {}
+      region: {}
+      registryId: {}
+      repoName: {}
+      tags: {}
+      uri: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecr.repository:
+    fields:
+      arn: {}
+      images: {}
+      name: {}
+      public: {}
+      region: {}
+      registryId: {}
+      uri: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs:
+    fields:
+      clusters: {}
+      containerInstances: {}
+      containers: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.cluster:
+    fields:
+      arn: {}
+      configuration: {}
+      containerInstances: {}
+      name: {}
+      pendingTasksCount: {}
+      registeredContainerInstancesCount: {}
+      runningTasksCount: {}
+      status: {}
+      tags: {}
+      tasks: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.container:
+    fields:
+      arn: {}
+      clusterName: {}
+      command: {}
+      containerName: {}
+      image: {}
+      logDriver: {}
+      name: {}
+      platformFamily: {}
+      platformVersion: {}
+      publicIp: {}
+      region: {}
+      runtimeId: {}
+      status: {}
+      taskArn: {}
+      taskDefinitionArn: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.instance:
+    fields:
+      agentConnected: {}
+      arn: {}
+      capacityProvider: {}
+      ec2Instance: {}
+      id: {}
+      region: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ecs.task:
+    fields:
+      arn: {}
+      clusterName: {}
+      connectivity: {}
+      containers: {}
+      lastStatus: {}
+      platformFamily: {}
+      platformVersion: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.efs:
+    fields:
+      filesystems: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.efs.filesystem:
+    fields:
+      arn: {}
+      backupPolicy: {}
+      encrypted: {}
+      id: {}
+      kmsKey: {}
+      name: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.eks:
+    fields:
+      clusters: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.eks.cluster:
+    fields:
+      arn: {}
+      createdAt: {}
+      encryptionConfig: {}
+      endpoint: {}
+      logging: {}
+      name: {}
+      networkConfig: {}
+      platformVersion: {}
+      region: {}
+      resourcesVpcConfig: {}
+      status: {}
+      tags: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.elasticache:
+    fields:
+      cacheClusters: {}
+      clusters: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.elasticache.cluster:
+    fields:
+      arn: {}
+      atRestEncryptionEnabled: {}
+      authTokenEnabled: {}
+      authTokenLastModifiedDate: {}
+      autoMinorVersionUpgrade: {}
+      cacheClusterCreateTime: {}
+      cacheClusterId: {}
+      cacheClusterStatus: {}
+      cacheNodeType: {}
+      cacheNodes: {}
+      cacheSecurityGroups: {}
+      cacheSubnetGroupName: {}
+      clientDownloadLandingPage: {}
+      engine: {}
+      engineVersion: {}
+      ipDiscovery: {}
+      logDeliveryConfigurations: {}
+      networkType: {}
+      nodeType: {}
+      notificationConfiguration: {}
+      numCacheNodes: {}
+      preferredAvailabilityZone: {}
+      region: {}
+      securityGroups: {}
+      snapshotRetentionLimit: {}
+      transitEncryptionEnabled: {}
+      transitEncryptionMode: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.elb:
+    fields:
+      classicLoadBalancers: {}
+      loadBalancers: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.elb.loadbalancer:
+    fields:
+      arn: {}
+      attributes: {}
+      dnsName: {}
+      listenerDescriptions: {}
+      name: {}
+      scheme: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.emr:
+    fields:
+      clusters: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.emr.cluster:
+    fields:
+      arn: {}
+      id: {}
+      masterInstances: {}
+      name: {}
+      normalizedInstanceHours: {}
+      outpostArn: {}
+      status: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.es:
+    fields:
+      domains: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.es.domain:
+    fields:
+      arn: {}
+      encryptionAtRestEnabled: {}
+      endpoint: {}
+      name: {}
+      nodeToNodeEncryptionEnabled: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.guardduty:
+    fields:
+      detectors: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.guardduty.detector:
+    fields:
+      findingPublishingFrequency: {}
+      id: {}
+      region: {}
+      status: {}
+      unarchivedFindings: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam:
+    fields:
+      accountPasswordPolicy: {}
+      accountSummary: {}
+      attachedPolicies: {}
+      credentialReport: {}
+      groups: {}
+      policies: {}
+      roles: {}
+      serverCertificates: {}
+      users: {}
+      virtualMfaDevices: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.group:
+    fields:
+      arn: {}
+      createDate: {}
+      id: {}
+      name: {}
+      usernames: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.policy:
+    fields:
+      arn: {}
+      attachedGroups: {}
+      attachedRoles: {}
+      attachedUsers: {}
+      attachmentCount: {}
+      createDate: {}
+      defaultVersion: {}
+      description: {}
+      id: {}
+      isAttachable: {}
+      name: {}
+      scope: {}
+      updateDate: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.policyversion:
+    fields:
+      arn: {}
+      createDate: {}
+      document: {}
+      isDefaultVersion: {}
+      versionId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.role:
+    fields:
+      arn: {}
+      createDate: {}
+      description: {}
+      id: {}
+      name: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.user:
+    fields:
+      accessKeys: {}
+      arn: {}
+      attachedPolicies: {}
+      createDate: {}
+      groups: {}
+      id: {}
+      name: {}
+      passwordLastUsed: {}
+      policies: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.usercredentialreportentry:
+    fields:
+      accessKey1Active: {}
+      accessKey1LastRotated: {}
+      accessKey1LastUsedDate: {}
+      accessKey1LastUsedRegion: {}
+      accessKey1LastUsedService: {}
+      accessKey2Active: {}
+      accessKey2LastRotated: {}
+      accessKey2LastUsedDate: {}
+      accessKey2LastUsedRegion: {}
+      accessKey2LastUsedService: {}
+      arn: {}
+      cert1Active: {}
+      cert1LastRotated: {}
+      cert2Active: {}
+      cert2LastRotated: {}
+      mfaActive: {}
+      passwordEnabled: {}
+      passwordLastChanged: {}
+      passwordLastUsed: {}
+      passwordNextRotation: {}
+      properties: {}
+      user: {}
+      userCreationTime: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.iam.virtualmfadevice:
+    fields:
+      enableDate: {}
+      serialNumber: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.kms:
+    fields:
+      keys: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.kms.key:
+    fields:
+      arn: {}
+      id: {}
+      keyRotationEnabled: {}
+      metadata: {}
+      region: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.lambda:
+    fields:
+      functions: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.lambda.function:
+    fields:
+      arn: {}
+      concurrency: {}
+      dlqTargetArn: {}
+      name: {}
+      policy: {}
+      region: {}
+      tags: {}
+      vpcConfig: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.organization:
+    fields:
+      arn: {}
+      featureSet: {}
+      masterAccountEmail: {}
+      masterAccountId: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.rds:
+    fields:
+      dbClusters: {}
+      dbInstances: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.rds.dbcluster:
+    fields:
+      arn: {}
+      id: {}
+      members: {}
+      region: {}
+      snapshots: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.rds.dbinstance:
+    fields:
+      arn: {}
+      backupRetentionPeriod: {}
+      dbInstanceClass: {}
+      dbInstanceIdentifier: {}
+      deletionProtection: {}
+      enabledCloudwatchLogsExports: {}
+      engine: {}
+      enhancedMonitoringResourceArn: {}
+      id: {}
+      multiAZ: {}
+      name: {}
+      publiclyAccessible: {}
+      region: {}
+      securityGroups: {}
+      snapshots: {}
+      status: {}
+      storageEncrypted: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.rds.snapshot:
+    fields:
+      arn: {}
+      attributes: {}
+      encrypted: {}
+      id: {}
+      isClusterSnapshot: {}
+      region: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.redshift:
+    fields:
+      clusters: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.redshift.cluster:
+    fields:
+      allowVersionUpgrade: {}
+      arn: {}
+      automatedSnapshotRetentionPeriod: {}
+      clusterParameterGroupNames: {}
+      encrypted: {}
+      logging: {}
+      name: {}
+      nodeType: {}
+      parameters: {}
+      preferredMaintenanceWindow: {}
+      publiclyAccessible: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3:
+    fields:
+      buckets: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3.bucket:
+    fields:
+      acl: {}
+      arn: {}
+      cors: {}
+      defaultLock: {}
+      encryption: {}
+      exists: {}
+      location: {}
+      logging: {}
+      name: {}
+      owner: {}
+      policy: {}
+      public: {}
+      publicAccessBlock: {}
+      replication: {}
+      staticWebsiteHosting: {}
+      tags: {}
+      versioning: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.corsrule:
+    fields:
+      allowedHeaders: {}
+      allowedMethods: {}
+      allowedOrigins: {}
+      exposeHeaders: {}
+      maxAgeSeconds: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.grant:
+    fields:
+      grantee: {}
+      id: {}
+      name: {}
+      permission: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3.bucket.policy:
+    fields:
+      document: {}
+      id: {}
+      name: {}
+      statements: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.s3control:
+    fields:
+      accountPublicAccessBlock: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sagemaker:
+    fields:
+      endpoints: {}
+      notebookInstances: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sagemaker.endpoint:
+    fields:
+      arn: {}
+      config: {}
+      name: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sagemaker.notebookinstance:
+    fields:
+      arn: {}
+      details: {}
+      name: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sagemaker.notebookinstance.details:
+    fields:
+      arn: {}
+      directInternetAccess: {}
+      kmsKey: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.secretsmanager:
+    fields:
+      secrets: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.secretsmanager.secret:
+    fields:
+      arn: {}
+      name: {}
+      rotationEnabled: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.securityhub:
+    fields:
+      hubs: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.securityhub.hub:
+    fields:
+      arn: {}
+      subscribedAt: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sns:
+    fields:
+      topics: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sns.subscription:
+    fields:
+      arn: {}
+      protocol: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.sns.topic:
+    fields:
+      arn: {}
+      attributes: {}
+      region: {}
+      subscriptions: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ssm:
+    fields:
+      instances: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.ssm.instance:
+    fields:
+      arn: {}
+      instanceId: {}
+      ipAddress: {}
+      pingStatus: {}
+      platformName: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.vpc:
+    fields:
+      arn: {}
+      flowLogs: {}
+      id: {}
+      isDefault: {}
+      region: {}
+      routeTables: {}
+      state: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.vpc.flowlog:
+    fields:
+      id: {}
+      region: {}
+      status: {}
+      tags: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.vpc.routetable:
+    fields:
+      id: {}
+      routes: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws

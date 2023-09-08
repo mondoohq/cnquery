@@ -13,11 +13,16 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 	"go.mondoo.com/cnquery/providers/aws/resources"
+	osconnection "go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 const (
-	defaultConnection uint32 = 1
-	ConnectionType           = "aws"
+	defaultConnection           uint32 = 1
+	DefaultConnectionType              = "aws"
+	SshConnectionType                  = "ssh"
+	RegistryImageConnectionType        = "registry-image"
 )
 
 type Service struct {
@@ -92,33 +97,46 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		},
 	}
 
-	conn.PlatformOverride = req.Asset.Platform.Name
-
-	inventory, err = s.discover(conn)
-	if err != nil {
-		return nil, err
+	if c, ok := conn.(*connection.AwsConnection); ok {
+		c.PlatformOverride = req.Asset.Platform.Name
+		inventory, err = s.discover(c)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return &plugin.ConnectRes{
-		Id:        uint32(conn.ID()),
-		Name:      conn.Name(),
+		Id:        uint32(conn.(shared.SimpleConnection).ID()),
+		Name:      conn.(shared.SimpleConnection).Name(),
 		Asset:     req.Asset,
 		Inventory: inventory,
 	}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.AwsConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (plugin.Connection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.AwsConnection
+	var conn shared.Connection
 	var err error
 
 	switch conf.Type {
+	case SshConnectionType:
+		s.lastConnectionID++
+		conn, err = osconnection.NewSshConnection(s.lastConnectionID, conf, asset)
+		if pf, ok := detector.DetectOS(conn); ok {
+			conn.Asset().Platform = pf
+		}
+
+	case RegistryImageConnectionType:
+		s.lastConnectionID++
+		conn, err = osconnection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 	default:
 		s.lastConnectionID++
 		conn, err = connection.NewAwsConnection(s.lastConnectionID, asset, conf)
+
 	}
 	if err != nil {
 		return nil, err
@@ -144,11 +162,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.AwsConnection) error {
-	asset.Id = conn.Conf.Type + "://" + conn.AccountId()
-	asset.Name = conn.Conf.Host
-	asset.Platform = conn.PlatformInfo()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + conn.AccountId()}
+func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
+	c := conn.(*connection.AwsConnection)
+	asset.Id = c.Conf.Type + "://" + c.AccountId()
+	asset.Name = c.Conf.Host
+	asset.Platform = c.PlatformInfo()
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + c.AccountId()}
 
 	return nil
 }
