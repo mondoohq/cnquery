@@ -87,6 +87,10 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 	return m.Impl.Connect(req, a)
 }
 
+func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (*ShutdownRes, error) {
+	return m.Impl.Shutdown(req)
+}
+
 func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error) {
 	return m.Impl.GetData(req)
 }
