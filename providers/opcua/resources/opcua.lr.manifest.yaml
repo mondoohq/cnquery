@@ -1,6 +1,3 @@
-# Copyright (c) Mondoo, Inc.
-# SPDX-License-Identifier: BUSL-1.1
-
 resources:
   opcua:
     fields:
@@ -12,6 +9,7 @@ resources:
     fields:
       id: {}
       name: {}
+    is_private: true
     min_mondoo_version: latest
   opcua.node:
     fields:
@@ -30,6 +28,7 @@ resources:
       properties: {}
       unit: {}
       writeable: {}
+    is_private: true
     min_mondoo_version: latest
   opcua.server:
     fields:

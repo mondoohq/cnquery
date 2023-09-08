@@ -1,6 +1,3 @@
-# Copyright (c) Mondoo, Inc.
-# SPDX-License-Identifier: BUSL-1.1
-
 resources:
   azure:
     fields: {}
@@ -154,6 +151,7 @@ resources:
       name: {}
       osDisk: {}
       properties: {}
+      publicIpAddresses: {}
       tags: {}
       type: {}
     min_mondoo_version: latest

@@ -1,21 +1,18 @@
-# Copyright (c) Mondoo, Inc.
-# SPDX-License-Identifier: BUSL-1.1
-
 resources:
   asset:
     fields:
-      name: {}
-      ids: {}
-      platform: {}
-      kind: {}
-      runtime: {}
-      version: {}
       arch: {}
-      title: {}
+      build: {}
       family: {}
       fqdn: {}
-      build: {}
+      ids: {}
+      kind: {}
       labels: {}
+      name: {}
+      platform: {}
+      runtime: {}
+      title: {}
+      version: {}
       vulnerabilityReport: {}
     min_mondoo_version: 6.13.0
   audit.advisory:
@@ -27,7 +24,6 @@ resources:
       published: {}
       title: {}
       worstScore: {}
-    is_private: true
     min_mondoo_version: 5.15.0
   audit.cve:
     fields:
@@ -39,13 +35,11 @@ resources:
       summary: {}
       unscored: {}
       worstScore: {}
-    is_private: true
     min_mondoo_version: 5.15.0
   audit.cvss:
     fields:
       score: {}
       vector: {}
-    is_private: true
     min_mondoo_version: 5.15.0
   audit.exploit:
     fields:
@@ -53,7 +47,6 @@ resources:
       modified: {}
       mrn: {}
       worstScore: {}
-    is_private: true
     min_mondoo_version: 5.15.0
   authorizedkeys:
     fields:
@@ -146,6 +139,8 @@ resources:
     min_mondoo_version: 5.15.0
   mondoo:
     fields:
+      arch:
+        min_mondoo_version: latest
       build: {}
       capabilities: {}
       jobEnvironment: {}
