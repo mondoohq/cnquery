@@ -18,18 +18,20 @@ import (
 )
 
 type AwsConnection struct {
-	id               uint32
-	Conf             *inventory.Config
-	asset            *inventory.Asset
-	cfg              aws.Config
-	accountId        string
-	clientcache      ClientsCache
-	awsConfigOptions []func(*config.LoadOptions) error
-	profile          string
-	PlatformOverride string
+	id                uint32
+	Conf              *inventory.Config
+	asset             *inventory.Asset
+	cfg               aws.Config
+	accountId         string
+	clientcache       ClientsCache
+	awsConfigOptions  []func(*config.LoadOptions) error
+	profile           string
+	PlatformOverride  string
+	connectionOptions map[string]string
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
+	log.Debug().Msg("new aws connection")
 	// check flags for connection options
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
@@ -66,6 +68,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.cfg = cfg
 	c.accountId = *identity.Account
 	c.profile = asset.Options["profile"]
+	c.connectionOptions = asset.Options
 	return c, nil
 }
 
@@ -170,6 +173,10 @@ func (p *AwsConnection) AccountId() string {
 
 func (p *AwsConnection) Profile() string {
 	return p.profile
+}
+
+func (p *AwsConnection) ConnectionOptions() map[string]string {
+	return p.connectionOptions
 }
 
 func (p *AwsConnection) Type() shared.ConnectionType {

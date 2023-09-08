@@ -136,7 +136,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
-			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn.Profile()))
+			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn))
 		}
 	case connection.DiscoveryECS:
 		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})

@@ -64,6 +64,7 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		Platform:    connection.GetPlatformForObject(platformName),
 		Labels:      mqlObject.labels,
 		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+		Options:     conn.ConnectionOptions(),
 	}
 }
 
@@ -205,6 +206,7 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 		Name:        name,
 		Platform:    connection.GetPlatformForObject(""),
 		Connections: []*inventory.Config{conn.Conf},
+		Options:     conn.ConnectionOptions(),
 	}
 }
 
@@ -235,6 +237,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		name = labelName
 	}
 	asset.Name = name
+	asset.Options = conn.ConnectionOptions()
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
 		imageName := ""
@@ -260,11 +263,13 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 				"instance": instance.InstanceId.Data,
 			},
 		}}
-		if instance.GetSsm().Data.(map[string]interface{})["PingStatus"] == "Online" {
-			asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
-				User: probableUsername,
-				Type: vault.CredentialType_aws_ec2_ssm_session,
-			})
+		if len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
+			if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
+				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
+					User: probableUsername,
+					Type: vault.CredentialType_aws_ec2_ssm_session,
+				})
+			}
 		}
 	} else {
 		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
@@ -289,10 +294,13 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 		Runtime: "aws_ec2",
 	}
 	ssm := ""
-	if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil {
-		ssm = s.(string)
+	if s := instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"]; s != nil {
+		if len(s.([]interface{})) > 0 {
+			ssm = s.([]interface{})[0].(map[string]interface{})["PingStatus"].(string)
+		}
 	}
 	asset.State = mapSmmManagedPingStateCode(ssm)
+	asset.Options = conn.ConnectionOptions()
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	name := instance.InstanceId.Data
 	if lname := asset.Labels["Name"]; name != "" {
@@ -387,6 +395,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	if instance.IpAddress.Data != "" {
 		host = instance.IpAddress.Data
 	}
+	asset.Options = conn.ConnectionOptions()
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
@@ -449,13 +458,14 @@ func MondooImageRegistryID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/docker/registry/" + id
 }
 
-func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, profile string) *inventory.Asset {
+func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConnection) *inventory.Asset {
 	a := &inventory.Asset{}
 	a.PlatformIds = []string{containerid.MondooContainerImageID(image.Digest.Data)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container_image",
 		Runtime: "aws_ecr",
 	}
+	a.Options = conn.ConnectionOptions()
 	a.Name = ecrImageName(image.RepoName.Data, image.Digest.Data)
 	a.State = inventory.State_STATE_ONLINE
 	imageTags := []string{}
@@ -468,7 +478,7 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, profile string) *invento
 			Host:    image.Uri.Data + ":" + tag,
 			Options: map[string]string{
 				"region":  image.Region.Data,
-				"profile": profile,
+				"profile": conn.Profile(),
 			},
 		})
 
@@ -525,6 +535,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	region := container.Region.Data
 
 	a.Name = container.Name.Data
+	a.Options = conn.ConnectionOptions()
 	a.PlatformIds = []string{containerid.MondooContainerID(runtimeId), MondooECSContainerID(containerArn)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container",
