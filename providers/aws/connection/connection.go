@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
@@ -177,6 +178,22 @@ func (p *AwsConnection) Profile() string {
 
 func (p *AwsConnection) ConnectionOptions() map[string]string {
 	return p.connectionOptions
+}
+
+func (p *AwsConnection) RunCommand(command string) (*shared.Command, error) {
+	return nil, errors.New("unimplemented")
+}
+
+func (p *AwsConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+	return shared.FileInfoDetails{}, errors.New("unimplemented")
+}
+
+func (p *AwsConnection) FileSystem() afero.Fs {
+	return nil
+}
+
+func (p *AwsConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_RunCommand // not true, update to nothing
 }
 
 func (p *AwsConnection) Type() shared.ConnectionType {

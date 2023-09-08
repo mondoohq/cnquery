@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/providers/aws/resources"
 	osconnection "go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 const (
@@ -118,13 +119,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn shared.SimpleConnection
+	var conn shared.Connection
 	var err error
 
 	switch conf.Type {
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = osconnection.NewSshConnection(s.lastConnectionID, conf, asset)
+		if pf, ok := detector.DetectOS(conn); ok {
+			conn.Asset().Platform = pf
+		}
+
 	case RegistryImageConnectionType:
 		s.lastConnectionID++
 		conn, err = osconnection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
