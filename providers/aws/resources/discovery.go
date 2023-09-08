@@ -61,7 +61,7 @@ func handleTargets(targets []string) []string {
 
 func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string) ([]*inventory.Asset, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
-	accountId := awsAccount.Id.Data
+	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
 	assetList := []*inventory.Asset{}
 	switch target {
 	case connection.DiscoveryAccounts:
