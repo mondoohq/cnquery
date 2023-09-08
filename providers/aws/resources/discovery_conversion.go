@@ -196,10 +196,10 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	if len(aliases.Data) > 0 {
 		alias = aliases.Data[0].(string)
 	}
-	justId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
-	name := AssembleIntegrationName(alias, justId)
+	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
+	name := AssembleIntegrationName(alias, accountId)
 
-	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + justId
+	id := "//platformid.api.mondoo.app/runtime/aws/accounts/" + accountId
 
 	return &inventory.Asset{
 		PlatformIds: []string{id},
@@ -215,11 +215,11 @@ func trimAwsAccountIdToJustId(id string) string {
 }
 
 func AssembleIntegrationName(alias string, id string) string {
-	justId := trimAwsAccountIdToJustId(id)
+	accountId := trimAwsAccountIdToJustId(id)
 	if alias == "" {
-		return fmt.Sprintf("AWS Account %s", justId)
+		return fmt.Sprintf("AWS Account %s", accountId)
 	}
-	return fmt.Sprintf("AWS Account %s (%s)", alias, justId)
+	return fmt.Sprintf("AWS Account %s (%s)", alias, accountId)
 }
 
 func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
