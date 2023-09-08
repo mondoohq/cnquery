@@ -387,7 +387,7 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 }
 
 func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
-	ds := k8s.GetStatefulsets()
+	ds := k8s.GetDeployments()
 	if ds.Error != nil {
 		return nil, ds.Error
 	}
