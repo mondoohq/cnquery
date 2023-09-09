@@ -24,7 +24,7 @@ func init() {
 }
 
 func runtime() llx.Runtime {
-	return testutils.LinuxMock("../providers-sdk/v1/testutils")
+	return testutils.LinuxMock()
 }
 
 func getEnvFeatures() cnquery.Features {

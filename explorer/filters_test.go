@@ -50,7 +50,7 @@ func TestSummarize(t *testing.T) {
 
 func TestBundleAssetFilter(t *testing.T) {
 	// load the raw bundle
-	tester := testutils.InitTester(testutils.LinuxMock("../providers-sdk/v1/testutils"))
+	tester := testutils.InitTester(testutils.LinuxMock())
 	bundle, err := explorer.BundleFromPaths("../examples/os.mql.yaml")
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(bundle.Packs))

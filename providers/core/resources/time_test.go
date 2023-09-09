@@ -19,7 +19,7 @@ func duration(i int64) *time.Time {
 }
 
 func TestFuzzyTime(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	code := "time.now.unix"
 	t.Run(code, func(t *testing.T) {
 		res := x.TestQuery(t, code)
@@ -40,7 +40,7 @@ func TestFuzzyTime(t *testing.T) {
 func TestTimeParsing(t *testing.T) {
 	parserTimestamp := int64(1136214245)
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "parse.date('0000-01-01T02:03:04Z').seconds",
@@ -131,7 +131,7 @@ func TestTime_Methods(t *testing.T) {
 	today, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), now.Location())
 	tomorrow := today.Add(24 * time.Hour)
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "time.now > time.today",
