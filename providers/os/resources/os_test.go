@@ -10,9 +10,9 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
-var x = testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+var x = testutils.InitTester(testutils.LinuxMock())
 
 func testWindowsQuery(t *testing.T, query string) []*llx.RawResult {
-	win := testutils.InitTester(testutils.WindowsMock("../../../providers-sdk/v1/testutils"))
+	win := testutils.InitTester(testutils.WindowsMock())
 	return win.TestQuery(t, query)
 }

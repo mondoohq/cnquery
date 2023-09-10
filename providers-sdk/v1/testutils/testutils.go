@@ -6,7 +6,9 @@ package testutils
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,11 +29,20 @@ import (
 	osprovider "go.mondoo.com/cnquery/providers/os/provider"
 )
 
-var Features cnquery.Features
+var (
+	Features     cnquery.Features
+	TestutilsDir string
+)
 
 func init() {
 	logger.InitTestEnv()
 	Features = getEnvFeatures()
+
+	_, pathToFile, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("unable to get runtime for testutils for cnquery providers")
+	}
+	TestutilsDir = path.Dir(pathToFile)
 }
 
 func getEnvFeatures() cnquery.Features {
@@ -136,20 +147,20 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
-func Local(pathToTestutils string) llx.Runtime {
-	raw, err := os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/os/resources/os.resources.json"))
+func Local() llx.Runtime {
+	raw, err := os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/os/resources/os.resources.json"))
 	if err != nil {
 		panic("failed to load os resources for testing: " + err.Error())
 	}
 	osSchema := providers.MustLoadSchema("os", raw)
 
-	raw, err = os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/core/resources/core.resources.json"))
+	raw, err = os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/core/resources/core.resources.json"))
 	if err != nil {
 		panic("failed to load core resources for testing: " + err.Error())
 	}
 	coreSchema := providers.MustLoadSchema("core", raw)
 
-	raw, err = os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/network/resources/network.resources.json"))
+	raw, err = os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/network/resources/network.resources.json"))
 	if err != nil {
 		panic("failed to load network resources for testing: " + err.Error())
 	}
@@ -177,12 +188,12 @@ func Local(pathToTestutils string) llx.Runtime {
 	return runtime
 }
 
-func mockRuntime(pathToTestutils string, testdata string) llx.Runtime {
-	return mockRuntimeAbs(pathToTestutils, filepath.Join(pathToTestutils, testdata))
+func mockRuntime(testdata string) llx.Runtime {
+	return mockRuntimeAbs(filepath.Join(TestutilsDir, testdata))
 }
 
-func mockRuntimeAbs(pathToTestutils string, testdata string) llx.Runtime {
-	runtime := Local(pathToTestutils).(*providers.Runtime)
+func mockRuntimeAbs(testdata string) llx.Runtime {
+	runtime := Local().(*providers.Runtime)
 
 	abs, _ := filepath.Abs(testdata)
 	recording, err := providers.LoadRecordingFile(abs)
@@ -202,24 +213,24 @@ func mockRuntimeAbs(pathToTestutils string, testdata string) llx.Runtime {
 	return runtime
 }
 
-func LinuxMock(pathToTestutils string) llx.Runtime {
-	return mockRuntime(pathToTestutils, "testdata/arch.json")
+func LinuxMock() llx.Runtime {
+	return mockRuntime("testdata/arch.json")
 }
 
-func KubeletMock(pathToTestutils string) llx.Runtime {
-	return mockRuntime(pathToTestutils, "testdata/kubelet.json")
+func KubeletMock() llx.Runtime {
+	return mockRuntime("testdata/kubelet.json")
 }
 
-func KubeletAKSMock(pathToTestutils string) llx.Runtime {
-	return mockRuntime(pathToTestutils, "testdata/kubelet-aks.json")
+func KubeletAKSMock() llx.Runtime {
+	return mockRuntime("testdata/kubelet-aks.json")
 }
 
-func WindowsMock(pathToTestutils string) llx.Runtime {
-	return mockRuntime(pathToTestutils, "testdata/windows.json")
+func WindowsMock() llx.Runtime {
+	return mockRuntime("testdata/windows.json")
 }
 
-func RecordingMock(pathToTestutils string, absTestdataPath string) llx.Runtime {
-	return mockRuntimeAbs(pathToTestutils, absTestdataPath)
+func RecordingMock(absTestdataPath string) llx.Runtime {
+	return mockRuntimeAbs(absTestdataPath)
 }
 
 func CustomMock(path string) llx.Runtime {

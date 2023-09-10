@@ -14,7 +14,7 @@ import (
 	"gotest.tools/assert"
 )
 
-var x = testutils.InitTester(testutils.LinuxMock("../../providers-sdk/v1/testutils"))
+var x = testutils.InitTester(testutils.LinuxMock())
 
 func testQuery(t *testing.T, query string) (*llx.CodeBundle, map[string]*llx.RawResult) {
 	codeBundle, err := x.Compile(query)

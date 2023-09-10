@@ -22,7 +22,7 @@ import (
 // core provider counterpart to this test file.
 
 func testChain(t *testing.T, codes ...string) {
-	tr := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	tr := testutils.InitTester(testutils.LinuxMock())
 	for i := range codes {
 		code := codes[i]
 		t.Run(code, func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestOS_Vars(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "{a: 123}",
@@ -119,7 +119,7 @@ func TestMap(t *testing.T) {
 }
 
 func TestListResource(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 
 	t.Run("list resource by default returns the list", func(t *testing.T) {
 		res := x.TestQuery(t, "users")
@@ -178,7 +178,7 @@ func TestListResource(t *testing.T) {
 }
 
 func TestListResource_Assertions(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "users.contains(name == 'root')",
@@ -226,7 +226,7 @@ func TestListResource_Assertions(t *testing.T) {
 }
 
 func TestResource_duplicateFields(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code: "users.list.duplicates(gid) { gid }",
@@ -257,7 +257,7 @@ func TestResource_duplicateFields(t *testing.T) {
 func TestDict_Methods_Contains(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params['hello'].contains('ll')",
@@ -344,7 +344,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		panic(err.Error())
 	}
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params['string-array'].where(_ == 'a')",
@@ -440,7 +440,7 @@ func TestDict_Methods_Map(t *testing.T) {
 func TestDict_Methods_Array(t *testing.T) {
 	p := "parse.json('/dummy.array.json')."
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params[0]",
@@ -474,7 +474,7 @@ func TestDict_Methods_Array(t *testing.T) {
 }
 
 func TestDict_Methods_OtherJson(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "parse.json('/dummy.number.json').params",
@@ -500,7 +500,7 @@ func TestDict_Methods_OtherJson(t *testing.T) {
 }
 
 func TestArrayBlockError(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "users.list { file(_.name + 'doesnotexist').content }")
 	assert.NotEmpty(t, res)
 	queryResult := res[len(res)-1]
@@ -510,7 +510,7 @@ func TestArrayBlockError(t *testing.T) {
 
 func TestBrokenQueryExecutionGH674(t *testing.T) {
 	// See https://github.com/mondoohq/cnquery/issues/674
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	bundle, err := x.Compile(`
 a = file("/tmp/ref1").content.trim
 file(a).path == "/tmp/ref2"

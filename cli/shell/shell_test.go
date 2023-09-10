@@ -14,7 +14,7 @@ import (
 )
 
 func localShell() *shell.Shell {
-	runtime := testutils.LinuxMock("../../providers-sdk/v1/testutils")
+	runtime := testutils.LinuxMock()
 	res, err := shell.New(runtime)
 	if err != nil {
 		panic(err.Error())

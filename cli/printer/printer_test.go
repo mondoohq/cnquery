@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/cnquery/utils/sortx"
 )
 
-var x = testutils.InitTester(testutils.LinuxMock("../../providers-sdk/v1/testutils"))
+var x = testutils.InitTester(testutils.LinuxMock())
 
 func init() {
 	logger.InitTestEnv()

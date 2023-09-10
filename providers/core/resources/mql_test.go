@@ -38,7 +38,7 @@ func TestCore_Props(t *testing.T) {
 		},
 	}
 
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 
 	for i := range tests {
 		cur := tests[i]
@@ -332,7 +332,7 @@ func TestNumber_Methods(t *testing.T) {
 }
 
 func TestString_Methods(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "'hello'.contains('ll')",
@@ -418,7 +418,7 @@ func TestString_Methods(t *testing.T) {
 }
 
 func TestScore_Methods(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "score(100)",
@@ -432,7 +432,7 @@ func TestScore_Methods(t *testing.T) {
 }
 
 func TestTypeof_Methods(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "typeof(null)",
@@ -454,7 +454,7 @@ func TestTypeof_Methods(t *testing.T) {
 }
 
 func TestArray_Access(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
 		{
 			Code:        "[0,1,2][100000]",
@@ -491,7 +491,7 @@ func TestArray_Access(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "[1,2,3]",
@@ -635,7 +635,7 @@ func TestArray(t *testing.T) {
 }
 
 func TestResource_Default(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")
 	require.NotEmpty(t, res)
 	vals := res[0].Data.Value.(map[string]interface{})
@@ -644,7 +644,7 @@ func TestResource_Default(t *testing.T) {
 }
 
 func TestBrokenQueryExecution(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x := testutils.InitTester(testutils.LinuxMock())
 	bundle, err := x.Compile("'asdf'.contains('asdf') == true")
 	require.NoError(t, err)
 	bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
