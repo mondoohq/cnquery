@@ -147,13 +147,13 @@ func ListAll() ([]*Provider, error) {
 
 // EnsureProvider find the provider for a given connector either from the list
 // of existing proviers or by downloading and installing it.
-func EnsureProvider(existing Providers, connectorName string, autoUpdate bool) (*Provider, error) {
-	provider := existing.ForConnection(connectorName)
+func EnsureProvider(existing Providers, connectorName string, connectorType string, autoUpdate bool) (*Provider, error) {
+	provider := existing.ForConnection(connectorName, connectorType)
 	if provider != nil {
 		return provider, nil
 	}
 
-	upstream := DefaultProviders.ForConnection(connectorName)
+	upstream := DefaultProviders.ForConnection(connectorName, connectorType)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
 		return nil, nil
@@ -530,10 +530,22 @@ func (p *Provider) binPath() string {
 	return filepath.Join(p.Path, p.Name)
 }
 
-func (p Providers) ForConnection(name string) *Provider {
-	for _, provider := range p {
-		if slices.Contains(provider.ConnectionTypes, name) {
-			return provider
+func (p Providers) ForConnection(name string, typ string) *Provider {
+	if name != "" {
+		for _, provider := range p {
+			for i := range provider.Connectors {
+				if provider.Connectors[i].Name == name {
+					return provider
+				}
+			}
+		}
+	}
+
+	if typ != "" {
+		for _, provider := range p {
+			if slices.Contains(provider.ConnectionTypes, typ) {
+				return provider
+			}
 		}
 	}
 
