@@ -22,6 +22,8 @@ import (
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers/mock"
 	networkconf "go.mondoo.com/cnquery/providers/network/config"
 	networkprovider "go.mondoo.com/cnquery/providers/network/provider"
@@ -147,24 +149,25 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
+func mustLoadSchema(provider string) *resources.Schema {
+	path := filepath.Join(TestutilsDir, "../../../providers/"+provider+"/resources/"+provider+".lr")
+	res, err := lr.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
+	if err != nil {
+		panic(err.Error())
+	}
+
+	schema, err := lr.Schema(res)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return schema
+}
+
 func Local() llx.Runtime {
-	raw, err := os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/os/resources/os.resources.json"))
-	if err != nil {
-		panic("failed to load os resources for testing: " + err.Error())
-	}
-	osSchema := providers.MustLoadSchema("os", raw)
-
-	raw, err = os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/core/resources/core.resources.json"))
-	if err != nil {
-		panic("failed to load core resources for testing: " + err.Error())
-	}
-	coreSchema := providers.MustLoadSchema("core", raw)
-
-	raw, err = os.ReadFile(filepath.Join(TestutilsDir, "../../../providers/network/resources/network.resources.json"))
-	if err != nil {
-		panic("failed to load network resources for testing: " + err.Error())
-	}
-	networkSchema := providers.MustLoadSchema("network", raw)
+	osSchema := mustLoadSchema("os")
+	coreSchema := mustLoadSchema("core")
+	networkSchema := mustLoadSchema("network")
 
 	runtime := providers.Coordinator.NewRuntime()
 
