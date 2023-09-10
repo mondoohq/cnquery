@@ -34,12 +34,12 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 		return err
 	}
 
-	connectorName, autoUpdate := detectConnector(os.Args, rootCmd, commands)
+	connectorName, autoUpdate := detectConnectorName(os.Args, commands)
 	if connectorName == "" {
 		return nil
 	}
 
-	if _, err := providers.EnsureProvider(existing, connectorName, autoUpdate); err != nil {
+	if _, err := providers.EnsureProvider(existing, connectorName, "", autoUpdate); err != nil {
 		return err
 	}
 
@@ -51,23 +51,27 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	return nil
 }
 
-func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command) (string, bool) {
+func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	autoUpdate := true
-	action := ""
+	connector := ""
+
+	cmds := make(map[string]struct{}, len(commands))
+	for i := range commands {
+		cmds[commands[i].Command.Use] = struct{}{}
+	}
 
 	preRunRoot := &cobra.Command{
 		Use: "root",
 		Run: func(cmd *cobra.Command, args []string) {
 			autoUpdate = viper.GetBool("auto_update")
-			for _, arg := range args {
-				for j := range commands {
-					if arg == commands[j].Command.Use {
-						action = arg
-						break
+			for i, arg := range args {
+				if _, ok := cmds[arg]; ok {
+					if len(args) == i+1 {
+						connector = "local"
+					} else {
+						connector = args[i+1]
 					}
-				}
-				if action != "" {
-					break
+					return
 				}
 			}
 		},
@@ -87,7 +91,7 @@ func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command)
 		return "", false
 	}
 
-	return action, autoUpdate
+	return connector, autoUpdate
 }
 
 func attachProviders(existing providers.Providers, commands []*Command) {
