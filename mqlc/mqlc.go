@@ -2206,12 +2206,3 @@ func Compile(input string, props map[string]*llx.Primitive, conf compilerConfig)
 
 	return res, nil
 }
-
-// MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, conf compilerConfig, props map[string]*llx.Primitive) *llx.CodeBundle {
-	res, err := Compile(input, props, conf)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to compile")
-	}
-	return res
-}
