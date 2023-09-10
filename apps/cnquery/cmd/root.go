@@ -4,13 +4,13 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
@@ -64,12 +64,12 @@ func Execute() {
 		},
 	)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Error().Msg(err.Error())
 		os.Exit(1)
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Error().Msg(err.Error())
 		os.Exit(1)
 	}
 }
