@@ -42,9 +42,8 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 	packages := pkgs.(*mqlPackages)
 
-	list := packages.GetList()
-	if list.Error != nil {
-		return nil, nil, list.Error
+	if err = packages.refreshCache(nil); err != nil {
+		return nil, nil, err
 	}
 
 	x, found := packages.packagesByName[name]
