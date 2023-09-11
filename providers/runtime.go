@@ -227,6 +227,11 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, err
 	}
 
+	// Resources without providers are bridging resources only. They are static in nature.
+	if provider == nil {
+		return &llx.MockResource{Name: name}, nil
+	}
+
 	if provider.Connection == nil {
 		return nil, errors.New("no connection to provider")
 	}
@@ -443,6 +448,15 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	info := r.schema.Lookup(resource)
 	if info == nil {
 		return nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
+	}
+
+	if info.Provider == "" {
+		// This case happens when the resource is only bridging a resource chain,
+		// i.e. it is extending in nature (which we only test for the warning).
+		if !info.IsExtension {
+			log.Warn().Msg("found a resource without a provider: '" + resource + "'")
+		}
+		return nil, info, nil
 	}
 
 	if provider := r.providers[info.Provider]; provider != nil {
