@@ -63,6 +63,15 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("failed to init core, cannot set asset metadata")
 	}
 
+	if len(asset.Connections) > 0 {
+		_, err = resources.CreateResource(runtime, "mondoo", map[string]*llx.RawData{
+			"capabilities": llx.ArrayData(llx.TArr2Raw(asset.Connections[0].Capabilities), types.String),
+		})
+		if err != nil {
+			return nil, errors.New("failed to init core, cannot set connection metadata")
+		}
+	}
+
 	return &plugin.ConnectRes{
 		Id:   connID,
 		Name: "core",
