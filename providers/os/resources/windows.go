@@ -34,7 +34,7 @@ func (wh *mqlWindowsHotfix) id() (string, error) {
 }
 
 func initWindowsHotfix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 1 {
 		return args, nil, nil
 	}
 
@@ -110,7 +110,7 @@ func (wh *mqlWindowsFeature) id() (string, error) {
 }
 
 func initWindowsFeature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
+	if len(args) > 1 {
 		return args, nil, nil
 	}
 
