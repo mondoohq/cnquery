@@ -49,28 +49,38 @@ func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, io.Rea
 		return nil, nil, err
 	}
 
-	// write image to disk (unconmpressed, unflattened)
+	// write image to disk (conmpressed, unflattened)
 	// Otherwise we can not later recognize it as a valid image
-	f, err := cache.RandomFile()
+	f, err := writeCompressedTarImage(img, sha)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	return img, f, nil
+}
+
+// writeCompressedTarImage writes image including the metradata unflattened to disk
+func writeCompressedTarImage(img v1.Image, digest string) (*os.File, error) {
+	f, err := cache.RandomFile()
+	if err != nil {
+		return nil, err
+	}
 	filename := f.Name()
 
-	ref, err := name.ParseReference(sha, name.WeakValidation)
+	ref, err := name.ParseReference(digest, name.WeakValidation)
 	if err != nil {
 		os.Remove(filename)
-		return nil, nil, err
+		return nil, err
 	}
 
 	err = tarball.Write(ref, img, f)
 	if err != nil {
 		os.Remove(filename)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Rewindo, to later read the complete file for uncompress
 	f.Seek(0, io.SeekStart)
 
-	return img, f, nil
+	return f, nil
 }

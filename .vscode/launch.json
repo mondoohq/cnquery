@@ -43,11 +43,9 @@
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "args": [
         "run",
-        "container",
-        "image",
-        "debian:11",
+        "local",
         "-c",
-        "container.image{*}"
+        "asset.eol"
       ],
     },
     {

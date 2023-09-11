@@ -16,7 +16,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
@@ -129,6 +128,13 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 	if err != nil {
 		return nil, nil, err
 	}
-	// extracting twice?
-	return img, mutate.Extract(img), nil
+
+	// write image to disk (conmpressed, unflattened)
+	// Otherwise we can not later recognize it as a valid image
+	f, err := writeCompressedTarImage(img, ref.String())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return img, f, nil
 }
