@@ -461,7 +461,7 @@ func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {

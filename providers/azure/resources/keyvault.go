@@ -507,7 +507,7 @@ func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.keyVault", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
