@@ -17,31 +17,31 @@ import (
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 )
 
-func (a *mqlAzureSubscriptionMonitor) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorService) id() (string, error) {
 	return "azure.subscription.monitor/" + a.SubscriptionId.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorActivityLog) id() (string, error) {
-	return "azure.subscription.monitor.activityLog/" + a.SubscriptionId.Data, nil
+func (a *mqlAzureSubscriptionMonitorServiceActivityLog) id() (string, error) {
+	return "azure.subscription.monitorService.activityLog/" + a.SubscriptionId.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorActivityLogAlert) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorServiceActivityLogAlert) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorApplicationInsight) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorServiceApplicationInsight) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorDiagnosticsetting) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorLogprofile) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorServiceLogprofile) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func initAzureSubscriptionMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionMonitorService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -52,7 +52,7 @@ func initAzureSubscriptionMonitor(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-func initAzureSubscriptionMonitorActivityLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionMonitorServiceActivityLog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -63,7 +63,7 @@ func initAzureSubscriptionMonitorActivityLog(runtime *plugin.Runtime, args map[s
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionMonitor) logProfiles() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -87,7 +87,7 @@ func (a *mqlAzureSubscriptionMonitor) logProfiles() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.monitor.logprofile",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.logprofile",
 				map[string]*llx.RawData{
 					"id":               llx.StringData(convert.ToString(entry.ID)),
 					"name":             llx.StringData(convert.ToString(entry.Name)),
@@ -106,12 +106,12 @@ func (a *mqlAzureSubscriptionMonitor) logProfiles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMonitor) diagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) diagnosticSettings() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings("/subscriptions"+a.SubscriptionId.Data, a.MqlRuntime, conn)
 }
 
-func (a *mqlAzureSubscriptionMonitor) applicationInsights() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -135,7 +135,7 @@ func (a *mqlAzureSubscriptionMonitor) applicationInsights() ([]interface{}, erro
 				return nil, err
 			}
 
-			mqlAppInsight, err := CreateResource(a.MqlRuntime, "azure.subscription.monitor.applicationInsight",
+			mqlAppInsight, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.applicationInsight",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(entry.ID)),
 					"name":       llx.StringData(convert.ToString(entry.Name)),
@@ -154,7 +154,7 @@ func (a *mqlAzureSubscriptionMonitor) applicationInsights() ([]interface{}, erro
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMonitorActivityLog) alerts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -234,7 +234,7 @@ func (a *mqlAzureSubscriptionMonitorActivityLog) alerts() ([]interface{}, error)
 				}
 				conditionsDict = append(conditionsDict, dict)
 			}
-			alert, err := CreateResource(a.MqlRuntime, "azure.subscription.monitor.activityLog.alert",
+			alert, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.activityLog.alert",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString(entry.ID)),
 					"name":        llx.StringData(convert.ToString(entry.Name)),
@@ -268,7 +268,7 @@ func (a *mqlAzureSubscriptionMonitorActivityLog) alerts() ([]interface{}, error)
 
 // TODO: we should check how the plugin generic struct works when the value isnt set, can we rely on default value
 // or need to use something else? goes for both storageAccount implementations
-func (a *mqlAzureSubscriptionMonitorLogprofile) storageAccount() (*mqlAzureSubscriptionStorageAccount, error) {
+func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
 		return nil, nil
@@ -276,7 +276,7 @@ func (a *mqlAzureSubscriptionMonitorLogprofile) storageAccount() (*mqlAzureSubsc
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
-func (a *mqlAzureSubscriptionMonitorDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageAccount, error) {
+func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
 		return nil, nil
@@ -304,7 +304,7 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitor.diagnosticsetting",
+			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
 				map[string]*llx.RawData{
 					"id":               llx.StringData(convert.ToString(entry.ID)),
 					"name":             llx.StringData(convert.ToString(entry.Name)),

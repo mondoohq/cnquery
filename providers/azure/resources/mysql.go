@@ -19,11 +19,11 @@ import (
 	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 )
 
-func (a *mqlAzureSubscriptionMySql) id() (string, error) {
+func (a *mqlAzureSubscriptionMySqlService) id() (string, error) {
 	return "azure.subscription.mysql/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionMySql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionMySqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -34,19 +34,19 @@ func initAzureSubscriptionMySql(runtime *plugin.Runtime, args map[string]*llx.Ra
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlFlexibleServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMySqlServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMySql) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -87,7 +87,7 @@ func (a *mqlAzureSubscriptionMySql) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySql) flexibleServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -128,7 +128,7 @@ func (a *mqlAzureSubscriptionMySql) flexibleServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -173,7 +173,7 @@ func (a *mqlAzureSubscriptionMySqlServer) databases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -218,7 +218,7 @@ func (a *mqlAzureSubscriptionMySqlServer) firewallRules() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -266,7 +266,7 @@ func (a *mqlAzureSubscriptionMySqlServer) configuration() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlFlexibleServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -311,7 +311,7 @@ func (a *mqlAzureSubscriptionMySqlFlexibleServer) databases() ([]interface{}, er
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlFlexibleServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -355,7 +355,7 @@ func (a *mqlAzureSubscriptionMySqlFlexibleServer) firewallRules() ([]interface{}
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMySqlFlexibleServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -403,7 +403,7 @@ func (a *mqlAzureSubscriptionMySqlFlexibleServer) configuration() ([]interface{}
 	return res, nil
 }
 
-func initAzureSubscriptionMySqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionMySqlServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -418,20 +418,20 @@ func initAzureSubscriptionMySqlServer(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, errors.New("id required to fetch azure mysql server")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.mySql", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	mysql := res.(*mqlAzureSubscriptionMySql)
+	mysql := res.(*mqlAzureSubscriptionMySqlService)
 	servers := mysql.GetServers()
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range servers.Data {
-		vm := entry.(*mqlAzureSubscriptionMySqlServer)
+		vm := entry.(*mqlAzureSubscriptionMySqlServiceServer)
 		if vm.Id.Data == id {
 			return args, vm, nil
 		}

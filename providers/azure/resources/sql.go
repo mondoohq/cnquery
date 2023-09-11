@@ -17,11 +17,11 @@ import (
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 )
 
-func (a *mqlAzureSubscriptionSql) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlService) id() (string, error) {
 	return "azure.subscription.sql/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionSql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -32,27 +32,27 @@ func initAzureSubscriptionSql(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSqlDatabaseusage) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabaseusage) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServerAdministrator) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServerAdministrator) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServerVulnerabilityassessmentsettings) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionSql) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -74,7 +74,7 @@ func (a *mqlAzureSubscriptionSql) servers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.server",
+			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(dbServer.ID)),
 					"name":       llx.StringData(convert.ToString(dbServer.Name)),
@@ -93,7 +93,7 @@ func (a *mqlAzureSubscriptionSql) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -145,7 +145,7 @@ func (a *mqlAzureSubscriptionSqlServer) databases() ([]interface{}, error) {
 				"restorePointInTime":            llx.TimeDataPtr(entry.Properties.RestorePointInTime),
 			}
 
-			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.database", args)
+			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database", args)
 			if err != nil {
 				return nil, err
 			}
@@ -155,7 +155,7 @@ func (a *mqlAzureSubscriptionSqlServer) databases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -183,7 +183,7 @@ func (a *mqlAzureSubscriptionSqlServer) firewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.firewallrule",
+			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringData(convert.ToString(entry.ID)),
 					"name":           llx.StringData(convert.ToString(entry.Name)),
@@ -200,7 +200,7 @@ func (a *mqlAzureSubscriptionSqlServer) firewallRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) virtualNetworkRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -233,7 +233,7 @@ func (a *mqlAzureSubscriptionSqlServer) virtualNetworkRules() ([]interface{}, er
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.virtualNetworkRule",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.virtualNetworkRule",
 				map[string]*llx.RawData{
 					"id":                     llx.StringData(convert.ToString(entry.ID)),
 					"name":                   llx.StringData(convert.ToString(entry.Name)),
@@ -250,7 +250,7 @@ func (a *mqlAzureSubscriptionSqlServer) virtualNetworkRules() ([]interface{}, er
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) azureAdAdministrators() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -276,7 +276,7 @@ func (a *mqlAzureSubscriptionSqlServer) azureAdAdministrators() ([]interface{}, 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlAdministrator, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.server.administrator",
+			mqlAzureSqlAdministrator, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.administrator",
 				map[string]*llx.RawData{
 					"id":                llx.StringData(convert.ToString(entry.ID)),
 					"name":              llx.StringData(convert.ToString(entry.Name)),
@@ -296,7 +296,7 @@ func (a *mqlAzureSubscriptionSqlServer) azureAdAdministrators() ([]interface{}, 
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) connectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -323,7 +323,7 @@ func (a *mqlAzureSubscriptionSqlServer) connectionPolicy() (interface{}, error) 
 	return convert.JsonToDict(policy)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) securityAlertPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -350,7 +350,7 @@ func (a *mqlAzureSubscriptionSqlServer) securityAlertPolicy() (interface{}, erro
 	return convert.JsonToDict(policy.ServerSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) auditingPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -376,7 +376,7 @@ func (a *mqlAzureSubscriptionSqlServer) auditingPolicy() (interface{}, error) {
 	return convert.JsonToDict(policy.ServerBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) threatDetectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -403,7 +403,7 @@ func (a *mqlAzureSubscriptionSqlServer) threatDetectionPolicy() (interface{}, er
 	return convert.JsonToDict(threatPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) encryptionProtector() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -429,7 +429,7 @@ func (a *mqlAzureSubscriptionSqlServer) encryptionProtector() (interface{}, erro
 	return convert.JsonToDict(policy.EncryptionProtector.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) vulnerabilityAssessmentSettings() (*mqlAzureSubscriptionSqlServerVulnerabilityassessmentsettings, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings() (*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -452,7 +452,7 @@ func (a *mqlAzureSubscriptionSqlServer) vulnerabilityAssessmentSettings() (*mqlA
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.server.vulnerabilityassessmentsettings",
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
 		map[string]*llx.RawData{
 			"id":                      llx.StringData(convert.ToString(vaSettings.ID)),
 			"name":                    llx.StringData(convert.ToString(vaSettings.Name)),
@@ -467,10 +467,10 @@ func (a *mqlAzureSubscriptionSqlServer) vulnerabilityAssessmentSettings() (*mqlA
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionSqlServerVulnerabilityassessmentsettings), err
+	return res.(*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings), err
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) transparentDataEncryption() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -503,7 +503,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) transparentDataEncryption() (interface
 	return convert.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) advisor() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -547,7 +547,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) advisor() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) threatDetectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -579,7 +579,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) threatDetectionPolicy() (interface{}, 
 	return convert.JsonToDict(policy.DatabaseSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) connectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -606,7 +606,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) connectionPolicy() (interface{}, error
 	return convert.JsonToDict(policy.ServerConnectionPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) auditingPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -639,7 +639,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) auditingPolicy() (interface{}, error) 
 	return convert.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) usage() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -671,7 +671,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) usage() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlUsage, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.databaseusage",
+			mqlAzureSqlUsage, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.databaseusage",
 				map[string]*llx.RawData{
 					"id":           llx.StringData(convert.ToString(entry.ID)),
 					"name":         llx.StringData(convert.ToString(entry.Name)),
@@ -691,7 +691,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) usage() ([]interface{}, error) {
 	return res, nil
 }
 
-func initAzureSubscriptionSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -706,20 +706,20 @@ func initAzureSubscriptionSqlServer(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, errors.New("id required to fetch azure sql server")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.sql", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.sqlService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	sqlSvc := res.(*mqlAzureSubscriptionSql)
+	sqlSvc := res.(*mqlAzureSubscriptionSqlService)
 	servers := sqlSvc.GetServers()
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range servers.Data {
-		vm := entry.(*mqlAzureSubscriptionSqlServer)
+		vm := entry.(*mqlAzureSubscriptionSqlServiceServer)
 		if vm.Id.Data == id {
 			return args, vm, nil
 		}

@@ -17,11 +17,11 @@ import (
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 )
 
-func (a *mqlAzureSubscriptionAuthorization) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) id() (string, error) {
 	return "azure.subscription.authorization/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionAuthorizationService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -32,15 +32,15 @@ func initAzureSubscriptionAuthorization(runtime *plugin.Runtime, args map[string
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionAuthorizationRoleDefinition) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionAuthorizationRoleDefinitionPermission) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionAuthorization) roleDefinitions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -71,7 +71,7 @@ func (a *mqlAzureSubscriptionAuthorization) roleDefinitions() ([]interface{}, er
 			}
 			permissions := []interface{}{}
 			for idx, p := range roleDef.Properties.Permissions {
-				id := fmt.Sprintf("%s/azure.subscription.authorization.roleDefinition.permission/%d", *roleDef.ID, idx)
+				id := fmt.Sprintf("%s/azure.subscription.authorizationService.roleDefinition.permission/%d", *roleDef.ID, idx)
 				permission, err := azureToMqlPermission(a.MqlRuntime, id, p)
 				if err != nil {
 					return nil, err
@@ -81,7 +81,7 @@ func (a *mqlAzureSubscriptionAuthorization) roleDefinitions() ([]interface{}, er
 			if isCustom {
 				isCustom = true
 			}
-			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorization.roleDefinition",
+			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString(roleDef.ID)),
 					"name":        llx.StringData(convert.ToString(roleDef.Properties.RoleName)),
@@ -126,7 +126,7 @@ func azureToMqlPermission(runtime *plugin.Runtime, id string, permission *author
 		}
 	}
 
-	p, err := CreateResource(runtime, "azure.subscription.authorization.roleDefinition.permission",
+	p, err := CreateResource(runtime, "azure.subscription.authorizationService.roleDefinition.permission",
 		map[string]*llx.RawData{
 			"id":                 llx.StringData(id),
 			"allowedActions":     llx.ArrayData(allowedActions, types.String),

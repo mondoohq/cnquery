@@ -174,19 +174,19 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.compute", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
 			return nil, err
 		}
-		computeSvc := svc.(*mqlAzureSubscriptionCompute)
+		computeSvc := svc.(*mqlAzureSubscriptionComputeService)
 		vms := computeSvc.GetVms()
 		if vms.Error != nil {
 			return nil, vms.Error
 		}
 		for _, v := range vms.Data {
-			vm := v.(*mqlAzureSubscriptionComputeVm)
+			vm := v.(*mqlAzureSubscriptionComputeServiceVm)
 			props := vm.GetProperties()
 			if props.Error != nil {
 				return nil, props.Error
@@ -222,13 +222,13 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 		if err != nil {
 			return nil, err
 		}
-		computeSvc := svc.(*mqlAzureSubscriptionCompute)
+		computeSvc := svc.(*mqlAzureSubscriptionComputeService)
 		vms := computeSvc.GetVms()
 		if vms.Error != nil {
 			return nil, vms.Error
 		}
 		for _, v := range vms.Data {
-			vm := v.(*mqlAzureSubscriptionComputeVm)
+			vm := v.(*mqlAzureSubscriptionComputeServiceVm)
 			props := vm.GetProperties()
 			if props.Error != nil {
 				return nil, props.Error
@@ -250,7 +250,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				},
 			}, subWithConfig.conf.Clone())
 			for _, ip := range ipAddresses.Data {
-				ipAddress := ip.(*mqlAzureSubscriptionNetworkIpAddress)
+				ipAddress := ip.(*mqlAzureSubscriptionNetworkServiceIpAddress)
 				// TODO: we need to make this work via another provider maybe?
 				// this is the OS representation of the VM itself
 				asset.Connections = append(asset.Connections, &inventory.Config{
@@ -283,13 +283,13 @@ func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig
 		if err != nil {
 			return nil, err
 		}
-		sqlSvc := svc.(*mqlAzureSubscriptionSql)
+		sqlSvc := svc.(*mqlAzureSubscriptionSqlService)
 		servers := sqlSvc.GetServers()
 		if servers.Error != nil {
 			return nil, servers.Error
 		}
 		for _, sqlServ := range servers.Data {
-			s := sqlServ.(*mqlAzureSubscriptionSqlServer)
+			s := sqlServ.(*mqlAzureSubscriptionSqlServiceServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
 				labels: interfaceMapToStr(s.Tags.Data),
@@ -316,13 +316,13 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 		if err != nil {
 			return nil, err
 		}
-		mysqlSvc := svc.(*mqlAzureSubscriptionMySql)
+		mysqlSvc := svc.(*mqlAzureSubscriptionMySqlService)
 		servers := mysqlSvc.GetServers()
 		if servers.Error != nil {
 			return nil, servers.Error
 		}
 		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionMySqlServer)
+			s := mysqlServ.(*mqlAzureSubscriptionMySqlServiceServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
 				labels: interfaceMapToStr(s.Tags.Data),
@@ -349,13 +349,13 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 		if err != nil {
 			return nil, err
 		}
-		postgresSvc := svc.(*mqlAzureSubscriptionPostgreSql)
+		postgresSvc := svc.(*mqlAzureSubscriptionPostgreSqlService)
 		servers := postgresSvc.GetServers()
 		if servers.Error != nil {
 			return nil, servers.Error
 		}
 		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServer)
+			s := mysqlServ.(*mqlAzureSubscriptionPostgreSqlServiceServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
 				labels: interfaceMapToStr(s.Tags.Data),
@@ -382,13 +382,13 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 		if err != nil {
 			return nil, err
 		}
-		mariaSvc := svc.(*mqlAzureSubscriptionMariaDb)
+		mariaSvc := svc.(*mqlAzureSubscriptionMariaDbService)
 		servers := mariaSvc.GetServers()
 		if servers.Error != nil {
 			return nil, servers.Error
 		}
 		for _, mysqlServ := range servers.Data {
-			s := mysqlServ.(*mqlAzureSubscriptionMariaDbServer)
+			s := mysqlServ.(*mqlAzureSubscriptionMariaDbServiceServer)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
 				labels: interfaceMapToStr(s.Tags.Data),
@@ -415,13 +415,13 @@ func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithCo
 		if err != nil {
 			return nil, err
 		}
-		storageSvc := svc.(*mqlAzureSubscriptionStorage)
+		storageSvc := svc.(*mqlAzureSubscriptionStorageService)
 		accounts := storageSvc.GetAccounts()
 		if accounts.Error != nil {
 			return nil, accounts.Error
 		}
 		for _, account := range accounts.Data {
-			a := account.(*mqlAzureSubscriptionStorageAccount)
+			a := account.(*mqlAzureSubscriptionStorageServiceAccount)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   a.Name.Data,
 				labels: interfaceMapToStr(a.Tags.Data),
@@ -448,19 +448,19 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 		if err != nil {
 			return nil, err
 		}
-		storageSvc := svc.(*mqlAzureSubscriptionStorage)
+		storageSvc := svc.(*mqlAzureSubscriptionStorageService)
 		accounts := storageSvc.GetAccounts()
 		if accounts.Error != nil {
 			return nil, accounts.Error
 		}
 		for _, account := range accounts.Data {
-			a := account.(*mqlAzureSubscriptionStorageAccount)
+			a := account.(*mqlAzureSubscriptionStorageServiceAccount)
 			containers := a.GetContainers()
 			if containers.Error != nil {
 				return nil, containers.Error
 			}
 			for _, container := range containers.Data {
-				c := container.(*mqlAzureSubscriptionStorageAccountContainer)
+				c := container.(*mqlAzureSubscriptionStorageServiceAccountContainer)
 				asset := mqlObjectToAsset(mqlObject{
 					name:   c.Name.Data,
 					labels: map[string]string{},
@@ -488,13 +488,13 @@ func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 		if err != nil {
 			return nil, err
 		}
-		networkSvc := svc.(*mqlAzureSubscriptionNetwork)
+		networkSvc := svc.(*mqlAzureSubscriptionNetworkService)
 		secGrps := networkSvc.GetSecurityGroups()
 		if secGrps.Error != nil {
 			return nil, secGrps.Error
 		}
 		for _, secGrp := range secGrps.Data {
-			s := secGrp.(*mqlAzureSubscriptionNetworkSecurityGroup)
+			s := secGrp.(*mqlAzureSubscriptionNetworkServiceSecurityGroup)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   s.Name.Data,
 				labels: interfaceMapToStr(s.Tags.Data),
@@ -521,13 +521,13 @@ func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([
 		if err != nil {
 			return nil, err
 		}
-		kvSvc := svc.(*mqlAzureSubscriptionKeyVault)
+		kvSvc := svc.(*mqlAzureSubscriptionKeyVaultService)
 		vaults := kvSvc.GetVaults()
 		if vaults.Error != nil {
 			return nil, vaults.Error
 		}
 		for _, vlt := range vaults.Data {
-			v := vlt.(*mqlAzureSubscriptionKeyVaultVault)
+			v := vlt.(*mqlAzureSubscriptionKeyVaultServiceVault)
 			asset := mqlObjectToAsset(mqlObject{
 				name:   v.VaultName.Data,
 				labels: interfaceMapToStr(v.Tags.Data),
@@ -561,7 +561,7 @@ func enrichWithLabels(a *inventory.Asset, labels map[string]string) {
 	}
 }
 
-func getInstancesLabels(vm *mqlAzureSubscriptionComputeVm) (map[string]string, error) {
+func getInstancesLabels(vm *mqlAzureSubscriptionComputeServiceVm) (map[string]string, error) {
 	labels := map[string]string{}
 	props := vm.GetProperties()
 	if props.Error != nil {

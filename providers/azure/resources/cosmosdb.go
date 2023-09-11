@@ -16,11 +16,11 @@ import (
 	cosmosdb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 )
 
-func (a *mqlAzureSubscriptionCosmosDb) id() (string, error) {
+func (a *mqlAzureSubscriptionCosmosDbService) id() (string, error) {
 	return "azure.subscription.cosmosdb/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionCosmosDb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionCosmosDbService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -31,11 +31,11 @@ func initAzureSubscriptionCosmosDb(runtime *plugin.Runtime, args map[string]*llx
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionCosmosDbAccount) id() (string, error) {
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionCosmosDb) accounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -58,7 +58,7 @@ func (a *mqlAzureSubscriptionCosmosDb) accounts() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlCosmosDbAccount, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDb.account",
+			mqlCosmosDbAccount, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(account.ID)),
 					"name":       llx.StringData(convert.ToString(account.Name)),

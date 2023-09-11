@@ -49,11 +49,11 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 	}, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVault) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultService) id() (string, error) {
 	return "azure.subscription.keyVault/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionKeyVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionKeyVaultService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -64,23 +64,23 @@ func initAzureSubscriptionKeyVault(runtime *plugin.Runtime, args map[string]*llx
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultKey) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) id() (string, error) {
 	return a.Kid.Data, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultSecret) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultCertificate) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVault) vaults() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -99,7 +99,7 @@ func (a *mqlAzureSubscriptionKeyVault) vaults() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.vault",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(entry.ID)),
 					"vaultName": llx.StringData(convert.ToString(entry.Name)),
@@ -116,13 +116,13 @@ func (a *mqlAzureSubscriptionKeyVault) vaults() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) vaultUri() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) vaultUri() (string, error) {
 	name := a.VaultName.Data
 	KVUri := "https://" + name + ".vault.azure.net"
 	return KVUri, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) properties() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -149,7 +149,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) properties() (interface{}, error) {
 	return convert.JsonToDict(vault.Properties)
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) keys() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -167,7 +167,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) keys() ([]interface{}, error) {
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.key",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
 					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
@@ -189,7 +189,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) keys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) secrets() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -207,7 +207,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) secrets() ([]interface{}, error) {
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.secret",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
@@ -229,7 +229,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) secrets() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) certificates() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -247,7 +247,7 @@ func (a *mqlAzureSubscriptionKeyVaultVault) certificates() ([]interface{}, error
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.certificate",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
@@ -269,12 +269,12 @@ func (a *mqlAzureSubscriptionKeyVaultVault) certificates() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultVault) diagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) diagnosticSettings() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
-func (a *mqlAzureSubscriptionKeyVaultKey) keyName() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) keyName() (string, error) {
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -284,7 +284,7 @@ func (a *mqlAzureSubscriptionKeyVaultKey) keyName() (string, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultKey) version() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) version() (string, error) {
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -294,7 +294,7 @@ func (a *mqlAzureSubscriptionKeyVaultKey) version() (string, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultKey) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Kid.Data
 	kvid, err := parseKeyVaultId(id)
@@ -323,7 +323,7 @@ func (a *mqlAzureSubscriptionKeyVaultKey) versions() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.key",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
 					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
@@ -345,7 +345,7 @@ func (a *mqlAzureSubscriptionKeyVaultKey) versions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultCertificate) certName() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) certName() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -355,7 +355,7 @@ func (a *mqlAzureSubscriptionKeyVaultCertificate) certName() (string, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultCertificate) version() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) version() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -365,7 +365,7 @@ func (a *mqlAzureSubscriptionKeyVaultCertificate) version() (string, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultCertificate) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
@@ -395,7 +395,7 @@ func (a *mqlAzureSubscriptionKeyVaultCertificate) versions() ([]interface{}, err
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.certificate",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
@@ -417,7 +417,7 @@ func (a *mqlAzureSubscriptionKeyVaultCertificate) versions() ([]interface{}, err
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultSecret) secretName() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) secretName() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -427,7 +427,7 @@ func (a *mqlAzureSubscriptionKeyVaultSecret) secretName() (string, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultSecret) version() (string, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) version() (string, error) {
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
 	if err != nil {
@@ -437,7 +437,7 @@ func (a *mqlAzureSubscriptionKeyVaultSecret) version() (string, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureSubscriptionKeyVaultSecret) versions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data
 	kvid, err := parseKeyVaultId(id)
@@ -469,7 +469,7 @@ func (a *mqlAzureSubscriptionKeyVaultSecret) versions() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVault.secret",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
@@ -491,7 +491,7 @@ func (a *mqlAzureSubscriptionKeyVaultSecret) versions() ([]interface{}, error) {
 	return res, nil
 }
 
-func initAzureSubscriptionKeyVaultVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionKeyVaultServiceVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -513,14 +513,14 @@ func initAzureSubscriptionKeyVaultVault(runtime *plugin.Runtime, args map[string
 	if err != nil {
 		return nil, nil, err
 	}
-	kv := res.(*mqlAzureSubscriptionKeyVault)
+	kv := res.(*mqlAzureSubscriptionKeyVaultService)
 	vaults := kv.GetVaults()
 	if vaults.Error != nil {
 		return nil, nil, vaults.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range vaults.Data {
-		vault := entry.(*mqlAzureSubscriptionKeyVaultVault)
+		vault := entry.(*mqlAzureSubscriptionKeyVaultServiceVault)
 		if vault.Id.Data == id {
 			return args, vault, nil
 		}

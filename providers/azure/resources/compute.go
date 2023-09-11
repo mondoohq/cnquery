@@ -18,11 +18,11 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-func (a *mqlAzureSubscriptionCompute) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
 	return "azure.subscription.compute/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionCompute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionComputeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -33,7 +33,7 @@ func initAzureSubscriptionCompute(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionCompute) vms() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 
 	ctx := context.Background()
@@ -58,7 +58,7 @@ func (a *mqlAzureSubscriptionCompute) vms() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.compute.vm",
+			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(vm.ID)),
 					"name":       llx.StringData(convert.ToString(vm.Name)),
@@ -77,7 +77,7 @@ func (a *mqlAzureSubscriptionCompute) vms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionComputeVm) extensions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	// id is a azure resource id
 	id := a.Id.Data
@@ -128,7 +128,7 @@ func (a *mqlAzureSubscriptionComputeVm) extensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionCompute) disks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) disks() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 
 	ctx := context.Background()
@@ -163,7 +163,7 @@ func (a *mqlAzureSubscriptionCompute) disks() ([]interface{}, error) {
 	return res, nil
 }
 
-func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptionComputeDisk, error) {
+func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptionComputeServiceDisk, error) {
 	properties, err := convert.JsonToDict(disk.Properties)
 	if err != nil {
 		return nil, err
@@ -187,7 +187,7 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.compute.disk",
+	res, err := CreateResource(runtime, "azure.subscription.computeService.disk",
 		map[string]*llx.RawData{
 			"id":                llx.StringData(convert.ToString(disk.ID)),
 			"name":              llx.StringData(convert.ToString(disk.Name)),
@@ -203,10 +203,10 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionComputeDisk), nil
+	return res.(*mqlAzureSubscriptionComputeServiceDisk), nil
 }
 
-func (a *mqlAzureSubscriptionComputeVm) osDisk() (*mqlAzureSubscriptionComputeDisk, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionComputeServiceDisk, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	propertiesDict := a.Properties.Data
 	data, err := json.Marshal(propertiesDict)
@@ -249,7 +249,7 @@ func (a *mqlAzureSubscriptionComputeVm) osDisk() (*mqlAzureSubscriptionComputeDi
 	return diskToMql(a.MqlRuntime, disk.Disk)
 }
 
-func (a *mqlAzureSubscriptionComputeVm) dataDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	propertiesDict := a.Properties.Data
 	data, err := json.Marshal(propertiesDict)
@@ -308,15 +308,15 @@ func (a *mqlAzureSubscriptionComputeVm) dataDisks() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionComputeVm) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionComputeDisk) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeServiceDisk) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionComputeVm) publicIpAddresses() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	token := conn.Token()
 	resourceId, err := ParseResourceID(a.Id.Data)
@@ -407,7 +407,7 @@ func (a *mqlAzureSubscriptionComputeVm) publicIpAddresses() ([]interface{}, erro
 	return res, nil
 }
 
-func initAzureSubscriptionComputeVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionComputeServiceVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -422,20 +422,20 @@ func initAzureSubscriptionComputeVm(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, errors.New("id required to fetch azure compute vm instance")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.compute", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	computeSvc := res.(*mqlAzureSubscriptionCompute)
+	computeSvc := res.(*mqlAzureSubscriptionComputeService)
 	vms := computeSvc.GetVms()
 	if vms.Error != nil {
 		return nil, nil, vms.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range vms.Data {
-		vm := entry.(*mqlAzureSubscriptionComputeVm)
+		vm := entry.(*mqlAzureSubscriptionComputeServiceVm)
 		if vm.Id.Data == id {
 			return args, vm, nil
 		}
