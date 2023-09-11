@@ -35,7 +35,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, assert 
 
 	return &FileSystemConnection{
 		id:         id,
-		conf:       conf,
+		Conf:       conf,
 		asset:      assert,
 		MountedDir: path,
 		closeFN:    closeFN,
@@ -49,7 +49,7 @@ func NewFileSystemConnection(id uint32, conf *inventory.Config, assert *inventor
 
 type FileSystemConnection struct {
 	id    uint32
-	conf  *inventory.Config
+	Conf  *inventory.Config
 	asset *inventory.Asset
 
 	MountedDir   string

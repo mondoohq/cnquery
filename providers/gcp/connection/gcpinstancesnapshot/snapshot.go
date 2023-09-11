@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/motorid/gce"
+	"go.mondoo.com/cnquery/providers/os/id/gce"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	googleoauth "golang.org/x/oauth2/google"
@@ -206,7 +206,12 @@ func (sc *SnapshotCreator) createDisk(disk *compute.Disk, projectID, zone, diskN
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
-				return clonedDiskUrl, fmt.Errorf("operation failed: %+v", operation.Error.Errors)
+				errMessage, _ := operation.Error.MarshalJSON()
+				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
+				if len(operation.Error.Errors) > 0 {
+					errMessage = []byte(operation.Error.Errors[0].Message)
+				}
+				return clonedDiskUrl, fmt.Errorf("create disk failed: %s", errMessage)
 			}
 			clonedDiskUrl = operation.TargetLink
 			break
@@ -267,7 +272,12 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
-				return fmt.Errorf("operation failed: %+v", operation.Error.Errors)
+				errMessage, _ := operation.Error.MarshalJSON()
+				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
+				if len(operation.Error.Errors) > 0 {
+					errMessage = []byte(operation.Error.Errors[0].Message)
+				}
+				return fmt.Errorf("attach disk failed: %s", errMessage)
 			}
 			break
 		}
@@ -284,7 +294,7 @@ func (sc *SnapshotCreator) detachDisk(projectID, zone, instanceName, deviceName 
 		return err
 	}
 
-	// attach the disk to the instance
+	// detach the disk from the instance
 	op, err := computeService.Instances.DetachDisk(projectID, zone, instanceName, deviceName).Context(ctx).Do()
 	if err != nil {
 		return err
@@ -298,7 +308,12 @@ func (sc *SnapshotCreator) detachDisk(projectID, zone, instanceName, deviceName 
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
-				return fmt.Errorf("operation failed: %+v", operation.Error.Errors)
+				errMessage, _ := operation.Error.MarshalJSON()
+				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
+				if len(operation.Error.Errors) > 0 {
+					errMessage = []byte(operation.Error.Errors[0].Message)
+				}
+				return fmt.Errorf("detach disk failed: %s", errMessage)
 			}
 			break
 		}

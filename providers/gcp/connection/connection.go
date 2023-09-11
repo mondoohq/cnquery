@@ -10,6 +10,11 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/providers/gcp/connection/shared"
+)
+
+const (
+	Gcp shared.ConnectionType = "gcp"
 )
 
 type ResourceType int
@@ -20,6 +25,7 @@ const (
 	Organization
 	Folder
 	Gcr
+	Snapshot
 )
 
 type GcpConnection struct {
@@ -49,10 +55,7 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		cred = conf.Credentials[0]
 	}
 	if conf.Type == "gcp" {
-		// FIXME: DEPRECATED, update in v8.0 vv
-		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
-		if conf.Options == nil || (conf.Options["project-id"] == "" && conf.Options["project"] == "" && conf.Options["organization-id"] == "" && conf.Options["organization"] == "" && conf.Options["folder-id"] == "") {
-			// ^^
+		if conf.Options == nil || (conf.Options["project-id"] == "" && conf.Options["organization-id"] == "" && conf.Options["folder-id"] == "") {
 			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id` or `folder-id`")
 		}
 	} else {
@@ -64,24 +67,18 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	if _, ok := conf.Options["repository"]; ok {
 		resourceType = Gcr
 		resourceID = conf.Options["project-id"]
-
-		// FIXME: DEPRECATED, remove in v8.0 vv
-		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
-	} else if conf.Options["project"] != "" {
-		resourceType = Project
-		resourceID = conf.Options["project"]
-		// ^^
-
 	} else if conf.Options["organization-id"] != "" {
 		resourceType = Organization
 		resourceID = conf.Options["organization-id"]
-
 	} else if conf.Options["folder-id"] != "" {
 		resourceType = Folder
 		resourceID = conf.Options["folder-id"]
 	} else if conf.Options["project-id"] != "" {
 		resourceType = Project
 		resourceID = conf.Options["project-id"]
+	} else if conf.Options["snapshot-name"] != "" {
+		resourceType = Snapshot
+		resourceID = conf.Options["snapshot-name"]
 	}
 
 	var override string
@@ -123,4 +120,12 @@ func (c *GcpConnection) ID() uint32 {
 
 func (c *GcpConnection) Asset() *inventory.Asset {
 	return c.asset
+}
+
+func (c *GcpConnection) Type() shared.ConnectionType {
+	return Gcp
+}
+
+func (c *GcpConnection) Config() *inventory.Config {
+	return c.Conf
 }

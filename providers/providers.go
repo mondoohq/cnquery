@@ -156,6 +156,7 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 	upstream := DefaultProviders.ForConnection(connectorName, connectorType)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
+		// FIXME: This causes a panic in the CLI, we should handle this better
 		return nil, nil
 	}
 

@@ -77,7 +77,7 @@ func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
 		command = shared.BuildSudoCommand(p.Sudo, command)
 	}
 	log.Debug().Msgf("local> run command %s", command)
-	c := &commandRunner{Shell: p.shell}
+	c := &CommandRunner{Shell: p.shell}
 	args := []string{}
 
 	res, err := c.Exec(command, args)
@@ -121,13 +121,13 @@ func (p *LocalConnection) Close() {
 	// TODO: we need to close all commands and file handles
 }
 
-type commandRunner struct {
+type CommandRunner struct {
 	shared.Command
 	cmdExecutor *exec.Cmd
 	Shell       []string
 }
 
-func (c *commandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
+func (c *CommandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
 	c.Command.Stats.Start = time.Now()
 
 	var cmd string

@@ -16,10 +16,14 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
+	"go.mondoo.com/cnquery/providers/gcp/connection/gcpinstancesnapshot"
+	"go.mondoo.com/cnquery/providers/gcp/connection/shared"
 	"go.mondoo.com/cnquery/providers/gcp/resources"
 )
 
-const ConnectionType = "gcp"
+const (
+	ConnectionType = "gcp"
+)
 
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
@@ -74,7 +78,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) != 2 {
-		return nil, errors.New("missing argument, use `gcp project id` or `gcp organization id` or `gcp folder id`")
+		return nil, errors.New("missing argument, use `gcp project id`, `gcp organization id`, `gcp folder id` or `gcp snapshot name`")
 	}
 
 	conf := &inventory.Config{
@@ -87,6 +91,18 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if x, ok := flags["credentials-path"]; ok && len(x.Value) != 0 {
 		credentialsPath = string(x.Value)
 	}
+
+	// these flags are currently only used for the snapshot sub-command
+	var projectId string
+	if x, ok := flags["project-id"]; ok && len(x.Value) != 0 {
+		projectId = string(x.Value)
+	}
+
+	var zone string
+	if x, ok := flags["zone"]; ok && len(x.Value) != 0 {
+		zone = string(x.Value)
+	}
+	// ^^ snapshot flags
 
 	envVars := []string{
 		"GOOGLE_APPLICATION_CREDENTIALS",
@@ -102,23 +118,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		})
 	}
 
-	switch req.Args[0] {
-	case "org":
-		conf.Options["organization-id"] = req.Args[1]
-	case "project":
-		conf.Options["project-id"] = req.Args[1]
-	case "folder":
-		conf.Options["folder-id"] = req.Args[1]
-	case "gcr":
-		conf.Options["project-id"] = req.Args[1]
-		conf.Options["repository"] = string(flags["repository"].Value)
-		conf.Runtime = "gcp-gcr"
-	}
-
-	asset := inventory.Asset{
-		Connections: []*inventory.Config{conf},
-	}
-
 	// parse discovery flags
 	conf.Discover = &inventory.Discovery{
 		Targets: []string{},
@@ -130,6 +129,30 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	} else {
 		conf.Discover.Targets = []string{resources.DiscoveryAuto}
+	}
+
+	switch req.Args[0] {
+	case "org":
+		conf.Options["organization-id"] = req.Args[1]
+	case "project":
+		conf.Options["project-id"] = req.Args[1]
+	case "folder":
+		conf.Options["folder-id"] = req.Args[1]
+	case "gcr":
+		conf.Options["project-id"] = req.Args[1]
+		conf.Options["repository"] = string(flags["repository"].Value)
+		conf.Runtime = "gcp-gcr"
+	case "snapshot":
+		conf.Options["snapshot-name"] = req.Args[1]
+		conf.Options["project-id"] = projectId
+		conf.Options["zone"] = zone
+		conf.Options["type"] = "snapshot"
+		conf.Type = string(gcpinstancesnapshot.SnapshotConnectionType)
+		conf.Discover = nil
+	}
+
+	asset := inventory.Asset{
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
@@ -152,10 +175,13 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	var inventory *inventory.Inventory
 	// discovery assets for further scanning
-	inventory, err := s.discover(conn)
-	if err != nil {
-		return nil, err
+	if conn.Config().Discover != nil {
+		inventory, err = s.discover(conn)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &plugin.ConnectRes{
@@ -170,20 +196,35 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for i := range s.runtimes {
+		runtime := s.runtimes[i]
+		// FIXME: I think, we might need the asset here to cleanup the correct connection
+		sharedConn := runtime.Connection.(shared.GcpConnection)
+		if sharedConn.Type() == gcpinstancesnapshot.SnapshotConnectionType {
+			conn := runtime.Connection.(*gcpinstancesnapshot.GcpSnapshotConnection)
+			conn.Close()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.GcpConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.GcpConnection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.GcpConnection
+	var conn shared.GcpConnection
 	var err error
 
 	switch conf.Type {
+	case string(gcpinstancesnapshot.SnapshotConnectionType):
+		// A GcpSnapshotConnection is a wrapper around a FilesystemConnection
+		// To make sure the connection is later handled by the os provider, override the type
+		conf.Type = "filesystem"
+		s.lastConnectionID++
+		conn, err = gcpinstancesnapshot.NewGcpSnapshotConnection(s.lastConnectionID, conf, asset)
 	default:
 		s.lastConnectionID++
 		conn, err = connection.NewGcpConnection(s.lastConnectionID, asset, conf)
@@ -213,25 +254,28 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.GcpConnection) error {
+func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) error {
 	// TODO: adjust asset detection
-	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
+	asset.Id = conn.Config().Type
+	asset.Name = conn.Config().Host
 
-	asset.Platform = &inventory.Platform{
-		Name:   "gcp",
-		Family: []string{"gcp"},
-		Kind:   "api",
-		Title:  "GCP Cloud",
+	switch conn.Config().Type {
+	default:
+		asset.Platform = &inventory.Platform{
+			Name:   "gcp",
+			Family: []string{"gcp"},
+			Kind:   "api",
+			Title:  "GCP Cloud",
+		}
+		// TODO: Add platform IDs
+		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gcp/"}
 	}
 
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gcp/"}
 	return nil
 }
 
-func (s *Service) discover(conn *connection.GcpConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+func (s *Service) discover(conn shared.GcpConnection) (*inventory.Inventory, error) {
+	if conn.Config().Discover == nil {
 		return nil, nil
 	}
 

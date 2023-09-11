@@ -5,15 +5,19 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/gcp/connection/gcpinstancesnapshot"
 	"go.mondoo.com/cnquery/providers/gcp/provider"
 	"go.mondoo.com/cnquery/providers/gcp/resources"
 )
 
 var Config = plugin.Provider{
-	Name:            "gcp",
-	ID:              "go.mondoo.com/cnquery/providers/gcp",
-	Version:         "9.0.0",
-	ConnectionTypes: []string{provider.ConnectionType},
+	Name:    "gcp",
+	ID:      "go.mondoo.com/cnquery/providers/gcp",
+	Version: "9.0.0",
+	ConnectionTypes: []string{
+		provider.ConnectionType,
+		string(gcpinstancesnapshot.SnapshotConnectionType),
+	},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gcp",
@@ -46,6 +50,18 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "specify the GCR repository to scan (only used for gcr sub command)",
+				},
+				{
+					Long:    "project-id",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "specify the GCP project ID where the target instance is located (only used for snapshots)",
+				},
+				{
+					Long:    "zone",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "specify the GCP zone where the target instance is located (only used for snapshots)",
 				},
 			},
 		},
