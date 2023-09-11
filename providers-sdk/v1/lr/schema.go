@@ -14,7 +14,7 @@ import (
 func Schema(ast *LR) (*resources.Schema, error) {
 	provider, ok := ast.Options["provider"]
 	if !ok {
-		return nil, errors.New("Missing provider name for resources to generate schema")
+		return nil, errors.New("missing provider name for resources to generate schema")
 	}
 
 	res := &resources.Schema{
@@ -77,6 +77,9 @@ func Schema(ast *LR) (*resources.Schema, error) {
 					Id:          rem,
 					Fields:      map[string]*resources.Field{},
 					IsExtension: true,
+					// Resource extensions do not set the provider. They are here to
+					// indicate that it bridges the resource chain, but it cannot
+					// initialize this resource! This is why no provider is set.
 				}
 				res.Resources[rem] = child
 			}
