@@ -963,6 +963,7 @@ resources:
       state: {}
       timestamp: {}
       type: {}
+    is_private: true
     min_mondoo_version: 5.35.0
   yaml.path:
     fields:
