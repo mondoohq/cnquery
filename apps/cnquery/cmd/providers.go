@@ -20,15 +20,15 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(providersCmd)
-	providersCmd.AddCommand(listProvidersCmd)
-	providersCmd.AddCommand(installProviderCmd)
+	rootCmd.AddCommand(ProvidersCmd)
+	ProvidersCmd.AddCommand(listProvidersCmd)
+	ProvidersCmd.AddCommand(installProviderCmd)
 
 	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "install a provider via URL")
 }
 
-var providersCmd = &cobra.Command{
+var ProvidersCmd = &cobra.Command{
 	Use:    "providers",
 	Short:  "Providers add connectivity to all assets.",
 	Long:   `Manage your providers. List and install new ones or update existing ones.`,
