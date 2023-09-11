@@ -95,12 +95,13 @@ func ListAll() ([]*Provider, error) {
 		if HomePath != "" {
 			msg = msg.Str("home-path", HomePath)
 		}
+		msg.Msg("can't find any paths for providers, none are configured")
 	}
 
 	if sysOk {
 		cur, err := findProviders(SystemPath)
 		if err != nil {
-			log.Warn().Str("path", SystemPath).Msg("failed to get providers from system path")
+			log.Warn().Str("path", SystemPath).Err(err).Msg("failed to get providers from system path")
 		}
 		all = append(all, cur...)
 	}
@@ -108,7 +109,7 @@ func ListAll() ([]*Provider, error) {
 	if homeOk {
 		cur, err := findProviders(HomePath)
 		if err != nil {
-			log.Warn().Str("path", HomePath).Msg("failed to get providers from home path")
+			log.Warn().Str("path", HomePath).Err(err).Msg("failed to get providers from home path")
 		}
 		all = append(all, cur...)
 	}
@@ -429,7 +430,8 @@ func isOverlyPermissive(path string) (bool, error) {
 	}
 
 	mode := stat.Mode()
-	if mode&0o022 != 0 {
+	// We don't check the permissions for windows
+	if runtime.GOOS != "windows" && mode&0o022 != 0 {
 		return true, nil
 	}
 
@@ -477,6 +479,9 @@ func findProviders(path string) ([]*Provider, error) {
 func readProviderDir(pdir string) (*Provider, error) {
 	name := filepath.Base(pdir)
 	bin := filepath.Join(pdir, name)
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
 	conf := filepath.Join(pdir, name+".json")
 	resources := filepath.Join(pdir, name+".resources.json")
 
@@ -485,11 +490,11 @@ func readProviderDir(pdir string) (*Provider, error) {
 		return nil, nil
 	}
 	if !config.ProbeFile(conf) {
-		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin config")
+		log.Debug().Str("path", conf).Msg("ignoring provider, can't access the plugin config")
 		return nil, nil
 	}
 	if !config.ProbeFile(resources) {
-		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin schema")
+		log.Debug().Str("path", resources).Msg("ignoring provider, can't access the plugin schema")
 		return nil, nil
 	}
 
@@ -528,7 +533,11 @@ func (p *Provider) LoadResources() error {
 }
 
 func (p *Provider) binPath() string {
-	return filepath.Join(p.Path, p.Name)
+	name := p.Name
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	return filepath.Join(p.Path, name)
 }
 
 func (p Providers) ForConnection(name string, typ string) *Provider {

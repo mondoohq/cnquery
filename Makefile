@@ -20,6 +20,15 @@ ifndef VERSION
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
 
+ifndef TARGETOS
+	TARGETOS = $(shell go env GOOS)
+endif
+
+BIN_SUFFIX = ""
+ifeq ($(TARGETOS),windows)
+	BIN_SUFFIX=".exe"
+endif
+
 LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery.Version=${VERSION} -X go.mondoo.com/cnquery.Build=${TAG}" # -linkmode external -extldflags=-static
 LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery.Build=${TAG} -s -w"
 
@@ -73,7 +82,7 @@ define buildProvider
 	echo "--> [${$@_NAME}] generate CLI json"
 	cd ${$@_HOME} && go run ./gen/main.go .
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	cd ${$@_HOME} && go build -o ${$@_DIST_BIN} ./main.go
+	cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
 endef
 
 define installProvider
@@ -461,7 +470,7 @@ cnquery/build/linux:
 
 .PHONY: cnquery/build/windows
 cnquery/build/windows:
-	GOOS=windows go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+	GOOS=windows GOARCH=amd64 go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 cnquery/build/darwin:
 	GOOS=darwin go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
