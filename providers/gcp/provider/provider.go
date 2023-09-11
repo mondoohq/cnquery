@@ -78,7 +78,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) != 2 {
-		return nil, errors.New("missing argument, use `gcp project id`, `gcp organization id`, `gcp folder id` or `gcp snapshot name`")
+		return nil, errors.New("missing argument, use `gcp project id`, `gcp organization id`, `gcp folder id`, `gcp instance name`, or `gcp snapshot name`")
 	}
 
 	conf := &inventory.Config{
@@ -92,7 +92,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		credentialsPath = string(x.Value)
 	}
 
-	// these flags are currently only used for the snapshot sub-command
+	// used for snapshot and instance sub-commands
 	var projectId string
 	if x, ok := flags["project-id"]; ok && len(x.Value) != 0 {
 		projectId = string(x.Value)
@@ -102,7 +102,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if x, ok := flags["zone"]; ok && len(x.Value) != 0 {
 		zone = string(x.Value)
 	}
-	// ^^ snapshot flags
+	// ^^ snapshot and instance flags
+
+	// these flags are currently only used for the instnace sub-command
+	var createSnapshot string
+	if x, ok := flags["create-snapshot"]; ok && len(x.Value) != 0 {
+		createSnapshot = string(x.Value)
+	}
+	// ^^ instance flags
 
 	envVars := []string{
 		"GOOGLE_APPLICATION_CREDENTIALS",
@@ -147,6 +154,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["project-id"] = projectId
 		conf.Options["zone"] = zone
 		conf.Options["type"] = "snapshot"
+		conf.Type = string(gcpinstancesnapshot.SnapshotConnectionType)
+		conf.Discover = nil
+	case "instance":
+		conf.Options["instance-name"] = req.Args[1]
+		conf.Options["type"] = "instance"
+		conf.Options["project-id"] = projectId
+		conf.Options["zone"] = zone
+		conf.Options["create-snapshot"] = createSnapshot
 		conf.Type = string(gcpinstancesnapshot.SnapshotConnectionType)
 		conf.Discover = nil
 	}

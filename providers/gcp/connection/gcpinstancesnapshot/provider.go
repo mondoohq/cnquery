@@ -163,6 +163,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 			mi.diskUrl = diskUrl
 
 		}
+		asset.Name = instanceInfo.InstanceName
+		asset.PlatformIds = []string{instanceInfo.PlatformMrn}
 	case "snapshot":
 		snapshotInfo, err := sc.SnapshotInfo(target.ProjectID, target.SnapshotName)
 		if err != nil {
@@ -176,6 +178,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 		}
 		log.Debug().Str("disk", diskUrl).Msg("created disk from snapshot")
 		mi.diskUrl = diskUrl
+		asset.Name = conf.Options["snapshot-name"]
+		asset.PlatformIds = []string{snapshotInfo.PlatformMrn}
 	default:
 		return nil, errors.New("invalid target type")
 	}
@@ -217,6 +221,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
 		Type:       conf.Type,
+		Record:     conf.Record,
 	}, asset)
 	if err != nil {
 		errorHandler()
@@ -241,11 +246,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 		return nil, errors.New("failed to detect OS")
 	}
 	asset.Id = conf.Type
-	asset.Name = conf.Options["snapshot-name"]
 	asset.Platform.Kind = c.Kind()
 	asset.Platform.Runtime = c.Runtime()
-	platformId := fmt.Sprintf("//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/%s/snapshots/%s", conf.Options["project-id"], conf.Options["snapshot-name"])
-	asset.PlatformIds = []string{platformId}
 
 	return c, nil
 }
