@@ -20,6 +20,15 @@ ifndef VERSION
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
 
+ifndef TARGETOS
+	TARGETOS = $(shell go env GOOS)
+endif
+
+BIN_SUFFIX = ""
+ifeq ($(TARGETOS),windows)
+	BIN_SUFFIX=".exe"
+endif
+
 LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery.Version=${VERSION} -X go.mondoo.com/cnquery.Build=${TAG}" # -linkmode external -extldflags=-static
 LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery.Build=${TAG} -s -w"
 
@@ -59,15 +68,6 @@ prep/tools:
 #   🌙 MQL/MOTOR   #
 
 cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate
-
-ifndef TARGETOS
-	TARGETOS = $(shell go env GOOS)
-endif
-
-BIN_SUFFIX = ""
-ifeq ($(TARGETOS),windows)
-	BIN_SUFFIX=".exe"
-endif
 
 define buildProvider
 	$(eval $@_HOME = $(1))
