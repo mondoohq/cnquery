@@ -102,12 +102,11 @@ message Config {
 
   // flags for additional asset discovery
   Discovery discover = 27;
-
   // additional platform information, passed-through
   string runtime = 25;
-
   // configuration to uniquely identify an specific asset for multi-asset api connection
   string platform_id = 26;
+  repeated string capabilities = 29;
 }
 
 message Sudo {

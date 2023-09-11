@@ -309,7 +309,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	asset.Connections[0].Id = conn.ID()
+	conf.Id = conn.ID()
+	conf.Capabilities = conn.Capabilities().String()
+
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
 		Callback:       callback,
