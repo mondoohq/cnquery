@@ -23,7 +23,7 @@ import (
 )
 
 func (a *mqlAwsVpc) id() (string, error) {
-	return a.GetArn().Data, nil
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAws) vpcs() ([]interface{}, error) {
