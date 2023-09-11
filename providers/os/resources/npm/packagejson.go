@@ -6,9 +6,8 @@ package npm
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
-	"go.mondoo.com/cnquery/upstream/mvd"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
 )
 
 // PackageJson allows parsing the package json file
@@ -34,7 +33,7 @@ type PackageJsonLock struct {
 }
 
 func ParsePackageJson(r io.Reader) ([]*mvd.Package, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +69,7 @@ func ParsePackageJson(r io.Reader) ([]*mvd.Package, error) {
 }
 
 func ParsePackageJsonLock(r io.Reader) ([]*mvd.Package, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
