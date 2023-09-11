@@ -129,5 +129,6 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 	if err != nil {
 		return nil, nil, err
 	}
+	// extracting twice?
 	return img, mutate.Extract(img), nil
 }

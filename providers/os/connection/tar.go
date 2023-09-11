@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
@@ -157,19 +158,24 @@ func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 
 // NewWithReader provides a tar provider from a container image stream
 func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser, close func()) (*TarConnection, error) {
-	// we cache the flattened image locally
-	f, err := cache.RandomFile()
-	if err != nil {
-		return nil, err
-	}
+	filename := ""
+	if x, ok := rc.(*os.File); ok {
+		filename = x.Name()
+	} else {
+		// cache file locally
+		f, err := cache.RandomFile()
+		if err != nil {
+			return nil, err
+		}
 
-	// we return a pure tar image
-	filename := f.Name()
+		// we return a pure tar image
+		filename = f.Name()
 
-	err = cache.StreamToTmpFile(rc, f)
-	if err != nil {
-		os.Remove(filename)
-		return nil, err
+		err = cache.StreamToTmpFile(rc, f)
+		if err != nil {
+			os.Remove(filename)
+			return nil, err
+		}
 	}
 
 	return NewWithClose(id, &inventory.Config{
@@ -200,11 +206,16 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 			return nil, err
 		}
 		identifier = containerid.MondooContainerImageID(hash.String())
-		// if it is a container image, we need to transform the tar first, so that all layers are flattened
-		c, err := NewWithReader(id, conf, asset, mutate.Extract(img), closeFn)
+
+		// we cache the flattened image locally
+		c, err := newWithFlattenedImage(id, conf, asset, &img)
 		if err != nil {
 			return nil, err
 		}
+
+		// remove unflattened image file, we now have a flattened image
+		closeFn()
+
 		c.PlatformIdentifier = identifier
 		return c, nil
 	} else {
@@ -232,4 +243,36 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 		c.PlatformIdentifier = identifier
 		return c, nil
 	}
+}
+
+func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.Asset, img *v1.Image) (*TarConnection, error) {
+	f, err := cache.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+	imageFilename := f.Name()
+	err = cache.StreamToTmpFile(mutate.Extract(*img), f)
+	if err != nil {
+		os.Remove(imageFilename)
+		return nil, err
+	}
+
+	c := &TarConnection{
+		id:    id,
+		asset: asset,
+		Fs:    provider_tar.NewFs(imageFilename),
+		CloseFN: func() {
+			// remove temporary file on stream close
+			os.Remove(imageFilename)
+		},
+		PlatformKind:    conf.Backend,
+		PlatformRuntime: conf.Runtime,
+		conf: &inventory.Config{
+			Options: map[string]string{
+				OPTION_FILE: imageFilename,
+			},
+		},
+	}
+
+	return c, nil
 }
