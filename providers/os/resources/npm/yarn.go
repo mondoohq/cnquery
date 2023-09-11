@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/upstream/mvd"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
 	"sigs.k8s.io/yaml"
 )
 
