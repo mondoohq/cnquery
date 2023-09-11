@@ -206,14 +206,6 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	if inv == nil {
-		inv = &inventory.Inventory{
-			Spec: &inventory.InventorySpec{
-				Assets: []*inventory.Asset{req.Asset},
-			},
-		}
-	}
-
 	return &plugin.ConnectRes{
 		Id:        uint32(conn.ID()),
 		Name:      conn.Name(),
