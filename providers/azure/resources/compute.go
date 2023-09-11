@@ -387,7 +387,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{
 				if err != nil {
 					return nil, err
 				}
-				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.network.ipAddress",
+				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
 					map[string]*llx.RawData{
 						"id":        llx.StringData(convert.ToString(ipAddress.ID)),
 						"name":      llx.StringData(convert.ToString(ipAddress.Name)),

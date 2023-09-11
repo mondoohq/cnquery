@@ -216,7 +216,7 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.compute", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -277,7 +277,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.sql", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.sqlService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -310,7 +310,7 @@ func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig
 func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.mySql", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.mySqlService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -343,7 +343,7 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.postgreSql", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -376,7 +376,7 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.mariaDb", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.mariaDbService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -409,7 +409,7 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfig {
-		svc, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -442,7 +442,7 @@ func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithCo
 func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfig {
-		svc, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -482,7 +482,7 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.network", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.networkService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
@@ -515,7 +515,7 @@ func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([]*inventory.Asset, error) {
 	assets := []*inventory.Asset{}
 	for _, subWithConfig := range subsWithConfigs {
-		svc, err := NewResource(runtime, "azure.subscription.keyVault", map[string]*llx.RawData{
+		svc, err := NewResource(runtime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
 			"subscriptionId": llx.StringDataPtr(subWithConfig.sub.SubscriptionID),
 		})
 		if err != nil {
