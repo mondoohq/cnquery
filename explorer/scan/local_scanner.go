@@ -222,10 +222,15 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		})
 	}
 
+	if len(assets) == 0 {
+		return nil, false, nil
+	}
+
 	justAssets := []*inventory.Asset{}
 	for _, asset := range assets {
 		justAssets = append(justAssets, asset.asset)
 	}
+
 	// sync assets
 	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
 		log.Info().Msg("synchronize assets")
