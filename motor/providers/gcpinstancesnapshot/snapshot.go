@@ -2,6 +2,7 @@ package gcpinstancesnapshot
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -203,7 +204,8 @@ func (sc *SnapshotCreator) createDisk(disk *compute.Disk, projectID, zone, diskN
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
-				return clonedDiskUrl, fmt.Errorf("operation failed: %+v", operation.Error.Errors)
+				data, _ := json.Marshal(operation.Error.Errors)
+				return clonedDiskUrl, fmt.Errorf("could not create disk: " + string(data))
 			}
 			clonedDiskUrl = operation.TargetLink
 			break
@@ -235,7 +237,7 @@ func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName strin
 	return sc.createDisk(disk, projectID, zone, diskName)
 }
 
-// attachDisk attaches a disk to an instanc
+// attachDisk attaches a disk to an instance
 func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskUrl, deviceName string) error {
 	ctx := context.Background()
 
@@ -253,6 +255,7 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 	// attach the disk to the instance
 	op, err := computeService.Instances.AttachDisk(projectID, zone, instanceName, attachedDisk).Context(ctx).Do()
 	if err != nil {
+		log.Debug().Err(err).Str("device-name", deviceName).Msg("could not attach disk")
 		return err
 	}
 
@@ -260,11 +263,13 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 	for {
 		operation, err := computeService.ZoneOperations.Get(projectID, zone, op.Name).Context(ctx).Do()
 		if err != nil {
+			log.Debug().Err(err).Str("device-name", deviceName).Msg("could not find operation for disk attachment")
 			return err
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
-				return fmt.Errorf("operation failed: %+v", operation.Error.Errors)
+				data, _ := json.Marshal(operation.Error.Errors)
+				return fmt.Errorf("disk attachment failed: " + string(data))
 			}
 			break
 		}

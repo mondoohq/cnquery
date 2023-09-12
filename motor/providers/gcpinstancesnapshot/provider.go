@@ -183,12 +183,6 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		return nil, errors.New("invalid target type")
 	}
 
-	// attach created disk to the scanner instance
-	err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
-	if err != nil {
-		return nil, err
-	}
-
 	errorHandler := func() {
 		// use different err variable to ensure it does not overshadow the real error
 		dErr := sc.detachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.deviceName)
@@ -200,6 +194,14 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		if dErr != nil {
 			log.Error().Err(dErr).Msg("could not delete created disk")
 		}
+	}
+
+	// attach created disk to the scanner instance
+	log.Debug().Str("device-name", mi.deviceName).Msg("attach created disk to the scanner instance")
+	err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
+	if err != nil {
+		errorHandler()
+		return nil, err
 	}
 
 	// mount volume
