@@ -1,6 +1,3 @@
-# Copyright (c) Mondoo, Inc.
-# SPDX-License-Identifier: BUSL-1.1
-
 resources:
   azure:
     fields: {}
@@ -655,6 +652,7 @@ resources:
       - azure
   azure.subscription.monitorService:
     fields:
+      activityLog: {}
       applicationInsights: {}
       diagnosticSettings: {}
       logProfiles: {}

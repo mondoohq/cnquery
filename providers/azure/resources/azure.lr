@@ -1044,6 +1044,8 @@ private azure.subscription.monitorService {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Application insights for the subscription
   applicationInsights() []azure.subscription.monitorService.applicationInsight
+  // The monitor activity log
+  activityLog() azure.subscription.monitorService.activityLog 
 }
 
 // Azure Monitor Activity Log
