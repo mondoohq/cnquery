@@ -137,10 +137,11 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 
 func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
 	res := &cobra.Command{
-		Use:    connector.Use,
-		Short:  cmd.Action + connector.Short,
-		Long:   connector.Long,
-		PreRun: cmd.Command.PreRun,
+		Use:     connector.Use,
+		Short:   cmd.Action + connector.Short,
+		Long:    connector.Long,
+		Aliases: connector.Aliases,
+		PreRun:  cmd.Command.PreRun,
 	}
 
 	cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
