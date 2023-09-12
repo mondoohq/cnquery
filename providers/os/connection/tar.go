@@ -276,5 +276,11 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 		},
 	}
 
+	err = c.LoadFile(imageFilename)
+	if err != nil {
+		log.Error().Err(err).Str("tar", imageFilename).Msg("tar> could not load tar file")
+		return nil, err
+	}
+
 	return c, nil
 }
