@@ -87,7 +87,7 @@ func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	err := preRunRoot.Execute()
 	if err != nil {
 		log.Debug().Err(err).Msg("early detection error")
-		log.Error().Msg("failed to run early comman detection")
+		log.Error().Msg("failed to run early command detection")
 		return "", false
 	}
 
@@ -105,6 +105,11 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
 			attachConnectorCmd(provider.Provider, &conn, cmd)
+			for k := range conn.Aliases {
+				copyConn := conn
+				copyConn.Name = conn.Aliases[k]
+				attachConnectorCmd(provider.Provider, &copyConn, cmd)
+			}
 		}
 	}
 
