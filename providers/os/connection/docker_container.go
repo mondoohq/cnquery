@@ -214,6 +214,17 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			conn.PlatformArchitecture = imgConfig.Architecture
 		}
 
+		labels := map[string]string{}
+		labels["docker.io/digests"] = ref.String()
+
+		manifest, err := img.Manifest()
+		if err == nil {
+			labels["mondoo.com/image-id"] = manifest.Config.Digest.String()
+		}
+
+		conn.Metadata.Labels = labels
+		asset.Labels = labels
+
 		return conn, err
 	}
 	log.Debug().Str("image", conf.Host).Msg("Could not detect a valid repository url")

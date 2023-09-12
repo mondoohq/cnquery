@@ -218,6 +218,12 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for i := range s.runtimes {
+		runtime := s.runtimes[i]
+		if x, ok := runtime.Connection.(*connection.TarConnection); ok {
+			x.CloseFN()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 

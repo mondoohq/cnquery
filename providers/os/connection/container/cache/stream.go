@@ -5,12 +5,11 @@ package cache
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 )
 
 func RandomFile() (*os.File, error) {
-	return ioutil.TempFile("", "mondoo.inspection")
+	return os.CreateTemp("", "mondoo.inspection")
 }
 
 // This streams a binary stream into a file. The user of this method
