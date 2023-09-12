@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -137,7 +136,7 @@ var docsYamlCmd = &cobra.Command{
 		}
 
 		log.Info().Str("file", filepath).Msg("write file")
-		err = ioutil.WriteFile(filepath, data, 0o700)
+		err = os.WriteFile(filepath, data, 0o700)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not write docs file")
 		}

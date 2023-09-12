@@ -6,7 +6,6 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 type WindowsEnv struct {
@@ -15,7 +14,7 @@ type WindowsEnv struct {
 }
 
 func ParseEnv(r io.Reader) (map[string]interface{}, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

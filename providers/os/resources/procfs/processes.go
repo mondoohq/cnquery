@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -95,7 +94,7 @@ func ParseProcessStatus(input io.Reader) (*LinuxProcessStatus, error) {
 }
 
 func ParseProcessCmdline(content io.Reader) (string, error) {
-	data, err := ioutil.ReadAll(content)
+	data, err := io.ReadAll(content)
 	if err != nil {
 		return "", err
 	}

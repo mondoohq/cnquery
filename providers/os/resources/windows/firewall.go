@@ -6,7 +6,6 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 const (
@@ -60,7 +59,7 @@ type WindowsFirewallRule struct {
 }
 
 func ParseWindowsFirewallRules(input io.Reader) ([]WindowsFirewallRule, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +100,7 @@ type WindowsFirewallSettings struct {
 }
 
 func ParseWindowsFirewallSettings(input io.Reader) (*WindowsFirewallSettings, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +144,7 @@ type WindowsFirewallProfile struct {
 }
 
 func ParseWindowsFirewallProfiles(input io.Reader) ([]WindowsFirewallProfile, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

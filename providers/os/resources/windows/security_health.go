@@ -6,7 +6,6 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
@@ -94,7 +93,7 @@ func GetSecurityProviderHealth(p shared.Connection) (*windowsSecurityHealth, err
 }
 
 func ParseSecurityProviderHealth(r io.Reader) (*windowsSecurityHealth, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

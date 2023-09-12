@@ -6,7 +6,6 @@ package uptime
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -50,7 +49,7 @@ func (s *Windows) Duration() (time.Duration, error) {
 }
 
 func (s *Windows) parse(r io.Reader) (time.Duration, error) {
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return 0, err
 	}

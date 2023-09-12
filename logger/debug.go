@@ -6,7 +6,6 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/hokaccha/go-prettyjson"
@@ -59,7 +58,7 @@ func DebugDumpJSON(name string, obj interface{}) {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}
 
-	err = ioutil.WriteFile(DumpLocal+name+".json", []byte(raw), 0644)
+	err = os.WriteFile(DumpLocal+name+".json", []byte(raw), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}
@@ -85,7 +84,7 @@ func DebugDumpYAML(name string, obj interface{}) {
 		log.Error().Err(err).Msg("failed to dump YAML")
 	}
 
-	err = ioutil.WriteFile(DumpLocal+name+".yaml", []byte(raw), 0644)
+	err = os.WriteFile(DumpLocal+name+".yaml", []byte(raw), 0o644)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to dump JSON")
 	}

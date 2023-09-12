@@ -5,7 +5,6 @@ package services
 
 import (
 	"io"
-	"io/ioutil"
 	"regexp"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -18,7 +17,7 @@ var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)
 // ^\s*([\d-]*)\s+(\d)\s+(.*)$
 func ParseServiceLaunchD(input io.Reader) ([]*Service, error) {
 	var services []*Service
-	content, err := ioutil.ReadAll(input)
+	content, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

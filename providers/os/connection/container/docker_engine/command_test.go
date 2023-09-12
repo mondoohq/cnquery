@@ -9,7 +9,6 @@ package docker_engine
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -76,9 +75,9 @@ func TestDockerCommand(t *testing.T) {
 		assert.Equal(t, "echo 'test'", cmd.Command, "they should be equal")
 		assert.Equal(t, nil, err, "should execute without error")
 
-		stdout, _ := ioutil.ReadAll(cmd.Stdout)
+		stdout, _ := io.ReadAll(cmd.Stdout)
 		assert.Equal(t, "test\n", string(stdout), "output should be correct")
-		stderr, _ := ioutil.ReadAll(cmd.Stderr)
+		stderr, _ := io.ReadAll(cmd.Stderr)
 		assert.Equal(t, "", string(stderr), "output should be correct")
 	})
 
@@ -91,10 +90,10 @@ func TestDockerCommand(t *testing.T) {
 		assert.Equal(t, "echo 'This message goes to stderr' >&2", cmd.Command, "they should be equal")
 		assert.Equal(t, nil, err, "should execute without error")
 
-		stdout, _ := ioutil.ReadAll(cmd.Stdout)
+		stdout, _ := io.ReadAll(cmd.Stdout)
 		assert.Equal(t, "", string(stdout), "output should be correct")
 
-		stderr, _ := ioutil.ReadAll(cmd.Stderr)
+		stderr, _ := io.ReadAll(cmd.Stderr)
 		assert.Equal(t, "This message goes to stderr\n", string(stderr), "output should be correct")
 	})
 }

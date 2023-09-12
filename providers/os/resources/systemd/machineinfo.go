@@ -5,14 +5,11 @@ package systemd
 
 import (
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 )
 
-var (
-	MACHINE_INFO_REGEX = regexp.MustCompile(`(?m)^\s*(.+?)\s*=\s*['"]?(.*?)['"]?\s*$`)
-)
+var MACHINE_INFO_REGEX = regexp.MustCompile(`(?m)^\s*(.+?)\s*=\s*['"]?(.*?)['"]?\s*$`)
 
 type MachineInfo struct {
 	PrettyHostname string
@@ -26,7 +23,7 @@ type MachineInfo struct {
 func ParseMachineInfo(r io.Reader) (MachineInfo, error) {
 	res := MachineInfo{}
 
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return res, err
 	}

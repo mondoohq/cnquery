@@ -5,7 +5,6 @@ package users
 
 import (
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 
@@ -16,7 +15,7 @@ import (
 var USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(.*)$`)
 
 func ParseDsclListResult(input io.Reader) (map[string]string, error) {
-	content, err := ioutil.ReadAll(input)
+	content, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

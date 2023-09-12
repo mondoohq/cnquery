@@ -6,7 +6,6 @@ package users
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
@@ -40,7 +39,7 @@ type WindowsLocalUser struct {
 }
 
 func ParseWindowsLocalUsers(r io.Reader) ([]WindowsLocalUser, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@ package services
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
@@ -103,7 +102,7 @@ func (s WindowsService) Service() *Service {
 }
 
 func ParseWindowsService(r io.Reader) ([]*Service, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

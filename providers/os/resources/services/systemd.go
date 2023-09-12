@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -36,7 +35,7 @@ func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
 // a line may be prefixed with nothing, whitespace or a dot
 func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	var services []*Service
-	content, err := ioutil.ReadAll(input)
+	content, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

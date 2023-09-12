@@ -4,7 +4,7 @@
 package reboot
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"go.mondoo.com/cnquery/providers/core/resources/versions/rpm"
@@ -45,7 +45,7 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 		return false, err
 	}
 
-	unameR, err := ioutil.ReadAll(unamerCmd.Stdout)
+	unameR, err := io.ReadAll(unamerCmd.Stdout)
 	if err != nil {
 		return false, err
 	}

@@ -5,7 +5,6 @@ package kernel
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -174,7 +173,7 @@ func (s *OSXKernelManager) Info() (KernelInfo, error) {
 		return KernelInfo{}, errors.Wrap(err, "could not read kernel parameters")
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return KernelInfo{}, errors.Wrap(err, "could not read kernel parameters")
 	}

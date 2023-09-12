@@ -72,7 +72,7 @@ func (s Fs) Rename(oldname, newname string) error {
 }
 
 func (s Fs) Stat(path string) (os.FileInfo, error) {
-	// NOTE we cannot use s.scpClient.Receive(path, ioutil.Discard) since it would not work with directories
+	// NOTE we cannot use s.scpClient.Receive(path, io.Discard) since it would not work with directories
 	return statutil.New(s.commandRunner).Stat(path)
 }
 

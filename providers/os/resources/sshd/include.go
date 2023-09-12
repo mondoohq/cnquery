@@ -6,8 +6,8 @@ package sshd
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -165,7 +165,7 @@ func readSshdConfig(filePath string, conn shared.Connection) ([]string, string, 
 	// so just consume the file's contents
 	allFiles = append(allFiles, fullFilePath)
 
-	rawFile, err := ioutil.ReadAll(f)
+	rawFile, err := io.ReadAll(f)
 	if err != nil {
 		return nil, "", err
 	}

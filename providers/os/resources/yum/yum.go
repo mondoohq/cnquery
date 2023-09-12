@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 )
@@ -69,7 +68,7 @@ const (
 )
 
 func ParseVariables(r io.Reader) (map[string]string, error) {
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
