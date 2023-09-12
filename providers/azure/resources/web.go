@@ -53,11 +53,11 @@ type AzureWebAppStackRuntime struct {
 	IsDefault    bool   `json:"isDefault,omitempty"`
 }
 
-func (a *mqlAzureSubscriptionWeb) id() (string, error) {
+func (a *mqlAzureSubscriptionWebService) id() (string, error) {
 	return "azure.subscription.web/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionWeb(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionWebService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -68,19 +68,19 @@ func initAzureSubscriptionWeb(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsiteauthsettings) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsiteauthsettings) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsiteconfig) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionWeb) apps() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -107,7 +107,7 @@ func (a *mqlAzureSubscriptionWeb) apps() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.web.appsite",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(entry.ID)),
 					"name":       llx.StringData(convert.ToString(entry.Name)),
@@ -128,7 +128,7 @@ func (a *mqlAzureSubscriptionWeb) apps() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionWeb) availableRuntimes() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -249,7 +249,7 @@ func (a *mqlAzureSubscriptionWeb) availableRuntimes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) configuration() (*mqlAzureSubscriptionWebAppsiteconfig, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -281,7 +281,7 @@ func (a *mqlAzureSubscriptionWebAppsite) configuration() (*mqlAzureSubscriptionW
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.web.appsiteconfig",
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteconfig",
 		map[string]*llx.RawData{
 			"id":         llx.StringData(convert.ToString(entry.ID)),
 			"name":       llx.StringData(convert.ToString(entry.Name)),
@@ -293,10 +293,10 @@ func (a *mqlAzureSubscriptionWebAppsite) configuration() (*mqlAzureSubscriptionW
 		return nil, err
 	}
 
-	return res.(*mqlAzureSubscriptionWebAppsiteconfig), nil
+	return res.(*mqlAzureSubscriptionWebServiceAppsiteconfig), nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) authenticationSettings() (*mqlAzureSubscriptionWebAppsiteauthsettings, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAzureSubscriptionWebServiceAppsiteauthsettings, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -326,7 +326,7 @@ func (a *mqlAzureSubscriptionWebAppsite) authenticationSettings() (*mqlAzureSubs
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.web.appsiteauthsettings",
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteauthsettings",
 		map[string]*llx.RawData{
 			"id":         llx.StringData(convert.ToString(configuration.ID)),
 			"name":       llx.StringData(convert.ToString(configuration.Name)),
@@ -338,10 +338,10 @@ func (a *mqlAzureSubscriptionWebAppsite) authenticationSettings() (*mqlAzureSubs
 		return nil, err
 	}
 
-	return res.(*mqlAzureSubscriptionWebAppsiteauthsettings), nil
+	return res.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings), nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) metadata() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -376,7 +376,7 @@ func (a *mqlAzureSubscriptionWebAppsite) metadata() (interface{}, error) {
 	return llx.MapData(res, types.String), nil
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) connectionSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -417,7 +417,7 @@ func (a *mqlAzureSubscriptionWebAppsite) connectionSettings() (interface{}, erro
 }
 
 // TODO: check here if we can use cached stuff (and how)
-func (a *mqlAzureSubscriptionWebAppsite) stack() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 	configPlugin := a.GetConfiguration()
 	if configPlugin.Error != nil {
 		return nil, configPlugin.Error
@@ -508,11 +508,11 @@ func (a *mqlAzureSubscriptionWebAppsite) stack() (interface{}, error) {
 	// fetch available runtimes and check if they are included
 	// if they are included, leverage their additional properties
 	// if they are not included they are either eol or custom
-	obj, err := CreateResource(a.MqlRuntime, "azure.subscription.web", map[string]*llx.RawData{})
+	obj, err := CreateResource(a.MqlRuntime, "azure.subscription.webService", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-	azureWeb := obj.(*mqlAzureSubscriptionWeb)
+	azureWeb := obj.(*mqlAzureSubscriptionWebService)
 	runtimesPlugin := azureWeb.GetAvailableRuntimes()
 	if runtimesPlugin.Error != nil {
 		return nil, runtimesPlugin.Error
@@ -546,7 +546,7 @@ func (a *mqlAzureSubscriptionWebAppsite) stack() (interface{}, error) {
 	return convert.JsonToDict(runtime)
 }
 
-func (a *mqlAzureSubscriptionWebAppsite) applicationSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()

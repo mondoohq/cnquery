@@ -17,7 +17,7 @@ import (
 	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
 )
 
-func (a *mqlAzureSubscriptionMariaDb) id() (string, error) {
+func (a *mqlAzureSubscriptionMariaDbService) id() (string, error) {
 	return "azure.subscription.mariadb/" + a.SubscriptionId.Data, nil
 }
 
@@ -32,15 +32,15 @@ func initAzureSubscriptionMariaDb(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDb) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbService) servers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -63,7 +63,7 @@ func (a *mqlAzureSubscriptionMariaDb) servers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mariaDb.server",
+			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mariaDbService.server",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(dbServer.ID)),
 					"name":       llx.StringData(convert.ToString(dbServer.Name)),
@@ -81,7 +81,7 @@ func (a *mqlAzureSubscriptionMariaDb) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -107,7 +107,7 @@ func (a *mqlAzureSubscriptionMariaDbServer) databases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mariaDb.database",
+			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mariaDbService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(entry.ID)),
 					"name":      llx.StringData(convert.ToString(entry.Name)),
@@ -125,7 +125,7 @@ func (a *mqlAzureSubscriptionMariaDbServer) databases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -153,7 +153,7 @@ func (a *mqlAzureSubscriptionMariaDbServer) firewallRules() ([]interface{}, erro
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.firewallrule",
+			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringData(convert.ToString(entry.ID)),
 					"name":           llx.StringData(convert.ToString(entry.Name)),
@@ -171,7 +171,7 @@ func (a *mqlAzureSubscriptionMariaDbServer) firewallRules() ([]interface{}, erro
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionMariaDbServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariaDbServiceServer) configuration() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -198,7 +198,7 @@ func (a *mqlAzureSubscriptionMariaDbServer) configuration() ([]interface{}, erro
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.configuration",
+			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString(entry.ID)),
 					"name":          llx.StringData(convert.ToString(entry.Name)),
@@ -234,20 +234,20 @@ func initAzureSubscriptionMariaDbServer(runtime *plugin.Runtime, args map[string
 		return nil, nil, errors.New("id required to fetch azure mariadb server")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.mariaDb", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.mariaDbService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	mariadb := res.(*mqlAzureSubscriptionMariaDb)
+	mariadb := res.(*mqlAzureSubscriptionMariaDbService)
 	servers := mariadb.GetServers()
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range servers.Data {
-		vm := entry.(*mqlAzureSubscriptionMariaDbServer)
+		vm := entry.(*mqlAzureSubscriptionMariaDbServiceServer)
 		if vm.Id.Data == id {
 			return args, vm, nil
 		}

@@ -27,11 +27,11 @@ type (
 	Kind                          storage.Kind
 )
 
-func (a *mqlAzureSubscriptionStorage) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageService) id() (string, error) {
 	return "azure.subscription.storage/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionStorageService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -42,35 +42,35 @@ func initAzureSubscriptionStorage(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountContainer) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountContainer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountDataProtection) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountDataProtection) id() (string, error) {
 	return a.StorageAccountId.Data + "/dataProtection", nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServiceProperties) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountServicePropertiesRetentionPolicy) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountServicePropertiesLogging) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccountServicePropertiesMetrics) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionStorage) accounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageService) accounts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -100,7 +100,7 @@ func (a *mqlAzureSubscriptionStorage) accounts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) containers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -133,7 +133,7 @@ func (a *mqlAzureSubscriptionStorageAccount) containers() ([]interface{}, error)
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.storage.account.container",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.container",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(container.ID)),
 					"name":       llx.StringData(convert.ToString(container.Name)),
@@ -151,7 +151,7 @@ func (a *mqlAzureSubscriptionStorageAccount) containers() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) queueProperties() (*mqlAzureSubscriptionStorageAccountServiceProperties, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) queueProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
 	props, err := a.getServiceStorageProperties("queue")
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (a *mqlAzureSubscriptionStorageAccount) queueProperties() (*mqlAzureSubscri
 	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "queue", id)
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) tableProperties() (*mqlAzureSubscriptionStorageAccountServiceProperties, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) tableProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
 	props, err := a.getServiceStorageProperties("table")
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (a *mqlAzureSubscriptionStorageAccount) tableProperties() (*mqlAzureSubscri
 	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "table", id)
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) blobProperties() (*mqlAzureSubscriptionStorageAccountServiceProperties, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) blobProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
 	props, err := a.getServiceStorageProperties("blob")
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (a *mqlAzureSubscriptionStorageAccount) blobProperties() (*mqlAzureSubscrip
 	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "blob", id)
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) dataProtection() (*mqlAzureSubscriptionStorageAccountDataProtection, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureSubscriptionStorageServiceAccountDataProtection, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -219,7 +219,7 @@ func (a *mqlAzureSubscriptionStorageAccount) dataProtection() (*mqlAzureSubscrip
 		containerRetentionDays = convert.ToInt64From32(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days)
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.storage.account.dataProtection",
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.dataProtection",
 		map[string]*llx.RawData{
 			"storageAccountId":             llx.StringData(id),
 			"blobSoftDeletionEnabled":      llx.BoolData(blobSoftDeletionEnabled),
@@ -230,10 +230,10 @@ func (a *mqlAzureSubscriptionStorageAccount) dataProtection() (*mqlAzureSubscrip
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionStorageAccountDataProtection), nil
+	return res.(*mqlAzureSubscriptionStorageServiceAccountDataProtection), nil
 }
 
-func (a *mqlAzureSubscriptionStorageAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data
 
@@ -264,8 +264,8 @@ func (a *mqlAzureSubscriptionStorageAccount) getServiceStorageProperties(service
 	return props, nil
 }
 
-func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageAccountServiceProperties, error) {
-	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.retentionPolicy",
+func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceProperties, serviceType, parentId string) (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
+	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.Logging.RetentionPolicy.Days)),
@@ -274,7 +274,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	logging, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.logging",
+	logging, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.logging",
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(loggingRetentionPolicy, "retentionPolicy"),
@@ -286,7 +286,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	minuteMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.retentionPolicy",
+	minuteMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.MinuteMetrics.RetentionPolicy.Days)),
@@ -295,7 +295,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	minuteMetrics, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.metrics",
+	minuteMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(minuteMetricsRetentionPolicy, "retentionPolicy"),
@@ -306,7 +306,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	hourMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.retentionPolicy",
+	hourMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.HourMetrics.RetentionPolicy.Days)),
@@ -315,7 +315,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	hourMetrics, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties.metrics",
+	hourMetrics, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.metrics",
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(hourMetricsRetentionPolicy, "retentionPolicy"),
@@ -326,7 +326,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	settings, err := CreateResource(runtime, "azure.subscription.storage.account.service.properties",
+	settings, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
 			"minuteMetrics": llx.ResourceData(minuteMetrics, "minuteMetrics"),
@@ -336,10 +336,10 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	if err != nil {
 		return nil, err
 	}
-	return settings.(*mqlAzureSubscriptionStorageAccountServiceProperties), nil
+	return settings.(*mqlAzureSubscriptionStorageServiceAccountServiceProperties), nil
 }
 
-func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageAccount, error) {
+func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	var properties map[string]interface{}
 	var err error
 	if account.Properties != nil {
@@ -363,7 +363,7 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	if account.Kind != nil {
 		kind = string(*account.Kind)
 	}
-	res, err := CreateResource(runtime, "azure.subscription.storage.account",
+	res, err := CreateResource(runtime, "azure.subscription.storageService.account",
 		map[string]*llx.RawData{
 			"id":         llx.StringData(convert.ToString(account.ID)),
 			"name":       llx.StringData(convert.ToString(account.Name)),
@@ -378,10 +378,10 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionStorageAccount), nil
+	return res.(*mqlAzureSubscriptionStorageServiceAccount), nil
 }
 
-func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *connection.AzureConnection) (*mqlAzureSubscriptionStorageAccount, error) {
+func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *connection.AzureConnection) (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	client, err := storage.NewAccountsClient(azureConnection.SubId(), azureConnection.Token(), &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
@@ -407,7 +407,7 @@ func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *conn
 	return storageAccountToMql(runtime, &account.Account)
 }
 
-func initAzureSubscriptionStorageAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionStorageServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -423,20 +423,20 @@ func initAzureSubscriptionStorageAccount(runtime *plugin.Runtime, args map[strin
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	storage := res.(*mqlAzureSubscriptionStorage)
+	storage := res.(*mqlAzureSubscriptionStorageService)
 	accs := storage.GetAccounts()
 	if accs.Error != nil {
 		return nil, nil, accs.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range accs.Data {
-		storageAcc := entry.(*mqlAzureSubscriptionStorageAccount)
+		storageAcc := entry.(*mqlAzureSubscriptionStorageServiceAccount)
 		if storageAcc.Id.Data == id {
 			return args, storageAcc, nil
 		}
@@ -445,7 +445,7 @@ func initAzureSubscriptionStorageAccount(runtime *plugin.Runtime, args map[strin
 	return nil, nil, errors.New("azure storage account does not exist")
 }
 
-func initAzureSubscriptionStorageAccountContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionStorageServiceAccountContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -461,26 +461,26 @@ func initAzureSubscriptionStorageAccountContainer(runtime *plugin.Runtime, args 
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.storage", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.storageService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	storage := res.(*mqlAzureSubscriptionStorage)
+	storage := res.(*mqlAzureSubscriptionStorageService)
 	accs := storage.GetAccounts()
 	if accs.Error != nil {
 		return nil, nil, accs.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range accs.Data {
-		storageAcc := entry.(*mqlAzureSubscriptionStorageAccount)
+		storageAcc := entry.(*mqlAzureSubscriptionStorageServiceAccount)
 		containers := storageAcc.GetContainers()
 		if containers.Error != nil {
 			return nil, nil, containers.Error
 		}
 		for _, c := range containers.Data {
-			container := c.(*mqlAzureSubscriptionStorageAccountContainer)
+			container := c.(*mqlAzureSubscriptionStorageServiceAccountContainer)
 			if container.Id.Data == id {
 				return args, storageAcc, nil
 			}

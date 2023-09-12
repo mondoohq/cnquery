@@ -38,7 +38,7 @@ const (
 	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
-func (a *mqlAzureSubscriptionCloudDefender) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
 	return "azure.subscription.cloudDefender/" + a.SubscriptionId.Data, nil
 }
 
@@ -53,11 +53,11 @@ func initAzureSubscriptionCloudDefender(runtime *plugin.Runtime, args map[string
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderSecurityContact) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) defenderForServers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForServers() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -100,7 +100,7 @@ func (a *mqlAzureSubscriptionCloudDefender) defenderForServers() (interface{}, e
 	return convert.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) monitoringAgentAutoProvision() (bool, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision() (bool, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -119,7 +119,7 @@ func (a *mqlAzureSubscriptionCloudDefender) monitoringAgentAutoProvision() (bool
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) defenderForContainers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -172,7 +172,7 @@ func (a *mqlAzureSubscriptionCloudDefender) defenderForContainers() (interface{}
 	return convert.JsonToDict(def)
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) securityContacts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -200,7 +200,7 @@ func (a *mqlAzureSubscriptionCloudDefender) securityContacts() ([]interface{}, e
 			mails = *contact.Properties.Emails
 		}
 		mailsArr := strings.Split(mails, ";")
-		mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefender.securityContact",
+		mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.securityContact",
 			map[string]*llx.RawData{
 				"id":                  llx.StringData(convert.ToString(contact.ID)),
 				"name":                llx.StringData(convert.ToString(contact.Name)),

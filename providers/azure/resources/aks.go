@@ -16,7 +16,7 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-func (a *mqlAzureSubscriptionAks) id() (string, error) {
+func (a *mqlAzureSubscriptionAksService) id() (string, error) {
 	return "azure.subscription.aks/" + a.SubscriptionId.Data, nil
 }
 
@@ -31,11 +31,11 @@ func initAzureSubscriptionAks(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionAksCluster) id() (string, error) {
+func (a *mqlAzureSubscriptionAksServiceCluster) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionAks) clusters() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -99,7 +99,7 @@ func (a *mqlAzureSubscriptionAks) clusters() ([]interface{}, error) {
 				createdAt = entry.SystemData.CreatedAt
 			}
 
-			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aks.cluster",
+			mqlAksCluster, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster",
 				map[string]*llx.RawData{
 					"id":                        llx.StringData(convert.ToString(entry.ID)),
 					"name":                      llx.StringData(convert.ToString(entry.Name)),

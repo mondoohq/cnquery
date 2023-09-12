@@ -18,11 +18,11 @@ import (
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
 )
 
-func (a *mqlAzureSubscriptionPostgreSql) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgreSqlService) id() (string, error) {
 	return "azure.subscription.postgresql/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionPostgreSql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionPostgreSqlService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -33,15 +33,15 @@ func initAzureSubscriptionPostgreSql(runtime *plugin.Runtime, args map[string]*l
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceDatabase) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSql) servers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -72,7 +72,7 @@ func (a *mqlAzureSubscriptionPostgreSql) servers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSql.server",
+			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.server",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(dbServer.ID)),
 					"name":       llx.StringData(convert.ToString(dbServer.Name)),
@@ -91,7 +91,7 @@ func (a *mqlAzureSubscriptionPostgreSql) servers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServer) databases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -118,7 +118,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServer) databases() ([]interface{}, error
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSql.database",
+			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(entry.ID)),
 					"name":      llx.StringData(convert.ToString(entry.Name)),
@@ -136,7 +136,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServer) databases() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServer) firewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -180,7 +180,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServer) firewallRules() ([]interface{}, e
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionPostgreSqlServer) configuration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -230,7 +230,7 @@ func (a *mqlAzureSubscriptionPostgreSqlServer) configuration() ([]interface{}, e
 	return res, nil
 }
 
-func initAzureSubscriptionPostgreSqlServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionPostgreSqlServiceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -245,20 +245,20 @@ func initAzureSubscriptionPostgreSqlServer(runtime *plugin.Runtime, args map[str
 		return nil, nil, errors.New("id required to fetch azure postgresql server")
 	}
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.postgreSql", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	postgreSql := res.(*mqlAzureSubscriptionPostgreSql)
+	postgreSql := res.(*mqlAzureSubscriptionPostgreSqlService)
 	servers := postgreSql.GetServers()
 	if servers.Error != nil {
 		return nil, nil, servers.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range servers.Data {
-		vm := entry.(*mqlAzureSubscriptionPostgreSqlServer)
+		vm := entry.(*mqlAzureSubscriptionPostgreSqlServiceServer)
 		if vm.Id.Data == id {
 			return args, vm, nil
 		}

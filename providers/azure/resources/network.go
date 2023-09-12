@@ -18,11 +18,11 @@ import (
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 )
 
-func (a *mqlAzureSubscriptionNetwork) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
 	return "azure.subscription.network/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionNetworkService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
@@ -33,7 +33,7 @@ func initAzureSubscriptionNetwork(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) interfaces() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -64,7 +64,7 @@ func (a *mqlAzureSubscriptionNetwork) interfaces() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) securityGroups() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -95,7 +95,7 @@ func (a *mqlAzureSubscriptionNetwork) securityGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) watchers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -119,7 +119,7 @@ func (a *mqlAzureSubscriptionNetwork) watchers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.network.watcher",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher",
 				map[string]*llx.RawData{
 					"id":                llx.StringData(convert.ToString(watcher.ID)),
 					"name":              llx.StringData(convert.ToString(watcher.Name)),
@@ -139,7 +139,7 @@ func (a *mqlAzureSubscriptionNetwork) watchers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) publicIpAddresses() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -158,7 +158,7 @@ func (a *mqlAzureSubscriptionNetwork) publicIpAddresses() ([]interface{}, error)
 			return nil, err
 		}
 		for _, ip := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.network.ipAddress",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(ip.ID)),
 					"name":      llx.StringData(convert.ToString(ip.Name)),
@@ -176,7 +176,7 @@ func (a *mqlAzureSubscriptionNetwork) publicIpAddresses() ([]interface{}, error)
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) bastionHosts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -203,7 +203,7 @@ func (a *mqlAzureSubscriptionNetwork) bastionHosts() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.network.bastionHost",
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bastionHost",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(bh.ID)),
 					"name":       llx.StringData(convert.ToString(bh.Name)),
@@ -222,11 +222,11 @@ func (a *mqlAzureSubscriptionNetwork) bastionHosts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkInterface) vm() (*mqlAzureSubscriptionComputeVm, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptionComputeServiceVm, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcher) flowLogs() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
@@ -279,7 +279,7 @@ func (a *mqlAzureSubscriptionNetworkWatcher) flowLogs() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.network.watcher.flowlog",
+			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher.flowlog",
 				map[string]*llx.RawData{
 					"id":                 llx.StringData(convert.ToString(flowLog.ID)),
 					"name":               llx.StringData(convert.ToString(flowLog.Name)),
@@ -307,40 +307,40 @@ func (a *mqlAzureSubscriptionNetworkWatcher) flowLogs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkInterface) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkIpAddress) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceIpAddress) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkBastionHost) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceBastionHost) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkSecurityGroup) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcher) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcherFlowlog) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkSecurityrule) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mqlAzureSubscriptionNetworkInterface, error) {
+func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mqlAzureSubscriptionNetworkServiceInterface, error) {
 	properties, err := convert.JsonToDict(iface.Properties)
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(runtime, "azure.subscription.network.interface",
+	res, err := CreateResource(runtime, "azure.subscription.networkService.interface",
 		map[string]*llx.RawData{
 			"id":         llx.StringData(convert.ToString(iface.ID)),
 			"name":       llx.StringData(convert.ToString(iface.Name)),
@@ -353,13 +353,13 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkInterface), nil
+	return res.(*mqlAzureSubscriptionNetworkServiceInterface), nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 type AzureSecurityGroupPropertiesFormat network.SecurityGroupPropertiesFormat
 
-func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup) (*mqlAzureSubscriptionNetworkSecurityGroup, error) {
+func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup) (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
 	var properties map[string]interface{}
 	ifaces := []interface{}{}
 	securityRules := []interface{}{}
@@ -415,7 +415,7 @@ func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup)
 			}
 		}
 	}
-	res, err := CreateResource(runtime, "azure.subscription.network.securityGroup",
+	res, err := CreateResource(runtime, "azure.subscription.networkService.securityGroup",
 		map[string]*llx.RawData{
 			"id":                   llx.StringData(convert.ToString(secGroup.ID)),
 			"name":                 llx.StringData(convert.ToString(secGroup.Name)),
@@ -431,10 +431,10 @@ func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkSecurityGroup), nil
+	return res.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
 }
 
-func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRule) (*mqlAzureSubscriptionNetworkSecurityrule, error) {
+func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRule) (*mqlAzureSubscriptionNetworkServiceSecurityrule, error) {
 	properties, err := convert.JsonToDict(secRule.Properties)
 	if err != nil {
 		return nil, err
@@ -452,7 +452,7 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.network.securityrule",
+	res, err := CreateResource(runtime, "azure.subscription.networkService.securityrule",
 		map[string]*llx.RawData{
 			"id":                   llx.StringData(convert.ToString(secRule.ID)),
 			"name":                 llx.StringData(convert.ToString(secRule.Name)),
@@ -463,7 +463,7 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkSecurityrule), nil
+	return res.(*mqlAzureSubscriptionNetworkServiceSecurityrule), nil
 }
 
 type AzureSecurityRulePortRange struct {
@@ -486,7 +486,7 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	return res
 }
 
-func initAzureSubscriptionNetworkSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionNetworkServiceSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -502,20 +502,20 @@ func initAzureSubscriptionNetworkSecurityGroup(runtime *plugin.Runtime, args map
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
-	res, err := NewResource(runtime, "azure.subscription.network", map[string]*llx.RawData{
+	res, err := NewResource(runtime, "azure.subscription.networkService", map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(conn.SubId()),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	network := res.(*mqlAzureSubscriptionNetwork)
+	network := res.(*mqlAzureSubscriptionNetworkService)
 	secGrps := network.GetSecurityGroups()
 	if secGrps.Error != nil {
 		return nil, nil, secGrps.Error
 	}
 	id := args["id"].Value.(string)
 	for _, entry := range secGrps.Data {
-		secGrp := entry.(*mqlAzureSubscriptionNetworkSecurityGroup)
+		secGrp := entry.(*mqlAzureSubscriptionNetworkServiceSecurityGroup)
 		if secGrp.Id.Data == id {
 			return args, secGrp, nil
 		}
