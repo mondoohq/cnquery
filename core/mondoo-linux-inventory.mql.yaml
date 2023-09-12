@@ -41,7 +41,7 @@ packs:
         mql: os.hostname
       - uid: mondoo-linux-platform
         title: Retrieve the platform
-        mql: platform.name
+        mql: asset.platform
       - uid: mondoo-linux-users 
         title: Retrieve regular users with shell access 
         mql: users.where( shell != "/sbin/nologin" && uid >= 1000 && name != "root")
