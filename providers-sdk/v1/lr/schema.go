@@ -86,13 +86,14 @@ func Schema(ast *LR) (*resources.Schema, error) {
 
 			if _, ok := child.Fields[basename]; !ok {
 				child.Fields[basename] = &resources.Field{
-					Name:        basename,
-					Type:        string(types.Resource(resource)),
-					IsMandatory: false, // it cannot be mandatory if we create it here
-					IsPrivate:   isPrivate,
-					Title:       fieldInfo.Title,
-					Desc:        fieldInfo.Desc,
-					Provider:    provider,
+					Name:               basename,
+					Type:               string(types.Resource(resource)),
+					IsMandatory:        false, // it cannot be mandatory if we create it here
+					IsImplicitResource: true,
+					IsPrivate:          isPrivate,
+					Title:              fieldInfo.Title,
+					Desc:               fieldInfo.Desc,
+					Provider:           provider,
 				}
 			}
 

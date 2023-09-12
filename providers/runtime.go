@@ -222,10 +222,14 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 }
 
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
-	provider, _, err := r.lookupResourceProvider(name)
+	provider, info, err := r.lookupResourceProvider(name)
 	if err != nil {
 		return nil, err
 	}
+	if info == nil {
+		return nil, errors.New("cannot create '" + name + "', no resource info found")
+	}
+	name = info.Id
 
 	// Resources without providers are bridging resources only. They are static in nature.
 	if provider == nil {
