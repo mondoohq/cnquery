@@ -34,7 +34,7 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 0,
 			Discovery: []string{
-				"containers",
+				"container",
 				"container-images",
 			},
 			Flags: []plugin.Flag{
@@ -171,7 +171,7 @@ var Config = plugin.Provider{
 			MinArgs: 1,
 			MaxArgs: 1,
 			Discovery: []string{
-				"containers",
+				"container",
 				"container-images",
 			},
 			Flags: []plugin.Flag{

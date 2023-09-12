@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
 	"go.mondoo.com/cnquery/providers/os/resources/discovery/container_registry"
+	"go.mondoo.com/cnquery/providers/os/resources/discovery/docker_engine"
 )
 
 const (
@@ -50,8 +51,14 @@ func Init() *Service {
 }
 
 func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
-	// TODO: parse me...
-	return &inventory.Discovery{Targets: []string{"auto"}}
+	discovery := &inventory.Discovery{Targets: []string{"auto"}}
+	if flag, ok := flags["discover"]; ok && len(flag.Array) > 0 {
+		discovery.Targets = []string{}
+		for i := range flag.Array {
+			discovery.Targets = append(discovery.Targets, string(flag.Array[i].Value))
+		}
+	}
+	return discovery
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
@@ -199,8 +206,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	var inv *inventory.Inventory
-	if conn.Asset().Connections[0].Type == "docker-registry" {
-		inv, err = s.discover(conn.(*connection.TarConnection))
+	connType := conn.Asset().Connections[0].Type
+	switch connType {
+	case "docker-registry":
+		tarConn := conn.(*connection.TarConnection)
+		inv, err = s.discoverRegistry(tarConn)
+		if err != nil {
+			return nil, err
+		}
+	case "local", "docker-container":
+		inv, err = s.discoverLocalContainers(conn.Asset().Connections[0])
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +421,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	return &plugin.StoreRes{}, nil
 }
 
-func (s *Service) discover(conn *connection.TarConnection) (*inventory.Inventory, error) {
+func (s *Service) discoverRegistry(conn *connection.TarConnection) (*inventory.Inventory, error) {
 	conf := conn.Asset().Connections[0]
 	if conf == nil {
 		return nil, nil
@@ -414,6 +429,22 @@ func (s *Service) discover(conn *connection.TarConnection) (*inventory.Inventory
 
 	resolver := container_registry.Resolver{}
 	resolvedAssets, err := resolver.Resolve(context.Background(), conn.Asset(), conf, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	inventory := &inventory.Inventory{}
+	inventory.AddAssets(resolvedAssets...)
+
+	return inventory, nil
+}
+
+func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.Inventory, error) {
+	if conf == nil {
+		return nil, nil
+	}
+
+	resolvedAssets, err := docker_engine.DiscoverDockerEngineAssets(conf)
 	if err != nil {
 		return nil, err
 	}
