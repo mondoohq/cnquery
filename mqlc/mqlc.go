@@ -1096,6 +1096,21 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		return true, typ, err
 	}
 
+	// Support easy accessors for dicts and maps, e.g:
+	// json.params.A.B.C => json.params["A"]["B"]["C"]
+	if typ == types.Dict {
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "[]",
+			Function: &llx.Function{
+				Type:    string(typ),
+				Binding: binding.ref,
+				Args:    []*llx.Primitive{llx.StringPrimitive(id)},
+			},
+		})
+		return true, typ, nil
+	}
+
 	return false, types.Nil, nil
 }
 
