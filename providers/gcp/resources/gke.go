@@ -6,12 +6,13 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"go.mondoo.com/cnquery/types"
-	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -28,7 +29,6 @@ func (g *mqlGcpProjectGkeService) id() (string, error) {
 }
 
 func (g *mqlGcpProject) gke() (*mqlGcpProjectGkeService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -412,7 +412,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 
 		var masterAuthorizedNetworksCfg map[string]interface{}
 		if c.MasterAuthorizedNetworksConfig != nil {
-			cidrBlocks := make([]map[string]interface{}, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
+			cidrBlocks := make([]interface{}, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
 			for _, cidrBlock := range c.MasterAuthorizedNetworksConfig.CidrBlocks {
 				cidrBlocks = append(cidrBlocks, map[string]interface{}{
 					"displayName": cidrBlock.DisplayName,
