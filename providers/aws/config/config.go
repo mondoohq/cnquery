@@ -13,7 +13,7 @@ var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/providers/aws",
 	Version:         "9.0.0",
-	ConnectionTypes: []string{provider.DefaultConnectionType, provider.SshConnectionType, provider.RegistryImageConnectionType},
+	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "aws",
