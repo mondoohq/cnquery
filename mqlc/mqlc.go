@@ -1096,21 +1096,6 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		return true, typ, err
 	}
 
-	// Support easy accessors for dicts and maps, e.g:
-	// json.params.A.B.C => json.params["A"]["B"]["C"]
-	if typ == types.Dict {
-		c.addChunk(&llx.Chunk{
-			Call: llx.Chunk_FUNCTION,
-			Id:   "[]",
-			Function: &llx.Function{
-				Type:    string(typ),
-				Binding: binding.ref,
-				Args:    []*llx.Primitive{llx.StringPrimitive(id)},
-			},
-		})
-		return true, typ, nil
-	}
-
 	return false, types.Nil, nil
 }
 
@@ -1279,6 +1264,22 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err
+	}
+
+	// Support easy accessors for dicts and maps, e.g:
+	// json.params { A.B.C } => json.params { _["A"]["B"]["C"] }
+	if callBinding != nil && callBinding.typ == types.Dict {
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "[]",
+			Function: &llx.Function{
+				Type:    string(callBinding.typ),
+				Binding: callBinding.ref,
+				Args:    []*llx.Primitive{llx.StringPrimitive(id)},
+			},
+		})
+		c.standalone = false
+		return restCalls, callBinding.typ, err
 	}
 
 	// suggestions
@@ -1525,11 +1526,26 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				return nil, err
 			}
 			if !found {
-				addFieldSuggestions(availableFields(c, typ), id, c.Result)
-				return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
+				if typ != types.Dict || !reAccessor.MatchString(id) {
+					addFieldSuggestions(availableFields(c, typ), id, c.Result)
+					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
+				}
+
+				// Support easy accessors for dicts and maps, e.g:
+				// json.params.A.B.C => json.params["A"]["B"]["C"]
+				c.addChunk(&llx.Chunk{
+					Call: llx.Chunk_FUNCTION,
+					Id:   "[]",
+					Function: &llx.Function{
+						Type:    string(typ),
+						Binding: ref,
+						Args:    []*llx.Primitive{llx.StringPrimitive(id)},
+					},
+				})
+			} else {
+				typ = resType
 			}
 
-			typ = resType
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
