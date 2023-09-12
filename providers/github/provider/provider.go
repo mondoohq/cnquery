@@ -60,16 +60,23 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	// Do custom flag parsing here
 	switch req.Args[0] {
 	case "org":
-		conf.Discover.Targets = []string{connection.DiscoveryOrganization}
 		conf.Options["organization"] = req.Args[1]
 	case "user":
-		conf.Discover.Targets = []string{connection.DiscoveryUser}
 		conf.Options["user"] = req.Args[1]
 	case "repo":
-		conf.Discover.Targets = []string{connection.DiscoveryRepository}
 		conf.Options["repository"] = req.Args[1]
 	default:
 		return nil, errors.New("invalid GitHub sub-command")
@@ -98,15 +105,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 	}
-	inventory, err := s.discover(conn)
+	inv, err := s.discover(conn)
 	if err != nil {
 		return nil, err
 	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: inventory,
+		Inventory: inv,
 	}, nil
 }
 

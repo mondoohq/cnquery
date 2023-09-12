@@ -815,7 +815,7 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range allContributors {
-		mqlUser, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(allContributors[i].ID),
 			"login": llx.StringDataPtr(allContributors[i].Login),
 		})

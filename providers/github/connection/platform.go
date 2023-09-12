@@ -12,13 +12,10 @@ import (
 )
 
 const (
-	DiscoveryRepository   = "repository"
-	DiscoveryUser         = "user"
-	DiscoveryOrganization = "organization"
-	DiscoveryAll          = "all"
+	DiscoveryAll   = "all"
+	DiscoveryRepos = "repos"
+	DiscoveryUsers = "users"
 )
-
-var All = []string{DiscoveryOrganization, DiscoveryRepository, DiscoveryUser}
 
 var (
 	GithubRepoPlatform = &inventory.Platform{
