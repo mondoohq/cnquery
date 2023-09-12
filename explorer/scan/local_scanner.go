@@ -228,6 +228,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	justAssets := []*inventory.Asset{}
 	for _, asset := range assets {
+		asset.asset.KindString = asset.asset.GetPlatform().Kind
 		justAssets = append(justAssets, asset.asset)
 	}
 
