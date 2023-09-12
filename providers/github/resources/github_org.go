@@ -365,7 +365,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 		for i := range allPackages {
 			p := allPackages[i]
 
-			owner, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			owner, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntData(p.GetOwner().GetID()),
 				"login": llx.StringData(p.GetOwner().GetLogin()),
 			})

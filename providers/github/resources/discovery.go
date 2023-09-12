@@ -116,6 +116,9 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	if stringx.Contains(targets, connection.DiscoveryUsers) {
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
+			if user.Name.Data == "" {
+				continue
+			}
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Name.Data)},
 				Name:        user.Name.Data,
