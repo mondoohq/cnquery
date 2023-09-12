@@ -38,9 +38,10 @@ func TestSchema(t *testing.T) {
 			IsExtension: true,
 			Fields: map[string]*resources.Field{
 				"has": {
-					Name:     "has",
-					Type:     string(types.Resource("platform.has")),
-					Provider: provider,
+					Name:               "has",
+					Type:               string(types.Resource("platform.has")),
+					Provider:           provider,
+					IsImplicitResource: true,
 				},
 			},
 		}, res.Resources["platform"])

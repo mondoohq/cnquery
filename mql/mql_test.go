@@ -133,3 +133,24 @@ func TestMqlIfAndProps(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, nil, value.Value)
 }
+
+func TestResourceAliases(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "os.unix.sshd.config.file.path",
+			ResultIndex: 0,
+			Expectation: "/etc/ssh/sshd_config",
+		},
+		{
+			Code:        "os.unix.sshd { config.file.path }",
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"_":   llx.ResourceData(&llx.MockResource{Name: "sshd"}, "os.unix.sshd"),
+				"__s": llx.NilData,
+				"__t": llx.BoolData(true),
+				"k6rlXoYpV48Qd19gKeNl+/IiPnkI5VNQBiqZBca3gDKsIRiLcpXQUlDv52x9sscIWiqOMpC7+x/aBpY0IUq0ww==": llx.StringData("/etc/ssh/sshd_config"),
+			},
+		},
+	})
+}
