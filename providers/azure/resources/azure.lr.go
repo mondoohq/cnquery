@@ -1592,6 +1592,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.applicationInsights": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorService).GetApplicationInsights()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.applicationInsight")))
 	},
+	"azure.subscription.monitorService.activityLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorService).GetActivityLog()).ToDataRes(types.Resource("azure.subscription.monitorService.activityLog"))
+	},
 	"azure.subscription.monitorService.activityLog.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceActivityLog).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -3705,6 +3708,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.monitorService.applicationInsights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorService).ApplicationInsights, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.activityLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorService).ActivityLog, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceActivityLog](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.activityLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9334,6 +9341,7 @@ type mqlAzureSubscriptionMonitorService struct {
 	LogProfiles plugin.TValue[[]interface{}]
 	DiagnosticSettings plugin.TValue[[]interface{}]
 	ApplicationInsights plugin.TValue[[]interface{}]
+	ActivityLog plugin.TValue[*mqlAzureSubscriptionMonitorServiceActivityLog]
 }
 
 // createAzureSubscriptionMonitorService creates a new instance of this resource
@@ -9422,6 +9430,22 @@ func (c *mqlAzureSubscriptionMonitorService) GetApplicationInsights() *plugin.TV
 		}
 
 		return c.applicationInsights()
+	})
+}
+
+func (c *mqlAzureSubscriptionMonitorService) GetActivityLog() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceActivityLog] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceActivityLog](&c.ActivityLog, func() (*mqlAzureSubscriptionMonitorServiceActivityLog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.monitorService", c.__id, "activityLog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceActivityLog), nil
+			}
+		}
+
+		return c.activityLog()
 	})
 }
 

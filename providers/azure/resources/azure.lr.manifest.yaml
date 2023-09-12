@@ -655,6 +655,7 @@ resources:
       - azure
   azure.subscription.monitorService:
     fields:
+      activityLog: {}
       applicationInsights: {}
       diagnosticSettings: {}
       logProfiles: {}
