@@ -625,3 +625,63 @@ func MondooECSContainerID(containerArn string) string {
 	}
 	return "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/" + account + "/regions/" + region + "/" + id
 }
+
+func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var user, id string
+	if len(args) == 3 {
+		if args[0] == "ec2" && args[1] == "ssm" {
+			if targets := strings.Split(args[2], "@"); len(targets) == 2 {
+				user = targets[0]
+				id = targets[1]
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	opts["instance"] = id
+	asset.IdDetector = []string{"aws-ec2"}
+	asset.Connections = []*inventory.Config{{
+		Backend:  "ssh",
+		Type:     "ssh",
+		Host:     id,
+		Insecure: true,
+		Runtime:  "ssh",
+		Credentials: []*vault.Credential{
+			{
+				Type: vault.CredentialType_aws_ec2_ssm_session,
+				User: user,
+			},
+		},
+		Options: opts,
+	}}
+	return asset
+}
+
+func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var user, id string
+	if len(args) == 3 {
+		if args[0] == "ec2" && args[1] == "instance-connect" {
+			if targets := strings.Split(args[2], "@"); len(targets) == 2 {
+				user = targets[0]
+				id = targets[1]
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	asset.IdDetector = []string{"aws-ec2"}
+	opts["instance"] = id
+	asset.Connections = []*inventory.Config{{
+		Backend:  "ssh",
+		Type:     "ssh",
+		Host:     id,
+		Insecure: true,
+		Runtime:  "ssh",
+		Credentials: []*vault.Credential{
+			{
+				Type: vault.CredentialType_aws_ec2_instance_connect,
+				User: user,
+			},
+		},
+		Options: opts,
+	}}
+	return asset
+}

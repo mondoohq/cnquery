@@ -38,11 +38,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if flags == nil {
 		flags = map[string]*llx.Primitive{}
 	}
+	opts := parseFlagsToOptions(flags)
 
-	inventoryConfig := &inventory.Config{
-		Type: "aws",
+	// handle aws subcommands
+	if len(req.Args) == 3 && req.Args[0] == "ec2" {
+		return &plugin.ParseCLIRes{Asset: handleAwsEc2Subcommands(req.Args, opts)}, nil
 	}
 
+	inventoryConfig := &inventory.Config{
+		Type: req.Connector,
+	}
 	// discovery flags
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
@@ -51,12 +56,25 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			discoverTargets = append(discoverTargets, entry)
 		}
 	}
+
 	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{inventoryConfig},
 		Options:     parseFlagsToOptions(flags),
 	}
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.Asset {
+	asset := &inventory.Asset{}
+	switch args[1] {
+	case "instance-connect":
+		return resources.InstanceConnectAsset(args, opts)
+	case "ssm":
+		return resources.SSMConnectAsset(args, opts)
+	case "ebs":
+	}
+	return asset
 }
 
 func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
@@ -113,8 +131,8 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return &plugin.ConnectRes{
-		Id:        uint32(conn.(shared.SimpleConnection).ID()),
-		Name:      conn.(shared.SimpleConnection).Name(),
+		Id:        uint32(conn.(shared.Connection).ID()),
+		Name:      conn.(shared.Connection).Name(),
 		Asset:     req.Asset,
 		Inventory: inventory,
 	}, nil
