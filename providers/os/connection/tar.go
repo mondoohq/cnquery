@@ -214,7 +214,9 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 		}
 
 		// remove unflattened image file, we now have a flattened image
-		closeFn()
+		if closeFn != nil {
+			closeFn()
+		}
 
 		c.PlatformIdentifier = identifier
 		return c, nil
