@@ -6,7 +6,6 @@ package packages
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -25,7 +24,7 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 
 	// if the read seaker is not implemented lets cache stdout in-memory
 	if !ok {
-		packageList, err := ioutil.ReadAll(input)
+		packageList, err := io.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}

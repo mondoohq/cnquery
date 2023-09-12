@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -29,7 +29,7 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 	// hide deprecation warnings for go api
 	// see https://kubernetes.io/blog/2020/09/03/warnings/#customize-client-handling
 	rest.SetDefaultWarningHandler(
-		rest.NewWarningWriter(ioutil.Discard, rest.WarningWriterOptions{}),
+		rest.NewWarningWriter(io.Discard, rest.WarningWriterOptions{}),
 	)
 
 	dynClient, err := dynamic.NewForConfig(restConfig)

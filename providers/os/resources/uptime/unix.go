@@ -6,7 +6,6 @@ package uptime
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -153,7 +152,7 @@ func (s *Unix) Duration() (time.Duration, error) {
 }
 
 func (s *Unix) parse(r io.Reader) (*UnixUptimeResult, error) {
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ package scp
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 
 	scp_client "github.com/hnakamur/go-scp"
@@ -44,7 +44,7 @@ func (f *File) Name() string {
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
-	return f.scpClient.Receive(f.path, ioutil.Discard)
+	return f.scpClient.Receive(f.path, io.Discard)
 }
 
 func (f *File) Sync() error {

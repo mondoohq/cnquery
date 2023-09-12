@@ -4,11 +4,11 @@
 package kernel
 
 import (
-	"github.com/cockroachdb/errors"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
+
+	"github.com/cockroachdb/errors"
 )
 
 var LINUX_KERNEL_ARGUMENTS_REGEX = regexp.MustCompile(`(?:^BOOT_IMAGE=([^\s]*)\s)?(?:root=([^\s]*)\s)?(.*)`)
@@ -24,7 +24,7 @@ func ParseLinuxKernelArguments(r io.Reader) (LinuxKernelArguments, error) {
 		Arguments: map[string]string{},
 	}
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return res, err
 	}
@@ -57,8 +57,7 @@ func ParseLinuxKernelArguments(r io.Reader) (LinuxKernelArguments, error) {
 
 // kernel version includes the kernel version, build data, buildhost, compiler version and an optional build date
 func ParseLinuxKernelVersion(r io.Reader) (string, error) {
-
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return "", err
 	}

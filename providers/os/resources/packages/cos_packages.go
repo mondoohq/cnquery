@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
@@ -57,7 +56,7 @@ func (mpm *CosPkgManager) Available() (map[string]PackageUpdate, error) {
 }
 
 func ParseCosPackages(input io.Reader) ([]Package, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,6 @@ import (
 	"archive/tar"
 	"bufio"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -47,7 +46,7 @@ func ParseLinuxSysctlProc(sysctlRootPath string, reader io.Reader) (map[string]s
 		}
 
 		if !h.FileInfo().IsDir() {
-			content, _ := ioutil.ReadAll(tr)
+			content, _ := io.ReadAll(tr)
 			// remove leading sysctl path
 			k := strings.Replace(h.Name, sysctlRootPath, "", -1)
 			k = strings.Replace(k, "/", ".", -1)

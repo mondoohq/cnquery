@@ -6,7 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -42,12 +42,12 @@ func (i *mqlIptables) output() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
+		outErr, _ := io.ReadAll(cmd.Stderr)
 		return nil, errors.New(string(outErr))
 	}
 	lines := getLines(string(data))
@@ -86,12 +86,12 @@ func (i *mqlIptables) input() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
+		outErr, _ := io.ReadAll(cmd.Stderr)
 		return nil, errors.New(string(outErr))
 	}
 	lines := getLines(string(data))
@@ -130,12 +130,12 @@ func (i *mqlIp6tables) output() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
+		outErr, _ := io.ReadAll(cmd.Stderr)
 		return nil, errors.New(string(outErr))
 	}
 	lines := getLines(string(data))
@@ -174,13 +174,13 @@ func (i *mqlIp6tables) input() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
 	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
+		outErr, _ := io.ReadAll(cmd.Stderr)
 		return nil, errors.New(string(outErr))
 	}
 	lines := getLines(string(data))

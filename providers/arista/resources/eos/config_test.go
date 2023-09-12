@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -39,7 +39,7 @@ func TestGetSection(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	require.NoError(t, err)
 
 	section := GetSection(bytes.NewReader(data), "cvx service openstack")

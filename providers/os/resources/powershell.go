@@ -6,7 +6,6 @@ package resources
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -76,7 +75,7 @@ func convertToUtf8Encoding(out []byte) (string, error) {
 	enc, name, _ := charset.DetermineEncoding(out, "")
 	log.Trace().Str("encoding", name).Msg("check powershell results charset")
 	r := transform.NewReader(bytes.NewReader(out), enc.NewDecoder())
-	utf8out, err := ioutil.ReadAll(r)
+	utf8out, err := io.ReadAll(r)
 	if err != nil {
 		return "", err
 	}

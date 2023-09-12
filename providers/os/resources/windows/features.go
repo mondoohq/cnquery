@@ -6,7 +6,6 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 const QUERY_FEATURES = "Get-WindowsFeature | Select-Object -Property Path,Name,DisplayName,Description,Installed,InstallState,FeatureType,DependsOn,Parent,SubFeatures | ConvertTo-Json"
@@ -25,7 +24,7 @@ type WindowsFeature struct {
 }
 
 func ParseWindowsFeatures(input io.Reader) ([]WindowsFeature, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

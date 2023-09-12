@@ -4,7 +4,7 @@
 package reboot
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -39,7 +39,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 		return false, err
 	}
 
-	content, err := ioutil.ReadAll(cmd.Stdout)
+	content, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return false, err
 	}
@@ -54,7 +54,7 @@ func (s *WinReboot) RebootPending() (bool, error) {
 		return false, err
 	}
 
-	content, err = ioutil.ReadAll(cmd.Stdout)
+	content, err = io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return false, err
 	}

@@ -6,7 +6,6 @@ package services
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"regexp"
 
@@ -47,7 +46,7 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 		}
 
 		// if the rc-status command is installed
-		cmdOut, _ := ioutil.ReadAll(cmd.Stdout)
+		cmdOut, _ := io.ReadAll(cmd.Stdout)
 		if string(cmdOut) != "" {
 			cmd, err := s.conn.RunCommand("rc-status -s")
 			if err != nil {

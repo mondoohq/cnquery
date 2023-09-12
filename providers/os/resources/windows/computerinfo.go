@@ -6,13 +6,12 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 const PSGetComputerInfo = "Get-ComputerInfo | ConvertTo-Json"
 
 func ParseComputerInfo(r io.Reader) (map[string]interface{}, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

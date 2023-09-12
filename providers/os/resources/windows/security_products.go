@@ -6,7 +6,6 @@ package windows
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -163,7 +162,7 @@ func GetSecurityProducts(p shared.Connection) ([]securityProduct, error) {
 
 func ParseWindowsSecurityProducts(r io.Reader) ([]securityProduct, error) {
 	var psSecProducts powershelSecurityProducts
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

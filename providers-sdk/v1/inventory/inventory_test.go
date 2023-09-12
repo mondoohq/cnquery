@@ -45,7 +45,7 @@ func TestPreprocess(t *testing.T) {
 		//data, err := inventory.ToYAML()
 		//require.NoError(t, err)
 		//
-		//err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
+		//err = os.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
 		//require.NoError(t, err)
 	})
 

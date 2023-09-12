@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
-	"io/ioutil"
+	"io"
 	"mime/quotedprintable"
 	"strings"
 )
@@ -107,7 +107,7 @@ func NewDkimPublicKeyRepresentation(dkimRecord string) (*DkimPublicKeyRepresenta
 		case "n":
 			pkr.Notes = val
 			// parse quote printable
-			qp, err := ioutil.ReadAll(quotedprintable.NewReader(strings.NewReader(val)))
+			qp, err := io.ReadAll(quotedprintable.NewReader(strings.NewReader(val)))
 			if err == nil {
 				pkr.Notes = string(qp)
 			}

@@ -6,7 +6,6 @@ package connection
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 // https://github.com/golang/oauth2/issues/241
@@ -34,7 +33,7 @@ func GetCurrentProject() (string, error) {
 func ParseGcloudConfig(r io.Reader) (GCloudConfig, error) {
 	var gcloudconfig GCloudConfig
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return gcloudconfig, err
 	}
