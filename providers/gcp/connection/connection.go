@@ -26,6 +26,7 @@ const (
 	Folder
 	Gcr
 	Snapshot
+	Instance
 )
 
 type GcpConnection struct {
@@ -79,6 +80,9 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	} else if conf.Options["snapshot-name"] != "" {
 		resourceType = Snapshot
 		resourceID = conf.Options["snapshot-name"]
+	} else if conf.Options["instance-name"] != "" {
+		resourceType = Instance
+		resourceID = conf.Options["instance-name"]
 	}
 
 	var override string

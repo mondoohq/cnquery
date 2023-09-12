@@ -88,9 +88,9 @@ func (sc *SnapshotCreator) InstanceInfo(projectID, zone, instanceName string) (i
 	}
 
 	ii.ProjectID = projectID
-	ii.Zone = instance.Zone
+	ii.Zone = zone
 	ii.InstanceName = instance.Name
-	ii.PlatformMrn = gce.MondooGcpInstancePlatformMrn(projectID, instance.Zone, instance.Name)
+	ii.PlatformMrn = gce.MondooGcpInstancePlatformMrn(projectID, zone, instance.Name)
 
 	// search for boot disk
 	var bootDisk *compute.AttachedDisk
