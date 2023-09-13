@@ -333,8 +333,8 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: cluster.Name.Data,
 				Platform: &inventory.Platform{
-					Name:    "gcp-container-cluster",
-					Title:   "GCP Container Cluster",
+					Name:    "gcp-gke-cluster",
+					Title:   "GCP GKE Cluster",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
 				},
