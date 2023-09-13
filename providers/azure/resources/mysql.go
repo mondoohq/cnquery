@@ -245,7 +245,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{},
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.configuration",
+			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString(entry.ID)),
 					"name":          llx.StringData(convert.ToString(entry.Name)),
@@ -382,7 +382,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]inte
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.configuration",
+			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString(entry.ID)),
 					"name":          llx.StringData(convert.ToString(entry.Name)),

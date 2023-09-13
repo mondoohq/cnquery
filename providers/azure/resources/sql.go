@@ -48,6 +48,10 @@ func (a *mqlAzureSubscriptionSqlServiceServerAdministrator) id() (string, error)
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionSqlServiceConfiguration) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings) id() (string, error) {
 	return a.Id.Data, nil
 }
