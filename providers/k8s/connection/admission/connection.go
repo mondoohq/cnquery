@@ -58,16 +58,20 @@ func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Conne
 	return c, nil
 }
 
-func (p *Connection) ServerVersion() *version.Info {
+func (c *Connection) ServerVersion() *version.Info {
 	return nil
 }
 
-func (p *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
-	return p.ManifestParser.SupportedResourceTypes()
+func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
+	return c.ManifestParser.SupportedResourceTypes()
 }
 
-func (p *Connection) ID() uint32 {
-	return p.id
+func (c *Connection) ID() uint32 {
+	return c.id
+}
+
+func (c *Connection) Runtime() string {
+	return "k8s-admission"
 }
 
 func (c *Connection) Asset() *inventory.Asset {
@@ -87,8 +91,8 @@ func (c *Connection) AssetId() (string, error) {
 	return shared.NewPlatformId(string(reviews[0].Request.UID)), nil
 }
 
-func (p *Connection) Name() string {
-	return p.asset.Name
+func (c *Connection) Name() string {
+	return c.asset.Name
 }
 
 func (c *Connection) Platform() *inventory.Platform {
@@ -96,7 +100,7 @@ func (c *Connection) Platform() *inventory.Platform {
 		Name:    "k8s-admission",
 		Family:  []string{"k8s"},
 		Kind:    "code",
-		Runtime: "k8s-admission",
+		Runtime: c.Runtime(),
 		Title:   "Kubernetes Admission",
 	}
 }

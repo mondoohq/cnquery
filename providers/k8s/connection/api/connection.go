@@ -114,6 +114,10 @@ func (c *Connection) ID() uint32 {
 	return c.id
 }
 
+func (c *Connection) Runtime() string {
+	return "k8s-cluster"
+}
+
 func (c *Connection) InventoryConfig() *inventory.Config {
 	return c.asset.Connections[0]
 }
@@ -187,7 +191,7 @@ func (c *Connection) Platform() *inventory.Platform {
 		Arch:    v.Platform,
 		Family:  []string{"k8s"},
 		Kind:    "api",
-		Runtime: "k8s-cluster",
+		Runtime: c.Runtime(),
 		Title:   "Kubernetes Cluster",
 	}
 }
