@@ -36,7 +36,7 @@ var docsCmd = &cobra.Command{
 
 var docsYamlCmd = &cobra.Command{
 	Use:   "yaml",
-	Short: "generates yaml docs skeleton file and merges it into existing defintion",
+	Short: "generates yaml docs skeleton file and merges it into existing definition",
 	Long:  `parse an LR file and generates a yaml file structure for additional documentation.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

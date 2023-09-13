@@ -71,7 +71,7 @@ func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningPr
 	if update.Enabled {
 		// We do not stop on failed updates. Up until some other errors happens,
 		// things are still functional. We want to consider failure, possibly
-		// with a config entry in the futuer.
+		// with a config entry in the future.
 		updated, err := c.tryProviderUpdate(provider, update)
 		if err != nil {
 			log.Error().

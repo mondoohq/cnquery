@@ -397,15 +397,15 @@ func (s *Shell) renderResources(resources map[string]*resources.ResourceInfo, ke
 
 	rows := []rowEntry{}
 	maxk := 0
-	const seperator = ":"
+	const separator = ":"
 
 	for i := range keys {
 		k := keys[i]
 		resource := resources[k]
 
-		keyLength := len(resource.Name) + len(seperator)
+		keyLength := len(resource.Name) + len(separator)
 		rows = append(rows, rowEntry{
-			s.Theme.PolicyPrinter.Secondary(resource.Name) + seperator,
+			s.Theme.PolicyPrinter.Secondary(resource.Name) + separator,
 			keyLength,
 			resource.Title,
 		})
@@ -435,9 +435,9 @@ func (s *Shell) renderResources(resources map[string]*resources.ResourceInfo, ke
 				displayType = s.Theme.PolicyPrinter.Disabled(fieldType)
 			}
 
-			keyLength = len(fieldName) + len(fieldType) + len(seperator)
+			keyLength = len(fieldName) + len(fieldType) + len(separator)
 			rows = append(rows, rowEntry{
-				s.Theme.PolicyPrinter.Secondary(fieldName) + displayType + seperator,
+				s.Theme.PolicyPrinter.Secondary(fieldName) + displayType + separator,
 				keyLength,
 				fieldComment,
 			})

@@ -236,7 +236,7 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 	}
 
 	// this only happens if the function set the field proactively, in which
-	// case we grab the value from the cached entry for consistancy
+	// case we grab the value from the cached entry for consistency
 	if cached.State&StateIsSet != 0 {
 		return cached
 	}

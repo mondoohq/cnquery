@@ -26,7 +26,7 @@ func NewJob(f func() (JobResult, error)) *Job {
 // Run runs a job and does appropriate accounting via a given sync.WorkGroup
 func (t *Job) Run(wg *sync.WaitGroup) {
 	if t.f == nil {
-		t.Err = fmt.Errorf("no funtion to run in jobpool: %s", t.Err)
+		t.Err = fmt.Errorf("no function to run in jobpool: %s", t.Err)
 	} else {
 		t.Result, t.Err = t.f()
 	}

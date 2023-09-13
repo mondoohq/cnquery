@@ -72,13 +72,13 @@ func (r *PlatformResolver) resolvePlatform(pf *platform.Platform, p os.Operating
 		for _, c := range r.Children {
 			detected, resolved := c.resolvePlatform(pf, p)
 			if resolved {
-				// add family hieracy
+				// add family hierarchy
 				detected.Family = append(pf.Family, r.Name)
 				return detected, resolved
 			}
 		}
 
-		// we reached this point, we know it is the platfrom but we could not
+		// we reached this point, we know it is the platform but we could not
 		// identify the system
 		// TODO: add generic platform instance
 		// TODO: should we return an error?

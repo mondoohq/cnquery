@@ -6,7 +6,7 @@ package convert
 import "encoding/json"
 
 // TODO: These functions are very heavyweight and prime candidates to
-// be replaced by better laternatives.
+// be replaced by better alternatives.
 
 // JsonToDict converts a raw golang object (typically loaded from JSON)
 // into a `dict` type

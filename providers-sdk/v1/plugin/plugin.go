@@ -37,7 +37,7 @@ type ParseArgsFun func(runtime *Runtime, args map[string]*llx.RawData) (map[stri
 // (Note: if necessary, parse arguments beforehand).
 type CreateResource func(runtime *Runtime, args map[string]*llx.RawData) (Resource, error)
 
-// ResourceFactory is generated for every resource and helps to initialze it
+// ResourceFactory is generated for every resource and helps to initialize it
 // and parse its arguments. This is focused on everything that is done
 // within a plugin, not beyond (recording, upstream etc).
 type ResourceFactory struct {

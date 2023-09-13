@@ -34,8 +34,8 @@ const (
 	arcClusterDefenderExtensionDefinitionId        string = "/providers/Microsoft.Authorization/policyDefinitions/708b60a6-d253-4fe0-9114-4be4c00f012c"
 	kubernetesClusterDefenderExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/64def556-fbad-4622-930e-72d1d5589bf5"
 
-	arcClusterPolicyExtensionDefinitionId       string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
-	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
+	arcClusterPolicyExtensionDefinitionId        string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
+	kubernetesClusterPolicyExtensionDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
 func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
@@ -145,7 +145,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 	kubernetesDefender := false
 	arcDefender := false
 	kubernetesPolicyExt := false
-	arcPoilcyExt := false
+	arcPolicyExt := false
 	for _, it := range pas.PolicyAssignments {
 		if it.Properties.PolicyDefinitionID == arcClusterDefenderExtensionDefinitionId &&
 			it.Properties.Scope == fmt.Sprintf("/subscriptions/%s", subId) {
@@ -157,9 +157,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 		}
 		if it.Properties.PolicyDefinitionID == arcClusterPolicyExtensionDefinitionId &&
 			it.Properties.Scope == fmt.Sprintf("/subscriptions/%s", subId) {
-			arcPoilcyExt = true
+			arcPolicyExt = true
 		}
-		if it.Properties.PolicyDefinitionID == kubernetesClusterPolicyExtensonDefinitionId &&
+		if it.Properties.PolicyDefinitionID == kubernetesClusterPolicyExtensionDefinitionId &&
 			it.Properties.Scope == fmt.Sprintf("/subscriptions/%s", subId) {
 			kubernetesPolicyExt = true
 		}
@@ -167,7 +167,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) defenderForContainers() (inte
 
 	def := defenderForContainers{
 		DefenderDaemonSet:        arcDefender && kubernetesDefender,
-		AzurePolicyForKubernetes: arcPoilcyExt && kubernetesPolicyExt,
+		AzurePolicyForKubernetes: arcPolicyExt && kubernetesPolicyExt,
 	}
 	return convert.JsonToDict(def)
 }

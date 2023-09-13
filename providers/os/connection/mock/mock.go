@@ -392,7 +392,7 @@ func (f *MockFile) Readdir(n int) ([]os.FileInfo, error) {
 			// check if it is only one layer down
 			filename := strings.TrimPrefix(k, path)
 
-			// path-seperator is still included, remove it
+			// path-separator is still included, remove it
 			filename = strings.TrimPrefix(filename, "/")
 			filename = strings.TrimPrefix(filename, "\\")
 
@@ -424,7 +424,7 @@ func (f *MockFile) Readdirnames(n int) ([]string, error) {
 			// check if it is only one layer down
 			filename := strings.TrimPrefix(k, path)
 
-			// path-seperator is still included, remove it
+			// path-separator is still included, remove it
 			filename = strings.TrimPrefix(filename, "/")
 			filename = strings.TrimPrefix(filename, "\\")
 

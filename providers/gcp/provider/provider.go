@@ -104,7 +104,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	// ^^ snapshot and instance flags
 
-	// these flags are currently only used for the instnace sub-command
+	// these flags are currently only used for the instance sub-command
 	var createSnapshot string
 	if x, ok := flags["create-snapshot"]; ok && len(x.Value) != 0 {
 		createSnapshot = string(x.Value)

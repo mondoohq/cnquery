@@ -1066,7 +1066,7 @@ func (x *OwnerReference) GetUid() string {
 	return ""
 }
 
-// Invetory declares the all assets and their credentials
+// Inventory declares the all assets and their credentials
 type Inventory struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

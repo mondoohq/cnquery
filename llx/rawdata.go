@@ -22,7 +22,7 @@ type RawData struct {
 	Error error       `json:"error,omitempty"`
 }
 
-// a helper structure exclusively used for json unmarshaling of errors
+// a helper structure exclusively used for json unmarshalling of errors
 // TODO: find a better way of doing this, this workaround is annoying
 type errData struct {
 	Error string `json:"error"`

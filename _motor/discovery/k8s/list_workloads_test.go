@@ -1645,15 +1645,15 @@ func TestListFiltering(t *testing.T) {
 	// List w/glob 'kube*'
 	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{"kube*"}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
-	assert.Equal(t, 4, len(assets), "expected 4 Pods to be returned from matched Namspaces")
+	assert.Equal(t, 4, len(assets), "expected 4 Pods to be returned from matched Namespaces")
 
 	// List w/glob '*alt*'
 	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{"*alt*"}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(assets), "expected 3 Pods to be returned from matched Namspaces")
+	assert.Equal(t, 3, len(assets), "expected 3 Pods to be returned from matched Namespaces")
 
 	// Exclude w/glob '*default*'
 	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{exclude: []string{"*default*"}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
-	assert.Equal(t, 4, len(assets), "expected 4 Pods to be returned from non-excluded Namspaces")
+	assert.Equal(t, 4, len(assets), "expected 4 Pods to be returned from non-excluded Namespaces")
 }

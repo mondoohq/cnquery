@@ -46,7 +46,7 @@ func WithDb(runtime llx.Runtime, f func(*Db, *explorer.LocalServices) error) err
 }
 
 // Prefixes for all keys that are stored in the cache.
-// Prevent collissions by creating namespaces for different types of data.
+// Prevent collisions by creating namespaces for different types of data.
 const (
 	dbIDQuery          = "q\x00"
 	dbIDQueryPack      = "qp\x00"
