@@ -280,6 +280,22 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 			return nil, err
 		}
 	}
+	// Determine whether the image is locally present or not.
+	resolver := docker_discovery.Resolver{}
+	resolvedAssets, err := resolver.Resolve(context.Background(), asset, conf, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resolvedAssets) > 1 {
+		return nil, errors.New("provided image name resolved to more than one container image")
+	}
+
+	// The requested image isn't locally available, but we can pull it from a remote registry.
+	if len(resolvedAssets) > 0 && resolvedAssets[0].Connections[0].Type == "container-registry" {
+		return NewContainerRegistryImage(id, conf, resolvedAssets[0])
+	}
+
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
