@@ -449,6 +449,10 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		return res.String()
 	}
 
+	if data == nil {
+		return print.Secondary("null")
+	}
+
 	m, ok := data.(map[string]interface{})
 	if !ok {
 		return "data is not a map to auto-expand"

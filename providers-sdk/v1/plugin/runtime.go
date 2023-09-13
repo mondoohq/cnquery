@@ -170,13 +170,16 @@ func (x *TValue[T]) ToDataRes(typ types.Type) *DataRes {
 		return &DataRes{}
 	}
 	if x.State&StateIsNull != 0 {
-		res := &DataRes{
-			Data: &llx.Primitive{Type: string(typ)},
-		}
 		if x.Error != nil {
-			res.Error = x.Error.Error()
+			return &DataRes{
+				Error: x.Error.Error(),
+				Data:  &llx.Primitive{Type: string(typ)},
+			}
 		}
-		return res
+
+		return &DataRes{
+			Data: &llx.Primitive{Type: string(types.Nil)},
+		}
 	}
 	raw := llx.RawData{Type: typ, Value: x.Data, Error: x.Error}
 	res := raw.Result()
