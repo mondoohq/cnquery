@@ -60,7 +60,7 @@ func (c *coordinator) NewRuntime() *Runtime {
 				Resources: map[string]*resources.ResourceInfo{},
 			},
 		},
-		Recording:       nullRecording{},
+		Recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 	}
 	res.schema.runtime = res
