@@ -45,7 +45,7 @@
         "run",
         "local",
         "-c",
-        "asset.eol"
+        "docker.containers{*}"
       ],
     },
     {

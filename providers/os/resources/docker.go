@@ -10,6 +10,10 @@ import (
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/aws/resources"
+	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -65,6 +69,8 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 	}
 
 	container := make([]interface{}, len(dContainers))
+	localConn := p.MqlRuntime.Connection.(*connection.LocalConnection)
+	localConnId := localConn.ID()
 
 	for i, dContainer := range dContainers {
 		labels := make(map[string]interface{})
@@ -77,15 +83,30 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		/*
-			FIXME: ??? not used?
-			conn, err := connection.NewDockerEngineContainer(dContainer.ID)
-			if err != nil {
-				return nil, err
-			}
-		*/
+		localConnId++
+		containerConf := &inventory.Config{
+			Host: dContainer.ID,
+			Type: "docker-container",
+		}
+		containerAsset := &inventory.Asset{
+			Name:        dContainer.ID,
+			Connections: []*inventory.Config{containerConf},
+		}
+		containerConn, err := connection.NewDockerEngineContainer(localConnId, containerConf, containerAsset)
+		if err != nil {
+			return nil, err
+		}
+		containerAsset.Connections[0].Id = containerConn.ID()
+		containerRuntime := &plugin.Runtime{
+			Connection:     containerConn,
+			Callback:       p.MqlRuntime.Callback,
+			HasRecording:   p.MqlRuntime.HasRecording,
+			CreateResource: resources.CreateResource,
+			Upstream:       p.MqlRuntime.Upstream,
+		}
+		// s.runtimes[containerConn.ID()] = containerRuntime
 
-		o, err := CreateResource(p.MqlRuntime, "docker.container", map[string]*llx.RawData{
+		o, err := CreateResource(containerRuntime, "docker.container", map[string]*llx.RawData{
 			"id":      llx.StringData(dContainer.ID),
 			"image":   llx.StringData(dContainer.Image),
 			"imageid": llx.StringData(dContainer.ImageID),
