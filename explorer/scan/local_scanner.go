@@ -172,7 +172,13 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, false, err
 		}
 		runtime := providers.Coordinator.NewRuntime()
-		runtime.DetectProvider(resolvedAsset)
+
+		err = runtime.DetectProvider(resolvedAsset)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to detect provider for asset")
+			continue
+		}
+
 		if err := runtime.Connect(&plugin.ConnectReq{
 			Features: cnquery.GetFeatures(ctx),
 			Asset:    resolvedAsset,
@@ -207,6 +213,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, false, err
 		}
 
+		// attach recording before connect, so it is tied to the asset
+		runtime.Recording = s.recording
+
 		err := runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
 			Asset:    asset,
@@ -216,6 +225,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			log.Error().Err(err).Msg("unable to connect to asset")
 			continue
 		}
+
 		assets = append(assets, &assetWithRuntime{
 			asset:   asset,
 			runtime: runtime,
@@ -285,7 +295,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// if a bundle was provided check that it matches the filter, bundles can also be downloaded
 	// later therefore we do not want to stop execution here
 	if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
-		return nil, false, errors.New("all available packs filtered out. nothing to do.")
+		return nil, false, errors.New("all available packs filtered out. nothing to do")
 	}
 
 	progressBarElements := map[string]string{}
