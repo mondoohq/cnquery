@@ -41,7 +41,6 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 	conf.Command, _ = cmd.Flags().GetString("command")
 	conf.DoAst, _ = cmd.Flags().GetBool("ast")
 	conf.DoParse, _ = cmd.Flags().GetBool("parse")
-	conf.DoRecord, _ = cmd.Flags().GetBool("record")
 	if doJSON, _ := cmd.Flags().GetBool("json"); doJSON {
 		conf.Format = "json"
 	}

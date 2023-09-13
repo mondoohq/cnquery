@@ -110,8 +110,9 @@
         "scan",
         // "local",
         "-f",
-        "./examples/os.mql.yaml"
-      ],
+        "examples/os.mql.yaml",
+        // "--record", "a.json"
+      ]
     },
     // gcp.project.kms.keyrings
     {
