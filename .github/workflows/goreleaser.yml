@@ -32,6 +32,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Skip Publish for Alpha and Beta Tags
+        id: skip-publish
+        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || inputs.skip-publish == 'true'
+        run: |
+          echo "Skipping publish for alpha and beta tags"
+          echo "skip-publish=true" >> $GITHUB_OUTPUT
+          echo "skip-publish=true" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -128,16 +136,16 @@ jobs:
           done
 
       - name: Publish Release to releases.mondoo.com
-        if: ${{ ! inputs.skip-publish }}
+        if: ${{ ! steps.skip-publish.outputs.skip-publish }}
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
           repository: "mondoohq/releasr"
           event-type: publish-release
           client-payload: '{
-            "repository": "${{ github.event.repository.name }}",
-            "version":  "${{  github.ref_name }}"
-          }'
+              "repository": "${{ github.event.repository.name }}",
+              "version":  "${{  github.ref_name }}"
+            }'
 
       - name: Cleanup
         if: always()
