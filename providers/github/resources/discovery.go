@@ -101,7 +101,8 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Labels:      map[string]string{},
 		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
 	})
-	if stringx.Contains(targets, connection.DiscoveryRepos) {
+	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
+		assetList = []*inventory.Asset{}
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			assetList = append(assetList, &inventory.Asset{
@@ -114,6 +115,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		}
 	}
 	if stringx.Contains(targets, connection.DiscoveryUsers) {
+		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
 			if user.Name.Data == "" {
@@ -155,6 +157,7 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
 	})
 	if stringx.Contains(targets, connection.DiscoveryUsers) {
+		assetList = []*inventory.Asset{}
 		for i := range repo.GetContributors().Data {
 			user := repo.GetContributors().Data[i].(*mqlGithubUser)
 			assetList = append(assetList, &inventory.Asset{
