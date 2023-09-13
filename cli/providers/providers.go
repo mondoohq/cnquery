@@ -87,7 +87,7 @@ func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	err := preRunRoot.Execute()
 	if err != nil {
 		log.Debug().Err(err).Msg("early detection error")
-		log.Error().Msg("failed to run early comman detection")
+		log.Error().Msg("failed to run early command detection")
 		return "", false
 	}
 
@@ -166,12 +166,12 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		{
 			Long: "record",
 			Type: plugin.FlagType_String,
-			Desc: "Record all resouce calls and use resouces in the recording",
+			Desc: "Record all resource calls and use resources in the recording",
 		},
 		{
 			Long: "use-recording",
 			Type: plugin.FlagType_String,
-			Desc: "Use a recording to inject resouces data (read-only)",
+			Desc: "Use a recording to inject resource data (read-only)",
 		},
 		{
 			Long:   "pretty",

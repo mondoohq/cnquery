@@ -92,7 +92,7 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 				if gresp.State == iamtypes.ReportStateTypeStarted || gresp.State == iamtypes.ReportStateTypeInprogress {
 					// we need to wait
 				} else if gresp.State == iamtypes.ReportStateTypeComplete {
-					// we do not neet do do anything
+					// we do not need do do anything
 				} else {
 					// unsupported report state
 					return nil, fmt.Errorf("aws iam credential report state is not supported: %s", gresp.State)

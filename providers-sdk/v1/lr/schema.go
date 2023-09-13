@@ -123,7 +123,7 @@ func resourceInit(r *Resource, fields map[string]*resources.Field, ast *LR) (*re
 	for _, arg := range i.Args {
 		typ := arg.Type.Type(ast)
 		if typ == types.Unset {
-			return nil, errors.New("A field in the init that isnt found in the resource must have a type assigned. Field \"" + arg.ID + "\"")
+			return nil, errors.New("A field in the init that isn't found in the resource must have a type assigned. Field \"" + arg.ID + "\"")
 		}
 
 		ref, ok := fields[arg.ID]

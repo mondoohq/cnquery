@@ -2233,7 +2233,7 @@ func stringSplitV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 		return &RawData{
 			Type:  types.Array(types.String),
 			Value: nil,
-			Error: errors.New("failed to split string, seperator was null"),
+			Error: errors.New("failed to split string, separator was null"),
 		}, 0, nil
 	}
 

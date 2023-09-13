@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 		// Test epoched
 		{"1:0", version{epoch: 1, version: "0", release: ""}, false},
 		{"5:1", version{epoch: 5, version: "1", release: ""}, false},
-		// Test multiple hypens
+		// Test multiple hyphens
 		{"0:0-0-0", version{epoch: 0, version: "0", release: "0-0"}, false},
 		{"0:0-0-0-0", version{epoch: 0, version: "0", release: "0-0-0"}, false},
 		// Test multiple colons

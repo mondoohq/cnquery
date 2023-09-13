@@ -358,7 +358,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						mqlMasterCfg, err := instaceGroupConfigToMql(
+						mqlMasterCfg, err := instanceGroupConfigToMql(
 							g.MqlRuntime, c.Config.MasterConfig, fmt.Sprintf("%s/dataproc/%s/config/master", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
@@ -377,7 +377,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						mqlSecondaryWorkerCfg, err := instaceGroupConfigToMql(
+						mqlSecondaryWorkerCfg, err := instanceGroupConfigToMql(
 							g.MqlRuntime, c.Config.SecondaryWorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/secondaryWorker", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
@@ -455,7 +455,7 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 							}
 						}
 
-						mqlWorkerCfg, err := instaceGroupConfigToMql(
+						mqlWorkerCfg, err := instanceGroupConfigToMql(
 							g.MqlRuntime, c.Config.WorkerConfig, fmt.Sprintf("%s/dataproc/%s/config/worker", projectId, c.ClusterName))
 						if err != nil {
 							log.Error().Err(err).Send()
@@ -736,7 +736,7 @@ func nodePoolTargetToMql(npt *dataproc.GkeNodePoolTarget) mqlGkeNodePoolTarget {
 	}
 }
 
-func instaceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGroupConfig, id string) (plugin.Resource, error) {
+func instanceGroupConfigToMql(runtime *plugin.Runtime, igc *dataproc.InstanceGroupConfig, id string) (plugin.Resource, error) {
 	if igc == nil {
 		return nil, nil
 	}

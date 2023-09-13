@@ -276,7 +276,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 	return res, nil
 }
 
-// TODO: we should check how the plugin generic struct works when the value isnt set, can we rely on default value
+// TODO: we should check how the plugin generic struct works when the value isn't set, can we rely on default value
 // or need to use something else? goes for both storageAccount implementations
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	storageAccId := a.StorageAccountId.Data

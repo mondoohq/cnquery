@@ -18,7 +18,7 @@ import (
 
 // InitProfiler sets up the go profiler based on the MONDOO_PROF environment
 // variable.
-// MONDO_PROF is a list of comma seperated key/key=value.
+// MONDO_PROF is a list of comma separated key/key=value.
 // Allowed keys:
 //   - `enable`:          Enables the profiler if no value is provided, or the value of
 //     `true` is provided

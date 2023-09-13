@@ -21,7 +21,7 @@ func TestMqueryMerge(t *testing.T) {
 			Remediation: &Remediation{
 				Items: []*TypedDoc{{
 					Id:   "default",
-					Desc: "a desciption",
+					Desc: "a description",
 				}},
 			},
 		},
@@ -33,7 +33,7 @@ func TestMqueryMerge(t *testing.T) {
 			Remediation: &Remediation{
 				Items: []*TypedDoc{{
 					Id:   "default",
-					Desc: "b desciption",
+					Desc: "b description",
 				}},
 			},
 		},

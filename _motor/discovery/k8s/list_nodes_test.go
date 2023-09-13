@@ -86,7 +86,7 @@ func TestListNodesAKS(t *testing.T) {
 	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/aks-default-36939070-vmss000000"}, assets[0].PlatformIds)
 
-	// Adds relatonship to host
+	// Adds relationship to host
 	require.Len(t, assets[0].RelatedAssets, 1)
 	require.Equal(t, "aks-default-36939070-vmss000000", assets[0].RelatedAssets[0].Name)
 	require.Equal(t, providers.Kind_KIND_VIRTUAL_MACHINE, assets[0].RelatedAssets[0].Platform.Kind)
@@ -309,7 +309,7 @@ func TestListNodesK3S(t *testing.T) {
 	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/x1"}, assets[0].PlatformIds)
 
-	// Adds relatonship to host
+	// Adds relationship to host
 	require.Len(t, assets[0].RelatedAssets, 1)
 	require.Equal(t, "x1", assets[0].RelatedAssets[0].Name)
 	require.Equal(t, providers.Kind_KIND_UNKNOWN, assets[0].RelatedAssets[0].GetPlatform().GetKind())

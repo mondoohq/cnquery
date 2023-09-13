@@ -134,7 +134,7 @@ func initConfig() {
 	// override values with env variables
 	viper.SetEnvPrefix("mondoo")
 	// to parse env variables properly we need to replace some chars
-	// all hypens need to be underscores
+	// all hyphens need to be underscores
 	// all dots neeto to be underscores
 	replacer := strings.NewReplacer("-", "_", ".", "_")
 	viper.SetEnvKeyReplacer(replacer)

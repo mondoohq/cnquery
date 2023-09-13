@@ -104,7 +104,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	// FIXME: workaround for gcp-snapshot
 	// For a gcp-snapshot asset, we start with a GCP connection.
-	// This get's overriden by a filesystem connection. The fileswystem connection is what we need for the scan
+	// This get's overridden by a filesystem connection. The filesystem connection is what we need for the scan
 	// But later, we need the GCP runtime to cleanup the snapshot disk
 	if runtime.Provider.Instance.Name == "gcp" && runtime.Provider.Connection.Name == "filesystem" {
 		defer runtime.Close()

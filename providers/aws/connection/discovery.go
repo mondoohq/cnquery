@@ -10,7 +10,7 @@ const (
 	DiscoveryECR          = "ecr"
 	DiscoveryECS          = "ecs"
 
-	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everrrything
+	DiscoveryAll  = "all"  // resources, accounts, instances, ecr, ecs, everything
 	DiscoveryAuto = "auto" // just the account for now
 
 	// API scan
