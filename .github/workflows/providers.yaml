@@ -5,7 +5,7 @@ on:
     inputs:
       version:
         description: "Providers that should be released"
-        default: "os network oci ipmi"
+        default: "arista aws azure equinix gcp github gitlab google-workspace ipmi k8s ms365 network oci okta opcua os slack terraform vcd vsphere"
 
 env:
   BUCKET: releases-us.mondoo.io
