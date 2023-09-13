@@ -71,8 +71,10 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				},
 				Name: gcpProject.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-project",
-					Title: "GCP Project " + gcpProject.Name.Data,
+					Name:    "gcp-project",
+					Title:   "GCP Project " + gcpProject.Name.Data,
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)},
@@ -82,6 +84,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		list, err := discoverProject(conn, gcpProject)
 		if err != nil {
 			return nil, err
+		}
+		if len(in.Spec.Assets) > 0 {
+			in.Spec.Assets[0].RelatedAssets = list
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	} else if conn.ResourceType() == connection.Gcr {
@@ -133,8 +138,10 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 				},
 				Name: project.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-project",
-					Title: "GCP Project " + project.Name.Data,
+					Name:    "gcp-project",
+					Title:   "GCP Project " + project.Name.Data,
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
@@ -181,8 +188,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: instance.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-compute-instance",
-					Title: "GCP Compute Instance",
+					Name:    "gcp-compute-instance",
+					Title:   "GCP Compute Instance",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels: labels,
 				// TODO: the current connection handling does not work well for instances
@@ -212,8 +221,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: image.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-compute-image",
-					Title: "GCP Compute Image",
+					Name:    "gcp-compute-image",
+					Title:   "GCP Compute Image",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      labels,
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -237,8 +248,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: network.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-compute-network",
-					Title: "GCP Compute Network",
+					Name:    "gcp-compute-network",
+					Title:   "GCP Compute Network",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -266,8 +279,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: network.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-compute-subnetwork",
-					Title: "GCP Compute Subnetwork",
+					Name:    "gcp-compute-subnetwork",
+					Title:   "GCP Compute Subnetwork",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -291,8 +306,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: firewall.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-compute-firewall",
-					Title: "GCP Compute Firewall",
+					Name:    "gcp-compute-firewall",
+					Title:   "GCP Compute Firewall",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -316,8 +333,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: cluster.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-container-cluster",
-					Title: "GCP Container Cluster",
+					Name:    "gcp-container-cluster",
+					Title:   "GCP Container Cluster",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -341,8 +360,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: bucket.Name.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-storage-bucket",
-					Title: "GCP Storage Bucket",
+					Name:    "gcp-storage-bucket",
+					Title:   "GCP Storage Bucket",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
@@ -366,8 +387,10 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Name: dataset.Id.Data,
 				Platform: &inventory.Platform{
-					Name:  "gcp-bigquery-dataset",
-					Title: "GCP BigQuery Dataset",
+					Name:    "gcp-bigquery-dataset",
+					Title:   "GCP BigQuery Dataset",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
