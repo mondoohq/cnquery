@@ -273,6 +273,7 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 			Platform: &inventory.Platform{
 				Name:  "k8s-pod",
 				Title: "Kubernetes Pod, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -308,6 +309,7 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 			Platform: &inventory.Platform{
 				Name:  "k8s-job",
 				Title: "Kubernetes Job, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -343,6 +345,7 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 			Platform: &inventory.Platform{
 				Name:  "k8s-cronjob",
 				Title: "Kubernetes CronJob, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -378,6 +381,7 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 			Platform: &inventory.Platform{
 				Name:  "k8s-statefulset",
 				Title: "Kubernetes StatefulSet, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -413,6 +417,7 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 			Platform: &inventory.Platform{
 				Name:  "k8s-deployment",
 				Title: "Kubernetes Deployment, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -448,6 +453,7 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 			Platform: &inventory.Platform{
 				Name:  "k8s-replicaset",
 				Title: "Kubernetes ReplicaSet, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -483,6 +489,7 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 			Platform: &inventory.Platform{
 				Name:  "k8s-daemonset",
 				Title: "Kubernetes DaemonSet, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -541,6 +548,7 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 			Platform: &inventory.Platform{
 				Name:  "k8s-ingress",
 				Title: "Kubernetes Ingress, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
@@ -585,6 +593,7 @@ func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clu
 			Platform: &inventory.Platform{
 				Name:  "k8s-namespace",
 				Title: "Kubernetes Namespace, Kubernetes Cluster",
+				Kind:  "k8s-object",
 			},
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
