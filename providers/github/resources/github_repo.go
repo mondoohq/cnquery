@@ -470,8 +470,26 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	branchProtection, _, err := conn.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
 	if err != nil {
 		// NOTE it is possible that the branch does not have any protection rules, therefore we don't return an error
+		if strings.Contains(err.Error(), "Not Found") {
+			res, err := CreateResource(g.MqlRuntime, "github.branchprotection", map[string]*llx.RawData{
+				"id":                             llx.StringData(repoName + "/" + branchName),
+				"requiredStatusChecks":           llx.MapData(map[string]interface{}{}, types.Any),
+				"requiredPullRequestReviews":     llx.MapData(map[string]interface{}{}, types.Any),
+				"enforceAdmins":                  llx.MapData(map[string]interface{}{}, types.Any),
+				"restrictions":                   llx.MapData(map[string]interface{}{}, types.Any),
+				"requireLinearHistory":           llx.MapData(map[string]interface{}{}, types.Any),
+				"allowForcePushes":               llx.MapData(map[string]interface{}{}, types.Any),
+				"allowDeletions":                 llx.MapData(map[string]interface{}{}, types.Any),
+				"requiredConversationResolution": llx.MapData(map[string]interface{}{}, types.Any),
+				"requiredSignatures":             llx.BoolData(false),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return res.(*mqlGithubBranchprotection), nil
+		}
 		// TODO: figure out if the client has the permission to fetch the protection rules
-		return nil, nil
+		return nil, err
 	}
 
 	rsc, err := convert.JsonToDict(branchProtection.RequiredStatusChecks)

@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	DiscoveryAll        = "all"
-	DiscoveryRepos      = "repos"
-	DiscoveryUsers      = "users"
-	DiscoveryRepository = "repository" // deprecated: use repos
+	DiscoveryAll          = "all"
+	DiscoveryAuto         = "auto"
+	DiscoveryRepos        = "repos"
+	DiscoveryUsers        = "users"
+	DiscoveryRepository   = "repository" // deprecated: use repos
+	DiscoveryUser         = "user"       // deprecated: use users
+	DiscoveryOrganization = "organization"
 )
 
 var (

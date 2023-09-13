@@ -67,6 +67,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			entry := string(x.Array[i].Value)
 			discoverTargets = append(discoverTargets, entry)
 		}
+	} else {
+		discoverTargets = []string{"auto"}
 	}
 	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
@@ -79,7 +81,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	case "repo":
 		conf.Options["repository"] = req.Args[1]
 	default:
-		return nil, errors.New("invalid GitHub sub-command")
+		return nil, errors.New("invalid GitHub sub-command, supported are: org, user, or repo")
 	}
 
 	asset := inventory.Asset{

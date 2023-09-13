@@ -49,12 +49,11 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			return nil, nil, err
 		}
 	}
-	var name string
-	if x, ok := args["name"]; ok {
-		name = x.Value.(string)
-	}
+	name := user.GetName()
 	if name == "" {
-		name = user.GetName()
+		if x, ok := args["name"]; ok {
+			name = x.Value.(string)
+		}
 	}
 	args["id"] = llx.IntData(user.GetID())
 	args["login"] = llx.StringData(user.GetLogin())

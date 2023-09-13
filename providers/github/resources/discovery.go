@@ -101,8 +101,10 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Labels:      map[string]string{},
 		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
 	})
-	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
-		assetList = []*inventory.Asset{}
+	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) || stringx.Contains(targets, connection.DiscoveryAll) || stringx.Contains(targets, connection.DiscoveryAuto) {
+		if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
+			assetList = []*inventory.Asset{}
+		}
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			assetList = append(assetList, &inventory.Asset{
@@ -114,7 +116,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			})
 		}
 	}
-	if stringx.Contains(targets, connection.DiscoveryUsers) {
+	if stringx.Contains(targets, connection.DiscoveryUsers) || stringx.Contains(targets, connection.DiscoveryUser) {
 		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
@@ -122,7 +124,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				continue
 			}
 			assetList = append(assetList, &inventory.Asset{
-				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Name.Data)},
+				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
 				Platform:    connection.GithubUserPlatform,
 				Labels:      make(map[string]string),
@@ -156,19 +158,6 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		Labels:      make(map[string]string),
 		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
 	})
-	if stringx.Contains(targets, connection.DiscoveryUsers) {
-		assetList = []*inventory.Asset{}
-		for i := range repo.GetContributors().Data {
-			user := repo.GetContributors().Data[i].(*mqlGithubUser)
-			assetList = append(assetList, &inventory.Asset{
-				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Name.Data)},
-				Name:        user.Name.Data,
-				Platform:    connection.GithubUserPlatform,
-				Labels:      make(map[string]string),
-				Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
-			})
-		}
-	}
 
 	return assetList, nil
 }
@@ -190,7 +179,7 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 		return nil, err
 	}
 	assetList = append(assetList, &inventory.Asset{
-		PlatformIds: []string{connection.NewGithubUserIdentifier(user.Name.Data)},
+		PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 		Name:        user.Name.Data,
 		Platform:    connection.GithubUserPlatform,
 		Labels:      make(map[string]string),
