@@ -69,23 +69,23 @@ type resourceRecording struct {
 	Fields   map[string]*llx.RawData
 }
 
-type nullRecording struct{}
+type NullRecording struct{}
 
-func (n nullRecording) Save() error {
+func (n NullRecording) Save() error {
 	return nil
 }
 
-func (n nullRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
+func (n NullRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 }
 
-func (n nullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (n NullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 }
 
-func (n nullRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
+func (n NullRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
 	return nil, false
 }
 
-func (n nullRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
+func (n NullRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
 	return nil, false
 }
 
@@ -123,7 +123,7 @@ func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 		// we don't want to record and we don't want to load a recording path...
 		// so there is nothing to do, so return nil
 		if !opts.DoRecord {
-			return nullRecording{}, nil
+			return NullRecording{}, nil
 		}
 		// for all remaining cases we do want to record and we want to check
 		// if the recording exists at the default location
