@@ -118,7 +118,7 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error
 
 func (a *mqlAzureSubscriptionMonitorService) diagnosticSettings() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	return getDiagnosticSettings("/subscriptions"+a.SubscriptionId.Data, a.MqlRuntime, conn)
+	return getDiagnosticSettings("/subscriptions/"+a.SubscriptionId.Data, a.MqlRuntime, conn)
 }
 
 func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{}, error) {
