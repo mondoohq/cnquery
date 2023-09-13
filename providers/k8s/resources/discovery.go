@@ -407,7 +407,7 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 		addMondooAssetLabels(labels, &deployment.obj.ObjectMeta, clusterId)
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
-				shared.NewWorkloadPlatformId(clusterId, "statefulset", deployment.Namespace.Data, deployment.Name.Data, deployment.Uid.Data),
+				shared.NewWorkloadPlatformId(clusterId, "deployment", deployment.Namespace.Data, deployment.Name.Data, deployment.Uid.Data),
 			},
 			Name: deployment.Namespace.Data + "/" + deployment.Name.Data,
 			Platform: &inventory.Platform{
