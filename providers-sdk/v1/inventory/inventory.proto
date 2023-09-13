@@ -73,6 +73,8 @@ message Asset {
 
   // optional url that can be used to access the asset via a browser
   string url = 35;
+
+  string kind_string = 36;
 }
 
 message Config {
