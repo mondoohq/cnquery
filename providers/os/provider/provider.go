@@ -116,7 +116,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		user = x.User.Username()
 		conf.Host = x.Hostname()
 		conf.Path = x.Path
-
 		if sPort := x.Port(); sPort != "" {
 			port, err = strconv.Atoi(x.Port())
 			if err != nil {
@@ -144,6 +143,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if x, ok := flags["path"]; ok && len(x.Value) != 0 {
 		conf.Path = string(x.Value)
 	}
+
+	conf.Credentials = append(conf.Credentials, &vault.Credential{Type: vault.CredentialType_ssh_agent, User: user})
 
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
