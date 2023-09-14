@@ -267,6 +267,12 @@ func (r *recording) reconnectResources() error {
 func (r *recording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
 	var err error
 	for k, v := range resource.Fields {
+		if v.Error != nil {
+			// in this case we have neither type information nor a value
+			resource.Fields[k].Error = v.Error
+			continue
+		}
+
 		typ := types.Type(v.Type)
 		resource.Fields[k].Value, err = tryReconnect(typ, v.Value, resource)
 		if err != nil {

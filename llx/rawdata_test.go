@@ -4,10 +4,13 @@
 package llx
 
 import (
+	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -169,6 +172,40 @@ func TestSuccess(t *testing.T) {
 			success, valid := o.data.IsSuccess()
 			assert.Equal(t, o.success, success)
 			assert.Equal(t, o.valid, valid)
+		})
+	}
+}
+
+func TestRawData_JSON(t *testing.T) {
+	tests := []*RawData{
+		NilData,
+		BoolTrue,
+		BoolFalse,
+		IntData(0),
+		IntData(123),
+		FloatData(0),
+		FloatData(1.23),
+		StringData(""),
+		StringData("b"),
+		RegexData(""),
+		RegexData("r"),
+		TimeData(time.Time{}),
+		// TODO: the raw comparison here does not come out right, because of nano time
+		// TimeData(now),
+		ArrayData([]interface{}{"a", "b"}, types.String),
+		MapData(map[string]interface{}{"a": "b"}, types.String),
+		{Error: errors.New("test")},
+	}
+
+	for i := range tests {
+		o := tests[i]
+		t.Run(o.String(), func(t *testing.T) {
+			out, err := json.Marshal(o)
+			require.NoError(t, err)
+			var res RawData
+			err = json.Unmarshal(out, &res)
+			require.NoError(t, err)
+			assert.Equal(t, o, &res)
 		})
 	}
 }

@@ -19,7 +19,7 @@ import (
 type RawData struct {
 	Type  types.Type  `json:"type"`
 	Value interface{} `json:"value"`
-	Error error       `json:"error,omitempty"`
+	Error error       `json:"-"`
 }
 
 // a helper structure exclusively used for json unmarshalling of errors
@@ -28,9 +28,28 @@ type errData struct {
 	Error string `json:"error"`
 }
 
+func (r *RawData) MarshalJSON() ([]byte, error) {
+	if r.Error != nil {
+		return json.Marshal(errData{Error: r.Error.Error()})
+	}
+
+	type rd2 RawData
+	return json.Marshal((*rd2)(r))
+}
+
 func (r *RawData) UnmarshalJSON(data []byte) error {
 	type tmp RawData
-	if err := json.Unmarshal(data, (*tmp)(r)); err == nil {
+	if err := json.Unmarshal(data, (*tmp)(r)); err == nil && r.Type != "" {
+		switch r.Type {
+		case types.Int:
+			r.Value = int64(r.Value.(float64))
+		case types.Time:
+			v, err := time.Parse(time.RFC3339, r.Value.(string))
+			if err != nil {
+				return errors.New("failed to parse time into raw data: " + err.Error())
+			}
+			r.Value = &v
+		}
 		return nil
 	}
 
