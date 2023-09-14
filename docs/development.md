@@ -52,6 +52,38 @@ make cnquery/generate
 
 This generates and updates all required files for the build. At this point you can `make cnquery/install` again as outlined above.
 
+## Develop with beta v9
+In v9 we introduced providers, which changes the development process a bit (and make it more lightweight and speedy!)
+
+To test a provider locally:
+- copy the resources json file `providers/TYPE/resources/TYPE.resources.json` to the `providers` top-level dir
+- add the provider to `providers/builtin.go`
+    ```
+    awsconf "go.mondoo.com/cnquery/providers/aws/config"
+    awsp "go.mondoo.com/cnquery/providers/aws/provider"
+
+    //go:embed aws.resources.json
+    var awsInfo []byte
+
+    awsconf.Config.ID: {
+        Runtime: &RunningProvider{
+        Name:     awsconf.Config.Name,
+        ID:       awsconf.Config.ID,
+        Plugin:   awsp.Init(),
+        Schema:   MustLoadSchema("aws", awsInfo),
+        isClosed: false,
+        },
+        Config: &awsconf.Config,
+    },
+    ```
+
+- note the local provider location in `go.mod`
+    `replace go.mondoo.com/cnquery/providers/aws => ./providers/aws`
+
+- build the provider after making changes: `make providers/build/aws`
+- run cnquery like you normally do (`go run apps/cnquery/cnquery.go shell aws`)
+- you should see it note that it is "using builtin provider for X"
+
 ## Contribute changes
 
 ### Mark PRs with emojis
