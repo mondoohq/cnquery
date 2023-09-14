@@ -461,6 +461,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	if owner.Login.Error != nil {
 		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
 		if strings.Contains(owner.Login.Error.Error(), "404") {
+			g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, owner.Login.Error
@@ -471,6 +472,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	if err != nil {
 		// NOTE it is possible that the branch does not have any protection rules, therefore we don't return an error
 		if strings.Contains(err.Error(), "Not Found") {
+			g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		// TODO: figure out if the client has the permission to fetch the protection rules
