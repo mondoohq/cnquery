@@ -105,6 +105,11 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
 			attachConnectorCmd(provider.Provider, &conn, cmd)
+			for k := range conn.Aliases {
+				copyConn := conn
+				copyConn.Name = conn.Aliases[k]
+				attachConnectorCmd(provider.Provider, &copyConn, cmd)
+			}
 		}
 	}
 
@@ -137,10 +142,11 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 
 func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
 	res := &cobra.Command{
-		Use:    connector.Use,
-		Short:  cmd.Action + connector.Short,
-		Long:   connector.Long,
-		PreRun: cmd.Command.PreRun,
+		Use:     connector.Use,
+		Short:   cmd.Action + connector.Short,
+		Long:    connector.Long,
+		Aliases: connector.Aliases,
+		PreRun:  cmd.Command.PreRun,
 	}
 
 	cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {

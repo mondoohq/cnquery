@@ -199,6 +199,7 @@ var Config = plugin.Provider{
 		},
 		{
 			Name:    "filesystem",
+			Aliases: []string{"fs"},
 			Use:     "filesystem [flags]",
 			Short:   "a mounted file system target.",
 			MinArgs: 0,
