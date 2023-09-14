@@ -63,3 +63,7 @@ vmknics
 Vtpm
 vulnerabilityassessmentsettings
 wil
+mgroup
+muser
+testutils
+nullgroup
