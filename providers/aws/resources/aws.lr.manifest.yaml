@@ -1109,6 +1109,7 @@ resources:
       name: {}
       policy: {}
       region: {}
+      runtime: {}
       tags: {}
       vpcConfig: {}
     is_private: true

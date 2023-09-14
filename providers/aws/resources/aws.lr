@@ -1438,6 +1438,8 @@ private aws.lambda.function @defaults("arn") {
   arn string
   // Name of the function
   name string
+  // Runtime environment for the function
+  runtime string
   // Concurrency limit for the function
   concurrency() int
   // Target ARN of the DeadLetterQueue config

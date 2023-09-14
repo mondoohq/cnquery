@@ -90,6 +90,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 						map[string]*llx.RawData{
 							"arn":          llx.StringData(convert.ToString(function.FunctionArn)),
 							"name":         llx.StringData(convert.ToString(function.FunctionName)),
+							"runtime":      llx.StringData(string(function.Runtime)),
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),
 							"region":       llx.StringData(regionVal),
