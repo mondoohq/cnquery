@@ -30,6 +30,12 @@
           "provider": "network",
           "connector": "",
           "version": ""
+        },
+        {
+          "url": "mock://",
+          "provider": "mockprovider",
+          "connector": "",
+          "version": ""
         }
       ],
       "resources": [

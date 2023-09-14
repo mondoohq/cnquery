@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/types"
 )
 
 var features cnquery.Features
@@ -150,6 +151,40 @@ func TestResourceAliases(t *testing.T) {
 				"__s": llx.NilData,
 				"__t": llx.BoolData(true),
 				"k6rlXoYpV48Qd19gKeNl+/IiPnkI5VNQBiqZBca3gDKsIRiLcpXQUlDv52x9sscIWiqOMpC7+x/aBpY0IUq0ww==": llx.StringData("/etc/ssh/sshd_config"),
+			},
+		},
+	})
+}
+
+func TestNullResources(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "muser.group",
+			ResultIndex: 0,
+			Expectation: &llx.MockResource{Name: "mgroup", ID: "group one"},
+		},
+		{
+			Code:        "muser.nullgroup",
+			ResultIndex: 0,
+			Expectation: nil,
+		},
+		{
+			Code:        "muser.groups",
+			ResultIndex: 0,
+			Expectation: []interface{}{
+				&llx.MockResource{Name: "mgroup", ID: "group one"},
+				nil,
+			},
+		},
+		{
+			Code:        "muser { nullgroup }",
+			ResultIndex: 0,
+			Expectation: map[string]interface{}{
+				"_":   &llx.RawData{Type: types.Resource("muser"), Value: &llx.MockResource{Name: "muser"}},
+				"__s": llx.NilData,
+				"__t": llx.BoolTrue,
+				"A8qiFMpyfjKsr3OzVu+L+43W0BvYXoCPiwM7zu8AFQkBYEBMvZfR73ZsdfIqswmN1n9Qs/Soc1D7qxJipXv/ZA==": llx.ResourceData(nil, "mgroup"),
 			},
 		},
 	})

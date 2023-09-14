@@ -24,6 +24,7 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/lr"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils/mockprovider"
 	"go.mondoo.com/cnquery/providers/mock"
 	networkconf "go.mondoo.com/cnquery/providers/network/config"
 	networkprovider "go.mondoo.com/cnquery/providers/network/provider"
@@ -150,7 +151,13 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 }
 
 func mustLoadSchema(provider string) *resources.Schema {
-	path := filepath.Join(TestutilsDir, "../../../providers/"+provider+"/resources/"+provider+".lr")
+	var path string
+	if provider == "mockprovider" {
+		path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
+	} else {
+		path = filepath.Join(TestutilsDir, "../../../providers/"+provider+"/resources/"+provider+".lr")
+	}
+
 	res, err := lr.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
 	if err != nil {
 		panic(err.Error())
@@ -168,6 +175,7 @@ func Local() llx.Runtime {
 	osSchema := mustLoadSchema("os")
 	coreSchema := mustLoadSchema("core")
 	networkSchema := mustLoadSchema("network")
+	mockSchema := mustLoadSchema("mockprovider")
 
 	runtime := providers.Coordinator.NewRuntime()
 
@@ -185,6 +193,14 @@ func Local() llx.Runtime {
 		ID:     networkconf.Config.ID,
 		Plugin: networkprovider.Init(),
 		Schema: networkSchema,
+	}
+	runtime.AddConnectedProvider(&providers.ConnectedProvider{Instance: provider})
+
+	provider = &providers.RunningProvider{
+		Name:   mockprovider.Config.Name,
+		ID:     mockprovider.Config.ID,
+		Plugin: mockprovider.Init(),
+		Schema: mockSchema,
 	}
 	runtime.AddConnectedProvider(&providers.ConnectedProvider{Instance: provider})
 
@@ -209,6 +225,10 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 		panic("failed to set recording: " + err.Error())
 	}
 	err = runtime.SetRecording(recording, networkconf.Config.ID, true, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetRecording(recording, mockprovider.Config.ID, true, true)
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
