@@ -489,6 +489,40 @@ func TestCompiler_Props(t *testing.T) {
 	})
 }
 
+func TestCompiler_Dict(t *testing.T) {
+	compileProps(t, "props.d.A.B", map[string]*llx.Primitive{
+		"d": {Type: string(types.Dict)},
+	}, func(res *llx.CodeBundle) {
+		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
+		assertFunction(t, "[]", &llx.Function{
+			Type:    string(types.Dict),
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.StringPrimitive("A")},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assertFunction(t, "[]", &llx.Function{
+			Type:    string(types.Dict),
+			Binding: (1 << 32) | 2,
+			Args:    []*llx.Primitive{llx.StringPrimitive("B")},
+		}, res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, map[string]string{"d": string(types.Dict)}, res.Props)
+	})
+
+	compileProps(t, "props.d.A-1", map[string]*llx.Primitive{
+		"d": {Type: string(types.Dict)},
+	}, func(res *llx.CodeBundle) {
+		assertProperty(t, "d", types.Dict, res.CodeV2.Blocks[0].Chunks[0])
+		assert.Equal(t, []uint64{(1 << 32) | 2, (1 << 32) | 3}, res.CodeV2.Entrypoints())
+		assertFunction(t, "[]", &llx.Function{
+			Type:    string(types.Dict),
+			Binding: (1 << 32) | 1,
+			Args:    []*llx.Primitive{llx.StringPrimitive("A")},
+		}, res.CodeV2.Blocks[0].Chunks[1])
+		assertPrimitive(t, llx.IntPrimitive(-1), res.CodeV2.Blocks[0].Chunks[2])
+		assert.Equal(t, map[string]string{"d": string(types.Dict)}, res.Props)
+	})
+}
+
 func TestCompiler_If(t *testing.T) {
 	compileT(t, "if ( true ) { return 1 } else if ( false ) { return 2 } else { return 3 }", func(res *llx.CodeBundle) {
 		assertFunction(t, "if", &llx.Function{

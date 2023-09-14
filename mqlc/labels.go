@@ -5,6 +5,7 @@ package mqlc
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
@@ -73,12 +74,20 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema llx.Schema) (string, er
 		case types.Int:
 			label = "[" + strconv.FormatInt(idx.(int64), 10) + "]"
 		case types.String:
-			label = "[" + idx.(string) + "]"
+			if chunk.Function.Type == string(types.Dict) && isAccessor(idx.(string)) {
+				label = idx.(string)
+			} else {
+				label = "[" + idx.(string) + "]"
+			}
 		default:
 			panic("cannot label array index of type " + arg.Type.Label())
 		}
 		if parentLabel != "" {
-			label = parentLabel + label
+			if label != "" && label[0] == '[' {
+				label = parentLabel + label
+			} else {
+				label = parentLabel + "." + label
+			}
 		}
 	case "{}", "${}":
 		label = parentLabel
@@ -99,6 +108,12 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema llx.Schema) (string, er
 
 	// TODO: figure out why this string includes control characters in the first place
 	return stripCtlAndExtFromUnicode(label), nil
+}
+
+var reAccessor = regexp.MustCompile(`^[\p{L}\d_]+$`)
+
+func isAccessor(s string) bool {
+	return reAccessor.MatchString(s)
 }
 
 // Unicode normalization and filtering, see http://blog.golang.org/normalization and

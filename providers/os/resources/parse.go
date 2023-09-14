@@ -114,7 +114,7 @@ func (s *mqlParseJson) id() (string, error) {
 }
 
 func (s *mqlParseJson) content(file *mqlFile) (string, error) {
-	c := file.Content
+	c := file.GetContent()
 	return c.Data, c.Error
 }
 
