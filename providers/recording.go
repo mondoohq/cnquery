@@ -174,7 +174,6 @@ func LoadRecordingFile(path string) (*recording, error) {
 
 	pres := &res
 	pres.refreshCache()
-	pres.fixTypes()
 
 	if err = pres.reconnectResources(); err != nil {
 		return nil, err
@@ -227,26 +226,6 @@ func (r *recording) refreshCache() {
 			if conn.id != 0 {
 				r.assets[conn.id] = asset
 			}
-		}
-	}
-}
-
-// json during the unmarshal step will load some things in a way that we
-// can't process. For example: numbers are loaded as float64, but can also
-// be int64's in MQL. This fixes the loaded types.
-func (r *recording) fixTypes() {
-	for i := range r.Assets {
-		asset := r.Assets[i]
-		for j := range asset.Resources {
-			fixResourceTypes(&asset.Resources[j])
-		}
-	}
-}
-
-func fixResourceTypes(r *resourceRecording) {
-	for _, v := range r.Fields {
-		if v.Type == types.Int {
-			v.Value = int64(v.Value.(float64))
 		}
 	}
 }
