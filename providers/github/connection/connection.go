@@ -60,7 +60,7 @@ func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 	// perform a quick call to verify the token's validity.
 	_, resp, err := client.Zen(context.Background())
 	if err != nil {
-		if resp.StatusCode == 401 {
+		if resp != nil && resp.StatusCode == 401 {
 			return nil, errors.New("invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable")
 		}
 		return nil, err

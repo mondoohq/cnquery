@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/github/connection"
 	"go.mondoo.com/cnquery/types"
@@ -23,62 +24,64 @@ func (g *mqlGithubOrganization) id() (string, error) {
 	return "github.organization/" + strconv.FormatInt(g.Id.Data, 10), nil
 }
 
-/*
-func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, GithubOrganization, error) {
-	if len(*args) > 2 {
+func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
-	gt, err := githubProvider(g.MqlRuntime.Connection)
+	conn := runtime.Connection.(*connection.GithubConnection)
+
+	org, err := conn.Organization()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	org, err := gt.Organization()
-	if err != nil {
-		return nil, nil, err
+	var name string
+	if x, ok := args["name"]; ok {
+		name = x.Value.(string)
 	}
+	if name == "" {
+		name = *org.Name
+	}
+	args["id"] = llx.IntData(convert.ToInt64(org.ID))
+	args["name"] = llx.StringData(name)
+	args["login"] = llx.StringDataPtr(org.Login)
+	args["nodeId"] = llx.StringDataPtr(org.NodeID)
+	args["company"] = llx.StringDataPtr(org.Company)
+	args["blog"] = llx.StringDataPtr(org.Blog)
+	args["location"] = llx.StringDataPtr(org.Location)
+	args["email"] = llx.StringDataPtr(org.Email)
+	args["twitterUsername"] = llx.StringDataPtr(org.TwitterUsername)
+	args["avatarUrl"] = llx.StringDataPtr(org.AvatarURL)
+	args["followers"] = llx.IntData(convert.ToInt64FromInt(org.Followers))
+	args["following"] = llx.IntData(convert.ToInt64FromInt(org.Following))
+	args["description"] = llx.StringDataPtr(org.Description)
+	args["createdAt"] = llx.TimeDataPtr(org.CreatedAt)
+	args["updatedAt"] = llx.TimeDataPtr(org.UpdatedAt)
+	args["totalPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.TotalPrivateRepos))
+	args["ownedPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.OwnedPrivateRepos))
+	args["privateGists"] = llx.IntData(convert.ToInt64FromInt(org.PrivateGists))
+	args["diskUsage"] = llx.IntData(convert.ToInt64FromInt(org.DiskUsage))
+	args["collaborators"] = llx.IntData(convert.ToInt64FromInt(org.Collaborators))
+	args["billingEmail"] = llx.StringDataPtr(org.BillingEmail)
 
-	(*args)["id"] = convert.ToInt64(org.ID)
-	(*args)["name"] = llx.StringDataPtr(org.Name)
-	(*args)["login"] = llx.StringDataPtr(org.Login)
-	(*args)["nodeId"] = llx.StringDataPtr(org.NodeID)
-	(*args)["company"] = llx.StringDataPtr(org.Company)
-	(*args)["blog"] = llx.StringDataPtr(org.Blog)
-	(*args)["location"] = llx.StringDataPtr(org.Location)
-	(*args)["email"] = llx.StringDataPtr(org.Email)
-	(*args)["twitterUsername"] = llx.StringDataPtr(org.TwitterUsername)
-	(*args)["avatarUrl"] = llx.StringDataPtr(org.AvatarURL)
-	(*args)["followers"] = convert.ToInt(org.Followers)
-	(*args)["following"] = convert.ToInt(org.Following)
-	(*args)["description"] = llx.StringDataPtr(org.Description)
-	(*args)["createdAt"] = org.CreatedAt
-	(*args)["updatedAt"] = org.UpdatedAt
-	(*args)["totalPrivateRepos"] = convert.ToInt(org.TotalPrivateRepos)
-	(*args)["ownedPrivateRepos"] = convert.ToInt(org.OwnedPrivateRepos)
-	(*args)["privateGists"] = convert.ToInt(org.PrivateGists)
-	(*args)["diskUsage"] = convert.ToInt(org.DiskUsage)
-	(*args)["collaborators"] = convert.ToInt(org.Collaborators)
-	(*args)["billingEmail"] = llx.StringDataPtr(org.BillingEmail)
+	plan, _ := convert.JsonToDict(org.Plan)
+	args["plan"] = llx.MapData(plan, types.Any)
 
-	plan, _ := core.JsonToDict(org.Plan)
-	(*args)["plan"] = plan
+	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToBool(org.TwoFactorRequirementEnabled))
+	args["isVerified"] = llx.BoolData(convert.ToBool(org.IsVerified))
 
-	(*args)["twoFactorRequirementEnabled"] = convert.ToBool(org.TwoFactorRequirementEnabled)
-	(*args)["isVerified"] = convert.ToBool(org.IsVerified)
-
-	(*args)["defaultRepositoryPermission"] = llx.StringDataPtr(org.DefaultRepoPermission)
-	(*args)["membersCanCreateRepositories"] = convert.ToBool(org.MembersCanCreateRepos)
-	(*args)["membersCanCreatePublicRepositories"] = convert.ToBool(org.MembersCanCreatePublicRepos)
-	(*args)["membersCanCreatePrivateRepositories"] = convert.ToBool(org.MembersCanCreatePrivateRepos)
-	(*args)["membersCanCreateInternalRepositories"] = convert.ToBool(org.MembersCanCreateInternalRepos)
-	(*args)["membersCanCreatePages"] = convert.ToBool(org.MembersCanCreatePages)
-	(*args)["membersCanCreatePublicPages"] = convert.ToBool(org.MembersCanCreatePublicPages)
-	(*args)["membersCanCreatePrivatePages"] = convert.ToBool(org.MembersCanCreatePrivateRepos)
+	args["defaultRepositoryPermission"] = llx.StringDataPtr(org.DefaultRepoPermission)
+	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateRepos))
+	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicRepos))
+	args["membersCanCreatePrivateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
+	args["membersCanCreateInternalRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateInternalRepos))
+	args["membersCanCreatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePages))
+	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicPages))
+	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
 
 	return args, nil, nil
 }
-*/
 
 func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
@@ -110,7 +113,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 	for i := range allMembers {
 		member := allMembers[i]
 
-		r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntData(convert.ToInt64(member.ID)),
 			"login": llx.StringDataPtr(member.Login),
 		})
@@ -369,7 +372,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 		for i := range allPackages {
 			p := allPackages[i]
 
-			owner, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			owner, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntData(p.GetOwner().GetID()),
 				"login": llx.StringData(p.GetOwner().GetLogin()),
 			})

@@ -38,9 +38,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
+	if len(req.Args) == 0 {
+		return nil, errors.New("invalid. must specify org, repo, or user")
+	}
+
 	conf := &inventory.Config{
-		Type:    req.Connector,
-		Options: map[string]string{},
+		Type:     req.Connector,
+		Options:  map[string]string{},
+		Discover: &inventory.Discovery{},
 	}
 
 	token := ""
@@ -55,6 +60,18 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	} else {
+		discoverTargets = []string{"auto"}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
+
 	// Do custom flag parsing here
 	switch req.Args[0] {
 	case "org":
@@ -64,7 +81,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	case "repo":
 		conf.Options["repository"] = req.Args[1]
 	default:
-		return nil, errors.New("invalid GitHub sub-command")
+		return nil, errors.New("invalid GitHub sub-command, supported are: org, user, or repo")
 	}
 
 	asset := inventory.Asset{
@@ -90,12 +107,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 	}
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
 
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inv,
 	}, nil
 }
 
@@ -168,7 +189,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 	if err != nil {
 		return err
 	}
-	// TODO: Add platform IDs
 	asset.PlatformIds = []string{id}
 	return nil
 }
@@ -258,4 +278,18 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 		return nil, errors.New(strings.Join(errs, ", "))
 	}
 	return &plugin.StoreRes{}, nil
+}
+
+func (s *Service) discover(conn *connection.GithubConnection) (*inventory.Inventory, error) {
+	if conn.Conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime, conn.Conf.Options)
 }

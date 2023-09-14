@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -23,7 +24,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		id = *repo.ID
 	}
 
-	owner, err := CreateResource(runtime, "github.user", map[string]*llx.RawData{
+	owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
 		"id":    llx.IntData(repo.GetOwner().GetID()),
 		"login": llx.StringData(repo.GetOwner().GetLogin()),
 	})
@@ -121,7 +122,6 @@ func (g *mqlGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-// func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, GithubRepository, error) {
 func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -169,7 +169,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 			return nil, nil, err
 		}
 
-		owner, err := CreateResource(runtime, "github.user", map[string]*llx.RawData{
+		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntData(repo.GetOwner().GetID()),
 			"login": llx.StringData(repo.GetOwner().GetLogin()),
 		})
@@ -241,7 +241,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	repoLicense, _, err := conn.Client().Repositories.License(context.Background(), ownerLogin, repoName)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
-			return nil, nil
+			return nil, errors.New("not found")
 		}
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		owner, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		owner, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(pr.User.ID),
 			"login": llx.StringDataPtr(pr.User.Login),
 		})
@@ -316,7 +316,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 
 		assigneesRes := []interface{}{}
 		for i := range pr.Assignees {
-			assignee, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			assignee, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(pr.Assignees[i].ID),
 				"login": llx.StringDataPtr(pr.Assignees[i].Login),
 			})
@@ -461,6 +461,7 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	if owner.Login.Error != nil {
 		log.Debug().Err(err).Msg("note: branch protection can only be accessed by admin users")
 		if strings.Contains(owner.Login.Error.Error(), "404") {
+			g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, owner.Login.Error
@@ -470,8 +471,12 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 	branchProtection, _, err := conn.Client().Repositories.GetBranchProtection(context.TODO(), ownerName, repoName, branchName)
 	if err != nil {
 		// NOTE it is possible that the branch does not have any protection rules, therefore we don't return an error
+		if strings.Contains(err.Error(), "Not Found") {
+			g.ProtectionRules.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		// TODO: figure out if the client has the permission to fetch the protection rules
-		return nil, nil
+		return nil, err
 	}
 
 	rsc, err := convert.JsonToDict(branchProtection.RequiredStatusChecks)
@@ -573,7 +578,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	}
 
 	if rc.Author != nil {
-		githubAuthor, err = CreateResource(runtime, "github.user", map[string]*llx.RawData{
+		githubAuthor, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(rc.Author.ID),
 			"login": llx.StringDataPtr(rc.Author.Login),
 		})
@@ -583,7 +588,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 	}
 	var githubCommitter interface{}
 	if rc.Committer != nil {
-		githubCommitter, err = CreateResource(runtime, "github.user", map[string]*llx.RawData{
+		githubCommitter, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(rc.Committer.ID),
 			"login": llx.StringDataPtr(rc.Committer.Login),
 		})
@@ -706,7 +711,7 @@ func (g *mqlGithubMergeRequest) reviews() ([]interface{}, error) {
 		r := allReviews[i]
 		var user interface{}
 		if r.User != nil {
-			user, err = CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			user, err = NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(r.User.ID),
 				"login": llx.StringDataPtr(r.User.Login),
 			})
@@ -815,7 +820,7 @@ func (g *mqlGithubRepository) contributors() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for i := range allContributors {
-		mqlUser, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(allContributors[i].ID),
 			"login": llx.StringDataPtr(allContributors[i].Login),
 		})
@@ -864,7 +869,7 @@ func (g *mqlGithubRepository) collaborators() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allContributors {
 		contributor := allContributors[i]
-		mqlUser, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		mqlUser, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(contributor.ID),
 			"login": llx.StringDataPtr(contributor.Login),
 		})
@@ -1367,7 +1372,7 @@ func (g *mqlGithubRepository) stargazers() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allStargazers {
 		stargazer := allStargazers[i]
-		r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(stargazer.User.ID),
 			"login": llx.StringDataPtr(stargazer.User.Login),
 		})
@@ -1441,7 +1446,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 
 		var assignees []interface{}
 		for _, assignee := range issue.Assignees {
-			r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(assignee.ID),
 				"login": llx.StringDataPtr(assignee.Login),
 			})
@@ -1453,7 +1458,7 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 
 		var closedBy interface{}
 		if issue.GetClosedBy() != nil {
-			r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 				"id":    llx.IntDataPtr(issue.GetClosedBy().ID),
 				"login": llx.StringDataPtr(issue.GetClosedBy().Login),
 			})
