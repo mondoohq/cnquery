@@ -1,0 +1,16 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/cnquery/providers-sdk/v1/testutils/mockprovider"
+option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/testutils/mockprovider"
+
+muser {
+  name string
+  group() mgroup
+  nullgroup() mgroup
+  groups() []mgroup
+}
+
+mgroup {
+  name string
+}

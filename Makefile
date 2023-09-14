@@ -151,7 +151,8 @@ providers/lr:
 
 .PHONY: providers/build
 # Note we need \ to escape the target line into multiple lines
-providers/build: providers/build/core \
+providers/build: providers/build/mock \
+	providers/build/core \
 	providers/build/network \
 	providers/build/os \
 	providers/build/ipmi \
@@ -172,6 +173,9 @@ providers/build: providers/build/core \
 	providers/build/azure \
 	providers/build/ms365 \
 	providers/build/aws
+
+providers/build/mock: providers/lr
+	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)

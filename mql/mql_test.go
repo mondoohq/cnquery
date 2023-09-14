@@ -154,3 +154,14 @@ func TestResourceAliases(t *testing.T) {
 		},
 	})
 }
+
+func TestNullResources(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "muser.group",
+			ResultIndex: 0,
+			Expectation: &llx.MockResource{Name: "mgroup", ID: "group one"},
+		},
+	})
+}
