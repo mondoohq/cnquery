@@ -15,6 +15,8 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn"
+	awsec2ebstypes "go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn/types"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
@@ -682,6 +684,40 @@ func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asse
 			},
 		},
 		Options: opts,
+	}}
+	return asset
+}
+
+func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var target, targetType string
+	if len(args) >= 3 {
+		if args[0] == "ec2" && args[1] == "ebs" {
+			// parse for target type: instance, volume, snapshot
+			switch args[2] {
+			case awsec2ebstypes.EBSTargetVolume:
+				target = args[3]
+				targetType = awsec2ebstypes.EBSTargetVolume
+			case awsec2ebstypes.EBSTargetSnapshot:
+				target = args[3]
+				targetType = awsec2ebstypes.EBSTargetSnapshot
+			default:
+				// in the case of an instance target, this is the instance id
+				target = args[2]
+				targetType = awsec2ebstypes.EBSTargetInstance
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	opts["type"] = targetType
+	opts["id"] = target
+	asset.Name = target
+	asset.Connections = []*inventory.Config{{
+		Backend:  string(awsec2ebsconn.EBSConnectionType),
+		Type:     string(awsec2ebsconn.EBSConnectionType),
+		Host:     target,
+		Insecure: true,
+		Runtime:  "aws-ebs",
+		Options:  opts,
 	}}
 	return asset
 }

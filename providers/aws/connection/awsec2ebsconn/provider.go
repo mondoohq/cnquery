@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/snapshot"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 const (
@@ -28,6 +29,8 @@ const (
 )
 
 type AwsEbsConnection struct {
+	id                  uint32
+	asset               *inventory.Asset
 	FsProvider          *connection.FileSystemConnection
 	scannerRegionEc2svc *ec2.Client
 	targetRegionEc2svc  *ec2.Client
@@ -40,17 +43,13 @@ type AwsEbsConnection struct {
 	volumeMounter       *snapshot.VolumeMounter
 }
 
-/*
-TODOS
-// TODO: validate the expected permissions here
-// TODO allow custom aws config
-
-*/
-
 // New creates a new aws-ec2-ebs provider
 // It expects to be running on an ec2 instance with ssm iam role and
 // permissions for copy snapshot, create snapshot, create volume, attach volume, detach volume
 func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*AwsEbsConnection, error) {
+	log.Debug().Msg("new aws ebs connection")
+	// TODO: validate the expected permissions here
+	// TODO: allow custom aws config
 	// 1. validate; load
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
@@ -79,7 +78,6 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		opts:   conf.Options,
 		target: awsec2ebstypes.TargetInfo{
 			PlatformId: conf.PlatformId,
-			AccountId:  conf.Options["account"],
 			Region:     conf.Options["region"],
 			Id:         conf.Options["id"],
 		},
@@ -93,6 +91,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		targetRegionEc2svc:  targetSvc,
 		scannerRegionEc2svc: scannerSvc,
 		volumeMounter:       volumeMounter,
+		asset:               asset,
 	}
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
 
@@ -145,23 +144,26 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		Backend:    "fs",
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
-	}, nil) // TODO ASSET..?
+	}, asset)
 	if err != nil {
 		return nil, err
 	}
 	c.FsProvider = fsConn
+	var ok bool
+	asset.Platform, ok = detector.DetectOS(fsConn)
+	if !ok {
+		return nil, errors.New("failed to detect OS")
+	}
+	asset.Id = conf.Type
+	asset.Platform.Runtime = c.Runtime()
 	return c, nil
-}
-
-func (c *AwsEbsConnection) RunCommand(command string) (*shared.Command, error) {
-	return nil, errors.New("RunCommand not implemented")
 }
 
 func (c *AwsEbsConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	return shared.FileInfoDetails{}, errors.New("FileInfo not implemented")
 }
 
-func (c *AwsEbsConnection) FS() afero.Fs {
+func (c *AwsEbsConnection) FileSystem() afero.Fs {
 	return c.FsProvider.FileSystem()
 }
 
@@ -196,16 +198,6 @@ func (c *AwsEbsConnection) Close() {
 	if err != nil {
 		log.Error().Err(err).Msg("unable to remove dir")
 	}
-}
-
-// func (c *AwsEbsConnection) Capabilities() providers.Capabilities {
-// 	return providers.Capabilities{
-// 		providers.Capability_Aws_Ebs,
-// 	}
-// }
-
-func (c *AwsEbsConnection) Runtime() string {
-	return "aws-ec2-ebs"
 }
 
 func RawInstanceInfo(cfg aws.Config) (*imds.InstanceIdentityDocument, error) {
@@ -295,4 +287,40 @@ func ParseEbsTransportUrl(path string) (*awsec2ebstypes.EbsTransportTarget, erro
 	}
 
 	return &awsec2ebstypes.EbsTransportTarget{Account: keyValues[1], Region: keyValues[3], Id: keyValues[5], Type: itemType}, nil
+}
+
+func (c *AwsEbsConnection) Name() string {
+	return "aws ebs"
+}
+
+func (c *AwsEbsConnection) ID() uint32 {
+	return c.id
+}
+
+func (c *AwsEbsConnection) Asset() *inventory.Asset {
+	return c.asset
+}
+
+func (c *AwsEbsConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_RunCommand // not true, update to nothing
+}
+
+func (c *AwsEbsConnection) RunCommand(command string) (*shared.Command, error) {
+	return nil, errors.New("unimplemented")
+}
+
+func (c *AwsEbsConnection) Type() shared.ConnectionType {
+	return EBSConnectionType
+}
+
+func (c *AwsEbsConnection) Runtime() string {
+	return "aws-ebs"
+}
+
+func (c *AwsEbsConnection) PlatformInfo() *inventory.Platform {
+	return &inventory.Platform{
+		Name:    "aws-ebs",
+		Title:   "aws-ebs",
+		Runtime: c.Runtime(),
+	}
 }
