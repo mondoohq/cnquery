@@ -5,6 +5,8 @@ asns
 Auths
 autoaccept
 autoscaler
+awsconf
+awsp
 backupconfiguration
 bigquery
 BLOCKLIST
