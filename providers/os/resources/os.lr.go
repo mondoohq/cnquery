@@ -59,19 +59,19 @@ func init() {
 			Create: createMachine,
 		},
 		"machine.bios": {
-			// to override args, implement: initMachineBios(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMachineBios,
 			Create: createMachineBios,
 		},
 		"machine.system": {
-			// to override args, implement: initMachineSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMachineSystem,
 			Create: createMachineSystem,
 		},
 		"machine.baseboard": {
-			// to override args, implement: initMachineBaseboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMachineBaseboard,
 			Create: createMachineBaseboard,
 		},
 		"machine.chassis": {
-			// to override args, implement: initMachineChassis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initMachineChassis,
 			Create: createMachineChassis,
 		},
 		"os": {
@@ -4770,7 +4770,7 @@ func (c *mqlAuditCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
 type mqlMachine struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMachineInternal it will be used here
+	mqlMachineInternal
 }
 
 // createMachine creates a new instance of this resource
