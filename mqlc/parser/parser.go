@@ -852,6 +852,10 @@ func (p *parser) parseExpression() (*Expression, error) {
 		return p.flushExpression(), err
 	}
 
+	for p.token.Value == ";" {
+		p.nextToken()
+	}
+
 	return &res, err
 }
 

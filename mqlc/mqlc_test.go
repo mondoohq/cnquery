@@ -35,15 +35,14 @@ func init() {
 
 func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f func(res *llx.CodeBundle)) {
 	res, err := mqlc.Compile(s, props, conf)
-	assert.Nil(t, err)
-	assert.NotNil(t, res)
+	require.Nil(t, err)
+	require.NotNil(t, res)
+	require.NotNil(t, res.CodeV2)
 	assert.NoError(t, mqlc.Invariants.Check(res))
-	if res != nil && res.CodeV2 != nil {
-		assert.Nil(t, res.Suggestions)
-		if assert.NotEmpty(t, res.CodeV2.Blocks) {
-			f(res)
-		}
-	}
+
+	assert.Nil(t, res.Suggestions)
+	require.NotEmpty(t, res.CodeV2.Blocks)
+	f(res)
 }
 
 func compileT(t *testing.T, s string, f func(res *llx.CodeBundle)) {
@@ -210,6 +209,30 @@ func TestCompiler_Buggy(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestCompiler_Semicolon(t *testing.T) {
+	compileT(t, "mondoo.version;mondoo.build", func(res *llx.CodeBundle) {
+		require.Len(t, res.CodeV2.Blocks, 1)
+		require.Len(t, res.CodeV2.Blocks[0].Chunks, 4)
+		assertFunction(t, "version",
+			&llx.Function{Binding: (1 << 32) | 1, Type: string(types.String)},
+			res.CodeV2.Blocks[0].Chunks[1])
+		assertFunction(t, "build",
+			&llx.Function{Binding: (1 << 32) | 3, Type: string(types.String)},
+			res.CodeV2.Blocks[0].Chunks[3])
+	})
+
+	compileT(t, "mondoo{version;build}", func(res *llx.CodeBundle) {
+		require.Len(t, res.CodeV2.Blocks, 2)
+		require.Len(t, res.CodeV2.Blocks[1].Chunks, 3)
+		assertFunction(t, "version",
+			&llx.Function{Binding: (2 << 32) | 1, Type: string(types.String)},
+			res.CodeV2.Blocks[1].Chunks[1])
+		assertFunction(t, "build",
+			&llx.Function{Binding: (2 << 32) | 1, Type: string(types.String)},
+			res.CodeV2.Blocks[1].Chunks[2])
+	})
 }
 
 func TestCompiler_Simple(t *testing.T) {
