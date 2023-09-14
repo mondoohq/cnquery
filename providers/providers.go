@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	osfs "os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -566,4 +567,20 @@ func (p Providers) Add(nu *Provider) {
 	if nu != nil {
 		p[nu.ID] = nu
 	}
+}
+
+func MustLoadSchema(name string, data []byte) *resources.Schema {
+	var res resources.Schema
+	if err := json.Unmarshal(data, &res); err != nil {
+		panic("failed to embed schema for " + name)
+	}
+	return &res
+}
+
+func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
+	raw, err := osfs.ReadFile(path)
+	if err != nil {
+		panic("cannot read schema file: " + path)
+	}
+	return MustLoadSchema(name, raw)
 }

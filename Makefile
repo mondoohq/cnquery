@@ -135,7 +135,7 @@ define gomodtidyProvider
 endef
 
 .PHONY: providers
-providers: providers/proto providers/build
+providers: providers/proto providers/config providers/build
 
 .PHONY: providers/proto
 providers/proto:
@@ -144,6 +144,11 @@ providers/proto:
 	go generate ./providers-sdk/v1/resources
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
+
+.PHONY: providers/config
+providers/config:
+	go run ./providers-sdk/v1/util/configure/configure.go -f providers.yaml -o providers/builtin.go
+	gofmt -w providers/builtin.go
 
 .PHONY: providers/lr
 providers/lr:
