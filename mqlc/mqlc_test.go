@@ -763,6 +763,11 @@ func TestCompiler_Switch(t *testing.T) {
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assert.Empty(t, res.CodeV2.Datapoints())
 	})
+
+	compileT(t, "switch { case 3 > 2: 123; default: 321 }", func(res *llx.CodeBundle) {
+		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
+	})
+
 	t.Run("test types fall back to any", func(t *testing.T) {
 		compileT(t, "switch ( 1 ) { case _ > 0: true; case _ < 0: 'test'; default: false }", func(res *llx.CodeBundle) {
 			assert.Equal(t, types.Any, res.CodeV2.Blocks[0].Chunks[3].Type())

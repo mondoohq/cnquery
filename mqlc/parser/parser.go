@@ -652,6 +652,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 							},
 						},
 					}
+
 					for {
 						exp, err := p.parseExpression()
 						if err != nil {
@@ -661,16 +662,15 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 							break
 						}
 						block.Operand.Block = append(block.Operand.Block, exp)
+						if p.token.Value == "case" || p.token.Value == "default" {
+							break
+						}
 					}
 
 					if len(block.Operand.Block) == 0 {
 						return nil, false, errors.New("expected block following `" + ident + "` statement")
 					}
 					res.Block = append(res.Block, &block)
-
-					for p.token.Value == ";" {
-						p.nextToken()
-					}
 				}
 
 				p.nextToken()
