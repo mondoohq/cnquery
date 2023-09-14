@@ -2112,6 +2112,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetName()).ToDataRes(types.String)
 	},
+	"aws.lambda.function.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetRuntime()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.concurrency": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetConcurrency()).ToDataRes(types.Int)
 	},
@@ -5007,6 +5010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.lambda.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.concurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13560,6 +13567,7 @@ type mqlAwsLambdaFunction struct {
 	// optional: if you define mqlAwsLambdaFunctionInternal it will be used here
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
+	Runtime plugin.TValue[string]
 	Concurrency plugin.TValue[int64]
 	DlqTargetArn plugin.TValue[string]
 	Policy plugin.TValue[interface{}]
@@ -13611,6 +13619,10 @@ func (c *mqlAwsLambdaFunction) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsLambdaFunction) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsLambdaFunction) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
 }
 
 func (c *mqlAwsLambdaFunction) GetConcurrency() *plugin.TValue[int64] {
