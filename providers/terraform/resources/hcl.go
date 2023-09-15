@@ -172,25 +172,19 @@ func newMqlHclBlock(runtime *plugin.Runtime, block *hcl.Block, file *hcl.File) (
 
 	snippet := extractHclCodeSnippet(file, block.TypeRange)
 
-	r, err := CreateResource(runtime, "terraform.block", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "terraform.block", map[string]*llx.RawData{
 		"type":    llx.StringData(block.Type),
 		"labels":  llx.ArrayData(llx.TArr2Raw(block.Labels), types.String),
 		"start":   llx.ResourceData(start, "terraform.fileposition"),
 		"end":     llx.ResourceData(end, "terraform.fileposition"),
 		"snippet": llx.StringData(snippet),
 	})
-
-	/*
-		if err == nil {
-			r.MqlResource().Cache.Store("_hclblock", &resources.CacheEntry{
-				Data: block,
-			})
-			r.MqlResource().Cache.Store("_hclfile", &resources.CacheEntry{
-				Data: file,
-			})
-		}
-	*/
-
+	if err != nil {
+		return nil, err
+	}
+	r := res.(*mqlTerraformBlock)
+	r.block = plugin.TValue[*hcl.Block]{State: plugin.StateIsSet, Data: block}
+	r.cachedFile = plugin.TValue[*hcl.File]{State: plugin.StateIsSet, Data: file}
 	return r, err
 }
 
