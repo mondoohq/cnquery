@@ -242,10 +242,16 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case LocalConnectionType:
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
+		fingerprint, _ := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		asset.Name = fingerprint.Name
+		asset.PlatformIds = fingerprint.PlatformIDs
 
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
+		fingerprint, _ := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
+		asset.Name = fingerprint.Name
+		asset.PlatformIds = fingerprint.PlatformIDs
 
 	case MockConnectionType:
 		s.lastConnectionID++
