@@ -15,8 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	"go.mondoo.com/cnquery/providers/core/resources/versions/semver"
 )
+
+var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator = coordinator{
 	Running: []*RunningProvider{},
@@ -26,6 +29,11 @@ type coordinator struct {
 	Providers Providers
 	Running   []*RunningProvider
 	mutex     sync.Mutex
+}
+
+type builtinProvider struct {
+	Runtime *RunningProvider
+	Config  *pp.Provider
 }
 
 type RunningProvider struct {

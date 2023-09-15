@@ -1,0 +1,15 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+# Configure builtin providers for the dev environment.
+# This only covers additional builtin providers, ie those
+# that are normally not builtin. Things like `core` are
+# always builtin.
+#
+# Builtin providers are great testing. Example: if you
+# review a PR where someone changed the `os` provider,
+# you'll want to set it as builtin for fast testing.
+# In this case it will be pulled from your local repo
+# instead of using the pre-installed provider in 
+# your OS (like ~/.mondoo/providers/os).
+builtin: []
