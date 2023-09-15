@@ -38,7 +38,7 @@ func PrettyJSON(obj interface{}) string {
 	return string(s)
 }
 
-// DebugDumpJSON will write a JSON dump if the Debug mode is active and
+// DebugDumpJSON will write a JSON dump if the Debug or Trace mode is active and
 // the DumpLocal prefix is defined.
 func DebugDumpJSON(name string, obj interface{}) {
 	if !log.Debug().Enabled() {
@@ -47,6 +47,8 @@ func DebugDumpJSON(name string, obj interface{}) {
 
 	if DumpLocal == "" {
 		if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
+			DumpLocal = "./mondoo-debug-"
+		} else if val, ok := os.LookupEnv("TRACE"); ok && (val == "1" || val == "true") {
 			DumpLocal = "./mondoo-debug-"
 		} else {
 			return
@@ -64,7 +66,7 @@ func DebugDumpJSON(name string, obj interface{}) {
 	}
 }
 
-// DebugDumpYAML will write a YAML dump if the Debug mode is active and
+// DebugDumpYAML will write a YAML dump if the Debug or Trace mode is active and
 // the DumpLocal prefix is defined.
 func DebugDumpYAML(name string, obj interface{}) {
 	if !log.Debug().Enabled() {
@@ -73,6 +75,8 @@ func DebugDumpYAML(name string, obj interface{}) {
 
 	if DumpLocal == "" {
 		if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
+			DumpLocal = "./mondoo-debug-"
+		} else if val, ok := os.LookupEnv("TRACE"); ok && (val == "1" || val == "true") {
 			DumpLocal = "./mondoo-debug-"
 		} else {
 			return
