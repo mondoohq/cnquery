@@ -60,34 +60,16 @@ In v9 we introduced providers, which split up the providers into individual go m
 
 To debug a provider locally with cnquery:
 
-1. Copy the resources json file `providers/TYPE/resources/TYPE.resources.json` to the `providers` top-level dir
-2. Add the provider to `providers/builtin.go`
-
+1. Modify the `providers.yaml` in the root folder and add providers you want to test to the `builtin` field. Example:
+   ```yaml
+   builtin: [aws]
    ```
-   awsconf "go.mondoo.com/cnquery/providers/aws/config"
-   awsp "go.mondoo.com/cnquery/providers/aws/provider"
-
-   //go:embed aws.resources.json
-   var awsInfo []byte
-
-   awsconf.Config.ID: {
-       Runtime: &RunningProvider{
-       Name:     awsconf.Config.Name,
-       ID:       awsconf.Config.ID,
-       Plugin:   awsp.Init(),
-       Schema:   MustLoadSchema("aws", awsInfo),
-       isClosed: false,
-       },
-       Config: &awsconf.Config,
-   },
+2. Build and upate everything via:
+   ```bash
+   make providers/config
    ```
-
-3. Change the local provider location in `go.mod`
-
-   `replace go.mondoo.com/cnquery/providers/aws => ./providers/aws`
-
-4. Build the provider after making changes: `make providers/build/aws`
-5. Run cnquery like you normally do (`go run apps/cnquery/cnquery.go shell aws`). You should see it note that it is "using builtin provider for X"
+3. You can now use and debug your code. For example `make cnquery/install` or start a debugger.
+4. Once done, please remember to restore `providers.yaml` (or just set back: `builtin: []`) and re-run `make providers/config`.
 
 ## Contribute changes
 
