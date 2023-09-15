@@ -242,10 +242,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case LocalConnectionType:
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+		}
 
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+		}
 
 	case MockConnectionType:
 		s.lastConnectionID++
@@ -254,10 +264,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case TarConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+		}
 
 	case DockerSnapshotConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+		}
 
 	case VagrantConnectionType:
 		s.lastConnectionID++
@@ -291,6 +311,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case FilesystemConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+		}
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

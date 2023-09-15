@@ -110,3 +110,18 @@ func ParseMondooAccountID(path string) (string, error) {
 func IsValidMondooAccountId(path string) bool {
 	return VALID_MONDOO_ACCOUNT_ID.MatchString(path)
 }
+
+func ParseEc2PlatformID(uri string) *MondooInstanceId {
+	// aws://ec2/v1/accounts/{account}/regions/{region}/instances/{instanceid}
+	awsec2 := regexp.MustCompile(`^\/\/platformid.api.mondoo.app\/runtime\/aws\/ec2\/v1\/accounts\/(.*)\/regions\/(.*)\/instances\/(.*)$`)
+	m := awsec2.FindStringSubmatch(uri)
+	if len(m) == 0 {
+		return nil
+	}
+
+	return &MondooInstanceId{
+		Account: m[1],
+		Region:  m[2],
+		Id:      m[3],
+	}
+}

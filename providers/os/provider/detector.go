@@ -14,29 +14,16 @@ import (
 	"go.mondoo.com/cnquery/providers/os/id/azure"
 	"go.mondoo.com/cnquery/providers/os/id/gcp"
 	"go.mondoo.com/cnquery/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/providers/os/id/ids"
 	"go.mondoo.com/cnquery/providers/os/id/machineid"
 	"go.mondoo.com/cnquery/providers/os/id/sshhostkey"
 )
 
-const (
-	IdDetector_Hostname    = "hostname"
-	IdDetector_MachineID   = "machine-id"
-	IdDetector_CloudDetect = "cloud-detect"
-	IdDetector_SshHostkey  = "ssh-host-key"
-
-	// FIXME: DEPRECATED, remove in v9.0 vv
-	// this is now cloud-detect
-	IdDetector_AwsEc2 = "aws-ec2"
-	// ^^
-
-	// IdDetector_PlatformID = "transport-platform-id" // TODO: how does this work?
-)
-
 var IdDetectors = []string{
-	IdDetector_Hostname,
-	IdDetector_MachineID,
-	IdDetector_CloudDetect,
-	IdDetector_SshHostkey,
+	ids.IdDetector_Hostname,
+	ids.IdDetector_MachineID,
+	ids.IdDetector_CloudDetect,
+	ids.IdDetector_SshHostkey,
 }
 
 func hasDetector(detectors map[string]struct{}, any ...string) bool {
@@ -71,13 +58,13 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		detectors = mapDetectors(asset.IdDetector)
 	}
 
-	if hasDetector(detectors, IdDetector_Hostname) {
+	if hasDetector(detectors, ids.IdDetector_Hostname) {
 		if id, ok := hostname.Hostname(conn, asset.Platform); ok {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 		}
 	}
 
-	if hasDetector(detectors, IdDetector_CloudDetect, IdDetector_AwsEc2) {
+	if hasDetector(detectors, ids.IdDetector_CloudDetect, ids.IdDetector_AwsEc2) {
 		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.Platform.Name = name
@@ -97,7 +84,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		}
 	}
 
-	if hasDetector(detectors, IdDetector_SshHostkey) {
+	if hasDetector(detectors, ids.IdDetector_SshHostkey) {
 		ids, err := sshhostkey.Detect(conn, asset.Platform)
 		if err != nil {
 			log.Warn().Err(err).Msg("failure in ssh hostkey detector")
@@ -106,7 +93,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		}
 	}
 
-	if hasDetector(detectors, IdDetector_MachineID) {
+	if hasDetector(detectors, ids.IdDetector_MachineID) {
 		id, hostErr := machineid.MachineId(conn, asset.Platform)
 		if hostErr != nil {
 			log.Warn().Err(hostErr).Msg("failure in machineID detector")
