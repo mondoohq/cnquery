@@ -64,7 +64,7 @@ To debug a provider locally with cnquery:
    ```yaml
    builtin: [aws]
    ```
-2. Build and upate everything via:
+2. Build and update everything via:
    ```bash
    make providers/config
    ```
