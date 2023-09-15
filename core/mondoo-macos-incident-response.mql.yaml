@@ -13,7 +13,7 @@ packs:
     queries:
       - uid: mondoo-macos-incident-response-platform-info
         title: Retrieve platform information
-        mql: platform { title release arch }
+        mql: asset { platform title version arch }
       - uid: mondoo-macos-incident-response-regular-users
         title: Retrieve regular users
         mql: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ )
