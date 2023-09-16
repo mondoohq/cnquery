@@ -135,6 +135,9 @@ var docsYamlCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("could not marshal docs")
 		}
 
+		// add license header
+		data = append([]byte("# Copyright (c) Mondoo, Inc.\n# SPDX-License-Identifier: BUSL-1.1\n\n"), data...)
+
 		log.Info().Str("file", filepath).Msg("write file")
 		err = os.WriteFile(filepath, data, 0o700)
 		if err != nil {

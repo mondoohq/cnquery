@@ -64,7 +64,10 @@ func NewOpcuaConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
 	}
 
-	c := opcua.NewClient(endpoint, opts...)
+	c, err := opcua.NewClient(endpoint, opts...)
+	if err != nil {
+		return nil, err
+	}
 	if err := c.Connect(ctx); err != nil {
 		return nil, err
 	}
