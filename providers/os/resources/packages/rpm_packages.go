@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	_ "github.com/glebarez/go-sqlite" // required for sqlite3 rpm support
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
