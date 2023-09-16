@@ -109,7 +109,7 @@ jobs:
 
       - name: Run GoReleaser (w/ Docker Release)
         if: ${{ ! steps.skip-publish.outputs.skip-publish }}
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
@@ -126,7 +126,7 @@ jobs:
 
       - name: Run GoReleaser (w/o Docker Release)
         if: ${{ steps.skip-publish.outputs.skip-publish == 'true' }}
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
