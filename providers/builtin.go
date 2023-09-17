@@ -15,15 +15,10 @@ import (
 
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
-	// osconf "go.mondoo.com/cnquery/providers/os/config"
-	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 //go:embed core/resources/core.resources.json
 var coreInfo []byte
-
-// //go:embed os/resources/os.resources.json
-// var osInfo []byte
 
 var builtinProviders = map[string]*builtinProvider{
 	coreconf.Config.ID: {
@@ -45,14 +40,4 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: mockProvider.Provider,
 	},
-	// osconf.Config.ID: {
-	// 	Runtime: &RunningProvider{
-	// 		Name:     osconf.Config.Name,
-	// 		ID:       osconf.Config.ID,
-	// 		Plugin:   os.Init(),
-	// 		Schema:   MustLoadSchema("os", osInfo),
-	// 		isClosed: false,
-	// 	},
-	// 	Config: &osconf.Config,
-	// },
 }

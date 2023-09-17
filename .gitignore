@@ -10,6 +10,7 @@ mondoo-test-secret-key
 gha-creds-*.json
 /tools
 # primarily used to ignore all dist files built for providers
+providers/*.resources.json
 providers/*/dist
 providers/*/resources/*.resources.json
 providers/*/resources/*.manifest.json
