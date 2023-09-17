@@ -85,6 +85,7 @@ func (l *mqlAwsLambda) getFunctions(provider *aws_provider.Provider) []*jobpool.
 					mqlFunc, err := l.MotorRuntime.CreateResource("aws.lambda.function",
 						"arn", core.ToString(function.FunctionArn),
 						"name", core.ToString(function.FunctionName),
+						"runtime", string(function.Runtime),
 						"dlqTargetArn", dlqTarget,
 						"vpcConfig", vpcConfigJson,
 						"region", regionVal,
