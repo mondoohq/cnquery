@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 var (
@@ -44,7 +46,7 @@ func New(tc *providers.Config) (*Provider, error) {
 	var closer func()
 	path := tc.Options["path"]
 	if strings.HasPrefix(path, "git+https://") || strings.HasPrefix(path, "git+ssh://") {
-		path, closer, err = processGitForTerraform(path)
+		path, closer, err = processGitForTerraform(path, tc.Credentials)
 		if err != nil {
 			return nil, err
 		}
@@ -239,19 +241,54 @@ func (p *Provider) Plan() (*Plan, error) {
 
 var reGitHttps = regexp.MustCompile(`git\+https://([^/]+)/(.*)`)
 
-func processGitForTerraform(url string) (string, func(), error) {
+// gitCloneUrl returns a git clone url from a git+https url
+// If a token is provided, it will be used to clone the repo
+// gitlab: git clone https://oauth2:ACCESS_TOKEN@somegitlab.com/vendor/package.git
+func gitCloneUrl(url string, credentials []*vault.Credential) (string, error) {
+
+	user := ""
+	token := ""
+	for i := range credentials {
+		cred := credentials[i]
+		if cred.Type == vault.CredentialType_password {
+			user = cred.User
+			token = string(cred.Secret)
+			if token == "" && cred.Password != "" {
+				token = string(cred.Password)
+			}
+		}
+	}
+
 	m := reGitHttps.FindStringSubmatch(url)
 	if len(m) == 3 {
 		if strings.Contains(m[1], ":") {
-			return "", nil, errors.New("url cannot contain a port! (" + m[1] + ")")
+			return "", errors.New("url cannot contain a port! (" + m[1] + ")")
 		}
-		url = "git@" + m[1] + ":" + m[2]
+
+		if user != "" && token != "" {
+			// e.g. used by GitLab
+			url = "https://" + user + ":" + token + "@" + m[1] + "/" + m[2]
+		} else if token != "" {
+			// e.g. used by GitHub
+			url = "https://" + token + "@" + m[1] + "/" + m[2]
+		} else {
+			url = "git@" + m[1] + ":" + m[2]
+		}
 	}
 	// url = strings.ReplaceAll(url, "git+https://gitlab.com/", "git@gitlab.com:")
 	url = strings.ReplaceAll(url, "git+ssh://", "")
 
 	if !strings.HasSuffix(url, ".git") {
 		url += ".git"
+	}
+	return url, nil
+}
+
+// processGitForTerraform clones a git repo and returns the path to the clone
+func processGitForTerraform(url string, credentials []*vault.Credential) (string, func(), error) {
+	cloneUrl, err := gitCloneUrl(url, credentials)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "failed to parse git clone url "+url)
 	}
 
 	cloneDir, err := os.MkdirTemp(os.TempDir(), "gitClone")
@@ -269,7 +306,7 @@ func processGitForTerraform(url string) (string, func(), error) {
 
 	log.Info().Str("url", url).Str("path", cloneDir).Msg("git clone")
 	repo, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
-		URL:               url,
+		URL:               cloneUrl,
 		Progress:          os.Stderr,
 		Depth:             1,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
