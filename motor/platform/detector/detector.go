@@ -2,8 +2,9 @@ package detector
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/motor/providers/opcua"
 	"runtime"
+
+	"go.mondoo.com/cnquery/motor/providers/opcua"
 
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -104,12 +105,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case *github.Provider:
 		return pt.PlatformInfo()
 	case *gitlab.Provider:
-		return &platform.Platform{
-			Name:    "gitlab",
-			Title:   "GitLab",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_GITLAB,
-		}, nil
+		return pt.PlatformInfo()
 	case *terraform.Provider:
 		return pt.PlatformInfo(), nil
 	case *network.Provider:

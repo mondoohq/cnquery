@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"errors"
+	"net/url"
 	"strconv"
 
 	"go.mondoo.com/cnquery/motor/providers"
@@ -82,6 +83,7 @@ func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
 			"id", int64(prj.ID),
 			"name", prj.Name,
 			"path", prj.Path,
+			"namespace", prj.Namespace.Name,
 			"description", prj.Description,
 			"visibility", string(prj.Visibility),
 		)
@@ -97,4 +99,30 @@ func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
 func (g *mqlGitlabProject) id() (string, error) {
 	id, _ := g.Id()
 	return "gitlab.project/" + strconv.FormatInt(id, 10), nil
+}
+
+// init initializes the gitlab project with the arguments
+func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabProject, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	project, _, err := gt.Client().Projects.GetProject(url.QueryEscape(gt.GroupPath)+"/"+url.QueryEscape(gt.ProjectPath), nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = int64(project.ID)
+	(*args)["name"] = project.Name
+	(*args)["path"] = project.Path
+	(*args)["namespace"] = project.Namespace.Name
+	(*args)["description"] = project.Description
+	(*args)["visibility"] = string(project.Visibility)
+
+	return args, nil, nil
 }
