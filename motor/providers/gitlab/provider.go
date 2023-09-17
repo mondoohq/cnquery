@@ -50,16 +50,18 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	return &Provider{
-		client:    client,
-		opts:      tc.Options,
-		GroupPath: tc.Options["group"],
+		client:      client,
+		opts:        tc.Options,
+		GroupPath:   tc.Options["group"],
+		ProjectPath: tc.Options["project"],
 	}, nil
 }
 
 type Provider struct {
-	client    *gitlab.Client
-	opts      map[string]string
-	GroupPath string
+	client      *gitlab.Client
+	opts        map[string]string
+	GroupPath   string
+	ProjectPath string
 }
 
 func (p *Provider) Close() {}
