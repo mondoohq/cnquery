@@ -92,6 +92,19 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 	return m.Impl.Connect(req, a)
 }
 
+func (m *GRPCServer) MockConnect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {
+	conn, err := m.broker.Dial(req.CallbackServer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: we do not close the connection from this side. It will get closed
+	// when the plugin caller decides to kill the process.
+
+	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
+	return m.Impl.MockConnect(req, a)
+}
+
 func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (*ShutdownRes, error) {
 	return m.Impl.Shutdown(req)
 }
