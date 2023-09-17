@@ -11,11 +11,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/cockroachdb/errors"
+	"github.com/go-git/go-git/v5"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -37,6 +37,19 @@ const (
 func New(tc *providers.Config) (*Provider, error) {
 	if tc.Options == nil {
 		return nil, errors.New("path is required")
+	}
+
+	// Terraform from git, temporary before v9
+	var err error
+	var closer func()
+	path := tc.Options["path"]
+	if strings.HasPrefix(path, "git+https://") || strings.HasPrefix(path, "git+ssh://") {
+		path, closer, err = processGitForTerraform(path)
+		if err != nil {
+			return nil, err
+		}
+		tc.Options["asset-type"] = "hcl"
+		tc.Options["path"] = path
 	}
 
 	projectPath := ""
@@ -82,7 +95,7 @@ func New(tc *providers.Config) (*Provider, error) {
 		projectPath = path
 		stat, err := os.Stat(path)
 		if os.IsNotExist(err) {
-			return nil, errors.New("path is not a valid file or directory")
+			return nil, errors.New("path '" + path + "'is not a valid file or directory")
 		}
 
 		if stat.IsDir() {
@@ -154,8 +167,9 @@ func New(tc *providers.Config) (*Provider, error) {
 		tfVars:          tfVars,
 		modulesManifest: modulesManifest,
 
-		state: &state,
-		plan:  &plan,
+		state:  &state,
+		plan:   &plan,
+		closer: closer,
 	}, nil
 }
 
@@ -170,9 +184,14 @@ type Provider struct {
 	modulesManifest *ModuleManifest
 	state           *State
 	plan            *Plan
+	closer          func()
 }
 
-func (t *Provider) Close() {}
+func (t *Provider) Close() {
+	if t.closer != nil {
+		t.closer()
+	}
+}
 
 func (t *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{}
@@ -214,4 +233,58 @@ func (p *Provider) State() (*State, error) {
 
 func (p *Provider) Plan() (*Plan, error) {
 	return p.plan, nil
+}
+
+// TODO: Migrate to v9
+
+var reGitHttps = regexp.MustCompile(`git\+https://([^/]+)/(.*)`)
+
+func processGitForTerraform(url string) (string, func(), error) {
+	m := reGitHttps.FindStringSubmatch(url)
+	if len(m) == 3 {
+		if strings.Contains(m[1], ":") {
+			return "", nil, errors.New("url cannot contain a port! (" + m[1] + ")")
+		}
+		url = "git@" + m[1] + ":" + m[2]
+	}
+	// url = strings.ReplaceAll(url, "git+https://gitlab.com/", "git@gitlab.com:")
+	url = strings.ReplaceAll(url, "git+ssh://", "")
+
+	if !strings.HasSuffix(url, ".git") {
+		url += ".git"
+	}
+
+	cloneDir, err := os.MkdirTemp(os.TempDir(), "gitClone")
+	if err != nil {
+		return "", nil, errors.Wrap(err, "failed to create temporary dir for git processing")
+	}
+
+	closer := func() {
+		// FIXME: needs to be added in v9
+		// log.Info().Str("path", cloneDir).Msg("cleaning up git clone")
+		// if err = os.RemoveAll(cloneDir); err != nil {
+		// 	log.Error().Err(err).Msg("failed to remove temporary dir for git processing")
+		// }
+	}
+
+	log.Info().Str("url", url).Str("path", cloneDir).Msg("git clone")
+	repo, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
+		URL:               url,
+		Progress:          os.Stderr,
+		Depth:             1,
+		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+	})
+	if err != nil {
+		closer()
+		return "", nil, errors.Wrap(err, "failed to clone git repo "+url)
+	}
+
+	ref, err := repo.Head()
+	if err != nil {
+		closer()
+		return "", nil, errors.Wrap(err, "failed to get head of git repo "+url)
+	}
+	log.Info().Str("url", url).Str("path", cloneDir).Str("head", ref.Hash().String()).Msg("finshed git clone")
+
+	return cloneDir, closer, nil
 }
