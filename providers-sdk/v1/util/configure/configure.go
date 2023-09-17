@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"go/format"
 	"os"
 	"os/exec"
 	"regexp"
@@ -47,8 +48,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		builtinGo, err := genBuiltinGo(conf)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to generate builtin go")
+		}
 
-		if err = os.WriteFile(outPath, []byte(builtinGo), 0o644); err != nil {
+		if err = os.WriteFile(outPath, builtinGo, 0o644); err != nil {
 			log.Fatal().Err(err).Str("path", outPath).Msg("failed to write output")
 		}
 		log.Info().Str("path", outPath).Strs("providers", conf.Builtin).Msg("(1/3) configured builtin providers")
@@ -61,7 +65,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func genBuiltinGo(conf ProvidersConf) (string, error) {
+func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 	var imports string
 	var infos string
 	var configs string
@@ -87,7 +91,8 @@ func genBuiltinGo(conf ProvidersConf) (string, error) {
 `, provider, provider, provider, provider, provider, provider, provider)
 	}
 
-	return fmt.Sprintf(template, imports, infos, configs), nil
+	res := fmt.Sprintf(template, imports, infos, configs)
+	return format.Source([]byte(res))
 }
 
 const template = `// Copyright (c) Mondoo, Inc.
