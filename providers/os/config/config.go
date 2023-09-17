@@ -15,7 +15,6 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{
 		provider.LocalConnectionType,
 		provider.SshConnectionType,
-		provider.MockConnectionType,
 		provider.TarConnectionType,
 		provider.DockerSnapshotConnectionType,
 		provider.VagrantConnectionType,

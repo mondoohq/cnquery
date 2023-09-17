@@ -107,10 +107,15 @@ import (
 
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
+	// osconf "go.mondoo.com/cnquery/providers/os/config"
+	// os "go.mondoo.com/cnquery/providers/os/provider"
 %s)
 
 //go:embed core/resources/core.resources.json
 var coreInfo []byte
+
+// //go:embed os/resources/os.resources.json
+// var osInfo []byte
 
 %s
 var builtinProviders = map[string]*builtinProvider{
@@ -124,6 +129,16 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: &coreconf.Config,
 	},
+	// osconf.Config.ID: {
+	// 	Runtime: &RunningProvider{
+	// 		Name:     osconf.Config.Name,
+	// 		ID:       osconf.Config.ID,
+	// 		Plugin:   os.Init(),
+	// 		Schema:   MustLoadSchema("os", osInfo),
+	// 		isClosed: false,
+	// 	},
+	// 	Config: &osconf.Config,
+	// },
 %s
 }
 `
