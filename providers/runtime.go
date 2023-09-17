@@ -217,7 +217,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if err != nil {
 		return err
 	}
-	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.Name, r.Provider.Connection.Id, asset.Connections[0])
+	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	return nil
 }
 
@@ -401,11 +401,44 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
 }
 
-func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool, mockConnection bool) error {
-	if readOnly {
-		r.Recording = &readOnlyRecording{recording}
-	} else {
-		r.Recording = recording
+func (r *Runtime) SetRecording(recording Recording) error {
+	r.Recording = recording
+	if r.Provider == nil || r.Provider.Instance == nil {
+		log.Warn().Msg("set recording while no provider is set on runtime")
+		return nil
+	}
+	if r.Provider.Instance.ID != mockProvider.ID {
+		return nil
+	}
+
+	service := r.Provider.Instance.Plugin.(*mockProviderService)
+	// TODO: This is problematic, since we don't have multiple instances of
+	// the service!!
+	service.runtime = r
+
+	return nil
+}
+
+func baseRecording(anyRecording Recording) *recording {
+	var baseRecording *recording
+	switch x := anyRecording.(type) {
+	case *recording:
+		baseRecording = x
+	case *readOnlyRecording:
+		baseRecording = x.recording
+	}
+	return baseRecording
+}
+
+// SetMockRecording is only used for test utilities. Please do not use it!
+//
+// Deprecated: This function may not be necessary anymore, consider removing.
+func (r *Runtime) SetMockRecording(anyRecording Recording, providerID string, mockConnection bool) error {
+	r.Recording = anyRecording
+
+	baseRecording := baseRecording(anyRecording)
+	if baseRecording == nil {
+		return nil
 	}
 
 	provider, ok := r.providers[providerID]
@@ -413,7 +446,7 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 		return errors.New("cannot set recording, provider '" + providerID + "' not found")
 	}
 
-	assetRecording := &recording.Assets[0]
+	assetRecording := &baseRecording.Assets[0]
 	asset := assetRecording.Asset.ToInventory()
 
 	if mockConnection {
@@ -442,7 +475,7 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 		// Dom: we may need to cancel the entire setup here, may need to be reconsidered...
 		log.Warn().Msg("recording cannot determine asset, no connection was set up!")
 	} else {
-		recording.assets[provider.Connection.Id] = assetRecording
+		baseRecording.assets[provider.Connection.Id] = assetRecording
 	}
 
 	return nil

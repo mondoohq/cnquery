@@ -32,6 +32,11 @@ type recording struct {
 	prettyPrintJSON bool                       `json:"-"`
 }
 
+// ReadOnly converts the recording into a read-only recording
+func (r *recording) ReadOnly() *readOnlyRecording {
+	return &readOnlyRecording{r}
+}
+
 type assetRecording struct {
 	Asset       assetInfo             `json:"asset"`
 	Connections []connectionRecording `json:"connections"`
@@ -56,11 +61,11 @@ type assetInfo struct {
 }
 
 type connectionRecording struct {
-	Url       string `json:"url"`
-	Provider  string `json:"provider"`
-	Connector string `json:"connector"`
-	Version   string `json:"version"`
-	id        uint32 `json:"-"`
+	Url        string `json:"url"`
+	ProviderID string `json:"provider"`
+	Connector  string `json:"connector"`
+	Version    string `json:"version"`
+	id         uint32 `json:"-"`
 }
 
 type resourceRecording struct {
@@ -374,7 +379,7 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 	return found, id
 }
 
-func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
+func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
 	found, _ := r.findAssetConnID(asset, conf)
 
 	if found == -1 {
@@ -409,10 +414,10 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, connect
 
 	url := conf.ToUrl()
 	assetObj.connections[url] = &connectionRecording{
-		Url:       url,
-		Provider:  provider,
-		Connector: conf.Type,
-		id:        conf.Id,
+		Url:        url,
+		ProviderID: providerID,
+		Connector:  conf.Type,
+		id:         conf.Id,
 	}
 	r.assets[connectionID] = assetObj
 }

@@ -129,6 +129,15 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: &coreconf.Config,
 	},
+	mockProvider.ID: {
+		Runtime: &RunningProvider{
+			Name:     mockProvider.Name,
+			ID:       mockProvider.ID,
+			Plugin:   &mockProviderService{coordinator: &Coordinator},
+			isClosed: false,
+		},
+		Config: mockProvider.Provider,
+	},
 	// osconf.Config.ID: {
 	// 	Runtime: &RunningProvider{
 	// 		Name:     osconf.Config.Name,

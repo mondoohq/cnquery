@@ -155,6 +155,11 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 		return provider, nil
 	}
 
+	if connectorName == "mock" || connectorType == "mock" {
+		existing.Add(&mockProvider)
+		return &mockProvider, nil
+	}
+
 	upstream := DefaultProviders.ForConnection(connectorName, connectorType)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set

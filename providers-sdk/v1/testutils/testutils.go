@@ -219,16 +219,17 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 	if err != nil {
 		panic("failed to load recording: " + err.Error())
 	}
+	roRecording := recording.ReadOnly()
 
-	err = runtime.SetRecording(recording, runtime.Provider.Instance.ID, true, true)
+	err = runtime.SetMockRecording(roRecording, runtime.Provider.Instance.ID, true)
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
-	err = runtime.SetRecording(recording, networkconf.Config.ID, true, true)
+	err = runtime.SetMockRecording(roRecording, networkconf.Config.ID, true)
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
-	err = runtime.SetRecording(recording, mockprovider.Config.ID, true, true)
+	err = runtime.SetMockRecording(roRecording, mockprovider.Config.ID, true)
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}

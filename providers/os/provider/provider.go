@@ -25,7 +25,6 @@ import (
 const (
 	LocalConnectionType             = "local"
 	SshConnectionType               = "ssh"
-	MockConnectionType              = "mock"
 	TarConnectionType               = "tar"
 	DockerSnapshotConnectionType    = "docker-snapshot"
 	VagrantConnectionType           = "vagrant"
@@ -215,6 +214,35 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
+func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	if req == nil || req.Asset == nil {
+		return nil, errors.New("no connection data provided")
+	}
+
+	asset := &inventory.Asset{
+		PlatformIds: req.Asset.PlatformIds,
+		Platform:    req.Asset.Platform,
+		Connections: []*inventory.Config{{
+			Type: "mock",
+		}},
+	}
+
+	conn, err := s.connect(&plugin.ConnectReq{
+		Features: req.Features,
+		Upstream: req.Upstream,
+		Asset:    asset,
+	}, callback)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin.ConnectRes{
+		Id:    uint32(conn.ID()),
+		Name:  conn.Name(),
+		Asset: asset,
+	}, nil
+}
+
 // Shutdown is automatically called when the shell closes.
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
@@ -246,10 +274,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
-
-	case MockConnectionType:
-		s.lastConnectionID++
-		conn, err = mock.New("", asset)
 
 	case TarConnectionType:
 		s.lastConnectionID++
@@ -291,6 +315,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case FilesystemConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
+
+	// Do not expose mock connection as a supported type
+	case "mock":
+		s.lastConnectionID++
+		conn, err = mock.New("", asset)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)
