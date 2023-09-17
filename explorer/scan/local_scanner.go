@@ -178,6 +178,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			log.Error().Err(err).Msg("unable to detect provider for asset")
 			continue
 		}
+		runtime.SetRecording(s.recording)
 
 		if err := runtime.Connect(&plugin.ConnectReq{
 			Features: cnquery.GetFeatures(ctx),
@@ -214,7 +215,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 
 		// attach recording before connect, so it is tied to the asset
-		runtime.Recording = s.recording
+		runtime.SetRecording(s.recording)
 
 		err := runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,

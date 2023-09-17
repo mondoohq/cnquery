@@ -24,14 +24,13 @@ func (m *GRPCClient) ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error) {
 	return m.client.ParseCLI(context.Background(), req)
 }
 
-func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error) {
+func (m *GRPCClient) connect(req *ConnectReq, callback ProviderCallback) {
 	helper := &GRPCProviderCallbackServer{Impl: callback}
 
 	var s *grpc.Server
 	serverFunc := func(opts []grpc.ServerOption) *grpc.Server {
 		s = grpc.NewServer(opts...)
 		RegisterProviderCallbackServer(s, helper)
-
 		return s
 	}
 
@@ -39,15 +38,21 @@ func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*Conne
 	req.CallbackServer = brokerID
 	go m.broker.AcceptAndServe(brokerID, serverFunc)
 
-	res, err := m.client.Connect(context.Background(), req)
-
 	// Note: the reverse connection is not closed explicitly. It stays open
 	// until the process is eventually stopped. Connect should only be called
 	// once per connected asset, thus the reverse connection is also only
 	// open for the duration of said connection.
 	// In the future, we may want to explicitly disconnect and re-use providers.
+}
 
-	return res, err
+func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error) {
+	m.connect(req, callback)
+	return m.client.Connect(context.Background(), req)
+}
+
+func (m *GRPCClient) MockConnect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error) {
+	m.connect(req, callback)
+	return m.client.MockConnect(context.Background(), req)
 }
 
 func (m *GRPCClient) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
@@ -85,6 +90,19 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 
 	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
 	return m.Impl.Connect(req, a)
+}
+
+func (m *GRPCServer) MockConnect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {
+	conn, err := m.broker.Dial(req.CallbackServer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Note: we do not close the connection from this side. It will get closed
+	// when the plugin caller decides to kill the process.
+
+	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
+	return m.Impl.MockConnect(req, a)
 }
 
 func (m *GRPCServer) Shutdown(ctx context.Context, req *ShutdownReq) (*ShutdownRes, error) {

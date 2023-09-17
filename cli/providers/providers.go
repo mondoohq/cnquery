@@ -307,14 +307,16 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if recordingPath == "" {
 			recordingPath = useRecording
 		}
+		doRecord := record != ""
 
-		runtime.Recording, err = providers.NewRecording(recordingPath, providers.RecordingOptions{
-			DoRecord:        record != "",
+		recording, err := providers.NewRecording(recordingPath, providers.RecordingOptions{
+			DoRecord:        doRecord,
 			PrettyPrintJSON: pretty,
 		})
 		if err != nil {
 			log.Fatal().Msg(err.Error())
 		}
+		runtime.SetRecording(recording)
 
 		cliRes, err := runtime.Provider.Instance.Plugin.ParseCLI(&plugin.ParseCLIReq{
 			Connector: connector.Name,

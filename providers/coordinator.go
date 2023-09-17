@@ -55,10 +55,14 @@ type UpdateProvidersConfig struct {
 
 func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	if x, ok := builtinProviders[id]; ok {
-		// We don't warn for the core provider, which is the only provider expected
-		// to be built into the binary for now.
-		if id != BuiltinCoreID {
+		// We don't warn for core providers, which are the only providers
+		// built into the binary (for now).
+		if id != BuiltinCoreID && id != mockProvider.ID {
 			log.Warn().Msg("using builtin provider for " + x.Config.Name)
+		}
+		if id == mockProvider.ID {
+			mp := x.Runtime.Plugin.(*mockProviderService)
+			mp.Init(x.Runtime)
 		}
 		return x.Runtime, nil
 	}

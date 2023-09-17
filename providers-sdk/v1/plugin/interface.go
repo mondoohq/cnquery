@@ -32,6 +32,7 @@ type ProviderCallback interface {
 type ProviderPlugin interface {
 	ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
+	MockConnect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
 	Shutdown(req *ShutdownReq) (*ShutdownRes, error)
 	GetData(req *DataReq) (*DataRes, error)
 	StoreData(req *StoreReq) (*StoreRes, error)

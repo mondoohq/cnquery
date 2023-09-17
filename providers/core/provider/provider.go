@@ -78,6 +78,10 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
+func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	return s.Connect(req, callback)
+}
+
 // Shutdown is automatically called when the shell closes.
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.

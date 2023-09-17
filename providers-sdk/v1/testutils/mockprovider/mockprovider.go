@@ -54,6 +54,13 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
+func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	// Should never happen: the mock provider should not be called with MockConnect.
+	// It is the only thing that should ever call MockConnect to other providers
+	// (outside of tests).
+	return nil, errors.New("the mock provider does not support the mock connect call, this is an internal error")
+}
+
 // Shutdown is automatically called when the shell closes.
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
