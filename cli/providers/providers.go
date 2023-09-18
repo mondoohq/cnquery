@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/components"
-	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -53,43 +52,50 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 
 func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	autoUpdate := true
-	connector := ""
 
-	cmds := make(map[string]struct{}, len(commands))
+	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
+	flags.Bool("auto-update", true, "")
+	flags.BoolP("help", "h", false, "")
 	for i := range commands {
-		cmds[commands[i].Command.Use] = struct{}{}
-	}
-
-	preRunRoot := &cobra.Command{
-		Use: "root",
-		Run: func(cmd *cobra.Command, args []string) {
-			autoUpdate = viper.GetBool("auto_update")
-			for i, arg := range args {
-				if _, ok := cmds[arg]; ok {
-					if len(args) == i+1 {
-						connector = "local"
-					} else {
-						connector = args[i+1]
-					}
-					return
-				}
+		cmd := commands[i]
+		cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
+			if found := flags.Lookup(flag.Name); found == nil {
+				flags.AddFlag(flag)
 			}
-		},
-		FParseErrWhitelist: cobra.FParseErrWhitelist{
-			UnknownFlags: true,
-		},
+		})
 	}
 
-	preRunRoot.Flags().Bool("auto-update", true, "Enable automatic provider installation and update")
-	viper.BindPFlag("auto_update", preRunRoot.Flags().Lookup("auto-update"))
-	config.Init(preRunRoot)
-
-	err := preRunRoot.Execute()
+	err := flags.Parse(args)
 	if err != nil {
-		log.Debug().Err(err).Msg("early detection error")
-		log.Error().Msg("failed to run early command detection")
-		return "", false
+		log.Warn().Err(err).Msg("pre-processing of cli had an error")
 	}
+
+	autoUpdate, _ = flags.GetBool("auto-update")
+
+	remaining := flags.Args()
+	if len(remaining) <= 1 {
+		return "", autoUpdate
+	}
+
+	commandFound := false
+	for j := range commands {
+		if commands[j].Command.Use == remaining[1] {
+			commandFound = true
+			break
+		}
+	}
+	if !commandFound {
+		return "", autoUpdate
+	}
+
+	// since we have a known command, we can now expect the connector to be
+	// local by default if nothing else is set
+	if len(remaining) == 2 {
+		return "local", autoUpdate
+	}
+
+	connector := remaining[2]
+	// we may want to double-check if the connector exists
 
 	return connector, autoUpdate
 }
