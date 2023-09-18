@@ -189,7 +189,9 @@ func TestRawData_JSON(t *testing.T) {
 		StringData("b"),
 		RegexData(""),
 		RegexData("r"),
-		TimeData(time.Time{}),
+		TimeData(time.Time{}.In(time.Local)),
+		TimeData(NeverFutureTime),
+		TimeData(NeverPastTime),
 		// TODO: the raw comparison here does not come out right, because of nano time
 		// TimeData(now),
 		ArrayData([]interface{}{"a", "b"}, types.String),

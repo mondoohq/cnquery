@@ -33,6 +33,12 @@ func (r *RawData) MarshalJSON() ([]byte, error) {
 		return json.Marshal(errData{Error: r.Error.Error()})
 	}
 
+	if r.Type == types.Time {
+		tv := r.Value.(*time.Time)
+		ut := tv.Unix()
+		return json.Marshal(RawData{Type: r.Type, Value: ut})
+	}
+
 	type rd2 RawData
 	return json.Marshal((*rd2)(r))
 }
@@ -44,11 +50,17 @@ func (r *RawData) UnmarshalJSON(data []byte) error {
 		case types.Int:
 			r.Value = int64(r.Value.(float64))
 		case types.Time:
-			v, err := time.Parse(time.RFC3339, r.Value.(string))
-			if err != nil {
-				return errors.New("failed to parse time into raw data: " + err.Error())
+			tv := r.Value.(float64)
+			// JSON serialization of numbers is limited to 1**53 precision, see:
+			// https://stackoverflow.com/questions/13502398/json-integers-limit-on-size#comment80159722_13502497
+			if tv > (1 << 53) {
+				r.Value = &NeverFutureTime
+			} else if tv < (-(1 << 53)) {
+				r.Value = &NeverPastTime
+			} else {
+				v := time.Unix(int64(tv), 0)
+				r.Value = &v
 			}
-			r.Value = &v
 		}
 		return nil
 	}
