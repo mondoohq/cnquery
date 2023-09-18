@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"go/format"
 	"os"
 	"os/exec"
 	"regexp"
@@ -47,8 +48,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		builtinGo, err := genBuiltinGo(conf)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to generate builtin go")
+		}
 
-		if err = os.WriteFile(outPath, []byte(builtinGo), 0o644); err != nil {
+		if err = os.WriteFile(outPath, builtinGo, 0o644); err != nil {
 			log.Fatal().Err(err).Str("path", outPath).Msg("failed to write output")
 		}
 		log.Info().Str("path", outPath).Strs("providers", conf.Builtin).Msg("(1/3) configured builtin providers")
@@ -61,7 +65,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func genBuiltinGo(conf ProvidersConf) (string, error) {
+func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 	var imports string
 	var infos string
 	var configs string
@@ -74,7 +78,7 @@ func genBuiltinGo(conf ProvidersConf) (string, error) {
 				"var %sInfo []byte\n",
 			provider, provider)
 		configs += fmt.Sprintf(`
-	%sconf.Config.ID: {
+	builtinProviders[%sconf.Config.ID] = &builtinProvider{
 		Runtime: &RunningProvider{
 			Name:     %sconf.Config.Name,
 			ID:       %sconf.Config.ID,
@@ -83,11 +87,12 @@ func genBuiltinGo(conf ProvidersConf) (string, error) {
 			isClosed: false,
 		},
 		Config: &%sconf.Config,
-	},
+	}
 `, provider, provider, provider, provider, provider, provider, provider)
 	}
 
-	return fmt.Sprintf(template, imports, infos, configs), nil
+	res := fmt.Sprintf(template, imports, infos, configs)
+	return format.Source([]byte(res))
 }
 
 const template = `// Copyright (c) Mondoo, Inc.
@@ -98,47 +103,19 @@ const template = `// Copyright (c) Mondoo, Inc.
 
 package providers
 
-// This is primarily useful for debugging purposes, if you want to
-// trace into any provider without having to debug the plugin
-// connection separately.
-
 import (
 	_ "embed"
-
-	coreconf "go.mondoo.com/cnquery/providers/core/config"
-	core "go.mondoo.com/cnquery/providers/core/provider"
 	// osconf "go.mondoo.com/cnquery/providers/os/config"
 	// os "go.mondoo.com/cnquery/providers/os/provider"
 %s)
-
-//go:embed core/resources/core.resources.json
-var coreInfo []byte
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
 
 %s
-var builtinProviders = map[string]*builtinProvider{
-	coreconf.Config.ID: {
-		Runtime: &RunningProvider{
-			Name:     coreconf.Config.Name,
-			ID:       coreconf.Config.ID,
-			Plugin:   core.Init(),
-			Schema:   MustLoadSchema("core", coreInfo),
-			isClosed: false,
-		},
-		Config: &coreconf.Config,
-	},
-	mockProvider.ID: {
-		Runtime: &RunningProvider{
-			Name:     mockProvider.Name,
-			ID:       mockProvider.ID,
-			Plugin:   &mockProviderService{coordinator: &Coordinator},
-			isClosed: false,
-		},
-		Config: mockProvider.Provider,
-	},
-	// osconf.Config.ID: {
+
+func init() {
+	// builtinProviders[osconf.Config.ID] = &builtinProvider{
 	// 	Runtime: &RunningProvider{
 	// 		Name:     osconf.Config.Name,
 	// 		ID:       osconf.Config.ID,
@@ -147,7 +124,7 @@ var builtinProviders = map[string]*builtinProvider{
 	// 		isClosed: false,
 	// 	},
 	// 	Config: &osconf.Config,
-	// },
+	// }
 %s
 }
 `
@@ -216,7 +193,7 @@ func rewireDependencies(providers []string) {
 
 func init() {
 	rootCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
-	rootCmd.Flags().StringP("output", "o", "providers/builtin.go", "output builtin.go file")
+	rootCmd.Flags().StringP("output", "o", "providers/builtin_dev.go", "output go-file for builtin dev providers")
 }
 
 func main() {

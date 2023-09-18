@@ -147,8 +147,7 @@ providers/proto:
 
 .PHONY: providers/config
 providers/config:
-	go run ./providers-sdk/v1/util/configure/configure.go -f providers.yaml -o providers/builtin.go
-	gofmt -w providers/builtin.go
+	go run ./providers-sdk/v1/util/configure/configure.go -f providers.yaml -o providers/builtin_dev.go
 
 .PHONY: providers/lr
 providers/lr:
