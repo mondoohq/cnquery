@@ -103,6 +103,8 @@ To manually configure a query pack, use this:
 		}
 		return []string{}, cobra.ShellCompDirectiveNoFileComp
 	},
+	// we have to initialize an empty run so it shows up as a runnable command in --help
+	Run: func(cmd *cobra.Command, args []string) {},
 }
 
 var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {

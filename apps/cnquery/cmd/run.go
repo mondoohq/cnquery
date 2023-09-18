@@ -33,6 +33,8 @@ var RunCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 	},
+	// we have to initialize an empty run so it shows up as a runnable command in --help
+	Run: func(cmd *cobra.Command, args []string) {},
 }
 
 var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
