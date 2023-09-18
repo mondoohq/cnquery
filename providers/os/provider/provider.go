@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -20,6 +21,8 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
 	"go.mondoo.com/cnquery/providers/os/resources/discovery/container_registry"
+	"go.mondoo.com/cnquery/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 const (
@@ -199,6 +202,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 	}
+	log.Debug().Str("asset", req.Asset.Name).Msg("detected asset")
 
 	var inv *inventory.Inventory
 	if conn.Asset().Connections[0].Type == "docker-registry" {
@@ -446,6 +450,26 @@ func (s *Service) discover(conn *connection.TarConnection) (*inventory.Inventory
 
 	resolver := container_registry.Resolver{}
 	resolvedAssets, err := resolver.Resolve(context.Background(), conn.Asset(), conf, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	inventory := &inventory.Inventory{}
+	inventory.AddAssets(resolvedAssets...)
+
+	return inventory, nil
+}
+
+func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.Inventory, error) {
+	if conf == nil || conf.Discover == nil {
+		return nil, nil
+	}
+
+	if !stringx.ContainsAnyOf(conf.Discover.Targets, "all", docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages) {
+		return nil, nil
+	}
+
+	resolvedAssets, err := docker_engine.DiscoverDockerEngineAssets(conf)
 	if err != nil {
 		return nil, err
 	}

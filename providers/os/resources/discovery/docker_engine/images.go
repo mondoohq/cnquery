@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
@@ -67,6 +68,7 @@ func (e *dockerEngineDiscovery) ListImages() ([]*inventory.Asset, error) {
 			},
 			State: inventory.State_STATE_ONLINE,
 		}
+		log.Debug().Str("container", dImg.ID).Msg("discovered container-image")
 
 		// update labels
 		labels := map[string]string{}

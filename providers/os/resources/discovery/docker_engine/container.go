@@ -149,6 +149,7 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 			State:  mapContainerState(dContainer.State),
 			Labels: make(map[string]string),
 		}
+		log.Debug().Str("container", dContainer.ID).Msg("discovered container")
 
 		for key := range dContainer.Labels {
 			asset.Labels[key] = dContainer.Labels[key]

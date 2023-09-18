@@ -221,7 +221,7 @@ func DiscoverDockerEngineAssets(conf *inventory.Config) ([]*inventory.Asset, err
 			return nil, err
 		}
 
-		log.Info().Int("images", len(containerAssets)).Msg("running container search completed")
+		log.Info().Int("container", len(containerAssets)).Msg("running container search completed")
 		assetList = append(assetList, containerAssets...)
 	}
 
