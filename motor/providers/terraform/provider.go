@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -97,7 +96,7 @@ func New(tc *providers.Config) (*Provider, error) {
 		projectPath = path
 		stat, err := os.Stat(path)
 		if os.IsNotExist(err) {
-			return nil, errors.New("path '" + path + "'is not a valid file or directory")
+			return nil, errors.New("path '" + path + "' is not a valid file or directory")
 		}
 
 		if stat.IsDir() {
@@ -245,7 +244,6 @@ var reGitHttps = regexp.MustCompile(`git\+https://([^/]+)/(.*)`)
 // If a token is provided, it will be used to clone the repo
 // gitlab: git clone https://oauth2:ACCESS_TOKEN@somegitlab.com/vendor/package.git
 func gitCloneUrl(url string, credentials []*vault.Credential) (string, error) {
-
 	user := ""
 	token := ""
 	for i := range credentials {
