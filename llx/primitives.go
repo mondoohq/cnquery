@@ -93,10 +93,10 @@ func TimePrimitive(t *time.Time) *Primitive {
 }
 
 // NeverFutureTime is an indicator for what we consider infinity when looking at time
-var NeverFutureTime = time.Unix(1<<63-1, 0).UTC()
+var NeverFutureTime = time.Unix(1<<63-1, 0)
 
 // NeverPastTime is an indicator for what we consider negative infinity when looking at time
-var NeverPastTime = time.Unix(-(1<<63 - 1), 0).UTC()
+var NeverPastTime = time.Unix(-(1<<63 - 1), 0)
 
 // NeverFuturePrimitive is the special time primitive for the infinite future time
 var NeverFuturePrimitive = TimePrimitive(&NeverFutureTime)

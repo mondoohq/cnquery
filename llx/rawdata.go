@@ -58,7 +58,7 @@ func (r *RawData) UnmarshalJSON(data []byte) error {
 			} else if tv < (-(1 << 53)) {
 				r.Value = &NeverPastTime
 			} else {
-				v := time.Unix(int64(tv), 0).UTC()
+				v := time.Unix(int64(tv), 0)
 				r.Value = &v
 			}
 		}
