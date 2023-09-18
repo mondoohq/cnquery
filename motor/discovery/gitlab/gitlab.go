@@ -3,10 +3,11 @@ package gitlab
 import (
 	"context"
 	"errors"
-	"github.com/rs/zerolog/log"
-	terraform_resolver "go.mondoo.com/cnquery/motor/discovery/terraform"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	terraform_resolver "go.mondoo.com/cnquery/motor/discovery/terraform"
 
 	"github.com/xanzy/go-gitlab"
 	gitlab_lib "github.com/xanzy/go-gitlab"
@@ -47,11 +48,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		return nil, errors.New("could not initialize gitlab transport")
 	}
 
-	identifier, err := p.Identifier()
-	if err != nil {
-		return nil, err
-	}
-
 	pf, err := m.Platform()
 	if err != nil {
 		return nil, err
@@ -72,7 +68,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					name = project.NameWithNamespace
 				}
 			}
-
+			identifier, err := p.Identifier()
+			if err != nil {
+				return nil, err
+			}
 			projectAsset := &asset.Asset{
 				PlatformIds: []string{identifier},
 				Name:        name,
@@ -133,7 +132,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					name = "GitLab Group " + grp.Name
 				}
 			}
-
+			identifier, err := p.Identifier()
+			if err != nil {
+				return nil, err
+			}
 			list = append(list, &asset.Asset{
 				PlatformIds: []string{identifier},
 				Name:        name,
@@ -153,8 +155,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					clonedConfig.Options["group"] = grp.Path
 					clonedConfig.Options["project"] = project.Path
 
+					id := gitlab_provider.NewGitLabProjectIdentifier(grp.Name, project.Name)
 					projectAsset := &asset.Asset{
-						PlatformIds: []string{identifier},
+						PlatformIds: []string{id},
 						Name:        project.NameWithNamespace,
 						Platform:    gitlab_provider.GitLabProjectPlatform,
 						Connections: []*providers.Config{clonedConfig}, // pass-in the current config
@@ -166,9 +169,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 						terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
 						if err == nil && len(terraformFiles) > 0 {
 							terraformCfg := pCfg.Clone()
-
-							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn, userIdDetectors...)
+							terraformCfg.Backend = providers.ProviderType_TERRAFORM
+							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn)
 							if err == nil && len(assets) > 0 {
+								for i := range assets {
+									if len(assets[i].PlatformIds) > 0 {
+										assets[i].PlatformIds[0] = assets[i].PlatformIds[0] + "/" + project.Name
+									} else {
+										log.Debug().Msg("missing platform id for asset")
+										continue
+									}
+								}
 								list = append(list, assets...)
 							}
 						}
