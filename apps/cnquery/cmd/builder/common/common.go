@@ -690,13 +690,15 @@ func GitlabProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runF
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
 			viper.BindPFlag("group", cmd.Flags().Lookup("group"))
+			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
 			preRun(cmd, args)
 		},
 		Run: runFn,
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("group", "", "a GitLab group to scan")
+	cmd.Flags().String("group", "", "a GitLab group")
 	cmd.MarkFlagRequired("group")
+	cmd.Flags().String("project", "", "a GitLab project")
 	cmd.Flags().String("token", "", "GitLab personal access token")
 	return cmd
 }

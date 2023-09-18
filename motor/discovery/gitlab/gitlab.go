@@ -3,8 +3,13 @@ package gitlab
 import (
 	"context"
 	"errors"
+	"github.com/rs/zerolog/log"
+	terraform_resolver "go.mondoo.com/cnquery/motor/discovery/terraform"
+	"os"
+	"strings"
 
 	"github.com/xanzy/go-gitlab"
+	gitlab_lib "github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -14,8 +19,9 @@ import (
 )
 
 const (
-	DiscoveryGroup   = "group"
-	DiscoveryProject = "project"
+	DiscoveryGroup     = "group"
+	DiscoveryProject   = "project"
+	DiscoveryTerraform = "terraform"
 )
 
 type Resolver struct{}
@@ -58,20 +64,61 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	case "gitlab-project":
 		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProject) {
 			name := defaultName
+			project, _ := p.Project()
+			grp, _ := p.Group()
+
 			if name == "" {
-				project, _ := p.Project()
 				if project != nil {
 					name = project.NameWithNamespace
 				}
 			}
 
-			list = append(list, &asset.Asset{
+			projectAsset := &asset.Asset{
 				PlatformIds: []string{identifier},
 				Name:        name,
 				Platform:    pf,
 				Connections: []*providers.Config{pCfg}, // pass-in the current config
 				State:       asset.State_STATE_ONLINE,
-			})
+			}
+
+			list = append(list, projectAsset)
+
+			if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTerraform) {
+				terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
+				if err != nil {
+					log.Error().Err(err).Msg("error discovering terraform")
+				} else if len(terraformFiles) > 0 {
+					terraformCfg := pCfg.Clone()
+					terraformCfg.Backend = providers.ProviderType_TERRAFORM
+
+					terraformCfg.Options = map[string]string{
+						"asset-type": "hcl",
+						"path":       "git+" + project.HTTPURLToRepo,
+					}
+
+					if pCfg.Credentials == nil {
+						token := os.Getenv("GITLAB_TOKEN")
+						terraformCfg.Credentials = []*vault.Credential{{
+							Type:   vault.CredentialType_password,
+							User:   "oauth2",
+							Secret: []byte(token),
+						}}
+					} else {
+						// add oauth2 user to the credentials
+						for i := range pCfg.Credentials {
+							cred := pCfg.Credentials[i]
+							if cred.Type == vault.CredentialType_password {
+								cred.User = "oauth2"
+							}
+						}
+					}
+
+					assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn, userIdDetectors...)
+					if err == nil && len(assets) > 0 {
+						list = append(list, assets...)
+					}
+				}
+			}
 		}
 	case "gitlab-group":
 		var grp *gitlab.Group
@@ -103,19 +150,69 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					if clonedConfig.Options == nil {
 						clonedConfig.Options = map[string]string{}
 					}
-					clonedConfig.Options["group"] = grp.Name
-					clonedConfig.Options["project"] = project.Name
+					clonedConfig.Options["group"] = grp.Path
+					clonedConfig.Options["project"] = project.Path
 
-					list = append(list, &asset.Asset{
+					projectAsset := &asset.Asset{
 						PlatformIds: []string{identifier},
 						Name:        project.NameWithNamespace,
 						Platform:    gitlab_provider.GitLabProjectPlatform,
 						Connections: []*providers.Config{clonedConfig}, // pass-in the current config
 						State:       asset.State_STATE_ONLINE,
-					})
+					}
+					list = append(list, projectAsset)
+
+					if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTerraform) {
+						terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
+						if err == nil && len(terraformFiles) > 0 {
+							terraformCfg := pCfg.Clone()
+
+							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn, userIdDetectors...)
+							if err == nil && len(assets) > 0 {
+								list = append(list, assets...)
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 	return list, nil
+}
+
+// discoverTerraformHcl will check if the repository contains terraform files and return the terraform asset
+func discoverTerraformHcl(ctx context.Context, client *gitlab_lib.Client, group string, project string) ([]string, error) {
+	opts := &gitlab_lib.ListTreeOptions{
+		ListOptions: gitlab_lib.ListOptions{
+			PerPage: 100,
+		},
+		Recursive: gitlab_lib.Bool(true),
+	}
+
+	nodes := []*gitlab_lib.TreeNode{}
+	for {
+		data, resp, err := client.Repositories.ListTree(group+"/"+project, opts)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, data...)
+
+		// Exit the loop when we've seen all pages.
+		if resp.NextPage == 0 {
+			break
+		}
+
+		// Update the page number to get the next page.
+		opts.Page = resp.NextPage
+	}
+
+	terraformFiles := []string{}
+	for i := range nodes {
+		node := nodes[i]
+		if node.Type == "blob" && strings.HasSuffix(node.Path, ".tf") {
+			terraformFiles = append(terraformFiles, node.Path)
+		}
+	}
+
+	return terraformFiles, nil
 }

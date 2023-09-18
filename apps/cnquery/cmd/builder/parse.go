@@ -640,6 +640,12 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Options["group"] = x
 		}
 
+		if x, err := cmd.Flags().GetString("project"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --project value")
+		} else if x != "" {
+			connection.Options["project"] = x
+		}
+
 		if x, err := cmd.Flags().GetString("token"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --token value")
 		} else if x != "" {
