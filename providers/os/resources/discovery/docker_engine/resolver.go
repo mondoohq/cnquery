@@ -209,10 +209,6 @@ func DiscoverDockerEngineAssets(conf *inventory.Config) ([]*inventory.Asset, err
 	// the system is using docker or podman locally
 	assetList := []*inventory.Asset{}
 
-	if conf.Discover == nil {
-		return assetList, nil
-	}
-
 	// discover running container: container
 	if stringx.Contains(conf.Discover.Targets, "all") || stringx.Contains(conf.Discover.Targets, DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
