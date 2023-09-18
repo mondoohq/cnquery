@@ -87,6 +87,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		Assets: []*inventory.Asset{},
 	}}
 
+	if (conn.InventoryConfig().Discover == nil || len(conn.InventoryConfig().Discover.Targets) == 0) && conn.Asset() != nil {
+		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
+		return in, nil
+	}
+
 	invConfig := conn.InventoryConfig()
 
 	res, err := runtime.CreateResource(runtime, "k8s", nil)
@@ -114,22 +119,26 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			return nil, err
 		}
 
+		root := &inventory.Asset{
+			PlatformIds: []string{assetId},
+			Name:        conn.Name(),
+			Platform:    conn.Platform(),
+			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
+		}
 		if slices.Contains(invConfig.Discover.Targets, DiscoveryClusters) {
-			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
-				PlatformIds: []string{assetId},
-				Name:        conn.Name(),
-				Platform:    conn.Platform(),
-				Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
-			})
+			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
 
-		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, false)
+		od := NewPlatformIdOwnershipIndex(assetId)
+
+		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, od, false)
 		if err != nil {
 			return nil, err
 		}
+		setRelatedAssets(conn, root, assets, od)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	} else {
-		nss, err := discoverNamespaces(conn, invConfig, "", nsFilter)
+		nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
 		if err != nil {
 			return nil, err
 		}
@@ -140,11 +149,14 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		for _, ns := range nss {
 			nsFilter = NamespaceFilterOpts{include: []string{ns.Name}}
 
+			od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
+
 			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, true)
+			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, od, true)
 			if err != nil {
 				return nil, err
 			}
+			setRelatedAssets(conn, ns, assets, od)
 			in.Spec.Assets = append(in.Spec.Assets, assets...)
 		}
 	}
@@ -159,6 +171,7 @@ func discoverAssets(
 	clusterId string,
 	k8s *mqlK8s,
 	nsFilter NamespaceFilterOpts,
+	od *PlatformIdOwnershipIndex,
 	skipNsDiscovery bool,
 ) ([]*inventory.Asset, error) {
 	var assets []*inventory.Asset
@@ -166,70 +179,70 @@ func discoverAssets(
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
 		if target == DiscoveryPods || target == DiscoveryAuto {
-			list, err = discoverPods(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryJobs || target == DiscoveryAuto {
-			list, err = discoverJobs(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryCronJobs || target == DiscoveryAuto {
-			list, err = discoverCronJobs(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryStatefulSets || target == DiscoveryAuto {
-			list, err = discoverStatefulSets(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDeployments || target == DiscoveryAuto {
-			list, err = discoverDeployments(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryReplicaSets || target == DiscoveryAuto {
-			list, err = discoverReplicaSets(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDaemonSets || target == DiscoveryAuto {
-			list, err = discoverDaemonSets(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryIngresses || target == DiscoveryAuto {
-			list, err = discoverIngresses(invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryAdmissionReviews {
-			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverAdmissionReviews(conn, invConfig, clusterId, k8s, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryNamespaces && !skipNsDiscovery {
-			list, err = discoverNamespaces(conn, invConfig, clusterId, nsFilter)
+			list, err = discoverNamespaces(conn, invConfig, clusterId, od, nsFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -246,7 +259,14 @@ func discoverAssets(
 	return assets, nil
 }
 
-func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverPods(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -265,24 +285,32 @@ func discoverPods(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &pod.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(pod.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "pod", pod.Namespace.Data, pod.Name.Data, pod.Uid.Data),
 			},
-			Name: pod.Namespace.Data + "/" + pod.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-pod",
-				Title: "Kubernetes Pod, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        pod.Namespace.Data + "/" + pod.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(pod.obj)
 	}
 	return assetList, nil
 }
 
-func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverJobs(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	jobs := k8s.GetJobs()
 	if jobs.Error != nil {
 		return nil, jobs.Error
@@ -301,24 +329,32 @@ func discoverJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, ns
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &job.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(job.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "job", job.Namespace.Data, job.Name.Data, job.Uid.Data),
 			},
-			Name: job.Namespace.Data + "/" + job.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-job",
-				Title: "Kubernetes Job, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        job.Namespace.Data + "/" + job.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(job.obj)
 	}
 	return assetList, nil
 }
 
-func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverCronJobs(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	cjs := k8s.GetCronjobs()
 	if cjs.Error != nil {
 		return nil, cjs.Error
@@ -337,24 +373,32 @@ func discoverCronJobs(invConfig *inventory.Config, clusterId string, k8s *mqlK8s
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &cjob.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(cjob.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "cronjob", cjob.Namespace.Data, cjob.Name.Data, cjob.Uid.Data),
 			},
-			Name: cjob.Namespace.Data + "/" + cjob.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-cronjob",
-				Title: "Kubernetes CronJob, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        cjob.Namespace.Data + "/" + cjob.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(cjob.obj)
 	}
 	return assetList, nil
 }
 
-func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverStatefulSets(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	ss := k8s.GetStatefulsets()
 	if ss.Error != nil {
 		return nil, ss.Error
@@ -373,24 +417,32 @@ func discoverStatefulSets(invConfig *inventory.Config, clusterId string, k8s *mq
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &statefulset.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(statefulset.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "statefulset", statefulset.Namespace.Data, statefulset.Name.Data, statefulset.Uid.Data),
 			},
-			Name: statefulset.Namespace.Data + "/" + statefulset.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-statefulset",
-				Title: "Kubernetes StatefulSet, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        statefulset.Namespace.Data + "/" + statefulset.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(statefulset.obj)
 	}
 	return assetList, nil
 }
 
-func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverDeployments(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	ds := k8s.GetDeployments()
 	if ds.Error != nil {
 		return nil, ds.Error
@@ -409,24 +461,32 @@ func discoverDeployments(invConfig *inventory.Config, clusterId string, k8s *mql
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &deployment.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(deployment.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "deployment", deployment.Namespace.Data, deployment.Name.Data, deployment.Uid.Data),
 			},
-			Name: deployment.Namespace.Data + "/" + deployment.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-deployment",
-				Title: "Kubernetes Deployment, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        deployment.Namespace.Data + "/" + deployment.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(deployment.obj)
 	}
 	return assetList, nil
 }
 
-func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverReplicaSets(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	rs := k8s.GetReplicasets()
 	if rs.Error != nil {
 		return nil, rs.Error
@@ -445,24 +505,32 @@ func discoverReplicaSets(invConfig *inventory.Config, clusterId string, k8s *mql
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &replicaset.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(replicaset.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "replicaset", replicaset.Namespace.Data, replicaset.Name.Data, replicaset.Uid.Data),
 			},
-			Name: replicaset.Namespace.Data + "/" + replicaset.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-replicaset",
-				Title: "Kubernetes ReplicaSet, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        replicaset.Namespace.Data + "/" + replicaset.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(replicaset.obj)
 	}
 	return assetList, nil
 }
 
-func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverDaemonSets(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	ds := k8s.GetDaemonsets()
 	if ds.Error != nil {
 		return nil, ds.Error
@@ -481,24 +549,32 @@ func discoverDaemonSets(invConfig *inventory.Config, clusterId string, k8s *mqlK
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &daemonset.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(daemonset.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "daemonset", daemonset.Namespace.Data, daemonset.Name.Data, daemonset.Uid.Data),
 			},
-			Name: daemonset.Namespace.Data + "/" + daemonset.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-daemonset",
-				Title: "Kubernetes DaemonSet, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        daemonset.Namespace.Data + "/" + daemonset.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(daemonset.obj)
 	}
 	return assetList, nil
 }
 
-func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverAdmissionReviews(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	admissionReviews, err := conn.AdmissionReviews()
 	if err != nil {
 		return nil, err
@@ -508,7 +584,7 @@ func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Confi
 	for i := range admissionReviews {
 		aReview := admissionReviews[i]
 
-		asset, err := assetFromAdmissionReview(aReview, conn.Platform().Runtime, invConfig, clusterId)
+		asset, err := assetFromAdmissionReview(aReview, conn.Runtime(), invConfig, clusterId)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from admission review")
 		}
@@ -521,7 +597,14 @@ func discoverAdmissionReviews(conn shared.Connection, invConfig *inventory.Confi
 	return assetList, nil
 }
 
-func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverIngresses(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	k8s *mqlK8s,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	is := k8s.GetIngresses()
 	if is.Error != nil {
 		return nil, is.Error
@@ -540,24 +623,31 @@ func discoverIngresses(invConfig *inventory.Config, clusterId string, k8s *mqlK8
 			labels[k] = v.(string)
 		}
 		addMondooAssetLabels(labels, &ingress.obj.ObjectMeta, clusterId)
+		platform, err := createPlatformData(ingress.Kind.Data, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "ingress", ingress.Namespace.Data, ingress.Name.Data, ingress.Uid.Data),
 			},
-			Name: ingress.Namespace.Data + "/" + ingress.Name.Data,
-			Platform: &inventory.Platform{
-				Name:  "k8s-ingress",
-				Title: "Kubernetes Ingress, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        ingress.Namespace.Data + "/" + ingress.Name.Data,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		od.Add(ingress.obj)
 	}
 	return assetList, nil
 }
 
-func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clusterId string, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverNamespaces(
+	conn shared.Connection,
+	invConfig *inventory.Config,
+	clusterId string,
+	od *PlatformIdOwnershipIndex,
+	nsFilter NamespaceFilterOpts,
+) ([]*inventory.Asset, error) {
 	// We don't use MQL here since we need to handle k8s permission errors
 	nss, err := conn.Namespaces()
 	if err != nil {
@@ -585,19 +675,22 @@ func discoverNamespaces(conn shared.Connection, invConfig *inventory.Config, clu
 			labels[k] = v
 		}
 		addMondooAssetLabels(labels, &ns.ObjectMeta, clusterId)
+		platform, err := createPlatformData(ns.Kind, conn.Runtime())
+		if err != nil {
+			return nil, err
+		}
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewNamespacePlatformId(clusterId, ns.Name, string(ns.UID)),
 			},
-			Name: ns.Name,
-			Platform: &inventory.Platform{
-				Name:  "k8s-namespace",
-				Title: "Kubernetes Namespace, Kubernetes Cluster",
-				Kind:  "k8s-object",
-			},
+			Name:        ns.Name,
+			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{cloneConfig(invConfig)}, // pass-in the parent connection config
 		})
+		if od != nil {
+			od.Add(&ns)
+		}
 	}
 	return assetList, nil
 }
@@ -783,4 +876,40 @@ func cloneConfig(invConf *inventory.Config) *inventory.Config {
 	// We do not want to run discovery again for the already discovered assets
 	invConfClone.Discover = &inventory.Discovery{}
 	return invConfClone
+}
+
+func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*inventory.Asset, od *PlatformIdOwnershipIndex) {
+	// everything is connected to the root asset
+	root.RelatedAssets = append(root.RelatedAssets, assets...)
+
+	// build a lookup on the k8s uid to look up individual assets to link
+	platformIdToAssetMap := map[string]*inventory.Asset{}
+	for _, a := range assets {
+		for _, platformId := range a.PlatformIds {
+			platformIdToAssetMap[platformId] = a
+		}
+	}
+
+	for id, a := range platformIdToAssetMap {
+		ownedBy := od.OwnedBy(id)
+		for _, ownerPlatformId := range ownedBy {
+			if aa, ok := platformIdToAssetMap[ownerPlatformId]; ok {
+				a.RelatedAssets = append(a.RelatedAssets, aa)
+			} else {
+				// If the owner object is not scanned we can still add an asset as we know most of the information
+				// from the ownerReference field
+				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
+					platformData, err := createPlatformData(platformEntry.Kind, conn.Runtime())
+					if err != nil {
+						continue
+					}
+					a.RelatedAssets = append(a.RelatedAssets, &inventory.Asset{
+						PlatformIds: []string{ownerPlatformId},
+						Platform:    platformData,
+						Name:        platformEntry.Namespace + "/" + platformEntry.Name,
+					})
+				}
+			}
+		}
+	}
 }

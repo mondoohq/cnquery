@@ -30,6 +30,7 @@ type ConnectionType string
 type Connection interface {
 	ID() uint32
 	Name() string
+	Runtime() string
 
 	// Resources returns the resources that match the provided kind and name. If not kind and name
 	// are provided, then all cluster resources are returned.
