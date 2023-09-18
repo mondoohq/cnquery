@@ -46,12 +46,23 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		return nil, nil, err
 	}
 
-	x, found := packages.packagesByName[name]
-	if !found {
-		return nil, nil, errors.New("cannot find package " + name)
+	if res, ok := packages.packagesByName[name]; ok {
+		return nil, res, nil
 	}
 
-	return nil, x, nil
+	res := &mqlPackage{}
+	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
+	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Outdated = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Version.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Epoch.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Available.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Arch.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, res, nil
 }
 
 func (p *mqlPackage) status() (string, error) {
