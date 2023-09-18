@@ -58,9 +58,9 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 	}
 
 	// check if we are having a container
-	data, err := dockerClient.ContainerInspect(context.Background(), asset.Name)
+	data, err := dockerClient.ContainerInspect(context.Background(), conf.Host)
 	if err != nil {
-		return nil, errors.New("cannot find container " + asset.Name)
+		return nil, errors.New("cannot find container " + conf.Host)
 	}
 
 	if !data.State.Running {
@@ -70,7 +70,7 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 	conn := &DockerContainerConnection{
 		asset:     asset,
 		Client:    dockerClient,
-		container: asset.Name,
+		container: conf.Host,
 		kind:      "container",
 		runtime:   "docker",
 	}

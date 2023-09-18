@@ -9,7 +9,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
 
 // be aware that images are prefixed with sha256:, while containers are not
@@ -53,33 +52,13 @@ func (e *dockerEngineDiscovery) ListImages() ([]*inventory.Asset, error) {
 		}
 
 		asset := &inventory.Asset{
-			Name:        strings.Join(dImg.RepoTags, ","),
-			PlatformIds: []string{containerid.MondooContainerImageID(digest)},
-			Platform: &inventory.Platform{
-				Kind:    "container-image",
-				Runtime: "docker-image",
-			},
 			Connections: []*inventory.Config{
 				{
-					Backend: "docker-image",
-					Host:    dImg.ID,
+					Type: "docker-image",
+					Host: dImg.ID,
 				},
 			},
-			State: inventory.State_STATE_ONLINE,
 		}
-
-		// update labels
-		labels := map[string]string{}
-		for key := range dImg.Labels {
-			labels[key] = dImg.Labels[key]
-		}
-
-		labels["mondoo.com/image-id"] = dImg.ID
-		// project/repo:5e664d0e,gcr.io/project/repo:5e664d0e
-		labels["docker.io/tags"] = strings.Join(dImg.RepoTags, ",")
-		// gcr.io/project/repo@sha256:5248...2bee
-		labels["docker.io/digests"] = strings.Join(dImg.RepoDigests, ",")
-		asset.Labels = labels
 
 		imgs[i] = asset
 	}
