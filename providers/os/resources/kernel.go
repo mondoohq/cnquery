@@ -322,7 +322,12 @@ func initKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	if res, ok := kernel.moduleByName[name]; ok {
 		return nil, res, nil
 	}
-	return args, nil, nil
+
+	res := &mqlKernelModule{}
+	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
+	res.Size.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Loaded = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	return nil, res, nil
 }
 
 func (k *mqlKernelModule) id() (string, error) {

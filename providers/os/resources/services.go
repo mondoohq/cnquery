@@ -39,12 +39,20 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		return nil, nil, err
 	}
 
-	srv := services.namedServices[name]
-	if srv == nil {
-		return nil, nil, errors.New("service '" + name + "' does not exist")
+	if srv, ok := services.namedServices[name]; ok {
+		return nil, srv, nil
 	}
 
-	return nil, srv, nil
+	res := &mqlService{}
+	res.Name = plugin.TValue[string]{Data: name, State: plugin.StateIsSet}
+	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Running = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Type.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
+	return nil, res, nil
 }
 
 func (x *mqlService) id() (string, error) {
