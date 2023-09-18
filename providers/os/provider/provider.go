@@ -143,7 +143,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Path = string(x.Value)
 	}
 
-	conf.Credentials = append(conf.Credentials, &vault.Credential{Type: vault.CredentialType_ssh_agent, User: user})
+	if user != "" {
+		conf.Credentials = append(conf.Credentials, &vault.Credential{Type: vault.CredentialType_ssh_agent, User: user})
+	}
 
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},

@@ -168,7 +168,7 @@ var Config = plugin.Provider{
 			Use:     "container",
 			Short:   "a running container or container image",
 			MinArgs: 1,
-			MaxArgs: 1,
+			MaxArgs: 2,
 			Discovery: []string{
 				"containers",
 				"container-images",
