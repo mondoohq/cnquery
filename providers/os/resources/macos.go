@@ -19,17 +19,12 @@ import (
 
 func (m *mqlMacos) userPreferences() (map[string]interface{}, error) {
 	conn := m.MqlRuntime.Connection.(shared.Connection)
-
-	res := map[string]interface{}{}
 	preferences, err := macos.NewPreferences(conn).UserPreferences()
 	if err != nil {
 		return nil, err
 	}
 
-	for k := range preferences {
-		res[k] = preferences[k]
-	}
-	return res, nil
+	return convert.JsonToDict(preferences)
 }
 
 func (m *mqlMacos) userHostPreferences() (map[string]interface{}, error) {
@@ -40,11 +35,7 @@ func (m *mqlMacos) userHostPreferences() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
-	for k := range preferences {
-		res[k] = preferences[k]
-	}
-	return res, nil
+	return convert.JsonToDict(preferences)
 }
 
 func (m *mqlMacos) globalAccountPolicies() (map[string]interface{}, error) {
