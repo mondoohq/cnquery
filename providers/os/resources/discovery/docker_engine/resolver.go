@@ -40,7 +40,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 	// check if we have a tar as input
 	// detect if the tar is a container image format -> container image
 	// or a container snapshot format -> container snapshot
-	if conf.Backend == "tar" {
+	if conf.Type == "tar" {
 
 		if conf.Options == nil || conf.Options["file"] == "" {
 			return nil, errors.New("could not find the tar file")
@@ -79,7 +79,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 	ded, dockerEngErr := NewDockerEngineDiscovery()
 	// we do not fail here, since we pull the image from upstream if its is an image without the need for docker
 
-	if conf.Backend == "docker-container" {
+	if conf.Type == "docker-container" {
 		if dockerEngErr != nil {
 			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
 		}
@@ -91,7 +91,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 		return []*inventory.Asset{resolvedAsset}, nil
 	}
 
-	if conf.Backend == "docker-image" {
+	if conf.Type == "docker-image" {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
 		// resolvedAssets, err := r.images(ctx, root, conf, ded, credsResolver, sfn)
 		resolvedAssets, err := r.images(ctx, root, conf, ded, credsResolver)
