@@ -172,6 +172,29 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 							terraformCfg.Backend = providers.ProviderType_TERRAFORM
 							// git+https://gitlab.com/mondoolabs/example-gitlab.git
 							terraformCfg.Options["path"] = "git+" + project.HTTPURLToRepo
+
+							terraformCfg.Options = map[string]string{
+								"asset-type": "hcl",
+								"path":       "git+" + project.HTTPURLToRepo,
+							}
+
+							if len(pCfg.Credentials) == 0 {
+								token := os.Getenv("GITLAB_TOKEN")
+								terraformCfg.Credentials = []*vault.Credential{{
+									Type:   vault.CredentialType_password,
+									User:   "oauth2",
+									Secret: []byte(token),
+								}}
+							} else {
+								// add oauth2 user to the credentials
+								for i := range pCfg.Credentials {
+									cred := pCfg.Credentials[i]
+									if cred.Type == vault.CredentialType_password {
+										cred.User = "oauth2"
+									}
+								}
+							}
+
 							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn)
 							if err == nil && len(assets) > 0 {
 								for i := range assets {
@@ -183,6 +206,8 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 										continue
 									}
 								}
+							} else {
+								log.Error().Err(err).Msg("error discovering terraform")
 							}
 						}
 					}
