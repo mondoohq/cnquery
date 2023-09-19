@@ -17,14 +17,20 @@ func (s *Schema) Add(other *Schema) *Schema {
 				existing.IsExtension = v.IsExtension
 				existing.Provider = v.Provider
 				existing.Init = v.Init
-			} else if !v.IsExtension {
-				// TODO: clean up any resource that clashes right now. There are a few
-				// implicit extensions that cause this behavior at the moment.
-				// log.Warn().Str("resource", k).Msg("found a resource that is not flagged as `extends` properly")
 			}
+			// TODO: clean up any resource that clashes right now. There are a few
+			//       implicit extensions that cause this behavior at the moment.
+			//       log.Warn().Str("resource", k).Msg("found a resource that is not flagged as `extends` properly")
+			// else if !v.IsExtension {}
 
 			if v.Title != "" {
 				existing.Title = v.Title
+			}
+			if v.Name != "" {
+				existing.Name = v.Name
+			}
+			if v.MinMondooVersion != "" {
+				existing.MinMondooVersion = v.MinMondooVersion
 			}
 			if v.Desc != "" {
 				existing.Desc = v.Desc
