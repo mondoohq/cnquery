@@ -52,6 +52,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	if err != nil {
 		return nil, err
 	}
+	rootToken, err := credsResolver.GetCredential(root.Connections[0].Credentials[0])
+	if err == nil && rootToken != nil {
+		pCfg.Credentials = []*vault.Credential{rootToken}
+	}
 
 	defaultName := root.Name
 	list := []*asset.Asset{}
