@@ -171,7 +171,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 							terraformCfg := pCfg.Clone()
 							terraformCfg.Backend = providers.ProviderType_TERRAFORM
 							// git+https://gitlab.com/mondoolabs/example-gitlab.git
-							terraformCfg.Options["path"] = "git" + "+" + project.HTTPURLToRepo
+							terraformCfg.Options["path"] = "git+" + project.HTTPURLToRepo
 							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn)
 							if err == nil && len(assets) > 0 {
 								for i := range assets {
