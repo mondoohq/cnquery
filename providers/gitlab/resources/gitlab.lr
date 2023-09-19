@@ -14,10 +14,18 @@ gitlab.group @defaults("name") {
   path string
   // Group description
   description string
+  // URL of the project
+  webURL string
   // Group visibility. Can be private, internal, or public.
   visibility string
   // Require all users in this group to setup Two-factor authentication.
   requireTwoFactorAuthentication bool
+  // Don't allow forking projects outside this group
+  preventForkingOutsideGroup bool
+  // Disable group email notifications
+  emailsDisabled bool
+  // Disable group mentions within issues and merge requests
+  mentionsDisabled bool
   // List all projects that belong to the group
   projects() []gitlab.project
 }

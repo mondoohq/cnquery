@@ -105,11 +105,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetDescription()).ToDataRes(types.String)
 	},
+	"gitlab.group.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetWebURL()).ToDataRes(types.String)
+	},
 	"gitlab.group.visibility": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetVisibility()).ToDataRes(types.String)
 	},
 	"gitlab.group.requireTwoFactorAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetRequireTwoFactorAuthentication()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.preventForkingOutsideGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetPreventForkingOutsideGroup()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetEmailsDisabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.group.mentionsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetMentionsDisabled()).ToDataRes(types.Bool)
 	},
 	"gitlab.group.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetProjects()).ToDataRes(types.Array(types.Resource("gitlab.project")))
@@ -161,12 +173,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.group.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.group.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.requireTwoFactorAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).RequireTwoFactorAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.preventForkingOutsideGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).PreventForkingOutsideGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.emailsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.mentionsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).MentionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -230,8 +258,12 @@ type mqlGitlabGroup struct {
 	Name plugin.TValue[string]
 	Path plugin.TValue[string]
 	Description plugin.TValue[string]
+	WebURL plugin.TValue[string]
 	Visibility plugin.TValue[string]
 	RequireTwoFactorAuthentication plugin.TValue[bool]
+	PreventForkingOutsideGroup plugin.TValue[bool]
+	EmailsDisabled plugin.TValue[bool]
+	MentionsDisabled plugin.TValue[bool]
 	Projects plugin.TValue[[]interface{}]
 }
 
@@ -288,12 +320,28 @@ func (c *mqlGitlabGroup) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlGitlabGroup) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
 func (c *mqlGitlabGroup) GetVisibility() *plugin.TValue[string] {
 	return &c.Visibility
 }
 
 func (c *mqlGitlabGroup) GetRequireTwoFactorAuthentication() *plugin.TValue[bool] {
 	return &c.RequireTwoFactorAuthentication
+}
+
+func (c *mqlGitlabGroup) GetPreventForkingOutsideGroup() *plugin.TValue[bool] {
+	return &c.PreventForkingOutsideGroup
+}
+
+func (c *mqlGitlabGroup) GetEmailsDisabled() *plugin.TValue[bool] {
+	return &c.EmailsDisabled
+}
+
+func (c *mqlGitlabGroup) GetMentionsDisabled() *plugin.TValue[bool] {
+	return &c.MentionsDisabled
 }
 
 func (c *mqlGitlabGroup) GetProjects() *plugin.TValue[[]interface{}] {
