@@ -56,6 +56,12 @@ func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
 	flags.Bool("auto-update", true, "")
 	flags.BoolP("help", "h", false, "")
+
+	builtins := genBuiltinFlags()
+	for i := range builtins {
+		addFlagToSet(flags, builtins[i])
+	}
+
 	for i := range commands {
 		cmd := commands[i]
 		cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
@@ -67,7 +73,7 @@ func detectConnectorName(args []string, commands []*Command) (string, bool) {
 
 	err := flags.Parse(args)
 	if err != nil {
-		log.Warn().Err(err).Msg("pre-processing of cli had an error")
+		log.Warn().Err(err).Msg("CLI pre-processing encountered an issue")
 	}
 
 	autoUpdate, _ = flags.GetBool("auto-update")
@@ -178,18 +184,23 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 	setConnector(provider, connector, cmd.Run, res)
 }
 
-func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes), cmd *cobra.Command) {
-	oldRun := cmd.Run
-	oldPreRun := cmd.PreRun
+func genBuiltinFlags(discoveries ...string) []plugin.Flag {
+	supportedDiscoveries := append([]string{"all", "auto"}, discoveries...)
 
-	supportedDiscoveries := append([]string{"all", "auto"}, connector.Discovery...)
-
-	builtinFlags := []plugin.Flag{
+	return []plugin.Flag{
+		// flags for providers:
 		{
 			Long: "discover",
 			Type: plugin.FlagType_List,
 			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
 		},
+		{
+			Long:   "pretty",
+			Type:   plugin.FlagType_Bool,
+			Desc:   "Pretty-print JSON",
+			Option: plugin.FlagOption_Hidden,
+		},
+		// runtime-only flags:
 		{
 			Long: "record",
 			Type: plugin.FlagType_String,
@@ -200,14 +211,89 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			Type: plugin.FlagType_String,
 			Desc: "Use a recording to inject resource data (read-only)",
 		},
-		{
-			Long:   "pretty",
-			Type:   plugin.FlagType_Bool,
-			Desc:   "Pretty-print JSON",
-			Option: plugin.FlagOption_Hidden,
-		},
 	}
+}
 
+// the following flags are not processed by providers
+var skipFlags = map[string]struct{}{
+	"ask-pass":      {},
+	"record":        {},
+	"use-recording": {},
+}
+
+func addFlagToSet(set *pflag.FlagSet, flag plugin.Flag) {
+	switch flag.Type {
+	case plugin.FlagType_Bool:
+		if flag.Short != "" {
+			set.BoolP(flag.Long, flag.Short, false, flag.Desc)
+		} else {
+			set.Bool(flag.Long, false, flag.Desc)
+		}
+	case plugin.FlagType_Int:
+		if flag.Short != "" {
+			set.IntP(flag.Long, flag.Short, 0, flag.Desc)
+		} else {
+			set.Int(flag.Long, 0, flag.Desc)
+		}
+	case plugin.FlagType_String:
+		if flag.Short != "" {
+			set.StringP(flag.Long, flag.Short, "", flag.Desc)
+		} else {
+			set.String(flag.Long, "", flag.Desc)
+		}
+	case plugin.FlagType_List:
+		if flag.Short != "" {
+			set.StringArrayP(flag.Long, flag.Short, []string{}, flag.Desc)
+		} else {
+			set.StringArray(flag.Long, []string{}, flag.Desc)
+		}
+	case plugin.FlagType_KeyValue:
+		if flag.Short != "" {
+			set.StringToStringP(flag.Long, flag.Short, map[string]string{}, flag.Desc)
+		} else {
+			set.StringToString(flag.Long, map[string]string{}, flag.Desc)
+		}
+	default:
+		log.Warn().Msg("unknown flag type for " + flag.Long)
+	}
+}
+
+func getFlagValue(flag plugin.Flag, cmd *cobra.Command) *llx.Primitive {
+	switch flag.Type {
+	case plugin.FlagType_Bool:
+		v, err := cmd.Flags().GetBool(flag.Long)
+		if err == nil {
+			return llx.BoolPrimitive(v)
+		}
+		log.Warn().Err(err).Msg("failed to get flag " + flag.Long)
+	case plugin.FlagType_Int:
+		if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
+			return llx.IntPrimitive(int64(v))
+		}
+	case plugin.FlagType_String:
+		if v, err := cmd.Flags().GetString(flag.Long); err == nil {
+			return llx.StringPrimitive(v)
+		}
+	case plugin.FlagType_List:
+		if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
+			return llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
+	case plugin.FlagType_KeyValue:
+		if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
+			return llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
+		}
+	default:
+		log.Warn().Msg("unknown flag type for " + flag.Long)
+		return nil
+	}
+	return nil
+}
+
+func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes), cmd *cobra.Command) {
+	oldRun := cmd.Run
+	oldPreRun := cmd.PreRun
+
+	builtinFlags := genBuiltinFlags(connector.Discovery...)
 	allFlags := append(connector.Flags, builtinFlags...)
 
 	cmd.PreRun = func(cc *cobra.Command, args []string) {
@@ -266,14 +352,6 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Warn().Msg("failed to get flag --pretty")
 		}
 
-		// the following flags are not processed by the provider; we handle them
-		// here instead
-		skipFlags := map[string]struct{}{
-			"ask-pass":      {},
-			"record":        {},
-			"use-recording": {},
-		}
-
 		flagVals := map[string]*llx.Primitive{}
 		for i := range allFlags {
 			flag := allFlags[i]
@@ -283,27 +361,8 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 				continue
 			}
 
-			switch flag.Type {
-			case plugin.FlagType_Bool:
-				if v, err := cmd.Flags().GetBool(flag.Long); err == nil {
-					flagVals[flag.Long] = llx.BoolPrimitive(v)
-				}
-			case plugin.FlagType_Int:
-				if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
-					flagVals[flag.Long] = llx.IntPrimitive(int64(v))
-				}
-			case plugin.FlagType_String:
-				if v, err := cmd.Flags().GetString(flag.Long); err == nil {
-					flagVals[flag.Long] = llx.StringPrimitive(v)
-				}
-			case plugin.FlagType_List:
-				if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
-					flagVals[flag.Long] = llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
-				}
-			case plugin.FlagType_KeyValue:
-				if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
-					flagVals[flag.Long] = llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
-				}
+			if v := getFlagValue(flag, cmd); v != nil {
+				flagVals[flag.Long] = v
 			}
 		}
 

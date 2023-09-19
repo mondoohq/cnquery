@@ -11,8 +11,9 @@ import (
 
 var mockProvider = Provider{
 	Provider: &plugin.Provider{
-		Name: "mock",
-		ID:   "go.mondoo.com/cnquery/providers/mock",
+		Name:    "mock",
+		ID:      "go.mondoo.com/cnquery/providers/mock",
+		Version: "9.0.0",
 		Connectors: []plugin.Connector{{
 			Name:  "mock",
 			Use:   "mock",
