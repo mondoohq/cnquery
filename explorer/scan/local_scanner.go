@@ -235,12 +235,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	justAssets := []*inventory.Asset{}
 	for _, asset := range assets {
-		if asset.asset.GetPlatform() != nil {
-			asset.asset.KindString = asset.asset.GetPlatform().Kind
-		} else {
-			asset.asset = asset.runtime.Provider.Connection.Asset
-			asset.asset.KindString = asset.runtime.Provider.Connection.Asset.Platform.Kind
-		}
+		asset.asset.KindString = asset.asset.GetPlatform().Kind
 		justAssets = append(justAssets, asset.asset)
 	}
 
