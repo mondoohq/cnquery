@@ -37,7 +37,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ipmi",
-					Short: "Ipmi",
+					Short: "IPMI",
 				},
 			},
 		},
@@ -145,7 +145,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "slack",
-					Short: "slack team",
+					Short: "Slack Team",
 				},
 			},
 		},
@@ -178,7 +178,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "k8s",
-					Short: "a Kubernetes cluster or local manifest file(s).",
+					Short: "Kubernetes cluster or local manifest file(s)",
 				},
 			},
 		},
@@ -200,7 +200,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "aws",
-					Short: "aws account",
+					Short: "AWS account",
 				},
 			},
 		},
@@ -233,7 +233,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "host",
-					Short: "a remote host",
+					Short: "Remote host",
 				},
 			},
 		},
@@ -244,7 +244,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ms365",
-					Short: "ms365",
+					Short: "Microsoft 365",
 				},
 			},
 		},
@@ -255,7 +255,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "azure",
-					Short: "azure",
+					Short: "Azure",
 				},
 			},
 		},
