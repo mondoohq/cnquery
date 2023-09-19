@@ -132,35 +132,16 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 
 	container := make([]*inventory.Asset, len(dContainers))
 	for i, dContainer := range dContainers {
-		name := strings.Join(DockerDisplayNames(dContainer.Names), ",")
 		asset := &inventory.Asset{
-			Name:        name,
-			PlatformIds: []string{containerid.MondooContainerID(dContainer.ID)},
-			Platform: &inventory.Platform{
-				Kind:    "container",
-				Runtime: "docker-container",
-			},
 			Connections: []*inventory.Config{
 				{
 					Backend: "docker-engine",
+					Type:    "docker-container",
 					Host:    dContainer.ID,
 				},
 			},
-			State:  mapContainerState(dContainer.State),
-			Labels: make(map[string]string),
 		}
 		log.Debug().Str("container", dContainer.ID).Msg("discovered container")
-
-		for key := range dContainer.Labels {
-			asset.Labels[key] = dContainer.Labels[key]
-		}
-
-		// fetch docker specific metadata
-		labels := map[string]string{}
-		labels["mondoo.com/image-id"] = dContainer.ImageID
-		labels["docker.io/image-name"] = dContainer.Image
-		labels["docker.io/names"] = name
-		asset.Labels = labels
 
 		container[i] = asset
 	}
