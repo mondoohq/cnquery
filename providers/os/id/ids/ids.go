@@ -10,10 +10,5 @@ const (
 	IdDetector_SshHostkey  = "ssh-host-key"
 	IdDetector_AwsEcs      = "aws-ecs"
 
-	// FIXME: DEPRECATED, remove in v9.0 vv
-	// this is now cloud-detect
-	IdDetector_AwsEc2 = "aws-ec2"
-	// ^^
-
 	// IdDetector_PlatformID = "transport-platform-id" // TODO: how does this work?
 )

@@ -147,23 +147,6 @@ func GatherPlatformInfo(conn shared.Connection, pf *inventory.Platform, idDetect
 			}, hostErr
 		}
 		return &PlatformInfo{}, nil
-	case idDetector == ids.IdDetector_AwsEc2:
-		metadata, err := awsec2.Resolve(conn, pf)
-		if err != nil {
-			return nil, err
-		}
-		ident, err := metadata.Identify()
-		if err != nil {
-			return nil, err
-		}
-		if ident.InstanceID != "" {
-			return &PlatformInfo{
-				IDs:                []string{ident.InstanceID},
-				Name:               ident.InstanceName,
-				RelatedPlatformIDs: []string{ident.AccountID},
-			}, nil
-		}
-		return &PlatformInfo{}, nil
 	case idDetector == ids.IdDetector_AwsEcs:
 		metadata, err := awsecs.Resolve(conn, pf)
 		if err != nil {

@@ -64,7 +64,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		}
 	}
 
-	if hasDetector(detectors, ids.IdDetector_CloudDetect, ids.IdDetector_AwsEc2) {
+	if hasDetector(detectors, ids.IdDetector_CloudDetect) {
 		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.Platform.Name = name
