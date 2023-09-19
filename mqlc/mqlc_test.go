@@ -15,14 +15,15 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/types"
+
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 var (
 	features    = cnquery.Features{}
-	os_schema   = providers.MustLoadSchemaFromFile("os", "../providers/os/resources/os.resources.json")
-	core_schema = providers.MustLoadSchemaFromFile("core", "../providers/core/resources/core.resources.json")
+	core_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
+	os_schema   = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
 	conf        = mqlc.NewConfig(
 		core_schema.Add(os_schema),
 		features,
@@ -233,6 +234,20 @@ func TestCompiler_Semicolon(t *testing.T) {
 			&llx.Function{Binding: (2 << 32) | 1, Type: string(types.String)},
 			res.CodeV2.Blocks[1].Chunks[2])
 	})
+}
+
+func TestCompiler_DeterministicChecksum(t *testing.T) {
+	// this is a query that in the past used to produce different checksum every now and then
+	// this test ensures that the checksum is always deterministic now
+	mql := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
+	azure_schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
+
+	for i := 0; i < 10_000; i++ {
+		azureConf := mqlc.NewConfig(azure_schema, features)
+		res, err := mqlc.Compile(mql, map[string]*llx.Primitive{}, azureConf)
+		require.Nil(t, err)
+		require.Equal(t, res.CodeV2.Id, "LkB8PP3xB2Q=")
+	}
 }
 
 func TestCompiler_Simple(t *testing.T) {

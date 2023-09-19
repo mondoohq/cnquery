@@ -23,6 +23,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/providers-sdk/v1/lr/docs"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils/mockprovider"
 	"go.mondoo.com/cnquery/providers/mock"
@@ -30,6 +31,7 @@ import (
 	networkprovider "go.mondoo.com/cnquery/providers/network/provider"
 	osconf "go.mondoo.com/cnquery/providers/os/config"
 	osprovider "go.mondoo.com/cnquery/providers/os/provider"
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -79,6 +81,11 @@ func TomlMock(filepath string) llx.Runtime {
 
 type tester struct {
 	Runtime llx.Runtime
+}
+
+type SchemaProvider struct {
+	Provider string
+	Path     string
 }
 
 func InitTester(runtime llx.Runtime) *tester {
@@ -150,32 +157,57 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
-func mustLoadSchema(provider string) *resources.Schema {
+func MustLoadSchema(provider SchemaProvider) *resources.Schema {
+	if provider.Path == "" && provider.Provider == "" {
+		panic("cannot load schema without provider name or path")
+	}
 	var path string
-	if provider == "mockprovider" {
-		path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
-	} else {
-		path = filepath.Join(TestutilsDir, "../../../providers/"+provider+"/resources/"+provider+".lr")
+	// path towards the .yaml manifest, containing metadata abou the resources
+	var manifestPath string
+	if provider.Provider != "" {
+		switch provider.Provider {
+		// special handling for the mockprovider
+		case "mockprovider":
+			path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
+		default:
+			manifestPath = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr.manifest.yaml")
+			path = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr")
+		}
+	} else if provider.Path != "" {
+		path = provider.Path
 	}
 
 	res, err := lr.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
 	if err != nil {
 		panic(err.Error())
 	}
-
 	schema, err := lr.Schema(res)
 	if err != nil {
 		panic(err.Error())
+	}
+	// TODO: we should make a function that takes the Schema and the metadata and merges those.
+	// Then we can use that in the LR code and the testutils code too
+	if manifestPath != "" {
+		// we will attempt to auto-detect the manifest to inject some metadata
+		// into the schema
+		raw, err := os.ReadFile(manifestPath)
+		if err == nil {
+			var lrDocsData docs.LrDocs
+			err = yaml.Unmarshal(raw, &lrDocsData)
+			if err == nil {
+				docs.InjectMetadata(schema, &lrDocsData)
+			}
+		}
 	}
 
 	return schema
 }
 
 func Local() llx.Runtime {
-	osSchema := mustLoadSchema("os")
-	coreSchema := mustLoadSchema("core")
-	networkSchema := mustLoadSchema("network")
-	mockSchema := mustLoadSchema("mockprovider")
+	osSchema := MustLoadSchema(SchemaProvider{Provider: "os"})
+	coreSchema := MustLoadSchema(SchemaProvider{Provider: "core"})
+	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
+	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
 	runtime := providers.Coordinator.NewRuntime()
 
