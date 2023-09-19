@@ -1529,7 +1529,7 @@ private gcp.project.gkeService.cluster.ipAllocationPolicy {
 }
 
 // GKE Cluster Network Config
-private gcp.project.gkeService.cluster.networkConfig {
+private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
   // Internal ID
   id string
   // Relative path of the network to which the cluster is connected
@@ -1890,7 +1890,7 @@ private gcp.project.kmsService.keyring @defaults("name") {
 }
 
 // GCP KMS crypto key
-private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
+private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   // Full resource path
   resourcePath string
   // Crypto key name
@@ -2082,7 +2082,7 @@ private gcp.project.loggingservice.bucket @defaults("name") {
 }
 
 // GCP Logging bucket index config
-private gcp.project.loggingservice.bucket.indexConfig {
+private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
   // Internal ID
   id string
   // Creation timestamp
@@ -2108,7 +2108,7 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
 }
 
 // GCP Logging sink
-private gcp.project.loggingservice.sink {
+private gcp.project.loggingservice.sink @defaults("destination") {
   // Sink ID
   id string
   // Project ID
@@ -2134,7 +2134,7 @@ private gcp.project.iamService {
 }
 
 // GCP Service Account
-private gcp.project.iamService.serviceAccount {
+private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // Project ID
   projectId string
   // Service account name
@@ -2156,7 +2156,7 @@ private gcp.project.iamService.serviceAccount {
 }
 
 // GCP service account keys
-private gcp.project.iamService.serviceAccount.key {
+private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Service account key name
   name string
   // Algorithm (and possibly key size) of the key
@@ -2173,7 +2173,7 @@ private gcp.project.iamService.serviceAccount.key {
   disabled bool
 }
 // GCP Cloud Function
-private gcp.project.cloudFunction {
+private gcp.project.cloudFunction @defaults("name") {
   // Project ID
   projectId string
   // Cloud Function name
