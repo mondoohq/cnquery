@@ -15,7 +15,7 @@ env:
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - name: Converge provider list inputs
         run: |
