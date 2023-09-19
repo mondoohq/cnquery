@@ -84,7 +84,7 @@ func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
 			}
 		}
 
-		var replacePaths map[string]interface{}
+		var replacePaths []interface{}
 		if rc.Change.ReplacePaths != nil {
 			if err := json.Unmarshal(rc.Change.ReplacePaths, &replacePaths); err != nil {
 				return nil, err
@@ -99,7 +99,7 @@ func (t *mqlTerraformPlan) resourceChanges() ([]interface{}, error) {
 			"afterUnknown":    llx.MapData(afterUnknown, types.Any),
 			"beforeSensitive": llx.MapData(beforeSensitive, types.Any),
 			"afterSensitive":  llx.MapData(afterSensitive, types.Any),
-			"replacePaths":    llx.MapData(replacePaths, types.Any),
+			"replacePaths":    llx.ArrayData(replacePaths, types.Any),
 		})
 		if err != nil {
 			return nil, err
