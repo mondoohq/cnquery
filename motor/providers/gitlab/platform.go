@@ -16,14 +16,14 @@ var (
 		Title:   "GitLab Project",
 		Family:  []string{"gitlab"},
 		Kind:    providers.Kind_KIND_API,
-		Runtime: providers.RUNTIME_GITHUB,
+		Runtime: providers.RUNTIME_GITLAB,
 	}
 	GitLabGroupPlatform = &platform.Platform{
 		Name:    "gitlab-group",
 		Title:   "GitLab Group",
 		Family:  []string{"gitlab"},
 		Kind:    providers.Kind_KIND_API,
-		Runtime: providers.RUNTIME_GITHUB,
+		Runtime: providers.RUNTIME_GITLAB,
 	}
 )
 
