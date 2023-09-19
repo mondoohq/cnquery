@@ -15,15 +15,16 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/types"
+
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 var (
 	features     = cnquery.Features{}
-	os_schema    = providers.MustLoadSchemaFromFile("os", "../providers/os/resources/os.resources.json")
-	core_schema  = providers.MustLoadSchemaFromFile("core", "../providers/core/resources/core.resources.json")
-	azure_schema = providers.MustLoadSchemaFromFile("azure", "../providers/azure/resources/azure.resources.json")
+	os_schema    = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
+	core_schema  = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
+	azure_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
 	conf         = mqlc.NewConfig(
 		core_schema.Add(os_schema).Add(azure_schema),
 		features,

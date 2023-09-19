@@ -81,6 +81,11 @@ type tester struct {
 	Runtime llx.Runtime
 }
 
+type SchemaProvider struct {
+	Provider string
+	Path     string
+}
+
 func InitTester(runtime llx.Runtime) *tester {
 	return &tester{
 		Runtime: runtime,
@@ -150,12 +155,21 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
-func mustLoadSchema(provider string) *resources.Schema {
+func MustLoadSchema(provider SchemaProvider) *resources.Schema {
+	if provider.Path == "" && provider.Provider == "" {
+		panic("cannot load schema without provider name or path")
+	}
 	var path string
-	if provider == "mockprovider" {
-		path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
-	} else {
-		path = filepath.Join(TestutilsDir, "../../../providers/"+provider+"/resources/"+provider+".lr")
+	if provider.Provider != "" {
+		switch provider.Provider {
+		// special handling for the mockprovider
+		case "mockprovider":
+			path = filepath.Join(TestutilsDir, "mockprovider/resources/mockprovider.lr")
+		default:
+			path = filepath.Join(TestutilsDir, "../../../providers/"+provider.Provider+"/resources/"+provider.Provider+".lr")
+		}
+	} else if provider.Path != "" {
+		path = provider.Path
 	}
 
 	res, err := lr.Resolve(path, func(path string) ([]byte, error) { return os.ReadFile(path) })
@@ -172,10 +186,10 @@ func mustLoadSchema(provider string) *resources.Schema {
 }
 
 func Local() llx.Runtime {
-	osSchema := mustLoadSchema("os")
-	coreSchema := mustLoadSchema("core")
-	networkSchema := mustLoadSchema("network")
-	mockSchema := mustLoadSchema("mockprovider")
+	osSchema := MustLoadSchema(SchemaProvider{Provider: "os"})
+	coreSchema := MustLoadSchema(SchemaProvider{Provider: "core"})
+	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
+	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
 	runtime := providers.Coordinator.NewRuntime()
 
