@@ -20,11 +20,12 @@ import (
 )
 
 var (
-	features    = cnquery.Features{}
-	os_schema   = providers.MustLoadSchemaFromFile("os", "../providers/os/resources/os.resources.json")
-	core_schema = providers.MustLoadSchemaFromFile("core", "../providers/core/resources/core.resources.json")
-	conf        = mqlc.NewConfig(
-		core_schema.Add(os_schema),
+	features     = cnquery.Features{}
+	os_schema    = providers.MustLoadSchemaFromFile("os", "../providers/os/resources/os.resources.json")
+	core_schema  = providers.MustLoadSchemaFromFile("core", "../providers/core/resources/core.resources.json")
+	azure_schema = providers.MustLoadSchemaFromFile("azure", "../providers/azure/resources/azure.resources.json")
+	conf         = mqlc.NewConfig(
+		core_schema.Add(os_schema).Add(azure_schema),
 		features,
 	)
 )
@@ -233,6 +234,17 @@ func TestCompiler_Semicolon(t *testing.T) {
 			&llx.Function{Binding: (2 << 32) | 1, Type: string(types.String)},
 			res.CodeV2.Blocks[1].Chunks[2])
 	})
+}
+
+func TestCompiler_DeterministicChecksum(t *testing.T) {
+	for i := 0; i < 10_000; i++ {
+		// this is a query that in the past used to produce different checksum every now and then
+		// this test ensures that the checksum is always deterministic now
+		m := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
+		compileT(t, m, func(res *llx.CodeBundle) {
+			require.Equal(t, res.CodeV2.Id, "LkB8PP3xB2Q=", i)
+		})
+	}
 }
 
 func TestCompiler_Simple(t *testing.T) {
