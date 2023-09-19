@@ -2,24 +2,30 @@ name: 'Build & Release Providers'
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Providers that should be released"
-        default: "arista aws azure equinix gcp github gitlab google-workspace ipmi k8s ms365 network oci okta opcua os slack terraform vcd vsphere"
+    # inputs:
+    #   providers:
+    #     description: "Providers to build (Space separated, leave empty for all providers)"
+    #     default: ""
+    #     required: false
 
 env:
   BUCKET: releases-us.mondoo.io
-  PROVIDERS: "os network"
+  PROVIDERS: 'arista aws azure equinix gcp github gitlab google-workspace ipmi k8s ms365 network oci okta opcua os slack terraform vcd vsphere'
 
 jobs:
   build:
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
-      - name: Version from Workflow Dispatch
-        if: github.event_name == 'workflow_dispatch'
+      - name: Converge provider list inputs
         run: |
-          echo "PROVIDERS=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          if [ -z "${{ github.event.inputs.providers }}" ]; then
+            echo "No providers specified, building all"
+            echo "PROVIDERS=${PROVIDERS}" >> $GITHUB_ENV
+          else
+            echo "Building ${{ github.event.inputs.providers }}"
+            echo "PROVIDERS=${{ github.event.inputs.providers }}" >> $GITHUB_ENV
+          fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,9 +71,12 @@ jobs:
             echo "{ \"name\": \"${PROVIDER}\", \"version\": \"${VERSION}\" }" >> "dist/${pkg}.json"
           done
 
-      - name: 'Publish latest.json'
+      - name: 'Generate and Publish latest.json'
         run: |
           echo "{ \"providers\": [$(ls dist/*.json | xargs cat | paste -sd, -)] }" > dist/latest.json
+          echo "Latest.json contents:"
+          cat dist/latest.json
+          echo "---"
           gsutil -m cp -c dist/latest.json gs://${BUCKET}/providers/
 
       - name: Trigger Reindex of releases.mondoo.com
