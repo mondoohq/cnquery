@@ -11,9 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/smithy-go"
@@ -24,7 +23,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/providers/aws/connection"
-
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -146,22 +144,29 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, entry := range networkacls.NetworkAcls[0].Entries {
+		egress := convert.ToBool(entry.Egress)
+		entryId := id + "-" + strconv.Itoa(convert.ToIntFrom32(entry.RuleNumber))
+		if egress {
+			entryId += "-egress"
+		} else {
+			entryId += "-ingress"
+		}
 		args := map[string]*llx.RawData{
-			"egress":     llx.BoolData(convert.ToBool(entry.Egress)),
+			"egress":     llx.BoolData(egress),
 			"ruleAction": llx.StringData(string(entry.RuleAction)),
-			"id":         llx.StringData(id + "-" + strconv.Itoa(convert.ToIntFrom32(entry.RuleNumber))),
+			"id":         llx.StringData(entryId),
 		}
 		if entry.PortRange != nil {
-			mqlPortEntry, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry.portrange",
+			mqlPortRange, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry.portrange",
 				map[string]*llx.RawData{
 					"from": llx.IntData(convert.ToInt64From32(entry.PortRange.From)),
 					"to":   llx.IntData(convert.ToInt64From32(entry.PortRange.To)),
-					"id":   llx.StringData(id + "-" + strconv.Itoa(convert.ToIntFrom32(entry.RuleNumber)) + "-" + strconv.Itoa(convert.ToIntFrom32(entry.PortRange.From))),
+					"id":   llx.StringData(entryId + "-" + strconv.Itoa(convert.ToIntFrom32(entry.PortRange.From))),
 				})
 			if err != nil {
 				return nil, err
 			}
-			args["mqlPortEntry"] = llx.ResourceData(mqlPortEntry, mqlPortEntry.MqlName())
+			args["portRange"] = llx.ResourceData(mqlPortRange, mqlPortRange.MqlName())
 		}
 
 		mqlAclEntry, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry", args)
