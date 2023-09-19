@@ -21,12 +21,11 @@ import (
 )
 
 var (
-	features     = cnquery.Features{}
-	os_schema    = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
-	core_schema  = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
-	azure_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
-	conf         = mqlc.NewConfig(
-		core_schema.Add(os_schema).Add(azure_schema),
+	features    = cnquery.Features{}
+	core_schema = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "core"})
+	os_schema   = testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "os"})
+	conf        = mqlc.NewConfig(
+		core_schema.Add(os_schema),
 		features,
 	)
 )
@@ -238,13 +237,16 @@ func TestCompiler_Semicolon(t *testing.T) {
 }
 
 func TestCompiler_DeterministicChecksum(t *testing.T) {
+	// this is a query that in the past used to produce different checksum every now and then
+	// this test ensures that the checksum is always deterministic now
+	mql := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
+	azure_schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
+
 	for i := 0; i < 10_000; i++ {
-		// this is a query that in the past used to produce different checksum every now and then
-		// this test ensures that the checksum is always deterministic now
-		m := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
-		compileT(t, m, func(res *llx.CodeBundle) {
-			require.Equal(t, res.CodeV2.Id, "LkB8PP3xB2Q=", i)
-		})
+		azureConf := mqlc.NewConfig(azure_schema, features)
+		res, err := mqlc.Compile(mql, map[string]*llx.Primitive{}, azureConf)
+		require.Nil(t, err)
+		require.Equal(t, res.CodeV2.Id, "LkB8PP3xB2Q=")
 	}
 }
 

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 )
 
 type LrDocs struct {
@@ -73,4 +75,24 @@ func (d LrDocsRefs) MarshalGo() string {
 type LrDocsSnippet struct {
 	Title string `json:"title,omitempty"`
 	Query string `json:"query,omitempty"`
+}
+
+func InjectMetadata(schema *resources.Schema, docs *LrDocs) {
+	for resource, rdoc := range docs.Resources {
+		info, ok := schema.Resources[resource]
+		if !ok {
+			continue
+		}
+
+		info.MinMondooVersion = rdoc.MinMondooVersion
+
+		for field, fdoc := range rdoc.Fields {
+			finfo, ok := info.Fields[field]
+			if !ok {
+				continue
+			}
+
+			finfo.MinMondooVersion = fdoc.MinMondooVersion
+		}
+	}
 }
