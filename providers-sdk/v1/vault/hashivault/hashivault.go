@@ -11,12 +11,14 @@ import (
 	"strings"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 var notImplemented = errors.New("not implemented")
 
 func New(serverURL string, token string) *Vault {
+	log.Debug().Bool("token-sec", len(token) > 0).Msgf("Using HashiCorp Vault at %s", serverURL)
 	return &Vault{
 		Token: token,
 		APIConfig: api.Config{
@@ -65,6 +67,7 @@ func validKey(key string) error {
 
 // https://learn.hashicorp.com/tutorials/vault/versioned-kv?in=vault/secrets-management#step-2-write-secrets
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
+	log.Debug().Str("secret", id.Key).Msg("gather secret from hashicorp-vault")
 	c, err := v.client()
 	if err != nil {
 		return nil, err
@@ -86,8 +89,9 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	}
 
 	return &vault.Secret{
-		Key:  id.Key,
-		Data: secretBytes,
+		Key:      id.Key,
+		Data:     secretBytes,
+		Encoding: vault.SecretEncoding_encoding_json,
 	}, nil
 }
 
