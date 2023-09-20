@@ -6,7 +6,10 @@ package provider
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/terraform/connection"
@@ -14,8 +17,9 @@ import (
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) error {
 	var p *inventory.Platform
-	switch conn.Type() {
-	case "state":
+	connType := asset.Connections[0].Type
+	switch connType {
+	case StateConnectionType:
 		p = &inventory.Platform{
 			Name:    "terraform-state",
 			Title:   "Terraform State",
@@ -23,7 +27,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 			Kind:    "code",
 			Runtime: "terraform",
 		}
-	case "plan":
+	case PlanConnectionType:
 		p = &inventory.Platform{
 			Name:    "terraform-plan",
 			Title:   "Terraform Plan",
@@ -31,7 +35,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 			Kind:    "code",
 			Runtime: "terraform",
 		}
-	case "hcl":
+	case HclConnectionType:
 		fallthrough
 	default:
 		p = &inventory.Platform{
@@ -51,6 +55,46 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 	hash := hex.EncodeToString(h.Sum(nil))
 	platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
 	asset.Connections[0].PlatformId = platformID
+	asset.PlatformIds = []string{platformID}
+
+	name := ""
+	if projectPath != "" {
+		// manifest parent directory name
+		name = projectNameFromPath(projectPath)
+	}
+	asset.Name = "Terraform Static Analysis " + name
 
 	return nil
+}
+
+func projectNameFromPath(file string) string {
+	// if it is a local file (which may not be true)
+	name := ""
+	fi, err := os.Stat(file)
+	if err == nil {
+		if fi.IsDir() && fi.Name() != "." {
+			name = "directory " + fi.Name()
+		} else if fi.IsDir() {
+			name = fi.Name()
+		} else {
+			name = filepath.Base(fi.Name())
+			extension := filepath.Ext(name)
+			name = strings.TrimSuffix(name, extension)
+		}
+	} else {
+		// it is not a local file, so we try to be a bit smart
+		name = path.Base(file)
+		extension := path.Ext(name)
+		name = strings.TrimSuffix(name, extension)
+	}
+
+	// if the path is . we read the current directory
+	if name == "." {
+		abspath, err := filepath.Abs(name)
+		if err == nil {
+			name = projectNameFromPath(abspath)
+		}
+	}
+
+	return name
 }
