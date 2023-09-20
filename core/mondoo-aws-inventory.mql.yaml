@@ -10,7 +10,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The AWS Asset Inventory by Mondoo query pack retrieves information about AWS accounts for asset inventory.
+        The AWS Asset Inventory Pack retrieves information about AWS accounts for asset inventory.
     filters:
       - asset.platform == "aws"
     queries:
@@ -43,7 +43,7 @@ packs:
             This query retrieves all of the IAM groups.
         mql: aws.iam.groups
       - uid: mondoo-asset-inventory-aws-iam-roles
-        title: Retrieve data on all IAM Roles.
+        title: Retrieve data on all IAM Roles
         docs:
           desc: |
             This query retrieves all IAM Roles
