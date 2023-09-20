@@ -301,7 +301,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
 		if err == nil {
-			asset.Name = fingerprint.Name
+			if conn.Asset().Connections[0].Runtime != "vagrant" {
+				asset.Name = fingerprint.Name
+			}
 			asset.PlatformIds = fingerprint.PlatformIDs
 		}
 

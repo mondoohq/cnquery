@@ -52,6 +52,10 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	if !ok {
 		return errors.New("failed to detect OS")
 	}
+	if asset.Connections[0].Runtime == "vagrant" {
+		// detect overrides this
+		asset.Platform.Kind = "virtualmachine"
+	}
 
 	var detectors map[string]struct{}
 	if asset.Platform.Kind != "container-image" {
