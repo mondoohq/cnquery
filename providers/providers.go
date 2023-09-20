@@ -28,6 +28,8 @@ import (
 var (
 	SystemPath string
 	HomePath   string
+	// this is the default path for providers, it's either system or home path, if the user is root the system path is used
+	DefaultPath string
 	// CachedProviders contains all providers that have been loaded the last time
 	// ListActive or ListAll have been called
 	CachedProviders []*Provider
@@ -35,8 +37,10 @@ var (
 
 func init() {
 	SystemPath = config.SystemDataPath("providers")
+	DefaultPath = SystemPath
 	if os.Geteuid() != 0 {
 		HomePath, _ = config.HomePath("providers")
+		DefaultPath = HomePath
 	}
 }
 
@@ -198,6 +202,7 @@ func installVersion(name string, version string) (*Provider, error) {
 	url = strings.ReplaceAll(url, "{OS}", runtime.GOOS)
 	url = strings.ReplaceAll(url, "{ARCH}", runtime.GOARCH)
 
+	log.Debug().Str("url", url).Msg("installing provider from URL")
 	res, err := http.Get(url)
 	if err != nil {
 		log.Debug().Str("url", url).Msg("failed to install form URL (get request)")
@@ -205,7 +210,7 @@ func installVersion(name string, version string) (*Provider, error) {
 	}
 
 	installed, err := InstallIO(res.Body, InstallConf{
-		Dst: HomePath,
+		Dst: DefaultPath,
 	})
 	if err != nil {
 		log.Debug().Str("url", url).Msg("failed to install form URL (download)")
@@ -298,7 +303,9 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if conf.Dst == "" {
 		conf.Dst = HomePath
 	}
+
 	if !config.ProbeDir(conf.Dst) {
+		log.Debug().Str("path", conf.Dst).Msg("creating providers directory")
 		if err := os.MkdirAll(conf.Dst, 0o755); err != nil {
 			return nil, errors.New("failed to create " + conf.Dst)
 		}
@@ -307,6 +314,7 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		}
 	}
 
+	log.Debug().Msg("create temp directory to unpack providers")
 	tmpdir, err := os.MkdirTemp(conf.Dst, ".providers-unpack")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temporary directory to unpack files")
