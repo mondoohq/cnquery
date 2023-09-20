@@ -59,7 +59,7 @@ build_bundle(){
 
   echo "Building ${PROVIDER_DIST}/${PROVIDER_NAME} for ${GOOS}/${GOARCH}/${GOARM} ..."
   # we switch into the path to use the local go.mods
-  cd ${PROVIDER_PATH} && GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} main.go
+  cd ${PROVIDER_PATH} && GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -ldflags "-linkmode 'external' -extldflags '-static'" -o ${PROVIDER_DIST}/${PROVIDER_NAME} main.go
 
   # set linux flags that do not work on macos
   TAR_FLAGS=""
