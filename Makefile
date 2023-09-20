@@ -85,6 +85,22 @@ define buildProvider
 	cd ${$@_HOME} && GOOS=${TARGETOS} go build -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
 endef
 
+define buildProviderDist
+	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_DIST_BIN = "./dist/${$@_NAME}")
+	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
+	echo "--> [${$@_NAME}] process resources"
+	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
+	./lr docs yaml ${$@_HOME}/resources/${$@_NAME}.lr --docs-file ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
+	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
+	echo "--> [${$@_NAME}] generate CLI json"
+	cd ${$@_HOME} && go run ./gen/main.go .
+	echo "--> [${$@_NAME}] creating ${$@_BIN}"
+	cd ${$@_HOME} && CGO_ENABLED=0 GOOS=${TARGETOS} go build ${LDFLAGSDIST} -o ${$@_DIST_BIN}${BIN_SUFFIX} ./main.go
+endef
+
 define installProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
@@ -244,6 +260,28 @@ providers/build/aws: providers/lr
 providers/build/ms365: providers/lr
 	@$(call buildProvider, providers/ms365)
 
+providers/dist:
+	@$(call buildProviderDist, providers/network)
+	@$(call buildProviderDist, providers/os)
+	@$(call buildProviderDist, providers/ipmi)
+	@$(call buildProviderDist, providers/oci)
+	@$(call buildProviderDist, providers/slack)
+	@$(call buildProviderDist, providers/github)
+	@$(call buildProviderDist, providers/gitlab)
+	@$(call buildProviderDist, providers/terraform)
+	@$(call buildProviderDist, providers/vsphere)
+	@$(call buildProviderDist, providers/opcua)
+	@$(call buildProviderDist, providers/okta)
+	@$(call buildProviderDist, providers/google-workspace)
+	@$(call buildProviderDist, providers/arista)
+	@$(call buildProviderDist, providers/equinix)
+	@$(call buildProviderDist, providers/vcd)
+	@$(call buildProviderDist, providers/gcp)
+	@$(call buildProviderDist, providers/k8s)
+	@$(call buildProviderDist, providers/azure)
+	@$(call buildProviderDist, providers/ms365)
+	@$(call buildProviderDist, providers/aws)
+
 providers/install:
 #	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/network)
@@ -267,7 +305,6 @@ providers/install:
 	@$(call installProvider, providers/ms365)
 	@$(call installProvider, providers/aws)
 
-
 providers/bundle:
 	@$(call bundleProvider, providers/network)
 	@$(call bundleProvider, providers/os)
@@ -289,7 +326,6 @@ providers/bundle:
 	@$(call bundleProvider, providers/azure)
 	@$(call bundleProvider, providers/ms365)
 	@$(call bundleProvider, providers/aws)
-
 
 providers/test:
 	@$(call testProvider, providers/core)
