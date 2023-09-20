@@ -52,9 +52,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	if err != nil {
 		return nil, err
 	}
-	rootToken, err := credsResolver.GetCredential(root.Connections[0].Credentials[0])
-	if err == nil && rootToken != nil {
-		pCfg.Credentials = []*vault.Credential{rootToken}
+	if len(root.Connections) > 0 && root.Connections[0].Credentials != nil && len(root.Connections[0].Credentials) > 0 {
+		gitlabToken, err := credsResolver.GetCredential(root.Connections[0].Credentials[0])
+		if err == nil && gitlabToken != nil {
+			pCfg.Credentials = []*vault.Credential{gitlabToken}
+		}
 	}
 
 	defaultName := root.Name
