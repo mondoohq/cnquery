@@ -5,12 +5,20 @@ resources:
   gitlab.group:
     fields:
       description: {}
+      emailsDisabled:
+        min_mondoo_version: 9.0.0
       id: {}
+      mentionsDisabled:
+        min_mondoo_version: 9.0.0
       name: {}
       path: {}
+      preventForkingOutsideGroup:
+        min_mondoo_version: 9.0.0
       projects: {}
       requireTwoFactorAuthentication: {}
       visibility: {}
+      webURL:
+        min_mondoo_version: 9.0.0
     maturity: experimental
     min_mondoo_version: 5.15.0
   gitlab.project:
