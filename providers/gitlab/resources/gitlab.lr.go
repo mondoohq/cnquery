@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -132,14 +133,71 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetName()).ToDataRes(types.String)
 	},
+	"gitlab.project.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetFullName()).ToDataRes(types.String)
+	},
 	"gitlab.project.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetPath()).ToDataRes(types.String)
+	},
+	"gitlab.project.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"gitlab.project.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetDescription()).ToDataRes(types.String)
 	},
+	"gitlab.project.defaultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetDefaultBranch()).ToDataRes(types.String)
+	},
 	"gitlab.project.visibility": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetVisibility()).ToDataRes(types.String)
+	},
+	"gitlab.project.archived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetArchived()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mirror": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMirror()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.webURL": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetWebURL()).ToDataRes(types.String)
+	},
+	"gitlab.project.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetEmailsDisabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.allowMergeOnSkippedPipeline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetAllowMergeOnSkippedPipeline()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.onlyAllowMergeIfPipelineSucceeds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetOnlyAllowMergeIfPipelineSucceeds()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.onlyAllowMergeIfAllDiscussionsAreResolved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetOnlyAllowMergeIfAllDiscussionsAreResolved()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.issuesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetIssuesEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetMergeRequestsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.wikiEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetWikiEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.snippetsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetSnippetsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetContainerRegistryEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.serviceDeskEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetServiceDeskEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.packagesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetPackagesEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.autoDevopsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetAutoDevopsEnabled()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.requirementsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProject).GetRequirementsEnabled()).ToDataRes(types.Bool)
 	},
 }
 
@@ -213,16 +271,92 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGitlabProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.project.defaultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).DefaultBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.archived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mirror": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).Mirror, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webURL": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.emailsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.allowMergeOnSkippedPipeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).AllowMergeOnSkippedPipeline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.onlyAllowMergeIfPipelineSucceeds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).OnlyAllowMergeIfPipelineSucceeds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.onlyAllowMergeIfAllDiscussionsAreResolved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).OnlyAllowMergeIfAllDiscussionsAreResolved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.issuesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).IssuesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).MergeRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.wikiEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).WikiEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.snippetsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).SnippetsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ContainerRegistryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.serviceDeskEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).ServiceDeskEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.packagesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).PackagesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.autoDevopsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).AutoDevopsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.requirementsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProject).RequirementsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -367,9 +501,28 @@ type mqlGitlabProject struct {
 	// optional: if you define mqlGitlabProjectInternal it will be used here
 	Id plugin.TValue[int64]
 	Name plugin.TValue[string]
+	FullName plugin.TValue[string]
 	Path plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 	Description plugin.TValue[string]
+	DefaultBranch plugin.TValue[string]
 	Visibility plugin.TValue[string]
+	Archived plugin.TValue[bool]
+	Mirror plugin.TValue[bool]
+	WebURL plugin.TValue[string]
+	EmailsDisabled plugin.TValue[bool]
+	AllowMergeOnSkippedPipeline plugin.TValue[bool]
+	OnlyAllowMergeIfPipelineSucceeds plugin.TValue[bool]
+	OnlyAllowMergeIfAllDiscussionsAreResolved plugin.TValue[bool]
+	IssuesEnabled plugin.TValue[bool]
+	MergeRequestsEnabled plugin.TValue[bool]
+	WikiEnabled plugin.TValue[bool]
+	SnippetsEnabled plugin.TValue[bool]
+	ContainerRegistryEnabled plugin.TValue[bool]
+	ServiceDeskEnabled plugin.TValue[bool]
+	PackagesEnabled plugin.TValue[bool]
+	AutoDevopsEnabled plugin.TValue[bool]
+	RequirementsEnabled plugin.TValue[bool]
 }
 
 // createGitlabProject creates a new instance of this resource
@@ -417,14 +570,90 @@ func (c *mqlGitlabProject) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlGitlabProject) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
 func (c *mqlGitlabProject) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlGitlabProject) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlGitlabProject) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlGitlabProject) GetDefaultBranch() *plugin.TValue[string] {
+	return &c.DefaultBranch
+}
+
 func (c *mqlGitlabProject) GetVisibility() *plugin.TValue[string] {
 	return &c.Visibility
+}
+
+func (c *mqlGitlabProject) GetArchived() *plugin.TValue[bool] {
+	return &c.Archived
+}
+
+func (c *mqlGitlabProject) GetMirror() *plugin.TValue[bool] {
+	return &c.Mirror
+}
+
+func (c *mqlGitlabProject) GetWebURL() *plugin.TValue[string] {
+	return &c.WebURL
+}
+
+func (c *mqlGitlabProject) GetEmailsDisabled() *plugin.TValue[bool] {
+	return &c.EmailsDisabled
+}
+
+func (c *mqlGitlabProject) GetAllowMergeOnSkippedPipeline() *plugin.TValue[bool] {
+	return &c.AllowMergeOnSkippedPipeline
+}
+
+func (c *mqlGitlabProject) GetOnlyAllowMergeIfPipelineSucceeds() *plugin.TValue[bool] {
+	return &c.OnlyAllowMergeIfPipelineSucceeds
+}
+
+func (c *mqlGitlabProject) GetOnlyAllowMergeIfAllDiscussionsAreResolved() *plugin.TValue[bool] {
+	return &c.OnlyAllowMergeIfAllDiscussionsAreResolved
+}
+
+func (c *mqlGitlabProject) GetIssuesEnabled() *plugin.TValue[bool] {
+	return &c.IssuesEnabled
+}
+
+func (c *mqlGitlabProject) GetMergeRequestsEnabled() *plugin.TValue[bool] {
+	return &c.MergeRequestsEnabled
+}
+
+func (c *mqlGitlabProject) GetWikiEnabled() *plugin.TValue[bool] {
+	return &c.WikiEnabled
+}
+
+func (c *mqlGitlabProject) GetSnippetsEnabled() *plugin.TValue[bool] {
+	return &c.SnippetsEnabled
+}
+
+func (c *mqlGitlabProject) GetContainerRegistryEnabled() *plugin.TValue[bool] {
+	return &c.ContainerRegistryEnabled
+}
+
+func (c *mqlGitlabProject) GetServiceDeskEnabled() *plugin.TValue[bool] {
+	return &c.ServiceDeskEnabled
+}
+
+func (c *mqlGitlabProject) GetPackagesEnabled() *plugin.TValue[bool] {
+	return &c.PackagesEnabled
+}
+
+func (c *mqlGitlabProject) GetAutoDevopsEnabled() *plugin.TValue[bool] {
+	return &c.AutoDevopsEnabled
+}
+
+func (c *mqlGitlabProject) GetRequirementsEnabled() *plugin.TValue[bool] {
+	return &c.RequirementsEnabled
 }

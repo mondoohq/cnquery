@@ -23,10 +23,48 @@ resources:
     min_mondoo_version: 5.15.0
   gitlab.project:
     fields:
+      allowMergeOnSkippedPipeline:
+        min_mondoo_version: 9.0.0
+      archived:
+        min_mondoo_version: 9.0.0
+      autoDevopsEnabled:
+        min_mondoo_version: 9.0.0
+      containerRegistryEnabled:
+        min_mondoo_version: 9.0.0
+      createdAt:
+        min_mondoo_version: 9.0.0
+      defaultBranch:
+        min_mondoo_version: 9.0.0
       description: {}
+      emailsDisabled:
+        min_mondoo_version: 9.0.0
+      fullName:
+        min_mondoo_version: 9.0.0
       id: {}
+      issuesEnabled:
+        min_mondoo_version: 9.0.0
+      mergeRequestsEnabled:
+        min_mondoo_version: 9.0.0
+      mirror:
+        min_mondoo_version: 9.0.0
       name: {}
+      onlyAllowMergeIfAllDiscussionsAreResolved:
+        min_mondoo_version: 9.0.0
+      onlyAllowMergeIfPipelineSucceeds:
+        min_mondoo_version: 9.0.0
+      packagesEnabled:
+        min_mondoo_version: 9.0.0
       path: {}
+      requirementsEnabled:
+        min_mondoo_version: 9.0.0
+      serviceDeskEnabled:
+        min_mondoo_version: 9.0.0
+      snippetsEnabled:
+        min_mondoo_version: 9.0.0
       visibility: {}
+      webURL:
+        min_mondoo_version: 9.0.0
+      wikiEnabled:
+        min_mondoo_version: 9.0.0
     maturity: experimental
     min_mondoo_version: 5.15.0

@@ -14,9 +14,9 @@ gitlab.group @defaults("name") {
   path string
   // Group description
   description string
-  // URL of the project
+  // URL of the group
   webURL string
-  // Group visibility. Can be private, internal, or public.
+  // The group's visibility level. Can be private, internal, or public.
   visibility string
   // Require all users in this group to setup Two-factor authentication.
   requireTwoFactorAuthentication bool
@@ -31,15 +31,53 @@ gitlab.group @defaults("name") {
 }
 
 // GitLab Project
-gitlab.project @defaults("name visibility") {
+gitlab.project @defaults("fullName visibility webURL") {
   // Project ID
   id int
   // Project name
   name string
+  // The full name of the project including the namespace
+  fullName string
   // Project path
   path string
+  // Create date of the project
+  createdAt time  
   // Project description
   description string
+  // default git branch
+  defaultBranch string
   // The project's visibility level. Can be private, internal, or public.
   visibility string
+  // Is the project archived
+  archived bool
+  // Is the project a mirror
+  mirror bool
+  // URL of the project
+  webURL string
+  // Disable project email notifications
+  emailsDisabled bool
+  // Allow merging merge requests when a pipeline is skipped
+  allowMergeOnSkippedPipeline bool
+  // Only allow merging merge requests if the pipelines succeed
+  onlyAllowMergeIfPipelineSucceeds bool
+  // Allow merging merge requests if all discussions are resolved
+  onlyAllowMergeIfAllDiscussionsAreResolved bool
+  // Is the issues feature enabled
+  issuesEnabled bool
+	// Is the merge request feature enabled
+  mergeRequestsEnabled bool
+	// Is the wiki feature enabled
+  wikiEnabled bool
+	// Is the snippets feature enabled
+  snippetsEnabled bool
+	// Is the container registry feature enabled
+  containerRegistryEnabled bool
+	// Is the Service Desk feature enabled
+  serviceDeskEnabled bool
+	// Is the packages feature enabled
+  packagesEnabled bool
+	// Is the Auto DevOps feature enabled
+  autoDevopsEnabled bool
+	// Is the requirements feature enabled
+  requirementsEnabled bool
 }
