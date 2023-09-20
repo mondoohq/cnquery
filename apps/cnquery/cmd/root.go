@@ -81,6 +81,13 @@ func init() {
 	logger.CliCompactLogger(logger.LogOutputWriter)
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
+	// TODO harmonize with initLogger, which is called later and attached to the command
+	// here we set the log level only by environment variable
+	envLevel, ok := logger.GetEnvLogLevel()
+	if ok {
+		logger.Set(envLevel)
+	}
+
 	config.DefaultConfigFile = "mondoo.yml"
 
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
