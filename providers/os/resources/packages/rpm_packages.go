@@ -258,7 +258,7 @@ func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 	if spm.isStaticAnalysis() {
 		return spm.staticAvailable()
 	}
-	cmd, err := spm.conn.RunCommand("zypper --xmlout list-updates")
+	cmd, err := spm.conn.RunCommand("zypper -n --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")
