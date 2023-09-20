@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/id/ids"
 	"go.mondoo.com/cnquery/providers/os/resources"
 	"go.mondoo.com/cnquery/providers/os/resources/discovery/container_registry"
 	"go.mondoo.com/cnquery/providers/os/resources/discovery/docker_engine"
@@ -290,7 +291,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case LocalConnectionType:
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect})
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
@@ -299,7 +300,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname", "cloud-detect"})
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey})
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
@@ -308,7 +309,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case TarConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
@@ -317,7 +318,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case DockerSnapshotConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
@@ -355,7 +356,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case FilesystemConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{"hostname"})
+		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
