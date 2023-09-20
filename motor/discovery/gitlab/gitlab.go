@@ -93,34 +93,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 				if err != nil {
 					log.Error().Err(err).Msg("error discovering terraform")
 				} else if len(terraformFiles) > 0 {
-					terraformCfg := pCfg.Clone()
-					terraformCfg.Backend = providers.ProviderType_TERRAFORM
-
-					terraformCfg.Options = map[string]string{
-						"asset-type": "hcl",
-						"path":       "git+" + project.HTTPURLToRepo,
-					}
-
-					if pCfg.Credentials == nil {
-						token := os.Getenv("GITLAB_TOKEN")
-						terraformCfg.Credentials = []*vault.Credential{{
-							Type:   vault.CredentialType_password,
-							User:   "oauth2",
-							Secret: []byte(token),
-						}}
-					} else {
-						// add oauth2 user to the credentials
-						for i := range pCfg.Credentials {
-							cred := pCfg.Credentials[i]
-							if cred.Type == vault.CredentialType_password {
-								cred.User = "oauth2"
-							}
-						}
-					}
+					terraformCfg := terraformConfig(pCfg, project.HTTPURLToRepo)
+					terraformCfg.Credentials = credentials(pCfg)
 
 					assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn, userIdDetectors...)
 					if err == nil && len(assets) > 0 {
 						list = append(list, assets...)
+					} else {
+						log.Error().Err(err).Msg("error discovering terraform")
 					}
 				}
 			}
@@ -174,44 +154,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTerraform) {
 						terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
 						if err == nil && len(terraformFiles) > 0 {
-							terraformCfg := pCfg.Clone()
-							terraformCfg.Backend = providers.ProviderType_TERRAFORM
-							// git+https://gitlab.com/mondoolabs/example-gitlab.git
-							terraformCfg.Options["path"] = "git+" + project.HTTPURLToRepo
-
-							terraformCfg.Options = map[string]string{
-								"asset-type": "hcl",
-								"path":       "git+" + project.HTTPURLToRepo,
-							}
-
-							if len(pCfg.Credentials) == 0 {
-								token := os.Getenv("GITLAB_TOKEN")
-								terraformCfg.Credentials = []*vault.Credential{{
-									Type:   vault.CredentialType_password,
-									User:   "oauth2",
-									Secret: []byte(token),
-								}}
-							} else {
-								// add oauth2 user to the credentials
-								for i := range pCfg.Credentials {
-									cred := pCfg.Credentials[i]
-									if cred.Type == vault.CredentialType_password {
-										cred.User = "oauth2"
-									}
-								}
-							}
+							terraformCfg := terraformConfig(pCfg, project.HTTPURLToRepo)
+							terraformCfg.Credentials = credentials(pCfg)
 
 							assets, err := (&terraform_resolver.Resolver{}).Resolve(ctx, projectAsset, terraformCfg, credsResolver, sfn)
 							if err == nil && len(assets) > 0 {
-								for i := range assets {
-									if len(assets[i].PlatformIds) > 0 {
-										assets[i].PlatformIds[0] = assets[i].PlatformIds[0] + "/" + project.Name
-										list = append(list, assets[i])
-									} else {
-										log.Debug().Msg("missing platform id for asset")
-										continue
-									}
-								}
+								list = append(list, assets...)
 							} else {
 								log.Error().Err(err).Msg("error discovering terraform")
 							}
@@ -259,4 +207,36 @@ func discoverTerraformHcl(ctx context.Context, client *gitlab_lib.Client, group 
 	}
 
 	return terraformFiles, nil
+}
+
+func terraformConfig(pCfg *providers.Config, url string) *providers.Config {
+	terraformCfg := pCfg.Clone()
+	terraformCfg.Backend = providers.ProviderType_TERRAFORM
+	terraformCfg.Options = map[string]string{
+		"asset-type": "hcl",
+		"path":       "git+" + url,
+	}
+	return terraformCfg
+}
+
+func credentials(pCfg *providers.Config) []*vault.Credential {
+	var credentials []*vault.Credential
+	if pCfg.Credentials == nil || len(pCfg.Credentials) == 0 {
+		token := os.Getenv("GITLAB_TOKEN")
+		credentials = []*vault.Credential{{
+			Type:   vault.CredentialType_password,
+			User:   "oauth2",
+			Secret: []byte(token),
+		}}
+	} else {
+		// add oauth2 user to the credentials
+		for i := range pCfg.Credentials {
+			cred := pCfg.Credentials[i]
+			if cred.Type == vault.CredentialType_password {
+				cred.User = "oauth2"
+			}
+		}
+		credentials = pCfg.Credentials
+	}
+	return credentials
 }
