@@ -40,7 +40,7 @@ func TestHashiVault(t *testing.T) {
 	require.NoError(t, err)
 
 	jsonSecret := make(map[string]string)
-	err = json.Unmarshal([]byte(newCred.Secret), &jsonSecret)
+	err = json.Unmarshal(newCred.Data, &jsonSecret)
 	require.NoError(t, err)
 
 	assert.Equal(t, jsonSecret, fields)
