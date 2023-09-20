@@ -642,7 +642,6 @@ func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	opts["instance"] = id
 	asset.IdDetector = []string{"aws-ec2"}
 	asset.Connections = []*inventory.Config{{
-		Backend:  "ssh",
 		Type:     "ssh",
 		Host:     id,
 		Insecure: true,
@@ -672,7 +671,6 @@ func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asse
 	asset.IdDetector = []string{"aws-ec2"}
 	opts["instance"] = id
 	asset.Connections = []*inventory.Config{{
-		Backend:  "ssh",
 		Type:     "ssh",
 		Host:     id,
 		Insecure: true,
@@ -712,7 +710,6 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	opts["id"] = target
 	asset.Name = target
 	asset.Connections = []*inventory.Config{{
-		Backend:  string(awsec2ebsconn.EBSConnectionType),
 		Type:     string(awsec2ebsconn.EBSConnectionType),
 		Host:     target,
 		Insecure: true,

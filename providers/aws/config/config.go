@@ -21,7 +21,7 @@ var Config = plugin.Provider{
 			Use:     "aws",
 			Short:   "aws account",
 			MinArgs: 0,
-			MaxArgs: 0,
+			MaxArgs: 4,
 			Discovery: []string{
 				connection.DiscoveryAccounts,
 				connection.DiscoveryAll,
@@ -77,6 +77,12 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Endpoint URL override for authentication with the API",
+				},
+				{
+					Long:    "no-setup",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Override option for EBS scanning that tells it to not create the snapshot or volume",
 				},
 			},
 		},

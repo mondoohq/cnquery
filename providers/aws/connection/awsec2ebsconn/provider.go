@@ -130,14 +130,26 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		if !ok {
 			return c, errors.New("something went wrong; unable to complete setup for ebs volume scan")
 		}
+		// set no setup
+		asset.Connections[0].Options[snapshot.NoSetup] = "true"
 	}
 
 	// Mount Volume
-	err = c.volumeMounter.Mount()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to complete mount step")
-		return c, err
+	if conf.Options["mounted"] != "" {
+		log.Info().Msg("skipping mount step")
+	} else {
+		err = c.volumeMounter.Mount()
+		if err != nil {
+			log.Error().Err(err).Msg("unable to complete mount step")
+			return c, err
+		}
+		// set mounted
+		asset.Connections[0].Options["mounted"] = c.volumeMounter.ScanDir
 	}
+	if c.volumeMounter.ScanDir == "" {
+		c.volumeMounter.ScanDir = conf.Options["mounted"]
+	}
+
 	// Create and initialize fs provider
 	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
 		Path:       c.volumeMounter.ScanDir,

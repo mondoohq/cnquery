@@ -9,8 +9,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.37
-	github.com/aws/aws-sdk-go-v2/config v1.18.37
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.35
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.18.5
@@ -58,10 +56,8 @@ require (
 	github.com/spf13/afero v1.9.5
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
-	k8s.io/client-go v0.28.2
-	go.mondoo.com/cnquery v0.0.0-20230822120357-4b3c486e0c35
 	gotest.tools v2.2.0+incompatible
-	k8s.io/client-go v0.28.0
+	k8s.io/client-go v0.28.2
 )
 
 require (
@@ -87,13 +83,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
-	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
-	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/cli v24.0.6+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
@@ -104,9 +94,6 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/getsentry/sentry-go v0.24.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/getsentry/sentry-go v0.13.0 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -116,24 +103,16 @@ require (
 	github.com/google/go-containerregistry v0.16.1 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-plugin v1.5.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hnakamur/go-scp v1.0.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
-	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
-	github.com/knqyf263/go-rpmdb v0.0.0-20221030135625-4082a22221ce // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -143,13 +122,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mattn/go-runewidth v0.0.14 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -157,11 +129,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/sftp v1.13.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.16.0 // indirect
-	github.com/prometheus/client_model v0.4.0 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
-	github.com/prometheus/procfs v0.10.1 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
@@ -180,46 +147,11 @@ require (
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/grpc v1.58.1 // indirect
-	github.com/spf13/cobra v1.7.0 // indirect
-	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c // indirect
-	github.com/vbatts/tar-split v0.11.3 // indirect
-	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f // indirect
-	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
-	golang.org/x/tools v0.9.3 // indirect
-	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
-	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
-	howett.net/plist v1.0.0 // indirect
-	k8s.io/api v0.28.0 // indirect
-	k8s.io/apimachinery v0.28.0 // indirect
-	k8s.io/component-base v0.28.0 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/kubelet v0.28.0 // indirect
-	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
-	lukechampine.com/uint128 v1.1.1 // indirect
-	modernc.org/cc/v3 v3.36.0 // indirect
-	modernc.org/ccgo/v3 v3.16.6 // indirect
-	modernc.org/libc v1.16.7 // indirect
-	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.1.1 // indirect
-	modernc.org/opt v0.1.1 // indirect
-	modernc.org/sqlite v1.17.3 // indirect
-	modernc.org/strutil v1.1.1 // indirect
-	modernc.org/token v1.0.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )

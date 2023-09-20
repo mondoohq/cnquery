@@ -150,6 +150,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
+	case string(awsec2ebsconn.EBSConnectionType):
+		s.lastConnectionID++
+		conn, err = awsec2ebsconn.NewAwsEbsConnection(s.lastConnectionID, conf, asset)
+
 	default:
 		s.lastConnectionID++
 		conn, err = connection.NewAwsConnection(s.lastConnectionID, asset, conf)
