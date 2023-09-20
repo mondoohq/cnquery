@@ -11,28 +11,12 @@ import (
 
 type ConnectionType string
 
-/*
-type Connection interface {
-	ID() uint32
-	Name() string
-	Type() ConnectionType
-	Asset() *inventory.Asset
-	State() (*State, error)
-	Identifier() (string, error)
-	TfVars() map[string]*hcl.Attribute
-	Parser() *hclparse.Parser
-	ModulesManifest() *ModuleManifest
-	Plan() (*Plan, error)
-}
-*/
-
 // References:
 // - https://www.terraform.io/docs/language/syntax/configuration.html
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Connection struct {
 	id              uint32
 	name            string
-	connectionType  ConnectionType
 	asset           *inventory.Asset
 	platformID      string
 	assetType       terraformAssetType
@@ -63,10 +47,6 @@ func (c *Connection) ID() uint32 {
 
 func (c *Connection) Name() string {
 	return c.name
-}
-
-func (c *Connection) Type() ConnectionType {
-	return c.connectionType
 }
 
 func (c *Connection) Parser() *hclparse.Parser {

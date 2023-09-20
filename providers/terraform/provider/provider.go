@@ -51,22 +51,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// below in this file we already have something similar:
 	// tc.Options["asset-type"] == "state"
 	switch req.Args[0] {
-	case "state":
-		conf.Type = "state"
-		if len(req.Args) > 1 {
-			conf.Options["path"] = req.Args[1]
-		} else {
-			return nil, errors.New("no path provided")
-		}
-	case "plan":
-		conf.Type = "plan"
-		if len(req.Args) > 1 {
-			conf.Options["path"] = req.Args[1]
-		} else {
-			return nil, errors.New("no path provided")
-		}
-	case "hcl":
-		conf.Type = "hcl"
+	case StateConnectionType, PlanConnectionType, HclConnectionType:
+		conf.Type = req.Args[0]
 		if len(req.Args) > 1 {
 			conf.Options["path"] = req.Args[1]
 		} else {
@@ -76,7 +62,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		if len(req.Args) > 1 {
 			return nil, errors.New("unknown set of arguments, use 'state <path>', 'plan <path>' or 'hcl <path>'")
 		}
-		conf.Type = "hcl"
+		conf.Type = HclConnectionType
 		conf.Options["path"] = req.Args[0]
 	}
 
