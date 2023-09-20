@@ -2,31 +2,19 @@ name: 'Build & Release Providers'
 
 on:
   workflow_dispatch:
-    # inputs:
-    #   providers:
-    #     description: "Providers to build (Space separated, leave empty for all providers)"
-    #     default: ""
-    #     required: false
 
 env:
   BUCKET: releases-us.mondoo.io
-  PROVIDERS: 'arista aws azure equinix gcp github gitlab google-workspace ipmi k8s ms365 network oci okta opcua os slack terraform vcd vsphere'
 
 jobs:
-  build:
+  provider-build:
     runs-on: self-hosted
     timeout-minutes: 120
+    strategy:
+      max-parallel: 2
+      matrix:
+        provider: [arista, aws, azure, equinix, gcp, github, gitlab, google-workspace, ipmi, k8s, ms365, network, oci, okta, opcua, os, slack, terraform, vcd, vsphere ]
     steps:
-      - name: Converge provider list inputs
-        run: |
-          if [ -z "${{ github.event.inputs.providers }}" ]; then
-            echo "No providers specified, building all"
-            echo "PROVIDERS=${PROVIDERS}" >> $GITHUB_ENV
-          else
-            echo "Building ${{ github.event.inputs.providers }}"
-            echo "PROVIDERS=${{ github.event.inputs.providers }}" >> $GITHUB_ENV
-          fi
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -51,14 +39,12 @@ jobs:
           make providers/proto
           go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
-      - name: 'Build Providers'
+      - name: 'Build Provider'
         run: |
           rm -rf ./dist
-          for p in ${PROVIDERS}; do
-            scripts/provider_bundler.sh $p
-          done
+          scripts/provider_bundler.sh ${{ matrix.provider }}
 
-      - name: 'Publish Providers'
+      - name: 'Publish Provider'
         run: |
           for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
             echo "Publishing $pkg"
@@ -68,17 +54,12 @@ jobs:
             echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/"
             gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
             gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
-            echo "{ \"name\": \"${PROVIDER}\", \"version\": \"${VERSION}\" }" >> "dist/${pkg}.json"
           done
 
-      - name: 'Generate and Publish latest.json'
-        run: |
-          echo "{ \"providers\": [$(ls dist/*.json | xargs cat | paste -sd, -)] }" > dist/latest.json
-          echo "Latest.json contents:"
-          cat dist/latest.json
-          echo "---"
-          gsutil -m cp -c dist/latest.json gs://${BUCKET}/providers/
-
+  provider-index:
+    needs: provider-build
+    runs-on: self-hosted
+    steps:
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v2
         with:
