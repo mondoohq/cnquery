@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/provider"
+	"go.mondoo.com/cnquery/providers/os/resources/discovery/docker_engine"
 )
 
 var Config = plugin.Provider{
@@ -33,8 +34,8 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 0,
 			Discovery: []string{
-				"containers",
-				"container-images",
+				docker_engine.DiscoveryContainerRunning,
+				docker_engine.DiscoveryContainerImages,
 			},
 			Flags: []plugin.Flag{
 				{
@@ -170,8 +171,8 @@ var Config = plugin.Provider{
 			MinArgs: 1,
 			MaxArgs: 2,
 			Discovery: []string{
-				"containers",
-				"container-images",
+				docker_engine.DiscoveryContainerRunning,
+				docker_engine.DiscoveryContainerImages,
 			},
 			Flags: []plugin.Flag{
 				{

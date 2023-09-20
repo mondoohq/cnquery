@@ -209,6 +209,10 @@ func DiscoverDockerEngineAssets(conf *inventory.Config) ([]*inventory.Asset, err
 	// the system is using docker or podman locally
 	assetList := []*inventory.Asset{}
 
+	if conf.Discover == nil {
+		return assetList, nil
+	}
+
 	// discover running container: container
 	if stringx.Contains(conf.Discover.Targets, "all") || stringx.Contains(conf.Discover.Targets, DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
@@ -221,7 +225,7 @@ func DiscoverDockerEngineAssets(conf *inventory.Config) ([]*inventory.Asset, err
 			return nil, err
 		}
 
-		log.Info().Int("images", len(containerAssets)).Msg("running container search completed")
+		log.Info().Int("container", len(containerAssets)).Msg("running container search completed")
 		assetList = append(assetList, containerAssets...)
 	}
 
