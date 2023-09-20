@@ -125,7 +125,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	if c, ok := conn.(*connection.AwsConnection); ok {
-		c.PlatformOverride = req.Asset.Platform.Name
+		if req.Asset.Platform != nil {
+			c.PlatformOverride = req.Asset.Platform.Name
+		}
 		inventory, err = s.discover(c)
 		if err != nil {
 			return nil, err
@@ -183,6 +185,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
+	if len(asset.Connections) > 0 && asset.Connections[0].Type == "ssh" {
+		// workaround to make sure we dont assign the aws platform to ec2 instances
+		return nil
+	}
 	if c, ok := conn.(*connection.AwsConnection); ok {
 		asset.Id = c.Conf.Type + "://" + c.AccountId()
 		asset.Name = c.Conf.Host

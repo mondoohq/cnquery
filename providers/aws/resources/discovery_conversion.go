@@ -19,6 +19,7 @@ import (
 	awsec2ebstypes "go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn/types"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/providers/os/id/ids"
 )
 
 type mqlObject struct {
@@ -640,7 +641,7 @@ func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	}
 	asset := &inventory.Asset{}
 	opts["instance"] = id
-	asset.IdDetector = []string{"aws-ec2"}
+	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",
 		Host:     id,
@@ -668,7 +669,7 @@ func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asse
 		}
 	}
 	asset := &inventory.Asset{}
-	asset.IdDetector = []string{"aws-ec2"}
+	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
 	opts["instance"] = id
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",
