@@ -106,6 +106,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"engine":                        llx.StringData(convert.ToString(dbInstance.Engine)),
 							"securityGroups":                llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 							"status":                        llx.StringData(convert.ToString(dbInstance.DBInstanceStatus)),
+							"autoMinorVersionUpgrade":       llx.BoolData(dbInstance.AutoMinorVersionUpgrade),
 						})
 					if err != nil {
 						return nil, err
