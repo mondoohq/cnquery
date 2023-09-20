@@ -12,6 +12,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 type SysVServiceManager struct {
@@ -35,8 +36,19 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 		return nil, err
 	}
 
+	// eg. we ignore the following run levels since `service halt status` may shutdown the system
+	ignored := []string{"boot", "boot.local", "functions", "halt", "halt.local", "killall", "rc", "reboot", "shutdown", "single", "skeleton", ".depend.boot", ".depend.start", ".depend.stop"}
+	statusServices := []string{}
+	for i := range services {
+		service := services[i]
+		if stringx.Contains(ignored, service) {
+			continue
+		}
+		statusServices = append(statusServices, service)
+	}
+
 	// 3. mimic `service --status-all` by running `service x status` for each detected service
-	running, err := s.running(services)
+	running, err := s.running(statusServices)
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +56,8 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 	// aggregate data into service struct
 	res := []*Service{}
 
-	for i := range services {
-		service := services[i]
-
-		if service == "functions" || service == "killall" || service == "halt" {
-			continue
-		}
+	for i := range statusServices {
+		service := statusServices[i]
 
 		srv := &Service{
 			Name:      service,
