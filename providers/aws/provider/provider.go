@@ -13,16 +13,12 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers/aws/connection"
 	"go.mondoo.com/cnquery/providers/aws/resources"
-	osconnection "go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 const (
-	defaultConnection           uint32 = 1
-	DefaultConnectionType              = "aws"
-	SshConnectionType                  = "ssh"
-	RegistryImageConnectionType        = "registry-image"
+	defaultConnection     uint32 = 1
+	DefaultConnectionType        = "aws"
 )
 
 type Service struct {
@@ -134,20 +130,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case SshConnectionType:
-		s.lastConnectionID++
-		conn, err = osconnection.NewSshConnection(s.lastConnectionID, conf, asset)
-		if pf, ok := detector.DetectOS(conn); ok {
-			conn.Asset().Platform = pf
-		}
-
-	case RegistryImageConnectionType:
-		s.lastConnectionID++
-		conn, err = osconnection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 	default:
 		s.lastConnectionID++
 		conn, err = connection.NewAwsConnection(s.lastConnectionID, asset, conf)
-
 	}
 	if err != nil {
 		return nil, err
