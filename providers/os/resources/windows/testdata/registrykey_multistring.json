@@ -1,0 +1,13 @@
+[
+  {
+    "key": "Machine",
+    "value": {
+      "kind": 7,
+      "data": [
+        "Software\\Microsoft\\Windows NT\\CurrentVersion\\Print",
+        "Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+        "System\\CurrentControlSet\\Control\\Print\\Printers"
+      ]
+    }
+  }
+]

@@ -315,7 +315,7 @@ func init() {
 			Create: createRegistrykey,
 		},
 		"registrykey.property": {
-			// to override args, implement: initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initRegistrykeyProperty,
 			Create: createRegistrykeyProperty,
 		},
 		"container.image": {
@@ -1465,6 +1465,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"registrykey.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetProperties()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"registrykey.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykey).GetItems()).ToDataRes(types.Array(types.Resource("registrykey.property")))
+	},
 	"registrykey.children": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykey).GetChildren()).ToDataRes(types.Array(types.String))
 	},
@@ -1479,6 +1482,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"registrykey.property.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegistrykeyProperty).GetValue()).ToDataRes(types.String)
+	},
+	"registrykey.property.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetType()).ToDataRes(types.String)
+	},
+	"registrykey.property.data": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegistrykeyProperty).GetData()).ToDataRes(types.Dict)
 	},
 	"container.image.reference": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContainerImage).GetReference()).ToDataRes(types.String)
@@ -3519,6 +3528,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlRegistrykey).Properties, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"registrykey.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykey).Items, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"registrykey.children": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykey).Children, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3541,6 +3554,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"registrykey.property.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRegistrykeyProperty).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"registrykey.property.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegistrykeyProperty).Data, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"container.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10016,6 +10037,7 @@ type mqlRegistrykey struct {
 	Path plugin.TValue[string]
 	Exists plugin.TValue[bool]
 	Properties plugin.TValue[map[string]interface{}]
+	Items plugin.TValue[[]interface{}]
 	Children plugin.TValue[[]interface{}]
 }
 
@@ -10072,6 +10094,22 @@ func (c *mqlRegistrykey) GetProperties() *plugin.TValue[map[string]interface{}] 
 	})
 }
 
+func (c *mqlRegistrykey) GetItems() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Items, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("registrykey", c.__id, "items")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.items()
+	})
+}
+
 func (c *mqlRegistrykey) GetChildren() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Children, func() ([]interface{}, error) {
 		return c.children()
@@ -10082,11 +10120,13 @@ func (c *mqlRegistrykey) GetChildren() *plugin.TValue[[]interface{}] {
 type mqlRegistrykeyProperty struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlRegistrykeyPropertyInternal
+	// optional: if you define mqlRegistrykeyPropertyInternal it will be used here
 	Path plugin.TValue[string]
 	Name plugin.TValue[string]
 	Exists plugin.TValue[bool]
 	Value plugin.TValue[string]
+	Type plugin.TValue[string]
+	Data plugin.TValue[interface{}]
 }
 
 // createRegistrykeyProperty creates a new instance of this resource
@@ -10142,12 +10182,19 @@ func (c *mqlRegistrykeyProperty) GetExists() *plugin.TValue[bool] {
 
 func (c *mqlRegistrykeyProperty) GetValue() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Value, func() (string, error) {
-		vargExists := c.GetExists()
-		if vargExists.Error != nil {
-			return "", vargExists.Error
-		}
+		return c.value()
+	})
+}
 
-		return c.value(vargExists.Data)
+func (c *mqlRegistrykeyProperty) GetType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Type, func() (string, error) {
+		return c.compute_type()
+	})
+}
+
+func (c *mqlRegistrykeyProperty) GetData() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Data, func() (interface{}, error) {
+		return c.data()
 	})
 }
 
