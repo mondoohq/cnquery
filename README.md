@@ -12,4 +12,4 @@ Join the [Mondoo Community GitHub Discussions](https://github.com/orgs/mondoohq/
 
 ## License
 
-[Mozilla Public License v2.0](https://github.com/mondoohq/mondoo-operator/blob/main/LICENSE)
+[Business Source License 1.1](LICENSE)

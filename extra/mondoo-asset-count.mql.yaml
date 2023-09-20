@@ -1,7 +1,11 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 packs:
   - uid: mondoo-asset-count
     name: Asset Count Query Pack
-    version: 1.0.0
+    version: 1.1.0
+    license: BUSL-1.1
     groups:
       - title: ESXi asset counts
         filters: asset.platform == 'vmware-vsphere'

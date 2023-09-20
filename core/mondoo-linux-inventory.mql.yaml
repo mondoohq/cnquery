@@ -1,7 +1,11 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack
-    version: 1.2.0
+    version: 1.3.0
+    license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
