@@ -833,7 +833,8 @@ resources:
       atRestEncryptionEnabled: {}
       authTokenEnabled: {}
       authTokenLastModifiedDate: {}
-      autoMinorVersionUpgrade: {}
+      autoMinorVersionUpgrade:
+        min_mondoo_version: 8.22.0
       cacheClusterCreateTime: {}
       cacheClusterId: {}
       cacheClusterStatus: {}
@@ -1151,6 +1152,8 @@ resources:
   aws.rds.dbinstance:
     fields:
       arn: {}
+      autoMinorVersionUpgrade:
+        min_mondoo_version: 8.22.0
       backupRetentionPeriod: {}
       dbInstanceClass: {}
       dbInstanceIdentifier: {}

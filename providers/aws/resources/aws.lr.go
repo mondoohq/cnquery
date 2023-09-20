@@ -1872,6 +1872,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.rds.dbinstance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
 	},
@@ -4638,6 +4641,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12403,6 +12410,7 @@ type mqlAwsRdsDbinstance struct {
 	Engine plugin.TValue[string]
 	SecurityGroups plugin.TValue[[]interface{}]
 	Status plugin.TValue[string]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -12524,6 +12532,10 @@ func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] 
 
 func (c *mqlAwsRdsDbinstance) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlAwsRdsDbinstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
 }
 
 // mqlAwsElasticache for the aws.elasticache resource
