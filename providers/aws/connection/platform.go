@@ -20,7 +20,7 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 	}
 	return &inventory.Platform{
 		Name:    "aws",
-		Title:   "Amazon Web Services",
+		Title:   "AWS Account",
 		Kind:    "api",
 		Runtime: "aws",
 	}
