@@ -2,6 +2,7 @@
 
 ![cnquery light-mode logo](docs/images/cnquery-light.svg#gh-light-mode-only)
 ![cnquery dark-mode logo](docs/images/cnquery-dark.svg#gh-dark-mode-only)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmondoohq%2Fcnquery.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmondoohq%2Fcnquery?ref=badge_shield)
 
 **Open source, cloud-native asset inventory and discovery**
 
@@ -217,3 +218,7 @@ See our [development documentation](docs/development.md) for information on buil
 - **Copyright:** 2018-2023, Mondoo, Inc.
 - **License:** BUSL 1.1
 - **Authors:** Christoph Hartmann, Dominik Richter
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmondoohq%2Fcnquery.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmondoohq%2Fcnquery?ref=badge_large)
