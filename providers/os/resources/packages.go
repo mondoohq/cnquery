@@ -137,7 +137,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"format":      llx.StringData(osPkg.Format),
 			"installed":   llx.BoolData(true),
 			"origin":      llx.StringData(osPkg.Origin),
-			// "epoch": "", // TODO: support Epoch
+			"epoch":       llx.NilData, // TODO: support Epoch
 		})
 		if err != nil {
 			return nil, err
