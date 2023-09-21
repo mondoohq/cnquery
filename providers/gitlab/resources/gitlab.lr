@@ -36,7 +36,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   id int
   // Project name
   name string
-  // The full name of the project including the namespace
+  // The full name of the project, including the namespace
   fullName string
   // Project path
   path string
