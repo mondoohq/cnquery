@@ -89,7 +89,11 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	reports, _, err := s.distributeJob(job, ctx, s.upstream)
+	upstreamConfig, err := s.getUpstreamConfig(job.Inventory, false)
+	if err != nil {
+		return nil, err
+	}
+	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
 	if err != nil {
 		if code := status.Code(err); code == codes.Unauthenticated {
 			return nil, multierr.Wrap(err,
@@ -102,6 +106,23 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 	}
 
 	return reports, nil
+}
+
+// returns the upstream config for the job. If the job has a specified config, it has precedence
+// over the automatically detected one
+func (s *LocalScanner) getUpstreamConfig(inv *inventory.Inventory, incognito bool) (*upstream.UpstreamConfig, error) {
+	jobCreds := inv.GetSpec().GetUpstreamCredentials()
+	if s.upstream == nil && jobCreds == nil {
+		return nil, errors.New("no default or job upstream config provided")
+	}
+	u := proto.Clone(s.upstream).(*upstream.UpstreamConfig)
+	u.Incognito = incognito
+	if jobCreds != nil {
+		u.ApiEndpoint = jobCreds.GetApiEndpoint()
+		u.Creds = jobCreds
+		u.SpaceMrn = jobCreds.GetParentMrn()
+	}
+	return u, nil
 }
 
 func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
@@ -117,13 +138,11 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	var upstreamConf *upstream.UpstreamConfig
-	if s.upstream != nil {
-		upstreamConf = proto.Clone(s.upstream).(*upstream.UpstreamConfig)
-		upstreamConf.Incognito = true
+	upstreamConfig, err := s.getUpstreamConfig(job.Inventory, true)
+	if err != nil {
+		return nil, err
 	}
-
-	reports, _, err := s.distributeJob(job, ctx, upstreamConf)
+	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -393,8 +412,8 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 
 	runtimeErr := inmemory.WithDb(job.runtime, func(db *inmemory.Db, services *explorer.LocalServices) error {
 		if job.UpstreamConfig != nil && job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
-			log.Debug().Msg("using API endpoint " + s.upstream.ApiEndpoint)
-			client, err := s.upstream.InitClient()
+			log.Debug().Msg("using API endpoint " + job.UpstreamConfig.ApiEndpoint)
+			client, err := job.UpstreamConfig.InitClient()
 			if err != nil {
 				return err
 			}
