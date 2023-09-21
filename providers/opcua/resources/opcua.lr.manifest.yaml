@@ -7,13 +7,13 @@ resources:
       namespaces: {}
       nodes: {}
       root: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.12.0
   opcua.namespace:
     fields:
       id: {}
       name: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.12.0
   opcua.node:
     fields:
       accessLevel: {}
@@ -32,7 +32,7 @@ resources:
       unit: {}
       writeable: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.12.0
   opcua.server:
     fields:
       buildInfo: {}
@@ -40,4 +40,4 @@ resources:
       node: {}
       startTime: {}
       state: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.12.0

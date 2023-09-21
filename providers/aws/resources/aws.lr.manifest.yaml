@@ -491,7 +491,8 @@ resources:
       keypair: {}
       launchTime: {}
       patchState: {}
-      platformDetails: {}
+      platformDetails:
+        min_mondoo_version: 8.11.0
       privateDnsName: {}
       privateIp: {}
       publicDnsName: {}

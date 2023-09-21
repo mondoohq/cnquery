@@ -6,7 +6,7 @@ resources:
     fields:
       compartments: {}
       regions: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.compartment:
     fields:
       created: {}
@@ -16,12 +16,12 @@ resources:
       name: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.compute:
     fields:
       images: {}
       instances: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.compute.image:
     fields:
       created: {}
@@ -31,7 +31,7 @@ resources:
       region: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.compute.instance:
     fields:
       created: {}
@@ -41,13 +41,13 @@ resources:
       region: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity:
     fields:
       groups: {}
       policies: {}
       users: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.apiKey:
     fields:
       created: {}
@@ -57,7 +57,7 @@ resources:
       state: {}
       value: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.apikey:
     fields:
       created: {}
@@ -65,7 +65,7 @@ resources:
       id: {}
       lifecycleState: {}
       value: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.authToken:
     fields:
       created: {}
@@ -75,7 +75,7 @@ resources:
       lifecycleState: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.customerSecretKey:
     fields:
       created: {}
@@ -86,7 +86,7 @@ resources:
       name: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.group:
     fields:
       compartmentID: {}
@@ -97,7 +97,7 @@ resources:
       name: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.policy:
     fields:
       compartmentID: {}
@@ -109,7 +109,7 @@ resources:
       state: {}
       statements: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.identity.user:
     fields:
       apiKeys: {}
@@ -131,12 +131,12 @@ resources:
       previousLogin: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.network:
     fields:
       securityLists: {}
       vcns: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.network.securityList:
     fields:
       compartmentID: {}
@@ -148,7 +148,7 @@ resources:
       name: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.network.vcn:
     fields:
       cidrBlock: {}
@@ -161,12 +161,12 @@ resources:
       securityLists: {}
       state: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.objectStorage:
     fields:
       buckets: {}
       namespace: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.objectStorage.bucket:
     fields:
       autoTiering: {}
@@ -181,7 +181,7 @@ resources:
       storageTier: {}
       versioning: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.region:
     fields:
       id: {}
@@ -189,11 +189,11 @@ resources:
       name: {}
       status: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
   oci.tenancy:
     fields:
       description: {}
       id: {}
       name: {}
       retentionPeriod: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 8.10.0
