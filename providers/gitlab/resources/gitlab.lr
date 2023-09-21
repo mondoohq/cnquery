@@ -62,7 +62,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   onlyAllowMergeIfPipelineSucceeds bool
   // Allow merging merge requests if all discussions are resolved
   onlyAllowMergeIfAllDiscussionsAreResolved bool
-  // Is the issues feature enabled
+  // Is the issues feature enabled?
   issuesEnabled bool
 	// Is the merge request feature enabled
   mergeRequestsEnabled bool
