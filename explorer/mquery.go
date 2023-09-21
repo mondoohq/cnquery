@@ -118,6 +118,9 @@ func (m *Mquery) RefreshChecksum(
 
 	for i := range m.Props {
 		prop := m.Props[i]
+		if _, err := prop.RefreshChecksumAndType(schema); err != nil {
+			return err
+		}
 		if prop.Checksum == "" {
 			return errors.New("referenced property '" + prop.Mrn + "' checksum is empty")
 		}

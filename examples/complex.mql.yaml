@@ -52,7 +52,7 @@ packs:
           # This MQL uses the property defined above. You can override it via
           # e.g. --props "home='/home/user'"
           mql: |
-            file( props.home ) { * }
+            file( props.home ) { basename user group }
 
 # These are shared queries that can be used in any querypack
 queries:
