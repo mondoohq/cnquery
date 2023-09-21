@@ -40,9 +40,9 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"homepage":          llx.StringDataPtr(repo.Homepage),
 		"topics":            llx.ArrayData(convert.SliceAnyToInterface[string](repo.Topics), types.String),
 		"language":          llx.StringData(repo.GetLanguage()),
-		"createdAt":         llx.TimeDataPtr(githubTimestamp(repo.CreatedAt)),
-		"updatedAt":         llx.TimeDataPtr(githubTimestamp(repo.UpdatedAt)),
-		"pushedAt":          llx.TimeDataPtr(githubTimestamp(repo.PushedAt)),
+		"createdAt":         llx.TimeData(repo.CreatedAt.Time),
+		"updatedAt":         llx.TimeData(repo.UpdatedAt.Time),
+		"pushedAt":          llx.TimeData(repo.PushedAt.Time),
 		"archived":          llx.BoolDataPtr(repo.Archived),
 		"disabled":          llx.BoolDataPtr(repo.Disabled),
 		"private":           llx.BoolDataPtr(repo.Private),
@@ -188,9 +188,9 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		args["forksCount"] = llx.IntData(int64(repo.GetForksCount()))
 		args["openIssuesCount"] = llx.IntData(int64(repo.GetOpenIssues()))
 		args["stargazersCount"] = llx.IntData(int64(repo.GetStargazersCount()))
-		args["createdAt"] = llx.TimeDataPtr(githubTimestamp(repo.CreatedAt))
-		args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(repo.UpdatedAt))
-		args["pushedAt"] = llx.TimeDataPtr(githubTimestamp(repo.PushedAt))
+		args["createdAt"] = llx.TimeData(repo.CreatedAt.Time)
+		args["updatedAt"] = llx.TimeData(repo.UpdatedAt.Time)
+		args["pushedAt"] = llx.TimeData(repo.PushedAt.Time)
 		args["archived"] = llx.BoolDataPtr(repo.Archived)
 		args["disabled"] = llx.BoolDataPtr(repo.Disabled)
 		args["private"] = llx.BoolDataPtr(repo.Private)
@@ -331,7 +331,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 			"number":    llx.IntData(int64(*pr.Number)),
 			"state":     llx.StringDataPtr(pr.State),
 			"labels":    llx.ArrayData(labels, types.Any),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
+			"createdAt": llx.TimeData(pr.CreatedAt.Time),
 			"title":     llx.StringDataPtr(pr.Title),
 			"owner":     llx.ResourceData(owner, owner.MqlName()),
 			"assignees": llx.ArrayData(assigneesRes, types.Any),
@@ -1069,8 +1069,8 @@ func (g *mqlGithubRepository) workflows() ([]interface{}, error) {
 			"name":      llx.StringDataPtr(w.Name),
 			"path":      llx.StringDataPtr(w.Path),
 			"state":     llx.StringDataPtr(w.State),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(w.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(w.UpdatedAt)),
+			"createdAt": llx.TimeData(w.CreatedAt.Time),
+			"updatedAt": llx.TimeData(w.UpdatedAt.Time),
 		})
 		if err != nil {
 			return nil, err
@@ -1475,9 +1475,9 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 			"state":     llx.StringData(issue.GetState()),
 			"body":      llx.StringData(issue.GetBody()),
 			"url":       llx.StringData(issue.GetURL()),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(issue.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(issue.UpdatedAt)),
-			"closedAt":  llx.TimeDataPtr(githubTimestamp(issue.ClosedAt)),
+			"createdAt": llx.TimeData(issue.CreatedAt.Time),
+			"updatedAt": llx.TimeData(issue.UpdatedAt.Time),
+			"closedAt":  llx.TimeData(issue.ClosedAt.Time),
 			"assignees": llx.ArrayData(assignees, types.Any),
 			"closedBy":  llx.AnyData(closedBy),
 		})

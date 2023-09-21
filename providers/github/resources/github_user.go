@@ -8,7 +8,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v55/github"
@@ -67,21 +66,9 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["twitterUsername"] = llx.StringData(user.GetTwitterUsername())
 	args["bio"] = llx.StringData(user.GetBio())
 
-	var createdAt *time.Time
-	if user.CreatedAt != nil {
-		createdAt = &user.CreatedAt.Time
-	}
-	args["createdAt"] = llx.TimeDataPtr(createdAt)
-	var updatedAt *time.Time
-	if user.UpdatedAt != nil {
-		updatedAt = &user.UpdatedAt.Time
-	}
-	args["updatedAt"] = llx.TimeDataPtr(updatedAt)
-	var suspendedAt *time.Time
-	if user.SuspendedAt != nil {
-		suspendedAt = &user.SuspendedAt.Time
-	}
-	args["suspendedAt"] = llx.TimeDataPtr(suspendedAt)
+	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(user.CreatedAt))
+	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(user.UpdatedAt))
+	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(user.SuspendedAt))
 	args["company"] = llx.StringData(user.GetCompany())
 	return args, nil, nil
 }
@@ -204,8 +191,8 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 		r, err := CreateResource(g.MqlRuntime, "github.gist", map[string]*llx.RawData{
 			"id":          llx.StringDataPtr(gist.ID),
 			"description": llx.StringDataPtr(gist.Description),
-			"createdAt":   llx.TimeDataPtr(githubTimestamp(gist.CreatedAt)),
-			"updatedAt":   llx.TimeDataPtr(githubTimestamp(gist.UpdatedAt)),
+			"createdAt":   llx.TimeData(gist.CreatedAt.Time),
+			"updatedAt":   llx.TimeData(gist.UpdatedAt.Time),
 			"public":      llx.BoolDataPtr(gist.Public),
 			"owner":       llx.ResourceData(g, g.MqlName()),
 			"files":       llx.ArrayData(files, types.Any),

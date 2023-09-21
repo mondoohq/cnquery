@@ -33,7 +33,7 @@ func newMqlGitAuthor(runtime *plugin.Runtime, sha string, a *github.CommitAuthor
 		"sha":   llx.StringData(sha),
 		"name":  llx.StringData(a.GetName()),
 		"email": llx.StringData(a.GetEmail()),
-		"date":  llx.TimeData(githubTimestamp(date)),
+		"date":  llx.TimeData(date.Time),
 	})
 }
 
