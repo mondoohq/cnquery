@@ -502,6 +502,8 @@ resources:
       state: {}
       stateReason: {}
       stateTransitionReason: {}
+      stateTransitionTime:
+        min_mondoo_version: 9.0.0
       tags: {}
       vpc: {}
     is_private: true

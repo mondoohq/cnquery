@@ -6,8 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -692,7 +694,16 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 			if err != nil {
 				return nil, err
 			}
-
+			var stateTransitionTime time.Time
+			reg := regexp.MustCompile(`.*\((\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}) GMT\)`)
+			timeString := reg.FindStringSubmatch(convert.ToString(instance.StateTransitionReason))
+			if len(timeString) == 2 {
+				stateTransitionTime, err = time.Parse(time.DateTime, timeString[1])
+				if err != nil {
+					log.Error().Err(err).Msg("cannot parse state transition time for ec2 instance")
+					stateTransitionTime = llx.NeverPastTime
+				}
+			}
 			args := map[string]*llx.RawData{
 				"platformDetails":       llx.StringData(convert.ToString(instance.PlatformDetails)),
 				"arn":                   llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
@@ -713,6 +724,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"launchTime":            llx.TimeData(toTime(instance.LaunchTime)),
 				"privateIp":             llx.StringData(convert.ToString(instance.PrivateIpAddress)),
 				"privateDnsName":        llx.StringData(convert.ToString(instance.PrivateDnsName)),
+				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 			}
 
 			if instance.ImageId != nil {

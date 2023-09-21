@@ -1659,6 +1659,8 @@ private aws.ec2.instance @defaults("arn state") {
   privateDnsName string
   // Keypair associated with the instance
   keypair() aws.ec2.keypair
+  // Time when the last state transition occurred
+  stateTransitionTime time
 }
 
 // Amazon EC2 Key Pair
