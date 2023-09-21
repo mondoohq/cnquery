@@ -36,7 +36,7 @@ const (
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(InitViperConfig)
 	Features = getFeatures()
 	// persistent flags are global for the application
 	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default $HOME/.config/mondoo/mondoo.yml)")
@@ -69,7 +69,7 @@ func getFeatures() cnquery.Features {
 	return cnquery.Features(flags)
 }
 
-func initConfig() {
+func InitViperConfig() {
 	viper.SetConfigType("yaml")
 
 	Path = strings.TrimSpace(UserProvidedPath)

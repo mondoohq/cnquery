@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/components"
+	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -53,8 +54,13 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 func detectConnectorName(args []string, commands []*Command) (string, bool) {
 	autoUpdate := true
 
+	config.InitViperConfig()
+	if viper.IsSet("auto_update") {
+		autoUpdate = viper.GetBool("auto_update")
+	}
+
 	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
-	flags.Bool("auto-update", true, "")
+	flags.Bool("auto-update", autoUpdate, "")
 	flags.BoolP("help", "h", false, "")
 
 	builtins := genBuiltinFlags()
