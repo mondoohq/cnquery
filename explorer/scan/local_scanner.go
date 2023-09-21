@@ -111,12 +111,12 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 // returns the upstream config for the job. If the job has a specified config, it has precedence
 // over the automatically detected one
 func (s *LocalScanner) getUpstreamConfig(inv *inventory.Inventory, incognito bool) (*upstream.UpstreamConfig, error) {
-	if s.upstream == nil && inv.Spec.GetUpstreamCredentials() == nil {
+	jobCreds := inv.GetSpec().GetUpstreamCredentials()
+	if s.upstream == nil && jobCreds == nil {
 		return nil, errors.New("no default or job upstream config provided")
 	}
 	u := proto.Clone(s.upstream).(*upstream.UpstreamConfig)
 	u.Incognito = incognito
-	jobCreds := inv.GetSpec().GetUpstreamCredentials()
 	if jobCreds != nil {
 		u.ApiEndpoint = jobCreds.GetApiEndpoint()
 		u.Creds = jobCreds
