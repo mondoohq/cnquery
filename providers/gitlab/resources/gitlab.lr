@@ -74,7 +74,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   containerRegistryEnabled bool
 	// Is the Service Desk feature enabled?
   serviceDeskEnabled bool
-	// Is the packages feature enabled
+	// Is the packages feature enabled?
   packagesEnabled bool
 	// Is the Auto DevOps feature enabled
   autoDevopsEnabled bool
