@@ -76,7 +76,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   serviceDeskEnabled bool
 	// Is the packages feature enabled?
   packagesEnabled bool
-	// Is the Auto DevOps feature enabled
+	// Is the Auto DevOps feature enabled?
   autoDevopsEnabled bool
 	// Is the requirements feature enabled
   requirementsEnabled bool
