@@ -70,7 +70,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   wikiEnabled bool
 	// Is the snippets feature enabled?
   snippetsEnabled bool
-	// Is the container registry feature enabled
+	// Is the container registry feature enabled?
   containerRegistryEnabled bool
 	// Is the Service Desk feature enabled?
   serviceDeskEnabled bool
