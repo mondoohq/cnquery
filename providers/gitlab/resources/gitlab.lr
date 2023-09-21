@@ -48,7 +48,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   defaultBranch string
   // The project's visibility level. Can be private, internal, or public.
   visibility string
-  // Is the project archived
+  // Is the project archived?
   archived bool
   // Is the project a mirror
   mirror bool
