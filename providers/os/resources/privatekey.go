@@ -16,7 +16,6 @@ func initPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		if !ok {
 			return nil, nil, errors.New("wrong type for 'path' in privatekey initialization, it must be a string")
 		}
-
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
 			"path": llx.StringData(path),
 		})
@@ -35,6 +34,9 @@ func (r *mqlPrivatekey) id() (string, error) {
 	file := r.GetFile()
 	if file.Error != nil {
 		return "", file.Error
+	}
+	if file.Data == nil {
+		return "", errors.New("no file provided")
 	}
 
 	return "privatekey:" + file.Data.Path.Data, nil
