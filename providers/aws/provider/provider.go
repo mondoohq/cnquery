@@ -95,6 +95,12 @@ func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for i := range s.runtimes {
+		runtime := s.runtimes[i]
+		if conn, ok := runtime.Connection.(awsec2ebsconn.AwsEbsConnection); ok {
+			conn.Close()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 

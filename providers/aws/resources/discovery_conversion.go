@@ -710,6 +710,7 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	opts["type"] = targetType
 	opts["id"] = target
 	asset.Name = target
+	asset.IdDetector = []string{ids.IdDetector_Hostname}
 	asset.Connections = []*inventory.Config{{
 		Type:     string(awsec2ebsconn.EBSConnectionType),
 		Host:     target,
