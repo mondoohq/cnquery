@@ -104,6 +104,7 @@ func ListAll() ([]*Provider, error) {
 	}
 
 	if sysOk {
+		log.Debug().Msg("looking for providers in system path")
 		cur, err := findProviders(SystemPath)
 		if err != nil {
 			log.Warn().Str("path", SystemPath).Err(err).Msg("failed to get providers from system path")
@@ -112,6 +113,7 @@ func ListAll() ([]*Provider, error) {
 	}
 
 	if homeOk {
+		log.Debug().Msg("looking for providers in home path")
 		cur, err := findProviders(HomePath)
 		if err != nil {
 			log.Warn().Str("path", HomePath).Err(err).Msg("failed to get providers from home path")
@@ -302,6 +304,9 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if conf.Dst == "" {
 		conf.Dst = HomePath
+	}
+	if conf.Dst == "" {
+		conf.Dst = SystemPath
 	}
 
 	if !config.ProbeDir(conf.Dst) {
