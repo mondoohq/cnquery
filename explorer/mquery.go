@@ -77,6 +77,13 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 
 	m.Mrn = nu
 	m.Uid = ""
+
+	for i := range m.Props {
+		if err := m.Props[i].RefreshMRN(ownerMRN); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -118,6 +125,9 @@ func (m *Mquery) RefreshChecksum(
 
 	for i := range m.Props {
 		prop := m.Props[i]
+		if _, err := prop.RefreshChecksumAndType(schema); err != nil {
+			return err
+		}
 		if prop.Checksum == "" {
 			return errors.New("referenced property '" + prop.Mrn + "' checksum is empty")
 		}

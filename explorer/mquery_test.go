@@ -4,12 +4,41 @@
 package explorer
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
+
+func TestMquery_Refresh(t *testing.T) {
+	a := &Mquery{
+		Mql:   "mondoo.version != props.world",
+		Uid:   "my-id0",
+		Props: []*Property{{Mql: "'hi'", Uid: "world"}},
+	}
+
+	err := a.RefreshMRN("//owner")
+	require.NoError(t, err)
+	assert.Equal(t, "//owner/queries/my-id0", a.Mrn)
+	assert.Empty(t, a.Uid)
+	assert.Equal(t, "//owner/queries/world", a.Props[0].Mrn)
+	assert.Empty(t, a.Props[0].Uid)
+
+	x := testutils.LinuxMock()
+	err = a.RefreshChecksum(
+		context.Background(),
+		x.Schema(),
+		func(ctx context.Context, mrn string) (*Mquery, error) {
+			return nil, nil
+		},
+	)
+	require.NoError(t, err)
+	assert.Equal(t, "5KkJ/lLHnBM=", a.Checksum)
+	assert.Equal(t, "9NhbOk30tEg=", a.Props[0].Checksum)
+}
 
 func TestMqueryMerge(t *testing.T) {
 	a := &Mquery{
