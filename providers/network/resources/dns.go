@@ -100,12 +100,18 @@ func (d *mqlDns) records(params interface{}) ([]interface{}, error) {
 			continue
 		}
 
+		var ttl *llx.RawData
+		if r["TTL"] == nil {
+			ttl = llx.NilData
+		} else {
+			ttl = llx.IntData(r["TTL"].(int64))
+		}
 		o, err := CreateResource(d.MqlRuntime, "dns.record", map[string]*llx.RawData{
 			"name":  llx.StringData(r["name"].(string)),
-			"ttl":   llx.IntData(r["TTL"].(int64)),
+			"ttl":   ttl,
 			"class": llx.StringData(r["class"].(string)),
 			"type":  llx.StringData(r["type"].(string)),
-			"rdata": llx.ArrayData(llx.TArr2Raw(r["rData"].([]string)), types.String),
+			"rdata": llx.ArrayData(llx.TArr2Raw(r["rData"].([]interface{})), types.String),
 		})
 		if err != nil {
 			return nil, err
