@@ -741,14 +741,20 @@ resources:
     fields:
       children: {}
       exists: {}
+      items:
+        min_mondoo_version: 8.19.0
       path: {}
       properties: {}
     min_mondoo_version: 5.15.0
   registrykey.property:
     fields:
+      data:
+        min_mondoo_version: 8.19.0
       exists: {}
       name: {}
       path: {}
+      type:
+        min_mondoo_version: 8.19.0
       value: {}
     min_mondoo_version: 5.15.0
     snippets:

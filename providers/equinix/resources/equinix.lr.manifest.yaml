@@ -1,0 +1,96 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  equinix.metal.device:
+    fields:
+      billingCycle: {}
+      createdAt: {}
+      description: {}
+      hostname: {}
+      id: {}
+      locked: {}
+      os: {}
+      shortID: {}
+      spotInstance: {}
+      state: {}
+      updatedAt: {}
+      url: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.organization:
+    fields:
+      address: {}
+      billingPhone: {}
+      createdAt: {}
+      creditAmount: {}
+      description: {}
+      id: {}
+      mainPhone: {}
+      name: {}
+      taxId: {}
+      twitter: {}
+      updatedAt: {}
+      url: {}
+      users: {}
+      website: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.project:
+    fields:
+      createdAt: {}
+      devices: {}
+      id: {}
+      name: {}
+      organization: {}
+      sshKeys: {}
+      updatedAt: {}
+      url: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.sshkey:
+    fields:
+      createdAt: {}
+      fingerPrint: {}
+      id: {}
+      key: {}
+      label: {}
+      updatedAt: {}
+      url: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix
+  equinix.metal.user:
+    fields:
+      avatarUrl: {}
+      createdAt: {}
+      email: {}
+      facebook: {}
+      firstName: {}
+      fullName: {}
+      id: {}
+      lastName: {}
+      linkedin: {}
+      phoneNumber: {}
+      timezone: {}
+      twitter: {}
+      twoFactorAuth: {}
+      updatedAt: {}
+      url: {}
+    is_private: true
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - equinix

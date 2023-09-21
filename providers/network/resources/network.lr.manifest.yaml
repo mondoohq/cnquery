@@ -1,0 +1,169 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  certificate:
+    fields:
+      authorityKeyID: {}
+      crlDistributionPoints: {}
+      expiresIn: {}
+      extendedKeyUsage: {}
+      extensions: {}
+      fingerprints: {}
+      isCA: {}
+      isRevoked: {}
+      isVerified:
+        min_mondoo_version: 5.17.1
+      issuer: {}
+      issuingCertificateUrl: {}
+      keyUsage: {}
+      notAfter: {}
+      notBefore: {}
+      ocspServer: {}
+      pem: {}
+      policyIdentifier: {}
+      revokedAt: {}
+      serial: {}
+      signature: {}
+      signingAlgorithm: {}
+      subject: {}
+      subjectKeyID: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  certificates:
+    fields:
+      list: {}
+      pem: {}
+    min_mondoo_version: latest
+  dns:
+    fields:
+      dkim: {}
+      fqdn: {}
+      mx: {}
+      params: {}
+      records: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+  dns.dkimRecord:
+    fields:
+      dnsTxt: {}
+      domain: {}
+      flags: {}
+      hashAlgorithms: {}
+      keyType: {}
+      notes: {}
+      publicKeyData: {}
+      serviceTypes: {}
+      valid: {}
+      version: {}
+    min_mondoo_version: 5.15.0
+  dns.mxRecord:
+    fields:
+      domainName: {}
+      name: {}
+      preference: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+  dns.record:
+    fields:
+      class: {}
+      name: {}
+      rdata: {}
+      ttl: {}
+      type: {}
+    maturity: experimental
+    min_mondoo_version: 5.15.0
+  domainName:
+    fields:
+      effectiveTLDPlusOne: {}
+      fqdn: {}
+      labels: {}
+      tld: {}
+      tldIcannManaged: {}
+    min_mondoo_version: 5.15.0
+  openpgp.entities:
+    fields:
+      content: {}
+      list: {}
+    is_private: true
+    min_mondoo_version: latest
+  openpgp.entity:
+    fields:
+      identities: {}
+      primaryPublicKey: {}
+    is_private: true
+    min_mondoo_version: latest
+  openpgp.identity:
+    fields:
+      comment: {}
+      email: {}
+      fingerprint: {}
+      id: {}
+      name: {}
+      signatures: {}
+    is_private: true
+    min_mondoo_version: latest
+  openpgp.publicKey:
+    fields:
+      bitLength: {}
+      creationTime: {}
+      fingerprint: {}
+      id: {}
+      keyAlgorithm: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+  openpgp.signature:
+    fields:
+      creationTime: {}
+      expiresIn: {}
+      fingerprint: {}
+      hash: {}
+      identityName: {}
+      keyAlgorithm: {}
+      keyExpiresIn: {}
+      keyLifetimeSecs: {}
+      lifetimeSecs: {}
+      signatureType: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+  pkix.extension:
+    fields:
+      critical: {}
+      identifier: {}
+      value: {}
+    min_mondoo_version: 5.15.0
+  pkix.name:
+    fields:
+      commonName: {}
+      country: {}
+      dn: {}
+      extraNames: {}
+      id: {}
+      locality: {}
+      names: {}
+      organization: {}
+      organizationalUnit: {}
+      postalCode: {}
+      province: {}
+      serialNumber: {}
+      streetAddress: {}
+    min_mondoo_version: 5.15.0
+  socket:
+    fields:
+      address: {}
+      port: {}
+      protocol: {}
+    min_mondoo_version: 5.15.0
+  tls:
+    fields:
+      certificates: {}
+      ciphers: {}
+      domainName: {}
+      extensions: {}
+      nonSniCertificates: {}
+      params: {}
+      socket: {}
+      versions: {}
+    min_mondoo_version: 5.15.0
