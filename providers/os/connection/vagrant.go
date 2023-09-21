@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/vagrant"
+	"go.mondoo.com/cnquery/providers/os/id/ids"
 )
 
 const (
@@ -86,22 +87,23 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 		return nil, err
 	}
 
-	a, err := newVagrantAsset(id, vmSshConfig[k], conf)
+	err = migrateVagrantAssetToSsh(id, vmSshConfig[k], conf, root)
 	if err != nil {
 		return nil, err
 	}
-	return NewSshConnection(id, a.Connections[0], a)
+	return NewSshConnection(id, root.Connections[0], root)
 }
 
-func newVagrantAsset(id uint32, sshConfig *vagrant.VagrantVmSSHConfig, rootTransportConfig *inventory.Config) (*inventory.Asset, error) {
+func migrateVagrantAssetToSsh(id uint32, sshConfig *vagrant.VagrantVmSSHConfig, rootTransportConfig *inventory.Config, asset *inventory.Asset) error {
 	if sshConfig == nil {
-		return nil, errors.New("missing vagrant ssh config")
+		return errors.New("missing vagrant ssh config")
 	}
 
 	cc := &inventory.Config{
 		// TODO: do we need to support winrm?
 		Backend:  "ssh",
 		Type:     "ssh",
+		Runtime:  "vagrant",
 		Host:     sshConfig.HostName,
 		Insecure: strings.ToLower(sshConfig.StrictHostKeyChecking) == "no",
 
@@ -112,19 +114,13 @@ func newVagrantAsset(id uint32, sshConfig *vagrant.VagrantVmSSHConfig, rootTrans
 	// load secret
 	credential, err := vault.NewPrivateKeyCredentialFromPath(sshConfig.User, sshConfig.IdentityFile, "")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	cc.Credentials = append(cc.Credentials, credential)
 
-	assetObj := &inventory.Asset{
-		Name:        sshConfig.Host,
-		PlatformIds: []string{},
-		Connections: []*inventory.Config{cc},
-		Platform: &inventory.Platform{
-			// FIXME: use const like before?
-			Kind: "vm",
-		},
-	}
+	asset.Name = sshConfig.Host
+	asset.Connections = []*inventory.Config{cc}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_SshHostkey, ids.IdDetector_MachineID}
 
-	return assetObj, nil
+	return nil
 }

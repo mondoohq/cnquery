@@ -4,6 +4,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"go/format"
 	"os"
@@ -170,6 +171,15 @@ func rewireDependencies(providers []string) {
 	deps := ""
 	replace := ""
 	for _, provider := range providers {
+		_, err := os.Stat("providers/" + provider + "/go.mod")
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				log.Info().Str("provider", provider).Msg("skipping provider without go.mod")
+				continue
+			} else {
+				log.Fatal().Err(err).Str("provider", provider).Msg("failed to stat provider go.mod")
+			}
+		}
 		// we don't care about the specific version for dev
 		deps += "\n\tgo.mondoo.com/cnquery/providers/" + provider + " v0.0.0"
 		replace += "\nreplace go.mondoo.com/cnquery/providers/" + provider + " => ./providers/" + provider

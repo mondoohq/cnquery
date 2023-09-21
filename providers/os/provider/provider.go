@@ -302,7 +302,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey})
 		if err == nil {
-			asset.Name = fingerprint.Name
+			if conn.Asset().Connections[0].Runtime != "vagrant" {
+				asset.Name = fingerprint.Name
+			}
 			asset.PlatformIds = fingerprint.PlatformIDs
 		}
 
