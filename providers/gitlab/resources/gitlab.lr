@@ -64,7 +64,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   onlyAllowMergeIfAllDiscussionsAreResolved bool
   // Is the issues feature enabled?
   issuesEnabled bool
-	// Is the merge request feature enabled
+	// Is the merge request feature enabled?
   mergeRequestsEnabled bool
 	// Is the wiki feature enabled
   wikiEnabled bool
