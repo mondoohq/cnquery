@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v55/github"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
@@ -43,7 +43,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if name == "" {
 		name = *org.Name
 	}
-	args["id"] = llx.IntData(convert.ToInt64(org.ID))
+	args["id"] = llx.IntData(org.ID)
 	args["name"] = llx.StringData(name)
 	args["login"] = llx.StringDataPtr(org.Login)
 	args["nodeId"] = llx.StringDataPtr(org.NodeID)
@@ -56,10 +56,10 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["followers"] = llx.IntData(convert.ToInt64FromInt(org.Followers))
 	args["following"] = llx.IntData(convert.ToInt64FromInt(org.Following))
 	args["description"] = llx.StringDataPtr(org.Description)
-	args["createdAt"] = llx.TimeDataPtr(org.CreatedAt)
-	args["updatedAt"] = llx.TimeDataPtr(org.UpdatedAt)
-	args["totalPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.TotalPrivateRepos))
-	args["ownedPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.OwnedPrivateRepos))
+	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(org.CreatedAt))
+	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(org.UpdatedAt))
+	args["totalPrivateRepos"] = llx.IntData(org.TotalPrivateRepos)
+	args["ownedPrivateRepos"] = llx.IntData(org.OwnedPrivateRepos)
 	args["privateGists"] = llx.IntData(convert.ToInt64FromInt(org.PrivateGists))
 	args["diskUsage"] = llx.IntData(convert.ToInt64FromInt(org.DiskUsage))
 	args["collaborators"] = llx.IntData(convert.ToInt64FromInt(org.Collaborators))

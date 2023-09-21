@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v55/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -331,7 +331,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 			"number":    llx.IntData(int64(*pr.Number)),
 			"state":     llx.StringDataPtr(pr.State),
 			"labels":    llx.ArrayData(labels, types.Any),
-			"createdAt": llx.TimeDataPtr(pr.CreatedAt),
+			"createdAt": llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
 			"title":     llx.StringDataPtr(pr.Title),
 			"owner":     llx.ResourceData(owner, owner.MqlName()),
 			"assignees": llx.ArrayData(assigneesRes, types.Any),
@@ -1475,9 +1475,9 @@ func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
 			"state":     llx.StringData(issue.GetState()),
 			"body":      llx.StringData(issue.GetBody()),
 			"url":       llx.StringData(issue.GetURL()),
-			"createdAt": llx.TimeDataPtr(issue.CreatedAt),
-			"updatedAt": llx.TimeDataPtr(issue.UpdatedAt),
-			"closedAt":  llx.TimeDataPtr(issue.ClosedAt),
+			"createdAt": llx.TimeDataPtr(githubTimestamp(issue.CreatedAt)),
+			"updatedAt": llx.TimeDataPtr(githubTimestamp(issue.UpdatedAt)),
+			"closedAt":  llx.TimeDataPtr(githubTimestamp(issue.ClosedAt)),
 			"assignees": llx.ArrayData(assignees, types.Any),
 			"closedBy":  llx.AnyData(closedBy),
 		})

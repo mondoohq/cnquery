@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v55/github"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/github/connection"
@@ -204,8 +204,8 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 		r, err := CreateResource(g.MqlRuntime, "github.gist", map[string]*llx.RawData{
 			"id":          llx.StringDataPtr(gist.ID),
 			"description": llx.StringDataPtr(gist.Description),
-			"createdAt":   llx.TimeDataPtr(gist.CreatedAt),
-			"updatedAt":   llx.TimeDataPtr(gist.UpdatedAt),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(gist.CreatedAt)),
+			"updatedAt":   llx.TimeDataPtr(githubTimestamp(gist.UpdatedAt)),
 			"public":      llx.BoolDataPtr(gist.Public),
 			"owner":       llx.ResourceData(g, g.MqlName()),
 			"files":       llx.ArrayData(files, types.Any),

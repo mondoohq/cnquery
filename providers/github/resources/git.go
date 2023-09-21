@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v55/github"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
@@ -33,7 +33,7 @@ func newMqlGitAuthor(runtime *plugin.Runtime, sha string, a *github.CommitAuthor
 		"sha":   llx.StringData(sha),
 		"name":  llx.StringData(a.GetName()),
 		"email": llx.StringData(a.GetEmail()),
-		"date":  llx.TimeData(date),
+		"date":  llx.TimeData(githubTimestamp(date)),
 	})
 }
 
