@@ -68,7 +68,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   mergeRequestsEnabled bool
 	// Is the wiki feature enabled?
   wikiEnabled bool
-	// Is the snippets feature enabled
+	// Is the snippets feature enabled?
   snippetsEnabled bool
 	// Is the container registry feature enabled
   containerRegistryEnabled bool
