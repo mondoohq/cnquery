@@ -50,7 +50,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   visibility string
   // Is the project archived?
   archived bool
-  // Is the project a mirror
+  // Is the project a mirror?
   mirror bool
   // URL of the project
   webURL string
