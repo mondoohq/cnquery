@@ -78,6 +78,6 @@ gitlab.project @defaults("fullName visibility webURL") {
   packagesEnabled bool
 	// Is the Auto DevOps feature enabled?
   autoDevopsEnabled bool
-	// Is the requirements feature enabled
+	// Is the requirements feature enabled?
   requirementsEnabled bool
 }
