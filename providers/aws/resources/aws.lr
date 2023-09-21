@@ -50,6 +50,8 @@ private aws.vpc @defaults("arn isDefault") {
   flowLogs() []aws.vpc.flowlog
   // List of route tables for the VPC
   routeTables() []aws.vpc.routetable
+  // List of subnets for the VPC
+  subnets() []aws.vpc.subnet
   // Tags on the VPC
   tags map[string]string
 }
@@ -60,6 +62,18 @@ private aws.vpc.routetable @defaults("id") {
   id string
   // A list of route descriptions
   routes []dict
+}
+
+// Amazon Virtual Private Cloud (VPC) Subnet
+private aws.vpc.subnet @defaults("arn") {
+  // ARN of the subnet
+  arn string
+  // Unique ID of the subnet
+  id string
+  // A list of CIDR descriptions
+  cidrs string
+  // Indicates whether instances launched in this subnet receive a public IPv4 address
+  mapPublicIpOnLaunch bool
 }
 
 // Amazon Virtual Private Cloud (VPC) Flow Log

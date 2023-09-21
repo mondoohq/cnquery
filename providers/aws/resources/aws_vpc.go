@@ -180,6 +180,48 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAwsVpcSubnet) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpcVal := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	nextToken := aws.String("no_token_to_start_with")
+	filterName := "vpc-id"
+	params := &ec2.DescribeSubnetsInput{Filters: []vpctypes.Filter{{Name: &filterName, Values: []string{vpcVal}}}}
+	for nextToken != nil {
+		subnets, err := svc.DescribeSubnets(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = subnets.NextToken
+		if subnets.NextToken != nil {
+			params.NextToken = nextToken
+		}
+
+		for _, subnet := range subnets.Subnets {
+			subnetResource, err := CreateResource(a.MqlRuntime, "aws.vpc.subnet",
+				map[string]*llx.RawData{
+					"arn":                 llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
+					"id":                  llx.StringData(convert.ToString(subnet.SubnetId)),
+					"cidrs":               llx.StringData(*subnet.CidrBlock),
+					"mapPublicIpOnLaunch": llx.BoolData(*subnet.MapPublicIpOnLaunch),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, subnetResource)
+		}
+	}
+	return res, nil
+}
+
 func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
