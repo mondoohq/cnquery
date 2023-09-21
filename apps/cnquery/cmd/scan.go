@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/execruntime"
+	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
@@ -162,14 +163,14 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		log.Fatal().Err(err).Msg("failed to parse props")
 	}
 
+	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"))
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse inventory")
+	}
 	conf := scanConfig{
-		Features:    opts.GetFeatures(),
-		IsIncognito: viper.GetBool("incognito"),
-		Inventory: &inventory.Inventory{
-			Spec: &inventory.InventorySpec{
-				Assets: []*inventory.Asset{cliRes.Asset},
-			},
-		},
+		Features:       opts.GetFeatures(),
+		IsIncognito:    viper.GetBool("incognito"),
+		Inventory:      inv,
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
