@@ -62,11 +62,30 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 		prj := grp.Projects[i]
 
 		mqlProject, err := CreateResource(g.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
-			"id":          llx.IntData(int64(prj.ID)),
-			"name":        llx.StringData(prj.Name),
-			"path":        llx.StringData(prj.Path),
-			"description": llx.StringData(prj.Description),
-			"visibility":  llx.StringData(string(prj.Visibility)),
+			"allowMergeOnSkippedPipeline": llx.BoolData(prj.AllowMergeOnSkippedPipeline),
+			"archived":                    llx.BoolData(prj.Archived),
+			"autoDevopsEnabled":           llx.BoolData(prj.AutoDevopsEnabled),
+			"containerRegistryEnabled":    llx.BoolData(prj.ContainerRegistryEnabled),
+			"createdAt":                   llx.TimeDataPtr(prj.CreatedAt),
+			"defaultBranch":               llx.StringData(prj.DefaultBranch),
+			"description":                 llx.StringData(prj.Description),
+			"emailsDisabled":              llx.BoolData(!prj.EmailsEnabled),
+			"fullName":                    llx.StringData(prj.NameWithNamespace),
+			"id":                          llx.IntData(int64(prj.ID)),
+			"issuesEnabled":               llx.BoolData(prj.IssuesEnabled),
+			"mergeRequestsEnabled":        llx.BoolData(prj.MergeRequestsEnabled),
+			"mirror":                      llx.BoolData(prj.Mirror),
+			"name":                        llx.StringData(prj.Name),
+			"onlyAllowMergeIfAllDiscussionsAreResolved": llx.BoolData(prj.OnlyAllowMergeIfAllDiscussionsAreResolved),
+			"onlyAllowMergeIfPipelineSucceeds":          llx.BoolData(prj.OnlyAllowMergeIfPipelineSucceeds),
+			"packagesEnabled":                           llx.BoolData(prj.PackagesEnabled),
+			"path":                                      llx.StringData(prj.Path),
+			"requirementsEnabled":                       llx.BoolData(prj.RequirementsEnabled),
+			"serviceDeskEnabled":                        llx.BoolData(prj.ServiceDeskEnabled),
+			"snippetsEnabled":                           llx.BoolData(prj.SnippetsEnabled),
+			"visibility":                                llx.StringData(string(prj.Visibility)),
+			"webURL":                                    llx.StringData(prj.WebURL),
+			"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
 		})
 		if err != nil {
 			return nil, err
