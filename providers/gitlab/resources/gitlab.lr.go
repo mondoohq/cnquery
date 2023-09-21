@@ -103,6 +103,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetPath()).ToDataRes(types.String)
 	},
+	"gitlab.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"gitlab.group.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetDescription()).ToDataRes(types.String)
 	},
@@ -225,6 +228,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gitlab.group.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -391,6 +398,7 @@ type mqlGitlabGroup struct {
 	Id plugin.TValue[int64]
 	Name plugin.TValue[string]
 	Path plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 	Description plugin.TValue[string]
 	WebURL plugin.TValue[string]
 	Visibility plugin.TValue[string]
@@ -448,6 +456,10 @@ func (c *mqlGitlabGroup) GetName() *plugin.TValue[string] {
 
 func (c *mqlGitlabGroup) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlGitlabGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlGitlabGroup) GetDescription() *plugin.TValue[string] {

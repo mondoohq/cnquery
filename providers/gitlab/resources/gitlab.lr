@@ -12,6 +12,8 @@ gitlab.group @defaults("name") {
   name string
   // Group path
   path string
+  // Create date of the group
+  createdAt time
   // Group description
   description string
   // URL of the group
