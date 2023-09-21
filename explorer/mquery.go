@@ -77,6 +77,13 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 
 	m.Mrn = nu
 	m.Uid = ""
+
+	for i := range m.Props {
+		if err := m.Props[i].RefreshMRN(ownerMRN); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

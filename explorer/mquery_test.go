@@ -13,13 +13,22 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
-func TestMquery_RefreshChecksum(t *testing.T) {
+func TestMquery_Refresh(t *testing.T) {
 	a := &Mquery{
 		Mql:   "mondoo.version != props.world",
+		Uid:   "my-id0",
 		Props: []*Property{{Mql: "'hi'", Uid: "world"}},
 	}
+
+	err := a.RefreshMRN("//owner")
+	require.NoError(t, err)
+	assert.Equal(t, "//owner/queries/my-id0", a.Mrn)
+	assert.Empty(t, a.Uid)
+	assert.Equal(t, "//owner/queries/world", a.Props[0].Mrn)
+	assert.Empty(t, a.Props[0].Uid)
+
 	x := testutils.LinuxMock()
-	err := a.RefreshChecksum(
+	err = a.RefreshChecksum(
 		context.Background(),
 		x.Schema(),
 		func(ctx context.Context, mrn string) (*Mquery, error) {
@@ -27,8 +36,8 @@ func TestMquery_RefreshChecksum(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-	assert.Equal(t, "t2slvX2k58s=", a.Checksum)
-	assert.Equal(t, "0xgs2tmERsM=", a.Props[0].Checksum)
+	assert.Equal(t, "5KkJ/lLHnBM=", a.Checksum)
+	assert.Equal(t, "9NhbOk30tEg=", a.Props[0].Checksum)
 }
 
 func TestMqueryMerge(t *testing.T) {
