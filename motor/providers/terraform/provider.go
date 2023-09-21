@@ -43,14 +43,16 @@ func New(tc *providers.Config) (*Provider, error) {
 	// Terraform from git, temporary before v9
 	var err error
 	var closer func()
+	var clonepath string
 	path := tc.Options["path"]
 	if strings.HasPrefix(path, "git+https://") || strings.HasPrefix(path, "git+ssh://") {
-		path, closer, err = processGitForTerraform(path, tc.Credentials)
+		clonepath, closer, err = processGitForTerraform(path, tc.Credentials)
 		if err != nil {
 			return nil, err
 		}
+		tc.Options["original-path"] = path
 		tc.Options["asset-type"] = "hcl"
-		tc.Options["path"] = path
+		tc.Options["path"] = clonepath
 	}
 
 	projectPath := ""
@@ -93,7 +95,6 @@ func New(tc *providers.Config) (*Provider, error) {
 	} else if tc.Options["path"] != "" {
 		assetType = configurationfiles
 		path := tc.Options["path"]
-		projectPath = path
 		stat, err := os.Stat(path)
 		if os.IsNotExist(err) {
 			return nil, errors.New("path '" + path + "' is not a valid file or directory")
@@ -154,6 +155,11 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	// build project hash to identify the project
+	projectPath = path
+	if tc.Options["original-path"] != "" { // override path for when files have been copied over
+		projectPath = tc.Options["original-path"]
+	}
+	log.Debug().Str("projectPath", projectPath).Msg("creating terraform id hash")
 	absPath, _ := filepath.Abs(projectPath)
 	h := sha256.New()
 	h.Write([]byte(absPath))
