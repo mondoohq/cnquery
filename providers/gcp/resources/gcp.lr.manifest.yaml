@@ -1249,7 +1249,8 @@ resources:
       clusterIpv4Cidr: {}
       created: {}
       currentMasterVersion: {}
-      databaseEncryption: {}
+      databaseEncryption:
+        min_mondoo_version: 8.3.0
       description: {}
       enableKubernetesAlpha: {}
       endpoint: {}

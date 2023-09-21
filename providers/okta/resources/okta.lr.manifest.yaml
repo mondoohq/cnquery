@@ -7,7 +7,8 @@ resources:
       applications: {}
       domains: {}
       groups: {}
-      networks: {}
+      networks:
+        min_mondoo_version: 8.4.0
       trustedOrigins: {}
       users: {}
     min_mondoo_version: latest
@@ -63,12 +64,13 @@ resources:
       type: {}
       usage: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 8.4.0
   okta.organization:
     fields:
       address1: {}
       address2: {}
-      billingContact: {}
+      billingContact:
+        min_mondoo_version: 8.4.0
       city: {}
       companyName: {}
       country: {}
@@ -80,13 +82,16 @@ resources:
       optOutCommunicationEmails: {}
       phoneNumber: {}
       postalCode: {}
-      securityNotificationEmails: {}
+      securityNotificationEmails:
+        min_mondoo_version: 8.4.0
       state: {}
       status: {}
       subdomain: {}
       supportPhoneNumber: {}
-      technicalContact: {}
-      threatInsightSettings: {}
+      technicalContact:
+        min_mondoo_version: 8.4.0
+      threatInsightSettings:
+        min_mondoo_version: 8.4.0
       website: {}
     min_mondoo_version: latest
   okta.policies:
