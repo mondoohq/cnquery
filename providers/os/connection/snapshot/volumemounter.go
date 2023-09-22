@@ -15,7 +15,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const NoSetup = "no-setup"
+const (
+	NoSetup = "no-setup"
+	IsSetup = "is-setup"
+)
 
 type VolumeMounter struct {
 	// the tmp dir we create; serves as the directory we mount the volume to

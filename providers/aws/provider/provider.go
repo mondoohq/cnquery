@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn"
 	"go.mondoo.com/cnquery/providers/aws/resources"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
@@ -38,11 +39,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if flags == nil {
 		flags = map[string]*llx.Primitive{}
 	}
+	opts := parseFlagsToOptions(flags)
 
-	inventoryConfig := &inventory.Config{
-		Type: "aws",
+	// handle aws subcommands
+	if len(req.Args) >= 3 && req.Args[0] == "ec2" {
+		return &plugin.ParseCLIRes{Asset: handleAwsEc2Subcommands(req.Args, opts)}, nil
 	}
 
+	inventoryConfig := &inventory.Config{
+		Type: req.Connector,
+	}
 	// discovery flags
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
@@ -51,18 +57,32 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			discoverTargets = append(discoverTargets, entry)
 		}
 	}
+
 	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{inventoryConfig},
-		Options:     parseFlagsToOptions(flags),
+		Options:     opts,
 	}
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.Asset {
+	asset := &inventory.Asset{}
+	switch args[1] {
+	case "instance-connect":
+		return resources.InstanceConnectAsset(args, opts)
+	case "ssm":
+		return resources.SSMConnectAsset(args, opts)
+	case "ebs":
+		return resources.EbsConnectAsset(args, opts)
+	}
+	return asset
 }
 
 func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
 	o := make(map[string]string, 0)
 	for k, v := range m {
-		if k == "profile" || k == "region" || k == "role" || k == "endpoint-url" {
+		if k == "profile" || k == "region" || k == "role" || k == "endpoint-url" || k == "no-setup" {
 			if val := string(v.Value); val != "" {
 				o[k] = string(v.Value)
 			}
@@ -75,6 +95,12 @@ func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for i := range s.runtimes {
+		runtime := s.runtimes[i]
+		if conn, ok := runtime.Connection.(awsec2ebsconn.AwsEbsConnection); ok {
+			conn.Close()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 
@@ -105,7 +131,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	if c, ok := conn.(*connection.AwsConnection); ok {
-		c.PlatformOverride = req.Asset.Platform.Name
+		if req.Asset.Platform != nil {
+			c.PlatformOverride = req.Asset.Platform.Name
+		}
 		inventory, err = s.discover(c)
 		if err != nil {
 			return nil, err
@@ -113,8 +141,8 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return &plugin.ConnectRes{
-		Id:        uint32(conn.(shared.SimpleConnection).ID()),
-		Name:      conn.(shared.SimpleConnection).Name(),
+		Id:        uint32(conn.(shared.Connection).ID()),
+		Name:      conn.(shared.Connection).Name(),
 		Asset:     req.Asset,
 		Inventory: inventory,
 	}, nil
@@ -130,6 +158,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
+	case string(awsec2ebsconn.EBSConnectionType):
+		s.lastConnectionID++
+		conn, err = awsec2ebsconn.NewAwsEbsConnection(s.lastConnectionID, conf, asset)
+
 	default:
 		s.lastConnectionID++
 		conn, err = connection.NewAwsConnection(s.lastConnectionID, asset, conf)
@@ -159,12 +191,19 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
-	c := conn.(*connection.AwsConnection)
-	asset.Id = c.Conf.Type + "://" + c.AccountId()
-	asset.Name = c.Conf.Host
-	asset.Platform = c.PlatformInfo()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + c.AccountId()}
-
+	if len(asset.Connections) > 0 && asset.Connections[0].Type == "ssh" {
+		// workaround to make sure we dont assign the aws platform to ec2 instances
+		return nil
+	}
+	if c, ok := conn.(*connection.AwsConnection); ok {
+		asset.Id = c.Conf.Type + "://" + c.AccountId()
+		asset.Name = c.Conf.Host
+		asset.Platform = c.PlatformInfo()
+		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + c.AccountId()}
+	}
+	if c, ok := conn.(*awsec2ebsconn.AwsEbsConnection); ok {
+		asset.Platform = c.PlatformInfo()
+	}
 	return nil
 }
 

@@ -15,8 +15,11 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/aws/connection"
+	"go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn"
+	awsec2ebstypes "go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn/types"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/providers/os/id/ids"
 )
 
 type mqlObject struct {
@@ -624,4 +627,96 @@ func MondooECSContainerID(containerArn string) string {
 		}
 	}
 	return "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/" + account + "/regions/" + region + "/" + id
+}
+
+func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var user, id string
+	if len(args) == 3 {
+		if args[0] == "ec2" && args[1] == "ssm" {
+			if targets := strings.Split(args[2], "@"); len(targets) == 2 {
+				user = targets[0]
+				id = targets[1]
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	opts["instance"] = id
+	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
+	asset.Connections = []*inventory.Config{{
+		Type:     "ssh",
+		Host:     id,
+		Insecure: true,
+		Runtime:  "ssh",
+		Credentials: []*vault.Credential{
+			{
+				Type: vault.CredentialType_aws_ec2_ssm_session,
+				User: user,
+			},
+		},
+		Options: opts,
+	}}
+	return asset
+}
+
+func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var user, id string
+	if len(args) == 3 {
+		if args[0] == "ec2" && args[1] == "instance-connect" {
+			if targets := strings.Split(args[2], "@"); len(targets) == 2 {
+				user = targets[0]
+				id = targets[1]
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
+	opts["instance"] = id
+	asset.Connections = []*inventory.Config{{
+		Type:     "ssh",
+		Host:     id,
+		Insecure: true,
+		Runtime:  "ssh",
+		Credentials: []*vault.Credential{
+			{
+				Type: vault.CredentialType_aws_ec2_instance_connect,
+				User: user,
+			},
+		},
+		Options: opts,
+	}}
+	return asset
+}
+
+func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
+	var target, targetType string
+	if len(args) >= 3 {
+		if args[0] == "ec2" && args[1] == "ebs" {
+			// parse for target type: instance, volume, snapshot
+			switch args[2] {
+			case awsec2ebstypes.EBSTargetVolume:
+				target = args[3]
+				targetType = awsec2ebstypes.EBSTargetVolume
+			case awsec2ebstypes.EBSTargetSnapshot:
+				target = args[3]
+				targetType = awsec2ebstypes.EBSTargetSnapshot
+			default:
+				// in the case of an instance target, this is the instance id
+				target = args[2]
+				targetType = awsec2ebstypes.EBSTargetInstance
+			}
+		}
+	}
+	asset := &inventory.Asset{}
+	opts["type"] = targetType
+	opts["id"] = target
+	asset.Name = target
+	asset.IdDetector = []string{ids.IdDetector_Hostname}
+	asset.Connections = []*inventory.Config{{
+		Type:     string(awsec2ebsconn.EBSConnectionType),
+		Host:     target,
+		Insecure: true,
+		Runtime:  "aws-ebs",
+		Options:  opts,
+	}}
+	return asset
 }
