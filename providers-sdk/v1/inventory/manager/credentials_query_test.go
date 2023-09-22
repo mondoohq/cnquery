@@ -8,15 +8,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/mock"
 )
+
+var runtime llx.Runtime
+
+func init() {
+	runtime = testutils.LinuxMock()
+}
 
 func TestSecretKeySimple(t *testing.T) {
 	query := `{ type: 'ssh_agent' }`
-	runner, err := manager.NewCredentialQueryRunner(query, mock.New())
+	runner, err := manager.NewCredentialQueryRunner(query, runtime)
 	require.NoError(t, err)
 	cred, err := runner.Run(&inventory.Asset{})
 	require.NoError(t, err)
@@ -31,7 +38,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 		return {type: 'private_key', secret_id: 'otherkey'}
 	`
 
-	runner, err := manager.NewCredentialQueryRunner(query, mock.New())
+	runner, err := manager.NewCredentialQueryRunner(query, runtime)
 	require.NoError(t, err)
 
 	cred, err := runner.Run(&inventory.Asset{
@@ -53,7 +60,7 @@ func TestSecretKeyIfConditionalReturn(t *testing.T) {
         return { secret_id: '' }"
 	`
 
-	runner, err := manager.NewCredentialQueryRunner(query, mock.New())
+	runner, err := manager.NewCredentialQueryRunner(query, runtime)
 	require.NoError(t, err)
 
 	// check with provided label
