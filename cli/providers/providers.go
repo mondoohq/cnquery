@@ -35,12 +35,10 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	}
 
 	connectorName, autoUpdate := detectConnectorName(os.Args, commands)
-	if connectorName == "" {
-		return nil
-	}
-
-	if _, err := providers.EnsureProvider(existing, connectorName, "", autoUpdate); err != nil {
-		return err
+	if connectorName != "" {
+		if _, err := providers.EnsureProvider(existing, connectorName, "", autoUpdate); err != nil {
+			return err
+		}
 	}
 
 	// Now that we know we have all providers, it's time to load them to build
