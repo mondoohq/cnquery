@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v55/github"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
@@ -43,7 +43,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	if name == "" {
 		name = *org.Name
 	}
-	args["id"] = llx.IntData(convert.ToInt64(org.ID))
+	args["id"] = llx.IntDataPtr(org.ID)
 	args["name"] = llx.StringData(name)
 	args["login"] = llx.StringDataPtr(org.Login)
 	args["nodeId"] = llx.StringDataPtr(org.NodeID)
@@ -56,10 +56,10 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["followers"] = llx.IntData(convert.ToInt64FromInt(org.Followers))
 	args["following"] = llx.IntData(convert.ToInt64FromInt(org.Following))
 	args["description"] = llx.StringDataPtr(org.Description)
-	args["createdAt"] = llx.TimeDataPtr(org.CreatedAt)
-	args["updatedAt"] = llx.TimeDataPtr(org.UpdatedAt)
-	args["totalPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.TotalPrivateRepos))
-	args["ownedPrivateRepos"] = llx.IntData(convert.ToInt64FromInt(org.OwnedPrivateRepos))
+	args["createdAt"] = llx.TimeData(org.CreatedAt.Time)
+	args["updatedAt"] = llx.TimeData(org.UpdatedAt.Time)
+	args["totalPrivateRepos"] = llx.IntDataPtr(org.TotalPrivateRepos)
+	args["ownedPrivateRepos"] = llx.IntDataPtr(org.OwnedPrivateRepos)
 	args["privateGists"] = llx.IntData(convert.ToInt64FromInt(org.PrivateGists))
 	args["diskUsage"] = llx.IntData(convert.ToInt64FromInt(org.DiskUsage))
 	args["collaborators"] = llx.IntData(convert.ToInt64FromInt(org.Collaborators))
@@ -176,9 +176,9 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 			"following":       llx.IntData(int64(member.GetFollowing())),
 			"twitterUsername": llx.StringData(member.GetTwitterUsername()),
 			"bio":             llx.StringDataPtr(member.Bio),
-			"createdAt":       llx.TimeDataPtr(githubTimestamp(member.CreatedAt)),
-			"updatedAt":       llx.TimeDataPtr(githubTimestamp(member.UpdatedAt)),
-			"suspendedAt":     llx.TimeDataPtr(githubTimestamp(member.SuspendedAt)),
+			"createdAt":       llx.TimeData(member.CreatedAt.Time),
+			"updatedAt":       llx.TimeData(member.UpdatedAt.Time),
+			"suspendedAt":     llx.TimeData(member.SuspendedAt.Time),
 			"company":         llx.StringDataPtr(member.Company),
 		})
 		if err != nil {
@@ -385,8 +385,8 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 				"name":         llx.StringDataPtr(p.Name),
 				"packageType":  llx.StringDataPtr(p.PackageType),
 				"owner":        llx.ResourceData(owner, owner.MqlName()),
-				"createdAt":    llx.TimeDataPtr(githubTimestamp(p.CreatedAt)),
-				"updatedAt":    llx.TimeDataPtr(githubTimestamp(p.UpdatedAt)),
+				"createdAt":    llx.TimeData(p.CreatedAt.Time),
+				"updatedAt":    llx.TimeData(p.UpdatedAt.Time),
 				"versionCount": llx.IntDataPtr(p.VersionCount),
 				"visibility":   llx.StringDataPtr(p.Visibility),
 			})
@@ -473,8 +473,8 @@ func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
 			"id":        llx.IntData(id),
 			"appId":     llx.IntDataPtr(app.AppID),
 			"appSlug":   llx.StringDataPtr(app.AppSlug),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(app.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(app.UpdatedAt)),
+			"createdAt": llx.TimeData(app.CreatedAt.Time),
+			"updatedAt": llx.TimeData(app.UpdatedAt.Time),
 		})
 		if err != nil {
 			return nil, err
