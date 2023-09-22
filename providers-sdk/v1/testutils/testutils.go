@@ -26,7 +26,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/lr/docs"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils/mockprovider"
-	"go.mondoo.com/cnquery/providers/mock"
 	networkconf "go.mondoo.com/cnquery/providers/network/config"
 	networkprovider "go.mondoo.com/cnquery/providers/network/provider"
 	osconf "go.mondoo.com/cnquery/providers/os/config"
@@ -68,15 +67,6 @@ func getEnvFeatures() cnquery.Features {
 		}
 	}
 	return fts
-}
-
-func TomlMock(filepath string) llx.Runtime {
-	trans, err := mock.NewFromTomlFile(filepath)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return trans
 }
 
 type tester struct {
@@ -287,10 +277,6 @@ func WindowsMock() llx.Runtime {
 
 func RecordingMock(absTestdataPath string) llx.Runtime {
 	return mockRuntimeAbs(absTestdataPath)
-}
-
-func CustomMock(path string) llx.Runtime {
-	return TomlMock(path)
 }
 
 type SimpleTest struct {
