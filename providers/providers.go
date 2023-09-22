@@ -129,7 +129,7 @@ func ListAll() ([]*Provider, error) {
 	for i := range all {
 		provider := all[i]
 
-		// builtin providers don't need to be loaded, so they ok to be returned
+		// builtin providers don't need to be loaded, so they are ok to be returned
 		if provider.Path == "" {
 			res = append(res, provider)
 			continue
@@ -147,8 +147,8 @@ func ListAll() ([]*Provider, error) {
 		}
 	}
 
-	CachedProviders = all
-	return all, nil
+	CachedProviders = res
+	return res, nil
 }
 
 // EnsureProvider find the provider for a given connector either from the list
