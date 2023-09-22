@@ -300,6 +300,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case SshConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey})
 		if err == nil {
 			if conn.Asset().Connections[0].Runtime != "vagrant" {
@@ -311,6 +314,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case TarConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
@@ -320,6 +326,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case DockerSnapshotConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
@@ -358,6 +367,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	case FilesystemConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
 		if err == nil {
 			asset.Name = fingerprint.Name
