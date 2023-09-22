@@ -83,10 +83,18 @@ func systemPath(isConfig bool, childPath ...string) string {
 	var parts []string
 	if runtime.GOOS == "windows" {
 		parts = append([]string{`C:\ProgramData\Mondoo\`}, childPath...)
-	} else if isConfig {
-		parts = append([]string{"/etc", "opt", "mondoo"}, childPath...)
+	} else if runtime.GOOS == "darwin" {
+		if isConfig {
+			parts = append([]string{"/Library", "Mondoo", "etc"}, childPath...)
+		} else {
+			parts = append([]string{"/Library", "Mondoo"}, childPath...)
+		}
 	} else {
-		parts = append([]string{"/opt", "mondoo"}, childPath...)
+		if isConfig {
+			parts = append([]string{"/etc", "opt", "mondoo"}, childPath...)
+		} else {
+			parts = append([]string{"/opt", "mondoo"}, childPath...)
+		}
 	}
 
 	systemConfig := filepath.Join(parts...)
