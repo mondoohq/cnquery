@@ -135,7 +135,7 @@ func buildProviders(providers []string) {
 		cmd := exec.Command("make", "providers/build/"+provider)
 		log.Debug().Str("provider", provider).Msg("build provider " + strconv.Itoa(i+1) + "/" + strconv.Itoa(len(providers)))
 		if err := cmd.Run(); err != nil {
-			log.Fatal().Err(err).Str("provider", provider).Msg("failed to build provider")
+			log.Error().Err(err).Str("provider", provider).Msg("failed to build provider")
 		}
 
 		// inefficient copy...
