@@ -247,6 +247,8 @@ func (a *mqlAwsSagemakerNotebookinstance) details() (*mqlAwsSagemakerNotebookins
 		} else {
 			args["kmsKey"] = llx.ResourceData(mqlKeyResource, mqlKeyResource.MqlName())
 		}
+	} else {
+		args["kmsKey"] = llx.NilData
 	}
 	mqlInstanceDetails, err := CreateResource(a.MqlRuntime, "aws.sagemaker.notebookinstance.details", args)
 	if err != nil {

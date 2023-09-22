@@ -167,6 +167,8 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 				return nil, err
 			}
 			args["portRange"] = llx.ResourceData(mqlPortRange, mqlPortRange.MqlName())
+		} else {
+			args["portRange"] = llx.NilData
 		}
 
 		mqlAclEntry, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry", args)
@@ -180,7 +182,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 }
 
 func (a *mqlAwsEc2NetworkaclEntry) portRange() (*mqlAwsEc2NetworkaclEntryPortrange, error) {
-	return a.GetPortRange().Data, nil
+	return a.PortRange.Data, nil
 }
 
 func (a *mqlAwsEc2Securitygroup) isAttachedToNetworkInterface() (bool, error) {
