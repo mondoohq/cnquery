@@ -2185,6 +2185,8 @@ resources:
       arn: {}
       cidrBlock:
         min_mondoo_version: 9.0.0
+      endpoints:
+        min_mondoo_version: 9.0.0
       flowLogs: {}
       id: {}
       instanceTenancy:
@@ -2198,6 +2200,20 @@ resources:
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.vpc.endpoint:
+    fields:
+      id: {}
+      policyDocument: {}
+      region: {}
+      serviceName: {}
+      subnets: {}
+      type: {}
+      vpc: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws

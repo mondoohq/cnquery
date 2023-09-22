@@ -50,6 +50,8 @@ private aws.vpc @defaults("arn isDefault cidrBlock") {
   instanceTenancy string
   // Region the VPC exists in
   region string
+  // A list of endpoints for the VPC
+  endpoints() []aws.vpc.endpoint
   // A list of flowlogs for the VPC
   flowLogs() []aws.vpc.flowlog
   // List of route tables for the VPC
@@ -78,6 +80,24 @@ private aws.vpc.subnet @defaults("arn") {
   cidrs string
   // Indicates whether instances launched in this subnet receive a public IPv4 address
   mapPublicIpOnLaunch bool
+}
+
+// Amazon Virtual Private Cloud (VPC) Endpoint
+private aws.vpc.endpoint @defaults("id") {
+  // Unique ID of the endpoint
+  id string
+  // Type of the endpoint
+  type string
+  // VPC the endpoint exists in
+  vpc string
+  // Region the VPC exists in
+  region string
+  // The name of the endpoint service
+  serviceName string
+  // The policy document associated with the endpoint, if applicable
+  policyDocument string
+  // The subnets for the (interface) endpoint
+  subnets []string
 }
 
 // Amazon Virtual Private Cloud (VPC) Flow Log
