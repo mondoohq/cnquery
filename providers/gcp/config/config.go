@@ -20,9 +20,10 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:  "gcp",
-			Use:   "gcp",
-			Short: "GCP Cloud",
+			Name:    "gcp",
+			Use:     "gcp",
+			Short:   "GCP Cloud",
+			MaxArgs: 2,
 			Discovery: []string{
 				resources.DiscoveryAll,
 				resources.DiscoveryAuto,
