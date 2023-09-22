@@ -69,10 +69,10 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 				PlatformIds: []string{
 					connection.NewProjectPlatformID(gcpProject.Id.Data),
 				},
-				Name: gcpProject.Name.Data,
+				Name: "GCP Project " + gcpProject.Id.Data,
 				Platform: &inventory.Platform{
 					Name:    "gcp-project",
-					Title:   "GCP Project " + gcpProject.Name.Data,
+					Title:   "GCP Project",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
 				},
