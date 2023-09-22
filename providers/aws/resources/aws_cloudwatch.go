@@ -616,11 +616,11 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 								"arn": llx.StringData(convert.ToString(loggroup.KmsKeyId)),
 							})
 						if err != nil {
-							return nil, err
+							args["kmsKey"] = llx.NilData
+						} else {
+							mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
+							args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
 						}
-
-						mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
-						args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
 					} else {
 						args["kmsKey"] = llx.NilData
 					}
@@ -659,7 +659,7 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, err
 	}
 	cloudwatch := obj.(*mqlAwsCloudwatch)
-	rawResources := cloudwatch.LogGroups.Data
+	rawResources := cloudwatch.GetLogGroups().Data
 
 	arnVal := args["arn"].Value.(string)
 	for i := range rawResources {
@@ -673,8 +673,8 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	return nil, nil, errors.New("cloudwatch log group does not exist")
 }
 
-func (s *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
-	return &mqlAwsKmsKey{}, nil
+func (a *mqlAwsCloudwatchLoggroup) kmsKey() (*mqlAwsKmsKey, error) {
+	return a.KmsKey.Data, nil
 }
 
 func (a *mqlAwsCloudwatchLoggroup) id() (string, error) {
@@ -766,7 +766,7 @@ func initAwsCloudwatchMetricsalarm(runtime *plugin.Runtime, args map[string]*llx
 	}
 	aws := obj.(*mqlAwsCloudwatch)
 
-	rawResources := aws.Alarms.Data
+	rawResources := aws.GetAlarms().Data
 
 	arnVal := args["arn"].Value.(string)
 	for i := range rawResources {

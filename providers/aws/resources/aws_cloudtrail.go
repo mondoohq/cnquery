@@ -70,7 +70,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	awsCloudtrail := obj.(*mqlAwsCloudtrail)
 
-	rawResources := awsCloudtrail.Trails.Data
+	rawResources := awsCloudtrail.GetTrails().Data
 
 	for i := range rawResources {
 		trail := rawResources[i].(*mqlAwsCloudtrailTrail)
@@ -136,6 +136,8 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					} else {
 						args["s3bucket"] = llx.ResourceData(mqlAwsS3Bucket, mqlAwsS3Bucket.MqlName())
 					}
+				} else {
+					args["s3bucket"] = llx.NilData
 				}
 
 				// add kms key if there is one
@@ -151,10 +153,12 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 						mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
 						args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
 					}
+				} else {
+					args["kmsKey"] = llx.NilData
 				}
 				if trail.CloudWatchLogsLogGroupArn != nil {
 					mqlLoggroup, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
-						map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(trail.CloudWatchLogsLogGroupArn))},
+						map[string]*llx.RawData{"arn": llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn)},
 					)
 					// means the log group does not exist or we have no access to it
 					// dont err out, just assign nil
@@ -164,6 +168,8 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 						mqlLog := mqlLoggroup.(*mqlAwsCloudwatchLoggroup)
 						args["logGroup"] = llx.ResourceData(mqlLog, mqlLog.MqlName())
 					}
+				} else {
+					args["logGroup"] = llx.NilData
 				}
 
 				mqlAwsCloudtrailTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
@@ -181,11 +187,11 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 }
 
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
-	return a.GetS3bucket().Data, nil
+	return a.S3bucket.Data, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
-	return a.GetLogGroup().Data, nil
+	return a.LogGroup.Data, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) kmsKey() (*mqlAwsKmsKey, error) {

@@ -297,22 +297,27 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 		device := devicesResp.VirtualMFADevices[i]
 
 		var mqlAwsIamUser plugin.Resource
+		args := map[string]*llx.RawData{
+			"serialNumber": llx.StringDataPtr(device.SerialNumber),
+			"enableDate":   llx.TimeDataPtr(device.EnableDate),
+		}
+
 		usr := device.User
 		if usr != nil {
 			mqlAwsIamUser, err = NewResource(a.MqlRuntime, "aws.iam.user", map[string]*llx.RawData{
-				"arn": llx.StringData(convert.ToString(usr.Arn)),
+				"arn":  llx.StringDataPtr(usr.Arn),
+				"name": llx.StringDataPtr(usr.UserName),
 			})
-			if err != nil {
-				return nil, err
+			if err == nil {
+				args["user"] = llx.ResourceData(mqlAwsIamUser, "aws.iam.user")
 			}
 		}
 
-		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice",
-			map[string]*llx.RawData{
-				"serialNumber": llx.StringData(convert.ToString(device.SerialNumber)),
-				"enableDate":   llx.TimeData(toTime(device.EnableDate)),
-				"user":         llx.ResourceData(mqlAwsIamUser, mqlAwsIamUser.MqlName()),
-			})
+		if usr == nil || err != nil {
+			args["user"] = llx.NilData
+		}
+
+		mqlAwsIamMfaDevice, err := CreateResource(a.MqlRuntime, "aws.iam.virtualmfadevice", args)
 		if err != nil {
 			return nil, err
 		}
@@ -671,14 +676,15 @@ func (a *mqlAwsIamUsercredentialreportentry) user() (*mqlAwsIamUser, error) {
 		log.Info().Msgf("could not retrieve key")
 		return nil, errors.New("could not read the credentials report")
 	}
-
 	// handle special case for the root account since that user does not exist
 	if props["user"] == "<root_account>" {
-		return nil, nil
+		return nil, errors.New("root user does not exist")
 	}
 
-	mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.user",
-		map[string]*llx.RawData{"name": llx.StringData(props["user"].(string))},
+	mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
+		map[string]*llx.RawData{
+			"name": llx.StringData(props["user"].(string)),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -706,8 +712,8 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		}
 	}
 
-	if args["arn"] == nil && args["name"] == nil {
-		return nil, nil, errors.New("arn or name required to fetch aws iam user")
+	if args["name"] == nil {
+		return nil, nil, errors.New("name required to fetch aws iam user")
 	}
 	conn := runtime.Connection.(*connection.AwsConnection)
 
@@ -738,6 +744,9 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 func (a *mqlAwsIamUser) id() (string, error) {
+	if a.Arn.Error != nil {
+		return "", a.Arn.Error
+	}
 	return a.Arn.Data, nil
 }
 
@@ -1035,7 +1044,7 @@ func (a *mqlAwsIamPolicy) attachedRoles() ([]interface{}, error) {
 	for i := range entities.PolicyRoles {
 		role := entities.PolicyRoles[i]
 
-		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.role",
+		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.role",
 			map[string]*llx.RawData{"name": llx.StringData(convert.ToString(role.RoleName))},
 		)
 		if err != nil {
