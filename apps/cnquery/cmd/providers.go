@@ -153,7 +153,7 @@ func printProviders(p []*providers.Provider) {
 
 func printProviderPath(path string, list []*providers.Provider, printEmpty bool) {
 	if list == nil {
-		if printEmpty {
+		if printEmpty && path != "" {
 			fmt.Println("")
 			log.Info().Msg(path + " has no providers")
 		}
