@@ -32,6 +32,7 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["name"] = llx.StringData(grp.Name)
 	args["path"] = llx.StringData(grp.Path)
 	args["description"] = llx.StringData(grp.Description)
+	args["createdAt"] = llx.TimeDataPtr(grp.CreatedAt)
 	args["webURL"] = llx.StringData(string(grp.WebURL))
 	args["visibility"] = llx.StringData(string(grp.Visibility))
 	args["requireTwoFactorAuthentication"] = llx.BoolData(grp.RequireTwoFactorAuth)

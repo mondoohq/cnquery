@@ -4,6 +4,8 @@
 resources:
   gitlab.group:
     fields:
+      createdAt:
+        min_mondoo_version: 9.0.0
       description: {}
       emailsDisabled:
         min_mondoo_version: 9.0.0
