@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	mastermind "github.com/Masterminds/semver"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -77,6 +79,10 @@ type providerConf struct {
 	name    string
 }
 
+func (p providerConf) commitTitle() string {
+	return p.name + "-" + p.version
+}
+
 func getConfig(providerPath string) (*providerConf, error) {
 	var conf providerConf
 
@@ -111,47 +117,78 @@ func updateVersion(providerPath string) {
 		return
 	}
 
-	out, err := tryUpdate(providerPath, conf)
+	didUpdate, err := tryUpdate(providerPath, conf)
 	if err != nil {
 		log.Fatal().Err(err).Str("path", providerPath).Msg("failed to process version")
 	}
-	if out == "" {
+	if !didUpdate {
 		log.Info().Msg("nothing to do, bye")
 		return
 	}
+}
 
-	if err = os.WriteFile(conf.path, []byte(out), 0o644); err != nil {
+func tryUpdate(repoPath string, conf *providerConf) (bool, error) {
+	changes := countChangesSince(conf.commitTitle(), repoPath, conf.path)
+	logChanges(changes, conf)
+
+	if changes == 0 {
+		return false, nil
+	}
+
+	version, err := bumpVersion(conf.version)
+	if err != nil || version == "" {
+		return false, err
+	}
+
+	res := reVersion.ReplaceAllStringFunc(conf.content, func(v string) string {
+		return "Version: \"" + version + "\""
+	})
+
+	// no switching config to the new version => gets new commitTitle + branchName!
+	log.Info().Str("provider", conf.name).Str("version", version).Str("previous", conf.version).Msg("set new version")
+	conf.version = version
+
+	if err = os.WriteFile(conf.path, []byte(res), 0o644); err != nil {
 		log.Fatal().Err(err).Str("path", conf.path).Msg("failed to write file")
 	}
 	log.Info().Str("path", conf.path).Msg("updated config")
 
-	commitTitle := conf.name + "-" + conf.version
-	log.Info().Msg("git add " + conf.path + " && git commit -m \"" + commitTitle + "\"")
-}
-
-func tryUpdate(repoPath string, conf *providerConf) (string, error) {
-	commitTitle := conf.name + "-" + conf.version
-	changes := countChangesSince(commitTitle, repoPath, conf.path)
-	logChanges(changes, conf)
-
-	if changes == 0 {
-		return "", nil
+	if doCommit {
+		branchName := "version/" + conf.commitTitle()
+		if err = commitChanges(branchName, conf); err != nil {
+			log.Error().Err(err).Msg("failed to commit changes")
+		}
+	} else {
+		log.Info().Msg("git add " + conf.path + " && git commit -m \"" + conf.commitTitle() + "\"")
 	}
 
-	v, err := mastermind.NewVersion(conf.version)
+	return true, nil
+}
+
+func bumpVersion(version string) (string, error) {
+	v, err := mastermind.NewVersion(version)
 	if err != nil {
-		return "", errors.New("version '" + conf.version + "' is not a semver")
+		return "", errors.New("version '" + version + "' is not a semver")
 	}
 
 	patch := v.IncPatch()
 	minor := v.IncMinor()
-	major := v.IncMajor()
+	// TODO: check if the major version of the repo has changed and bump it
+
+	if increment == "patch" {
+		return (&patch).String(), nil
+	}
+	if increment == "minor" {
+		return (&patch).String(), nil
+	}
+	if increment != "" {
+		return "", errors.New("do not understand --increment=" + increment + ", either pick patch or minor")
+	}
 
 	versions := []string{
-		v.String(),
+		v.String() + " - no change, keep developing",
 		(&patch).String(),
 		(&minor).String(),
-		(&major).String(),
 	}
 
 	selection := -1
@@ -167,20 +204,77 @@ func tryUpdate(repoPath string, conf *providerConf) (string, error) {
 		return "", nil
 	}
 
-	version := versions[selection]
-	res := reVersion.ReplaceAllStringFunc(conf.content, func(v string) string {
-		return "Version: \"" + version + "\""
-	})
+	return versions[selection], nil
+}
 
-	conf.version = version
-	log.Info().Str("provider", conf.name).Str("version", version).Str("previous", v.String()).Msg("set new version")
-	return res, nil
+func commitChanges(branchName string, conf *providerConf) error {
+	repo, err := git.PlainOpen(".")
+	if err != nil {
+		return errors.New("failed to open git: " + err.Error())
+	}
+
+	headRef, err := repo.Head()
+	if err != nil {
+		return errors.New("failed to get git head: " + err.Error())
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return errors.New("failed to get git tree: " + err.Error())
+	}
+
+	branchRef := plumbing.NewBranchReferenceName(branchName)
+
+	// Note: The branch may be local and thus won't be found in repo.Branch(branchName)
+	// This is consufing and I couldn't find any further docs on this behavior,
+	// but we have to work around it.
+	if _, err := repo.Reference(branchRef, true); err == nil {
+		err = repo.Storer.RemoveReference(branchRef)
+		if err != nil {
+			return errors.New("failed to git delete branch " + branchName + ": " + err.Error())
+		}
+	}
+
+	err = worktree.Checkout(&git.CheckoutOptions{
+		Hash:   headRef.Hash(),
+		Branch: branchRef,
+		Create: true,
+		Keep:   true,
+	})
+	if err != nil {
+		return errors.New("failed to git checkout+create " + branchName + ": " + err.Error())
+	}
+
+	_, err = worktree.Add(conf.path)
+	if err != nil {
+		return errors.New("failed to git add: " + err.Error())
+	}
+
+	commit, err := worktree.Commit(conf.commitTitle(), &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Mondoo",
+			Email: "hello@mondoo.com",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return errors.New("failed to commit: " + err.Error())
+	}
+
+	_, err = repo.CommitObject(commit)
+	if err != nil {
+		return errors.New("commit is not in repo: " + err.Error())
+	}
+
+	log.Info().Msg("comitted changes for " + conf.name + " " + conf.version)
+	log.Info().Msg("run: git push -u origin " + branchName)
+	return nil
 }
 
 func countChangesSince(commitTitle string, repoPath string, confPath string) int {
 	repo, err := git.PlainOpen(".")
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to determine path of provider")
+		log.Fatal().Err(err).Msg("failed to open git repo")
 	}
 	iter, err := repo.Log(&git.LogOptions{
 		PathFilter: func(p string) bool {
@@ -220,10 +314,16 @@ func countChangesSince(commitTitle string, repoPath string, confPath string) int
 	return count
 }
 
-var fastMode bool
+var (
+	fastMode  bool
+	doCommit  bool
+	increment string
+)
 
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&fastMode, "fast", false, "perform fast checking of git repo (not counting changes)")
+	rootCmd.PersistentFlags().BoolVar(&doCommit, "commit", false, "commit the change to git if there is a version bump")
+	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch or minor version")
 
 	rootCmd.AddCommand(updateCmd, checkCmd)
 }
