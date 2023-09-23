@@ -117,7 +117,7 @@ resources:
       public: {}
       updatedAt: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 7.14.0
   github.gistfile:
     fields:
       content: {}
@@ -128,7 +128,7 @@ resources:
       size: {}
       type: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 7.14.0
   github.installation:
     fields:
       appId: {}
@@ -180,7 +180,7 @@ resources:
   github.organization:
     fields:
       avatarUrl:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       billing_email: {}
       billingEmail:
         min_mondoo_version: 6.11.0
@@ -199,9 +199,9 @@ resources:
         min_mondoo_version: 6.11.0
       email: {}
       followers:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       following:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       id: {}
       installations:
         min_mondoo_version: 5.31.0
@@ -401,30 +401,30 @@ resources:
   github.user:
     fields:
       avatarUrl:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       bio: {}
       blog:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       company:
         min_mondoo_version: 6.4.0
       createdAt: {}
       email: {}
       followers:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       following:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       gists:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       id: {}
       location:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       login: {}
       name: {}
       repositories:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       suspendedAt: {}
       twitterUsername:
-        min_mondoo_version: latest
+        min_mondoo_version: 7.14.0
       updatedAt: {}
     is_private: true
     min_mondoo_version: 5.31.0
