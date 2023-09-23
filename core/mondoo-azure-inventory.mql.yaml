@@ -25,12 +25,6 @@ packs:
           desc: |
             This query retrieves the Azure subscription id
         mql: azure.subscription.id
-      - uid: mondoo-asset-inventory-azure-networks
-        title: Retrieve data on all securityGroups
-        docs:
-          desc: |
-            This query retrieves all of the configuration data for Azure securityGroups
-        mql: azure.subscription.network.securityGroups
       - uid: mondoo-asset-inventory-azure-roleDefinitions
         title: Retrieve data for all Azure roleDefinitions
         docs:
@@ -68,22 +62,22 @@ packs:
             This query retrieves data for all tables in storage accounts
         mql: azure.subscription.storage.accounts { tableProperties }
       - uid: mondoo-asset-inventory-azure-sqlServers
-        title: Retrieve data for all Azure sql servers
+        title: Retrieve data for all Azure SQL Database servers
         docs:
           desc: |
-            This query retrieves data for all sql servers
+            This query retrieves data for all Azure SQL Database servers
         mql: azure.subscription.sql.servers
       - uid: mondoo-asset-inventory-azure-sqlServers-firewallrules
-        title: Retrieve data for all firewall rules in Azure sql servers
+        title: Retrieve data for all firewall rules in Azure SQL Database servers
         docs:
           desc: |
-            This query retrieves data for all firewall rules in sql servers
+            This query retrieves data for all firewall rules in Azure SQL Database servers
         mql: azure.subscription.sql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-sqlServers-databases
-        title: Retrieve data for all databases in Azure sql servers
+        title: Retrieve data for all databases in Azure SQL Database servers
         docs:
           desc: |
-            This query retrieves data for all databases in sql servers
+            This query retrieves data for all databases in Azure SQL Database servers
         mql: azure.subscription.sql.servers { databases }
       - uid: mondoo-asset-inventory-azure-postgresql                                                                                                                                                         
         title: Retrieve data for all Azure PostgreSQL servers                                                                                                                                                         
@@ -95,19 +89,19 @@ packs:
         title: Retrieve data for all firewall rules in Azure PostgreSQL servers                                                                                                                                                         
         docs:
           desc: |
-            This query retrieves data for all firewall rules in PostgreSQL servers
+            This query retrieves data for all firewall rules in Azure PostgreSQL servers
         mql: azure.subscription.postgreSql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-mysql                                                                                                                                                        
         title: Retrieve data for all Azure MySQL servers                                                                                                                                                         
         docs:
           desc: |
-            This query retrieves data for all sql servers
+            This query retrieves data for all Azure MySQL servers
         mql: azure.subscription.mySql.servers
       - uid: mondoo-asset-inventory-azure-mariaDb
         title: Retrieve data for all Azure MariaDB servers
         docs:
           desc: |
-            This query retrieves data for all MariaDB servers
+            This query retrieves data for all Azure MariaDB servers
         mql: azure.subscription.mariaDb.servers
       - uid: mondoo-asset-inventory-azure-diagnosticSettings                                                                                                                                                       
         title: Retrieve data for all Azure diagnostic settings                                                                                                                                                         
