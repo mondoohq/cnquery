@@ -81,6 +81,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["membersCanCreatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePages))
 	args["membersCanCreatePublicPages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicPages))
 	args["membersCanCreatePrivatePages"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePrivateRepos))
+	args["membersCanForkPrivateRepos"] = llx.BoolData(convert.ToBool(org.MembersCanForkPrivateRepos))
 
 	return args, nil, nil
 }

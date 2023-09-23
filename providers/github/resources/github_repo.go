@@ -62,6 +62,8 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"hasWiki":           llx.BoolData(repo.GetHasWiki()),
 		"hasPages":          llx.BoolData(repo.GetHasPages()),
 		"hasDownloads":      llx.BoolData(repo.GetHasDownloads()),
+		"hasDiscussions":    llx.BoolData(repo.GetHasDiscussions()),
+		"isTemplate":        llx.BoolData(repo.GetIsTemplate()),
 		"defaultBranchName": llx.StringDataPtr(repo.DefaultBranch),
 		"cloneUrl":          llx.StringData(repo.GetCloneURL()),
 		"sshUrl":            llx.StringData(repo.GetSSHURL()),
@@ -206,6 +208,8 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		args["hasWiki"] = llx.BoolData(repo.GetHasWiki())
 		args["hasPages"] = llx.BoolData(repo.GetHasPages())
 		args["hasDownloads"] = llx.BoolData(repo.GetHasDownloads())
+		args["hasDiscussions"] = llx.BoolData(repo.GetHasDiscussions())
+		args["isTemplate"] = llx.BoolData(repo.GetIsTemplate())
 		args["defaultBranchName"] = llx.StringDataPtr(repo.DefaultBranch)
 		args["cloneUrl"] = llx.StringData(repo.GetCloneURL())
 		args["sshUrl"] = llx.StringData(repo.GetSSHURL())

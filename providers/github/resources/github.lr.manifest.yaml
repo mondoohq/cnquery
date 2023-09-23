@@ -233,6 +233,8 @@ resources:
         min_mondoo_version: 6.11.0
       membersCanCreateRepositories:
         min_mondoo_version: 6.11.0
+      membersCanForkPrivateRepos:
+        min_mondoo_version: 9.0.0
       name: {}
       node_id: {}
       nodeId:
@@ -325,6 +327,8 @@ resources:
       forksCount:
         min_mondoo_version: 7.14.0
       fullName: {}
+      hasDiscussions:
+        min_mondoo_version: 9.0.0
       hasDownloads:
         min_mondoo_version: 7.14.0
       hasIssues:
@@ -339,6 +343,8 @@ resources:
       id: {}
       isFork:
         min_mondoo_version: 7.14.0
+      isTemplate:
+        min_mondoo_version: 9.0.0
       language:
         min_mondoo_version: 7.14.0
       license:
