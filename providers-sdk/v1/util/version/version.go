@@ -1,9 +1,14 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package main
 
 import (
 	"errors"
 	"fmt"
+	"go/format"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -28,9 +33,7 @@ var updateCmd = &cobra.Command{
 	Short: "try to update the version of the provider",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		for i := range args {
-			updateVersion(args[i])
-		}
+		updateVersions(args)
 	},
 }
 
@@ -52,8 +55,7 @@ func checkUpdate(providerPath string) {
 		return
 	}
 
-	commitTitle := conf.name + "-" + conf.version
-	changes := countChangesSince(commitTitle, providerPath, conf.path)
+	changes := countChangesSince(conf, providerPath)
 	logChanges(changes, conf)
 }
 
@@ -72,6 +74,10 @@ var (
 	reName    = regexp.MustCompile(`Name:\s*"([^"]+)",`)
 )
 
+const (
+	titlePrefix = "🎉 "
+)
+
 type providerConf struct {
 	path    string
 	content string
@@ -79,12 +85,38 @@ type providerConf struct {
 	name    string
 }
 
-func (p providerConf) commitTitle() string {
-	return "🎉 " + p.name + "-" + p.version
+func (conf *providerConf) title() string {
+	return conf.name + "-" + conf.version
 }
 
-func (p providerConf) branchName() string {
-	return "version/" + p.name + "-" + p.version
+func (conf *providerConf) commitTitle() string {
+	return titlePrefix + conf.title()
+}
+
+type updateConfs []*providerConf
+
+func (confs updateConfs) titles() []string {
+	titles := make([]string, len(confs))
+	for i := range confs {
+		titles[i] = confs[i].title()
+	}
+	return titles
+}
+
+func (confs updateConfs) commitTitle() string {
+	return "🎉 " + strings.Join(confs.titles(), ", ")
+}
+
+func (confs updateConfs) branchName() string {
+	return "version/" + strings.Join(confs.titles(), "+")
+}
+
+func getVersion(content string) string {
+	m := reVersion.FindStringSubmatch(content)
+	if len(m) == 0 {
+		return ""
+	}
+	return m[1]
 }
 
 func getConfig(providerPath string) (*providerConf, error) {
@@ -105,67 +137,77 @@ func getConfig(providerPath string) (*providerConf, error) {
 	}
 	conf.name = m[1]
 
-	m = reVersion.FindStringSubmatch(conf.content)
-	if len(m) == 0 {
+	conf.version = getVersion(conf.content)
+	if conf.version == "" {
 		return nil, errors.New("no provider version found in config")
 	}
-
-	conf.version = m[1]
 	return &conf, nil
 }
 
-func updateVersion(providerPath string) {
-	conf, err := getConfig(providerPath)
-	if err != nil {
-		log.Error().Err(err).Str("path", providerPath).Msg("failed to process version")
-		return
+func updateVersions(providerPaths []string) {
+	updated := []*providerConf{}
+
+	for _, path := range providerPaths {
+		conf, err := tryUpdate(path)
+		if err != nil {
+			log.Error().Err(err).Str("path", path).Msg("failed to process version")
+			continue
+		}
+		if conf == nil {
+			log.Info().Str("path", path).Msg("nothing to update")
+			continue
+		}
+		updated = append(updated, conf)
 	}
 
-	didUpdate, err := tryUpdate(providerPath, conf)
-	if err != nil {
-		log.Fatal().Err(err).Str("path", providerPath).Msg("failed to process version")
-	}
-	if !didUpdate {
-		log.Info().Msg("nothing to do, bye")
-		return
+	if doCommit {
+		if err := commitChanges(updated); err != nil {
+			log.Error().Err(err).Msg("failed to commit changes")
+		}
 	}
 }
 
-func tryUpdate(repoPath string, conf *providerConf) (bool, error) {
-	changes := countChangesSince(conf.commitTitle(), repoPath, conf.path)
+func tryUpdate(providerPath string) (*providerConf, error) {
+	conf, err := getConfig(providerPath)
+	if err != nil {
+		return nil, err
+	}
+
+	changes := countChangesSince(conf, providerPath)
 	logChanges(changes, conf)
 
 	if changes == 0 {
-		return false, nil
+		return nil, nil
 	}
 
 	version, err := bumpVersion(conf.version)
 	if err != nil || version == "" {
-		return false, err
+		return nil, err
 	}
 
 	res := reVersion.ReplaceAllStringFunc(conf.content, func(v string) string {
 		return "Version: \"" + version + "\""
 	})
 
+	raw, err := format.Source([]byte(res))
+	if err != nil {
+		return nil, err
+	}
+
 	// no switching config to the new version => gets new commitTitle + branchName!
 	log.Info().Str("provider", conf.name).Str("version", version).Str("previous", conf.version).Msg("set new version")
 	conf.version = version
 
-	if err = os.WriteFile(conf.path, []byte(res), 0o644); err != nil {
+	if err = os.WriteFile(conf.path, raw, 0o644); err != nil {
 		log.Fatal().Err(err).Str("path", conf.path).Msg("failed to write file")
 	}
 	log.Info().Str("path", conf.path).Msg("updated config")
 
-	if doCommit {
-		if err = commitChanges(conf); err != nil {
-			log.Error().Err(err).Msg("failed to commit changes")
-		}
-	} else {
+	if !doCommit {
 		log.Info().Msg("git add " + conf.path + " && git commit -m \"" + conf.commitTitle() + "\"")
 	}
 
-	return true, nil
+	return conf, nil
 }
 
 func bumpVersion(version string) (string, error) {
@@ -182,7 +224,7 @@ func bumpVersion(version string) (string, error) {
 		return (&patch).String(), nil
 	}
 	if increment == "minor" {
-		return (&patch).String(), nil
+		return (&minor).String(), nil
 	}
 	if increment != "" {
 		return "", errors.New("do not understand --increment=" + increment + ", either pick patch or minor")
@@ -210,7 +252,7 @@ func bumpVersion(version string) (string, error) {
 	return versions[selection], nil
 }
 
-func commitChanges(conf *providerConf) error {
+func commitChanges(confs updateConfs) error {
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		return errors.New("failed to open git: " + err.Error())
@@ -226,7 +268,7 @@ func commitChanges(conf *providerConf) error {
 		return errors.New("failed to get git tree: " + err.Error())
 	}
 
-	branchName := conf.branchName()
+	branchName := confs.branchName()
 	branchRef := plumbing.NewBranchReferenceName(branchName)
 
 	// Note: The branch may be local and thus won't be found in repo.Branch(branchName)
@@ -249,12 +291,17 @@ func commitChanges(conf *providerConf) error {
 		return errors.New("failed to git checkout+create " + branchName + ": " + err.Error())
 	}
 
-	_, err = worktree.Add(conf.path)
-	if err != nil {
-		return errors.New("failed to git add: " + err.Error())
+	for i := range confs {
+		_, err = worktree.Add(confs[i].path)
+		if err != nil {
+			return errors.New("failed to git add: " + err.Error())
+		}
 	}
 
-	commit, err := worktree.Commit(conf.commitTitle(), &git.CommitOptions{
+	body := "\n\nThis release was created by cnquery's provider versioning bot.\n" +
+		"You can find me under: `providers-sdk/v1/util/version`."
+
+	commit, err := worktree.Commit(confs.commitTitle()+body, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  "Mondoo",
 			Email: "hello@mondoo.com",
@@ -270,12 +317,27 @@ func commitChanges(conf *providerConf) error {
 		return errors.New("commit is not in repo: " + err.Error())
 	}
 
-	log.Info().Msg("comitted changes for " + conf.name + " " + conf.version)
+	log.Info().Msg("comitted changes for " + strings.Join(confs.titles(), ", "))
 	log.Info().Msg("run: git push -u origin " + branchName)
+
+	// Not sure why the auth method doesn't work... so we exec here
+	err = exec.Command("git", "push", "-u", "origin", branchName).Run()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func countChangesSince(commitTitle string, repoPath string, confPath string) int {
+func titleOf(msg string) string {
+	i := strings.Index(msg, "\n")
+	if i != -1 {
+		return msg[0:i]
+	}
+	return msg
+}
+
+func countChangesSince(conf *providerConf, repoPath string) int {
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to open git repo")
@@ -300,7 +362,7 @@ func countChangesSince(commitTitle string, repoPath string, confPath string) int
 			fmt.Print(".")
 		}
 
-		if strings.HasPrefix(c.Message, commitTitle) {
+		if strings.HasPrefix(c.Message, titlePrefix) && strings.Contains(titleOf(c.Message), " "+conf.title()) {
 			found = c
 			break
 		}
