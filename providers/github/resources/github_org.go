@@ -56,8 +56,8 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["followers"] = llx.IntData(convert.ToInt64FromInt(org.Followers))
 	args["following"] = llx.IntData(convert.ToInt64FromInt(org.Following))
 	args["description"] = llx.StringDataPtr(org.Description)
-	args["createdAt"] = llx.TimeData(org.CreatedAt.Time)
-	args["updatedAt"] = llx.TimeData(org.UpdatedAt.Time)
+	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(org.CreatedAt))
+	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(org.UpdatedAt))
 	args["totalPrivateRepos"] = llx.IntDataPtr(org.TotalPrivateRepos)
 	args["ownedPrivateRepos"] = llx.IntDataPtr(org.OwnedPrivateRepos)
 	args["privateGists"] = llx.IntData(convert.ToInt64FromInt(org.PrivateGists))
@@ -176,9 +176,9 @@ func (g *mqlGithubOrganization) owners() ([]interface{}, error) {
 			"following":       llx.IntData(int64(member.GetFollowing())),
 			"twitterUsername": llx.StringData(member.GetTwitterUsername()),
 			"bio":             llx.StringDataPtr(member.Bio),
-			"createdAt":       llx.TimeData(member.CreatedAt.Time),
-			"updatedAt":       llx.TimeData(member.UpdatedAt.Time),
-			"suspendedAt":     llx.TimeData(member.SuspendedAt.Time),
+			"createdAt":       llx.TimeDataPtr(githubTimestamp(member.CreatedAt)),
+			"updatedAt":       llx.TimeDataPtr(githubTimestamp(member.UpdatedAt)),
+			"suspendedAt":     llx.TimeDataPtr(githubTimestamp(member.SuspendedAt)),
 			"company":         llx.StringDataPtr(member.Company),
 		})
 		if err != nil {
@@ -385,8 +385,8 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 				"name":         llx.StringDataPtr(p.Name),
 				"packageType":  llx.StringDataPtr(p.PackageType),
 				"owner":        llx.ResourceData(owner, owner.MqlName()),
-				"createdAt":    llx.TimeData(p.CreatedAt.Time),
-				"updatedAt":    llx.TimeData(p.UpdatedAt.Time),
+				"createdAt":    llx.TimeDataPtr(githubTimestamp(p.CreatedAt)),
+				"updatedAt":    llx.TimeDataPtr(githubTimestamp(p.UpdatedAt)),
 				"versionCount": llx.IntDataPtr(p.VersionCount),
 				"visibility":   llx.StringDataPtr(p.Visibility),
 			})
@@ -473,8 +473,8 @@ func (g *mqlGithubOrganization) installations() ([]interface{}, error) {
 			"id":        llx.IntData(id),
 			"appId":     llx.IntDataPtr(app.AppID),
 			"appSlug":   llx.StringDataPtr(app.AppSlug),
-			"createdAt": llx.TimeData(app.CreatedAt.Time),
-			"updatedAt": llx.TimeData(app.UpdatedAt.Time),
+			"createdAt": llx.TimeDataPtr(githubTimestamp(app.CreatedAt)),
+			"updatedAt": llx.TimeDataPtr(githubTimestamp(app.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err

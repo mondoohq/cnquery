@@ -191,8 +191,8 @@ func (g *mqlGithubUser) gists() ([]interface{}, error) {
 		r, err := CreateResource(g.MqlRuntime, "github.gist", map[string]*llx.RawData{
 			"id":          llx.StringDataPtr(gist.ID),
 			"description": llx.StringDataPtr(gist.Description),
-			"createdAt":   llx.TimeData(gist.CreatedAt.Time),
-			"updatedAt":   llx.TimeData(gist.UpdatedAt.Time),
+			"createdAt":   llx.TimeDataPtr(githubTimestamp(gist.CreatedAt)),
+			"updatedAt":   llx.TimeDataPtr(githubTimestamp(gist.UpdatedAt)),
 			"public":      llx.BoolDataPtr(gist.Public),
 			"owner":       llx.ResourceData(g, g.MqlName()),
 			"files":       llx.ArrayData(files, types.Any),
