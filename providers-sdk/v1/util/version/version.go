@@ -80,7 +80,11 @@ type providerConf struct {
 }
 
 func (p providerConf) commitTitle() string {
-	return p.name + "-" + p.version
+	return "🎉 " + p.name + "-" + p.version
+}
+
+func (p providerConf) branchName() string {
+	return "version/" + p.name + "-" + p.version
 }
 
 func getConfig(providerPath string) (*providerConf, error) {
@@ -154,8 +158,7 @@ func tryUpdate(repoPath string, conf *providerConf) (bool, error) {
 	log.Info().Str("path", conf.path).Msg("updated config")
 
 	if doCommit {
-		branchName := "version/" + conf.commitTitle()
-		if err = commitChanges(branchName, conf); err != nil {
+		if err = commitChanges(conf); err != nil {
 			log.Error().Err(err).Msg("failed to commit changes")
 		}
 	} else {
@@ -207,7 +210,7 @@ func bumpVersion(version string) (string, error) {
 	return versions[selection], nil
 }
 
-func commitChanges(branchName string, conf *providerConf) error {
+func commitChanges(conf *providerConf) error {
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		return errors.New("failed to open git: " + err.Error())
@@ -223,6 +226,7 @@ func commitChanges(branchName string, conf *providerConf) error {
 		return errors.New("failed to get git tree: " + err.Error())
 	}
 
+	branchName := conf.branchName()
 	branchRef := plumbing.NewBranchReferenceName(branchName)
 
 	// Note: The branch may be local and thus won't be found in repo.Branch(branchName)
