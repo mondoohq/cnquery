@@ -35,6 +35,10 @@ func (x *mqlGroup) members() ([]interface{}, error) {
 	}
 	users := raw.(*mqlUsers)
 
+	if err := users.refreshCache(nil); err != nil {
+		return nil, err
+	}
+
 	res := make([]interface{}, len(x.membersArr))
 	for i, name := range x.membersArr {
 		res[i] = users.usersByName[name]
