@@ -365,11 +365,40 @@ func (p *Platform) PrettyTitle() string {
 	return prettyTitle
 }
 
-func (cfg *Config) Clone() *Config {
+type cloneSettings struct {
+	noDiscovery bool
+}
+
+type CloneOption interface {
+	Apply(*cloneSettings)
+}
+
+// WithoutDiscovery removes the discovery flags in the opts to ensure the same discovery does not run again
+func WithoutDiscovery() CloneOption {
+	return withoutDiscovery{}
+}
+
+type withoutDiscovery struct{}
+
+func (w withoutDiscovery) Apply(o *cloneSettings) { o.noDiscovery = true }
+
+func (cfg *Config) Clone(opts ...CloneOption) *Config {
 	if cfg == nil {
 		return nil
 	}
-	return proto.Clone(cfg).(*Config)
+
+	cloneSettings := &cloneSettings{}
+	for _, option := range opts {
+		option.Apply(cloneSettings)
+	}
+
+	clonedObject := proto.Clone(cfg).(*Config)
+
+	if cloneSettings.noDiscovery {
+		clonedObject.Discover = &Discovery{}
+	}
+
+	return clonedObject
 }
 
 func (c *Config) ToUrl() string {
