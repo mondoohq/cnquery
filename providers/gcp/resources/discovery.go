@@ -77,7 +77,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())},
 			})
 		}
 
@@ -195,7 +195,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Labels: labels,
 				// TODO: the current connection handling does not work well for instances
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -227,7 +227,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      labels,
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -254,7 +254,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -285,7 +285,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -312,7 +312,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -339,7 +339,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -366,7 +366,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -393,19 +393,12 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Kind:    "gcp-object",
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{cloneConfig(conn.Conf)}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 			})
 		}
 	}
 
 	return assetList, nil
-}
-
-func cloneConfig(invConf *inventory.Config) *inventory.Config {
-	invConfClone := invConf.Clone()
-	// We do not want to run discovery again for the already discovered assets
-	invConfClone.Discover = &inventory.Discovery{}
-	return invConfClone
 }
 
 func resolveGcr(ctx context.Context, conf *inventory.Config) ([]*inventory.Asset, error) {
