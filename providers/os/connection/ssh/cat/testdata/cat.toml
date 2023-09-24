@@ -39,25 +39,15 @@ UsePAM yes
 """
 
 
-[commands."sudo stat -L /etc/ssh/sshd_config --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
-stdout = """4317
-8180
-0
-0
-1590420240
-1590418792
+[commands."sudo stat -L /etc/ssh/sshd_config -c '%s.%f.%u.%g.%X.%Y.%C'"]
+stdout = """4317.8180.0.0.1590420240.1590418792.?
 """
 
 [commands."sudo test -e /etc/ssh"]
 stdout = ""
 
-[commands."sudo stat -L /etc/ssh --printf '%s\n%f\n%u\n%g\n%X\n%Y\n%C'"]
-stdout = """271
-41ed
-0
-0
-1635245760
-1635147499
+[commands."sudo stat -L /etc/ssh -c '%s.%f.%u.%g.%X.%Y.%C'"]
+stdout = """271.41ed.0.0.1635245760.1635147499.?
 """
 
 [commands."sudo ls -1 '/etc/ssh'"]
