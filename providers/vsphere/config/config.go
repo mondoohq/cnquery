@@ -16,9 +16,11 @@ var Config = plugin.Provider{
 	Connectors: []plugin.Connector{
 		{
 			Name:      "vsphere",
-			Use:       "vsphere",
+			Use:       "vsphere user@host",
 			Short:     "VMware vSphere",
 			Discovery: []string{},
+			MinArgs:   1,
+			MaxArgs:   1,
 			Flags: []plugin.Flag{
 				{
 					Long:        "ask-pass",
