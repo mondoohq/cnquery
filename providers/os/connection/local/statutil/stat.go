@@ -99,19 +99,10 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, os.ErrNotExist
 	}
 
-	// run stat
-	lstat := "-L"
-	format := "--printf"
-
 	var sb strings.Builder
-
-	sb.WriteString("stat ")
-	sb.WriteString(lstat)
-	sb.WriteString(" ")
+	sb.WriteString("stat -L ")
 	sb.WriteString(path)
-	sb.WriteString(" ")
-	sb.WriteString(format)
-	sb.WriteString(" '%s\n%f\n%u\n%g\n%X\n%Y\n%C'")
+	sb.WriteString(" -c '%s.%f.%u.%g.%X.%Y.%C'")
 
 	// NOTE: handling the exit code here does not work for all cases
 	// sometimes stat returns something like: failed to get security context of '/etc/ssh/sshd_config': No data available
@@ -134,7 +125,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, err
 	}
 
-	statsData := strings.Split(string(data), "\n")
+	statsData := strings.Split(strings.TrimSpace(string(data)), ".")
 	if len(statsData) != 7 {
 		log.Debug().Str("path", path).Msg("could not parse file stat information")
 		// TODO: we may need to parse the returning error to better distinguish between a real error and file not found
@@ -142,6 +133,9 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		// multiple languages
 		return nil, errors.New("could not parse file stat: " + path)
 	}
+
+	// Note: The SElinux context may not be supported by stats on all OSs.
+	// For example: Alpine does not support it, resulting in statsData[6] == "C"
 
 	size, err := strconv.Atoi(statsData[0])
 	if err != nil {
