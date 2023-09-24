@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -122,4 +123,48 @@ func TestResource_Vsphere(t *testing.T) {
 		})
 		assert.Equal(t, "DC0_H0", string(dataResp.Data.Value))
 	})
+}
+
+func TestVsphereDiscovery(t *testing.T) {
+	vs, err := vsimulator.New()
+	if err != nil {
+		panic(err)
+	}
+
+	port, err := strconv.Atoi(vs.Server.URL.Port())
+	if err != nil {
+		panic(err)
+	}
+
+	srv := &Service{
+		runtimes:         map[uint32]*plugin.Runtime{},
+		lastConnectionID: 0,
+	}
+
+	resp, err := srv.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type:     "vsphere",
+					Host:     vs.Server.URL.Hostname(),
+					Port:     int32(port),
+					Insecure: true, // allows self-signed certificates
+					Discover: &inventory.Discovery{
+						Targets: []string{"auto"},
+					},
+					Credentials: []*vault.Credential{
+						{
+							Type:   vault.CredentialType_password,
+							User:   vsimulator.Username,
+							Secret: []byte(vsimulator.Password),
+						},
+					},
+				},
+			},
+		},
+	}, nil)
+	require.NoError(t, err)
+	assert.NotNil(t, resp.Asset)
+	assert.Equal(t, 8, len(resp.Inventory.Spec.Assets)) // api + esx + vm
+
 }

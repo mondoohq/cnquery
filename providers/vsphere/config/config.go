@@ -6,6 +6,7 @@ package config
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/vsphere/provider"
+	"go.mondoo.com/cnquery/providers/vsphere/resources"
 )
 
 var Config = plugin.Provider{
@@ -15,12 +16,16 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "vsphere",
-			Use:       "vsphere user@host",
-			Short:     "VMware vSphere",
-			Discovery: []string{},
-			MinArgs:   1,
-			MaxArgs:   1,
+			Name:  "vsphere",
+			Use:   "vsphere user@host",
+			Short: "VMware vSphere",
+			Discovery: []string{
+				resources.DiscoveryApi,
+				resources.DiscoveryInstances,
+				resources.DiscoveryHostMachines,
+			},
+			MinArgs: 1,
+			MaxArgs: 1,
 			Flags: []plugin.Flag{
 				{
 					Long:        "ask-pass",

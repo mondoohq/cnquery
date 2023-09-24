@@ -18,6 +18,12 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 )
 
+const (
+	VspherePlatform = "vmware-vsphere"
+	EsxiPlatform    = "vmware-esxi"
+	Family          = "vmware-vsphere"
+)
+
 func listDatacenters(c *govmomi.Client) ([]*object.Datacenter, error) {
 	finder := find.NewFinder(c.Client, true)
 	l, err := finder.ManagedObjectListChildren(context.Background(), "/")
@@ -82,6 +88,20 @@ type EsxiSystemVersion struct {
 	Moid    string
 }
 
+func (c *VsphereConnection) EsxiVersion(moid string) (*EsxiSystemVersion, error) {
+	hostRef, err := DecodeMoid(moid)
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := c.Host(hostRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return esxiVersion(host)
+}
+
 // $ESXCli.system.version.get()
 // Build   : Releasebuild-8169922
 // Patch   : 0
@@ -89,7 +109,7 @@ type EsxiSystemVersion struct {
 // Update  : 0
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
-func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
+func esxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	e, err := esxcli.NewExecutor(host.Client(), host)
 	if err != nil {
 		return nil, err
@@ -139,7 +159,7 @@ func EsxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
 	return &version, nil
 }
 
-func GetHost(client *govmomi.Client) (*object.HostSystem, error) {
+func getHost(client *govmomi.Client) (*object.HostSystem, error) {
 	dcs, err := listDatacenters(client)
 	if err != nil {
 		return nil, err
@@ -162,10 +182,10 @@ func GetHost(client *govmomi.Client) (*object.HostSystem, error) {
 	return host, nil
 }
 
-func InstanceUUID(client *govmomi.Client) (string, error) {
+func (c *VsphereConnection) InstanceUUID() (string, error) {
 	// determine identifier since ESXI connections do not return an InstanceUuid
-	if !client.IsVC() {
-		host, err := GetHost(client)
+	if !c.client.IsVC() {
+		host, err := getHost(c.client)
 		if err != nil {
 			return "", err
 		}
@@ -174,7 +194,7 @@ func InstanceUUID(client *govmomi.Client) (string, error) {
 		return host.Reference().Value, nil
 	}
 
-	v := client.ServiceContent.About
+	v := c.client.ServiceContent.About
 	return v.InstanceUuid, nil
 }
 
@@ -190,7 +210,7 @@ func (c *VsphereConnection) Identifier() (string, error) {
 		return c.selectedPlatformID, nil
 	}
 
-	id, err := InstanceUUID(c.Client())
+	id, err := c.InstanceUUID()
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get vsphere instance uuid")
 		// This error is being ignored
@@ -205,11 +225,11 @@ func (c *VsphereConnection) Info() types.AboutInfo {
 	return c.Client().ServiceContent.About
 }
 
-func VsphereResourceID(instance string, reference types.ManagedObjectReference) string {
-	return "//platformid.api.mondoo.app/runtime/vsphere/instance/" + instance + "/moid/" + reference.Encode()
+func VsphereResourceID(instance string, moid string) string {
+	return "//platformid.api.mondoo.app/runtime/vsphere/instance/" + instance + "/moid/" + moid
 }
 
-func decodeMoid(moid string) (types.ManagedObjectReference, error) {
+func DecodeMoid(moid string) (types.ManagedObjectReference, error) {
 	r := types.ManagedObjectReference{}
 
 	s := strings.SplitN(moid, "-", 2)
@@ -235,7 +255,7 @@ func ParseVsphereResourceID(id string) (types.ManagedObjectReference, error) {
 		return reference, errors.New("vsphere platform id has invalid type")
 	}
 
-	reference, err = decodeMoid(moid)
+	reference, err = DecodeMoid(moid)
 	if err != nil {
 		return reference, err
 	}

@@ -39,6 +39,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		if err != nil {
 			return nil, err
 		}
+		mqlHost.(*mqlVsphereHost).host = hostInfo
 
 		mqlHosts[i] = mqlHost
 	}
@@ -165,22 +166,7 @@ func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
 			return nil, err
 		}
 
-		props, err := resourceclient.VmProperties(vmInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		var name string
-		if vmInfo != nil && vmInfo.Config != nil {
-			name = vmInfo.Config.Name
-		}
-
-		mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
-			"moid":          llx.StringData(vm.Reference().Encode()),
-			"name":          llx.StringData(name),
-			"properties":    llx.DictData(props),
-			"inventoryPath": llx.StringData(vm.InventoryPath),
-		})
+		mqlVm, err := newMqlVm(v.MqlRuntime, vm, vmInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -189,25 +175,4 @@ func (v *mqlVsphereDatacenter) vms() ([]interface{}, error) {
 	}
 
 	return mqlVms, nil
-}
-
-func (v *mqlVsphereVm) id() (string, error) {
-	return v.Moid.Data, nil
-}
-
-func (v *mqlVsphereVm) advancedSettings() (map[string]interface{}, error) {
-	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
-	vClient := getClientInstance(conn)
-
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
-	}
-	path := v.InventoryPath.Data
-
-	vm, err := vClient.VirtualMachineByInventoryPath(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return resourceclient.AdvancedSettings(vm)
 }

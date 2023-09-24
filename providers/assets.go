@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/cli/config"
+	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
@@ -17,6 +18,7 @@ func ProcessAssetCandidates(runtime *Runtime, connectRes *pp.ConnectRes, upstrea
 	if connectRes.Inventory == nil || connectRes.Inventory.Spec == nil {
 		return []*inventory.Asset{connectRes.Asset}, nil
 	} else {
+		logger.DebugDumpJSON("inventory-resolved", connectRes.Inventory)
 		assetCandidates = connectRes.Inventory.Spec.Assets
 	}
 	log.Debug().Msgf("resolved %d assets", len(assetCandidates))
