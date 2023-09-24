@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
@@ -32,15 +33,16 @@ func RunExecutionJob(
 	return res, res.runCode(job.Queries, timeout)
 }
 
-func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
-	errs := []error{}
+func ExecuteFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
 	equeries := map[string]*explorer.ExecutionQuery{}
 	mqueries := map[string]*explorer.Mquery{}
 	for i := range queries {
 		query := queries[i]
 		code, err := query.Compile(nil, runtime.Schema())
+		// Errors for filter queries are common when they reference resources for
+		// providers that are not found on the system.
 		if err != nil {
-			errs = append(errs, err)
+			log.Debug().Err(err).Str("mql", query.Mql).Msg("skipping filter query, not supported")
 			continue
 		}
 
@@ -49,9 +51,6 @@ func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout t
 			Code:  code,
 		}
 		mqueries[code.CodeV2.Id] = query
-	}
-	if len(errs) != 0 {
-		return nil, errs
 	}
 
 	instance := newInstance(runtime, nil)
@@ -62,6 +61,7 @@ func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout t
 
 	instance.WaitUntilDone(timeout)
 
+	var errs []error
 	res := []*explorer.Mquery{}
 	for _, equery := range equeries {
 		bundle := equery.Code

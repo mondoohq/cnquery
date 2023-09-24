@@ -672,7 +672,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 
 // FilterQueries returns all queries whose result is truthy
 func (s *localAssetScanner) FilterQueries(queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
-	return executor.RunFilterQueries(s.Runtime, queries, timeout)
+	return executor.ExecuteFilterQueries(s.Runtime, queries, timeout)
 }
 
 // UpdateFilters takes a list of test filters and runs them against the backend
