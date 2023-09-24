@@ -79,6 +79,19 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
+	// parse discovery flags
+	conf.Discover = &inventory.Discovery{
+		Targets: []string{},
+	}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			conf.Discover.Targets = append(conf.Discover.Targets, entry)
+		}
+	} else {
+		conf.Discover.Targets = []string{resources.DiscoveryAuto}
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}
@@ -114,11 +127,16 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	in, err := s.discover(conn)
+	if err != nil {
+		return nil, err
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: in,
 	}, nil
 }
 
@@ -163,15 +181,18 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnection) error {
-	// TODO: adjust asset detection with full discovery
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
+	vSphereInfo := conn.Info()
 	asset.Platform = &inventory.Platform{
-		Name:   "vsphere",
-		Family: []string{"vsphere"},
-		Kind:   "api",
-		Title:  "VMware vSphere",
+		Name:    connection.VspherePlatform,
+		Family:  []string{connection.Family},
+		Title:   "VMware vSphere " + vSphereInfo.Version,
+		Version: vSphereInfo.Version,
+		Build:   vSphereInfo.Build,
+		Kind:    "api",
+		Runtime: "vsphere",
 	}
 
 	id, err := conn.Identifier()
@@ -180,6 +201,20 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 	}
 	asset.PlatformIds = []string{id}
 	return nil
+}
+
+func (s *Service) discover(conn *connection.VsphereConnection) (*inventory.Inventory, error) {
+	if conn.Conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime)
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {

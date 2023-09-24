@@ -1326,7 +1326,7 @@ func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]interface{}] {
 type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlVsphereHostInternal it will be used here
+	mqlVsphereHostInternal
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
@@ -1564,7 +1564,7 @@ func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]interface{}] {
 type mqlVsphereVm struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlVsphereVmInternal it will be used here
+	mqlVsphereVmInternal
 	Moid plugin.TValue[string]
 	Name plugin.TValue[string]
 	InventoryPath plugin.TValue[string]

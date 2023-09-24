@@ -274,7 +274,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) error {
-	// TODO: adjust asset detection
 	asset.Id = conn.Config().Type
 	asset.Name = conn.Config().Host
 
@@ -286,7 +285,6 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) erro
 			Kind:   "api",
 			Title:  "GCP Cloud",
 		}
-		// TODO: Add platform IDs
 		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gcp/"}
 	}
 

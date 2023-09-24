@@ -5,16 +5,20 @@ package resources
 
 import (
 	"errors"
+	"github.com/vmware/govmomi/vim25/mo"
 	"time"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/vsphere/connection"
 	"go.mondoo.com/cnquery/providers/vsphere/resources/resourceclient"
 	"go.mondoo.com/cnquery/types"
 )
+
+type mqlVsphereHostInternal struct {
+	host *mo.HostSystem
+}
 
 func (v *mqlVsphereHost) id() (string, error) {
 	return v.Moid.Data, nil

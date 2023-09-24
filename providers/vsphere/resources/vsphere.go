@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/cnquery/llx"
@@ -129,7 +128,6 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 
 		h = hosts[0]
 	} else {
-
 		// check if the connection was initialized with a specific host
 		identifier, err := conn.Identifier()
 		if err != nil || !connection.IsVsphereResourceID(identifier) {
@@ -233,27 +231,7 @@ func (v *mqlEsxi) vm() (*mqlVsphereVm, error) {
 		return nil, err
 	}
 
-	props, err := resourceclient.VmProperties(vmInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	var name string
-	if vmInfo != nil && vmInfo.Config != nil {
-		name = vmInfo.Config.Name
-	}
-
-	mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
-		"moid":          llx.StringData(vm.Reference().Encode()),
-		"name":          llx.StringData(name),
-		"properties":    llx.DictData(props),
-		"inventoryPath": llx.StringData(vm.InventoryPath),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return mqlVm.(*mqlVsphereVm), nil
+	return newMqlVm(v.MqlRuntime, vm, vmInfo)
 }
 
 func (v *mqlEsxiCommand) id() (string, error) {

@@ -35,7 +35,7 @@ func TestVsphereID(t *testing.T) {
 }
 
 func TestMrnParser(t *testing.T) {
-	id := VsphereResourceID("uuid", types.ManagedObjectReference{Type: "VirtualMachine", Value: "4"})
+	id := VsphereResourceID("uuid", types.ManagedObjectReference{Type: "VirtualMachine", Value: "4"}.Encode())
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/vsphere/instance/uuid/moid/VirtualMachine-4", id)
 	ok := IsVsphereResourceID(id)
 	assert.True(t, ok)
