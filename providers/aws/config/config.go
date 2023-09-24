@@ -5,9 +5,9 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/aws/connection"
 	"go.mondoo.com/cnquery/providers/aws/connection/awsec2ebsconn"
 	"go.mondoo.com/cnquery/providers/aws/provider"
+	"go.mondoo.com/cnquery/providers/aws/resources"
 )
 
 var Config = plugin.Provider{
@@ -23,35 +23,35 @@ var Config = plugin.Provider{
 			MinArgs: 0,
 			MaxArgs: 4,
 			Discovery: []string{
-				connection.DiscoveryAccounts,
-				connection.DiscoveryAll,
-				connection.DiscoveryAuto,
+				resources.DiscoveryAccounts,
+				resources.DiscoveryAll,
+				resources.DiscoveryAuto,
 
-				connection.DiscoveryInstances,
-				connection.DiscoverySSMInstances,
-				connection.DiscoveryECR,
-				connection.DiscoveryECS,
+				resources.DiscoveryInstances,
+				resources.DiscoverySSMInstances,
+				resources.DiscoveryECR,
+				resources.DiscoveryECS,
 
-				connection.DiscoveryResources,
-				connection.DiscoveryS3Buckets,
-				connection.DiscoveryCloudtrailTrails,
-				connection.DiscoveryRdsDbInstances,
-				connection.DiscoveryVPCs,
-				connection.DiscoverySecurityGroups,
-				connection.DiscoveryIAMUsers,
-				connection.DiscoveryIAMGroups,
-				connection.DiscoveryCloudwatchLoggroups,
-				connection.DiscoveryLambdaFunctions,
-				connection.DiscoveryDynamoDBTables,
-				connection.DiscoveryRedshiftClusters,
-				connection.DiscoveryVolumes,
-				connection.DiscoverySnapshots,
-				connection.DiscoveryEFSFilesystems,
-				connection.DiscoveryAPIGatewayRestAPIs,
-				connection.DiscoveryELBLoadBalancers,
-				connection.DiscoveryESDomains,
-				connection.DiscoveryKMSKeys,
-				connection.DiscoverySagemakerNotebookInstances,
+				resources.DiscoveryResources,
+				resources.DiscoveryS3Buckets,
+				resources.DiscoveryCloudtrailTrails,
+				resources.DiscoveryRdsDbInstances,
+				resources.DiscoveryVPCs,
+				resources.DiscoverySecurityGroups,
+				resources.DiscoveryIAMUsers,
+				resources.DiscoveryIAMGroups,
+				resources.DiscoveryCloudwatchLoggroups,
+				resources.DiscoveryLambdaFunctions,
+				resources.DiscoveryDynamoDBTables,
+				resources.DiscoveryRedshiftClusters,
+				resources.DiscoveryVolumes,
+				resources.DiscoverySnapshots,
+				resources.DiscoveryEFSFilesystems,
+				resources.DiscoveryAPIGatewayRestAPIs,
+				resources.DiscoveryELBLoadBalancers,
+				resources.DiscoveryESDomains,
+				resources.DiscoveryKMSKeys,
+				resources.DiscoverySagemakerNotebookInstances,
 			},
 			Flags: []plugin.Flag{
 				{
