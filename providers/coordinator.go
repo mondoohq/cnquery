@@ -43,7 +43,37 @@ type RunningProvider struct {
 	Client *plugin.Client
 	Schema *resources.Schema
 
+	// isClosed is true for any provider that is not running anymore,
+	// either via shutdown or via crash
 	isClosed bool
+	// isShutdown is only used once during provider shutdown
+	isShutdown bool
+	// provider errors which are evaluated and printed during shutdown of the provider
+	err  error
+	lock sync.Mutex
+}
+
+func (p *RunningProvider) Shutdown() error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	if p.isShutdown {
+		return nil
+	}
+
+	// This is an error that happened earlier, so we print it directly.
+	// The error this function returns is about failing to shutdown.
+	if p.err != nil {
+		log.Error().Msg(p.err.Error())
+	}
+
+	var err error
+	if !p.isClosed {
+		_, err = p.Plugin.Shutdown(&pp.ShutdownReq{})
+		p.isClosed = true
+	}
+	p.isShutdown = true
+	return err
 }
 
 type UpdateProvidersConfig struct {

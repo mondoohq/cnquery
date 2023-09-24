@@ -34,10 +34,11 @@ type Errors struct {
 }
 
 func (m *Errors) Add(err ...error) {
-	if err == nil {
-		return
+	for i := range err {
+		if err[i] != nil {
+			m.errors = append(m.errors, err[i])
+		}
 	}
-	m.errors = append(m.errors, err...)
 }
 
 func (m *Errors) Error() string {

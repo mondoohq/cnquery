@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/cnquery/utils/multierr"
+	"google.golang.org/grpc/status"
 )
 
 const defaultShutdownTimeout = time.Duration(time.Second * 120)
@@ -36,6 +37,7 @@ type Runtime struct {
 	// schema aggregates all resources executable on this asset
 	schema          extensibleSchema
 	isClosed        bool
+	close           sync.Once
 	shutdownTimeout time.Duration
 }
 
@@ -76,39 +78,40 @@ type shutdownResult struct {
 }
 
 func (r *Runtime) tryShutdown() shutdownResult {
-	resp, err := r.Provider.Instance.Plugin.Shutdown(&plugin.ShutdownReq{})
+	var errs multierr.Errors
+	for _, provider := range r.providers {
+		errs.Add(provider.Instance.Shutdown())
+	}
+
 	return shutdownResult{
-		Response: resp,
-		Error:    err,
+		Error: errs.Deduplicate(),
 	}
 }
 
 func (r *Runtime) Close() {
-	if r.isClosed {
-		return
-	}
 	r.isClosed = true
-
-	if err := r.Recording.Save(); err != nil {
-		log.Error().Err(err).Msg("failed to save recording")
-	}
-
-	response := make(chan shutdownResult, 1)
-	go func() {
-		response <- r.tryShutdown()
-	}()
-	select {
-	case <-time.After(r.shutdownTimeout):
-		log.Error().Str("provider", r.Provider.Instance.Name).Msg("timed out shutting down the provider")
-	case result := <-response:
-		if result.Error != nil {
-			log.Error().Err(result.Error).Msg("failed to shutdown the provider")
+	r.close.Do(func() {
+		if err := r.Recording.Save(); err != nil {
+			log.Error().Err(err).Msg("failed to save recording")
 		}
-	}
 
-	// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
-	// r.coordinator.Close(r.Provider.Instance)
-	r.schema.Close()
+		response := make(chan shutdownResult, 1)
+		go func() {
+			response <- r.tryShutdown()
+		}()
+		select {
+		case <-time.After(r.shutdownTimeout):
+			log.Error().Str("provider", r.Provider.Instance.Name).Msg("timed out shutting down the provider")
+		case result := <-response:
+			if result.Error != nil {
+				log.Error().Err(result.Error).Msg("failed to shutdown the provider")
+			}
+		}
+
+		// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
+		// r.coordinator.Close(r.Provider.Instance)
+		r.schema.Close()
+	})
 }
 
 func (r *Runtime) DeactivateProviderDiscovery() {
@@ -333,7 +336,14 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		Field:      field,
 	})
 	if err != nil {
-		return nil, err
+		// Recoverable errors can continue with the exeuction,
+		// they only store errors in the place of actual data.
+		// Every other error is thrown up the chain.
+		handled, err := r.handlePluginError(err, provider)
+		if !handled {
+			return nil, err
+		}
+		data = &plugin.DataRes{Error: err.Error()}
 	}
 
 	var raw *llx.RawData
@@ -345,6 +355,23 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 
 	r.Recording.AddData(provider.Connection.Id, resource, resourceID, field, raw)
 	return raw, nil
+}
+
+func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (bool, error) {
+	st, ok := status.FromError(err)
+	if !ok {
+		return false, err
+	}
+
+	switch st.Code() {
+	case 14:
+		// Error: Unavailable. Happens when the plugin crashes.
+		// TODO: try to restart the plugin and reset its connections
+		provider.Instance.isClosed = true
+		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed")
+		return false, provider.Instance.err
+	}
+	return false, err
 }
 
 type providerCallbacks struct {
