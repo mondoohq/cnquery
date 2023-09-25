@@ -60,8 +60,8 @@ cloud.google.com/go/recommender v1.11.0 h1:SuzbMJhDAiPro7tR9QP7EX97+TI31urjsIgNh
 cloud.google.com/go/recommender v1.11.0/go.mod h1:kPiRQhPyTJ9kyXPCG6u/dlPLbYfFlkwHNRwdzPVAoII=
 cloud.google.com/go/run v1.2.0 h1:kHeIG8q+N6Zv0nDkBjSOYfK2eWqa5FnaiDPH/7/HirE=
 cloud.google.com/go/run v1.2.0/go.mod h1:36V1IlDzQ0XxbQjUx6IYbw8H3TJnWvhii963WW3B/bo=
-cloud.google.com/go/serviceusage v1.7.1 h1:JY1f+nTvBhUrar46zOO8pwkJKYHt5BvGtQOUeoJ/GhQ=
-cloud.google.com/go/serviceusage v1.7.1/go.mod h1:IFag53ZmAA17/MqgIBGbqUGwvMvnWPVDuSvPVs/X1rM=
+cloud.google.com/go/serviceusage v1.8.0 h1:RPNiGxTnc/oBPC/y2L7jNi521Av1EbeEDgWTc35HR+M=
+cloud.google.com/go/serviceusage v1.8.0/go.mod h1:fgHNnITDlWfZjPa1oaZes9NklvRThlb2+/8tYuRxipk=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
 cloud.google.com/go/storage v1.5.0/go.mod h1:tpKbwo567HUNpVclU5sGELwQWBDZ8gh0ZeosJ0Rtdos=
 cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohlUTyfDhBk=
