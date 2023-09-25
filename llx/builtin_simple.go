@@ -199,6 +199,14 @@ func chunkNeqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	})
 }
 
+func bindingEqNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return BoolData(bind == nil), 0, nil
+}
+
+func bindingNeqNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return BoolData(bind != nil), 0, nil
+}
+
 // raw operator handling
 // ==   !=
 
@@ -318,6 +326,20 @@ func timeCmpTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 
 func timeNotTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return boolNotOpV2(e, bind, chunk, ref, opTimeCmpTime)
+}
+
+func stringCmpEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+	return BoolData(bind.Value.(string) == ""), 0, nil
+}
+
+func stringNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	return BoolData(bind.Value.(string) != ""), 0, nil
 }
 
 // int arithmetic

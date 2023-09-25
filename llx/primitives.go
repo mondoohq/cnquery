@@ -138,6 +138,9 @@ func RefPrimitiveV2(v uint64) *Primitive {
 	}
 }
 
+// EmptyPrimitive is the empty value indicator
+var EmptyPrimitive = &Primitive{Type: string(types.Empty)}
+
 // ArrayPrimitive creates a primitive from a list of primitives
 func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
@@ -578,7 +581,7 @@ const mapOverhead = 4 + 1 + 1 + 2 + 4
 func (p *Primitive) Size() int {
 	typ := types.Type(p.Type)
 
-	if typ.IsEmpty() {
+	if typ.NotSet() {
 		return 0
 	}
 

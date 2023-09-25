@@ -42,7 +42,17 @@ func init() {
 		"typeof": compileTypeof,
 		"switch": compileSwitch,
 		"Never":  compileNever,
+		"empty":  compileEmpty,
 	}
+}
+
+func compileEmpty(c *compiler, id string, call *parser.Call) (types.Type, error) {
+	c.addChunk(&llx.Chunk{
+		Call:      llx.Chunk_PRIMITIVE,
+		Primitive: llx.EmptyPrimitive,
+	})
+
+	return types.Time, nil
 }
 
 // compile the operation between two operands A and B
@@ -253,7 +263,7 @@ func compileTransformation(c *compiler, id string, call *parser.Call) (types.Typ
 	}
 
 	returnType := h.Typ
-	if returnType == types.Empty {
+	if returnType == types.NoType {
 		returnType = lt
 	}
 

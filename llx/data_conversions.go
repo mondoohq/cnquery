@@ -37,6 +37,7 @@ func init() {
 		types.Time:         time2result,
 		types.Dict:         dict2result,
 		types.Score:        score2result,
+		types.Empty:        empty2result,
 		types.Block:        block2result,
 		types.ArrayLike:    array2result,
 		types.MapLike:      map2result,
@@ -55,6 +56,7 @@ func init() {
 		types.Time:         ptime2raw,
 		types.Dict:         pdict2raw,
 		types.Score:        pscore2raw,
+		types.Empty:        pempty2raw,
 		types.Block:        pblock2rawV2,
 		types.ArrayLike:    parray2raw,
 		types.MapLike:      pmap2raw,
@@ -224,6 +226,10 @@ func score2result(value interface{}, typ types.Type) (*Primitive, error) {
 		Type:  string(types.Score),
 		Value: v,
 	}, nil
+}
+
+func empty2result(value interface{}, typ types.Type) (*Primitive, error) {
+	return EmptyPrimitive, nil
 }
 
 func block2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -465,7 +471,7 @@ func (r *Result) RawData() *RawData {
 	data := &RawData{}
 	if r.Data != nil {
 		// The type can be empty, when we do not have data
-		if r.Data.IsNil() || types.Type(r.Data.Type).IsEmpty() {
+		if r.Data.IsNil() || types.Type(r.Data.Type).NotSet() {
 			data.Type = types.Nil
 		} else {
 			data = r.Data.RawData()
@@ -560,6 +566,10 @@ func pscore2raw(p *Primitive) *RawData {
 		}
 	}
 	return &RawData{Value: p.Value, Type: types.Score}
+}
+
+func pempty2raw(p *Primitive) *RawData {
+	return &RawData{Type: types.Type(p.Type)}
 }
 
 func pblock2rawV2(p *Primitive) *RawData {

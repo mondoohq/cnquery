@@ -296,6 +296,42 @@ func TestOperations_Equality(t *testing.T) {
 	x.TestSimple(t, simpleTests)
 }
 
+func TestEmpty(t *testing.T) {
+	empty := []string{
+		"null",
+		"''",
+		"[]",
+		"{}",
+	}
+	nonEmpty := []string{
+		"true", "false",
+		"0", "1.0",
+		"'a'",
+		"/a/",
+		"[null]", "[1]",
+		"{a: 1}",
+	}
+
+	tests := []testutils.SimpleTest{}
+	for i := range empty {
+		tests = append(tests, testutils.SimpleTest{
+			Code:        empty[i] + " == empty",
+			ResultIndex: 1,
+			Expectation: true,
+		})
+	}
+
+	for i := range nonEmpty {
+		tests = append(tests, testutils.SimpleTest{
+			Code:        nonEmpty[i] + " == empty",
+			ResultIndex: 1,
+			Expectation: false,
+		})
+	}
+
+	x.TestSimple(t, tests)
+}
+
 func TestNumber_Methods(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{

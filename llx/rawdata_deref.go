@@ -98,7 +98,7 @@ func dereferenceStringMap(typ types.Type, data map[string]interface{}, codeID st
 }
 
 func dereference(raw *RawData, codeID string, bundle *CodeBundle) (*RawData, error) {
-	if raw.Type.IsEmpty() || raw.Value == nil {
+	if raw.Type.NotSet() || raw.Value == nil {
 		return raw, nil
 	}
 

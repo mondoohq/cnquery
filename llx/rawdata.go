@@ -221,7 +221,7 @@ func (r *RawData) Score() (int, bool) {
 
 func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 	if data == nil &&
-		(typ.IsEmpty() || !typ.IsResource()) {
+		(typ.NotSet() || !typ.IsResource()) {
 		return false, true
 	}
 
@@ -353,7 +353,7 @@ func (r *RawData) IsSuccess() (bool, bool) {
 
 func isSuccess(data interface{}, typ types.Type) (bool, bool) {
 	if data == nil &&
-		(typ.IsEmpty() || !typ.IsResource()) {
+		(typ.NotSet() || !typ.IsResource()) {
 		return false, false
 	}
 
