@@ -7,7 +7,7 @@ go 1.20
 require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-github/v55 v55.0.0
-	github.com/rs/zerolog v1.30.0
+	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery v0.0.0-20230921152023-8e36364513b6
 	go.mondoo.com/ranger-rpc v0.5.1
