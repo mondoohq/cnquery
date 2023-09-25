@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/emr v1.28.6
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.27.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/kms v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.5
