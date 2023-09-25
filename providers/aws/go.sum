@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4 h1:Ir8BEej
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4/go.mod h1:NSAyKko0rDkrZOjcdCPPvMEe+FyIw/aDDQ8X+xAIW44=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5 h1:EeNQ3bDA6hlx3vifHf7LT/l9dh9w7D2XgCdaD11TRU4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5/go.mod h1:X3ThW5RPV19hi7bnQ0RMAiBjZbzxj4rZlj+qdctbMWY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.118.0 h1:ueSJS07XpOwCFhYTHh/Jjw856+U+u0Dv5LIIPOB1/Ns=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.118.0/go.mod h1:0FhI2Rzcv5BNM3dNnbcCx2qa2naFZoAidJi11cQgzL0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.120.0 h1:ksT76SStTSqusv5PekSW/WqnbPMzwJIZXH+rDMhazpQ=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.120.0/go.mod h1:0FhI2Rzcv5BNM3dNnbcCx2qa2naFZoAidJi11cQgzL0=
 github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.16.5 h1:CXMRg2qgPKAvmp6lwIxG7gkAfuDBissGqjQjNmUzw28=
 github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.16.5/go.mod h1:EUoK01sA2bRkRT5LdQANbz04O81e7tDi+D/3aq4Z7Jo=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.20.0 h1:Qw8H7V55d2P1d/a9+cLgAcdez4GtP6l30KQAeYqx9vY=
