@@ -6,7 +6,7 @@ replace go.mondoo.com/cnquery => ../..
 
 require (
 	github.com/oracle/oci-go-sdk/v65 v65.49.1
-	github.com/rs/zerolog v1.30.0
+	github.com/rs/zerolog v1.31.0
 	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
 )
 
