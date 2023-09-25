@@ -148,8 +148,8 @@ github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5 h1:A42xdtStObqy7NGvzZKpnyNXvoOmm
 github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5/go.mod h1:rDGMZA7f4pbmTtPOk5v5UM2lmX6UAbRnMDJeDvnH7AM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0 h1:f4qHghGTcns4L4F7u8AHH6pcVLwgtTMNkNZeRJZ5xlA=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0/go.mod h1:YSdqo9knBVm5H3JVmWDhx9Wts9828nColUJzL3OKXDk=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.106.0 h1:sjSnu8PSlFTSOQMj7zDmvZn4iF8uIWpoNWOj2ZD4UHw=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.106.0/go.mod h1:KLdYHQCLE/gpbrs1H7G/lZ4exCdXAuhYhijB13G0tY8=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.107.0 h1:+9g22htDWYCmZvoriTUkteSL2EnC0NHUaB442cdRMyI=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.107.0/go.mod h1:KLdYHQCLE/gpbrs1H7G/lZ4exCdXAuhYhijB13G0tY8=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.3 h1:H6ZipEknzu7RkJW3w2PP75zd8XOdR35AEY5D57YrJtA=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.3/go.mod h1:5W2cYXDPabUmwULErlC92ffLhtTuyv4ai+5HhdbhfNo=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.36.2 h1:BtNDz3VSS/FCri8qnTvvXCMUh8hRFbtAZPyHOFUQMTo=
