@@ -108,8 +108,8 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
 			assetList = append(assetList, &inventory.Asset{
-				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Name.Data, repo.Name.Data)},
-				Name:        org.Name.Data + "/" + repo.Name.Data,
+				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Login.Data, repo.Name.Data)},
+				Name:        org.Login.Data + "/" + repo.Name.Data,
 				Platform:    connection.GithubRepoPlatform,
 				Labels:      make(map[string]string),
 				Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
