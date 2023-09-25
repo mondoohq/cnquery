@@ -37,11 +37,13 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	var name string
-	if x, ok := args["name"]; ok {
-		name = x.Value.(string)
+	if org.Name != nil {
+		name = *org.Name
 	}
 	if name == "" {
-		name = *org.Name
+		if x, ok := args["name"]; ok {
+			name = x.Value.(string)
+		}
 	}
 	args["id"] = llx.IntDataPtr(org.ID)
 	args["name"] = llx.StringData(name)
