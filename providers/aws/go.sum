@@ -120,8 +120,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.20.6 h1:5n5h2hr9zdB
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.20.6/go.mod h1:L9XcF8QdOpGUDPccs9VZPlNhrpfPEKFDl/vb3C+iZbs=
 github.com/aws/aws-sdk-go-v2/service/emr v1.28.6 h1:5/AJnoYwHtY/jnqPB9PqtURSur9OFY16h1SL4dN3oxU=
 github.com/aws/aws-sdk-go-v2/service/emr v1.28.6/go.mod h1:zS0OkiqKPhWhUwdpe5i0pzlm6sP0A2YZzSaGzRKa+p8=
-github.com/aws/aws-sdk-go-v2/service/guardduty v1.27.0 h1:meywWHLvGovm4KVqP8C9+TfZAowEhnNlpV7LRKGCHjA=
-github.com/aws/aws-sdk-go-v2/service/guardduty v1.27.0/go.mod h1:yc+B63Prgo9cISl5lMBgJ5GvqztkEEpNbSbREYTs3Rg=
+github.com/aws/aws-sdk-go-v2/service/guardduty v1.28.0 h1:T5mPJK4PHQVKr+mTYqbKxxeEsoBxm8ykzCmB3RewKFg=
+github.com/aws/aws-sdk-go-v2/service/guardduty v1.28.0/go.mod h1:yc+B63Prgo9cISl5lMBgJ5GvqztkEEpNbSbREYTs3Rg=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.5 h1:qGv+oW4uV1T3kbE9uSYEfdZbo38OqxgRxxfStfDr4BU=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.5/go.mod h1:8lyPrjQczmx72ac9s82zTjf9xLqs7uuFMG9TVEZ07XU=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.14 h1:m0QTSI6pZYJTk5WSKx3fm5cNW/DCicVzULBgU/6IyD0=
