@@ -46,7 +46,8 @@ const (
 	byteDict
 	byteScore
 	byteBlock
-	byteArray = 1<<4 + iota - 4 // set to 25 to avoid breaking changes
+	byteEmpty
+	byteArray = 1<<4 + iota - 5 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -54,8 +55,8 @@ const (
 	byteRange
 )
 
-// Empty type is one whose type information is not available at all
-const Empty Type = ""
+// NoType type is one whose type information is not available at all
+const NoType Type = ""
 
 const (
 	// Unset type indicates that the type has not yet been set
@@ -84,6 +85,8 @@ const (
 	Score = Type(rune(byteScore))
 	// Block evaluation results
 	Block = Type(rune(byteBlock))
+	// Empty value
+	Empty = Type(rune(byteEmpty))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -109,8 +112,8 @@ const (
 	Range = Type(rune(byteRange))
 )
 
-// IsEmpty returns true if the type has no information
-func (typ Type) IsEmpty() bool {
+// NotSet returns true if the type has no information
+func (typ Type) NotSet() bool {
 	return typ == ""
 }
 
@@ -144,7 +147,7 @@ func Resource(name string) Type {
 
 // IsResource checks if this type is a map
 func (typ Type) IsResource() bool {
-	if typ.IsEmpty() {
+	if typ.NotSet() {
 		return false
 	}
 	return typ[0] == byteResource
@@ -251,6 +254,7 @@ var labels = map[byte]string{
 	byteDict:        "dict",
 	byteScore:       "score",
 	byteBlock:       "block",
+	byteEmpty:       "empty",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
 }

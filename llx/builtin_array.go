@@ -1037,6 +1037,28 @@ func arrayNotNilV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return BoolTrue, 0, nil
 }
 
+func arrayCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+	v := bind.Value.([]interface{})
+	if v == nil {
+		return BoolTrue, 0, nil
+	}
+	return BoolData(len(v) == 0), 0, nil
+}
+
+func arrayNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	v := bind.Value.([]interface{})
+	if v == nil {
+		return BoolFalse, 0, nil
+	}
+	return BoolData(len(v) != 0), 0, nil
+}
+
 func boolarrayCmpBoolV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrayOne(left, right, opBoolCmpBool)

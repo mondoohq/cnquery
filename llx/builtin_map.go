@@ -56,6 +56,50 @@ func mapGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	}, 0, nil
 }
 
+func mapCmpNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+	v, ok := bind.Value.(map[string]interface{})
+	if !ok || v == nil {
+		return BoolTrue, 0, nil
+	}
+	return BoolFalse, 0, nil
+}
+
+func mapNotNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	v, ok := bind.Value.(map[string]interface{})
+	if !ok || v == nil {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func mapCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+	v, ok := bind.Value.(map[string]interface{})
+	if !ok || v == nil {
+		return BoolTrue, 0, nil
+	}
+	return BoolData(len(v) == 0), 0, nil
+}
+
+func mapNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+	v, ok := bind.Value.(map[string]interface{})
+	if !ok || v == nil {
+		return BoolFalse, 0, nil
+	}
+	return BoolData(len(v) != 0), 0, nil
+}
+
 func mapLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: types.Int}, 0, nil
@@ -357,6 +401,41 @@ func dictLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	}
 }
 
+func dictCmpEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolTrue, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case string:
+		return BoolData(len(x) == 0), 0, nil
+	case []interface{}:
+		return BoolData(len(x) == 0), 0, nil
+	case map[string]interface{}:
+		return BoolData(len(x) == 0), 0, nil
+	default:
+		return BoolFalse, 0, nil
+	}
+}
+
+func dictNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case string:
+		return BoolData(len(x) != 0), 0, nil
+	case []interface{}:
+		return BoolData(len(x) != 0), 0, nil
+	case map[string]interface{}:
+		return BoolData(len(x) != 0), 0, nil
+	default:
+		return BoolTrue, 0, nil
+	}
+}
+
+// Deprecated: replace with calls to the empty type
 func dictNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil

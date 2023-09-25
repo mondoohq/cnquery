@@ -273,7 +273,7 @@ func rawIntMapJSON(typ types.Type, data map[int]interface{}, codeID string, bund
 // possible for now, because our type system provides most of the information we need,
 // allowing us to avoid more costly reflection calls.
 func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
-	if typ.IsEmpty() {
+	if typ.NotSet() {
 		return errors.New("type information is missing")
 	}
 

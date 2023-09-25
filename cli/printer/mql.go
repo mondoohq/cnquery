@@ -503,7 +503,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 }
 
 func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
-	if typ.IsEmpty() {
+	if typ.NotSet() {
 		return "no data available"
 	}
 
