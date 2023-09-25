@@ -318,7 +318,7 @@ func commitChanges(confs updateConfs) error {
 	}
 
 	log.Info().Msg("comitted changes for " + strings.Join(confs.titles(), ", "))
-	log.Info().Msg("run: git push -u origin " + branchName)
+	log.Info().Msg("running: git push -u origin " + branchName)
 
 	// Not sure why the auth method doesn't work... so we exec here
 	err = exec.Command("git", "push", "-u", "origin", branchName).Run()
@@ -326,6 +326,8 @@ func commitChanges(confs updateConfs) error {
 		return err
 	}
 
+	log.Info().Msg("updates pushed successfully, open: \n\t" +
+		"https://github.com/mondoohq/cnquery/compare/" + branchName + "?expand=1")
 	return nil
 }
 
@@ -372,7 +374,9 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 			return count
 		}
 	}
-	fmt.Println()
+	if !fastMode {
+		fmt.Println()
+	}
 
 	if found == nil {
 		log.Warn().Msg("looks like there is no previous version in your commit history => we assume this is the first version commit")
