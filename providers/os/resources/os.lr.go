@@ -43,15 +43,15 @@ func init() {
 			Create: createPlatformCves,
 		},
 		"audit.cvss": {
-			// to override args, implement: initAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAuditCvss,
 			Create: createAuditCvss,
 		},
 		"audit.advisory": {
-			// to override args, implement: initAuditAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAuditAdvisory,
 			Create: createAuditAdvisory,
 		},
 		"audit.cve": {
-			// to override args, implement: initAuditCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAuditCve,
 			Create: createAuditCve,
 		},
 		"machine": {
@@ -4605,7 +4605,12 @@ func createAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("audit.cvss", res.__id)
@@ -4659,7 +4664,12 @@ func createAuditAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("audit.advisory", res.__id)
@@ -4734,7 +4744,12 @@ func createAuditCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("audit.cve", res.__id)
