@@ -52,7 +52,7 @@ var listProvidersCmd = &cobra.Command{
 var installProviderCmd = &cobra.Command{
 	Use:    "install <NAME>",
 	Short:  "Install or update a provider.",
-	Args:   cobra.MinimumNArgs(1),
+	Args:   cobra.ExactArgs(1),
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
