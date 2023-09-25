@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery => ../..
 go 1.20
 
 require (
-	github.com/rs/zerolog v1.30.0
+	github.com/rs/zerolog v1.31.0
 	github.com/slack-go/slack v0.12.3
 	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
 )
