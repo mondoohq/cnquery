@@ -49,9 +49,8 @@ var listProvidersCmd = &cobra.Command{
 }
 
 var installProviderCmd = &cobra.Command{
-	Use:    "install <NAME@[VERSION]>",
+	Use:    "install <NAME[@VERSION]>",
 	Short:  "Install or update a provider.",
-	Args:   cobra.ExactArgs(1),
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -67,6 +66,10 @@ var installProviderCmd = &cobra.Command{
 		if url != "" {
 			installProviderUrl(url)
 			return
+		}
+
+		if len(args) == 0 {
+			log.Fatal().Msg("no provider specified, use the NAME[@VERSION] format to pass in a provider name")
 		}
 
 		// if no url or file is specified, we default to installing by name from the default upstream
