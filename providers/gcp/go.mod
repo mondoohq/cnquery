@@ -23,7 +23,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.16.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/rs/zerolog v1.30.0
+	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
 	go.mondoo.com/ranger-rpc v0.5.1
