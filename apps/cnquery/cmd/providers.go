@@ -82,10 +82,11 @@ var installProviderCmd = &cobra.Command{
 }
 
 func installProviderByVersion(name string, version string) {
-	_, err := providers.Install(name, version)
+	installed, err := providers.Install(name, version)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to install")
 	}
+	providers.PrintInstallResults([]*providers.Provider{installed})
 }
 
 func installProviderUrl(u string) {

@@ -235,7 +235,7 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 	if err != nil {
 		return nil, err
 	}
-
+	PrintInstallResults([]*Provider{provider})
 	now := time.Now()
 	if err := os.Chtimes(binPath, now, now); err != nil {
 		log.Warn().

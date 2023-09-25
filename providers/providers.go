@@ -176,8 +176,12 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 	}
 
 	nu, err := Install(upstream.Name, "")
+	if err != nil {
+		return nil, err
+	}
 	existing.Add(nu)
-	return nu, err
+	PrintInstallResults([]*Provider{nu})
+	return nu, nil
 }
 
 func Install(name string, version string) (*Provider, error) {
@@ -245,7 +249,6 @@ func installVersion(name string, version string) (*Provider, error) {
 	// otherwise it will load old data
 	CachedProviders = nil
 
-	PrintInstallResults(installed)
 	return installed[0], nil
 }
 
