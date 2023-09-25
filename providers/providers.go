@@ -185,11 +185,8 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 }
 
 func Install(name string, version string) (*Provider, error) {
-	if version != "" {
-		// we remove the v prefix if passing in a version that looks like 'v9.0.0'
-		version = strings.TrimPrefix(version, "v")
-	} else {
-		// else, if no version is specified, we default to installing the latest one
+	if version == "" {
+		// if no version is specified, we default to installing the latest one
 		latestVersion, err := LatestVersion(name)
 		if err != nil {
 			return nil, err

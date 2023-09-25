@@ -56,13 +56,6 @@ var installProviderCmd = &cobra.Command{
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
-		// If there's a version and a name, we can install the version, using the default home url for
-		// providers
-		version, _ := cmd.Flags().GetString("version")
-		if version != "" {
-			installProviderByVersion(args[0], version)
-			return
-		}
 		// Explicit installs of files will ignore version recommendations.
 		// So we just take them and roll with it.
 		path, _ := cmd.Flags().GetString("file")
@@ -77,11 +70,22 @@ var installProviderCmd = &cobra.Command{
 			return
 		}
 
-		log.Fatal().Msg("cannot install providers by name yet")
+		// if no url or file is specified, we default to installing by name from the default upstream
+		installProviderByName(args[0])
 	},
 }
 
-func installProviderByVersion(name string, version string) {
+func installProviderByName(name string) {
+	parts := strings.Split(name, "@")
+	if len(parts) > 2 {
+		log.Fatal().Msg("invalid provider name")
+	}
+	name = parts[0]
+	version := ""
+	if len(parts) == 2 {
+		// trim the v prefix, allowing users to specify both 9.0.0 and v9.0.0
+		version = strings.TrimPrefix(parts[1], "v")
+	}
 	installed, err := providers.Install(name, version)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to install")
