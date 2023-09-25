@@ -2,9 +2,9 @@ package gitlab
 
 import (
 	"errors"
-	"net/url"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/gitlab"
 	"go.mondoo.com/cnquery/resources"
@@ -111,18 +111,28 @@ func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabPr
 	if err != nil {
 		return nil, nil, err
 	}
-
-	project, _, err := gt.Client().Projects.GetProject(url.QueryEscape(gt.GroupPath)+"/"+url.QueryEscape(gt.ProjectPath), nil)
+	obj, err := g.MotorRuntime.CreateResource("gitlab.group")
 	if err != nil {
 		return nil, nil, err
 	}
+	gr := obj.(*mqlGitlabGroup)
 
-	(*args)["id"] = int64(project.ID)
-	(*args)["name"] = project.Name
-	(*args)["path"] = project.Path
-	(*args)["namespace"] = project.Namespace.Name
-	(*args)["description"] = project.Description
-	(*args)["visibility"] = string(project.Visibility)
+	rawResources, err := gr.Projects()
+	if err != nil {
+		return nil, nil, err
+	}
+	matcher := gt.ProjectPath
+	for i := range rawResources {
+		proj := rawResources[i].(*mqlGitlabProject)
+		mqlPath, err := proj.Path()
+		if err != nil {
+			log.Error().Err(err).Msg("project is not initialized")
+			return nil, nil, err
+		}
+		if mqlPath == matcher {
+			return args, proj, nil
+		}
+	}
 
 	return args, nil, nil
 }

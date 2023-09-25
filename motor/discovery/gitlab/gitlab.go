@@ -131,8 +131,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 
 			if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProject) {
-				p.Client().Projects.ListProjects(&gitlab.ListProjectsOptions{})
-
 				for _, project := range grp.Projects {
 					clonedConfig := pCfg.Clone()
 					if clonedConfig.Options == nil {
