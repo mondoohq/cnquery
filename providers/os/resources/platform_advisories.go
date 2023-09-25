@@ -289,8 +289,8 @@ func (a *mqlPlatformCves) list() ([]interface{}, error) {
 			"state":      llx.StringData(cve.State.String()),
 			"summary":    llx.StringData(cve.Summary),
 			"unscored":   llx.BoolData(cve.Unscored),
-			"published":  llx.TimeData(*published),
-			"modified":   llx.TimeData(*modified),
+			"published":  llx.TimeDataPtr(published),
+			"modified":   llx.TimeDataPtr(modified),
 			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {

@@ -78,10 +78,21 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
+	var upstreamConfig *upstream.UpstreamConfig
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		upstreamConfig = &upstream.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Incognito:   conf.Incognito,
+			Creds:       serviceAccount,
+		}
+	}
+
 	err := runtime.Connect(&pp.ConnectReq{
 		Features: config.Features,
 		Asset:    conf.Inventory.Spec.Assets[0],
-		Upstream: nil,
+		Upstream: upstreamConfig,
 	})
 	if err != nil {
 		return err
@@ -89,17 +100,6 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	if conf.Format == "json" {
 		out.WriteString("[")
-	}
-
-	var upstreamConfig *upstream.UpstreamConfig
-	serviceAccount := opts.GetServiceCredential()
-	if serviceAccount != nil {
-		upstreamConfig = &upstream.UpstreamConfig{
-			SpaceMrn:    opts.GetParentMrn(),
-			ApiEndpoint: opts.UpstreamApiEndpoint(),
-			Incognito:   true,
-			Creds:       serviceAccount,
-		}
 	}
 
 	// FIXME: workaround for gcp-snapshot

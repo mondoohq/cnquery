@@ -52,6 +52,7 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 			Assets: []*inventory.Asset{cliRes.Asset},
 		},
 	}
+	conf.Incognito, _ = cmd.Flags().GetBool("incognito")
 
 	x := cnqueryPlugin{}
 	w := shared.IOWriter{Writer: os.Stdout}
