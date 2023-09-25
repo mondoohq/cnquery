@@ -175,15 +175,18 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 		return nil, errors.New("cannot find installed provider for connection " + connectorName)
 	}
 
-	nu, err := Install(upstream.Name)
+	nu, err := Install(upstream.Name, "")
 	existing.Add(nu)
 	return nu, err
 }
 
-func Install(name string) (*Provider, error) {
-	version, err := LatestVersion(name)
-	if err != nil {
-		return nil, err
+func Install(name string, version string) (*Provider, error) {
+	if version == "" {
+		latestVersion, err := LatestVersion(name)
+		if err != nil {
+			return nil, err
+		}
+		version = latestVersion
 	}
 
 	log.Info().

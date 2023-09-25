@@ -26,6 +26,7 @@ func init() {
 
 	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "install a provider via URL")
+	installProviderCmd.Flags().String("version", "", "install a specific version of a provider")
 }
 
 var ProvidersCmd = &cobra.Command{
@@ -51,9 +52,17 @@ var listProvidersCmd = &cobra.Command{
 var installProviderCmd = &cobra.Command{
 	Use:    "install <NAME>",
 	Short:  "Install or update a provider.",
+	Args:   cobra.MinimumNArgs(1),
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {
+		// If there's a version and a name, we can install the version, using the default home url for
+		// providers
+		version, _ := cmd.Flags().GetString("version")
+		if version != "" {
+			installProviderByVersion(args[0], version)
+			return
+		}
 		// Explicit installs of files will ignore version recommendations.
 		// So we just take them and roll with it.
 		path, _ := cmd.Flags().GetString("file")
@@ -70,6 +79,13 @@ var installProviderCmd = &cobra.Command{
 
 		log.Fatal().Msg("cannot install providers by name yet")
 	},
+}
+
+func installProviderByVersion(name string, version string) {
+	_, err := providers.Install(name, version)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to install")
+	}
 }
 
 func installProviderUrl(u string) {
