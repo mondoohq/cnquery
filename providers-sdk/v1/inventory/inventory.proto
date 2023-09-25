@@ -31,7 +31,7 @@ enum State {
 }
 
 enum AssetCategory {
-  CATEGORY_FLEET = 0;
+  CATEGORY_INVENTORY = 0;
   CATEGORY_CICD = 1;
 }
 
@@ -64,7 +64,7 @@ message Asset {
   // platform id detection mechanisms
   repeated string id_detector = 31;
 
-  // indicator is this is a fleet asset or a CI/CD run
+  // indicator is this is an inventory object or a CI/CD run
   AssetCategory category = 32;
 
   repeated Asset related_assets = 33;
