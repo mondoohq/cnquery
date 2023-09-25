@@ -26,7 +26,6 @@ func init() {
 
 	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
 	installProviderCmd.Flags().String("url", "", "install a provider via URL")
-	installProviderCmd.Flags().String("version", "", "install a specific version of a provider")
 }
 
 var ProvidersCmd = &cobra.Command{
@@ -50,7 +49,7 @@ var listProvidersCmd = &cobra.Command{
 }
 
 var installProviderCmd = &cobra.Command{
-	Use:    "install <NAME>",
+	Use:    "install <NAME@[VERSION]>",
 	Short:  "Install or update a provider.",
 	Args:   cobra.ExactArgs(1),
 	Long:   "",
