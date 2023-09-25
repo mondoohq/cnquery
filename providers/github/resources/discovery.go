@@ -95,7 +95,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		return nil, err
 	}
 	assetList = append(assetList, &inventory.Asset{
-		PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Name.Data)},
+		PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
 		Name:        org.Name.Data,
 		Platform:    connection.GithubOrgPlatform,
 		Labels:      map[string]string{},
