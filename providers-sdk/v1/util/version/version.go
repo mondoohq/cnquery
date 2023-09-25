@@ -317,7 +317,7 @@ func commitChanges(confs updateConfs) error {
 		return errors.New("commit is not in repo: " + err.Error())
 	}
 
-	log.Info().Msg("comitted changes for " + strings.Join(confs.titles(), ", "))
+	log.Info().Msg("committed changes for " + strings.Join(confs.titles(), ", "))
 	log.Info().Msg("running: git push -u origin " + branchName)
 
 	// Not sure why the auth method doesn't work... so we exec here

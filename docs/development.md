@@ -139,7 +139,7 @@ version update providers/*/ --increment=patch --commit
 
 ```
 ...
-→ comitted changes for os-9.0.2, slack-9.0.1, terraform-9.0.1, vcd-9.0.1, vsphere-9.0.1
+→ committed changes for os-9.0.2, slack-9.0.1, terraform-9.0.1, vcd-9.0.1, vsphere-9.0.1
 → running: git push -u origin version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1
 → updates pushed successfully, open:
 	https://github.com/mondoohq/cnquery/compare/version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1?expand=1
