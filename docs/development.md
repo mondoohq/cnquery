@@ -76,6 +76,77 @@ To debug a provider locally with cnquery:
 4. Once done, please remember to restore `providers.yaml` (or just set back: `builtin: []`) and
    re-run `make providers/config`.
 
+
+## Update provider versions
+
+Providers each have their own version, which is based on [Semver](https://semver.org/).
+
+It's often easy to forget to update them. We didn't want to auto-update versions and accidentally release them for now, so you'll have to update versions in order to get the new providers out.
+
+Here's how to make this process as easy as 🥧
+
+**Setup**
+
+In the cnquery repo you can now find the version utility in `providers-sdk/v1/util/version`.
+
+To make working with it easier, let's alias it:
+
+```bash
+alias version="go run providers-sdk/v1/util/version/version.go"
+```
+
+**Version checking**
+
+This utility can check if providers need upgrades. If you use it in `--fast` mode, it won't crawl the entire git change history but only looks for the first change.
+
+```bash
+version check providers/*/
+```
+
+```
+...
+crawling git history....
+→ no changes provider=opcua version=9.0.1
+crawling git history......
+→ provider changed changes=2 provider=os version=9.0.1
+...
+```
+
+It will automatically detect if providers have no changes since their last version bump and count changes that may have happened for those providers that have changed.
+
+If you prefer not to wait, you can use the `--fast` option which will only look for the first change.
+
+**Version update**
+
+Once you are ready to release providers, you can use the `update` command.
+
+Here is an example showing how the version tool will increment and update all provider versions:
+
+```bash
+version update providers/*/
+```
+
+Notable options include:
+- `--increment` will auto-increment either the patch or minor version for you (eg: `--increment=patch`). Without this option you get the interactive CLI.
+- `--fast` will do fast change detection (i.e. once a change is found it will create the update)
+- `--commit` will automatically generate the commit for you and push the branch to github
+
+If you use the `--commit` option, it will create both the commit and push it back to `origin`:
+
+```bash
+version update providers/*/ --increment=patch --commit
+```
+
+```
+...
+→ committed changes for os-9.0.2, slack-9.0.1, terraform-9.0.1, vcd-9.0.1, vsphere-9.0.1
+→ running: git push -u origin version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1
+→ updates pushed successfully, open:
+	https://github.com/mondoohq/cnquery/compare/version/os-9.0.2+slack-9.0.1+terraform-9.0.1+vcd-9.0.1+vsphere-9.0.1?expand=1
+```
+
+The final line of this message is the blueprint for the pull request.
+
 ## Using go workspaces
 
 In case you want to develop cnquery, cnspec and providers at the same time, you can use go workspaces. This allows you
