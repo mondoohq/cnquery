@@ -164,11 +164,21 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
+	version := ""
+	arch := ""
+	aristaVersion, err := conn.GetVersion()
+	if err == nil {
+		version = aristaVersion.Version
+		arch = aristaVersion.Architecture
+	}
+
 	asset.Platform = &inventory.Platform{
-		Name:   "arista",
-		Family: []string{"arista"},
-		Kind:   "api",
-		Title:  "Arista EOS",
+		Name:    "arista-eos",
+		Version: version,
+		Arch:    arch,
+		Family:  []string{"arista"},
+		Kind:    "api",
+		Title:   "Arista EOS",
 	}
 
 	id, err := conn.Identifier()
