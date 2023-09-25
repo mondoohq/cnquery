@@ -5,7 +5,7 @@ replace go.mondoo.com/cnquery => ../..
 go 1.20
 
 require (
-	github.com/rs/zerolog v1.30.0
+	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
