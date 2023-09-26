@@ -72,6 +72,15 @@ func (c *coordinator) NewRuntime() *Runtime {
 	return res
 }
 
+func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
+	res := c.NewRuntime()
+	res.Recording = parent.Recording
+	for k, v := range parent.providers {
+		res.providers[k] = v
+	}
+	return res
+}
+
 type shutdownResult struct {
 	Response *plugin.ShutdownRes
 	Error    error
