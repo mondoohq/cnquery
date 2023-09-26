@@ -32,7 +32,7 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
-          find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;) > providers.list
+          find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \; > providers.list
           echo "providers=$(cat providers.list)" >> $GITHUB_OUTPUT
 
   provider-build:
