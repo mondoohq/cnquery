@@ -21,6 +21,7 @@ env:
 
 jobs:
   scoping:
+    name: "Scoping"
     runs-on: self-hosted
     timeout-minutes: 10
     outputs:
