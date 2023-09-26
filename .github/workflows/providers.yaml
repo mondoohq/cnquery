@@ -32,10 +32,8 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
-          { echo "providers="<<EOF
-            $(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-            echo EOF
-          } >> $GITHUB_OUTPUT
+          find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;) > providers.list
+          echo "providers=$(cat providers.list)" >> $GITHUB_OUTPUT
 
   provider-build:
     name: "${{ matrix.provider }}"
