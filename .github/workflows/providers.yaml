@@ -54,15 +54,14 @@ jobs:
             printf "PROVIDER $p:\n  Local version: $REPO_VERSION\n  Remote version: $DIST_VERSION\n"
             if [[ $REPO_VERSION != $DIST_VERSION ]]; then
               echo "  Adding $p to build list"
-              build="$build\n$p"
+              build="$build $p"
             else
               echo "  Skipping: Provider version unchanged."
             fi
             cd $root
           done
 
-          printf '%s\n' "${build[@]}" | jq -R . | jq -sc . > providers.json
-          echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
+          echo -n $build | jq -Rsc 'split(" ")' >> $GITHUB_OUTPUT
 
           if [[ ${{ github.event.inputs.build_all }} == 'true' ]]; then
             echo "Forced build of all providers"
