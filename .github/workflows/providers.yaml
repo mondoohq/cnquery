@@ -17,6 +17,7 @@ on:
 
 env:
   BUCKET: releases-us.mondoo.io
+  SKIP_PROVIDERS: "core"
 
 jobs:
   scoping:
@@ -32,12 +33,42 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
+          SKIP_PROVIDERS="core xx"
           providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-          printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
+          build=""
+          root=$PWD
+          for p in $providers; do
+            skip=0
+            for s in $SKIP_PROVIDERS; do
+              if [[ $p == $s ]]; then
+                skip=1
+              fi
+            done
+            if [[ $skip == 1 ]]; then
+              echo "$p is on the skip list. Skipping."
+              continue
+            fi
+            cd providers/$p
+            REPO_VERSION=$(grep Version config/config.go | cut -f2 -d\")
+            DIST_VERSION=$(curl -s https://releases.mondoo.com/providers/${p}/latest.json | jq -r .version)
+            printf "PROVIDER $p:\n  Local version: $REPO_VERSION\n  Remote version: $DIST_VERSION\n"
+            if [[ $REPO_VERSION != $DIST_VERSION ]]; then
+              echo "  Adding $p to build list"
+              build="$build $p"
+            else
+              echo "  Skipping: Provider version unchanged."
+            fi
+            cd $root
+          done
+
+          printf '%s\n' "${build[@]}" | jq -R . | jq -sc . > providers.json
           echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
 
           echo "Providers detected:"
           echo $providers
+
+          echo "Providers to build:"
+          echo $build
 
   provider-build:
     name: "${{ matrix.provider }}"
@@ -53,24 +84,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Check for changes
-        id: version
-        run: |
-          echo "Checking for changes in ${{ matrix.provider }}"
-          cd providers/${{ matrix.provider }}
-          REPO_VERSION=$(grep Version config/config.go | cut -f2 -d\")
-          echo "REPO_VERSION=$REPO_VERSION" >> $GITHUB_ENV
-          DIST_VERSION=$(curl -s https://releases-us.mondoo.io/providers/${{ matrix.provider }}/latest.json | jq -r .version)
-          echo "DIST_VERSION=$DIST_VERSION" >> $GITHUB_ENV
-          echo "Version in this repo:           $REPO_VERSION"
-          echo "Version on releases.mondoo.com: $DIST_VERSION"
-
-      - name: Abort if no change
-        if: ${{ github.event.inputs.build_all == 'false' && steps.version.outputs.REPO_VERSION == steps.version.outputs.DIST_VERSION }}
-        run: |
-          echo "No changes to version detected for ${{ matrix.provider }}. Skipping build."
-          exit 78
 
       - name: Set up Go
         uses: actions/setup-go@v4
