@@ -49,7 +49,7 @@ var listProvidersCmd = &cobra.Command{
 }
 
 var installProviderCmd = &cobra.Command{
-	Use:    "install <NAME>",
+	Use:    "install <NAME[@VERSION]>",
 	Short:  "Install or update a provider.",
 	Long:   "",
 	PreRun: func(cmd *cobra.Command, args []string) {},
@@ -68,8 +68,31 @@ var installProviderCmd = &cobra.Command{
 			return
 		}
 
-		log.Fatal().Msg("cannot install providers by name yet")
+		if len(args) == 0 {
+			log.Fatal().Msg("no provider specified, use the NAME[@VERSION] format to pass in a provider name")
+		}
+
+		// if no url or file is specified, we default to installing by name from the default upstream
+		installProviderByName(args[0])
 	},
+}
+
+func installProviderByName(name string) {
+	parts := strings.Split(name, "@")
+	if len(parts) > 2 {
+		log.Fatal().Msg("invalid provider name")
+	}
+	name = parts[0]
+	version := ""
+	if len(parts) == 2 {
+		// trim the v prefix, allowing users to specify both 9.0.0 and v9.0.0
+		version = strings.TrimPrefix(parts[1], "v")
+	}
+	installed, err := providers.Install(name, version)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to install")
+	}
+	providers.PrintInstallResults([]*providers.Provider{installed})
 }
 
 func installProviderUrl(u string) {

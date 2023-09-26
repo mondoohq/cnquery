@@ -175,15 +175,23 @@ func EnsureProvider(existing Providers, connectorName string, connectorType stri
 		return nil, errors.New("cannot find installed provider for connection " + connectorName)
 	}
 
-	nu, err := Install(upstream.Name)
-	existing.Add(nu)
-	return nu, err
-}
-
-func Install(name string) (*Provider, error) {
-	version, err := LatestVersion(name)
+	nu, err := Install(upstream.Name, "")
 	if err != nil {
 		return nil, err
+	}
+	existing.Add(nu)
+	PrintInstallResults([]*Provider{nu})
+	return nu, nil
+}
+
+func Install(name string, version string) (*Provider, error) {
+	if version == "" {
+		// if no version is specified, we default to installing the latest one
+		latestVersion, err := LatestVersion(name)
+		if err != nil {
+			return nil, err
+		}
+		version = latestVersion
 	}
 
 	log.Info().
@@ -205,10 +213,17 @@ func installVersion(name string, version string) (*Provider, error) {
 	log.Debug().Str("url", url).Msg("installing provider from URL")
 	res, err := http.Get(url)
 	if err != nil {
-		log.Debug().Str("url", url).Msg("failed to install form URL (get request)")
+		log.Debug().Str("url", url).Msg("failed to install from URL (get request)")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
 	}
+	if res.StatusCode == http.StatusNotFound {
+		return nil, errors.New("cannot find provider " + name + "-" + version + " under url " + url)
+	} else if res.StatusCode != http.StatusOK {
+		log.Debug().Str("url", url).Int("status", res.StatusCode).Msg("failed to install from URL (status code)")
+		return nil, errors.New("failed to install " + name + "-" + version + ", received status code: " + res.Status)
+	}
 
+	// else we know we got a 200 response, we can safely install
 	installed, err := InstallIO(res.Body, InstallConf{
 		Dst: DefaultPath,
 	})
@@ -231,7 +246,6 @@ func installVersion(name string, version string) (*Provider, error) {
 	// otherwise it will load old data
 	CachedProviders = nil
 
-	PrintInstallResults(installed)
 	return installed[0], nil
 }
 
