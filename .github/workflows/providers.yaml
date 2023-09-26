@@ -63,14 +63,14 @@ jobs:
           echo "REPO_VERSION=$REPO_VERSION" >> $GITHUB_ENV
           DIST_VERSION=$(curl -s https://releases-us.mondoo.io/providers/${{ matrix.provider }}/latest.json | jq -r .version)
           echo "DIST_VERSION=$DIST_VERSION" >> $GITHUB_ENV
+          echo "Version in this repo:           $REPO_VERSION"
+          echo "Version on releases.mondoo.com: $DIST_VERSION"
 
-      - name: Skip if no changes
-        if: ${{ github.event.inputs.build_all == 'false' }}
+      - name: Abort if no change
+        if: ${{ github.event.inputs.build_all == 'false' && steps.version.outputs.REPO_VERSION == steps.version.outputs.DIST_VERSION }}
         run: |
-          if [ "$REPO_VERSION" == "$DIST_VERSION" ]; then
-            echo "No change to version detected for ${{ matrix.provider }}. Skipping build."
-            exit 78
-          fi
+          echo "No changes to version detected for ${{ matrix.provider }}. Skipping build."
+          exit 78
 
       - name: Set up Go
         uses: actions/setup-go@v4
