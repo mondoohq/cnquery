@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
+	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/gitlab"
 	"go.mondoo.com/cnquery/resources"
@@ -46,35 +47,27 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 	if err != nil {
 		return nil, nil, err
 	}
-
-	(*args)["id"] = int64(grp.ID)
-	(*args)["name"] = grp.Name
-	(*args)["path"] = grp.Path
-	(*args)["description"] = grp.Description
-	(*args)["visibility"] = string(grp.Visibility)
-	(*args)["requireTwoFactorAuthentication"] = grp.RequireTwoFactorAuth
-
-	return args, nil, nil
+	resArgs := []interface{}{
+		"id", int64(grp.ID),
+		"name", grp.Name,
+		"path", grp.Path,
+		"description", grp.Description,
+		"visibility", string(grp.Visibility),
+		"requireTwoFactorAuthentication", grp.RequireTwoFactorAuth,
+	}
+	projects, err := g.createProjectResources(grp)
+	if err != nil {
+		return nil, nil, err
+	}
+	resArgs = append(resArgs, "projects", projects)
+	mqlGroup, err := g.MotorRuntime.CreateResource("gitlab.group", resArgs...)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlGroup.(*mqlGitlabGroup), nil
 }
 
-// GetProjects list all projects that belong to a group
-// see https://docs.gitlab.com/ee/api/projects.html
-func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
-	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-
-	path, err := g.Path()
-	if err != nil {
-		return nil, err
-	}
-
-	grp, _, err := gt.Client().Groups.GetGroup(path, nil)
-	if err != nil {
-		return nil, err
-	}
-
+func (g *mqlGitlabGroup) createProjectResources(grp *gitlab.Group) ([]interface{}, error) {
 	var mqlProjects []interface{}
 	for i := range grp.Projects {
 		prj := grp.Projects[i]
@@ -88,12 +81,20 @@ func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
 			"visibility", string(prj.Visibility),
 		)
 		if err != nil {
-			return nil, err
+			// log the err. we're seeing weird behavior with these apis. lets log if we have
+			// issues here
+			log.Error().Err(err).Str("path", prj.Path).Msg("cannot create gitlab project asset")
+		} else {
+			mqlProjects = append(mqlProjects, mqlProject)
 		}
-		mqlProjects = append(mqlProjects, mqlProject)
 	}
-
 	return mqlProjects, nil
+}
+
+// GetProjects list all projects that belong to a group
+// see https://docs.gitlab.com/ee/api/projects.html
+func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
+	return g.Projects()
 }
 
 func (g *mqlGitlabProject) id() (string, error) {
@@ -134,5 +135,5 @@ func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabPr
 		}
 	}
 
-	return args, nil, nil
+	return nil, nil, errors.New("project not found")
 }
