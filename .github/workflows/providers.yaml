@@ -32,8 +32,8 @@ jobs:
         run: |
           p=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
           providers=$p # This removes the trailing newlines
-          echo "providers=$providers" >> $GITHUB_OUTPUT
-          echo "PROVIDERS=$providers" >> $GITHUB_ENV
+          echo "providers=\"$providers\"" >> $GITHUB_OUTPUT
+          echo "PROVIDERS=\"$providers\"" >> $GITHUB_ENV
 
   provider-build:
     name: "${{ matrix.provider }}"
