@@ -53,7 +53,26 @@ func (t *Provider) Identifier() (string, error) {
 }
 
 func (t *Provider) Group() (*gitlab.Group, error) {
-	grp, _, err := t.Client().Groups.GetGroup(t.GroupPath, nil)
+	var gid interface{}
+	gid = t.GroupPath
+	if t.GroupId != 0 {
+		gid = strconv.Itoa(t.GroupId)
+	}
+	grp, _, err := t.Client().Groups.GetGroup(gid, nil)
+	if err != nil {
+		return nil, err
+	}
+	t.GroupId = grp.ID
+	return grp, err
+}
+
+func (t *Provider) GroupProjects() ([]*gitlab.Project, error) {
+	var gid interface{}
+	gid = t.GroupPath
+	if t.GroupId != 0 {
+		gid = t.GroupId
+	}
+	grp, _, err := t.Client().Groups.ListGroupProjects(gid, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +80,17 @@ func (t *Provider) Group() (*gitlab.Group, error) {
 }
 
 func (t *Provider) Project() (*gitlab.Project, error) {
-	project, _, err := t.Client().Projects.GetProject(url.QueryEscape(t.GroupPath)+"/"+url.QueryEscape(t.ProjectPath), nil)
+	var pid interface{}
+	pid = url.QueryEscape(t.GroupPath) + "/" + url.QueryEscape(t.ProjectPath)
+	if t.ProjectId != 0 {
+		pid = t.ProjectId
+	}
+
+	project, _, err := t.Client().Projects.GetProject(pid, nil)
 	if err != nil {
 		return nil, err
 	}
+	t.ProjectId = project.ID
 	return project, err
 }
 

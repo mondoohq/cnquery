@@ -62,6 +62,8 @@ type Provider struct {
 	opts        map[string]string
 	GroupPath   string
 	ProjectPath string
+	GroupId     int
+	ProjectId   int
 }
 
 func (p *Provider) Close() {}
