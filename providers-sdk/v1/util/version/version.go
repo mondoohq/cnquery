@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -108,7 +109,12 @@ func (confs updateConfs) commitTitle() string {
 }
 
 func (confs updateConfs) branchName() string {
-	return "version/" + strings.Join(confs.titles(), "+")
+	if len(confs) <= 5 {
+		return "version/" + strings.Join(confs.titles(), "+")
+	}
+
+	now := time.Now()
+	return "versions/" + strconv.Itoa(len(confs)) + "-provider-updates-" + now.Format(time.DateOnly)
 }
 
 func getVersion(content string) string {
@@ -291,15 +297,18 @@ func commitChanges(confs updateConfs) error {
 		return errors.New("failed to git checkout+create " + branchName + ": " + err.Error())
 	}
 
+	fmt.Print("Adding providers to commit ")
 	for i := range confs {
 		_, err = worktree.Add(confs[i].path)
 		if err != nil {
 			return errors.New("failed to git add: " + err.Error())
 		}
+		fmt.Print(".")
 	}
+	fmt.Println(" done")
 
-	body := "\n\nThis release was created by cnquery's provider versioning bot.\n" +
-		"You can find me under: `providers-sdk/v1/util/version`."
+	body := "\n\nThis release was created by cnquery's provider versioning bot.\n\n" +
+		"You can find me under: `providers-sdk/v1/util/version`.\n"
 
 	commit, err := worktree.Commit(confs.commitTitle()+body, &git.CommitOptions{
 		Author: &object.Signature{
