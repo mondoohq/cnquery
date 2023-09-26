@@ -22,6 +22,8 @@ jobs:
   scoping:
     runs-on: self-hosted
     timeout-minutes: 10
+    outputs:
+      providers: ${{ steps.providers.outputs.providers }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,10 +32,10 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
-          p=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-          providers=$p # This removes the trailing newlines
-          echo "providers=\"$providers\"" >> $GITHUB_OUTPUT
-          echo "PROVIDERS=\"$providers\"" >> $GITHUB_ENV
+          { echo "providers="<<EOF
+            $(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+            echo EOF
+          } >> $GITHUB_OUTPUT
 
   provider-build:
     name: "${{ matrix.provider }}"
