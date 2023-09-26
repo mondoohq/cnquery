@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -86,21 +85,17 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 
 		// get all mandatory args
 		resourceInfo := e.ctx.runtime.Schema().Lookup(resource.MqlName())
+		copyFields := []string{}
+		for k, v := range resourceInfo.Fields {
+			if k != "list" && v.IsMandatory {
+				copyFields = append(copyFields, k)
+			}
+		}
 		args := map[string]*Primitive{
 			"list": ArrayPrimitive(resList, ct),
 		}
-		for k, v := range resourceInfo.Fields {
-			if k != "list" && v.IsMandatory {
-				log.Error().Msg("found a mandatory argument for list, which is not supported: " + k + " for list of " + resource.MqlName())
-				// e.ctx.runtime.WatchAndUpdate(resource, k, blockId, func(res interface{}, err error) {
-				// 	if err == nil {
-				// 		args[k] = v
-				// 	}
-				// })
-			}
-		}
 
-		resResource, err := e.ctx.runtime.CreateResourceWithID(resource.MqlName(), blockId, args)
+		resResource, err := e.ctx.runtime.CloneResource(resource, blockId, copyFields, args)
 
 		var data *RawData
 		if err != nil {

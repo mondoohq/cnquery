@@ -9,7 +9,7 @@ type Runtime interface {
 	AssetMRN() string
 	Unregister(watcherUID string) error
 	CreateResource(name string, args map[string]*Primitive) (Resource, error)
-	CreateResourceWithID(name string, id string, args map[string]*Primitive) (Resource, error)
+	CloneResource(src Resource, id string, fields []string, args map[string]*Primitive) (Resource, error)
 	WatchAndUpdate(resource Resource, field string, watcherUID string, callback func(res interface{}, err error)) error
 	Schema() Schema
 	Close()

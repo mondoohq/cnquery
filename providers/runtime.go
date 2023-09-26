@@ -260,10 +260,27 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 	return &llx.MockResource{Name: typ.ResourceName(), ID: string(res.Data.Value)}, nil
 }
 
-func (r *Runtime) CreateResourceWithID(name string, id string, args map[string]*llx.Primitive) (llx.Resource, error) {
+func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, args map[string]*llx.Primitive) (llx.Resource, error) {
+	name := src.MqlName()
+	srcID := src.MqlID()
+
 	provider, _, err := r.lookupResourceProvider(name)
 	if err != nil {
 		return nil, err
+	}
+
+	for i := range fields {
+		field := fields[i]
+		data, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
+			Connection: provider.Connection.Id,
+			Resource:   name,
+			ResourceId: srcID,
+			Field:      field,
+		})
+		if err != nil {
+			return nil, err
+		}
+		args[field] = data.Data
 	}
 
 	args["__id"] = llx.StringPrimitive(id)
