@@ -11,7 +11,7 @@ packs:
         email: hello@mondoo.com
     tags:
       mondoo.com/platform: linux,host
-      mondoo.com/category: best-practices
+      mondoo.com/category: security
     filters:
       - asset.family.contains("linux")
     queries:
