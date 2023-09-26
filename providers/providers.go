@@ -193,7 +193,7 @@ func Install(name string) (*Provider, error) {
 }
 
 // This is the default installation source for core providers.
-const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{OS}_{ARCH}.tar.xz"
+const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{NAME}_{VERSION}/{NAME}_{VERSION}_{OS}_{ARCH}.tar.xz"
 
 func installVersion(name string, version string) (*Provider, error) {
 	url := upstreamURL
