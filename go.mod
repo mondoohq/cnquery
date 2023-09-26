@@ -172,7 +172,7 @@ require (
 	github.com/vmware/go-vcloud-director/v2 v2.17.0
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	github.com/vmware/govmomi v0.29.0
-	github.com/xanzy/go-gitlab v0.74.0
+	github.com/xanzy/go-gitlab v0.92.1
 	github.com/zclconf/go-cty v1.10.0
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f
 	go.opentelemetry.io/otel v1.14.0
@@ -360,7 +360,7 @@ require (
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.6 // indirect

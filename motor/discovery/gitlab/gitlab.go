@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -66,8 +67,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	case "gitlab-project":
 		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProject) {
 			name := defaultName
-			project, _ := p.Project()
-			grp, _ := p.Group()
+			project, err := p.Project()
+			if err != nil {
+				return nil, err
+			}
 
 			if name == "" {
 				if project != nil {
@@ -89,7 +92,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			list = append(list, projectAsset)
 
 			if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTerraform) {
-				terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
+				terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), project.ID)
 				if err != nil {
 					log.Error().Err(err).Msg("error discovering terraform")
 				} else if len(terraformFiles) > 0 {
@@ -131,13 +134,18 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 
 			if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProject) {
-				for _, project := range grp.Projects {
+				proj, err := p.GroupProjects()
+				if err != nil {
+					return nil, err
+				}
+				for _, project := range proj {
 					clonedConfig := pCfg.Clone()
 					if clonedConfig.Options == nil {
 						clonedConfig.Options = map[string]string{}
 					}
 					clonedConfig.Options["group"] = grp.Path
 					clonedConfig.Options["project"] = project.Path
+					clonedConfig.Options["project-id"] = strconv.Itoa(project.ID)
 
 					id := gitlab_provider.NewGitLabProjectIdentifier(grp.Name, project.Name)
 					projectAsset := &asset.Asset{
@@ -150,7 +158,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 					list = append(list, projectAsset)
 
 					if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTerraform) {
-						terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), grp.Path, project.Path)
+						terraformFiles, err := discoverTerraformHcl(ctx, p.Client(), project.ID)
 						if err == nil && len(terraformFiles) > 0 {
 							terraformCfg := terraformConfig(pCfg, project.HTTPURLToRepo)
 							terraformCfg.Credentials = credentials(pCfg)
@@ -171,7 +179,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 }
 
 // discoverTerraformHcl will check if the repository contains terraform files and return the terraform asset
-func discoverTerraformHcl(ctx context.Context, client *gitlab_lib.Client, group string, project string) ([]string, error) {
+func discoverTerraformHcl(ctx context.Context, client *gitlab_lib.Client, projectId int) ([]string, error) {
 	opts := &gitlab_lib.ListTreeOptions{
 		ListOptions: gitlab_lib.ListOptions{
 			PerPage: 100,
@@ -181,7 +189,7 @@ func discoverTerraformHcl(ctx context.Context, client *gitlab_lib.Client, group 
 
 	nodes := []*gitlab_lib.TreeNode{}
 	for {
-		data, resp, err := client.Repositories.ListTree(group+"/"+project, opts)
+		data, resp, err := client.Repositories.ListTree(projectId, opts)
 		if err != nil {
 			return nil, err
 		}

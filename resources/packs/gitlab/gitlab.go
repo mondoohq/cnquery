@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/gitlab"
 	"go.mondoo.com/cnquery/resources"
@@ -43,7 +42,7 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 		return nil, nil, err
 	}
 
-	grp, _, err := gt.Client().Groups.GetGroup(gt.GroupPath, nil)
+	grp, err := gt.Group()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -55,11 +54,7 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 		"visibility", string(grp.Visibility),
 		"requireTwoFactorAuthentication", grp.RequireTwoFactorAuth,
 	}
-	projects, err := g.createProjectResources(grp)
-	if err != nil {
-		return nil, nil, err
-	}
-	resArgs = append(resArgs, "projects", projects)
+
 	mqlGroup, err := g.MotorRuntime.CreateResource("gitlab.group", resArgs...)
 	if err != nil {
 		return nil, nil, err
@@ -67,10 +62,15 @@ func (g *mqlGitlabGroup) init(args *resources.Args) (*resources.Args, GitlabGrou
 	return args, mqlGroup.(*mqlGitlabGroup), nil
 }
 
-func (g *mqlGitlabGroup) createProjectResources(grp *gitlab.Group) ([]interface{}, error) {
+func (g *mqlGitlabGroup) createProjectResources(prov *provider.Provider) ([]interface{}, error) {
 	var mqlProjects []interface{}
-	for i := range grp.Projects {
-		prj := grp.Projects[i]
+	proj, err := prov.GroupProjects()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range proj {
+		prj := proj[i]
 
 		mqlProject, err := g.MotorRuntime.CreateResource("gitlab.project",
 			"id", int64(prj.ID),
@@ -94,7 +94,11 @@ func (g *mqlGitlabGroup) createProjectResources(grp *gitlab.Group) ([]interface{
 // GetProjects list all projects that belong to a group
 // see https://docs.gitlab.com/ee/api/projects.html
 func (g *mqlGitlabGroup) GetProjects() ([]interface{}, error) {
-	return g.Projects()
+	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	return g.createProjectResources(gt)
 }
 
 func (g *mqlGitlabProject) id() (string, error) {
@@ -107,11 +111,21 @@ func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabPr
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
-
-	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
+	var projectId string
+	if args == nil || len(*args) == 0 {
+		if id := getAssetIdentifier(g.MqlResource().MotorRuntime, "project"); id != nil {
+			projectId = *id
+		}
+	} else {
+		if idArg, ok := (*args)["id"]; ok {
+			projectId = idArg.(string)
+		}
 	}
+
+	if projectId == "" {
+		return nil, nil, errors.New("no project info provided")
+	}
+
 	obj, err := g.MotorRuntime.CreateResource("gitlab.group")
 	if err != nil {
 		return nil, nil, err
@@ -122,18 +136,36 @@ func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabPr
 	if err != nil {
 		return nil, nil, err
 	}
-	matcher := gt.ProjectPath
+	matcher, err := strconv.Atoi(projectId)
+	if err != nil {
+		return nil, nil, err
+	}
 	for i := range rawResources {
 		proj := rawResources[i].(*mqlGitlabProject)
-		mqlPath, err := proj.Path()
+		mqlId, err := proj.Id()
 		if err != nil {
 			log.Error().Err(err).Msg("project is not initialized")
-			return nil, nil, err
+			continue
 		}
-		if mqlPath == matcher {
+		if mqlId == int64(matcher) {
 			return args, proj, nil
 		}
 	}
 
 	return nil, nil, errors.New("project not found")
+}
+
+func getAssetIdentifier(runtime *resources.Runtime, t string) *string {
+	a := runtime.Motor.GetAsset()
+	if a == nil || len(a.Connections) == 0 {
+		return nil
+	}
+	switch t {
+	case "project":
+		if id, ok := a.Connections[0].Options["project-id"]; ok {
+			return &id
+		}
+	}
+
+	return nil
 }
