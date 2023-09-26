@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"time"
 
 	"github.com/slack-go/slack"
@@ -15,6 +16,9 @@ import (
 func (s *mqlSlack) accessLogs() ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	accessLogs, _, err := client.GetAccessLogs(slack.AccessLogParameters{
 		Count: 1000,

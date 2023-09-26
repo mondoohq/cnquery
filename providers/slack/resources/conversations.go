@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"time"
 
 	"github.com/slack-go/slack"
@@ -16,6 +17,9 @@ import (
 func (s *mqlSlack) conversations() ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	list := []interface{}{}
 
@@ -135,6 +139,9 @@ func (x *mqlSlackConversation) id() (string, error) {
 func (s *mqlSlackConversation) members() ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	var list []interface{}
 	isChannel := s.IsChannel.Data

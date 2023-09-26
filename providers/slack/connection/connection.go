@@ -21,6 +21,14 @@ type SlackConnection struct {
 	teamInfo *slack.TeamInfo
 }
 
+func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *SlackConnection {
+	return &SlackConnection{
+		Conf:  conf,
+		id:    id,
+		asset: asset,
+	}
+}
+
 func NewSlackConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*SlackConnection, error) {
 	sc := &SlackConnection{
 		Conf:  conf,

@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/llx"
@@ -15,6 +16,9 @@ import (
 func (s *mqlSlack) userGroups() ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	// requires usergroups:read scope
 	ctx := context.Background()

@@ -22,6 +22,10 @@ func (o *mqlSlackUsers) id() (string, error) {
 func (s *mqlSlackUsers) list() ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
+
 	ctx := context.Background()
 
 	// requires users:read scope
@@ -238,6 +242,9 @@ func initSlackUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 	conn := runtime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
+	if client == nil {
+		return nil, nil, errors.New("cannot retrieve new data while using a mock connection")
+	}
 
 	users, err := client.GetUsersInfo(id)
 	if err != nil {
