@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"unsafe"
 
 	"github.com/rs/zerolog/log"
@@ -25,8 +26,9 @@ import (
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
-func (s *mqlPorts) id() (string, error) {
-	return "ports", nil
+type mqlPortsInternal struct {
+	processes2ports plugin.TValue[map[int64]*mqlProcess]
+	lock            sync.Mutex
 }
 
 func (p *mqlPorts) list() ([]interface{}, error) {
@@ -217,15 +219,33 @@ func (p *mqlPorts) users() (map[int64]*mqlUser, error) {
 }
 
 func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	if p.processes2ports.Error != nil {
+		return nil, p.processes2ports.Error
+	}
+	if p.processes2ports.State&plugin.StateIsSet != 0 {
+		return p.processes2ports.Data, nil
+	}
+
 	// Prerequisites: processes
 	obj, err := CreateResource(p.MqlRuntime, "processes", map[string]*llx.RawData{})
 	if err != nil {
+		p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
+			State: plugin.StateIsSet,
+			Error: err,
+		}
 		return nil, err
 	}
 	processes := obj.(*mqlProcesses)
 
 	err = processes.refreshCache(nil)
 	if err != nil {
+		p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
+			State: plugin.StateIsSet,
+			Error: err,
+		}
 		return nil, err
 	}
 
@@ -234,7 +254,11 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 	if len(res) == 0 {
 		c, err := conn.RunCommand("find /proc -maxdepth 4 -path '/proc/*/fd/*' -exec ls -n {} \\;")
 		if err != nil {
-			return nil, fmt.Errorf("processes> could not run command: %v", err)
+			p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
+				State: plugin.StateIsSet,
+				Error: errors.New("processes> could not run command: " + err.Error()),
+			}
+			return nil, p.processes2ports.Error
 		}
 
 		processesBySocket := map[int64]*mqlProcess{}
@@ -252,6 +276,10 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 		res = processesBySocket
 	}
 
+	p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
+		Data:  res,
+		State: plugin.StateIsSet,
+	}
 	return res, err
 }
 
@@ -282,7 +310,7 @@ func parseLinuxFindLine(line string) (int64, int64, error) {
 
 // See:
 // - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser, getProcess func(int64) *llx.RawData) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
 	stat, err := fs.Stat(path)
@@ -317,7 +345,6 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 			"port":          llx.IntData(port.Port),
 			"address":       llx.StringData(port.Address),
 			"user":          llx.ResourceData(users[port.Uid], "user"),
-			"process":       getProcess(port.Inode),
 			"state":         llx.StringData(port.State),
 			"remoteAddress": llx.StringData(port.RemoteAddress),
 			"remotePort":    llx.IntData(port.RemotePort),
@@ -325,6 +352,9 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 		if err != nil {
 			return nil, err
 		}
+
+		po := obj.(*mqlPort)
+		po.inode = port.Inode
 
 		res = append(res, obj)
 	}
@@ -415,38 +445,26 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 
-	processes, processErr := p.processesBySocket()
-	getProcess := func(inode int64) *llx.RawData {
-		found, ok := processes[inode]
-		if ok {
-			return llx.ResourceData(found, "process")
-		}
-
-		res := llx.ResourceData(nil, "process")
-		res.Error = processErr
-		return res
-	}
-
 	var ports []interface{}
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users, getProcess)
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPorts...)
 
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp4", users, getProcess)
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp4", users)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, udpPorts...)
 
-	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6", users, getProcess)
+	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6", users)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPortsV6...)
 
-	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp6", users, getProcess)
+	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp6", users)
 	if err != nil {
 		return nil, err
 	}
@@ -652,6 +670,10 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 	return res, nil
 }
 
+type mqlPortInternal struct {
+	inode int64
+}
+
 func (s *mqlPort) id() (string, error) {
 	return fmt.Sprintf("port: %s/%s:%d/%s:%d/%s",
 		s.Protocol.Data, s.Address.Data, s.Port.Data,
@@ -676,4 +698,36 @@ func (s *mqlPort) tls(address string, port int64, proto string) (plugin.Resource
 		"socket":     llx.ResourceData(socket, "socket"),
 		"domainName": llx.StringData(""),
 	})
+}
+
+func (s *mqlPort) process() (*mqlProcess, error) {
+	// At this point everything except for linux should have their port identified.
+	// For linux we need to scour the /proc system, which takes a long time.
+	// TODO: massively speed this up on linux with more approach.
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	pf := conn.Asset().Platform
+	if !pf.IsFamily("linux") {
+		return nil, errors.New("unable to detect process for this port")
+	}
+
+	obj, err := CreateResource(s.MqlRuntime, "ports", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	ports := obj.(*mqlPorts)
+
+	// TODO: refresh on the fly, eg when loading this from a recording
+	if s.inode == 0 {
+		return nil, errors.New("no iNode found for this port and cannot yet refresh it")
+	}
+
+	procs, err := ports.processesBySocket()
+	if err != nil {
+		return nil, err
+	}
+	proc := procs[s.inode]
+	if proc == nil {
+		s.Process = plugin.TValue[*mqlProcess]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return proc, nil
 }

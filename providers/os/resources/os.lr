@@ -763,7 +763,7 @@ port @defaults("port protocol address process.executable") {
   // User configured for this port
   user user
   // Process that is connected to this port
-  process process
+  process() process
   // State of this open port
   state string
   // Remote address connected to this port
