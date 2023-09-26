@@ -8755,7 +8755,7 @@ func (c *mqlProcesses) GetList() *plugin.TValue[[]interface{}] {
 type mqlPort struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlPortInternal it will be used here
+	mqlPortInternal
 	Protocol plugin.TValue[string]
 	Port plugin.TValue[int64]
 	Address plugin.TValue[string]
@@ -8821,7 +8821,19 @@ func (c *mqlPort) GetUser() *plugin.TValue[*mqlUser] {
 }
 
 func (c *mqlPort) GetProcess() *plugin.TValue[*mqlProcess] {
-	return &c.Process
+	return plugin.GetOrCompute[*mqlProcess](&c.Process, func() (*mqlProcess, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("port", c.__id, "process")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlProcess), nil
+			}
+		}
+
+		return c.process()
+	})
 }
 
 func (c *mqlPort) GetState() *plugin.TValue[string] {
@@ -8871,7 +8883,7 @@ func (c *mqlPort) GetTls() *plugin.TValue[plugin.Resource] {
 type mqlPorts struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlPortsInternal it will be used here
+	mqlPortsInternal
 	Listening plugin.TValue[[]interface{}]
 	List plugin.TValue[[]interface{}]
 }
@@ -8887,12 +8899,7 @@ func createPorts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("ports", res.__id)
