@@ -30,10 +30,10 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
-          providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-          echo "::set-output name=providers::$providers"
+          p=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+          providers=$p # This removes the trailing newlines
+          echo "providers=$providers" >> $GITHUB_OUTPUT
           echo "PROVIDERS=$providers" >> $GITHUB_ENV
-          echo "Detected providers: $providers"
 
   provider-build:
     name: "${{ matrix.provider }}"
