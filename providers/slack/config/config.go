@@ -18,8 +18,8 @@ var Config = plugin.Provider{
 			Name:      "slack",
 			Use:       "slack",
 			Short:     "slack team",
-			MinArgs:   1,
-			MaxArgs:   1,
+			MinArgs:   0,
+			MaxArgs:   0,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

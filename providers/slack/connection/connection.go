@@ -53,7 +53,7 @@ func NewSlackConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 
 	sc.client = client
 	sc.teamInfo = teamInfo
-	sc.asset.Name = teamInfo.Name
+	sc.asset.Name = "Slack team " + teamInfo.Name
 	return sc, nil
 }
 
