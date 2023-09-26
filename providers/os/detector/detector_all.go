@@ -1005,7 +1005,7 @@ var linuxFamily = &PlatformResolver{
 var unixFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_UNIX,
 	IsFamily: true,
-	Children: []*PlatformResolver{bsdFamily, linuxFamily, solaris},
+	Children: []*PlatformResolver{bsdFamily, linuxFamily, solaris, aix},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// in order to support linux container image detection, we cannot run
 		// processes here, lets just read files to detect a system
@@ -1019,7 +1019,6 @@ var solaris = &PlatformResolver{
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		osrd := NewOSReleaseDetector(conn)
 
-		// check if we got vmkernel
 		unames, err := osrd.unames()
 		if err != nil {
 			return false, err
@@ -1056,6 +1055,41 @@ var solaris = &PlatformResolver{
 			pf.Name = release.ID
 			pf.Title = release.Title
 			pf.Version = release.Release
+		}
+
+		return true, nil
+	},
+}
+
+var aixUnameParser = regexp.MustCompile(`(\d+)\s+(\d+)\s+(.*)`)
+
+var aix = &PlatformResolver{
+	Name:     "aix",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		osrd := NewOSReleaseDetector(conn)
+
+		unames, err := osrd.unames()
+		if err != nil {
+			return false, err
+		}
+
+		if strings.Contains(strings.ToLower(unames), "aix") == false {
+			return false, nil
+		}
+
+		pf.Name = "aix"
+		pf.Title = "AIX"
+
+		// try to read the architecture and version
+		unamervp, err := osrd.command("uname -rvp")
+		if err == nil {
+			m := aixUnameParser.FindStringSubmatch(unamervp)
+			if len(m) == 4 {
+				pf.Version = m[2] + "." + m[1]
+				pf.Version = pf.Version
+				pf.Arch = m[3]
+			}
 		}
 
 		return true, nil
