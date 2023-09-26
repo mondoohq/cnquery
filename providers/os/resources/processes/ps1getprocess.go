@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 )
@@ -174,5 +175,9 @@ func (wpm *WindowsProcessManager) Exists(pid int64) (bool, error) {
 }
 
 func (wpm *WindowsProcessManager) Process(pid int64) (*OSProcess, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (wpm *WindowsProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
 	return nil, errors.New("not implemented")
 }

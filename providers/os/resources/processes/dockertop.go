@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
@@ -89,4 +90,8 @@ func (lpm *DockerTopManager) Process(pid int64) (*OSProcess, error) {
 		}
 	}
 	return nil, fmt.Errorf("process with PID %d does not exist", pid)
+}
+
+func (lpm *DockerTopManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
+	return nil, nil
 }
