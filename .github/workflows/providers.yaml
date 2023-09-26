@@ -61,7 +61,7 @@ jobs:
             cd $root
           done
 
-          echo -n $build | jq -Rsc 'split(" ")' >> $GITHUB_OUTPUT
+          echo "providers=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
 
           if [[ ${{ github.event.inputs.build_all }} == 'true' ]]; then
             echo "Forced build of all providers"
