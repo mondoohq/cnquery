@@ -315,7 +315,7 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 
 func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if conf.Dst == "" {
-		conf.Dst = HomePath
+		conf.Dst = DefaultPath
 	}
 
 	if !config.ProbeDir(conf.Dst) {
