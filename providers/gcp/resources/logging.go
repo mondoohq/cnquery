@@ -6,11 +6,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"go.mondoo.com/cnquery/types"
-	"strings"
 
 	"cloud.google.com/go/logging/logadmin"
 	"google.golang.org/api/iterator"
@@ -27,7 +28,6 @@ func (g *mqlGcpProjectLoggingservice) id() (string, error) {
 }
 
 func (g *mqlGcpProject) logging() (*mqlGcpProjectLoggingservice, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -263,17 +263,22 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		sink, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.sink", map[string]*llx.RawData{
+		args := map[string]*llx.RawData{
 			"id":              llx.StringData(s.ID),
 			"projectId":       llx.StringData(projectId),
 			"destination":     llx.StringData(s.Destination),
 			"filter":          llx.StringData(s.Filter),
 			"writerIdentity":  llx.StringData(s.WriterIdentity),
 			"includeChildren": llx.BoolData(s.IncludeChildren),
-		})
+		}
+		if !strings.HasPrefix(s.Destination, "storage.googleapis.com/") {
+			args["storageBucket"] = llx.NilData
+		}
+		sink, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.sink", args)
 		if err != nil {
 			return nil, err
 		}
+
 		sinks = append(sinks, sink)
 	}
 	return sinks, nil

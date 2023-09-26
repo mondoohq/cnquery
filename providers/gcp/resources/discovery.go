@@ -75,6 +75,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Title:   "GCP Project",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())},
@@ -142,6 +143,7 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 					Title:   "GCP Project " + project.Name.Data,
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
@@ -192,6 +194,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Compute Instance",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels: labels,
 				// TODO: the current connection handling does not work well for instances
@@ -225,6 +228,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Compute Image",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      labels,
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -252,6 +256,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Compute Network",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -283,6 +288,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Compute Subnetwork",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -310,6 +316,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Compute Firewall",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -337,6 +344,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP GKE Cluster",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -364,6 +372,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP Storage Bucket",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
@@ -391,6 +400,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Title:   "GCP BigQuery Dataset",
 					Runtime: "gcp",
 					Kind:    "gcp-object",
+					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
