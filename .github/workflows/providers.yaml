@@ -33,7 +33,6 @@ jobs:
       - name: Detect providers
         id: providers
         run: |
-          SKIP_PROVIDERS="core xx"
           providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
           build=""
           root=$PWD
