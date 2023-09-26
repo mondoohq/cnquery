@@ -64,6 +64,12 @@ jobs:
           printf '%s\n' "${build[@]}" | jq -R . | jq -sc . > providers.json
           echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
 
+          if [[ ${{ github.event.inputs.build_all }} == 'true' ]]; then
+            echo "Forced build of all providers"
+            printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
+            echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
+          fi
+
           echo "Providers detected:"
           echo $providers
 
@@ -123,7 +129,7 @@ jobs:
           done
 
       - name: 'Save Artifacts'
-        if: ${{ github.event.inputs.skip_publish == 'false' }}
+        if: ${{ github.event.inputs.skip_publish == 'true' }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.provider }}
