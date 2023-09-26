@@ -956,7 +956,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlK8sIngresstls).GetHosts()).ToDataRes(types.Array(types.String))
 	},
 	"k8s.ingresstls.certificates": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlK8sIngresstls).GetCertificates()).ToDataRes(types.Array(types.Resource("core.certificate")))
+		return (r.(*mqlK8sIngresstls).GetCertificates()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
 	"k8s.ingress.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sIngress).GetId()).ToDataRes(types.String)
@@ -5766,7 +5766,19 @@ func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]interface{}] {
 }
 
 func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]interface{}] {
-	return &c.Tls
+	return plugin.GetOrCompute[[]interface{}](&c.Tls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.ingress", c.__id, "tls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.tls()
+	})
 }
 
 // mqlK8sServiceaccount for the k8s.serviceaccount resource
