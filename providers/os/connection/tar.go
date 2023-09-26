@@ -24,8 +24,10 @@ import (
 )
 
 const (
-	Tar         shared.ConnectionType = "tar"
-	OPTION_FILE                       = "path"
+	Tar              shared.ConnectionType = "tar"
+	OPTION_FILE                            = "path"
+	FLATTENED_IMAGE                        = "flattened_path"
+	COMPRESSED_IMAGE                       = "compressed_path"
 )
 
 type TarConnection struct {
@@ -157,7 +159,7 @@ func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 }
 
 // NewWithReader provides a tar provider from a container image stream
-func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser, close func()) (*TarConnection, error) {
+func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser) (*TarConnection, error) {
 	filename := ""
 	if x, ok := rc.(*os.File); ok {
 		filename = x.Name()
@@ -185,7 +187,7 @@ func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc
 			OPTION_FILE: filename,
 		},
 	}, asset, func() {
-		// remove temporary file on stream close
+		log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
 		os.Remove(filename)
 	})
 }
@@ -208,14 +210,9 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 		identifier = containerid.MondooContainerImageID(hash.String())
 
 		// we cache the flattened image locally
-		c, err := newWithFlattenedImage(id, conf, asset, &img)
+		c, err := newWithFlattenedImage(id, conf, asset, &img, closeFn)
 		if err != nil {
 			return nil, err
-		}
-
-		// remove unflattened image file, we now have a flattened image
-		if closeFn != nil {
-			closeFn()
 		}
 
 		c.PlatformIdentifier = identifier
@@ -247,16 +244,22 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 	}
 }
 
-func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.Asset, img *v1.Image) (*TarConnection, error) {
-	f, err := cache.RandomFile()
-	if err != nil {
-		return nil, err
-	}
-	imageFilename := f.Name()
-	err = cache.StreamToTmpFile(mutate.Extract(*img), f)
-	if err != nil {
-		os.Remove(imageFilename)
-		return nil, err
+func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.Asset, img *v1.Image, closeFn func()) (*TarConnection, error) {
+	imageFilename := ""
+	if asset.Connections[0].Options[FLATTENED_IMAGE] != "" {
+		log.Debug().Str("tar", asset.Connections[0].Options[FLATTENED_IMAGE]).Msg("tar> use cached tar file")
+		imageFilename = asset.Connections[0].Options[FLATTENED_IMAGE]
+	} else {
+		f, err := cache.RandomFile()
+		if err != nil {
+			return nil, err
+		}
+		imageFilename = f.Name()
+		err = cache.StreamToTmpFile(mutate.Extract(*img), f)
+		if err != nil {
+			os.Remove(imageFilename)
+			return nil, err
+		}
 	}
 
 	c := &TarConnection{
@@ -264,7 +267,11 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 		asset: asset,
 		Fs:    provider_tar.NewFs(imageFilename),
 		CloseFN: func() {
+			if closeFn != nil {
+				closeFn()
+			}
 			// remove temporary file on stream close
+			log.Debug().Str("tar", imageFilename).Msg("tar> remove temporary flattened image file on connection close")
 			os.Remove(imageFilename)
 		},
 		PlatformKind:    conf.Backend,
@@ -275,10 +282,15 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 			},
 		},
 	}
+	if asset.Connections[0].Options == nil {
+		asset.Connections[0].Options = map[string]string{}
+	}
+	asset.Connections[0].Options[FLATTENED_IMAGE] = imageFilename
 
-	err = c.LoadFile(imageFilename)
+	err := c.LoadFile(imageFilename)
 	if err != nil {
 		log.Error().Err(err).Str("tar", imageFilename).Msg("tar> could not load tar file")
+		os.Remove(imageFilename)
 		return nil, err
 	}
 

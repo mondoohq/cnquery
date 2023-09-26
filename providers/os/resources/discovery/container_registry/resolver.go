@@ -61,6 +61,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 		if err != nil {
 			return nil, err
 		}
+		// keep already set options, i.e. image paths
+		if conf.Options != nil && a.Connections[0].Options == nil {
+			a.Connections[0].Options = conf.Options
+		}
 
 		if conf.Insecure {
 			for i := range a.Connections {

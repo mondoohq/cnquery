@@ -79,7 +79,7 @@ func writeCompressedTarImage(img v1.Image, digest string) (*os.File, error) {
 		return nil, err
 	}
 
-	// Rewindo, to later read the complete file for uncompress
+	// Rewind, to later read the complete file for uncompress
 	f.Seek(0, io.SeekStart)
 
 	return f, nil

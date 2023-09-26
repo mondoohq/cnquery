@@ -7,11 +7,13 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -184,9 +186,30 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			registryOpts = append(registryOpts, remoteOpts[i])
 		}
 
-		img, rc, err := image.LoadImageFromRegistry(ref, registryOpts...)
-		if err != nil {
-			return nil, err
+		var img v1.Image
+		var rc io.ReadCloser
+		loadedImage := false
+		if asset.Connections[0].Options != nil {
+			if _, ok := asset.Connections[0].Options[COMPRESSED_IMAGE]; ok {
+				// read image from disk
+				img, rc, err = image.LoadImageFromDisk(asset.Connections[0].Options[COMPRESSED_IMAGE])
+				if err != nil {
+					return nil, err
+				}
+				loadedImage = true
+			}
+		}
+		if !loadedImage {
+			img, rc, err = image.LoadImageFromRegistry(ref, registryOpts...)
+			if err != nil {
+				return nil, err
+			}
+			if asset.Connections[0].Options == nil {
+				asset.Connections[0].Options = map[string]string{}
+			}
+			osFile := rc.(*os.File)
+			filename := osFile.Name()
+			asset.Connections[0].Options[COMPRESSED_IMAGE] = filename
 		}
 
 		var identifier string
@@ -195,7 +218,7 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			identifier = containerid.MondooContainerImageID(hash.String())
 		}
 
-		conn, err := NewWithReader(id, conf, asset, rc, nil)
+		conn, err := NewWithReader(id, conf, asset, rc)
 		if err != nil {
 			return nil, err
 		}
@@ -335,7 +358,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	asset.Name = ii.Name
 	asset.Labels = ii.Labels
 
-	tarConn, err := NewWithReader(id, conf, asset, rc, nil)
+	tarConn, err := NewWithReader(id, conf, asset, rc)
 	if err != nil {
 		return nil, err
 	}
