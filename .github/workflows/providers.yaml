@@ -53,7 +53,7 @@ jobs:
             printf "PROVIDER $p:\n  Local version: $REPO_VERSION\n  Remote version: $DIST_VERSION\n"
             if [[ $REPO_VERSION != $DIST_VERSION ]]; then
               echo "  Adding $p to build list"
-              build="$build $p"
+              build="$build\n$p"
             else
               echo "  Skipping: Provider version unchanged."
             fi
