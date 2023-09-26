@@ -122,9 +122,9 @@ jobs:
             VERSION=$(echo $pkg | cut -f2 -d_)
             echo "Publishing $pkg: $PROVIDER $VERSION"
 
-            echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${PROVIDER}_${VERSION}/"
-            gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${PROVIDER}_${VERSION}/
-            gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${PROVIDER}_${VERSION}/
+            echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/"
+            gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
+            gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
           done
 
       - name: 'Save Artifacts'
