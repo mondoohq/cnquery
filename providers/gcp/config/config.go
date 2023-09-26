@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "gcp",
 	ID:      "go.mondoo.com/cnquery/providers/gcp",
-	Version: "9.0.0",
+	Version: "9.0.1",
 	ConnectionTypes: []string{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
