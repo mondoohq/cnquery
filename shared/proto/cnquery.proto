@@ -19,6 +19,7 @@ message RunQueryConfig {
   bool do_record = 7;
   string format = 8;
   string platform_id = 9;
+  bool incognito = 10;
 }
 
 message Empty {}
