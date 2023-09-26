@@ -5,10 +5,12 @@ on:
     inputs:
       build_all:
         description: 'Force build all providers'
+        type: boolean
         required: false
         default: 'false'
       skip_publish:
         description: 'Skip publishing'
+        type: boolean
         required: false
         default: 'false'
 
