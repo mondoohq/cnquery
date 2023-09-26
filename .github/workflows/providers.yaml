@@ -33,7 +33,7 @@ jobs:
         id: providers
         run: |
           find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \; > providers.list
-          echo "providers=$(cat providers.list)" >> $GITHUB_OUTPUT
+          echo "providers=$(cat providers.list | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
   provider-build:
     name: "${{ matrix.provider }}"
