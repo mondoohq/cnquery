@@ -2,23 +2,69 @@ name: 'Build & Release Providers'
 
 on:
   workflow_dispatch:
+    inputs:
+      build_all:
+        description: 'Force build all providers'
+        required: false
+        default: 'false'
+      skip_publish:
+        description: 'Skip publishing'
+        required: false
+        default: 'false'
+
 
 env:
   BUCKET: releases-us.mondoo.io
 
 jobs:
-  provider-build:
+  scoping:
     runs-on: self-hosted
-    timeout-minutes: 120
-    strategy:
-      max-parallel: 2
-      matrix:
-        provider: [arista, aws, azure, equinix, gcp, github, gitlab, google-workspace, ipmi, k8s, ms365, network, oci, okta, opcua, os, slack, terraform, vcd, vsphere ]
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Detect providers
+        id: providers
+        run: |
+          providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+          echo "::set-output name=providers::$providers")"
+          echo "PROVIDERS=$providers" >> $GITHUB_ENV
+          echo "Detecting providers: $providers"
+
+  provider-build:
+    name: "${{ matrix.provider }}"
+    runs-on: self-hosted
+    timeout-minutes: 120
+    needs: scoping
+    strategy:
+      max-parallel: 2
+      matrix:
+        provider: ${{ needs.scoping.outputs.providers }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes
+        id: version
+        run: |
+          echo "Checking for changes in ${{ matrix.provider }}"
+          cd providers/${{ matrix.provider }}
+          REPO_VERSION=$(grep Version config/config.go | cut -f2 -d\")
+          echo "REPO_VERSION=$REPO_VERSION" >> $GITHUB_ENV
+          DIST_VERSION=$(curl -s https://releases-us.mondoo.io/providers/${{ matrix.provider }}/latest.json | jq -r .version)
+          echo "DIST_VERSION=$DIST_VERSION" >> $GITHUB_ENV
+
+      - name: Skip if no changes
+        if: ${{ github.event.inputs.build_all == 'false' }}
+        run: |
+          if [ "$REPO_VERSION" == "$DIST_VERSION" ]; then
+            echo "No change to version detected for ${{ matrix.provider }}. Skipping build."
+            exit 78
+          fi
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -45,16 +91,24 @@ jobs:
           scripts/provider_bundler.sh ${{ matrix.provider }}
 
       - name: 'Publish Provider'
+        if: ${{ github.event.inputs.skip_publish == 'false' }}
         run: |
           for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
             echo "Publishing $pkg"
             PROVIDER=$(echo $pkg | cut -f1 -d_)
-            VERSION=$(echo $pkg | cut -f2 -d_)
+            VERSION=$REPO_VERSION
 
             echo "Publishing $pkg to gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/"
             gsutil -m cp -c dist/${pkg}*.xz gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
             gsutil -m cp -c dist/${pkg}_SHA256SUMS gs://${BUCKET}/providers/${PROVIDER}/${VERSION}/
           done
+
+      - name: 'Save Artifacts'
+        if: ${{ github.event.inputs.skip_publish == 'false' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.provider }}
+          path: dist
 
   provider-index:
     needs: provider-build
