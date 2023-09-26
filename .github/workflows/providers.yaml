@@ -33,7 +33,9 @@ jobs:
         id: providers
         run: |
           find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \; > providers.list
-          echo "providers=$(cat providers.list | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          echo "providers=$(cat providers.list | tr '\n' ',')" >> $GITHUB_OUTPUT
+          echo "Providers detected:"
+          cat providers.list
 
   provider-build:
     name: "${{ matrix.provider }}"
@@ -43,7 +45,7 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        provider: ${{ needs.scoping.outputs.providers }}
+        provider: [ ${{ needs.scoping.outputs.providers }} ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,7 +115,7 @@ jobs:
           path: dist
 
   provider-index:
-    needs: provider-build
+    needs: [provider-build, scoping]
     runs-on: self-hosted
     steps:
       - name: Trigger Reindex of releases.mondoo.com
