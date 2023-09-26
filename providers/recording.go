@@ -364,15 +364,31 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 		id = asset.Mrn
 	} else if asset.Id != "" {
 		id = asset.Id
-	} else if asset.Platform != nil {
-		id = asset.Platform.Title
 	}
 
 	found := -1
-	for i := range r.Assets {
-		if r.Assets[i].Asset.ID == id {
-			found = i
-			break
+
+	if id != "" {
+		for i := range r.Assets {
+			if r.Assets[i].Asset.ID == id {
+				found = i
+				break
+			}
+		}
+		if found != -1 {
+			return found, id
+		}
+	}
+
+	if asset.Platform != nil {
+		for i := range r.Assets {
+			if r.Assets[i].Asset.Title == asset.Platform.Title {
+				found = i
+				break
+			}
+		}
+		if found != -1 {
+			return found, r.Assets[found].Asset.ID
 		}
 	}
 
@@ -460,6 +476,10 @@ func (r *recording) GetData(connectionID uint32, resource string, id string, fie
 	}
 
 	data, ok := obj.Fields[field]
+	if !ok && field == "id" {
+		return llx.StringData(id), true
+	}
+
 	return data, ok
 }
 

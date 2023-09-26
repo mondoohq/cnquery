@@ -117,8 +117,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range assets {
 		connectAsset := assets[i]
-		connectAssetRuntime := providers.Coordinator.NewRuntime()
-		connectAssetRuntime.Recording = runtime.Recording
+		connectAssetRuntime := providers.Coordinator.NewRuntimeFrom(runtime)
 
 		if err := connectAssetRuntime.DetectProvider(connectAsset); err != nil {
 			return err
