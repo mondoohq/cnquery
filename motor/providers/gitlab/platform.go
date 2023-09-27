@@ -86,11 +86,19 @@ func (t *Provider) Project() (*gitlab.Project, error) {
 		pid = t.ProjectId
 	}
 
-	project, _, err := t.Client().Projects.GetProject(pid, nil)
+	project, err := t.GetProjectById(pid)
 	if err != nil {
 		return nil, err
 	}
 	t.ProjectId = project.ID
+	return project, err
+}
+
+func (t *Provider) GetProjectById(pid interface{}) (*gitlab.Project, error) {
+	project, _, err := t.Client().Projects.GetProject(pid, nil)
+	if err != nil {
+		return nil, err
+	}
 	return project, err
 }
 

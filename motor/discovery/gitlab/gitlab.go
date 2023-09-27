@@ -81,11 +81,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			if err != nil {
 				return nil, err
 			}
+			clonedConfig := pCfg.Clone()
+			if clonedConfig.Options == nil {
+				clonedConfig.Options = map[string]string{}
+			}
+			clonedConfig.Options["project-id"] = strconv.Itoa(project.ID)
+
 			projectAsset := &asset.Asset{
 				PlatformIds: []string{identifier},
 				Name:        name,
 				Platform:    pf,
-				Connections: []*providers.Config{pCfg}, // pass-in the current config
+				Connections: []*providers.Config{clonedConfig}, // pass-in the current config
 				State:       asset.State_STATE_ONLINE,
 			}
 
