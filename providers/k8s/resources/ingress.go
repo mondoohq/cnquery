@@ -20,10 +20,9 @@ import (
 )
 
 type mqlK8sIngressInternal struct {
-	lock   sync.Mutex
-	obj    *networkingv1.Ingress
-	objId  string
-	mqlK8s *mqlK8s
+	lock  sync.Mutex
+	obj   *networkingv1.Ingress
+	objId string
 }
 
 func (k *mqlK8s) ingresses() ([]interface{}, error) {
@@ -63,15 +62,20 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 		}
 		r.(*mqlK8sIngress).obj = ingress
 		r.(*mqlK8sIngress).objId = objId
-		r.(*mqlK8sIngress).mqlK8s = k
 		return r, nil
 	})
 }
 
 func (k *mqlK8sIngress) tls() ([]interface{}, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	k8s := o.(*mqlK8s)
+
 	ingress := k.obj
 	objId := k.objId
-	tls, err := getTLS(ingress, objId, k.MqlRuntime, k.mqlK8s.GetSecrets)
+	tls, err := getTLS(ingress, objId, k.MqlRuntime, k8s.GetSecrets)
 	if err != nil {
 		return nil, err
 	}
