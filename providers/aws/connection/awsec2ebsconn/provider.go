@@ -106,7 +106,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	// check if we got the no setup override option. this implies the target volume is already attached to the instance
 	// this is used in cases where we need to test a snapshot created from a public marketplace image. the volume gets attached to a brand
 	// new instance, and then that instance is started and we scan the attached fs
-	var volLocation string
+	var volLocation, volId string
 	if conf.Options[snapshot.NoSetup] == "true" || conf.Options[snapshot.IsSetup] == "true" {
 		log.Info().Msg("skipping setup step")
 	} else {
@@ -114,13 +114,13 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		var err error
 		switch c.targetType {
 		case awsec2ebstypes.EBSTargetInstance:
-			ok, volLocation, err = c.SetupForTargetInstance(ctx, instanceinfo)
+			ok, volLocation, volId, err = c.SetupForTargetInstance(ctx, instanceinfo)
 			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, conf.Options["region"], convert.ToString(instanceinfo.InstanceId))
 		case awsec2ebstypes.EBSTargetVolume:
-			ok, volLocation, err = c.SetupForTargetVolume(ctx, *volumeid)
+			ok, volLocation, volId, err = c.SetupForTargetVolume(ctx, *volumeid)
 			conf.PlatformId = awsec2.MondooVolumeID(volumeid.Account, volumeid.Region, volumeid.Id)
 		case awsec2ebstypes.EBSTargetSnapshot:
-			ok, volLocation, err = c.SetupForTargetSnapshot(ctx, *snapshotid)
+			ok, volLocation, volId, err = c.SetupForTargetSnapshot(ctx, *snapshotid)
 			conf.PlatformId = awsec2.MondooSnapshotID(snapshotid.Account, snapshotid.Region, snapshotid.Id)
 		default:
 			return c, errors.New("invalid target type")
@@ -136,6 +136,12 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		}
 		// set is setup to true
 		asset.Connections[0].Options[snapshot.IsSetup] = "true"
+		// save the other information to asset connection options too
+		asset.Connections[0].Options["volume-id"] = volId
+		asset.Connections[0].Options["volume-loc"] = volLocation
+		if c.scanVolumeInfo.Tags["createdBy"] == "Mondoo" {
+			asset.Connections[0].Options["createdBy"] = "Mondoo"
+		}
 	}
 	asset.PlatformIds = []string{conf.PlatformId}
 
@@ -187,6 +193,8 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 	asset.Id = conf.Type
 	asset.Platform.Runtime = c.Runtime()
+	asset.Connections[0].Options["scanner-id"] = c.scannerInstance.Id
+	asset.Connections[0].Options["scanner-region"] = c.scannerInstance.Region
 	return c, nil
 }
 
@@ -205,7 +213,29 @@ func (c *AwsEbsConnection) Close() {
 			return
 		}
 	}
+	// we seem to be losing all the connection info we
+	// had when we started by the time we get here.
+	// we should figure out what is happening
+	// for now, reassemble the info needed from the asset
+	// connection options
 	ctx := context.Background()
+	opts := c.asset.Connections[0].Options
+	c.volumeMounter = &snapshot.VolumeMounter{
+		ScanDir:             opts["mounted"],
+		VolumeAttachmentLoc: opts["volume-loc"],
+	}
+	c.scanVolumeInfo = &awsec2ebstypes.VolumeInfo{
+		Id:   opts["volume-id"],
+		Tags: map[string]string{"createdBy": opts["createdBy"]},
+	}
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("cfg")
+		return
+	}
+	cfg.Region = opts["scanner-region"]
+	c.scannerRegionEc2svc = ec2.NewFromConfig(cfg)
+	c.scannerInstance.Id = opts["scanner-id"]
 	if c.volumeMounter != nil {
 		err := c.volumeMounter.UnmountVolumeFromInstance()
 		if err != nil {
