@@ -66,7 +66,8 @@ jobs:
 
           echo "providers=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
 
-          if [[ ${{ github.event.inputs.build_all }} ]]; then
+          build_all=${{ github.event.inputs.build_all }}}
+          if [[ $build_all ]]; then
             echo "Forced build of all providers"
             printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
             echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
