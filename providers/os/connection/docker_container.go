@@ -255,7 +255,8 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
-		conn.Asset().Name = ci.Name
+		asset.Name = ci.Name
+		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
 	} else {
 		log.Debug().Msg("found stopped container " + ci.ID)
@@ -268,7 +269,8 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
-		conn.Asset().Name = ci.Name
+		asset.Name = ci.Name
+		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
 	}
 }
