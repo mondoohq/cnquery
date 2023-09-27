@@ -97,8 +97,11 @@ func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
 	for i := range s.runtimes {
 		runtime := s.runtimes[i]
-		if conn, ok := runtime.Connection.(awsec2ebsconn.AwsEbsConnection); ok {
-			conn.Close()
+		if conn, ok := runtime.Connection.(shared.Connection); ok {
+			if conn.Type() == awsec2ebsconn.EBSConnectionType {
+				conn := runtime.Connection.(*awsec2ebsconn.AwsEbsConnection)
+				conn.Close()
+			}
 		}
 	}
 	return &plugin.ShutdownRes{}, nil

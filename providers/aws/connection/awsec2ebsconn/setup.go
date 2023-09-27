@@ -61,7 +61,7 @@ func (c *AwsEbsConnection) Validate(ctx context.Context) (*types.Instance, *awse
 	return nil, nil, nil, errors.New("cannot validate; unrecognized ebs target")
 }
 
-func (c *AwsEbsConnection) SetupForTargetVolume(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, error) {
+func (c *AwsEbsConnection) SetupForTargetVolume(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, string, error) {
 	log.Debug().Interface("volume", volume).Msg("setup for target volume")
 	if !volume.IsAvailable {
 		return c.SetupForTargetVolumeUnavailable(ctx, volume)
@@ -70,7 +70,7 @@ func (c *AwsEbsConnection) SetupForTargetVolume(ctx context.Context, volume awse
 	return c.AttachVolumeToInstance(ctx, volume)
 }
 
-func (c *AwsEbsConnection) SetupForTargetVolumeUnavailable(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, error) {
+func (c *AwsEbsConnection) SetupForTargetVolumeUnavailable(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, string, error) {
 	found, snapId, err := c.FindRecentSnapshotForVolume(ctx, volume)
 	if err != nil {
 		// only log the error here, this is not a blocker
@@ -79,41 +79,41 @@ func (c *AwsEbsConnection) SetupForTargetVolumeUnavailable(ctx context.Context, 
 	if !found {
 		snapId, err = c.CreateSnapshotFromVolume(ctx, volume)
 		if err != nil {
-			return false, "", err
+			return false, "", "", err
 		}
 	}
 	snapId, err = c.CopySnapshotToRegion(ctx, snapId)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	volId, err := c.CreateVolumeFromSnapshot(ctx, snapId)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	c.scanVolumeInfo = &volId
 	return c.AttachVolumeToInstance(ctx, volId)
 }
 
-func (c *AwsEbsConnection) SetupForTargetSnapshot(ctx context.Context, snapshot awsec2ebstypes.SnapshotId) (bool, string, error) {
+func (c *AwsEbsConnection) SetupForTargetSnapshot(ctx context.Context, snapshot awsec2ebstypes.SnapshotId) (bool, string, string, error) {
 	log.Debug().Interface("snapshot", snapshot).Msg("setup for target snapshot")
 	snapId, err := c.CopySnapshotToRegion(ctx, snapshot)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	volId, err := c.CreateVolumeFromSnapshot(ctx, snapId)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	c.scanVolumeInfo = &volId
 	return c.AttachVolumeToInstance(ctx, volId)
 }
 
-func (c *AwsEbsConnection) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, string, error) {
+func (c *AwsEbsConnection) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, string, string, error) {
 	log.Debug().Str("instance id", *instanceinfo.InstanceId).Msg("setup for target instance")
 	var err error
 	v, err := c.GetVolumeInfoForInstance(ctx, instanceinfo)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	found, snapId, err := c.FindRecentSnapshotForVolume(ctx, v)
 	if err != nil {
@@ -123,16 +123,16 @@ func (c *AwsEbsConnection) SetupForTargetInstance(ctx context.Context, instancei
 	if !found {
 		snapId, err = c.CreateSnapshotFromVolume(ctx, v)
 		if err != nil {
-			return false, "", err
+			return false, "", "", err
 		}
 	}
 	snapId, err = c.CopySnapshotToRegion(ctx, snapId)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	volId, err := c.CreateVolumeFromSnapshot(ctx, snapId)
 	if err != nil {
-		return false, "", err
+		return false, "", "", err
 	}
 	c.scanVolumeInfo = &volId
 	return c.AttachVolumeToInstance(ctx, volId)
@@ -391,15 +391,14 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 	return location, res.State, nil
 }
 
-func (c *AwsEbsConnection) AttachVolumeToInstance(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, error) {
+func (c *AwsEbsConnection) AttachVolumeToInstance(ctx context.Context, volume awsec2ebstypes.VolumeInfo) (bool, string, string, error) {
 	log.Info().Str("volume id", volume.Id).Msg("attach volume")
-	location := newVolumeAttachmentLoc()
 	ready := false
 	loc, state, err := AttachVolume(ctx, c.scannerRegionEc2svc, newVolumeAttachmentLoc(), volume.Id, c.scannerInstance.Id)
 	if err != nil {
-		return ready, "", err
+		return ready, "", "", err
 	}
-	location = loc // warning: there is no guarantee from AWS that the device will be placed there
+	location := loc // warning: there is no guarantee from AWS that the device will be placed there
 	log.Debug().Str("location", location).Msg("target volume")
 
 	/*
@@ -415,7 +414,7 @@ func (c *AwsEbsConnection) AttachVolumeToInstance(ctx context.Context, volume aw
 			time.Sleep(10 * time.Second)
 			resp, err := c.scannerRegionEc2svc.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{VolumeIds: []string{volume.Id}})
 			if err != nil {
-				return ready, location, err
+				return ready, location, "", err
 			}
 			if len(resp.Volumes) == 1 {
 				volState = resp.Volumes[0].State
@@ -423,7 +422,7 @@ func (c *AwsEbsConnection) AttachVolumeToInstance(ctx context.Context, volume aw
 			log.Info().Interface("state", volState).Msg("waiting for volume attachment completion")
 		}
 	}
-	return true, location, nil
+	return true, location, volume.Id, nil
 }
 
 func awsTagsToMap(tags []types.Tag) map[string]string {
