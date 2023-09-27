@@ -73,9 +73,7 @@ func (k *mqlK8sIngress) tls() ([]interface{}, error) {
 	}
 	k8s := o.(*mqlK8s)
 
-	ingress := k.obj
-	objId := k.objId
-	tls, err := getTLS(ingress, objId, k.MqlRuntime, k8s.GetSecrets)
+	tls, err := getTLS(k.obj, k.objId, k.MqlRuntime, k8s.GetSecrets)
 	if err != nil {
 		return nil, err
 	}
