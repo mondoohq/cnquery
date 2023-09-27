@@ -20,8 +20,9 @@ import (
 )
 
 type mqlK8sIngressInternal struct {
-	lock sync.Mutex
-	obj  *networkingv1.Ingress
+	lock  sync.Mutex
+	obj   *networkingv1.Ingress
+	objId string
 }
 
 func (k *mqlK8s) ingresses() ([]interface{}, error) {
@@ -45,11 +46,6 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 			return nil, err
 		}
 
-		tls, err := getTLS(ingress, objId, k.MqlRuntime, k.GetSecrets)
-		if err != nil {
-			return nil, err
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.ingress", map[string]*llx.RawData{
 			"id":              llx.StringData(objId),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -60,14 +56,29 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 			"created":         llx.TimeData(ts.Time),
 			"manifest":        llx.DictData(manifest),
 			"rules":           llx.ArrayData(rules, types.Resource("k8s.ingressrule")),
-			"tls":             llx.ArrayData(tls, types.Resource("k8s.ingresstls")),
 		})
 		if err != nil {
 			return nil, err
 		}
 		r.(*mqlK8sIngress).obj = ingress
+		r.(*mqlK8sIngress).objId = objId
 		return r, nil
 	})
+}
+
+func (k *mqlK8sIngress) tls() ([]interface{}, error) {
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	k8s := o.(*mqlK8s)
+
+	tls, err := getTLS(k.obj, k.objId, k.MqlRuntime, k8s.GetSecrets)
+	if err != nil {
+		return nil, err
+	}
+
+	return tls, nil
 }
 
 func (k *mqlK8sIngress) id() (string, error) {
@@ -296,7 +307,7 @@ func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime
 			ingressTls, err := CreateResource(runtime, "k8s.ingresstls", map[string]*llx.RawData{
 				"id":           llx.StringData(fmt.Sprintf("%s-tls%d", objId, i)),
 				"hosts":        llx.ArrayData(convert.SliceAnyToInterface(tls.Hosts), types.String),
-				"certificates": llx.ArrayData(secret.Certificates.Data, types.Resource("core.certificate")),
+				"certificates": llx.ArrayData(secret.Certificates.Data, types.Resource("network.certificate")),
 			})
 			if err != nil {
 				return nil, fmt.Errorf("error creating k8s.ingresstls: %s", err)

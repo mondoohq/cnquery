@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import "../../os/resources/os.lr"
+import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/providers/k8s"
 option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
@@ -465,7 +466,7 @@ private k8s.secret @defaults("namespace name created") {
   // Secret type
   type string
   // Secret certificates
-  certificates() []certificate
+  certificates() []network.certificate
 }
 
 // Kubernetes ConfigMap
@@ -583,7 +584,7 @@ private k8s.ingresstls {
   // List of hosts associated with TLS certificate
   hosts []string
   // Certificates data from TLS Secret
-  certificates []core.certificate
+  certificates []network.certificate
 }
 
 // Kubernetes Ingress
@@ -611,7 +612,7 @@ private k8s.ingress @defaults("namespace name created") {
   // Ingress rules
   rules []k8s.ingressrule
   // Ingress TLS data
-  tls []k8s.ingresstls
+  tls() []k8s.ingresstls
 }
 
 // Kubernetes Service Account
