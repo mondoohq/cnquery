@@ -18,11 +18,24 @@ func (t *mqlTerraformPlan) id() (string, error) {
 }
 
 func initTerraformPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) != 0 {
+		return args, nil, nil
+	}
 	conn := runtime.Connection.(*connection.Connection)
 
 	plan, err := conn.Plan()
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// TODO: This only creates compatibility with v8. Please revisit this section
+	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	if plan == nil {
+		return map[string]*llx.RawData{
+			"formatVersion":    llx.StringData(""),
+			"terraformVersion": llx.StringData(""),
+			"resourceChanges":  llx.ArrayData([]interface{}{}, types.Resource("terraform.plan.resourceChange")),
+		}, nil, nil
 	}
 
 	args["formatVersion"] = llx.StringData(plan.FormatVersion)
@@ -154,6 +167,12 @@ func (t *mqlTerraformPlanConfiguration) providerConfig() ([]interface{}, error) 
 		return nil, err
 	}
 
+	// TODO: This only creates compatibility with v8. Please revisit this section
+	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	if plan == nil {
+		return []interface{}{}, nil
+	}
+
 	if plan.Configuration == nil {
 		return nil, nil
 	}
@@ -178,6 +197,12 @@ func (t *mqlTerraformPlanConfiguration) resources() ([]interface{}, error) {
 	plan, err := conn.Plan()
 	if err != nil {
 		return nil, err
+	}
+
+	// TODO: This only creates compatibility with v8. Please revisit this section
+	// after https://github.com/mondoohq/cnquery/issues/1943 is clarified.
+	if plan == nil {
+		return []interface{}{}, nil
 	}
 
 	if plan.Configuration == nil {
