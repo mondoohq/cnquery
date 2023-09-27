@@ -397,9 +397,13 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		// TODO: add flag to set timeout and then use RuntimeWithShutdownTimeout
 		runtime := providers.Coordinator.NewRuntime()
 
-		// TODO: read from config
+		autoUpdate := true
+		if viper.IsSet("auto_update") {
+			autoUpdate = viper.GetBool("auto_update")
+		}
+
 		runtime.AutoUpdate = providers.UpdateProvidersConfig{
-			Enabled:         true,
+			Enabled:         autoUpdate,
 			RefreshInterval: 60 * 60,
 		}
 
