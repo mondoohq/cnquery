@@ -95,7 +95,13 @@ func (t *mqlTerraform) blocks() ([]interface{}, error) {
 
 func filterBlockByType(runtime *plugin.Runtime, filterType string) ([]interface{}, error) {
 	conn := runtime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+	parsed := conn.Parser()
+	if parsed == nil {
+		// no results, because this is not a regular parsed HCL
+		return []interface{}{}, nil
+	}
+
+	files := parsed.Files()
 
 	var mqlHclBlocks []interface{}
 	for k := range files {
@@ -538,8 +544,39 @@ func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 	return mqlHclBlock, nil
 }
 
-func (g *mqlTerraformSettings) id() (string, error) {
-	return "terraform.settings", nil
+func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	blocks, err := filterBlockByType(runtime, "terraform")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(blocks) != 1 {
+		// no terraform settings block found, this is ok for terraform and not an error
+		// TODO: return modified arguments to load from recording
+		return nil, &mqlTerraformSettings{
+			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
+			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
+		}, nil
+	}
+
+	settingsBlock := blocks[0].(*mqlTerraformBlock)
+	args["block"] = llx.ResourceData(settingsBlock, "terraform.block")
+	args["requiredProviders"] = llx.DictData(map[string]interface{}{})
+
+	if settingsBlock.block.State == plugin.StateIsSet {
+		hb := settingsBlock.block.Data
+		requireProviderBlock := getBlockByName(hb, "required_providers")
+		if requireProviderBlock != nil {
+			attributes, _ := requireProviderBlock.Body.JustAttributes()
+			dict, err := hclResolvedAttributesToDict(attributes)
+			if err != nil {
+				return nil, nil, err
+			}
+			args["requiredProviders"] = llx.DictData(dict)
+		}
+	}
+
+	return args, nil, nil
 }
 
 func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
