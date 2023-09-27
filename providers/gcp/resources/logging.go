@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"go.mondoo.com/cnquery/types"
@@ -319,6 +320,8 @@ func (g *mqlGcpProjectLoggingserviceSink) storageBucket() (*mqlGcpProjectStorage
 			}
 		}
 	}
+
+	g.StorageBucket.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
