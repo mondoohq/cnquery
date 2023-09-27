@@ -255,7 +255,8 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
-		conn.Asset().Name = ci.Name
+		asset.Name = ci.Name
+		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
 	} else {
 		log.Debug().Msg("found stopped container " + ci.ID)
@@ -268,7 +269,8 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
-		conn.Asset().Name = ci.Name
+		asset.Name = ci.Name
+		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
 	}
 }
@@ -295,7 +297,10 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 
 	// The requested image isn't locally available, but we can pull it from a remote registry.
 	if len(resolvedAssets) > 0 && resolvedAssets[0].Connections[0].Type == "container-registry" {
-		return NewContainerRegistryImage(id, conf, resolvedAssets[0])
+		asset.Name = resolvedAssets[0].Name
+		asset.PlatformIds = resolvedAssets[0].PlatformIds
+		asset.Labels = resolvedAssets[0].Labels
+		return NewContainerRegistryImage(id, conf, asset)
 	}
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
