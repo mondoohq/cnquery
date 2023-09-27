@@ -1,9 +1,9 @@
 package gitlab
 
 import (
-	"errors"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/gitlab"
@@ -151,8 +151,23 @@ func (g *mqlGitlabProject) init(args *resources.Args) (*resources.Args, GitlabPr
 			return args, proj, nil
 		}
 	}
+	// try to fetch it directly
+	gt, err := gitlabProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+	prj, err := gt.GetProjectById(projectId)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "project not found")
+	}
 
-	return nil, nil, errors.New("project not found")
+	(*args)["id"] = int64(prj.ID)
+	(*args)["name"] = prj.Name
+	(*args)["path"] = prj.Path
+	(*args)["namespace"] = prj.Namespace.Name
+	(*args)["description"] = prj.Description
+	(*args)["visibility"] = string(prj.Visibility)
+	return args, nil, nil
 }
 
 func getAssetIdentifier(runtime *resources.Runtime, t string) *string {
