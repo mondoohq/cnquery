@@ -246,10 +246,15 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 
 func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.Asset, img *v1.Image, closeFn func()) (*TarConnection, error) {
 	imageFilename := ""
-	if asset.Connections[0].Options[FLATTENED_IMAGE] != "" {
-		log.Debug().Str("tar", asset.Connections[0].Options[FLATTENED_IMAGE]).Msg("tar> use cached tar file")
-		imageFilename = asset.Connections[0].Options[FLATTENED_IMAGE]
-	} else {
+	useCached := false
+	if asset != nil && len(asset.Connections) > 0 {
+		if x, ok := asset.Connections[0].Options[FLATTENED_IMAGE]; ok && x != "" {
+			log.Debug().Str("tar", asset.Connections[0].Options[FLATTENED_IMAGE]).Msg("tar> use cached tar file")
+			imageFilename = asset.Connections[0].Options[FLATTENED_IMAGE]
+			useCached = true
+		}
+	}
+	if !useCached {
 		f, err := cache.RandomFile()
 		if err != nil {
 			return nil, err
@@ -282,10 +287,12 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 			},
 		},
 	}
-	if asset.Connections[0].Options == nil {
-		asset.Connections[0].Options = map[string]string{}
+	if asset != nil && len(asset.Connections) > 0 {
+		if asset.Connections[0].Options == nil {
+			asset.Connections[0].Options = map[string]string{}
+		}
+		asset.Connections[0].Options[FLATTENED_IMAGE] = imageFilename
 	}
-	asset.Connections[0].Options[FLATTENED_IMAGE] = imageFilename
 
 	err := c.LoadFile(imageFilename)
 	if err != nil {
