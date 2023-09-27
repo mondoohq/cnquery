@@ -139,6 +139,8 @@ func ResolveManager(conn shared.Connection) (OSServiceManager, error) {
 		osm = &AlpineOpenrcServiceManager{conn: conn}
 	case asset.Platform.Name == "cos":
 		osm = ResolveSystemdServiceManager(conn)
+	case asset.Platform.Name == "aix":
+		osm = &AixServiceManager{conn: conn}
 	case asset.Platform.Name == "kali": // debian based with versions from 2015 onwards being systemd based
 		osm = ResolveSystemdServiceManager(conn)
 	}

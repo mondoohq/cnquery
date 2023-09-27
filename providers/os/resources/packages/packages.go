@@ -73,6 +73,8 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 		pm = &CosPkgManager{conn: conn}
 	case asset.Platform.Name == "freebsd":
 		pm = &FreeBSDPkgManager{conn: conn}
+	case asset.Platform.Name == "aix":
+		pm = &AixPkgManager{conn: conn}
 	case asset.Platform.IsFamily("linux"):
 		// no clear package manager for linux platform found
 		// most likely we land here if we have a yocto-based system

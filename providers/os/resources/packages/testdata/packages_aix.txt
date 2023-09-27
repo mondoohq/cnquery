@@ -1,0 +1,17 @@
+#Fileset:Level:PTF Id:State:Type:Description:EFIX Locked
+/usr/lib/objrepos:ICU4C.rte:7.3.0.0::COMMITTED:I:International Components for Unicode :
+/usr/lib/objrepos:Java8_64.jre:8.0.0.636::COMMITTED:I:Java SDK 64-bit Java Runtime Environment :
+/usr/lib/objrepos:Java8_64.sdk:8.0.0.636::COMMITTED:I:Java SDK 64-bit Development Kit :
+/usr/lib/objrepos:X11.adt.bitmaps:7.3.0.0::COMMITTED:I:AIXwindows Application Development Toolkit Bitmap Files :
+/usr/lib/objrepos:X11.adt.imake:7.3.0.0::COMMITTED:I:AIXwindows Application Development Toolkit imake :
+/usr/lib/objrepos:X11.adt.include:7.3.0.0::COMMITTED:I:AIXwindows Application Development Toolkit Include Files :
+/usr/lib/objrepos:X11.adt.lib:7.3.0.0::COMMITTED:I:AIXwindows Application Development Toolkit Libraries :
+/usr/lib/objrepos:X11.apps.aixterm:7.3.0.0::COMMITTED:I:AIXwindows aixterm Application :
+/usr/lib/objrepos:X11.apps.clients:7.3.0.0::COMMITTED:I:AIXwindows Client Applications :
+/usr/lib/objrepos:X11.apps.config:7.3.0.0::COMMITTED:I:AIXwindows Configuration Applications :
+/usr/lib/objrepos:X11.apps.custom:7.3.0.0::COMMITTED:I:AIXwindows Customizing Tool :
+/usr/lib/objrepos:X11.apps.msmit:7.3.0.0::COMMITTED:I:AIXwindows msmit Application :
+/usr/lib/objrepos:X11.apps.rte:7.3.0.0::COMMITTED:I:AIXwindows Runtime Configuration Applications :
+/usr/lib/objrepos:X11.apps.util:7.3.0.0::COMMITTED:I:AIXwindows Utility Applications :
+/usr/lib/objrepos:X11.apps.xdm:7.3.0.0::COMMITTED:I:AIXwindows xdm Application :
+/usr/lib/objrepos:X11.apps.xterm:7.3.0.0::COMMITTED:I:AIXwindows xterm Application :
