@@ -41,6 +41,7 @@
       "type": "go",
       "request": "launch",
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
       "args": [
         "run",
         "local",

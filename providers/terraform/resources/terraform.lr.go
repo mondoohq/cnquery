@@ -38,7 +38,7 @@ func init() {
 			Create: createTerraformModule,
 		},
 		"terraform.settings": {
-			// to override args, implement: initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initTerraformSettings,
 			Create: createTerraformSettings,
 		},
 		"terraform.state": {
@@ -1297,12 +1297,7 @@ func createTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("terraform.settings", res.__id)

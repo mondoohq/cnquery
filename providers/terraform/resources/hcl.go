@@ -538,8 +538,37 @@ func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 	return mqlHclBlock, nil
 }
 
-func (g *mqlTerraformSettings) id() (string, error) {
-	return "terraform.settings", nil
+func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	blocks, err := filterBlockByType(runtime, "terraform")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(blocks) != 1 {
+		// no terraform settings block found, this is ok for terraform and not an error
+		args["block"] = nil
+		args["requiredProviders"] = llx.DictData(map[string]interface{}{})
+		return args, nil, nil
+	}
+
+	settingsBlock := blocks[0].(*mqlTerraformBlock)
+	args["block"] = llx.ResourceData(settingsBlock, "terraform.block")
+	args["requiredProviders"] = llx.DictData(map[string]interface{}{})
+
+	if settingsBlock.block.State == plugin.StateIsSet {
+		hb := settingsBlock.block.Data
+		requireProviderBlock := getBlockByName(hb, "required_providers")
+		if requireProviderBlock != nil {
+			attributes, _ := requireProviderBlock.Body.JustAttributes()
+			dict, err := hclResolvedAttributesToDict(attributes)
+			if err != nil {
+				return nil, nil, err
+			}
+			args["requiredProviders"] = llx.DictData(dict)
+		}
+	}
+
+	return args, nil, nil
 }
 
 func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
