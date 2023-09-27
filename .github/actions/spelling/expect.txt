@@ -1,12 +1,7 @@
 Adddays
+bigquery
 cea
 CUSTOMERID
-ipaddress
-macaddress
 mpim
-nicconfig
-Operatingsystem
 saas
-usergroups
-wmic
 xoxp

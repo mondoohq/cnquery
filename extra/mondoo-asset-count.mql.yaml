@@ -66,6 +66,32 @@ packs:
           - uid: mondoo-asset-count-aws-security-hub
           - uid: mondoo-asset-count-aws-sns-topics
           - uid: mondoo-asset-count-aws-vpcs
+      - title: GCP Project Asset Count
+        filters: asset.platform == "gcp-project"
+        queries:
+          - uid: mondoo-asset-count-gcp-storage-buckets
+          - uid: mondoo-asset-count-gcp-compute-instances
+          - uid: mondoo-asset-count-gcp-service-accounts
+          - uid: mondoo-asset-count-gcp-gke-clusters
+          - uid: mondoo-asset-count-gcp-bigquery-datasets
+          - uid: mondoo-asset-count-gcp-storage-buckets
+          - uid: mondoo-asset-count-gcp-compute-instances
+          - uid: mondoo-asset-count-gcp-service-accounts
+          - uid: mondoo-asset-count-gcp-gke-clusters
+          - uid: mondoo-asset-count-gcp-bigquery-datasets
+          - uid: mondoo-asset-count-gcp-cloudfunctions
+          - uid: mondoo-asset-count-gcp-cloudrun-jobs
+          - uid: mondoo-asset-count-gcp-cloudrun-services
+          - uid: mondoo-asset-count-gcp-cloudrun-operations
+          - uid: mondoo-asset-count-gcp-dns-managed-zones
+          - uid: mondoo-asset-count-gcp-iam-policies
+          - uid: mondoo-asset-count-gcp-kms-keyrings
+          - uid: mondoo-asset-count-gcp-sql-instances
+          - uid: mondoo-asset-count-gcp-services
+      - title: GitLab Asset Counts
+        filters: asset.platform == "gitlab-group"
+        queries:
+          - uid: mondoo-asset-count-gitlab-group-projects
     queries:
       - uid: mondoo-asset-count-on-vsphere-cluster-esxi
         title: Retrieve all ESXi hosts
@@ -249,3 +275,63 @@ packs:
         title: Retrieve all computer object from the Windows domain
         query: |
           parse.json(content: powershell('$time = (Get-Date).Adddays(-(180));Get-ADComputer -Filter {LastLogonTimeStamp -ge $time} -properties * | select Name,Enabled,OperatingSystem,OperatingSystemVersion,LastLogonDate | ConvertTo-Json').stdout).params
+
+      - uid: mondoo-asset-count-gcp-storage-buckets
+        title: GCP Project Storage Buckets 
+        query: gcp.project.storage.buckets.length
+
+      - uid: mondoo-asset-count-gcp-compute-instances
+        title: GCP Project Compute Instances 
+        query: gcp.project.compute.instances.length
+
+      - uid: mondoo-asset-count-gcp-service-accounts
+        title: GCP Project Service Accounts 
+        query: gcp.project.iam.serviceAccounts.length
+
+      - uid: mondoo-asset-count-gcp-gke-clusters
+        title: GCP Project GKE Clusters 
+        query: gcp.project.gke.clusters.length
+
+      - uid: mondoo-asset-count-gcp-bigquery-datasets
+        title: GCP Project BigQuery Datasets 
+        query: gcp.project.bigquery.datasets.length
+
+      - uid: mondoo-asset-count-gcp-cloudfunctions
+        title: GCP Project CloudFunctions  
+        query: gcp.project.cloudFunctions.length
+
+      - uid: mondoo-asset-count-gcp-cloudrun-jobs
+        title: GCP Project CloudRun Jobs  
+        query: gcp.project.cloudRun.jobs.length
+
+      - uid: mondoo-asset-count-gcp-cloudrun-services
+        title: GCP Project CloudRun Services  
+        query: gcp.project.cloudRun.services.length
+
+      - uid: mondoo-asset-count-gcp-cloudrun-operations
+        title: GCP Project CloudRun Operations  
+        query: gcp.project.cloudRun.operations.length
+
+      - uid: mondoo-asset-count-gcp-dns-managed-zones
+        title: GCP Project DNS Managed Zones
+        query: gcp.project.dns.managedZones.length
+
+      - uid: mondoo-asset-count-gcp-iam-policies
+        title: GCP Project IAM Policies
+        query: gcp.project.iamPolicy.length
+
+      - uid: mondoo-asset-count-gcp-kms-keyrings
+        title: GCP Project KMS Keyrings
+        query: gcp.project.kms.keyrings.length
+
+      - uid: mondoo-asset-count-gcp-sql-instances
+        title: GCP Project SQL Instances
+        query: gcp.project.sql.instances.length
+
+      - uid: mondoo-asset-count-gcp-services
+        title: GCP Project Services Enabled
+        query: gcp.project.services.where( enabled ).length
+
+      - uid: mondoo-asset-count-gitlab-group-projects
+        title: GitLab Group Projects 
+        query: gitlab.group.projects.length
