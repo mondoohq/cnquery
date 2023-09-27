@@ -72,11 +72,20 @@ func (t *Provider) GroupProjects() ([]*gitlab.Project, error) {
 	if t.GroupId != 0 {
 		gid = t.GroupId
 	}
-	grp, _, err := t.Client().Groups.ListGroupProjects(gid, nil)
-	if err != nil {
-		return nil, err
+	perPage := 50
+	page := 1
+	total := 50
+	projects := []*gitlab.Project{}
+	for page*perPage <= total {
+		projs, resp, err := t.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		projects = append(projects, projs...)
+		total = resp.TotalItems
+		page += 1
 	}
-	return grp, err
+	return projects, nil
 }
 
 func (t *Provider) Project() (*gitlab.Project, error) {
