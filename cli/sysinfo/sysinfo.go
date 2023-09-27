@@ -57,7 +57,9 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			return nil, err
 		}
 
-		if err = cfg.runtime.Connect(&plugin.ConnectReq{Asset: args.Asset}); err != nil {
+		if err = cfg.runtime.Connect(&plugin.ConnectReq{
+			Asset: args.Asset,
+		}); err != nil {
 			return nil, err
 		}
 	}
@@ -68,7 +70,7 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 	}
 
 	exec := mql.New(cfg.runtime, nil)
-	raw, err := exec.Exec("asset{*}", nil)
+	raw, err := exec.Exec("asset { name arch title family build version kind runtime labels }", nil)
 	if err != nil {
 		return sysInfo, err
 	}
@@ -82,7 +84,7 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			Build:   llx.TRaw2T[string](vals["build"]),
 			Version: llx.TRaw2T[string](vals["version"]),
 			Kind:    llx.TRaw2T[string](vals["kind"]),
-			Runtime: llx.TRaw2T[string](vals["Runtime"]),
+			Runtime: llx.TRaw2T[string](vals["runtime"]),
 			Labels:  llx.TRaw2TMap[string](vals["labels"]),
 		}
 	} else {
