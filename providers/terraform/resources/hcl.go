@@ -95,7 +95,13 @@ func (t *mqlTerraform) blocks() ([]interface{}, error) {
 
 func filterBlockByType(runtime *plugin.Runtime, filterType string) ([]interface{}, error) {
 	conn := runtime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+	parsed := conn.Parser()
+	if parsed == nil {
+		// no results, because this is not a regular parsed HCL
+		return []interface{}{}, nil
+	}
+
+	files := parsed.Files()
 
 	var mqlHclBlocks []interface{}
 	for k := range files {
@@ -546,9 +552,11 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	if len(blocks) != 1 {
 		// no terraform settings block found, this is ok for terraform and not an error
-		args["block"] = nil
-		args["requiredProviders"] = llx.DictData(map[string]interface{}{})
-		return args, nil, nil
+		// TODO: return modified arguments to load from recording
+		return nil, &mqlTerraformSettings{
+			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
+			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
+		}, nil
 	}
 
 	settingsBlock := blocks[0].(*mqlTerraformBlock)
