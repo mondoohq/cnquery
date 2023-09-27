@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
@@ -147,14 +148,16 @@ func register(token string) {
 		// try to read local options
 		opts, optsErr := config.Read()
 		if optsErr != nil {
-			log.Fatal().Msg("could not load configuration, please use --token or --config with the appropriate values")
+			log.Warn().Msg("could not load configuration, please use --token or --config with the appropriate values")
+			os.Exit(1)
 		}
 		// print the used config to the user
 		config.DisplayUsedConfig()
 
 		httpClient, err = opts.GetHttpClient()
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not create http client")
+			log.Warn().Err(err).Msg("could not create http client")
+			os.Exit(1)
 		}
 
 		if opts.AgentMrn != "" {
@@ -170,12 +173,14 @@ func register(token string) {
 			certAuth, err := upstream.NewServiceAccountRangerPlugin(credential)
 			if err != nil {
 				log.Warn().Err(err).Msg("could not initialize certificate authentication")
+				os.Exit(1)
 			}
 			plugins = append(plugins, certAuth)
 
 			client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 			if err != nil {
-				log.Fatal().Err(err).Msg("could not connect to Mondoo Platform")
+				log.Warn().Err(err).Msg("could not connect to Mondoo Platform")
+				os.Exit(1)
 			}
 
 			name := viper.GetString("name")
@@ -210,7 +215,8 @@ func register(token string) {
 
 	err = config.StoreConfig()
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not write mondoo configuration")
+		log.Warn().Err(err).Msg("could not write mondoo configuration")
+		os.Exit(1)
 	}
 
 	// run ping pong to validate the service account
@@ -223,12 +229,14 @@ func register(token string) {
 	plugins = append(plugins, certAuth)
 	client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not connect to mondoo platform")
+		log.Warn().Err(err).Msg("could not connect to mondoo platform")
+		os.Exit(1)
 	}
 
 	_, err = client.PingPong(context.Background(), &upstream.Ping{})
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		log.Warn().Msg(err.Error())
+		os.Exit(1)
 	}
 
 	log.Info().Msgf("client %s has logged in successfully", viper.Get("agent_mrn"))
