@@ -23,7 +23,7 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
-	grp, _, err := conn.Client().Groups.GetGroup(conn.GroupPath, nil)
+	grp, err := conn.Group()
 	if err != nil {
 		return nil, nil, err
 	}
