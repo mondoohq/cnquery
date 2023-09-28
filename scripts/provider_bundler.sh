@@ -59,7 +59,11 @@ build_bundle(){
 
   echo "Building ${PROVIDER_DIST}/${PROVIDER_NAME} for ${GOOS}/${GOARCH}/${GOARM} ..."
   # we switch into the path to use the local go.mods
-  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${PROVIDER_DIST}/${PROVIDER_NAME} main.go
+  PROVIDER_EXECUTABLE="${PROVIDER_NAME}"
+  if [[ "${GOOS}" == "windows" ]]; then
+    PROVIDER_EXECUTABLE="${PROVIDER_EXECUTABLE}.exe"
+  fi
+  cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE} main.go
 
   # set linux flags that do not work on macos
   TAR_FLAGS=""
@@ -70,14 +74,14 @@ build_bundle(){
   tar -cf ${BUNDLE_DIST}/${PROVIDER_NAME}_${PROVIDER_VERSION}_${GOOS}_${GOARCH}.tar.xz \
     ${TAR_FLAGS} --use-compress-program='xz -9v' \
     -C ${PROVIDER_DIST} \
-    ${PROVIDER_NAME} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
+    ${PROVIDER_EXECUTABLE} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
 
   if [ $? -ne 0 ]; then
     echo "Failed to build the ${PROVIDER_NAME} provider."
     exit 1
   fi
 
-  rm ${PROVIDER_DIST}/${PROVIDER_NAME}
+  rm ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}
 }
 
 # Build Darwin Architectures
