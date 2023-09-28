@@ -34,7 +34,7 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 		return err
 	}
 
-	connectorName, autoUpdate := detectConnectorName(os.Args, commands, existing)
+	connectorName, autoUpdate := detectConnectorName(os.Args, rootCmd, commands, existing)
 	if connectorName != "" {
 		if _, err := providers.EnsureProvider(existing, connectorName, "", autoUpdate); err != nil {
 			return err
@@ -49,7 +49,7 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	return nil
 }
 
-func detectConnectorName(args []string, commands []*Command, providers providers.Providers) (string, bool) {
+func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Command, providers providers.Providers) (string, bool) {
 	autoUpdate := true
 
 	config.InitViperConfig()
@@ -66,12 +66,24 @@ func detectConnectorName(args []string, commands []*Command, providers providers
 		attachFlag(flags, builtins[i])
 	}
 
-	for i := range commands {
-		cmd := commands[i]
-		cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
-			if found := flags.Lookup(flag.Name); found == nil {
-				flags.AddFlag(flag)
+	// To avoid warnings about flags, we need to mock every single flag across
+	// all commands that are attached to the runtime. This is done by adding
+	// flags from the root command and all its descendent commands. We don't
+	// care about these flags, we just want to avoid the errors and make sure
+	// they are parsed correctly (e.g. --key a,b --etc)
+	cobraCmds := []*cobra.Command{rootCmd}
+	for i := 0; i < len(cobraCmds); i++ {
+		cobraCmds = append(cobraCmds, cobraCmds[i].Commands()...)
+		cobraCmds[i].Flags().VisitAll(func(flag *pflag.Flag) {
+			if found := flags.Lookup(flag.Name); found != nil {
+				return
 			}
+			if flag.Shorthand != "" {
+				if found := flags.ShorthandLookup(flag.Shorthand); found != nil {
+					return
+				}
+			}
+			flags.AddFlag(flag)
 		})
 	}
 
@@ -95,14 +107,14 @@ func detectConnectorName(args []string, commands []*Command, providers providers
 
 	autoUpdate, _ = flags.GetBool("auto-update")
 
-	remaining := flags.Args()
-	if len(remaining) <= 1 {
+	parsedArgs := flags.Args()
+	if len(parsedArgs) <= 1 {
 		return "", autoUpdate
 	}
 
 	commandFound := false
 	for j := range commands {
-		if commands[j].Command.Use == remaining[1] {
+		if commands[j].Command.Use == parsedArgs[1] {
 			commandFound = true
 			break
 		}
@@ -113,11 +125,11 @@ func detectConnectorName(args []string, commands []*Command, providers providers
 
 	// since we have a known command, we can now expect the connector to be
 	// local by default if nothing else is set
-	if len(remaining) == 2 {
+	if len(parsedArgs) == 2 {
 		return "local", autoUpdate
 	}
 
-	connector := remaining[2]
+	connector := parsedArgs[2]
 	// we may want to double-check if the connector exists
 
 	return connector, autoUpdate
