@@ -6,6 +6,9 @@ package sysinfo
 import (
 	"errors"
 
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/resources/networkinterface"
+
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/execruntime"
 	"go.mondoo.com/cnquery/llx"
@@ -44,12 +47,17 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 		opt(cfg)
 	}
 
+	log.Debug().Msg("Gathering system information")
 	if cfg.runtime == nil {
+
 		cfg.runtime = providers.Coordinator.NewRuntime()
+
+		// TODO: we need to ensure that the os provider is available here
+
+		// init runtime
 		if err := cfg.runtime.UseProvider(providers.DefaultOsID); err != nil {
 			return nil, err
 		}
-
 		args, err := cfg.runtime.Provider.Instance.Plugin.ParseCLI(&plugin.ParseCLIReq{
 			Connector: "local",
 		})
@@ -70,7 +78,8 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 	}
 
 	exec := mql.New(cfg.runtime, nil)
-	raw, err := exec.Exec("asset { name arch title family build version kind runtime labels }", nil)
+	// TODO: it is not returning it as a MQL SingleValue, therefore we need to force it with return
+	raw, err := exec.Exec("return asset { name arch title family build version kind runtime labels ids }", nil)
 	if err != nil {
 		return sysInfo, err
 	}
@@ -87,20 +96,31 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			Runtime: llx.TRaw2T[string](vals["runtime"]),
 			Labels:  llx.TRaw2TMap[string](vals["labels"]),
 		}
+
+		platformID := llx.TRaw2TArr[string](vals["ids"])
+		if len(platformID) > 0 {
+			sysInfo.PlatformId = platformID[0]
+		}
 	} else {
 		return sysInfo, errors.New("returned asset detection type is incorrect")
 	}
 
-	// TODO: platform IDs
-	// 	idDetector := providers.HostnameDetector
-	// 	if pi.IsFamily(platform.FAMILY_WINDOWS) {
-	// 		idDetector = providers.MachineIdDetector
-	// 	}
-	// 		sysInfo.PlatformId = info.IDs[0]
-	// TODO: outbound ip
-	// sysInfo.IP = ip
-	// TODO: hostname
-	// sysInfo.Hostname = hn
+	// determine hostname
+	osRaw, err := exec.Exec("return os.hostname", nil)
+	if err != nil {
+		return sysInfo, err
+	}
+
+	if hostname, ok := osRaw.Value.(string); ok {
+		sysInfo.Hostname = hostname
+	}
+
+	// determine ip address
+	// TODO: move this to MQL and expose that information in the graph
+	ipAddr, err := networkinterface.GetOutboundIP()
+	if err == nil {
+		sysInfo.IP = ipAddr.String()
+	}
 
 	// detect the execution runtime
 	execEnv := execruntime.Detect()
