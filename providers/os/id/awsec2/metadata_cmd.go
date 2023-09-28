@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	identityUrl = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	tagNameUrl  = "http://169.254.169.254/latest/meta-data/tags/instance/Name"
+	identityUrl = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/dynamic/instance-identity/document`
+	token       = `-X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+	tagNameUrl  = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/meta-data/tags/instance/Name`
 )
 
 func NewCommandInstanceMetadata(conn shared.Connection, pf *inventory.Platform, config *aws.Config) *CommandInstanceMetadata {
@@ -85,14 +86,24 @@ func curlWindows(url string) string {
 	return fmt.Sprintf("Invoke-RestMethod -TimeoutSec 1 -URI %s -UseBasicParsing | ConvertTo-Json", url)
 }
 
-func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
+func (m *CommandInstanceMetadata) curlDocument(token string, url string) (string, error) {
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err := m.conn.RunCommand("curl " + url)
+		cmd, err := m.conn.RunCommand("curl " + token)
 		if err != nil {
 			return "", err
 		}
 		data, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			return "", err
+		}
+
+		tokenString := strings.TrimSpace(string(data))
+		cmd, err = m.conn.RunCommand("curl " + fmt.Sprintf(identityUrl, tokenString))
+		if err != nil {
+			return "", err
+		}
+		data, err = io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return "", err
 		}
@@ -117,7 +128,7 @@ func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 }
 
 func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
-	res, err := m.curlDocument(tagNameUrl)
+	res, err := m.curlDocument(token, tagNameUrl)
 	if err != nil {
 		return "", err
 	}
@@ -128,5 +139,5 @@ func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
 }
 
 func (m *CommandInstanceMetadata) instanceIdentityDocument() (string, error) {
-	return m.curlDocument(identityUrl)
+	return m.curlDocument(token, identityUrl)
 }
