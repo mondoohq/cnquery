@@ -167,7 +167,10 @@ func (s Status) RenderCliStatus() {
 	if len(s.Upstream.Features) > 0 {
 		log.Info().Msg("Features:\t" + strings.Join(s.Upstream.Features, ","))
 	}
-	log.Info().Msg("Owner:\t" + s.Client.ParentMrn)
+
+	if s.Client.ParentMrn == "" {
+		log.Info().Msg("Owner:\t" + s.Client.ParentMrn)
+	}
 
 	if s.Client.Registered {
 		log.Info().Msg("Client:\t" + s.Client.Mrn)
