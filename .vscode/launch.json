@@ -168,6 +168,15 @@
       "args": [
         "go", "./providers/os/resources/os.lr", "--dist", "./providers/os/dist",
       ],
+    },
+    {
+      "name": "cnquery-status",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "status",
+      ],
     }
   ]
 }

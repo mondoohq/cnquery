@@ -118,7 +118,7 @@ func (c *Connection) ID() uint32 {
 }
 
 func (c *Connection) Type() shared.ConnectionType {
-	return "local"
+	return "mock"
 }
 
 func (c *Connection) Asset() *inventory.Asset {
