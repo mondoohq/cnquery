@@ -575,6 +575,9 @@ func (p Providers) ForConnection(name string, typ string) *Provider {
 				if provider.Connectors[i].Name == name {
 					return provider
 				}
+				if slices.Contains(provider.Connectors[i].Aliases, name) {
+					return provider
+				}
 			}
 		}
 	}
@@ -583,6 +586,11 @@ func (p Providers) ForConnection(name string, typ string) *Provider {
 		for _, provider := range p {
 			if slices.Contains(provider.ConnectionTypes, typ) {
 				return provider
+			}
+			for i := range provider.Connectors {
+				if slices.Contains(provider.Connectors[i].Aliases, typ) {
+					return provider
+				}
 			}
 		}
 	}
