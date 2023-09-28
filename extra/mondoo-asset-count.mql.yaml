@@ -301,15 +301,15 @@ packs:
         query: gcp.project.cloudFunctions.length
 
       - uid: mondoo-asset-count-gcp-cloudrun-jobs
-        title: GCP Project CloudRun Jobs  
+        title: GCP Project Cloud Run Jobs  
         query: gcp.project.cloudRun.jobs.length
 
       - uid: mondoo-asset-count-gcp-cloudrun-services
-        title: GCP Project CloudRun Services  
+        title: GCP Project Cloud Run Services  
         query: gcp.project.cloudRun.services.length
 
       - uid: mondoo-asset-count-gcp-cloudrun-operations
-        title: GCP Project CloudRun Operations  
+        title: GCP Project Cloud Run Operations  
         query: gcp.project.cloudRun.operations.length
 
       - uid: mondoo-asset-count-gcp-dns-managed-zones
