@@ -26,7 +26,7 @@ func New(serviceName string) *Vault {
 		allowedBackends: []keyring.BackendType{
 			// Windows
 			keyring.WinCredBackend,
-			// MacOS
+			// macOS
 			keyring.KeychainBackend,
 			// Linux
 			keyring.SecretServiceBackend,

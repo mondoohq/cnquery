@@ -36,7 +36,7 @@ func ParseServiceLaunchD(input io.Reader) ([]*Service, error) {
 	return services, nil
 }
 
-// MacOS is using launchd as default service manager
+// macOS is using launchd as default service manager
 type LaunchDServiceManager struct {
 	conn shared.Connection
 }
