@@ -83,6 +83,21 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 		return nil, errors.Wrap(err, "could not create kubernetes clientset")
 	}
 
+	currentClusterName := ""
+	if ctx, ok := kubeConfig.Contexts[kubeConfig.CurrentContext]; ok {
+		currentClusterName = ctx.Cluster
+	} else {
+		// right now we use the name of the first node to identify the cluster
+		result, err := clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		if len(result.Items) > 0 {
+			currentClusterName = result.Items[0].GetName()
+		}
+	}
+
 	res := Connection{
 		id:                 id,
 		asset:              asset,
@@ -90,7 +105,7 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 		config:             config,
 		clientset:          clientset,
 		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
-		currentClusterName: kubeConfig.Contexts[kubeConfig.CurrentContext].Cluster,
+		currentClusterName: currentClusterName,
 	}
 
 	return &res, nil
