@@ -184,7 +184,7 @@ func NewHclGitConnection(id uint32, asset *inventory.Asset) (*Connection, error)
 	return conn, nil
 }
 
-func gitClone(url string) (string, func(), error) {
+func gitClone(gitUrl string) (string, func(), error) {
 	cloneDir, err := os.MkdirTemp(os.TempDir(), "gitClone")
 	if err != nil {
 		return "", nil, errors.Wrap(err, "failed to create temporary dir for git processing")
@@ -197,24 +197,34 @@ func gitClone(url string) (string, func(), error) {
 		}
 	}
 
-	log.Info().Str("url", url).Str("path", cloneDir).Msg("git clone")
+	// Note: DO NOT leak credentials into logs!!
+	var infoUrl string
+	if u, err := url.Parse(gitUrl); err == nil {
+		if u.User != nil {
+			u.User = url.User("_obfuscated_")
+		}
+		infoUrl = u.String()
+	}
+
+	log.Info().Str("url", infoUrl).Str("path", cloneDir).Msg("git clone")
 	repo, err := git.PlainClone(cloneDir, false, &git.CloneOptions{
-		URL:               url,
+		URL:               gitUrl,
 		Progress:          os.Stderr,
 		Depth:             1,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 	})
 	if err != nil {
 		closer()
-		return "", nil, errors.Wrap(err, "failed to clone git repo "+url)
+		return "", nil, errors.Wrap(err, "failed to clone git repo "+infoUrl)
 	}
 
 	ref, err := repo.Head()
 	if err != nil {
 		closer()
-		return "", nil, errors.Wrap(err, "failed to get head of git repo "+url)
+		return "", nil, errors.Wrap(err, "failed to get head of git repo "+infoUrl)
 	}
-	log.Info().Str("url", url).Str("path", cloneDir).Str("head", ref.Hash().String()).Msg("finshed git clone")
+
+	log.Info().Str("url", infoUrl).Str("path", cloneDir).Str("head", ref.Hash().String()).Msg("finished git clone")
 
 	return cloneDir, closer, nil
 }
