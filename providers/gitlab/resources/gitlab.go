@@ -6,6 +6,7 @@ package resources
 import (
 	"strconv"
 
+	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/gitlab/connection"
@@ -62,32 +63,7 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 	for i := range grp.Projects {
 		prj := grp.Projects[i]
 
-		mqlProject, err := CreateResource(g.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
-			"allowMergeOnSkippedPipeline": llx.BoolData(prj.AllowMergeOnSkippedPipeline),
-			"archived":                    llx.BoolData(prj.Archived),
-			"autoDevopsEnabled":           llx.BoolData(prj.AutoDevopsEnabled),
-			"containerRegistryEnabled":    llx.BoolData(prj.ContainerRegistryEnabled),
-			"createdAt":                   llx.TimeDataPtr(prj.CreatedAt),
-			"defaultBranch":               llx.StringData(prj.DefaultBranch),
-			"description":                 llx.StringData(prj.Description),
-			"emailsDisabled":              llx.BoolData(!prj.EmailsEnabled),
-			"fullName":                    llx.StringData(prj.NameWithNamespace),
-			"id":                          llx.IntData(int64(prj.ID)),
-			"issuesEnabled":               llx.BoolData(prj.IssuesEnabled),
-			"mergeRequestsEnabled":        llx.BoolData(prj.MergeRequestsEnabled),
-			"mirror":                      llx.BoolData(prj.Mirror),
-			"name":                        llx.StringData(prj.Name),
-			"onlyAllowMergeIfAllDiscussionsAreResolved": llx.BoolData(prj.OnlyAllowMergeIfAllDiscussionsAreResolved),
-			"onlyAllowMergeIfPipelineSucceeds":          llx.BoolData(prj.OnlyAllowMergeIfPipelineSucceeds),
-			"packagesEnabled":                           llx.BoolData(prj.PackagesEnabled),
-			"path":                                      llx.StringData(prj.Path),
-			"requirementsEnabled":                       llx.BoolData(prj.RequirementsEnabled),
-			"serviceDeskEnabled":                        llx.BoolData(prj.ServiceDeskEnabled),
-			"snippetsEnabled":                           llx.BoolData(prj.SnippetsEnabled),
-			"visibility":                                llx.StringData(string(prj.Visibility)),
-			"webURL":                                    llx.StringData(prj.WebURL),
-			"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
-		})
+		mqlProject, err := CreateResource(g.MqlRuntime, "gitlab.project", getGitlabProjectArgs(prj))
 		if err != nil {
 			return nil, err
 		}
@@ -97,6 +73,51 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
+func getGitlabProjectArgs(prj *gitlab.Project) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"id":                          llx.IntData(int64(prj.ID)),
+		"name":                        llx.StringData(prj.Name),
+		"fullName":                    llx.StringData(prj.NameWithNamespace),
+		"allowMergeOnSkippedPipeline": llx.BoolData(prj.AllowMergeOnSkippedPipeline),
+		"archived":                    llx.BoolData(prj.Archived),
+		"autoDevopsEnabled":           llx.BoolData(prj.AutoDevopsEnabled),
+		"containerRegistryEnabled":    llx.BoolData(prj.ContainerRegistryEnabled),
+		"createdAt":                   llx.TimeDataPtr(prj.CreatedAt),
+		"defaultBranch":               llx.StringData(prj.DefaultBranch),
+		"description":                 llx.StringData(prj.Description),
+		"emailsDisabled":              llx.BoolData(!prj.EmailsEnabled),
+		"issuesEnabled":               llx.BoolData(prj.IssuesEnabled),
+		"mergeRequestsEnabled":        llx.BoolData(prj.MergeRequestsEnabled),
+		"mirror":                      llx.BoolData(prj.Mirror),
+		"onlyAllowMergeIfAllDiscussionsAreResolved": llx.BoolData(prj.OnlyAllowMergeIfAllDiscussionsAreResolved),
+		"onlyAllowMergeIfPipelineSucceeds":          llx.BoolData(prj.OnlyAllowMergeIfPipelineSucceeds),
+		"packagesEnabled":                           llx.BoolData(prj.PackagesEnabled),
+		"path":                                      llx.StringData(prj.Path),
+		"requirementsEnabled":                       llx.BoolData(prj.RequirementsEnabled),
+		"serviceDeskEnabled":                        llx.BoolData(prj.ServiceDeskEnabled),
+		"snippetsEnabled":                           llx.BoolData(prj.SnippetsEnabled),
+		"visibility":                                llx.StringData(string(prj.Visibility)),
+		"webURL":                                    llx.StringData(prj.WebURL),
+		"wikiEnabled":                               llx.BoolData(prj.WikiEnabled),
+	}
+}
+
 func (g *mqlGitlabProject) id() (string, error) {
 	return "gitlab.project/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+// init initializes the gitlab project with the arguments
+func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.GitLabConnection)
+	project, err := conn.Project()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	args = getGitlabProjectArgs(project)
+	return args, nil, nil
 }
