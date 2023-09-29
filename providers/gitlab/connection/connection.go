@@ -21,8 +21,8 @@ type GitLabConnection struct {
 	group       *gitlab.Group
 	project     *gitlab.Project
 	projectID   string // only used for initial setup, use project.ID afterwards!
-	groupPath   string
-	projectPath string
+	groupName   string
+	projectName string
 	client      *gitlab.Client
 }
 
@@ -60,8 +60,8 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		Conf:        conf,
 		id:          id,
 		asset:       asset,
-		groupPath:   conf.Options["group"],
-		projectPath: conf.Options["project"],
+		groupName:   conf.Options["group"],
+		projectName: conf.Options["project"],
 		projectID:   conf.Options["project-id"],
 		client:      client,
 	}
@@ -89,28 +89,28 @@ func (c *GitLabConnection) Group() (*gitlab.Group, error) {
 	if c.group != nil {
 		return c.group, nil
 	}
-	if c.groupPath == "" {
-		return nil, errors.New("cannot look up gitlab group, no group path defined")
+	if c.groupName == "" {
+		return nil, errors.New("cannot look up gitlab group, no group name defined")
 	}
 
 	var err error
-	c.group, _, err = c.Client().Groups.GetGroup(c.groupPath, nil)
+	c.group, _, err = c.Client().Groups.GetGroup(c.groupName, nil)
 	return c.group, err
 }
 
 func (c *GitLabConnection) IsGroup() bool {
-	return c.groupPath != ""
+	return c.groupName != ""
 }
 
 func (c *GitLabConnection) IsProject() bool {
-	return c.projectPath != "" || c.projectID != ""
+	return c.projectName != "" || c.projectID != ""
 }
 
 func (c *GitLabConnection) GID() (interface{}, error) {
-	if c.groupPath == "" {
+	if c.groupName == "" {
 		return nil, errors.New("cannot look up gitlab group, no group path defined")
 	}
-	return url.QueryEscape(c.groupPath), nil
+	return url.QueryEscape(c.groupName), nil
 }
 
 func (c *GitLabConnection) PID() (interface{}, error) {
@@ -118,13 +118,13 @@ func (c *GitLabConnection) PID() (interface{}, error) {
 		return c.projectID, nil
 	}
 
-	if c.groupPath == "" {
+	if c.groupName == "" {
 		return nil, errors.New("cannot look up gitlab group, no group path defined")
 	}
-	if c.projectPath == "" {
+	if c.projectName == "" {
 		return nil, errors.New("cannot look up gitlab project, no project path defined")
 	}
-	return url.QueryEscape(c.groupPath) + "/" + url.QueryEscape(c.projectPath), nil
+	return url.QueryEscape(c.groupName) + "/" + url.QueryEscape(c.projectName), nil
 }
 
 func (c *GitLabConnection) Project() (*gitlab.Project, error) {

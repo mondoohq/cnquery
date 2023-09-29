@@ -4,7 +4,6 @@
 package provider
 
 import (
-	"context"
 	"errors"
 	"os"
 	"strconv"
@@ -199,186 +198,45 @@ var (
 	}
 )
 
-func newGitLabGroupID(groupID string) string {
-	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + groupID
+func newGitLabGroupID(groupID int) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID)
 }
 
-func newGitLabProjectID(groupID string, projectID string) string {
-	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + groupID + "/project/" + projectID
+func newGitLabProjectID(groupID int, projectID int) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID) + "/project/" + strconv.Itoa(projectID)
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnection) error {
 	asset.Id = conn.Conf.Type
 
-	if conn.IsProject() {
-		return s.detectAsProject(asset, conn, nil)
-	} else {
-		return s.detectAsGroup(asset, conn)
-	}
-}
-
-func (s *Service) detectAsProject(asset *inventory.Asset, conn *connection.GitLabConnection, project *gitlab.Project) error {
-	asset.Platform = projectPlatform
 	group, err := conn.Group()
 	if err != nil {
 		return err
 	}
-	if project == nil {
-		project, err = conn.Project()
+
+	if conn.IsProject() {
+		project, err := conn.Project()
 		if err != nil {
 			return err
 		}
-	}
+		s.detectAsProject(asset, group, project)
 
+	} else {
+		s.detectAsGroup(asset, group)
+	}
+	return nil
+}
+
+func (s *Service) detectAsProject(asset *inventory.Asset, group *gitlab.Group, project *gitlab.Project) {
+	asset.Platform = projectPlatform
 	asset.Name = "GitLab Project " + project.Name
-	asset.PlatformIds = []string{newGitLabProjectID(strconv.Itoa(group.ID), strconv.Itoa(project.ID))}
-	return nil
+	asset.PlatformIds = []string{newGitLabProjectID(group.ID, project.ID)}
 }
 
-func (s *Service) detectAsGroup(asset *inventory.Asset, conn *connection.GitLabConnection) error {
+func (s *Service) detectAsGroup(asset *inventory.Asset, group *gitlab.Group) {
 	asset.Platform = groupPlatform
-	group, err := conn.Group()
-	if err != nil {
-		return err
-	}
 	asset.Name = "GitLab Group " + group.Name
-	asset.PlatformIds = []string{newGitLabGroupID(strconv.Itoa(group.ID))}
-	return nil
-}
-
-func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
-		return nil, nil
-	}
-	client := conn.Client()
-	if client == nil {
-		return nil, nil
-	}
-
-	list := []*inventory.Asset{}
-	targets := conn.Conf.Discover.Targets
-
-	for i := range targets {
-		target := conn.Conf.Discover.Targets[i]
-		switch target {
-		case DiscoveryGroup:
-			// If the root asset it a group, we are done because it's the returned
-			// main asset. If the root is a project, we want to additionally detect
-			// the group and return it.
-			// TODO: discover groups for generic gitlab connection
-			if conn.IsGroup() {
-				list = append(list, root)
-				continue
-			}
-
-			conf := conn.Conf.Clone()
-			conf.Type = GitlabGroupConnection
-			asset := &inventory.Asset{
-				Connections: []*inventory.Config{conf},
-			}
-			err := s.detectAsGroup(asset, conn)
-			if err != nil {
-				return nil, err
-			}
-
-			list = append(list, asset)
-
-		case DiscoveryProject:
-			// We only discover projects if the root connection is not a project already
-			if conn.IsProject() {
-				list = append(list, root)
-				continue
-			}
-
-			projects, err := groupProjects(conn)
-			if err != nil {
-				return nil, err
-			}
-			for _, project := range projects {
-				conf := conn.Conf.Clone()
-				conf.Type = GitlabProjectConnection
-				asset := &inventory.Asset{
-					Name:        project.NameWithNamespace,
-					Connections: []*inventory.Config{conf},
-				}
-				err := s.detectAsProject(asset, conn, project)
-				if err != nil {
-					return nil, err
-				}
-
-				list = append(list, asset)
-			}
-		}
-	}
-
-	if len(list) == 0 {
-		return nil, nil
-	}
-	return &inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: list,
-		},
-	}, nil
-}
-
-func groupProjects(conn *connection.GitLabConnection) ([]*gitlab.Project, error) {
-	gid, err := conn.GID()
-	if err != nil {
-		return nil, err
-	}
-
-	perPage := 50
-	page := 1
-	total := 50
-	projects := []*gitlab.Project{}
-	for page*perPage <= total {
-		projs, resp, err := conn.Client().Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
-		if err != nil {
-			return nil, err
-		}
-		projects = append(projects, projs...)
-		total = resp.TotalItems
-		page += 1
-	}
-
-	return projects, nil
-}
-
-// discoverTerraformHcl will check if the repository contains terraform files and return the terraform asset
-func discoverTerraformHcl(ctx context.Context, client *gitlab.Client, projectId int) ([]string, error) {
-	opts := &gitlab.ListTreeOptions{
-		ListOptions: gitlab.ListOptions{
-			PerPage: 100,
-		},
-		Recursive: gitlab.Bool(true),
-	}
-
-	nodes := []*gitlab.TreeNode{}
-	for {
-		data, resp, err := client.Repositories.ListTree(projectId, opts)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, data...)
-
-		// Exit the loop when we've seen all pages.
-		if resp.NextPage == 0 {
-			break
-		}
-
-		// Update the page number to get the next page.
-		opts.Page = resp.NextPage
-	}
-
-	terraformFiles := []string{}
-	for i := range nodes {
-		node := nodes[i]
-		if node.Type == "blob" && strings.HasSuffix(node.Path, ".tf") {
-			terraformFiles = append(terraformFiles, node.Path)
-		}
-	}
-
-	return terraformFiles, nil
+	asset.PlatformIds = []string{newGitLabGroupID(group.ID)}
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {

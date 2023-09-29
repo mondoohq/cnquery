@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	StateConnectionType = "state"
-	PlanConnectionType  = "plan"
-	HclConnectionType   = "hcl"
+	StateConnectionType = "terraform-state"
+	PlanConnectionType  = "terraform-plan"
+	HclConnectionType   = "terraform-hcl"
 )
 
 type Service struct {
