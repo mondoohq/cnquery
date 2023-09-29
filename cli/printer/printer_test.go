@@ -257,7 +257,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"if: {",
 				"  [failed] Expected 4 users but got 1",
 				"  users.where.list: [",
-				"  0: user name=\"root\" uid=0 gid=0",
+				"    0: user name=\"root\" uid=0 gid=0",
 				"  ]",
 				"}",
 			}, "\n"),

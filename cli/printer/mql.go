@@ -435,7 +435,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 			return "[]"
 		}
 
-		prefix := "  "
+		prefix := indent + "  "
 		res.WriteString("[\n")
 		for i := range arr {
 			c := print.autoExpand(blockRef, arr[i], bundle, prefix)
@@ -491,7 +491,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 			}
 
 			label := bundle.Labels.Labels[checksum]
-			val := print.Data(vv.Type, vv.Value, checksum, bundle, "")
+			val := print.Data(vv.Type, vv.Value, checksum, bundle, indent)
 			res.WriteByte(' ')
 			res.WriteString(label)
 			res.WriteByte('=')
