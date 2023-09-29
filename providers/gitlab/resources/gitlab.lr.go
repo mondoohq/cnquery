@@ -23,7 +23,7 @@ func init() {
 			Create: createGitlabGroup,
 		},
 		"gitlab.project": {
-			// to override args, implement: initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGitlabProject,
 			Create: createGitlabProject,
 		},
 	}
