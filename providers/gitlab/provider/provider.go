@@ -70,13 +70,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	if x, ok := flags["group"]; ok && len(x.Value) != 0 {
 		conf.Options["group"] = string(x.Value)
-	} else {
-		return nil, errors.New("a valid GitLab group is required")
 	}
 
 	if x, ok := flags["project"]; ok && len(x.Value) != 0 {
 		conf.Options["project"] = string(x.Value)
 	}
+	// it's ok if no group or project is defined.
+	// we will discover all the groups
 
 	conf.Discover = parseDiscover(flags)
 	asset := inventory.Asset{
@@ -202,13 +202,26 @@ func newGitLabGroupID(groupID int) string {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID)
 }
 
+func newGitLabGroupIDFromPath(groupPath string) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + groupPath
+}
+
 func newGitLabProjectID(groupID int, projectID int) string {
 	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + strconv.Itoa(groupID) + "/project/" + strconv.Itoa(projectID)
+}
+
+func newGitLabProjectIDFromPaths(groupPath string, projectPath string) string {
+	return "//platformid.api.mondoo.app/runtime/gitlab/group/" + groupPath + "/project/" + projectPath
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnection) error {
 	asset.Id = conn.Conf.Type
 
+	if !conn.IsGroup() && !conn.IsProject() {
+		// that's ok, it means nothing was defined on connection.
+		// we will discover the groups
+		return nil
+	}
 	group, err := conn.Group()
 	if err != nil {
 		return err
@@ -230,13 +243,20 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 func (s *Service) detectAsProject(asset *inventory.Asset, group *gitlab.Group, project *gitlab.Project) {
 	asset.Platform = projectPlatform
 	asset.Name = "GitLab Project " + project.Name
-	asset.PlatformIds = []string{newGitLabProjectID(group.ID, project.ID)}
+	asset.PlatformIds = []string{
+		newGitLabProjectID(group.ID, project.ID),
+		newGitLabProjectIDFromPaths(group.Path, project.Path), // for backwards compatibility with v8
+	}
 }
 
-func (s *Service) detectAsGroup(asset *inventory.Asset, group *gitlab.Group) {
+func (s *Service) detectAsGroup(asset *inventory.Asset, group *gitlab.Group) error {
 	asset.Platform = groupPlatform
 	asset.Name = "GitLab Group " + group.Name
-	asset.PlatformIds = []string{newGitLabGroupID(group.ID)}
+	asset.PlatformIds = []string{
+		newGitLabGroupID(group.ID),
+		newGitLabGroupIDFromPath(group.Path), // for backwards compatibility with v8
+	}
+	return nil
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {

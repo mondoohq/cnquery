@@ -52,9 +52,9 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 	if g.Path.Error != nil {
 		return nil, g.Path.Error
 	}
-	path := g.Path.Data
+	gid := g.Id.Data
 
-	grp, _, err := conn.Client().Groups.GetGroup(path, nil)
+	grp, _, err := conn.Client().Groups.GetGroup(gid, nil)
 	if err != nil {
 		return nil, err
 	}

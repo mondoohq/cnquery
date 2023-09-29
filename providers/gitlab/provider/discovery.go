@@ -27,7 +27,6 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 	}
 
 	assets := []*inventory.Asset{}
-	projects := []*gitlab.Project{}
 
 	targets := conn.Conf.Discover.Targets
 
@@ -39,7 +38,7 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 	if err != nil {
 		return nil, err
 	}
-	if slices.Contains(targets, DiscoveryGroup) {
+	if slices.Contains(targets, DiscoveryGroup) || slices.Contains(targets, DiscoveryAuto) {
 		assets = append(assets, groupAssets...)
 	}
 
@@ -70,13 +69,34 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 }
 
 func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabConnection) ([]*inventory.Asset, []*gitlab.Group, error) {
-	// If the root asset it a group, we are done because it's the returned
-	// main asset. If the root is a project, we want to additionally detect
+	// If the root asset it a group, we want to use that and discover
+	// the sub and descendant groups. If the root is a project, we want to additionally detect
 	// the group and return it.
-	// TODO: discover groups for generic gitlab connection
+	// If no group or project was defined, we want to list all groups
+	if !conn.IsGroup() && !conn.IsProject() {
+		groups, err := listAllGroups(conn)
+		if err != nil {
+			return nil, nil, err
+		}
+		return s.convertGitlabGroupsToAssetGroups(groups, conn), groups, nil
+	}
+
 	if conn.IsGroup() {
 		group, err := conn.Group()
-		return []*inventory.Asset{root}, []*gitlab.Group{group}, err
+		if err != nil {
+			return nil, nil, err
+		}
+		groups := []*gitlab.Group{group}
+		assets := []*inventory.Asset{root}
+		// discover subgroups and descendant groups
+		subgroups, err := discoverSubAndDescendantGroupsForGroup(conn)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to discover sub groups")
+			return []*inventory.Asset{root}, []*gitlab.Group{group}, err
+		}
+		groups = append(groups, subgroups...)
+		assets = append(assets, s.convertGitlabGroupsToAssetGroups(subgroups, conn)...)
+		return assets, groups, err
 	}
 
 	group, err := conn.Group()
@@ -96,7 +116,17 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 
 	s.detectAsGroup(asset, group)
 
-	return []*inventory.Asset{asset}, []*gitlab.Group{group}, nil
+	groups := []*gitlab.Group{group}
+	assets := []*inventory.Asset{asset}
+	// discover subgroups and descendant groups
+	subgroups, err := discoverSubAndDescendantGroupsForGroup(conn)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to discover sub groups")
+		return []*inventory.Asset{root}, []*gitlab.Group{group}, err
+	}
+	groups = append(groups, subgroups...)
+	assets = append(assets, s.convertGitlabGroupsToAssetGroups(subgroups, conn)...)
+	return assets, groups, nil
 }
 
 func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLabConnection, groups []*gitlab.Group) ([]*inventory.Asset, []*gitlab.Project, error) {
@@ -158,6 +188,104 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid interface{}) (
 	}
 
 	return projects, nil
+}
+
+func (s *Service) convertGitlabGroupsToAssetGroups(groups []*gitlab.Group, conn *connection.GitLabConnection) []*inventory.Asset {
+	var list []*inventory.Asset
+	// convert to assets
+	for _, group := range groups {
+		conf := conn.Conf.Clone()
+		if conf.Options == nil {
+			conf.Options = map[string]string{}
+		}
+		conf.Options["group"] = group.Path
+		conf.Type = GitlabGroupConnection
+		asset := &inventory.Asset{
+			Connections: []*inventory.Config{conf},
+		}
+		err := s.detectAsGroup(asset, group)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot detect as group")
+			continue
+		}
+		list = append(list, asset)
+	}
+	return list
+}
+
+func discoverSubAndDescendantGroupsForGroup(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
+	gid, err := conn.GID()
+	if err != nil {
+		return nil, err
+	}
+	var list []*gitlab.Group
+	// discover subgroups
+	subgroups, err := groupSubgroups(conn, gid)
+	if err != nil {
+		return nil, err
+	}
+	list = append(list, subgroups...)
+	// discover descendant groups
+	descgroups, err := groupDescendantGroups(conn, gid)
+	if err != nil {
+		return nil, err
+	}
+	list = append(list, descgroups...)
+	return list, nil
+}
+
+func groupDescendantGroups(conn *connection.GitLabConnection, gid interface{}) ([]*gitlab.Group, error) {
+	perPage := 50
+	page := 1
+	total := 50
+	groups := []*gitlab.Group{}
+	for page*perPage <= total {
+		grps, resp, err := conn.Client().Groups.ListDescendantGroups(gid, &gitlab.ListDescendantGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, grps...)
+		total = resp.TotalItems
+		page += 1
+	}
+
+	return groups, nil
+}
+
+func groupSubgroups(conn *connection.GitLabConnection, gid interface{}) ([]*gitlab.Group, error) {
+	perPage := 50
+	page := 1
+	total := 50
+	groups := []*gitlab.Group{}
+	for page*perPage <= total {
+		grps, resp, err := conn.Client().Groups.ListSubGroups(gid, &gitlab.ListSubGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, grps...)
+		total = resp.TotalItems
+		page += 1
+	}
+
+	return groups, nil
+}
+
+func listAllGroups(conn *connection.GitLabConnection) ([]*gitlab.Group, error) {
+	perPage := 50
+	page := 1
+	total := 50
+	groups := []*gitlab.Group{}
+	for page*perPage <= total {
+		grps, resp, err := conn.Client().Groups.ListGroups(&gitlab.ListGroupsOptions{ListOptions: gitlab.ListOptions{Page: page, PerPage: perPage}})
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, grps...)
+		total = resp.TotalItems
+		page += 1
+	}
+
+	return groups, nil
 }
 
 func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitLabConnection, projects []*gitlab.Project) ([]*inventory.Asset, error) {
