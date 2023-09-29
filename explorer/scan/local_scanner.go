@@ -207,6 +207,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			log.Error().Err(err).Msg("unable to connect to asset")
 			continue
 		}
+
+		// for all discovered assets, we apply mondoo-specific labels that come from the root asset
+		for _, a := range runtime.Provider.Connection.GetInventory().GetSpec().GetAssets() {
+			a.AddMondooLabels(asset)
+		}
 		processedAssets, err := providers.ProcessAssetCandidates(runtime, runtime.Provider.Connection, upstream, "")
 		if err != nil {
 			return nil, false, err
