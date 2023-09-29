@@ -2,6 +2,9 @@ Adddays
 bigquery
 cea
 CUSTOMERID
+linux
 mpim
+openssh
 saas
+spdx
 xoxp

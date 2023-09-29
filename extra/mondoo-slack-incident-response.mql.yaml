@@ -24,10 +24,10 @@ packs:
         and assign the appropriate permissions:
 
         1. Sign in to [the Slack website](https://api.slack.com/apps/), and view "Your Apps"
-        2. Click "Create New App"
+        2. Select "Create New App"
         3. Select "From scratch"
-        4. Enter an "App Name" e.g. cnquery and select the workspace, then click "Create App"
-        5. In the section "Add features & functionality" click on "Permissions"
+        4. Enter an "App Name" e.g. cnquery and select the workspace, then select "Create App"
+        5. In the section "Add features & functionality" select "Permissions"
         6. Scroll to "Scopes" and then "User Token Scopes"
  
         Note: Bots are very limited in their access; therefore we need to set the user scopes
@@ -44,7 +44,7 @@ packs:
         | [usergroups:read](https://api.slack.com/scopes/usergroups:read) | 
         | [users:read](https://api.slack.com/scopes/users:read) |
 
-        8. Scroll up to "OAuth Tokens for Your Workspace" and click "Install to Workspace"
+        8. Scroll up to "OAuth Tokens for Your Workspace" and select "Install to Workspace"
         9. Copy the provided "User OAuth Token", it will look like `xoxp-1234567890123-1234567890123-1234567890123-12345cea5ae0d3bed30dca43cb34c2d1`
 
         ### Run query pack
