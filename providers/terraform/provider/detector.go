@@ -6,6 +6,8 @@ package provider
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -48,26 +50,37 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 	}
 	asset.Platform = p
 
-	projectPath := asset.Connections[0].Options["path"]
-	absPath, _ := filepath.Abs(projectPath)
-	h := sha256.New()
-	h.Write([]byte(absPath))
-	hash := hex.EncodeToString(h.Sum(nil))
-	platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
-	asset.Connections[0].PlatformId = platformID
-	asset.PlatformIds = []string{platformID}
-
-	name := ""
-	if projectPath != "" {
-		// manifest parent directory name
-		name = projectNameFromPath(projectPath)
+	// we always prefer the git url since it is more reliable
+	url, ok := asset.Connections[0].Options["ssh-url"]
+	if ok {
+		domain, org, repo, err := parseSSHURL(url)
+		if err != nil {
+			return err
+		}
+		platformID := "//platformid.api.mondoo.app/runtime/terraform/domain/" + domain + "/org/" + org + "/repo/" + repo
+		asset.Connections[0].PlatformId = platformID
+		asset.PlatformIds = []string{platformID}
+		asset.Name = "Terraform Static Analysis " + org + "/" + repo
+		return nil
 	}
-	asset.Name = "Terraform Static Analysis " + name
 
-	return nil
+	projectPath, ok := asset.Connections[0].Options["path"]
+	if ok {
+		absPath, _ := filepath.Abs(projectPath)
+		h := sha256.New()
+		h.Write([]byte(absPath))
+		hash := hex.EncodeToString(h.Sum(nil))
+		platformID := "//platformid.api.mondoo.app/runtime/terraform/hash/" + hash
+		asset.Connections[0].PlatformId = platformID
+		asset.PlatformIds = []string{platformID}
+		asset.Name = "Terraform Static Analysis " + parseNameFromPath(projectPath)
+		return nil
+	}
+
+	return errors.New("could not determine platform id for Terraform asset")
 }
 
-func projectNameFromPath(file string) string {
+func parseNameFromPath(file string) string {
 	// if it is a local file (which may not be true)
 	name := ""
 	fi, err := os.Stat(file)
@@ -92,9 +105,34 @@ func projectNameFromPath(file string) string {
 	if name == "." {
 		abspath, err := filepath.Abs(name)
 		if err == nil {
-			name = projectNameFromPath(abspath)
+			name = parseNameFromPath(abspath)
 		}
 	}
 
 	return name
+}
+
+func parseSSHURL(url string) (string, string, string, error) {
+	parts := strings.Split(url, "@")
+	if len(parts) != 2 {
+		return "", "", "", fmt.Errorf("malformed URL")
+	}
+
+	// Get the provider
+	providerParts := strings.Split(parts[1], ":")
+	if len(providerParts) != 2 {
+		return "", "", "", fmt.Errorf("malformed URL")
+	}
+	provider := providerParts[0]
+
+	// Now split the second part at the slash to separate the org and repo
+	orgRepoParts := strings.Split(providerParts[1], "/")
+	if len(orgRepoParts) != 2 {
+		return "", "", "", fmt.Errorf("malformed URL")
+	}
+
+	// The repo name includes .git, so we remove that
+	repo := strings.TrimSuffix(orgRepoParts[1], ".git")
+
+	return provider, orgRepoParts[0], repo, nil
 }
