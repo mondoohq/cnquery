@@ -175,11 +175,15 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
-	if x, ok := conn.Conf.Options["repository"]; ok {
-		fullRepo := x
-		repoParts := strings.Split(fullRepo, "/")
-		conn.Conf.Options["owner"] = repoParts[0]
-		conn.Conf.Options["repository"] = repoParts[1]
+	repoOpt := conn.Conf.Options["repository"]
+	ownerOpt := conn.Conf.Options["owner"]
+	// try and parse the repo only if the owner isnt explicitly set
+	if repoOpt != "" && ownerOpt == "" {
+		repoParts := strings.Split(repoOpt, "/")
+		if len(repoParts) > 1 {
+			conn.Conf.Options["owner"] = repoParts[0]
+			conn.Conf.Options["repository"] = repoParts[1]
+		}
 	}
 
 	platform, err := conn.PlatformInfo()
