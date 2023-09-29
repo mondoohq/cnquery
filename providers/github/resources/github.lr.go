@@ -316,6 +316,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.membersCanCreatePrivatePages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetMembersCanCreatePrivatePages()).ToDataRes(types.Bool)
 	},
+	"github.organization.membersCanForkPrivateRepos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetMembersCanForkPrivateRepos()).ToDataRes(types.Bool)
+	},
 	"github.organization.owners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetOwners()).ToDataRes(types.Array(types.Resource("github.user")))
 	},
@@ -543,6 +546,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.hasDownloads": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetHasDownloads()).ToDataRes(types.Bool)
+	},
+	"github.repository.hasDiscussions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetHasDiscussions()).ToDataRes(types.Bool)
+	},
+	"github.repository.isTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetIsTemplate()).ToDataRes(types.Bool)
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetOpenMergeRequests()).ToDataRes(types.Array(types.Resource("github.mergeRequest")))
@@ -1110,6 +1119,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlGithubOrganization).MembersCanCreatePrivatePages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"github.organization.membersCanForkPrivateRepos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).MembersCanForkPrivateRepos, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"github.organization.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).Owners, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -1432,6 +1445,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.hasDownloads": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).HasDownloads, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.hasDiscussions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).HasDiscussions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.isTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).IsTemplate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2225,6 +2246,7 @@ type mqlGithubOrganization struct {
 	MembersCanCreatePages plugin.TValue[bool]
 	MembersCanCreatePublicPages plugin.TValue[bool]
 	MembersCanCreatePrivatePages plugin.TValue[bool]
+	MembersCanForkPrivateRepos plugin.TValue[bool]
 	Owners plugin.TValue[[]interface{}]
 	Members plugin.TValue[[]interface{}]
 	Teams plugin.TValue[[]interface{}]
@@ -2397,6 +2419,10 @@ func (c *mqlGithubOrganization) GetMembersCanCreatePublicPages() *plugin.TValue[
 
 func (c *mqlGithubOrganization) GetMembersCanCreatePrivatePages() *plugin.TValue[bool] {
 	return &c.MembersCanCreatePrivatePages
+}
+
+func (c *mqlGithubOrganization) GetMembersCanForkPrivateRepos() *plugin.TValue[bool] {
+	return &c.MembersCanForkPrivateRepos
 }
 
 func (c *mqlGithubOrganization) GetOwners() *plugin.TValue[[]interface{}] {
@@ -2973,6 +2999,8 @@ type mqlGithubRepository struct {
 	HasWiki plugin.TValue[bool]
 	HasPages plugin.TValue[bool]
 	HasDownloads plugin.TValue[bool]
+	HasDiscussions plugin.TValue[bool]
+	IsTemplate plugin.TValue[bool]
 	OpenMergeRequests plugin.TValue[[]interface{}]
 	Branches plugin.TValue[[]interface{}]
 	DefaultBranchName plugin.TValue[string]
@@ -3150,6 +3178,14 @@ func (c *mqlGithubRepository) GetHasPages() *plugin.TValue[bool] {
 
 func (c *mqlGithubRepository) GetHasDownloads() *plugin.TValue[bool] {
 	return &c.HasDownloads
+}
+
+func (c *mqlGithubRepository) GetHasDiscussions() *plugin.TValue[bool] {
+	return &c.HasDiscussions
+}
+
+func (c *mqlGithubRepository) GetIsTemplate() *plugin.TValue[bool] {
+	return &c.IsTemplate
 }
 
 func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]interface{}] {

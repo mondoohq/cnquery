@@ -110,6 +110,8 @@ github.organization @defaults("login name") {
   membersCanCreatePublicPages bool
   // Whether members can create private pages
   membersCanCreatePrivatePages bool
+  // Whether members can create private repositories
+  membersCanForkPrivateRepos bool
   // List of users that are part of the owners group
   owners() []github.user
   // List of users that are part of the members group
@@ -283,6 +285,10 @@ private github.repository @defaults("fullName") {
   hasPages bool
   // Whether the repository has downloads
   hasDownloads bool
+  // Whether the repository has discussions
+  hasDiscussions bool
+  // Whether the repository is an organization repository template
+  isTemplate bool
   // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
   // List of branches for the repository
