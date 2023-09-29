@@ -9,7 +9,7 @@ packs:
   - asset.family.contains("unix")
 
   # Queries can be grouped together, which gives us additional filters on each group.
-  # For example: the first group is for MacOS only, the second for is for Linux
+  # For example: the first group is for macOS only, the second for is for Linux
   groups:
     - filters: asset.platform == "macos"
       queries:

@@ -4,7 +4,7 @@ This transport reads a directory and treats it as its own platform. This is usef
 
 ## Testing
 
-If you need to test a remote linux system on macos, it is possible to spin up the machine and mount the whole filesystem to your local machine.
+If you need to test a remote Linux system on macOS, it is possible to spin up the machine and mount the whole filesystem to your local machine.
 
 ```bash
 # NOTE: make sure you do NOT run the following as sudo
@@ -34,6 +34,7 @@ On debian, the needed package is called `sshfs`.
 When you want to connect to a Vagrant VM, you need to add an ssh key to the root user.
 
 Then you can use root, to mount via sshfs:
+
 ```bash
 sshfs -o default_permissions root@127.0.0.1:/ ./mnt -o IdentityFile=/home/you/.ssh/id_rsa -o Port=2222
 ```
