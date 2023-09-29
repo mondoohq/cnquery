@@ -14,7 +14,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Azure Asset Inventory by Mondoo query pack retrieves information about Azure subscriptions for asset inventory.
+        The Azure Asset Inventory by Mondoo query pack retrieves information about Azure subscriptions and resources for asset inventory.
     filters:
       asset.platform == "azure"
     queries:
@@ -144,6 +144,12 @@ packs:
           desc: |
             This query retrieves data for all network security groups
         mql: azure.subscription.network.securityGroups
+      - uid: mondoo-asset-inventory-azure-publicip
+        title: Retrieve data for all public IP addresses
+        docs:
+          desc: |
+            This query retrieves all public IP addresses in your subscription
+        mql: azure.subscription.networkService.publicIpAddresses{ name location ipAddress }
       - uid: mondoo-asset-inventory-azure-virtualmachines
         title: Retrieve data for all Azure virtual machines
         docs:
