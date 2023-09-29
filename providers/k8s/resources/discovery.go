@@ -248,7 +248,7 @@ func discoverAssets(
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryContainerImages || target == DiscoveryAuto {
+		if target == DiscoveryContainerImages {
 			list, err = discoverContainerImages(runtime, invConfig, clusterId, k8s, nsFilter)
 			if err != nil {
 				return nil, err
