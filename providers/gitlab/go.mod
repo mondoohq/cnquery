@@ -10,6 +10,7 @@ require (
 	github.com/xanzy/go-gitlab v0.91.1
 	go.mondoo.com/cnquery v0.0.0-20230920205842-55a158611de3
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	google.golang.org/protobuf v1.31.0
 )
 
 require (
@@ -62,7 +63,6 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/grpc v1.58.1 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

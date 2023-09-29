@@ -16,6 +16,7 @@ var Config = plugin.Provider{
 		provider.StateConnectionType,
 		provider.PlanConnectionType,
 		provider.HclConnectionType,
+		provider.HclGitConnectionType,
 	},
 	Connectors: []plugin.Connector{
 		{

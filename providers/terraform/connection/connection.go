@@ -25,9 +25,14 @@ type Connection struct {
 	modulesManifest *ModuleManifest
 	state           *State
 	plan            *Plan
+	closer          func()
 }
 
-func (c *Connection) Close() {}
+func (c *Connection) Close() {
+	if c.closer != nil {
+		c.closer()
+	}
+}
 
 func (c *Connection) Kind() string {
 	return "code"

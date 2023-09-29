@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	StateConnectionType = "terraform-state"
-	PlanConnectionType  = "terraform-plan"
-	HclConnectionType   = "terraform-hcl"
+	StateConnectionType  = "terraform-state"
+	PlanConnectionType   = "terraform-plan"
+	HclConnectionType    = "terraform-hcl"
+	HclGitConnectionType = "terraform-hcl-git"
 )
 
 type Service struct {
@@ -81,6 +82,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for _, runtime := range s.runtimes {
+		if conn, ok := runtime.Connection.(*connection.Connection); ok {
+			conn.Close()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 
@@ -137,9 +143,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err != nil {
 			return nil, err
 		}
+
 	case PlanConnectionType:
 		s.lastConnectionID++
 		conn, err = connection.NewPlanConnection(s.lastConnectionID, asset)
+		if err != nil {
+			return nil, err
+		}
+
+	case HclGitConnectionType:
+		s.lastConnectionID++
+		conn, err = connection.NewHclGitConnection(s.lastConnectionID, asset)
 		if err != nil {
 			return nil, err
 		}

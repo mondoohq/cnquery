@@ -10,8 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/gitlab/connection"
 	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnection) (*inventory.Inventory, error) {
@@ -159,6 +161,17 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid interface{}) (
 }
 
 func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitLabConnection, projects []*gitlab.Project) ([]*inventory.Asset, error) {
+	// For git clone we need to set the user to oauth2 to be usable with the token.
+	creds := make([]*vault.Credential, len(conn.Conf.Credentials))
+	for i := range conn.Conf.Credentials {
+		cred := conn.Conf.Credentials[i]
+		cc := proto.Clone(cred).(*vault.Credential)
+		if cc.User == "" {
+			cc.User = "oauth2"
+		}
+		creds[i] = cc
+	}
+
 	var res []*inventory.Asset
 	for i := range projects {
 		project := projects[i]
@@ -173,7 +186,7 @@ func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitL
 						"ssh-url":  project.SSHURLToRepo,
 						"http-url": project.HTTPURLToRepo,
 					},
-					Credentials: conn.Conf.Credentials,
+					Credentials: creds,
 				}},
 			})
 		}
