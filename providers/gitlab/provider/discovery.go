@@ -177,7 +177,7 @@ func (s *Service) discoverTerraform(root *inventory.Asset, conn *connection.GitL
 		project := projects[i]
 		files, err := discoverTerraformHcl(conn.Client(), project.ID)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to discover terraform repo in gitlab")
+			log.Error().Err(err).Str("project", project.PathWithNamespace).Msg("failed to discover terraform repo in gitlab")
 		} else if len(files) != 0 {
 			res = append(res, &inventory.Asset{
 				Connections: []*inventory.Config{{
@@ -206,7 +206,10 @@ func discoverTerraformHcl(client *gitlab.Client, pid interface{}) ([]string, err
 	nodes := []*gitlab.TreeNode{}
 	for {
 		data, resp, err := client.Repositories.ListTree(pid, opts)
-		if err != nil {
+		if err != nil && resp.StatusCode == 404 {
+			// this case can happen when you have a new project with no commits / files
+			break
+		} else if err != nil {
 			return nil, err
 		}
 		nodes = append(nodes, data...)
