@@ -200,11 +200,11 @@ func chunkNeqTrueV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 }
 
 func bindingEqNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return BoolData(bind == nil), 0, nil
+	return BoolData(bind.Value == nil), 0, nil
 }
 
 func bindingNeqNil(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return BoolData(bind != nil), 0, nil
+	return BoolData(bind.Value != nil), 0, nil
 }
 
 // raw operator handling

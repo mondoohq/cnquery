@@ -170,6 +170,26 @@ func TestNullResources(t *testing.T) {
 			Expectation: nil,
 		},
 		{
+			Code:        "muser.nullgroup == null",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "muser.nullgroup == empty",
+			ResultIndex: 2,
+			Expectation: true,
+		},
+		{
+			Code:        "muser.groups.where(null) == empty",
+			ResultIndex: 2,
+			Expectation: false,
+		},
+		{
+			Code:        "muser.groups.where(name == '') == empty",
+			ResultIndex: 2,
+			Expectation: true,
+		},
+		{
 			Code:        "muser.groups",
 			ResultIndex: 0,
 			Expectation: []interface{}{
