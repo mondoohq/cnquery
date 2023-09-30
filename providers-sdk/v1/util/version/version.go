@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/logger"
+	"golang.org/x/mod/modfile"
 )
 
 var rootCmd = &cobra.Command{}
@@ -47,6 +48,123 @@ var checkCmd = &cobra.Command{
 			checkUpdate(args[i])
 		}
 	},
+}
+
+var modTidyCmd = &cobra.Command{
+	Use:   "mod-tidy [PROVIDERS]",
+	Short: "run 'go mod tidy' for all provided providers",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		for i := range args {
+			goModTidy(args[i])
+		}
+	},
+}
+
+var modUpdateCmd = &cobra.Command{
+	Use:   "mod-update [PROVIDERS]",
+	Short: "update all go dependencies for all provided providers",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		for i := range args {
+			checkGoModUpdate(args[i])
+		}
+	},
+}
+
+func checkGoModUpdate(providerPath string) {
+	log.Info().Msgf("Updating dependencies for %s...", providerPath)
+
+	// Define the path to your project's go.mod file
+	goModPath := filepath.Join(providerPath, "go.mod")
+
+	// Read the content of the go.mod file
+	modContent, err := os.ReadFile(goModPath)
+	if err != nil {
+		log.Info().Msgf("Error reading go.mod file: %v", err)
+		return
+	}
+
+	// Parse the go.mod file
+	modFile, err := modfile.Parse("go.mod", modContent, nil)
+	if err != nil {
+		log.Info().Msgf("Error parsing go.mod file: %v", err)
+		return
+	}
+
+	// Iterate through the require statements and update dependencies
+	for _, require := range modFile.Require {
+		cmd := exec.Command("go", "get", "-u", require.Mod.Path+"@"+require.Mod.Version)
+
+		// Redirect standard output and standard error to the console
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		// Set the working directory for the command
+		cmd.Dir = providerPath
+
+		log.Info().Msgf("Updating %s to the latest version...", require.Mod.Path)
+
+		// Run the `go get` command to update the dependency
+		err := cmd.Run()
+		if err != nil {
+			log.Info().Msgf("Error updating %s: %v", require.Mod.Path, err)
+		}
+	}
+
+	// Re-read the content of the go.mod file after updating
+	modContent, err = os.ReadFile(goModPath)
+	if err != nil {
+		fmt.Printf("Error reading go.mod file: %v\n", err)
+		return
+	}
+
+	// Parse the go.mod file again with the updated content
+	modFile, err = modfile.Parse("go.mod", modContent, nil)
+	if err != nil {
+		fmt.Printf("Error parsing go.mod file: %v\n", err)
+		return
+	}
+
+	// Write the updated go.mod file
+	updatedModContent, err := modFile.Format()
+	if err != nil {
+		log.Info().Msgf("Error formatting go.mod file: %v", err)
+		return
+	}
+
+	err = os.WriteFile(goModPath, updatedModContent, 0644)
+	if err != nil {
+		log.Info().Msgf("Error writing updated go.mod file: %v", err)
+		return
+	}
+
+	log.Info().Msgf("All dependencies updated.")
+
+	// Run 'go mod tidy' to clean up the go.mod and go.sum files
+	goModTidy(providerPath)
+
+	log.Info().Msgf("All dependencies updated and cleaned up successfully.")
+}
+
+func goModTidy(providerPath string) {
+	log.Info().Msgf("Running 'go mod tidy' for %s...", providerPath)
+
+	// Run 'go mod tidy' to clean up the go.mod and go.sum files
+	tidyCmd := exec.Command("go", "mod", "tidy")
+
+	// Redirect standard output and standard error
+	tidyCmd.Stdout = os.Stdout
+	tidyCmd.Stderr = os.Stderr
+
+	// Set the working directory for the command
+	tidyCmd.Dir = providerPath
+
+	err := tidyCmd.Run()
+	if err != nil {
+		log.Error().Msgf("Error running 'go mod tidy': %v", err)
+		return
+	}
 }
 
 func checkUpdate(providerPath string) {
@@ -404,7 +522,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&doCommit, "commit", false, "commit the change to git if there is a version bump")
 	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch or minor version")
 
-	rootCmd.AddCommand(updateCmd, checkCmd)
+	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd)
 }
 
 func main() {
