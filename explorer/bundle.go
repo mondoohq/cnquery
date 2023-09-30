@@ -209,6 +209,18 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 	return nil
 }
 
+// Compile a bundle. See CompileExt for a full description.
+func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, error) {
+	return p.CompileExt(ctx, BundleCompileConf{
+		Schema: schema,
+	})
+}
+
+type BundleCompileConf struct {
+	Schema        llx.Schema
+	RemoveFailing bool
+}
+
 // Compile a bundle
 // Does a few things:
 // 1. turns it into a map for easier access
@@ -217,29 +229,30 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 // 4. generate MRNs for all packs, queries, and updates referencing local fields
 // 5. snapshot all queries into the packs
 // 6. make queries public that are only embedded
-func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, error) {
-	ownerMrn := p.OwnerMrn
+func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*BundleMap, error) {
+	ownerMrn := bundle.OwnerMrn
 	if ownerMrn == "" {
 		// this only happens for local bundles where queries have no mrn yet
 		ownerMrn = "//local.cnquery.io/run/local-execution"
 	}
 
 	cache := &bundleCache{
-		ownerMrn:    ownerMrn,
-		bundle:      p,
-		uid2mrn:     map[string]string{},
-		lookupProp:  map[string]PropertyRef{},
-		lookupQuery: map[string]*Mquery{},
-		schema:      schema,
+		ownerMrn:      ownerMrn,
+		bundle:        bundle,
+		uid2mrn:       map[string]string{},
+		removeQueries: map[string]struct{}{},
+		lookupProp:    map[string]PropertyRef{},
+		lookupQuery:   map[string]*Mquery{},
+		conf:          conf,
 	}
 
-	if err := cache.compileQueries(p.Queries, nil); err != nil {
+	if err := cache.compileQueries(bundle.Queries, nil); err != nil {
 		return nil, err
 	}
 
 	// index packs + update MRNs and checksums, link properties via MRNs
-	for i := range p.Packs {
-		pack := p.Packs[i]
+	for i := range bundle.Packs {
+		pack := bundle.Packs[i]
 
 		// !this is very important to prevent user overrides! vv
 		pack.InvalidateAllChecksums()
@@ -252,7 +265,7 @@ func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, er
 			return nil, multierr.Wrap(err, "failed to refresh query pack "+pack.Mrn)
 		}
 
-		if err = pack.Filters.Compile(ownerMrn, schema); err != nil {
+		if err = pack.Filters.Compile(ownerMrn, conf.Schema); err != nil {
 			return nil, multierr.Wrap(err, "failed to compile querypack filters")
 		}
 		pack.ComputedFilters.AddFilters(pack.Filters)
@@ -265,7 +278,7 @@ func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, er
 			group := pack.Groups[i]
 
 			// When filters are initially added they haven't been compiled
-			if err = group.Filters.Compile(ownerMrn, schema); err != nil {
+			if err = group.Filters.Compile(ownerMrn, conf.Schema); err != nil {
 				return nil, multierr.Wrap(err, "failed to compile querypack filters")
 			}
 			pack.ComputedFilters.AddFilters(group.Filters)
@@ -276,22 +289,73 @@ func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, er
 		}
 	}
 
-	return p.ToMap(), cache.error()
+	// Removing any failing queries happens at the very end, when everything is
+	// set to go. We do this to the original bundle, because the intent is to
+	// clean it up with this option.
+	cache.removeFailing(bundle)
+
+	return bundle.ToMap(), cache.error()
 }
 
 type bundleCache struct {
-	ownerMrn    string
-	lookupQuery map[string]*Mquery
-	lookupProp  map[string]PropertyRef
-	uid2mrn     map[string]string
-	bundle      *Bundle
-	errors      []error
-	schema      llx.Schema
+	ownerMrn      string
+	lookupQuery   map[string]*Mquery
+	lookupProp    map[string]PropertyRef
+	uid2mrn       map[string]string
+	removeQueries map[string]struct{}
+	bundle        *Bundle
+	errors        []error
+	conf          BundleCompileConf
 }
 
 type PropertyRef struct {
 	*Property
 	Name string
+}
+
+func (c *bundleCache) removeFailing(res *Bundle) {
+	if !c.conf.RemoveFailing {
+		return
+	}
+
+	filtered := []*Mquery{}
+	for i := range res.Queries {
+		cur := res.Queries[i]
+		if _, ok := c.removeQueries[cur.Mrn]; !ok {
+			filtered = append(filtered, cur)
+		}
+	}
+	res.Queries = filtered
+
+	for i := range res.Packs {
+		pack := res.Packs[i]
+
+		filtered := []*Mquery{}
+		for i := range pack.Queries {
+			cur := pack.Queries[i]
+			if _, ok := c.removeQueries[cur.Mrn]; !ok {
+				filtered = append(filtered, cur)
+			}
+		}
+		pack.Queries = filtered
+
+		groups := []*QueryGroup{}
+		for j := range pack.Groups {
+			group := pack.Groups[j]
+			filtered := []*Mquery{}
+			for k := range group.Queries {
+				cur := group.Queries[k]
+				if _, ok := c.removeQueries[cur.Mrn]; !ok {
+					filtered = append(filtered, cur)
+				}
+			}
+			group.Queries = filtered
+			if len(group.Queries) != 0 {
+				groups = append(groups, group)
+			}
+		}
+		pack.Groups = groups
+	}
 }
 
 func (c *bundleCache) hasErrors() bool {
@@ -376,7 +440,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	}
 
 	// filters have no dependencies, so we can compile them early
-	if err := query.Filters.Compile(c.ownerMrn, c.schema); err != nil {
+	if err := query.Filters.Compile(c.ownerMrn, c.conf.Schema); err != nil {
 		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
 		return
 	}
@@ -407,9 +471,13 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 // dependencies have been processed. Properties must be compiled. Connected
 // queries may not be ready yet, but we have to have precompiled them.
 func (c *bundleCache) compileQuery(query *Mquery) {
-	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp, c.schema)
+	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp, c.conf.Schema)
 	if err != nil {
-		c.errors = append(c.errors, multierr.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+		if c.conf.RemoveFailing {
+			c.removeQueries[query.Mrn] = struct{}{}
+		} else {
+			c.errors = append(c.errors, multierr.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+		}
 	}
 }
 
@@ -436,7 +504,7 @@ func (c *bundleCache) compileProp(prop *Property) error {
 		name = m.Basename()
 	}
 
-	if _, err := prop.RefreshChecksumAndType(c.schema); err != nil {
+	if _, err := prop.RefreshChecksumAndType(c.conf.Schema); err != nil {
 		return err
 	}
 
