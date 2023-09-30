@@ -151,9 +151,25 @@ func ListAll() ([]*Provider, error) {
 	return res, nil
 }
 
-// EnsureProvider find the provider for a given connector either from the list
-// of existing proviers or by downloading and installing it.
-func EnsureProvider(existing Providers, connectorName string, connectorType string, autoUpdate bool) (*Provider, error) {
+// EnsureProvider makes sure that a given provider exists and returns it.
+// You can supply providers either via:
+//  1. connectorName, which is what you see in the CLI e.g. "local", "ssh", ...
+//  2. connectorType, which is how assets define the connector type when
+//     they are moved between discovery and execution, e.g. "registry-image".
+//
+// If you disable autoUpdate, it will neither update NOR install missing providers.
+//
+// If you don't supply existing providers, it will look for alist of all
+// active providers first.
+func EnsureProvider(connectorName string, connectorType string, autoUpdate bool, existing Providers) (*Provider, error) {
+	if existing == nil {
+		var err error
+		existing, err = ListActive()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	provider := existing.ForConnection(connectorName, connectorType)
 	if provider != nil {
 		return provider, nil

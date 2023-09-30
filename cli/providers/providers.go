@@ -36,7 +36,7 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 
 	connectorName, autoUpdate := detectConnectorName(os.Args, rootCmd, commands, existing)
 	if connectorName != "" {
-		if _, err := providers.EnsureProvider(existing, connectorName, "", autoUpdate); err != nil {
+		if _, err := providers.EnsureProvider(connectorName, "", autoUpdate, existing); err != nil {
 			return err
 		}
 	}
