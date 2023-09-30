@@ -8,7 +8,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.8.0-beta.3
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.1
 	github.com/cockroachdb/errors v1.11.1
-	github.com/microsoft/kiota-abstractions-go v1.2.1
+	github.com/microsoft/kiota-abstractions-go v1.2.2
 	github.com/microsoft/kiota-authentication-azure-go v1.0.0
 	github.com/microsoftgraph/msgraph-sdk-go v1.17.0
 	github.com/pkg/errors v0.9.1
@@ -66,8 +66,8 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
+	github.com/std-uritemplate/std-uritemplate/go v0.0.42 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.mondoo.com/ranger-rpc v0.5.1 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect

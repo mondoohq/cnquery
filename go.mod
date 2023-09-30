@@ -92,7 +92,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
-	gotest.tools v2.2.0+incompatible
 	howett.net/plist v1.0.0
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2
