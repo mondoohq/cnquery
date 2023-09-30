@@ -12,24 +12,24 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: 'AWS Documentation: Managing AWS Regions'
-        url: https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
-      - title: 'AWS Documentation: Security in Amazon Virtual Private Cloud'
-        url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
+    - title: 'AWS Documentation: Managing AWS Regions'
+      url: https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
+    - title: 'AWS Documentation: Security in Amazon Virtual Private Cloud'
+      url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
     snippets:
-      - query: aws.regions
-        title: List all enabled regions within the AWS account
-      - query: aws.vpcs
-        title: List of `aws.vpc` resources for all VPCs across all enabled regions
-      - query: "aws.vpcs {\n  arn \n  id \n  state \n  isDefault \n  region \n  flowLogs\n
+    - query: aws.regions
+      title: List all enabled regions within the AWS account
+    - query: aws.vpcs
+      title: List of `aws.vpc` resources for all VPCs across all enabled regions
+    - query: "aws.vpcs {\n  arn \n  id \n  state \n  isDefault \n  region \n  flowLogs\n
         \ routeTables\n}\n"
-        title: List of `aws.vpc` resources for all VPCs across all enabled regions and
-          the values for specified fields
-      - query: |
-          aws.vpcs.all( flowLogs.any(status == "ACTIVE") )
-        title: Ensure VPC flow logging is enabled in all VPCs
+      title: List of `aws.vpc` resources for all VPCs across all enabled regions and
+        the values for specified fields
+    - query: |
+        aws.vpcs.all( flowLogs.any(status == "ACTIVE") )
+      title: Ensure VPC flow logging is enabled in all VPCs
   aws.accessAnalyzer:
     docs:
       desc: |
@@ -39,23 +39,23 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Using AWS IAM Access Analyzer
-        url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
+    - title: Using AWS IAM Access Analyzer
+      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
     snippets:
-      - query: aws.accessAnalyzer.analyzers
-        title: Return a list of `aws.accessAnalyzer.analyzer` resources representing
-          all of the AWS IAM Access Analyzers configured across the AWS account
-      - query: "aws.accessAnalyzer.analyzers { \n  arn \n  name \n  status \n  type
+    - query: aws.accessAnalyzer.analyzers
+      title: Return a list of `aws.accessAnalyzer.analyzer` resources representing
+        all of the AWS IAM Access Analyzers configured across the AWS account
+    - query: "aws.accessAnalyzer.analyzers { \n  arn \n  name \n  status \n  type
         \n}\n"
-        title: Return a list of `aws.accessAnalyzer.analyzer` resources and the value
-          for specified fields
-      - query: |
-          aws.accessAnalyzer.analyzers.all(
-            status == "ACTIVE"
-          )
-        title: Ensure that IAM Access analyzer is enabled for all regions
+      title: Return a list of `aws.accessAnalyzer.analyzer` resources and the value
+        for specified fields
+    - query: |
+        aws.accessAnalyzer.analyzers.all(
+          status == "ACTIVE"
+        )
+      title: Ensure that IAM Access analyzer is enabled for all regions
   aws.accessanalyzer.analyzer:
     fields:
       arn: {}
@@ -68,7 +68,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.account:
     docs:
       desc: |
@@ -81,10 +81,10 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: "aws.account { \n  id \n  aliases \n}\n"
-        title: Return the account id (number) and any configured account aliases
+    - query: "aws.account { \n  id \n  aliases \n}\n"
+      title: Return the account id (number) and any configured account aliases
   aws.acm:
     docs:
       desc: The `aws.acm` resource can be used to assess the configuration of the
@@ -96,25 +96,25 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: What Is AWS Certificate Manager?
-        url: https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html
-      - title: Security in AWS Certificate Manager
-        url: https://docs.aws.amazon.com/acm/latest/userguide/security.html
+    - title: What Is AWS Certificate Manager?
+      url: https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html
+    - title: Security in AWS Certificate Manager
+      url: https://docs.aws.amazon.com/acm/latest/userguide/security.html
     snippets:
-      - query: aws.acm.certificates
-        title: Return a list of `aws.acm.certificate` resources within the AWS account
-      - query: "aws.acm.certificates {\n  arn\n  notBefore\n  notAfter \n  createdAt\n
+    - query: aws.acm.certificates
+      title: Return a list of `aws.acm.certificate` resources within the AWS account
+    - query: "aws.acm.certificates {\n  arn\n  notBefore\n  notAfter \n  createdAt\n
         \ domainName\n  status\n  subject\n  certificate() \n}\n"
-        title: Return a list of `aws.acm.certificate` resources within the AWS account
-          along with values for specified fields
-      - query: |
-          aws.acm.certificates.
-            where( status != /PENDING_VALIDATION/ ).
-            all (notAfter - notBefore <= 90 * time.day)
-        title: Checks whether ACM Certificates in your account are marked for expiration
-          within 90 days
+      title: Return a list of `aws.acm.certificate` resources within the AWS account
+        along with values for specified fields
+    - query: |
+        aws.acm.certificates.
+          where( status != /PENDING_VALIDATION/ ).
+          all (notAfter - notBefore <= 90 * time.day)
+      title: Checks whether ACM Certificates in your account are marked for expiration
+        within 90 days
   aws.acm.certificate:
     docs:
       desc: |
@@ -134,7 +134,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.apigateway:
     docs:
       desc: The `aws.apigateway` resource can be used to assess the configuration
@@ -144,38 +144,38 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: What is Amazon API Gateway?
-        url: https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html
-      - title: Security in Amazon API Gateway
-        url: https://docs.aws.amazon.com/apigateway/latest/developerguide/security.html
+    - title: What is Amazon API Gateway?
+      url: https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html
+    - title: Security in Amazon API Gateway
+      url: https://docs.aws.amazon.com/apigateway/latest/developerguide/security.html
     snippets:
-      - query: aws.apigateway.restApis
-        title: Return a list of `aws.apigateway.restapi` resources for all REST APIs
-          configured with the account across all enabled regions
-      - query: |
-          aws.apigateway.restApis {
-            createdDate
-            description
-            stages
-            region
-            arn
-            id
-            name
-          }
-        title: Return a list of `aws.apigateway.restapi` resources for all REST APIs
-          configured with the account across all enabled regions and the value for specified
-          fields
-      - query: "aws.apigateway.restApis.all(stages.all(\n  methodSettings['CachingEnabled']
+    - query: aws.apigateway.restApis
+      title: Return a list of `aws.apigateway.restapi` resources for all REST APIs
+        configured with the account across all enabled regions
+    - query: |
+        aws.apigateway.restApis {
+          createdDate
+          description
+          stages
+          region
+          arn
+          id
+          name
+        }
+      title: Return a list of `aws.apigateway.restapi` resources for all REST APIs
+        configured with the account across all enabled regions and the value for specified
+        fields
+    - query: "aws.apigateway.restApis.all(stages.all(\n  methodSettings['CachingEnabled']
         == true && \n    methodSettings['CacheDataEncrypted'] == true\n))\n"
-        title: Checks that all methods in Amazon API Gateway have caching enabled and
-          encrypted
-      - query: |
-          aws.apigateway.restApis.all(stages.all(
-          methodSettings['LoggingLevel'] == "ERROR" || methodSettings['LoggingLevel'] == "INFO"
-          ))
-        title: Checks that all methods in Amazon API Gateway have logging enabled
+      title: Checks that all methods in Amazon API Gateway have caching enabled and
+        encrypted
+    - query: |
+        aws.apigateway.restApis.all(stages.all(
+        methodSettings['LoggingLevel'] == "ERROR" || methodSettings['LoggingLevel'] == "INFO"
+        ))
+      title: Checks that all methods in Amazon API Gateway have logging enabled
   aws.apigateway.restapi:
     docs:
       desc: |
@@ -194,7 +194,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.apigateway.stage:
     docs:
       desc: |
@@ -210,11 +210,11 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: "aws.apigateway.restApis { \n  arn \n  stages \n}\n"
-        title: Return a list of AWS API Gateway REST APIs configured across all enabled
-          regions in the AWS account and the values for the arn and stages
+    - query: "aws.apigateway.restApis { \n  arn \n  stages \n}\n"
+      title: Return a list of AWS API Gateway REST APIs configured across all enabled
+        regions in the AWS account and the values for the arn and stages
   aws.applicationAutoscaling:
     fields:
       namespace: {}
@@ -222,7 +222,7 @@ resources:
     min_mondoo_version: 6.11.1
     platform:
       name:
-        - aws
+      - aws
   aws.applicationautoscaling.target:
     fields:
       arn: {}
@@ -235,7 +235,7 @@ resources:
     min_mondoo_version: 6.11.1
     platform:
       name:
-        - aws
+      - aws
   aws.autoscaling:
     docs:
       desc: |
@@ -245,22 +245,22 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon EC2 Auto Scaling
-        url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/security.html
-      - title: Compliance validation for Amazon EC2 Auto Scaling
-        url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-compliance.html
+    - title: Security in Amazon EC2 Auto Scaling
+      url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/security.html
+    - title: Compliance validation for Amazon EC2 Auto Scaling
+      url: https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-compliance.html
     snippets:
-      - query: "aws.autoscaling.groups { \n  arn \n  healthCheckType \n  loadBalancerNames
+    - query: "aws.autoscaling.groups { \n  arn \n  healthCheckType \n  loadBalancerNames
         \n  name \n}\n"
-        title: Return a list of `aws.autoscaling.group` resources representing all auto
-          scaling groups configured across all enabled regions across the account and
-          the value for specified fields
-      - query: "aws.autoscaling.groups.where(loadBalancerNames.length > 0) { \n  healthCheckType
+      title: Return a list of `aws.autoscaling.group` resources representing all auto
+        scaling groups configured across all enabled regions across the account and
+        the value for specified fields
+    - query: "aws.autoscaling.groups.where(loadBalancerNames.length > 0) { \n  healthCheckType
         == \"ELB\" \n}\n"
-        title: Checks that all autoscaling groups assoc with a load balancer use health
-          checks
+      title: Checks that all autoscaling groups assoc with a load balancer use health
+        checks
   aws.autoscaling.group:
     docs:
       desc: |
@@ -276,7 +276,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.backup:
     fields:
       vaults: {}
@@ -368,32 +368,32 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security best practices in AWS CloudTrail
-        url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/best-practices-security.html
+    - title: Security best practices in AWS CloudTrail
+      url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/best-practices-security.html
     snippets:
-      - query: |
-          aws.cloudtrail.trails {
-            arn
-            name
-            kmsKey
-            isMultiRegionTrail
-            isOrganizationTrail
-            logFileValidationEnabled
-            includeGlobalServiceEvents
-            s3bucket
-            snsTopicARN
-            status
-            logGroup
-            cloudWatchLogsRoleArn
-            eventSelectors
-            region
-          }
-        title: Return a list of `aws.cloudtrail.trail` resources representing all AWS
-          Cloud Trails configured across all enabled regions and the values for specified
-          fields
-      - query: "aws.cloudtrail.trails.any( \n  isMultiRegionTrail && status['IsLogging']
+    - query: |
+        aws.cloudtrail.trails {
+          arn
+          name
+          kmsKey
+          isMultiRegionTrail
+          isOrganizationTrail
+          logFileValidationEnabled
+          includeGlobalServiceEvents
+          s3bucket
+          snsTopicARN
+          status
+          logGroup
+          cloudWatchLogsRoleArn
+          eventSelectors
+          region
+        }
+      title: Return a list of `aws.cloudtrail.trail` resources representing all AWS
+        Cloud Trails configured across all enabled regions and the values for specified
+        fields
+    - query: "aws.cloudtrail.trails.any( \n  isMultiRegionTrail && status['IsLogging']
         \n)\n"
   aws.cloudtrail.trail:
     docs:
@@ -418,7 +418,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch:
     docs:
       desc: |
@@ -430,21 +430,21 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: aws.cloudwatch.logGroups
-        title: Return a list of `aws.cloudwatch.loggroup` resources representing individual
-          CloudWatch log groups configured across all enabled regions
-      - query: aws.cloudwatch.metrics
-        title: Return a list of `aws.cloudwatch.metric` resources representing individual
-          CloudWatch metrics configured across all enabled regions
-      - query: |
-          aws.cloudwatch.alarms.all(
-            actions.length > 0 == true &&
-            insufficientDataActions.length > 0 == props.cloudwatchAlarmInsufficientDataActionRequired &&
-            okActions.length > 0 == props.cloudwatchAlarmOkActionRequired
-          )
-        title: Checks that all cloudwatch alarms have at least one action enabled
+    - query: aws.cloudwatch.logGroups
+      title: Return a list of `aws.cloudwatch.loggroup` resources representing individual
+        CloudWatch log groups configured across all enabled regions
+    - query: aws.cloudwatch.metrics
+      title: Return a list of `aws.cloudwatch.metric` resources representing individual
+        CloudWatch metrics configured across all enabled regions
+    - query: |
+        aws.cloudwatch.alarms.all(
+          actions.length > 0 == true &&
+          insufficientDataActions.length > 0 == props.cloudwatchAlarmInsufficientDataActionRequired &&
+          okActions.length > 0 == props.cloudwatchAlarmOkActionRequired
+        )
+      title: Checks that all cloudwatch alarms have at least one action enabled
   aws.cloudwatch.loggroup:
     docs:
       desc: |
@@ -459,7 +459,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.loggroup.metricsfilter:
     docs:
       desc: |
@@ -473,7 +473,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.metric:
     docs:
       desc: |
@@ -491,7 +491,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.metric.datapoint:
     fields:
       average: {}
@@ -505,7 +505,7 @@ resources:
     min_mondoo_version: 5.17.1
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.metricdimension:
     fields:
       name: {}
@@ -513,7 +513,7 @@ resources:
     min_mondoo_version: 5.17.1
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.metricsalarm:
     docs:
       desc: |
@@ -533,7 +533,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.cloudwatch.metricstatistics:
     fields:
       datapoints: {}
@@ -544,7 +544,7 @@ resources:
     min_mondoo_version: 5.17.1
     platform:
       name:
-        - aws
+      - aws
   aws.codebuild:
     docs:
       desc: "The `aws.codebuild` resource is used to assess the configuration of the
@@ -554,32 +554,32 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in AWS CodeBuild
-        url: https://docs.aws.amazon.com/codebuild/latest/userguide/security.html
+    - title: Security in AWS CodeBuild
+      url: https://docs.aws.amazon.com/codebuild/latest/userguide/security.html
     snippets:
-      - query: |
-          aws.codebuild.projects {
-            arn
-            description
-            name
-            environment
-            region
-            source
-          }
-        title: Return a list of `aws.codebuild.project` resources representing all AWS
-          CodeBuild projects configured across all enabled regions within the account
-          and the values for specified fields
-      - query: "aws.codebuild.projects { \n  environment ['EnvironmentVariables'].where(_['Name']
+    - query: |
+        aws.codebuild.projects {
+          arn
+          description
+          name
+          environment
+          region
+          source
+        }
+      title: Return a list of `aws.codebuild.project` resources representing all AWS
+        CodeBuild projects configured across all enabled regions within the account
+        and the values for specified fields
+    - query: "aws.codebuild.projects { \n  environment ['EnvironmentVariables'].where(_['Name']
         == \"AWS_ACCESS_KEY_ID\") { _['Type'] != \"PLAINTEXT\"}\n  environment ['EnvironmentVariables'].where(_['Name']
         == \"AWS_SECRET_ACCESS_KEY\") { _['Type'] != \"PLAINTEXT\"} \n}\n"
-        title: Checks that all projects containing env variables AWS_ACCESS_KEY_ID and
-          AWS_SECRET_ACCESS_KEY are not in plaintext
-      - query: "aws.codebuild.projects.where( source['Type'] == \"BITBUCKET\" || source['Type']
+      title: Checks that all projects containing env variables AWS_ACCESS_KEY_ID and
+        AWS_SECRET_ACCESS_KEY are not in plaintext
+    - query: "aws.codebuild.projects.where( source['Type'] == \"BITBUCKET\" || source['Type']
         == \"GITHUB\" ) { \n  source['Auth']['Type'] == \"OAUTH\"\n}\n"
-        title: Checks that all projects using GitHub or Bitbucket as the source use
-          oauth
+      title: Checks that all projects using GitHub or Bitbucket as the source use
+        oauth
   aws.codebuild.project:
     docs:
       desc: |
@@ -597,7 +597,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.config:
     docs:
       desc: |
@@ -608,26 +608,26 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in AWS Config
-        url: https://docs.aws.amazon.com/config/latest/developerguide/security.html
-      - title: AWS Config best practices
-        url: https://aws.amazon.com/blogs/mt/aws-config-best-practices/
+    - title: Security in AWS Config
+      url: https://docs.aws.amazon.com/config/latest/developerguide/security.html
+    - title: AWS Config best practices
+      url: https://aws.amazon.com/blogs/mt/aws-config-best-practices/
     snippets:
-      - query: "aws.config.rules {\n  arn \n  state \n  source\n}\n"
-        title: Return a list of `aws.config.rule` resources representing AWS Config
-          rules configured across all enabled regions and the value for specified fields
-      - query: "aws.config.recorders {\n  name \n  roleArn \n  allSupported \n  includeGlobalResourceTypes
+    - query: "aws.config.rules {\n  arn \n  state \n  source\n}\n"
+      title: Return a list of `aws.config.rule` resources representing AWS Config
+        rules configured across all enabled regions and the value for specified fields
+    - query: "aws.config.recorders {\n  name \n  roleArn \n  allSupported \n  includeGlobalResourceTypes
         \n  recording \n  lastStatus \n  region \n}\n"
-        title: Return a list of AWS Config recorders configured across all enabled regions
-          and the value for specified fields
-      - query: |
-          aws.config.recorders.any(allSupported == true && includeGlobalResourceTypes == true)
-          aws.config.recorders.where(allSupported == true && includeGlobalResourceTypes == true).all(
-            recording == true && lastStatus == "SUCCESS"
-          )
-        title: Ensure AWS Config is enabled in all regions
+      title: Return a list of AWS Config recorders configured across all enabled regions
+        and the value for specified fields
+    - query: |
+        aws.config.recorders.any(allSupported == true && includeGlobalResourceTypes == true)
+        aws.config.recorders.where(allSupported == true && includeGlobalResourceTypes == true).all(
+          recording == true && lastStatus == "SUCCESS"
+        )
+      title: Ensure AWS Config is enabled in all regions
   aws.config.recorder:
     docs:
       desc: "The `aws.config.recorder` resource provides fields representing an individual
@@ -645,7 +645,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.config.rule:
     docs:
       desc: "The `aws.config.rule` resource provides fields representing an individual
@@ -659,7 +659,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.dms:
     docs:
       desc: |
@@ -669,19 +669,19 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in AWS Database Migration Service
-        url: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html
+    - title: Security in AWS Database Migration Service
+      url: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html
     snippets:
-      - query: aws.dms.replicationInstances
-        title: Return a list of AWS Database Migration service replication instances
-      - query: |
-          aws.dms.replicationInstances.none(
-            _['PubliclyAccessible'] == true
-          )
-        title: Checks whether AWS Database Migration Service replication instances are
-          public
+    - query: aws.dms.replicationInstances
+      title: Return a list of AWS Database Migration service replication instances
+    - query: |
+        aws.dms.replicationInstances.none(
+          _['PubliclyAccessible'] == true
+        )
+      title: Checks whether AWS Database Migration Service replication instances are
+        public
   aws.dynamodb:
     docs:
       desc: |
@@ -694,26 +694,26 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security and Compliance in Amazon DynamoDB
-        url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/security.html
+    - title: Security and Compliance in Amazon DynamoDB
+      url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/security.html
     snippets:
-      - query: "aws.dynamodb.tables {\n  arn \n  name \n  region \n  backups \n  sseDescription
+    - query: "aws.dynamodb.tables {\n  arn \n  name \n  region \n  backups \n  sseDescription
         \n  provisionedThroughput \n  continuousBackups \n}\n"
-        title: Return a list of `aws.dynamodb.table` resources and the values for specified
-          fields
-      - query: "aws.dynamodb.limits {\n  arn \n  region \n  accountMaxRead \n  accountMaxWrite
+      title: Return a list of `aws.dynamodb.table` resources and the values for specified
+        fields
+    - query: "aws.dynamodb.limits {\n  arn \n  region \n  accountMaxRead \n  accountMaxWrite
         \n  tableMaxRead\n  tableMaxWrite \n}\n"
-        title: Return a list of `aws.dynamodb.limit` resources and the values for specified
-          fields
-      - query: "aws.dynamodb.globaltables {\n  arn \n  name \n  replicaSettings \n}\n"
-        title: Return a list of `aws.dynamodb.globaltable` resources and the value for
-          specified fields
-      - query: "aws.dynamodb.tables.all( \n  sseDescription['SSEType'] == 'KMS' && sseDescription['Status']
+      title: Return a list of `aws.dynamodb.limit` resources and the values for specified
+        fields
+    - query: "aws.dynamodb.globaltables {\n  arn \n  name \n  replicaSettings \n}\n"
+      title: Return a list of `aws.dynamodb.globaltable` resources and the value for
+        specified fields
+    - query: "aws.dynamodb.tables.all( \n  sseDescription['SSEType'] == 'KMS' && sseDescription['Status']
         == 'ENABLED'\n)\n"
-        title: Checks that all DynamoDB tables are encrypted with AWS Key Management
-          Service (KMS)
+      title: Checks that all DynamoDB tables are encrypted with AWS Key Management
+        Service (KMS)
   aws.dynamodb.globaltable:
     docs:
       desc: |
@@ -728,7 +728,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.dynamodb.limit:
     docs:
       desc: |
@@ -744,7 +744,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.dynamodb.table:
     docs:
       desc: |
@@ -763,7 +763,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2:
     docs:
       desc: |
@@ -781,37 +781,37 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon EC2
-        url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security.html
-      - title: Security in Amazon Virtual Private Cloud
-        url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
+    - title: Security in Amazon EC2
+      url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security.html
+    - title: Security in Amazon Virtual Private Cloud
+      url: https://docs.aws.amazon.com/vpc/latest/userguide/security.html
     snippets:
-      - query: "aws.ec2.instances {\n  arn\n  instanceId \n  detailedMonitoring \n  region
+    - query: "aws.ec2.instances {\n  arn\n  instanceId \n  detailedMonitoring \n  region
         \n  publicIp \n  ssm \n  vpc \n  httpTokens \n  patchState \n  state \n  deviceMappings
         \n  securityGroups\n  publicDnsName \n  instanceStatus\n  stateReason \n  stateTransitionReason
         \n  ebsOptimized \n  instanceType \n  tags \n  image\n  launchTime \n}\n"
-        title: Return a list of all EC2 instances across all enabled regions in the
-          account and the value for specified fields
-      - query: |
-          aws.ec2.securityGroups {
-            arn
-            region
-            vpc
-            id
-          }
-        title: Return a list of security groups across every enabled region and the
-          value for specified fields
-      - query: "aws.ec2.volumes {\n  arn\n  region \n}\n"
-        title: Return a list of all EBS volumes along with the associated ARN and the
-          region the volume exists in
-      - query: |
-          aws.ec2.securityGroups.where(name == "default") {
-            ipPermissions.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
-            ipPermissionsEgress.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
-          }
-        title: Ensure the default security group of every VPC restricts all traffic
+      title: Return a list of all EC2 instances across all enabled regions in the
+        account and the value for specified fields
+    - query: |
+        aws.ec2.securityGroups {
+          arn
+          region
+          vpc
+          id
+        }
+      title: Return a list of security groups across every enabled region and the
+        value for specified fields
+    - query: "aws.ec2.volumes {\n  arn\n  region \n}\n"
+      title: Return a list of all EBS volumes along with the associated ARN and the
+        region the volume exists in
+    - query: |
+        aws.ec2.securityGroups.where(name == "default") {
+          ipPermissions.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
+          ipPermissionsEgress.all(ipRanges.length == 0 && ipv6Ranges.length == 0 && fromPort == 0 && toPort == 0)
+        }
+      title: Ensure the default security group of every VPC restricts all traffic
   aws.ec2.image:
     docs:
       desc: |
@@ -828,7 +828,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.instance:
     docs:
       desc: |
@@ -866,7 +866,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.instance.device:
     docs:
       desc: |
@@ -880,7 +880,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.internetgateway:
     docs:
       desc: |
@@ -893,7 +893,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.keypair:
     fields:
       arn: {}
@@ -906,7 +906,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.networkacl:
     docs:
       desc: |
@@ -920,7 +920,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.networkacl.entry:
     docs:
       desc: |
@@ -934,7 +934,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.networkacl.entry.portrange:
     docs:
       desc: |
@@ -947,7 +947,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.securitygroup:
     docs:
       desc: |
@@ -967,7 +967,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.securitygroup.ippermission:
     docs:
       desc: |
@@ -983,7 +983,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.snapshot:
     docs:
       desc: |
@@ -1001,7 +1001,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.vgwtelemetry:
     docs:
       desc: |
@@ -1014,7 +1014,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.volume:
     docs:
       desc: |
@@ -1035,7 +1035,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ec2.vpnconnection:
     docs:
       desc: |
@@ -1047,7 +1047,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.ecr:
     docs:
       desc: |
@@ -1059,14 +1059,14 @@ resources:
     min_mondoo_version: 7.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon Elastic Container Registry
-        url: https://docs.aws.amazon.com/AmazonECR/latest/userguide/security.html
+    - title: Security in Amazon Elastic Container Registry
+      url: https://docs.aws.amazon.com/AmazonECR/latest/userguide/security.html
     snippets:
-      - query: |
-          aws.ecr {*}
-        title: Return a `aws.ecr` resource representing the Elastic Container Registry.
+    - query: |
+        aws.ecr {*}
+      title: Return a `aws.ecr` resource representing the Elastic Container Registry.
   aws.ecr.image:
     docs:
       desc: |
@@ -1084,19 +1084,12 @@ resources:
     min_mondoo_version: 7.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: |
-          aws.ecr {
-            publicRepositories { 
-              images {
-                digest
-                repoName
-                tags
-              }
-            }
-          }
-        title: Return a list of `aws.ecr.image` resources representing the images stored in public repositories.
+    - query: "aws.ecr {\n  publicRepositories { \n    images {\n      digest\n      repoName\n
+        \     tags\n    }\n  }\n}\n"
+      title: Return a list of `aws.ecr.image` resources representing the images stored
+        in public repositories.
   aws.ecr.repository:
     docs:
       desc: |
@@ -1113,16 +1106,11 @@ resources:
     min_mondoo_version: 7.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: |
-          aws.ecr {
-            publicRepositories { 
-              name
-              uri
-            }
-          }
-        title: Return a list of `aws.ecr.repository` resources representing the public repositories.
+    - query: "aws.ecr {\n  publicRepositories { \n    name\n    uri\n  }\n}\n"
+      title: Return a list of `aws.ecr.repository` resources representing the public
+        repositories.
   aws.ecs:
     fields:
       clusters: {}
@@ -1208,27 +1196,27 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon EFS
-        url: https://docs.aws.amazon.com/efs/latest/ug/security-considerations.html
+    - title: Security in Amazon EFS
+      url: https://docs.aws.amazon.com/efs/latest/ug/security-considerations.html
     snippets:
-      - query: |
-          aws.efs.filesystems {
-            name
-            id
-            arn
-            encrypted
-            kmsKey
-            backupPolicy
-            region
-          }
-        title: Return a list of `aws.efs.filesystem` resources representing any EFS
-          deployments across all enabled regions in the account
-      - query: "aws.efs.filesystems.all(\n  encrypted == true && kmsKey.arn == /^arn:aws:kms:.*/
+    - query: |
+        aws.efs.filesystems {
+          name
+          id
+          arn
+          encrypted
+          kmsKey
+          backupPolicy
+          region
+        }
+      title: Return a list of `aws.efs.filesystem` resources representing any EFS
+        deployments across all enabled regions in the account
+    - query: "aws.efs.filesystems.all(\n  encrypted == true && kmsKey.arn == /^arn:aws:kms:.*/
         \n)\n"
-        title: Checks whether all EFS systems are configured to encrypt file data using
-          KMS
+      title: Checks whether all EFS systems are configured to encrypt file data using
+        KMS
   aws.efs.filesystem:
     docs:
       desc: "The `aws.efs.filesystem` resource provides fields for assessing the configuration
@@ -1247,14 +1235,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.eks:
     fields:
       clusters: {}
     min_mondoo_version: 5.31.0
     platform:
       name:
-        - aws
+      - aws
   aws.eks.cluster:
     fields:
       arn: {}
@@ -1274,7 +1262,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-        - aws
+      - aws
   aws.elasticache:
     docs:
       desc: "The `aws.elasticache` resource can be used to assess the configuration
@@ -1285,17 +1273,17 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon ElastiCache
-        url: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/redis-security.html
+    - title: Security in Amazon ElastiCache
+      url: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/redis-security.html
     snippets:
-      - query: |
-          aws.elasticache.clusters.all(
-            _['SnapshotRetentionLimit'] > _['SnapshotRetentionPeriod']
-          )
-        title: Checks if the ElastiCache Redis clusters have automatic backup turned
-          on
+    - query: |
+        aws.elasticache.clusters.all(
+          _['SnapshotRetentionLimit'] > _['SnapshotRetentionPeriod']
+        )
+      title: Checks if the ElastiCache Redis clusters have automatic backup turned
+        on
   aws.elasticache.cluster:
     fields:
       arn: {}
@@ -1341,41 +1329,41 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Elastic Load Balancing
-        url: https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/security.html
+    - title: Security in Elastic Load Balancing
+      url: https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/security.html
     snippets:
-      - query: |
-          aws.elb.loadbalancers {
-            arn
-            dnsName
-            listenerDescriptions
-            name
-            scheme
-            attributes
-          }
-        title: Return a list of all application, gateway, and network Elastic Load Balancers
-          deployed across every enabled region and the values for specified fields
-      - query: |
-          aws.elb.classicLoadBalancers {
-            arn
-            dnsName
-            listenerDescriptions
-            name
-            scheme
-            attributes
-          }
-        title: Return a list of all classic Elastic Load Balancers deployed across every
-          enabled region and the values for specified fields
-      - query: "aws.elb.loadBalancers.all( listenerDescriptions.any ( \n  _['Protocol']
+    - query: |
+        aws.elb.loadbalancers {
+          arn
+          dnsName
+          listenerDescriptions
+          name
+          scheme
+          attributes
+        }
+      title: Return a list of all application, gateway, and network Elastic Load Balancers
+        deployed across every enabled region and the values for specified fields
+    - query: |
+        aws.elb.classicLoadBalancers {
+          arn
+          dnsName
+          listenerDescriptions
+          name
+          scheme
+          attributes
+        }
+      title: Return a list of all classic Elastic Load Balancers deployed across every
+        enabled region and the values for specified fields
+    - query: "aws.elb.loadBalancers.all( listenerDescriptions.any ( \n  _['Protocol']
         == \"HTTPS\" || _['Protocol'] == \"SSL\" ) \n)\n"
-        title: Checks whether HTTP to HTTPS redirection is configured on all application
-          load balancer http listeners
-      - query: "aws.elb.classicLoadBalancers.all( listenerDescriptions.any ( \n  _['Listener']['Protocol']
+      title: Checks whether HTTP to HTTPS redirection is configured on all application
+        load balancer http listeners
+    - query: "aws.elb.classicLoadBalancers.all( listenerDescriptions.any ( \n  _['Listener']['Protocol']
         == \"HTTPS\" || _['Listener']['Protocol'] == \"SSL\" ) \n)\n"
-        title: Checks that all Classic Load Balancers use SSL certificates provided
-          by AWS Cert Mgr
+      title: Checks that all Classic Load Balancers use SSL certificates provided
+        by AWS Cert Mgr
   aws.elb.loadbalancer:
     docs:
       desc: |
@@ -1391,7 +1379,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.emr:
     docs:
       desc: |
@@ -1401,28 +1389,28 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon EMR
-        url: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-security.html
+    - title: Security in Amazon EMR
+      url: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-security.html
     snippets:
-      - query: |
-          aws.emr.clusters {
-            arn
-            name
-            normalizedInstanceHours
-            outpostArn
-            status
-            masterInstances
-            id
-          }
-        title: Return a list of EMR clusters deployed across all enabled regions and
-          the value for specified fields
-      - query: |
-          aws.emr.clusters.all(
-            masterInstances { _['PublicIpAddress'] == null }
-          )
-        title: Checks whether EMR cluster master nodes have public ips
+    - query: |
+        aws.emr.clusters {
+          arn
+          name
+          normalizedInstanceHours
+          outpostArn
+          status
+          masterInstances
+          id
+        }
+      title: Return a list of EMR clusters deployed across all enabled regions and
+        the value for specified fields
+    - query: |
+        aws.emr.clusters.all(
+          masterInstances { _['PublicIpAddress'] == null }
+        )
+      title: Checks whether EMR cluster master nodes have public ips
   aws.emr.cluster:
     docs:
       desc: |
@@ -1440,7 +1428,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.es:
     docs:
       desc: |
@@ -1450,10 +1438,10 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Amazon Security Blog on Elasticsearch
-        url: https://aws.amazon.com/blogs/security/tag/amazon-elasticsearch-service/
+    - title: Amazon Security Blog on Elasticsearch
+      url: https://aws.amazon.com/blogs/security/tag/amazon-elasticsearch-service/
   aws.es.domain:
     docs:
       desc: |
@@ -1470,7 +1458,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.guardduty:
     docs:
       desc: |
@@ -1480,28 +1468,28 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon GuardDuty
-        url: https://docs.aws.amazon.com/guardduty/latest/ug/security.html
+    - title: Security in Amazon GuardDuty
+      url: https://docs.aws.amazon.com/guardduty/latest/ug/security.html
     snippets:
-      - query: |
-          aws.guardduty.detectors {
-            id
-            region
-            status
-            findingPublishingFrequency
-            unarchivedFindings
-          }
-        title: Return a list of Amazon GuardDuty Detectors along with the values for
-          specified fields
-      - query: |
-          aws.guardduty.detectors.all( status == "ENABLED" )
-        title: Checks that guardduty is enabled in all regions
+    - query: |
+        aws.guardduty.detectors {
+          id
+          region
+          status
+          findingPublishingFrequency
+          unarchivedFindings
+        }
+      title: Return a list of Amazon GuardDuty Detectors along with the values for
+        specified fields
+    - query: |
+        aws.guardduty.detectors.all( status == "ENABLED" )
+      title: Checks that guardduty is enabled in all regions
   aws.guardduty.detector:
     docs:
       desc: |
-         The `aws.guardduty.detector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage see the `aws.guardduty` resource documentation
+        The `aws.guardduty.detector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage see the `aws.guardduty` resource documentation
     fields:
       findingPublishingFrequency: {}
       id: {}
@@ -1512,7 +1500,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam:
     docs:
       desc: |
@@ -1531,33 +1519,33 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in IAM and AWS STS
-        url: https://docs.aws.amazon.com/IAM/latest/UserGuide/security.html
+    - title: Security in IAM and AWS STS
+      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/security.html
     snippets:
-      - query: |
-          aws.iam.users {
-            users
-            roles
-            groups
-            policies
-            attachedPolicies
-            accountSummary
-            virtualMfaDevices
-            serverCertificates
-          }
-        title: Return a list of `aws.iam.user` resources representing IAM users in the
-          account and specified fields
-      - query: "aws.iam.credentialReport.where(mfaActive == false) { \n  user { \n    arn
+    - query: |
+        aws.iam.users {
+          users
+          roles
+          groups
+          policies
+          attachedPolicies
+          accountSummary
+          virtualMfaDevices
+          serverCertificates
+        }
+      title: Return a list of `aws.iam.user` resources representing IAM users in the
+        account and specified fields
+    - query: "aws.iam.credentialReport.where(mfaActive == false) { \n  user { \n    arn
         \n    name \n    groups \n  }\n}\n"
-        title: Return a list of users that do not have MFA configured along with the
-          ARN, name, and associated IAM Groups
-      - query: "aws.iam.credentialReport.\n  where(\n    passwordEnabled &&\n    accessKey1Active
+      title: Return a list of users that do not have MFA configured along with the
+        ARN, name, and associated IAM Groups
+    - query: "aws.iam.credentialReport.\n  where(\n    passwordEnabled &&\n    accessKey1Active
         &&\n    userCreationTime < time.today\n  ).\n  all(\n    accessKey1LastUsedDate
         != null\n  ) \n"
-        title: Do not setup access keys during initial user setup for all IAM users
-          that have a console password
+      title: Do not setup access keys during initial user setup for all IAM users
+        that have a console password
   aws.iam.group:
     docs:
       desc: |
@@ -1572,7 +1560,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.policy:
     docs:
       desc: |
@@ -1596,7 +1584,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.policyversion:
     docs:
       desc: |
@@ -1611,7 +1599,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.role:
     docs:
       desc: |
@@ -1627,7 +1615,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.user:
     docs:
       desc: |
@@ -1647,7 +1635,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.usercredentialreportentry:
     docs:
       desc: |
@@ -1680,7 +1668,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.iam.virtualmfadevice:
     docs:
       desc: |
@@ -1693,7 +1681,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.kms:
     docs:
       desc: "The `aws.kms` resource can be used to assess the configuration of AWS
@@ -1703,11 +1691,11 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     snippets:
-      - query: |
-          aws.kms.keys.where( metadata['KeyState'] == "Enabled" ).all( keyRotationEnabled == true )
-        title: Ensure rotation for customer created CMKs is enabled
+    - query: |
+        aws.kms.keys.where( metadata['KeyState'] == "Enabled" ).all( keyRotationEnabled == true )
+      title: Ensure rotation for customer created CMKs is enabled
   aws.kms.key:
     docs:
       desc: |
@@ -1722,7 +1710,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.lambda:
     docs:
       desc: "The `aws.lambda` resource can be used to assess the configuration of
@@ -1732,7 +1720,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.lambda.function:
     docs:
       desc: |
@@ -1745,14 +1733,14 @@ resources:
       policy: {}
       region: {}
       runtime:
-      	min_mondoo_version: 8.28.0
+        min_mondoo_version: 8.28.0
       tags: {}
       vpcConfig: {}
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.organization:
     fields:
       arn: {}
@@ -1762,7 +1750,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-        - aws
+      - aws
   aws.rds:
     docs:
       desc: |
@@ -1773,19 +1761,19 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Security in Amazon RDS
-        url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.html
+    - title: Security in Amazon RDS
+      url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.html
     snippets:
-      - query: aws.rds.dbInstances.all(snapshots.length > 0)
-        title: Checks whether RDS DB instances have backups enabled
-      - query: aws.rds.dbInstances.all(multiAZ == true)
-        title: Checks whether high availability is enabled for all rds instances
-      - query: aws.rds.dbClusters { snapshots.where( encrypted == false) } { arn region
-          id }
-        title: Return a list of RDS Clusters across all regions where snapshots are
-          not encrypted and return the `arn` `region` and `id` for the cluster
+    - query: aws.rds.dbInstances.all(snapshots.length > 0)
+      title: Checks whether RDS DB instances have backups enabled
+    - query: aws.rds.dbInstances.all(multiAZ == true)
+      title: Checks whether high availability is enabled for all rds instances
+    - query: aws.rds.dbClusters { snapshots.where( encrypted == false) } { arn region
+        id }
+      title: Return a list of RDS Clusters across all regions where snapshots are
+        not encrypted and return the `arn` `region` and `id` for the cluster
   aws.rds.dbcluster:
     docs:
       desc: |
@@ -1801,7 +1789,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.rds.dbinstance:
     docs:
       desc: |
@@ -1836,7 +1824,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.rds.snapshot:
     docs:
       desc: |
@@ -1854,7 +1842,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.redshift:
     docs:
       desc: |
@@ -1864,36 +1852,36 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Amazon Redshift security overview
-        url: https://docs.aws.amazon.com/redshift/latest/dg/c_security-overview.html
+    - title: Amazon Redshift security overview
+      url: https://docs.aws.amazon.com/redshift/latest/dg/c_security-overview.html
     snippets:
-      - query: |
-          aws.redshift.clusters {
-            arn
-            encrypted
-            nodeType
-            allowVersionUpgrade
-            preferredMaintenanceWindow
-            automatedSnapshotRetentionPeriod
-            publiclyAccessible
-            parameters
-            logging
-            name
-            region
-            clusterParameterGroupNames
-          }
-        title: Return a list of Amazon RedShift clusters deployed across all enabled
-          regions and the values for specified fields
-      - query: |
-          aws.redshift.clusters.where( encrypted == false ) {
-            arn
-            region
-            name
-          }
-        title: Return a list of RedShift clusters that are not encrypted and the values
-          for the `arn` `region` and `name` fields
+    - query: |
+        aws.redshift.clusters {
+          arn
+          encrypted
+          nodeType
+          allowVersionUpgrade
+          preferredMaintenanceWindow
+          automatedSnapshotRetentionPeriod
+          publiclyAccessible
+          parameters
+          logging
+          name
+          region
+          clusterParameterGroupNames
+        }
+      title: Return a list of Amazon RedShift clusters deployed across all enabled
+        regions and the values for specified fields
+    - query: |
+        aws.redshift.clusters.where( encrypted == false ) {
+          arn
+          region
+          name
+        }
+      title: Return a list of RedShift clusters that are not encrypted and the values
+        for the `arn` `region` and `name` fields
   aws.redshift.cluster:
     fields:
       allowVersionUpgrade: {}
@@ -1913,7 +1901,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.s3:
     docs:
       desc: |
@@ -1923,44 +1911,44 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Amazon S3 Product Page
-        url: https://aws.amazon.com/s3/
-      - title: 'AWS Documentation: What is Amazon S3?'
-        url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
+    - title: Amazon S3 Product Page
+      url: https://aws.amazon.com/s3/
+    - title: 'AWS Documentation: What is Amazon S3?'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
     snippets:
-      - query: |
-          aws.s3.buckets {
-            arn
-            name
-            policy
-            tags
-            acl
-            owner
-            public
-            cors
-            location
-            versioning
-            logging
-            staticWebsiteHosting
-            defaultLock
-            replication
-            encryption
-            publicAccessBlock
-            exists
-          }
-        title: Return a list of AWS S3 buckets and the value for specified fields
-      - query: "aws.s3.buckets.where( public == true ) {\n  arn\n  name\n  location\n
+    - query: |
+        aws.s3.buckets {
+          arn
+          name
+          policy
+          tags
+          acl
+          owner
+          public
+          cors
+          location
+          versioning
+          logging
+          staticWebsiteHosting
+          defaultLock
+          replication
+          encryption
+          publicAccessBlock
+          exists
+        }
+      title: Return a list of AWS S3 buckets and the value for specified fields
+    - query: "aws.s3.buckets.where( public == true ) {\n  arn\n  name\n  location\n
         \ tags\n  publicAccessBlock \n}\n"
-        title: Return a list of AWS S3 buckets that are public and return the values
-          for the `arn` `name` `location` `tags` and `publicAccessBlock`
-      - query: "aws.s3.buckets.all( \n  replication['Rules'] { _['Status'] == \"Enabled\"
+      title: Return a list of AWS S3 buckets that are public and return the values
+        for the `arn` `name` `location` `tags` and `publicAccessBlock`
+    - query: "aws.s3.buckets.all( \n  replication['Rules'] { _['Status'] == \"Enabled\"
         }\n)\n"
-        title: Checks whether S3 buckets have cross-region replication enabled
-      - query: "aws.s3.buckets.all( \n  encryption['Rules'] { _['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
+      title: Checks whether S3 buckets have cross-region replication enabled
+    - query: "aws.s3.buckets.all( \n  encryption['Rules'] { _['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
         == /^arn:aws:kms:.*/}\n)\n"
-        title: Checks that all buckets are encrypted with kms
+      title: Checks that all buckets are encrypted with kms
   aws.s3.bucket:
     docs:
       desc: |
@@ -1987,12 +1975,12 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: Amazon S3 Product Page
-        url: https://aws.amazon.com/s3/
-      - title: 'AWS Documentation: Buckets overview'
-        url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html
+    - title: Amazon S3 Product Page
+      url: https://aws.amazon.com/s3/
+    - title: 'AWS Documentation: Buckets overview'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingBucket.html
   aws.s3.bucket.corsrule:
     fields:
       allowedHeaders: {}
@@ -2005,7 +1993,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.s3.bucket.grant:
     fields:
       grantee: {}
@@ -2016,7 +2004,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.s3.bucket.policy:
     docs:
       desc: |
@@ -2031,17 +2019,17 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
     refs:
-      - title: 'AWS Documentation: Using bucket policies'
-        url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html
+    - title: 'AWS Documentation: Using bucket policies'
+      url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html
   aws.s3control:
     fields:
       accountPublicAccessBlock: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sagemaker:
     fields:
       endpoints: {}
@@ -2049,7 +2037,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sagemaker.endpoint:
     fields:
       arn: {}
@@ -2061,7 +2049,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sagemaker.notebookinstance:
     fields:
       arn: {}
@@ -2073,7 +2061,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sagemaker.notebookinstance.details:
     fields:
       arn: {}
@@ -2083,14 +2071,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.secretsmanager:
     fields:
       secrets: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.secretsmanager.secret:
     fields:
       arn: {}
@@ -2101,14 +2089,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.securityhub:
     fields:
       hubs: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.securityhub.hub:
     fields:
       arn: {}
@@ -2117,14 +2105,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sns:
     fields:
       topics: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sns.subscription:
     fields:
       arn: {}
@@ -2133,7 +2121,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.sns.topic:
     fields:
       arn: {}
@@ -2167,7 +2155,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-        - aws
+      - aws
   aws.vpc:
     fields:
       arn: {}
@@ -2182,7 +2170,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.vpc.flowlog:
     fields:
       id: {}
@@ -2194,7 +2182,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
   aws.vpc.routetable:
     fields:
       id: {}
@@ -2203,4 +2191,4 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-        - aws
+      - aws
