@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/json"
+	"errors"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -23,6 +24,9 @@ func initTerraformState(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	state, err := conn.State()
 	if err != nil {
 		return nil, nil, err
+	}
+	if state == nil {
+		return nil, nil, errors.New("cannot find state")
 	}
 
 	args["formatVersion"] = llx.StringData(state.FormatVersion)
