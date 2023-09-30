@@ -143,13 +143,6 @@ define testGoModProvider
 	cd ${$@_HOME} && gotestsum --junitfile ../../report_${$@_NAME}.xml --format pkgname -- -cover ${$@_PKGS}
 endef
 
-define gomodtidyProvider
-	$(eval $@_HOME = $(1))
-	$(eval $@_NAME = $(shell basename ${$@_HOME}))
-	echo "--> go mod tidy ${$@_NAME} in ${$@_HOME}"
-	cd ${$@_HOME} && go mod tidy
-endef
-
 .PHONY: providers
 providers: providers/proto providers/config providers/build
 
@@ -349,31 +342,6 @@ providers/test:
 	@$(call testGpModProvider, providers/azure)
 	@$(call testGpModProvider, providers/ms365)
 	@$(call testGpModProvider, providers/aws)
-
-
-providers/gomodtidy:
-#	@$(call gomodtidyProvider, providers/core)
-#	@$(call gomodtidyProvider, providers/network)
-#	@$(call gomodtidyProvider, providers/os)
-	@$(call gomodtidyProvider, providers/ipmi)
-	@$(call gomodtidyProvider, providers/oci)
-	@$(call gomodtidyProvider, providers/slack)
-	@$(call gomodtidyProvider, providers/github)
-	@$(call gomodtidyProvider, providers/gitlab)
-	@$(call gomodtidyProvider, providers/terraform)
-	@$(call gomodtidyProvider, providers/vsphere)
-	@$(call gomodtidyProvider, providers/opcua)
-	@$(call gomodtidyProvider, providers/okta)
-	@$(call gomodtidyProvider, providers/google-workspace)
-	@$(call gomodtidyProvider, providers/arista)
-	@$(call gomodtidyProvider, providers/equinix)
-	@$(call gomodtidyProvider, providers/vcd)
-	@$(call gomodtidyProvider, providers/gcp)
-	@$(call gomodtidyProvider, providers/k8s)
-	@$(call gomodtidyProvider, providers/azure)
-	@$(call gomodtidyProvider, providers/ms365)
-	@$(call gomodtidyProvider, providers/aws)
-
 
 lr/test:
 	go test ./resources/lr/...
