@@ -49,12 +49,12 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 
 	log.Debug().Msg("Gathering system information")
 	if cfg.runtime == nil {
-
 		cfg.runtime = providers.Coordinator.NewRuntime()
 
-		// TODO: we need to ensure that the os provider is available here
-
 		// init runtime
+		if _, err := providers.EnsureProvider("local", "", true, nil); err != nil {
+			return nil, err
+		}
 		if err := cfg.runtime.UseProvider(providers.DefaultOsID); err != nil {
 			return nil, err
 		}

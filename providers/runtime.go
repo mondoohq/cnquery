@@ -192,7 +192,7 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 			continue
 		}
 
-		provider, err := EnsureProvider(r.coordinator.Providers, "", conn.Type, true)
+		provider, err := EnsureProvider("", conn.Type, true, r.coordinator.Providers)
 		if err != nil {
 			errs.Add(err)
 			continue
