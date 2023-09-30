@@ -234,6 +234,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.settings.requiredProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformSettings).GetRequiredProviders()).ToDataRes(types.Dict)
 	},
+	"terraform.settings.backend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformSettings).GetBackend()).ToDataRes(types.Dict)
+	},
 	"terraform.state.formatVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformState).GetFormatVersion()).ToDataRes(types.String)
 	},
@@ -530,6 +533,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"terraform.settings.requiredProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformSettings).RequiredProviders, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"terraform.settings.backend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformSettings).Backend, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"terraform.state.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1284,6 +1291,7 @@ type mqlTerraformSettings struct {
 	// optional: if you define mqlTerraformSettingsInternal it will be used here
 	Block plugin.TValue[*mqlTerraformBlock]
 	RequiredProviders plugin.TValue[interface{}]
+	Backend plugin.TValue[interface{}]
 }
 
 // createTerraformSettings creates a new instance of this resource
@@ -1324,6 +1332,10 @@ func (c *mqlTerraformSettings) GetBlock() *plugin.TValue[*mqlTerraformBlock] {
 
 func (c *mqlTerraformSettings) GetRequiredProviders() *plugin.TValue[interface{}] {
 	return &c.RequiredProviders
+}
+
+func (c *mqlTerraformSettings) GetBackend() *plugin.TValue[interface{}] {
+	return &c.Backend
 }
 
 // mqlTerraformState for the terraform.state resource

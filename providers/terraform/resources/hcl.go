@@ -556,12 +556,14 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, &mqlTerraformSettings{
 			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
 			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
+			Backend:           plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
 		}, nil
 	}
 
 	settingsBlock := blocks[0].(*mqlTerraformBlock)
 	args["block"] = llx.ResourceData(settingsBlock, "terraform.block")
 	args["requiredProviders"] = llx.DictData(map[string]interface{}{})
+	args["backend"] = llx.DictData(map[string]interface{}{})
 
 	if settingsBlock.block.State == plugin.StateIsSet {
 		hb := settingsBlock.block.Data
@@ -573,6 +575,19 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 				return nil, nil, err
 			}
 			args["requiredProviders"] = llx.DictData(dict)
+		}
+
+		backendBlock := getBlockByName(hb, "backend")
+		if backendBlock != nil {
+			attributes, _ := backendBlock.Body.JustAttributes()
+			dict, err := hclResolvedAttributesToDict(attributes)
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(backendBlock.Labels) != 0 {
+				dict["type"] = backendBlock.Labels[0]
+			}
+			args["backend"] = llx.DictData(dict)
 		}
 	}
 

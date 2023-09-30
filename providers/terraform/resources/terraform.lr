@@ -88,6 +88,8 @@ terraform.settings {
   block terraform.block
   // Provider Requirements
   requiredProviders dict
+  // Backend configuration
+  backend dict
 }
 
 // Terraform State
