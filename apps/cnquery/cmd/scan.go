@@ -253,7 +253,14 @@ func (c *scanConfig) loadBundles() error {
 			return err
 		}
 
-		_, err = bundle.Compile(context.Background(), c.runtime.Schema())
+		_, err = bundle.CompileExt(context.Background(), explorer.BundleCompileConf{
+			Schema: c.runtime.Schema(),
+			// We don't care about failing queries for local runs. We may only
+			// process a subset of all the queries in the bundle. When we receive
+			// things from the server, upstream can filter things for us. But running
+			// them locally requires us to do it in here.
+			RemoveFailing: true,
+		})
 		if err != nil {
 			return errors.Wrap(err, "failed to compile bundle")
 		}
