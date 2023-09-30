@@ -14,6 +14,7 @@ linters:
   disable-all: true
   enable:
     - gofmt
+    - depguard
 # deactivated for now since its slow in github actions
 #    - govet
 
@@ -28,3 +29,10 @@ linters-settings:
       - structtag
       - lostcancel
     disable-all: true
+
+  depguard:
+    rules:
+      denied-packages:
+        deny:
+          - pkg: "gotest.tools"
+            desc: Should be replaced with "github.com/stretchr/testify/assert"
