@@ -17,10 +17,15 @@ import (
 )
 
 const (
+	// asset connection types, used internally
 	StateConnectionType  = "terraform-state"
 	PlanConnectionType   = "terraform-plan"
 	HclConnectionType    = "terraform-hcl"
 	HclGitConnectionType = "terraform-hcl-git"
+	// CLI keywords, e.g. `<binary> run terraform plan file.json ...`
+	CLIPlan  = "plan"
+	CLIHcl   = "hcl"
+	CLIState = "state"
 )
 
 type Service struct {
@@ -51,14 +56,23 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	// and later on decide which thing to call based on the conn.Type
 	// below in this file we already have something similar:
 	// tc.Options["asset-type"] == "state"
-	switch req.Args[0] {
-	case StateConnectionType, PlanConnectionType, HclConnectionType:
-		conf.Type = req.Args[0]
-		if len(req.Args) > 1 {
-			conf.Options["path"] = req.Args[1]
-		} else {
+	action := req.Args[0]
+	switch action {
+	case CLIPlan, CLIHcl, CLIState:
+		switch action {
+		case CLIPlan:
+			conf.Type = PlanConnectionType
+		case CLIHcl:
+			conf.Type = HclConnectionType
+		case CLIState:
+			conf.Type = StateConnectionType
+		}
+
+		if len(req.Args) < 2 {
 			return nil, errors.New("no path provided")
 		}
+		conf.Options["path"] = req.Args[1]
+
 	default:
 		if len(req.Args) > 1 {
 			return nil, errors.New("unknown set of arguments, use 'state <path>', 'plan <path>' or 'hcl <path>'")
