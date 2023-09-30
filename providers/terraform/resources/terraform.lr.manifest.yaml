@@ -70,7 +70,7 @@ resources:
   terraform.module:
     fields:
       block:
-        min_mondoo_version: latest
+        min_mondoo_version: 9.0.0
       dir: {}
       key: {}
       source: {}
@@ -132,6 +132,8 @@ resources:
       - terraform
   terraform.settings:
     fields:
+      backend:
+        min_mondoo_version: latest
       block: {}
       requiredProviders: {}
     min_mondoo_version: 5.31.0
