@@ -22,12 +22,12 @@ resources:
       publisherDomain: {}
       signInAudience: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.devicemanagement:
     fields:
       deviceCompliancePolicies: {}
       deviceConfigurations: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.devicemanagement.devicecompliancepolicy:
     fields:
       assignments: {}
@@ -39,7 +39,7 @@ resources:
       properties: {}
       version: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.devicemanagement.deviceconfiguration:
     fields:
       createdDateTime: {}
@@ -50,7 +50,7 @@ resources:
       properties: {}
       version: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.domain:
     fields:
       authenticationType: {}
@@ -66,7 +66,7 @@ resources:
       serviceConfigurationRecords: {}
       supportedServices: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.domaindnsrecord:
     fields:
       id: {}
@@ -77,7 +77,7 @@ resources:
       supportedService: {}
       ttl: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.group:
     fields:
       displayName: {}
@@ -88,7 +88,7 @@ resources:
       members: {}
       securityEnabled: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.organization:
     fields:
       assignedPlans: {}
@@ -97,18 +97,18 @@ resources:
       id: {}
       verifiedDomains: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.policies:
     fields:
       adminConsentRequestPolicy: {}
       authorizationPolicy: {}
       identitySecurityDefaultsEnforcementPolicy: {}
       permissionGrantPolicies: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.rolemanagement:
     fields:
       roleDefinitions: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.rolemanagement.roleassignment:
     fields:
       id: {}
@@ -116,7 +116,7 @@ resources:
       principalId: {}
       roleDefinitionId: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.rolemanagement.roledefinition:
     fields:
       assignments: {}
@@ -129,12 +129,12 @@ resources:
       templateId: {}
       version: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.security:
     fields:
       latestSecureScores: {}
       secureScores: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.security.securityscore:
     fields:
       activeUserCount: {}
@@ -149,12 +149,12 @@ resources:
       maxScore: {}
       vendorInformation: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.serviceprincipal:
     fields:
       id: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   microsoft.user:
     fields:
       accountEnabled: {}
@@ -180,7 +180,7 @@ resources:
       userPrincipalName: {}
       userType: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
   ms365.exchangeonline:
     fields:
       adminAuditLogConfig: {}
@@ -200,7 +200,7 @@ resources:
       safeLinksPolicy: {}
       sharingPolicy: {}
       transportRule: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - microsoft365
@@ -208,7 +208,7 @@ resources:
     fields:
       spoTenant: {}
       spoTenantSyncClientRestriction: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - microsoft365
@@ -216,7 +216,7 @@ resources:
     fields:
       csOAuthConfiguration: {}
       csTeamsClientConfiguration: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - microsoft365
