@@ -54,7 +54,7 @@ func (g *mqlGitlabGroup) projects() ([]interface{}, error) {
 	}
 	gid := g.Id.Data
 
-	grp, _, err := conn.Client().Groups.GetGroup(gid, nil)
+	grp, _, err := conn.Client().Groups.GetGroup(int(gid), nil)
 	if err != nil {
 		return nil, err
 	}
