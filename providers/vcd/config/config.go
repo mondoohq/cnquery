@@ -15,9 +15,13 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "vcd",
-			Use:       "vcd",
-			Short:     "VMware Cloud Director",
+			Name:  "vcd",
+			Use:   "vcd [--user <user>] [--host <host>] [--organization <organization>] [--ask-pass] [--password <password>]",
+			Short: "VMware Cloud Director",
+			Long: `vcd is designed for querying resources within for a VMware Cloud Director environment. VMware's 
+vCloud Director (vCD), a platform that facilitates the operation and management of virtual resources within
+a multi-tenant cloud environment.
+`,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
@@ -25,12 +29,14 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "vCloud Director user",
+					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "host",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "vCloud Director user",
+					Desc:    "vCloud Director host",
+					Option:  plugin.FlagOption_Required,
 				},
 				{
 					Long:    "organization",

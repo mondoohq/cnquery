@@ -39,7 +39,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	conn := &inventory.Config{
-		Type: req.Connector,
+		Type:    req.Connector,
+		Options: make(map[string]string),
 	}
 
 	// custom flag parsing
