@@ -35,15 +35,19 @@ aws.organization @defaults("arn masterAccountEmail") {
 }
 
 // Amazon Virtual Private Cloud (VPC)
-private aws.vpc @defaults("arn isDefault") {
+private aws.vpc @defaults("arn isDefault cidrBlock") {
   // ARN of the VPC
   arn string
   // ID of the VPC
   id string
+  // IPv4 CIDR block of the VPC
+  cidrBlock string
   // State of the VPC (pending or available)
   state string
   // Whether the VPC is the default one
   isDefault bool
+  // How instance hardware tenancy settings are enforced on instances launched in this VPC
+  instanceTenancy string
   // Region the VPC exists in
   region string
   // A list of flowlogs for the VPC

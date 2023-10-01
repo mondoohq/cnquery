@@ -80,12 +80,14 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 
 					mqlVpc, err := CreateResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":       llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
-							"id":        llx.StringData(convert.ToString(v.VpcId)),
-							"state":     llx.StringData(string(v.State)),
-							"isDefault": llx.BoolData(convert.ToBool(v.IsDefault)),
-							"region":    llx.StringData(regionVal),
-							"tags":      llx.MapData(Ec2TagsToMap(v.Tags), types.String),
+							"arn":             llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(v.VpcId))),
+							"id":              llx.StringData(convert.ToString(v.VpcId)),
+							"state":           llx.StringData(string(v.State)),
+							"isDefault":       llx.BoolData(convert.ToBool(v.IsDefault)),
+							"instanceTenancy": llx.StringData(string(v.InstanceTenancy)),
+							"cidrBlock":       llx.StringData(convert.ToString(v.CidrBlock)),
+							"region":          llx.StringData(regionVal),
+							"tags":            llx.MapData(Ec2TagsToMap(v.Tags), types.String),
 						})
 					if err != nil {
 						log.Error().Msg(err.Error())
