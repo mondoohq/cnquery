@@ -977,6 +977,8 @@ private aws.s3.bucket @defaults("arn") {
   publicAccessBlock() dict
   // False if the bucket no longer exists (stale reference)
   exists bool
+  // Date the bucket was created
+  creationDate time
 }
 
 // Amazon S3 Bucket Grant
@@ -1228,7 +1230,6 @@ private aws.rds.dbinstance @defaults("arn") {
   // Indicates whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
 }
-
 
 // Amazon ElastiCache
 aws.elasticache {
