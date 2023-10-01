@@ -8,9 +8,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"gotest.tools/assert"
 )
 
 func TestVault(t *testing.T) {
@@ -39,5 +39,5 @@ func TestVault(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, key, newCred.Key)
 	assert.Equal(t, cred.Label, newCred.Label)
-	assert.DeepEqual(t, cred.Data, newCred.Data)
+	assert.EqualValues(t, cred.Data, newCred.Data)
 }

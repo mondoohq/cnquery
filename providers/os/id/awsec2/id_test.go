@@ -6,14 +6,14 @@ package awsec2
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestParseInstanceId(t *testing.T) {
 	path := "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/185972265011/regions/us-east-1/instances/i-07f67838ada5879af"
 	id, err := ParseMondooInstanceID(path)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, id.Account, "185972265011")
 	assert.Equal(t, id.Region, "us-east-1")
 	assert.Equal(t, id.Id, "i-07f67838ada5879af")

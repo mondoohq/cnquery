@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/shared"
-	"gotest.tools/assert"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock())
