@@ -3,7 +3,10 @@
 
 package providers
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import (
+	"github.com/cockroachdb/errors"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+)
 
 const DefaultOsID = "go.mondoo.com/cnquery/providers/os"
 
@@ -14,6 +17,14 @@ func DefaultRuntime() *Runtime {
 		defaultRuntime = Coordinator.NewRuntime()
 	}
 	return defaultRuntime
+}
+
+func SetDefaultRuntime(rt *Runtime) error {
+	if rt == nil {
+		return errors.New("attempted to set default runtime to null")
+	}
+	defaultRuntime = rt
+	return nil
 }
 
 // DefaultProviders are useful when working in air-gapped environments

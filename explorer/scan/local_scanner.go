@@ -174,14 +174,15 @@ func preprocessQueryPackFilters(filters []string) []string {
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
-	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.Coordinator.NewRuntime()))
+	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.DefaultRuntime()))
 	if err != nil {
 		return nil, false, errors.New("failed to resolve inventory for connection")
 	}
 	assetList := im.GetAssets()
 
 	var assets []*assetWithRuntime
-	var assetCandidates []*inventory.Asset
+	// note: asset candidate runtimes are the runtime that discovered them
+	var assetCandidates []*assetWithRuntime
 
 	// we connect and perform discovery for each asset in the job inventory
 	for i := range assetList {
@@ -190,11 +191,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		if err != nil {
 			return nil, false, err
 		}
-		runtime := providers.Coordinator.NewRuntime()
 
-		err = runtime.DetectProvider(resolvedAsset)
+		runtime, err := providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
 		if err != nil {
-			log.Error().Err(err).Msg("unable to detect provider for asset")
+			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to create runtime for asset")
 			continue
 		}
 		runtime.SetRecording(s.recording)
@@ -211,7 +211,12 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		if err != nil {
 			return nil, false, err
 		}
-		assetCandidates = append(assetCandidates, processedAssets...)
+		for i := range processedAssets {
+			assetCandidates = append(assetCandidates, &assetWithRuntime{
+				asset:   processedAssets[i],
+				runtime: runtime,
+			})
+		}
 		// TODO: we want to keep better track of errors, since there may be
 		// multiple assets coming in. It's annoying to abort the scan if we get one
 		// error at this stage.
@@ -222,28 +227,26 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}
 
 	// for each asset candidate, we initialize a new runtime and connect to it.
-	for _, asset := range assetCandidates {
-		runtime := providers.Coordinator.NewRuntime()
-		// Make sure the provider for the asset is present
-		if err := runtime.DetectProvider(asset); err != nil {
+	for i := range assetCandidates {
+		candidate := assetCandidates[i]
+
+		runtime, err := providers.Coordinator.RuntimeFor(candidate.asset, candidate.runtime)
+		if err != nil {
 			return nil, false, err
 		}
 
-		// attach recording before connect, so it is tied to the asset
-		runtime.SetRecording(s.recording)
-
-		err := runtime.Connect(&plugin.ConnectReq{
+		err = runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
-			Asset:    asset,
+			Asset:    candidate.asset,
 			Upstream: upstream,
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("unable to connect to asset")
+			log.Error().Err(err).Str("asset", candidate.asset.Name).Msg("unable to connect to asset")
 			continue
 		}
 
 		assets = append(assets, &assetWithRuntime{
-			asset:   asset,
+			asset:   candidate.asset,
 			runtime: runtime,
 		})
 	}
@@ -383,6 +386,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		defer scanGroup.Done()
 		multiprogress.Open()
 	}()
+
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
 }
