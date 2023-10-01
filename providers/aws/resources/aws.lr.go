@@ -1855,8 +1855,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetStorageEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbinstance.storageAllocated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStorageAllocated()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbinstance.storageIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStorageIops()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbinstance.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetStorageType()).ToDataRes(types.String)
+	},
 	"aws.rds.dbinstance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetAvailabilityZone()).ToDataRes(types.String)
 	},
 	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
@@ -1888,6 +1900,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEngine()).ToDataRes(types.String)
 	},
+	"aws.rds.dbinstance.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEngineVersion()).ToDataRes(types.String)
+	},
 	"aws.rds.dbinstance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
@@ -1896,6 +1911,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCreationDate()).ToDataRes(types.Time)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -4647,8 +4665,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbinstance.storageAllocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).StorageAllocated, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.storageIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).StorageIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbinstance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4691,6 +4725,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbinstance.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.dbinstance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -4701,6 +4739,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12552,7 +12594,11 @@ type mqlAwsRdsDbinstance struct {
 	BackupRetentionPeriod plugin.TValue[int64]
 	Snapshots plugin.TValue[[]interface{}]
 	StorageEncrypted plugin.TValue[bool]
+	StorageAllocated plugin.TValue[int64]
+	StorageIops plugin.TValue[int64]
+	StorageType plugin.TValue[string]
 	Region plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
 	PubliclyAccessible plugin.TValue[bool]
 	EnabledCloudwatchLogsExports plugin.TValue[[]interface{}]
 	DeletionProtection plugin.TValue[bool]
@@ -12563,9 +12609,11 @@ type mqlAwsRdsDbinstance struct {
 	DbInstanceClass plugin.TValue[string]
 	DbInstanceIdentifier plugin.TValue[string]
 	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
 	SecurityGroups plugin.TValue[[]interface{}]
 	Status plugin.TValue[string]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
+	CreationDate plugin.TValue[*time.Time]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -12637,8 +12685,24 @@ func (c *mqlAwsRdsDbinstance) GetStorageEncrypted() *plugin.TValue[bool] {
 	return &c.StorageEncrypted
 }
 
+func (c *mqlAwsRdsDbinstance) GetStorageAllocated() *plugin.TValue[int64] {
+	return &c.StorageAllocated
+}
+
+func (c *mqlAwsRdsDbinstance) GetStorageIops() *plugin.TValue[int64] {
+	return &c.StorageIops
+}
+
+func (c *mqlAwsRdsDbinstance) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
 func (c *mqlAwsRdsDbinstance) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsRdsDbinstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
 }
 
 func (c *mqlAwsRdsDbinstance) GetPubliclyAccessible() *plugin.TValue[bool] {
@@ -12681,6 +12745,10 @@ func (c *mqlAwsRdsDbinstance) GetEngine() *plugin.TValue[string] {
 	return &c.Engine
 }
 
+func (c *mqlAwsRdsDbinstance) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
 func (c *mqlAwsRdsDbinstance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
 	return &c.SecurityGroups
 }
@@ -12691,6 +12759,10 @@ func (c *mqlAwsRdsDbinstance) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbinstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
 	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsRdsDbinstance) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
 }
 
 // mqlAwsElasticache for the aws.elasticache resource
