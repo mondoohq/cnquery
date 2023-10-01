@@ -1599,6 +1599,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetExists()).ToDataRes(types.Bool)
 	},
+	"aws.s3.bucket.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetCreationDate()).ToDataRes(types.Time)
+	},
 	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
 	},
@@ -4213,6 +4216,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.s3.bucket.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11073,6 +11080,7 @@ type mqlAwsS3Bucket struct {
 	Encryption plugin.TValue[interface{}]
 	PublicAccessBlock plugin.TValue[interface{}]
 	Exists plugin.TValue[bool]
+	CreationDate plugin.TValue[*time.Time]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -11236,6 +11244,10 @@ func (c *mqlAwsS3Bucket) GetPublicAccessBlock() *plugin.TValue[interface{}] {
 
 func (c *mqlAwsS3Bucket) GetExists() *plugin.TValue[bool] {
 	return &c.Exists
+}
+
+func (c *mqlAwsS3Bucket) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
 }
 
 // mqlAwsS3BucketGrant for the aws.s3.bucket.grant resource
