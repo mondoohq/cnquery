@@ -15,9 +15,15 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "ipmi",
-			Use:       "ipmi",
-			Short:     "Ipmi",
+			Name:  "ipmi",
+			Use:   "ipmi user@host",
+			Short: "Intelligent Platform Management Interface (IPMI)",
+			Long: `ipmi is designed for querying resources via the Intelligent Platform Management Interface (IPMI).
+IPMI provides management and monitoring capabilities  independently of the host system's CPU,
+firmware (BIOS or UEFI), and operating system.
+`,
+			MinArgs:   1,
+			MaxArgs:   1,
 			Discovery: []string{provider.ConnectionType},
 			Flags: []plugin.Flag{
 				{
@@ -32,7 +38,7 @@ var Config = plugin.Provider{
 					Short:       "p",
 					Type:        plugin.FlagType_String,
 					Default:     "",
-					Desc:        "Set the connection password for SSH.",
+					Desc:        "Set the connection password for IPMI connection.",
 					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
 				},

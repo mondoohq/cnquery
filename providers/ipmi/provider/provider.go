@@ -44,7 +44,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// custom flag parsing
-
 	user := ""
 	port := 623
 	if len(req.Args) != 0 {
