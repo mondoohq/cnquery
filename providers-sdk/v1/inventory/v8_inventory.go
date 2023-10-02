@@ -114,7 +114,7 @@ func (s *ProviderType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func connBackendToType(backend ProviderType) string {
+func ConnBackendToType(backend ProviderType) string {
 	switch backend {
 	case ProviderType_LOCAL_OS:
 		return "os"

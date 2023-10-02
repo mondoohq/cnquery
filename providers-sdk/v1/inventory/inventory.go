@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"google.golang.org/protobuf/proto"
@@ -56,7 +57,8 @@ func InventoryFromYAML(data []byte) (*Inventory, error) {
 		for _, asset := range res.Spec.Assets {
 			for _, conn := range asset.Connections {
 				if conn.Type == "" {
-					conn.Type = connBackendToType(conn.Backend)
+					log.Warn().Msg("no connection `type` provided in inventory, falling back to deprecated `backend` field")
+					conn.Type = ConnBackendToType(conn.Backend)
 				}
 			}
 		}
