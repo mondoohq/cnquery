@@ -1640,6 +1640,8 @@ private aws.ec2.instance @defaults("arn state") {
   vpc() aws.vpc
   // A value of optional for http tokens denotes imdsv1 server compatibility; required is imdsv2
   httpTokens string
+  // Status of the IMDS endpoint is enabled on the instance
+  httpEndpoint string
   // Patch state information about the instance
   patchState() dict
   // State of the instance (pending, running, stopping, stopped, rebooting, or terminated)

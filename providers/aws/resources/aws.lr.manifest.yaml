@@ -838,6 +838,8 @@ resources:
       detailedMonitoring: {}
       deviceMappings: {}
       ebsOptimized: {}
+      httpEndpoint:
+        min_mondoo_version: 9.0.0
       httpTokens: {}
       image: {}
       instanceId: {}

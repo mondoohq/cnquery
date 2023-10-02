@@ -21,8 +21,8 @@ gpu
 gvnic
 hostkeys
 iap
-iex
 ilb
+IMDS
 ingresstls
 iotedge
 linux

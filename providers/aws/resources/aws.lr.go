@@ -2344,6 +2344,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.httpTokens": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetHttpTokens()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetHttpEndpoint()).ToDataRes(types.String)
+	},
 	"aws.ec2.instance.patchState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetPatchState()).ToDataRes(types.Dict)
 	},
@@ -5394,6 +5397,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.patchState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14713,6 +14720,7 @@ type mqlAwsEc2Instance struct {
 	Ssm plugin.TValue[interface{}]
 	Vpc plugin.TValue[*mqlAwsVpc]
 	HttpTokens plugin.TValue[string]
+	HttpEndpoint plugin.TValue[string]
 	PatchState plugin.TValue[interface{}]
 	State plugin.TValue[string]
 	DeviceMappings plugin.TValue[[]interface{}]
@@ -14814,6 +14822,10 @@ func (c *mqlAwsEc2Instance) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 
 func (c *mqlAwsEc2Instance) GetHttpTokens() *plugin.TValue[string] {
 	return &c.HttpTokens
+}
+
+func (c *mqlAwsEc2Instance) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
 }
 
 func (c *mqlAwsEc2Instance) GetPatchState() *plugin.TValue[interface{}] {
