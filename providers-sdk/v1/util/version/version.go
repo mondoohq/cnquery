@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/format"
@@ -25,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 )
 
@@ -192,7 +194,7 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy) {
 		return
 	}
 
-	err = os.WriteFile(goModPath, updatedModContent, 0644)
+	err = os.WriteFile(goModPath, updatedModContent, 0o644)
 	if err != nil {
 		log.Info().Msgf("Error writing updated go.mod file: %v", err)
 		return
@@ -224,6 +226,16 @@ func goModTidy(providerPath string) {
 		log.Error().Msgf("Error running 'go mod tidy': %v", err)
 		return
 	}
+}
+
+var defaultsCmd = &cobra.Command{
+	Use:   "defaults [PROVIDERS]",
+	Short: "generates the content for the defaults list of providers",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		defaults := parseDefaults(args)
+		fmt.Println(defaults)
+	},
 }
 
 func checkUpdate(providerPath string) {
@@ -570,6 +582,48 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 	return count
 }
 
+func parseDefaults(paths []string) string {
+	confs := []*plugin.Provider{}
+	for _, path := range paths {
+		name := filepath.Base(path)
+		data, err := os.ReadFile(filepath.Join(path, "dist", name+".json"))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to read config json")
+		}
+		var v plugin.Provider
+		if err = json.Unmarshal(data, &v); err != nil {
+			log.Fatal().Err(err).Msg("failed to parse config json")
+		}
+		confs = append(confs, &v)
+	}
+
+	var res strings.Builder
+	for i := range confs {
+		conf := confs[i]
+		var connectors strings.Builder
+		for j := range conf.Connectors {
+			conn := conf.Connectors[j]
+			connectors.WriteString(fmt.Sprintf(`
+				{
+					Name:  %#v,
+					Short: %#v,
+				},`, conn.Name, conn.Short))
+		}
+
+		res.WriteString(fmt.Sprintf(`
+	"%s": {
+		Provider: &plugin.Provider{
+			Name: "%s",
+			ConnectionTypes: %#v,
+			Connectors: []plugin.Connector{%s
+			},
+		},
+	},`, conf.Name, conf.Name, conf.ConnectionTypes, connectors.String()))
+	}
+
+	return res.String()
+}
+
 var (
 	fastMode           bool
 	doCommit           bool
@@ -586,6 +640,7 @@ func init() {
 	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
 	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
 	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd)
+	rootCmd.AddCommand(updateCmd, checkCmd, defaultsCmd)
 }
 
 func main() {

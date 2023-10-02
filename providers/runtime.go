@@ -160,7 +160,11 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 	for i := range asset.Connections {
 		conn := asset.Connections[i]
 		if conn.Type == "" {
-			continue
+			if conn.Backend != "" {
+				conn.Type = conn.Backend
+			} else {
+				continue
+			}
 		}
 
 		provider, err := EnsureProvider("", conn.Type, true, r.coordinator.Providers)
