@@ -1,0 +1,22 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  atlassian:
+    docs:
+      desc: |
+        The `atlassian` can be used to assess the configuration of atlassian accounts.
+    fields:
+      field: {}
+    min_mondoo_version: latest
+  atlassian.admin:
+    fields:
+      organizations: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization:
+    fields:
+      users: {}
+    min_mondoo_version: latest
+  atlassian.admin.user:
+    fields: {}
+    min_mondoo_version: latest

@@ -186,7 +186,8 @@ providers/build: \
 	providers/build/k8s \
 	providers/build/azure \
 	providers/build/ms365 \
-	providers/build/aws
+	providers/build/aws \
+	providers/build/atlassian
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -313,6 +314,9 @@ providers/build/aws: providers/lr
 providers/install/aws:
 	@$(call installProvider, providers/aws)
 
+providers/build/atlassian: providers/lr
+	@$(call buildProvider, providers/atlassian)
+
 providers/build/ms365: providers/lr
 	@$(call buildProvider, providers/ms365)
 providers/install/ms365:
@@ -339,6 +343,31 @@ providers/dist:
 	@$(call buildProviderDist, providers/azure)
 	@$(call buildProviderDist, providers/ms365)
 	@$(call buildProviderDist, providers/aws)
+	@$(call buildProviderDist, providers/atlassian)
+
+providers/install:
+#	@$(call installProvider, providers/core)
+	@$(call installProvider, providers/network)
+	@$(call installProvider, providers/os)
+	@$(call installProvider, providers/ipmi)
+	@$(call installProvider, providers/oci)
+	@$(call installProvider, providers/slack)
+	@$(call installProvider, providers/github)
+	@$(call installProvider, providers/gitlab)
+	@$(call installProvider, providers/terraform)
+	@$(call installProvider, providers/vsphere)
+	@$(call installProvider, providers/opcua)
+	@$(call installProvider, providers/okta)
+	@$(call installProvider, providers/google-workspace)
+	@$(call installProvider, providers/arista)
+	@$(call installProvider, providers/equinix)
+	@$(call installProvider, providers/vcd)
+	@$(call installProvider, providers/gcp)
+	@$(call installProvider, providers/k8s)
+	@$(call installProvider, providers/azure)
+	@$(call installProvider, providers/ms365)
+	@$(call installProvider, providers/aws)
+	@$(call installProvider, providers/atlassian)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -361,6 +390,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/azure)
 	@$(call bundleProvider, providers/ms365)
 	@$(call bundleProvider, providers/aws)
+	@$(call bundleProvider, providers/atlassian)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -384,6 +414,7 @@ providers/test:
 	@$(call testGpModProvider, providers/azure)
 	@$(call testGpModProvider, providers/ms365)
 	@$(call testGpModProvider, providers/aws)
+	@$(call testGpModProvider, providers/atlassian)
 
 lr/test:
 	go test ./resources/lr/...

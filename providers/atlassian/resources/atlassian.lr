@@ -1,0 +1,18 @@
+option provider = "go.mondoo.com/cnquery/providers/atlassian"
+option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
+
+// Atlassian
+atlassian {
+	field() string
+}
+
+atlassian.admin {
+  organizations() []atlassian.admin.organization
+}
+
+atlassian.admin.organization { 
+  users() []atlassian.admin.user
+}
+
+atlassian.admin.user {
+}
