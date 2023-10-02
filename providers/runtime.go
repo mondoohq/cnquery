@@ -160,11 +160,8 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 	for i := range asset.Connections {
 		conn := asset.Connections[i]
 		if conn.Type == "" {
-			if conn.Backend != "" {
-				conn.Type = conn.Backend
-			} else {
-				continue
-			}
+			log.Warn().Msg("no connection `type` provided in inventory, falling back to deprecated `backend` field")
+			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
 		provider, err := EnsureProvider("", conn.Type, true, r.coordinator.Providers)
