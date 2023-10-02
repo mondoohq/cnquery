@@ -138,3 +138,15 @@ func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+// Merges the mondoo-specific labels from the provided root into the provided asset
+func (a *Asset) AddMondooLabels(root *Asset) {
+	if a.Labels == nil {
+		a.Labels = map[string]string{}
+	}
+	for k, v := range root.Labels {
+		if strings.HasPrefix(k, "mondoo.com/") {
+			a.Labels[k] = v
+		}
+	}
+}
