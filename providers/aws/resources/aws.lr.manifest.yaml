@@ -2177,8 +2177,12 @@ resources:
   aws.vpc:
     fields:
       arn: {}
+      cidrBlock:
+        min_mondoo_version: 9.0.0
       flowLogs: {}
       id: {}
+      instanceTenancy:
+        min_mondoo_version: 9.0.0
       isDefault: {}
       region: {}
       routeTables: {}

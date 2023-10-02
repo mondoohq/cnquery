@@ -595,11 +595,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetId()).ToDataRes(types.String)
 	},
+	"aws.vpc.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetCidrBlock()).ToDataRes(types.String)
+	},
 	"aws.vpc.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetState()).ToDataRes(types.String)
 	},
 	"aws.vpc.isDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.instanceTenancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetInstanceTenancy()).ToDataRes(types.String)
 	},
 	"aws.vpc.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetRegion()).ToDataRes(types.String)
@@ -2665,12 +2671,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpc).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.instanceTenancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).InstanceTenancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6015,8 +6029,10 @@ type mqlAwsVpc struct {
 	// optional: if you define mqlAwsVpcInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
+	CidrBlock plugin.TValue[string]
 	State plugin.TValue[string]
 	IsDefault plugin.TValue[bool]
+	InstanceTenancy plugin.TValue[string]
 	Region plugin.TValue[string]
 	FlowLogs plugin.TValue[[]interface{}]
 	RouteTables plugin.TValue[[]interface{}]
@@ -6069,12 +6085,20 @@ func (c *mqlAwsVpc) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlAwsVpc) GetCidrBlock() *plugin.TValue[string] {
+	return &c.CidrBlock
+}
+
 func (c *mqlAwsVpc) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
 func (c *mqlAwsVpc) GetIsDefault() *plugin.TValue[bool] {
 	return &c.IsDefault
+}
+
+func (c *mqlAwsVpc) GetInstanceTenancy() *plugin.TValue[string] {
+	return &c.InstanceTenancy
 }
 
 func (c *mqlAwsVpc) GetRegion() *plugin.TValue[string] {
