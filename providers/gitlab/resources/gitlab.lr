@@ -46,7 +46,7 @@ gitlab.project @defaults("fullName visibility webURL") {
   createdAt time  
   // Project description
   description string
-  // default git branch
+  // Default git branch
   defaultBranch string
   // The project's visibility level. Can be private, internal, or public.
   visibility string
