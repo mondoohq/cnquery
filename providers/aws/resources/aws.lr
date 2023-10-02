@@ -1204,7 +1204,7 @@ private aws.rds.snapshot @defaults("arn") {
 }
 
 // Amazon RDS Database Instance
-private aws.rds.dbinstance @defaults("arn") {
+private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // ARN for the database instance
   arn string
   // Name of the database instance
@@ -1215,8 +1215,16 @@ private aws.rds.dbinstance @defaults("arn") {
   snapshots() []aws.rds.snapshot
   // Denotes whether the instance is encrypted
   storageEncrypted bool
+  // The amount of storage, in GiB, provisioned on the instance
+  storageAllocated int
+  // The storage IOPS provisioned on the instance
+  storageIops int
+  // The type of storage provisioned on the instance
+  storageType string
   // Region where the instance exists
   region string
+  // Availability zone where the instance exists
+  availabilityZone string
   // Denotes whether or not the instance is publicly accessible
   publiclyAccessible bool
   // List of log types the instance is configured to export to cloudwatch logs
@@ -1237,12 +1245,16 @@ private aws.rds.dbinstance @defaults("arn") {
   dbInstanceIdentifier string
   // Name of the database engine for this DB instance
   engine string
+  // The version of the database engine for this DB instance
+  engineVersion string
   // List of VPC security group elements that the DB instance belongs to
   securityGroups []aws.ec2.securitygroup
   // Current state of this database
   status string
   // Indicates whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
+  // The creation date of the RDS instance
+  creationDate time
 }
 
 // Amazon ElastiCache

@@ -1802,7 +1802,11 @@ resources:
       arn: {}
       autoMinorVersionUpgrade:
         min_mondoo_version: 8.22.0
+      availabilityZone:
+        min_mondoo_version: 9.0.0
       backupRetentionPeriod: {}
+      creationDate:
+        min_mondoo_version: 9.0.0
       dbInstanceClass:
         min_mondoo_version: 5.19.1
       dbInstanceIdentifier:
@@ -1811,6 +1815,8 @@ resources:
       enabledCloudwatchLogsExports: {}
       engine:
         min_mondoo_version: 5.19.1
+      engineVersion:
+        min_mondoo_version: 9.0.0
       enhancedMonitoringResourceArn: {}
       id: {}
       multiAZ: {}
@@ -1822,7 +1828,13 @@ resources:
       snapshots: {}
       status:
         min_mondoo_version: 5.19.1
+      storageAllocated:
+        min_mondoo_version: 9.0.0
       storageEncrypted: {}
+      storageIops:
+        min_mondoo_version: 9.0.0
+      storageType:
+        min_mondoo_version: 9.0.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
