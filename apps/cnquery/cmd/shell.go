@@ -74,7 +74,7 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 			// AssetMrn: not necessary right now, especially since incognito
 			SpaceMrn:    conf.GetParentMrn(),
 			ApiEndpoint: conf.UpstreamApiEndpoint(),
-			Incognito:   true,
+			Incognito:   viper.GetBool("incognito"),
 			Creds:       conf.GetServiceCredential(),
 		}
 	}
