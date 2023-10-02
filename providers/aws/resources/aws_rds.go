@@ -97,7 +97,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"dbInstanceIdentifier":          llx.StringData(convert.ToString(dbInstance.DBInstanceIdentifier)),
 							"deletionProtection":            llx.BoolData(dbInstance.DeletionProtection),
 							"enabledCloudwatchLogsExports":  llx.ArrayData(stringSliceInterface, types.String),
-							"engine":                        llx.StringData(convert.ToString(dbInstance.Engine)),
+							"engine":                        llx.StringDataPtr(dbInstance.Engine),
 							"engineVersion":                 llx.StringData(convert.ToString(dbInstance.EngineVersion)),
 							"enhancedMonitoringResourceArn": llx.StringData(convert.ToString(dbInstance.EnhancedMonitoringResourceArn)),
 							"id":                            llx.StringData(convert.ToString(dbInstance.DBInstanceIdentifier)),
