@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.5
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.21.5
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5
