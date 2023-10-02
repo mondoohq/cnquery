@@ -70,8 +70,8 @@ github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4 h1:6lJvvkQ9HmbHZ4h/IEwclwv2mrTW
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4/go.mod h1:1PrKYwxTM+zjpw9Y41KFtoJCQrJ34Z47Y4VgVbfndjo=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.0 h1:KBMHwjgjyu5wUZwNrzYSyv2BBjXDgbS7axPtYxWSyt8=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.0/go.mod h1:zwKhX2c7u7XDz2ToVE+qunfyoy9+3AO0rZynN5TwXCc=
-github.com/aws/aws-sdk-go-v2/service/acm v1.18.5 h1:P+guX2KwWLOAvofjSZ3z6Yd1RcxR3UX85GnLVLTf9wg=
-github.com/aws/aws-sdk-go-v2/service/acm v1.18.5/go.mod h1:3jqJmuasOx2V/CD5tQd3TNYZb1dMmXKh1F+cl8hDlYs=
+github.com/aws/aws-sdk-go-v2/service/acm v1.19.0 h1:WVTc4Z8EKSF6vWq5oAUmKxhVPRqyYKK3P2/DT1dveMk=
+github.com/aws/aws-sdk-go-v2/service/acm v1.19.0/go.mod h1:3jqJmuasOx2V/CD5tQd3TNYZb1dMmXKh1F+cl8hDlYs=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.0 h1:rByriM7T0xvKy7eDiNUhFyVgnGupZ7DIifReKDzfk5E=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.0/go.mod h1:OJmEdRP/gDTqY71Cc/eJ/anpvvGHNgf62FyNuah3X48=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.22.5 h1:kkjav/s/WVG2lGArKpDqdU+xHetu7Gg6pA4juZhyyEE=
