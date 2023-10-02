@@ -181,7 +181,7 @@ func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc
 	}
 
 	return NewWithClose(id, &inventory.Config{
-		Backend: "tar",
+		Type:    "tar",
 		Runtime: "docker-image",
 		Options: map[string]string{
 			OPTION_FILE: filename,
@@ -229,7 +229,7 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 			asset:           asset,
 			Fs:              provider_tar.NewFs(filename),
 			CloseFN:         closeFn,
-			PlatformKind:    conf.Backend,
+			PlatformKind:    conf.Type,
 			PlatformRuntime: conf.Runtime,
 		}
 
@@ -279,7 +279,7 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 			log.Debug().Str("tar", imageFilename).Msg("tar> remove temporary flattened image file on connection close")
 			os.Remove(imageFilename)
 		},
-		PlatformKind:    conf.Backend,
+		PlatformKind:    conf.Type,
 		PlatformRuntime: conf.Runtime,
 		conf: &inventory.Config{
 			Options: map[string]string{

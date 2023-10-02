@@ -201,7 +201,6 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		Name:        name,
 		Connections: []*inventory.Config{
 			{
-				Backend:     "container-registry",
 				Type:        "container-registry",
 				Host:        imageUrl,
 				Credentials: creds,

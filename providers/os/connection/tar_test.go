@@ -34,7 +34,7 @@ func TestTarCommand(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
@@ -58,7 +58,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	conn, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
@@ -74,7 +74,7 @@ func TestTarSymlinkFile(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
@@ -106,7 +106,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: centosContainerPath,
 		},
@@ -137,7 +137,7 @@ func TestTarFile(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
@@ -167,7 +167,7 @@ func TestFilePermissions(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
@@ -224,7 +224,7 @@ func TestTarFileFind(t *testing.T) {
 	require.NoError(t, err, "should create tar without error")
 
 	c, err := connection.NewTarConnection(0, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},

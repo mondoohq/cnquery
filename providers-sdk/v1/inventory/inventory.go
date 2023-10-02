@@ -55,8 +55,8 @@ func InventoryFromYAML(data []byte) (*Inventory, error) {
 	if err == nil && res.Spec != nil {
 		for _, asset := range res.Spec.Assets {
 			for _, conn := range asset.Connections {
-				if conn.Backend != "" && conn.Type == "" {
-					conn.Type = conn.Backend
+				if conn.Type == "" {
+					conn.Type = connBackendToType(conn.Backend)
 				}
 			}
 		}

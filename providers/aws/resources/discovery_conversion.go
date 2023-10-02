@@ -249,7 +249,6 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		}
 		probableUsername := getProbableUsernameFromImageName(imageName)
 		asset.Connections = []*inventory.Config{{
-			Backend:  "ssh",
 			Type:     "ssh",
 			Host:     instance.PublicIp.Data,
 			Insecure: true,
@@ -326,7 +325,6 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 	}
 	if ssm == string(ssmtypes.PingStatusOnline) {
 		asset.Connections = []*inventory.Config{{
-			Backend:     "ssh",
 			Host:        host,
 			Insecure:    true,
 			Runtime:     "aws_ec2",
@@ -409,7 +407,6 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
 		creds[0].Type = vault.CredentialType_aws_ec2_ssm_session // this will only work for ec2 instances
 		asset.Connections = []*inventory.Config{{
-			Backend:     "ssh",
 			Host:        host,
 			Insecure:    true,
 			Runtime:     "aws_ec2",
@@ -476,9 +473,8 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 		tag := image.Tags.Data[i].(string)
 		imageTags = append(imageTags, tag)
 		a.Connections = append(a.Connections, &inventory.Config{
-			Type:    "registry-image",
-			Backend: "registry-image",
-			Host:    image.Uri.Data + ":" + tag,
+			Type: "registry-image",
+			Host: image.Uri.Data + ":" + tag,
 			Options: map[string]string{
 				"region":  image.Region.Data,
 				"profile": conn.Profile(),
@@ -556,8 +552,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 
 	if publicIp != "" {
 		a.Connections = []*inventory.Config{{
-			Backend: "ssh",
-			Host:    publicIp,
+			Host: publicIp,
 			Options: map[string]string{
 				"region":         region,
 				"container_name": container.Name.Data,
@@ -589,7 +584,7 @@ func addConnectionInfoToECSContainerInstanceAsset(inst *mqlAwsEcsInstance, accou
 	}
 	a := MqlObjectToAsset(accountId, m, conn)
 	a.Connections = append(a.Connections, &inventory.Config{
-		Backend: "ssh", // fallback to ssh
+		Type: "ssh", // fallback to ssh
 		Options: map[string]string{
 			"region": inst.Region.Data,
 		},

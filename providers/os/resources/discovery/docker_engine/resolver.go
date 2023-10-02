@@ -138,7 +138,7 @@ func (k *Resolver) container(ctx context.Context, root *inventory.Asset, conf *i
 		return nil, err
 	}
 
-	conf.Backend = "docker-container"
+	conf.Type = "docker-container"
 
 	// TODO: how do we know we're not connecting to docker over
 	// the network and LOCAL_OS is correct
@@ -146,7 +146,7 @@ func (k *Resolver) container(ctx context.Context, root *inventory.Asset, conf *i
 		{
 			Connections: []*inventory.Config{
 				{
-					Backend: "local",
+					Type: "local",
 				},
 			},
 		},
@@ -172,7 +172,7 @@ func (k *Resolver) images(ctx context.Context, root *inventory.Asset, conf *inve
 	if ded != nil {
 		ii, err := ded.ImageInfo(conf.Host)
 		if err == nil {
-			conf.Backend = "docker-image"
+			conf.Type = "docker-image"
 			return []*inventory.Asset{{
 				Name:        ii.Name,
 				Connections: []*inventory.Config{conf},

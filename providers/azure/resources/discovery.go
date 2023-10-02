@@ -255,7 +255,6 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				// this is the OS representation of the VM itself
 				asset.Connections = append(asset.Connections, &inventory.Config{
 					Type:     "ssh",
-					Backend:  "ssh",
 					Host:     ipAddress.IpAddress.Data,
 					Insecure: true,
 				})
