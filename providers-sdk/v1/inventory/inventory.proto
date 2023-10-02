@@ -77,12 +77,52 @@ message Asset {
   string kind_string = 36;
 }
 
+// FIXME: DEPRECATED, remove in v10.0 (or later) vv
+enum ProviderType {
+  LOCAL_OS = 0;
+  DOCKER_ENGINE_IMAGE = 1;
+  DOCKER_ENGINE_CONTAINER = 2;
+  SSH = 3;
+  WINRM = 4;
+  AWS_SSM_RUN_COMMAND = 5;
+  CONTAINER_REGISTRY = 6;
+  TAR = 7;
+  MOCK = 8;
+  VSPHERE = 9;
+  ARISTAEOS = 10;
+  reserved 11;
+  AWS = 12;
+  GCP = 13;
+  AZURE = 14;
+  MS365 = 15;
+  IPMI = 16;
+  VSPHERE_VM = 17;
+  FS = 18;
+  K8S = 19;
+  EQUINIX_METAL = 20;
+  DOCKER = 21; // unspecified if this is a container or image
+  GITHUB = 22;
+  VAGRANT = 23;
+  AWS_EC2_EBS = 24;
+  GITLAB = 25;
+  TERRAFORM = 26;
+  HOST = 27;
+  UNKNOWN = 28;
+  OKTA = 29;
+  GOOGLE_WORKSPACE = 30;
+  SLACK = 31;
+  VCD = 32;
+  OCI = 33;
+  OPCUA = 34;
+  GCP_COMPUTE_INSTANCE_SNAPSHOT =35;
+}
+
 message Config {
   reserved 6, 7, 9, 10, 20;
   // FIXME: DEPRECATED, remove in v10.0 (or later) vv
   // This is replaced by type. We use a different number here so it doesn't
   // conflict with the old "backend" while allowing us to load the field from yaml.
-  int32 backend = 28;
+  ProviderType backend = 28;
   // ^^
 
   string host = 2;
