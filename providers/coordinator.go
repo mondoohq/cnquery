@@ -6,6 +6,7 @@ package providers
 import (
 	"os"
 	"os/exec"
+	"strconv"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
@@ -22,13 +24,18 @@ import (
 var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator = coordinator{
-	Running: []*RunningProvider{},
+	Running:  []*RunningProvider{},
+	runtimes: map[string]*Runtime{},
 }
 
 type coordinator struct {
 	Providers Providers
 	Running   []*RunningProvider
-	mutex     sync.Mutex
+
+	unprocessedRuntimes []*Runtime
+	runtimes            map[string]*Runtime
+	runtimeCnt          int
+	mutex               sync.Mutex
 }
 
 type builtinProvider struct {
@@ -244,6 +251,103 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 	}
 
 	return provider, nil
+}
+
+func (c *coordinator) NewRuntime() *Runtime {
+	res := &Runtime{
+		coordinator: c,
+		providers:   map[string]*ConnectedProvider{},
+		schema: extensibleSchema{
+			loaded: map[string]struct{}{},
+			Schema: resources.Schema{
+				Resources: map[string]*resources.ResourceInfo{},
+			},
+		},
+		Recording:       NullRecording{},
+		shutdownTimeout: defaultShutdownTimeout,
+	}
+	res.schema.runtime = res
+
+	// TODO: do this dynamically in the future
+	res.schema.loadAllSchemas()
+
+	c.mutex.Lock()
+	c.unprocessedRuntimes = append(c.unprocessedRuntimes, res)
+	c.runtimeCnt++
+	cnt := c.runtimeCnt
+	c.mutex.Unlock()
+
+	log.Warn().Msg("Started a new runtime (" + strconv.Itoa(cnt) + " total)")
+
+	return res
+}
+
+func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
+	res := c.NewRuntime()
+	res.Recording = parent.Recording
+	for k, v := range parent.providers {
+		res.providers[k] = v
+	}
+	return res
+}
+
+// RuntimFor an asset will return a new or existing runtime for a given asset.
+// If a runtime for this asset already exists, it will re-use it. If the runtime
+// is new, it will create it and detect the provider.
+// The asset and parent must be defined.
+func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error) {
+	c.mutex.Lock()
+	c.unsafeRefreshRuntimes()
+	res := c.unsafeGetAssetRuntime(asset)
+	c.mutex.Unlock()
+
+	if res != nil {
+		return res, nil
+	}
+
+	res = c.NewRuntimeFrom(parent)
+	return res, res.DetectProvider(asset)
+}
+
+// Only call this with a mutex lock around it!
+func (c *coordinator) unsafeRefreshRuntimes() {
+	var remaining []*Runtime
+	for i := range c.unprocessedRuntimes {
+		rt := c.unprocessedRuntimes[i]
+		if asset := rt.asset(); asset == nil || !c.unsafeSetAssetRuntime(asset, rt) {
+			remaining = append(remaining, rt)
+		}
+	}
+	c.unprocessedRuntimes = remaining
+}
+
+func (c *coordinator) unsafeGetAssetRuntime(asset *inventory.Asset) *Runtime {
+	if asset.Mrn != "" {
+		if rt := c.runtimes[asset.Mrn]; rt != nil {
+			return rt
+		}
+	}
+	for _, id := range asset.PlatformIds {
+		if rt := c.runtimes[id]; rt != nil {
+			return rt
+		}
+	}
+	return nil
+}
+
+// Returns true if we were able to set the runtime index for this asset,
+// i.e. if either the MRN and/or its platform IDs were identified.
+func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Runtime) bool {
+	found := false
+	if asset.Mrn != "" {
+		c.runtimes[asset.Mrn] = runtime
+		found = true
+	}
+	for _, id := range asset.PlatformIds {
+		c.runtimes[id] = runtime
+		found = true
+	}
+	return found
 }
 
 func (c *coordinator) Close(p *RunningProvider) {

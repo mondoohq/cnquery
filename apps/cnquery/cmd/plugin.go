@@ -117,12 +117,12 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range assets {
 		connectAsset := assets[i]
-		connectAssetRuntime := providers.Coordinator.NewRuntimeFrom(runtime)
-
-		if err := connectAssetRuntime.DetectProvider(connectAsset); err != nil {
+		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(connectAsset, runtime)
+		if err != nil {
 			return err
 		}
-		err := connectAssetRuntime.Connect(&pp.ConnectReq{
+
+		err = connectAssetRuntime.Connect(&pp.ConnectReq{
 			Features: config.Features,
 			Asset:    connectAsset,
 			Upstream: upstreamConfig,
