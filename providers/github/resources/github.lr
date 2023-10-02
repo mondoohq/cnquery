@@ -110,7 +110,7 @@ github.organization @defaults("login name") {
   membersCanCreatePublicPages bool
   // Whether members can create private pages
   membersCanCreatePrivatePages bool
-  // Whether members can create private repositories
+  // Whether members can fork private repositories to their own GitHub account
   membersCanForkPrivateRepos bool
   // List of users that are part of the owners group
   owners() []github.user
