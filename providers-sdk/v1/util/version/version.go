@@ -94,6 +94,11 @@ func checkGoModUpdate(providerPath string) {
 
 	// Iterate through the require statements and update dependencies
 	for _, require := range modFile.Require {
+		// Skip indirect dependencies
+		if require.Indirect {
+			continue
+		}
+
 		cmd := exec.Command("go", "get", "-u", require.Mod.Path+"@"+require.Mod.Version)
 
 		// Redirect standard output and standard error to the console
