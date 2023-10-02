@@ -11,10 +11,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20230817085602-5cf8b3f7a3f4
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	k8s.io/api v0.28.2
-	k8s.io/apiextensions-apiserver v0.28.0
+	k8s.io/apiextensions-apiserver v0.28.2
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2
 	k8s.io/klog/v2 v2.100.1

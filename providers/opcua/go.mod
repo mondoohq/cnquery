@@ -7,7 +7,7 @@ go 1.20
 require (
 	github.com/gopcua/opcua v0.5.1
 	github.com/mozillazg/go-slugify v0.2.0
-	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 )
 
 require (

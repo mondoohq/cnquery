@@ -7,8 +7,8 @@ go 1.20
 require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	github.com/vmware/govmomi v0.30.7
-	go.mondoo.com/cnquery v0.0.0-20230925140805-09d467fbdccc
+	github.com/vmware/govmomi v0.32.0
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 )
 
 require (
