@@ -1765,7 +1765,7 @@ private aws.ec2.securitygroup @defaults("arn") {
 }
 
 // Amazon EC2 Security Group IP Permission
-private aws.ec2.securitygroup.ippermission @defaults("id") {
+private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProtocol ipRanges ipv6Ranges") {
   // Unique ID for the IP permission
   id string
   // Start of port range for TCP/UDP protocols
