@@ -38,6 +38,10 @@ func init() {
 			// to override args, implement: initAwsVpcRoutetable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcRoutetable,
 		},
+		"aws.vpc.subnet": {
+			// to override args, implement: initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcSubnet,
+		},
 		"aws.vpc.flowlog": {
 			// to override args, implement: initAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcFlowlog,
@@ -606,6 +610,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetRouteTables()).ToDataRes(types.Array(types.Resource("aws.vpc.routetable")))
 	},
+	"aws.vpc.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
 	"aws.vpc.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -614,6 +621,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.routetable.routes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetRoutes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.vpc.subnet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.vpc.subnet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.subnet.cidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetCidrs()).ToDataRes(types.String)
+	},
+	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetMapPublicIpOnLaunch()).ToDataRes(types.Bool)
 	},
 	"aws.vpc.flowlog.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetId()).ToDataRes(types.String)
@@ -2645,6 +2664,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpc).RouteTables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
@@ -2659,6 +2682,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.routetable.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcRoutetable).Routes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcSubnet).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.subnet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.cidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).Cidrs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).MapPublicIpOnLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5928,6 +5971,7 @@ type mqlAwsVpc struct {
 	Region plugin.TValue[string]
 	FlowLogs plugin.TValue[[]interface{}]
 	RouteTables plugin.TValue[[]interface{}]
+	Subnets plugin.TValue[[]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
 }
 
@@ -6020,6 +6064,22 @@ func (c *mqlAwsVpc) GetRouteTables() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlAwsVpc) GetSubnets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Subnets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
 func (c *mqlAwsVpc) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
 }
@@ -6071,6 +6131,70 @@ func (c *mqlAwsVpcRoutetable) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]interface{}] {
 	return &c.Routes
+}
+
+// mqlAwsVpcSubnet for the aws.vpc.subnet resource
+type mqlAwsVpcSubnet struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcSubnetInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Cidrs plugin.TValue[string]
+	MapPublicIpOnLaunch plugin.TValue[bool]
+}
+
+// createAwsVpcSubnet creates a new instance of this resource
+func createAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcSubnet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.subnet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcSubnet) MqlName() string {
+	return "aws.vpc.subnet"
+}
+
+func (c *mqlAwsVpcSubnet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcSubnet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsVpcSubnet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcSubnet) GetCidrs() *plugin.TValue[string] {
+	return &c.Cidrs
+}
+
+func (c *mqlAwsVpcSubnet) GetMapPublicIpOnLaunch() *plugin.TValue[bool] {
+	return &c.MapPublicIpOnLaunch
 }
 
 // mqlAwsVpcFlowlog for the aws.vpc.flowlog resource

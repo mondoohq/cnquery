@@ -2169,6 +2169,8 @@ resources:
       region: {}
       routeTables: {}
       state: {}
+      subnets:
+        min_mondoo_version: 9.0.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -2193,6 +2195,17 @@ resources:
       routes: {}
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.vpc.subnet:
+    fields:
+      arn: {}
+      cidrs: {}
+      id: {}
+      mapPublicIpOnLaunch: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
