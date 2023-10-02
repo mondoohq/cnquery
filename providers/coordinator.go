@@ -288,7 +288,7 @@ func (c *coordinator) NewRuntime() *Runtime {
 	cnt := c.runtimeCnt
 	c.mutex.Unlock()
 
-	log.Warn().Msg("Started a new runtime (" + strconv.Itoa(cnt) + " total)")
+	log.Debug().Msg("Started a new runtime (" + strconv.Itoa(cnt) + " total)")
 
 	return res
 }
