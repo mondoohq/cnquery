@@ -16,5 +16,7 @@ message Job {
   bool do_record = 20;
   repeated string query_pack_filters = 21;
   map<string,string> props = 22;
+  // annotations that will be applied to all assets in the job
+  map<string,string> annotations = 23;
 }
 
