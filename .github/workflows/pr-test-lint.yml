@@ -71,7 +71,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - run: make test/go/plain-ci
+      - name: Test cnquery
+        run: make test/go/plain-ci
+        
+      - name: Test Providers
+        run: make providers/test
 
       - uses: actions/upload-artifact@v3  # upload test results
         if: success() || failure()        # run this step even if previous step failed
