@@ -714,6 +714,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"publicIp":              llx.StringData(convert.ToString(instance.PublicIpAddress)),
 				"detailedMonitoring":    llx.StringData(string(instance.Monitoring.State)),
 				"httpTokens":            llx.StringData(httpTokens),
+				"httpEndpoint":          llx.StringData(string(instance.MetadataOptions.HttpEndpoint)),
 				"state":                 llx.StringData(string(instance.State.Name)),
 				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),
 				"securityGroups":        llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
