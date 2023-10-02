@@ -28,7 +28,32 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-var rootCmd = &cobra.Command{}
+var rootCmd = &cobra.Command{
+	Short: "cnquery versioning tool",
+	Long: `
+cnquery versioning tool allows us to update the version of one or more providers.
+
+The tool will automatically detect the current version of the provider and
+suggest a new version. It will also create a commit with the new version and
+push it to a new branch.
+
+  $ version update providers/*/ --increment=patch --commit
+
+The tool will also check if the provider go dependencies have changed since the 
+last version and will suggest to update them as well. To just clean up the go.mod
+and go.sum files, run:
+
+  $ version mod-tidy providers/*/ 
+
+To update all provider go dependencies to the latest patch version, run:
+
+  $ version mod-update providers/*/ --patch 
+
+To update all provider go dependencies to the latest version, run:
+
+  $ version mod-update providers/*/ --latest
+`,
+}
 
 var updateCmd = &cobra.Command{
 	Use:   "update [PROVIDERS]",
@@ -66,13 +91,32 @@ var modUpdateCmd = &cobra.Command{
 	Short: "update all go dependencies for all provided providers",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		updateStrategy := UpdateStrategyNone
+
+		if latestPatchVersion {
+			updateStrategy = UpdateStrategyPatch
+		} else if latestVersion {
+			updateStrategy = UpdateStrategyLatest
+		}
+
 		for i := range args {
-			checkGoModUpdate(args[i])
+			checkGoModUpdate(args[i], updateStrategy)
 		}
 	},
 }
 
-func checkGoModUpdate(providerPath string) {
+type UpdateStrategy int
+
+const (
+	// UpdateStrategyNone indicates that version should not be updated
+	UpdateStrategyNone UpdateStrategy = iota
+	// UpdateStrategyLatest indicates that version should be updated to the latest
+	UpdateStrategyLatest
+	// UpdateStrategyPatch indicates that version should be updated to the latest patch
+	UpdateStrategyPatch
+)
+
+func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy) {
 	log.Info().Msgf("Updating dependencies for %s...", providerPath)
 
 	// Define the path to your project's go.mod file
@@ -99,7 +143,17 @@ func checkGoModUpdate(providerPath string) {
 			continue
 		}
 
-		cmd := exec.Command("go", "get", "-u", require.Mod.Path+"@"+require.Mod.Version)
+		var modPath string
+		switch updateStrategy {
+		case UpdateStrategyLatest:
+			modPath = require.Mod.Path + "@latest"
+		case UpdateStrategyPatch:
+			modPath = require.Mod.Path + "@patch" // see https://github.com/golang/go/issues/26812
+		default:
+			modPath = require.Mod.Path + "@" + require.Mod.Version
+		}
+
+		cmd := exec.Command("go", "get", "-u", modPath)
 
 		// Redirect standard output and standard error to the console
 		cmd.Stdout = os.Stdout
@@ -517,9 +571,11 @@ func countChangesSince(conf *providerConf, repoPath string) int {
 }
 
 var (
-	fastMode  bool
-	doCommit  bool
-	increment string
+	fastMode           bool
+	doCommit           bool
+	increment          string
+	latestVersion      bool
+	latestPatchVersion bool
 )
 
 func init() {
@@ -527,6 +583,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&doCommit, "commit", false, "commit the change to git if there is a version bump")
 	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch or minor version")
 
+	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
+	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
 	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd)
 }
 
