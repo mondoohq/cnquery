@@ -77,8 +77,19 @@ func (p *RunningProvider) Shutdown() error {
 	var err error
 	if !p.isClosed {
 		_, err = p.Plugin.Shutdown(&pp.ShutdownReq{})
+		if err != nil {
+			log.Debug().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
+		}
+
+		// If the plugin was not in active use, we may not have a client at this
+		// point. Since all of this is run within a sync-lock, we can check the
+		// client and if it exists use it to send the kill signal.
+		if p.Client != nil {
+			p.Client.Kill()
+		}
 		p.isClosed = true
 	}
+
 	p.isShutdown = true
 	return err
 }
