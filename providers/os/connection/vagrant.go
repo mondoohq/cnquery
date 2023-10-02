@@ -101,7 +101,6 @@ func migrateVagrantAssetToSsh(id uint32, sshConfig *vagrant.VagrantVmSSHConfig, 
 
 	cc := &inventory.Config{
 		// TODO: do we need to support winrm?
-		Backend:  "ssh",
 		Type:     "ssh",
 		Runtime:  "vagrant",
 		Host:     sshConfig.HostName,

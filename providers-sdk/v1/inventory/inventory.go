@@ -55,8 +55,8 @@ func InventoryFromYAML(data []byte) (*Inventory, error) {
 	if err == nil && res.Spec != nil {
 		for _, asset := range res.Spec.Assets {
 			for _, conn := range asset.Connections {
-				if conn.Backend != "" && conn.Type == "" {
-					conn.Type = conn.Backend
+				if conn.Backend != 0 && conn.Type == "" {
+					conn.Type = connBackendToType(conn.Backend)
 				}
 			}
 		}
@@ -64,6 +64,118 @@ func InventoryFromYAML(data []byte) (*Inventory, error) {
 	// ^^
 
 	return res, err
+}
+
+func connBackendToType(backend int32) string {
+	// ProviderType_LOCAL_OS                      ProviderType = 0
+	// ProviderType_DOCKER_ENGINE_IMAGE           ProviderType = 1
+	// ProviderType_DOCKER_ENGINE_CONTAINER       ProviderType = 2
+	// ProviderType_SSH                           ProviderType = 3
+	// ProviderType_WINRM                         ProviderType = 4
+	// ProviderType_AWS_SSM_RUN_COMMAND           ProviderType = 5
+	// ProviderType_CONTAINER_REGISTRY            ProviderType = 6
+	// ProviderType_TAR                           ProviderType = 7
+	// ProviderType_MOCK                          ProviderType = 8
+	// ProviderType_VSPHERE                       ProviderType = 9
+	// ProviderType_ARISTAEOS                     ProviderType = 10
+	// ProviderType_AWS                           ProviderType = 12
+	// ProviderType_GCP                           ProviderType = 13
+	// ProviderType_AZURE                         ProviderType = 14
+	// ProviderType_MS365                         ProviderType = 15
+	// ProviderType_IPMI                          ProviderType = 16
+	// ProviderType_VSPHERE_VM                    ProviderType = 17
+	// ProviderType_FS                            ProviderType = 18
+	// ProviderType_K8S                           ProviderType = 19
+	// ProviderType_EQUINIX_METAL                 ProviderType = 20
+	// ProviderType_DOCKER                        ProviderType = 21 // unspecified if this is a container or image
+	// ProviderType_GITHUB                        ProviderType = 22
+	// ProviderType_VAGRANT                       ProviderType = 23
+	// ProviderType_AWS_EC2_EBS                   ProviderType = 24
+	// ProviderType_GITLAB                        ProviderType = 25
+	// ProviderType_TERRAFORM                     ProviderType = 26
+	// ProviderType_HOST                          ProviderType = 27
+	// ProviderType_UNKNOWN                       ProviderType = 28
+	// ProviderType_OKTA                          ProviderType = 29
+	// ProviderType_GOOGLE_WORKSPACE              ProviderType = 30
+	// ProviderType_SLACK                         ProviderType = 31
+	// ProviderType_VCD                           ProviderType = 32
+	// ProviderType_OCI                           ProviderType = 33
+	// ProviderType_OPCUA                         ProviderType = 34
+	// ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT ProviderType = 35
+	switch backend {
+	case 0:
+		return "os"
+	case 1:
+		return "docker-image"
+	case 2:
+		return "docker-container"
+	case 3:
+		return "ssh"
+	case 4:
+		return "winrm"
+	case 5:
+		return "aws-ssm-run-command"
+	case 6:
+		return "container-registry"
+	case 7:
+		return "tar"
+	case 8:
+		return "mock"
+	case 9:
+		return "vsphere"
+	case 10:
+		return "arista-eos"
+	case 12:
+		return "aws"
+	case 13:
+		return "gcp"
+	case 14:
+		return "azure"
+	case 15:
+		return "ms365"
+	case 16:
+		return "ipmi"
+	case 17:
+		return "vsphere-vm"
+	case 18:
+		return "fs"
+	case 19:
+		return "k8s"
+	case 20:
+		return "equinix-metal"
+	case 21:
+		return "docker"
+	case 22:
+		return "github"
+	case 23:
+		return "vagrant"
+	case 24:
+		return "aws-ec2-ebs"
+	case 25:
+		return "gitlab"
+	case 26:
+		return "terraform"
+	case 27:
+		return "host"
+	case 28:
+		return "unknown"
+	case 29:
+		return "okta"
+	case 30:
+		return "google-workspace"
+	case 31:
+		return "slack"
+	case 32:
+		return "vcd"
+	case 33:
+		return "oci"
+	case 34:
+		return "opcua"
+	case 35:
+		return "gcp-compute-instance-snapshot"
+	default:
+		return ""
+	}
 }
 
 // InventoryFromFile loads an inventory from file system

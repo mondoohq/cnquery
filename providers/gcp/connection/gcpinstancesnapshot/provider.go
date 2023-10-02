@@ -217,7 +217,6 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 	// create and initialize fs provider
 	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
 		Path:       volumeMounter.ScanDir,
-		Backend:    "fs",
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
 		Type:       conf.Type,

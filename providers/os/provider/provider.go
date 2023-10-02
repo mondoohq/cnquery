@@ -93,7 +93,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			switch req.Args[0] {
 			case "image":
 				conf.Type = "docker-image"
-				conf.Backend = "tar"
 				conf.Host = req.Args[1]
 			case "registry":
 				conf.Type = "docker-registry"

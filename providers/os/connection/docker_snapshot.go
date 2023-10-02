@@ -47,7 +47,7 @@ func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 
 	tarConnection, err := NewWithClose(id, &inventory.Config{
-		Backend: "tar",
+		Type: "tar",
 		Options: map[string]string{
 			OPTION_FILE: f.Name(),
 		},

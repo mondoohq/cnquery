@@ -135,9 +135,8 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*inventory.Asset, error) {
 		asset := &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Backend: "docker-engine",
-					Type:    "docker-container",
-					Host:    dContainer.ID,
+					Type: "docker-container",
+					Host: dContainer.ID,
 				},
 			},
 		}
