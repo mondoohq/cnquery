@@ -92,8 +92,8 @@ github.com/aws/aws-sdk-go-v2/service/codebuild v1.21.5 h1:uol+F5F9T1cNSJsBfTOo85
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.21.5/go.mod h1:a0ghZ8nA7qvVSQ69JRKUxIMqVFgXp7pEF8sGYx1ibO0=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.36.3 h1:a07v+hVWO2PPoFnkiV2A+l6RO/jv6YSKBqwnFWiwaec=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.36.3/go.mod h1:zMbXre8in+0e6LAQsFNyzNCpuSy0Mw5XwSg6mDxhg6M=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4 h1:Ir8BEejwSOOrD9juzFSMdXkXPyIdj1DfkFR+FJb0kc8=
-github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4/go.mod h1:NSAyKko0rDkrZOjcdCPPvMEe+FyIw/aDDQ8X+xAIW44=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.31.0 h1:JFqbuMEmjEaIr5lx0uB0jSHFIbzwkLKal5Jwxqxjp20=
+github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.31.0/go.mod h1:NSAyKko0rDkrZOjcdCPPvMEe+FyIw/aDDQ8X+xAIW44=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5 h1:EeNQ3bDA6hlx3vifHf7LT/l9dh9w7D2XgCdaD11TRU4=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5/go.mod h1:X3ThW5RPV19hi7bnQ0RMAiBjZbzxj4rZlj+qdctbMWY=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.122.0 h1:i+YnwvmUy51p+8nwH9eDMzn5GWVLK+Pvva6To8O4AaI=

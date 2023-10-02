@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.36.3
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.30.4
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.122.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.20.0
