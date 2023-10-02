@@ -629,7 +629,7 @@ func subToAsset(sub subscriptions.Subscription, conf *inventory.Config) *invento
 		},
 		Name:        fmt.Sprintf("Azure subscription %s", *sub.DisplayName),
 		Connections: []*inventory.Config{conf},
-		PlatformIds: []string{platformId, *sub.ID},
+		PlatformIds: []string{platformId},
 	}
 }
 
