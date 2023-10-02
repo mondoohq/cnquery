@@ -9,20 +9,14 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 func getTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
-	// fallback to CLI authorizer if no credentials are specified
 	if credential == nil {
-		log.Debug().Msg("using azure cli to get a token")
-		azCred, err = azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
-		if err != nil {
-			return nil, errors.Wrap(err, "error creating CLI credentials")
-		}
+		return nil, errors.New("no credentials provided")
 	} else {
 		// we only support private key authentication for ms 365
 		switch credential.Type {

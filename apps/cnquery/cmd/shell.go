@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -18,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
@@ -92,9 +94,18 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
+	// we go through inventory resolution to resolve credentials properly for the passed-in asset
+	im, err := manager.NewManager(manager.WithInventory(inventory.New(inventory.WithAssets(conf.Asset)), runtime))
+	if err != nil {
+		return errors.New("failed to resolve inventory for connection")
+	}
+	resolvedAsset, err := im.ResolveAsset(conf.Asset)
+	if err != nil {
+		return err
+	}
 	res, err := runtime.Provider.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
-		Asset:    conf.Asset,
+		Asset:    resolvedAsset,
 		Upstream: nil,
 	}, nil)
 	if err != nil {
