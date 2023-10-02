@@ -140,6 +140,10 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 	return flowLogs, nil
 }
 
+func (a *mqlAwsVpcRoutetable) id() (string, error) {
+  return a.Id.Data, nil
+}
+
 func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpcVal := a.Id.Data
