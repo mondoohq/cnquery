@@ -9,7 +9,7 @@ require (
 	github.com/google/go-github/v55 v55.0.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20231002080743-cbf2ec2fee84
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 	go.mondoo.com/ranger-rpc v0.5.1
 	golang.org/x/oauth2 v0.12.0
 	sigs.k8s.io/yaml v1.3.0

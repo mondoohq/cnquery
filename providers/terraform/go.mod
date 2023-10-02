@@ -87,6 +87,6 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.0
-	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 	golang.org/x/text v0.13.0 // indirect
 )

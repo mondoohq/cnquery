@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/efs v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/efs v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.16.5
@@ -55,7 +55,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20230915180754-c5f61bc705cf
+	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
 	k8s.io/client-go v0.28.2
 )
 
