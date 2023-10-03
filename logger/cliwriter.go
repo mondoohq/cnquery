@@ -86,6 +86,9 @@ func consoleDefaultFormatErrFieldValue() zerolog.Formatter {
 	}
 }
 
+// consoleFormatLevelNoColor returns a formatter that outputs the level in uppercase without any color
+// this is used for compact mode and primarily for windows which has a restricted color palette and character set
+// for the console
 func consoleFormatLevelNoColor() zerolog.Formatter {
 	return func(i interface{}) string {
 		var l string
@@ -97,21 +100,21 @@ func consoleFormatLevelNoColor() zerolog.Formatter {
 			case "debug":
 				l = "DBG"
 			case "info":
-				l = "→"
+				l = "-"
 			case "warn":
-				l = "!"
+				l = "WRN"
 			case "error":
-				l = "x"
+				l = "ERR"
 			case "fatal":
 				l = "FTL"
 			case "panic":
 				l = "PNC"
 			default:
-				l = "???"
+				l = "UNK"
 			}
 		} else {
 			if i == nil {
-				l = "???"
+				l = "UNK"
 			} else {
 				l = strings.ToUpper(fmt.Sprintf("%s", i))[0:3]
 			}
