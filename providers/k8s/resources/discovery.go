@@ -249,7 +249,7 @@ func discoverAssets(
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryContainerImages {
-			list, err = discoverContainerImages(runtime, invConfig, clusterId, k8s, nsFilter)
+			list, err = discoverContainerImages(conn, runtime, invConfig, clusterId, k8s, nsFilter)
 			if err != nil {
 				return nil, err
 			}
@@ -297,6 +297,7 @@ func discoverPods(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(pod.obj)
 	}
@@ -341,6 +342,7 @@ func discoverJobs(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(job.obj)
 	}
@@ -385,6 +387,7 @@ func discoverCronJobs(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(cjob.obj)
 	}
@@ -429,6 +432,7 @@ func discoverStatefulSets(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(statefulset.obj)
 	}
@@ -473,6 +477,7 @@ func discoverDeployments(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(deployment.obj)
 	}
@@ -517,6 +522,7 @@ func discoverReplicaSets(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(replicaset.obj)
 	}
@@ -561,6 +567,7 @@ func discoverDaemonSets(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(daemonset.obj)
 	}
@@ -584,7 +591,7 @@ func discoverAdmissionReviews(
 	for i := range admissionReviews {
 		aReview := admissionReviews[i]
 
-		asset, err := assetFromAdmissionReview(aReview, conn.Runtime(), invConfig, clusterId)
+		asset, err := assetFromAdmissionReview(conn, aReview, conn.Runtime(), invConfig, clusterId)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from admission review")
 		}
@@ -635,6 +642,7 @@ func discoverIngresses(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		od.Add(ingress.obj)
 	}
@@ -687,6 +695,7 @@ func discoverNamespaces(
 			Platform:    platform,
 			Labels:      labels,
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Category:    conn.Asset().Category,
 		})
 		if od != nil {
 			od.Add(&ns)
@@ -695,7 +704,7 @@ func discoverNamespaces(
 	return assetList, nil
 }
 
-func discoverContainerImages(runtime *plugin.Runtime, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
+func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, invConfig *inventory.Config, clusterId string, k8s *mqlK8s, nsFilter NamespaceFilterOpts) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
@@ -722,6 +731,7 @@ func discoverContainerImages(runtime *plugin.Runtime, invConfig *inventory.Confi
 					Host: i.resolvedImage,
 				},
 			},
+			Category: conn.Asset().Category,
 		})
 	}
 
@@ -758,7 +768,7 @@ func addMondooAssetLabels(assetLabels map[string]string, objMeta metav1.Object, 
 	}
 }
 
-func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, connection *inventory.Config, clusterIdentifier string) (*inventory.Asset, error) {
+func assetFromAdmissionReview(conn shared.Connection, a admissionv1.AdmissionReview, runtime string, connection *inventory.Config, clusterIdentifier string) (*inventory.Asset, error) {
 	// Use the meta from the request object.
 	obj, err := resources.ResourcesFromManifest(bytes.NewReader(a.Request.Object.Raw))
 	if err != nil {
@@ -809,6 +819,7 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 		Connections: []*inventory.Config{connection},
 		State:       inventory.State_STATE_ONLINE,
 		Labels:      assetLabels,
+		Category:    conn.Asset().Category,
 	}
 
 	return asset, nil
