@@ -117,7 +117,7 @@ func (s *ProviderType) UnmarshalJSON(data []byte) error {
 func ConnBackendToType(backend ProviderType) string {
 	switch backend {
 	case ProviderType_LOCAL_OS:
-		return "os"
+		return "local"
 	case ProviderType_DOCKER_ENGINE_IMAGE:
 		return "docker-image"
 	case ProviderType_DOCKER_ENGINE_CONTAINER:
