@@ -138,10 +138,8 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstreamConfig, err := s.getUpstreamConfig(job.Inventory, true)
-	if err != nil {
-		return nil, err
-	}
+	// skip the error check, we are running in incognito
+	upstreamConfig, _ := s.getUpstreamConfig(job.Inventory, true)
 	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
 	if err != nil {
 		return nil, err
