@@ -74,8 +74,6 @@ func dict2primitive(value interface{}) (*Primitive, error) {
 	switch x := value.(type) {
 	case bool:
 		return BoolPrimitive(x), nil
-	case int32:
-		return IntPrimitive(int64(x)), nil
 	case int64:
 		return IntPrimitive(x), nil
 	case float64:
