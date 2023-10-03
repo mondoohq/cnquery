@@ -20,7 +20,7 @@ jobs:
       - name: Trigger Registry Update
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_API_TOKEN }}
+          token: ${{ secrets.SERVER_ACTION_TOKEN }}
           repository: mondoohq/server
           event-type: update
           client-payload: '{"source": "${{ github.repository }}", "tag": "${{ github.ref }}"}'
