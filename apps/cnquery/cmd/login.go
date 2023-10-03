@@ -23,6 +23,7 @@ import (
 func init() {
 	rootCmd.AddCommand(LoginCmd)
 	LoginCmd.Flags().StringP("token", "t", "", "Set a client registration token.")
+	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations.")
 	LoginCmd.Flags().String("name", "", "Set asset name.")
 	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
 }
@@ -47,11 +48,12 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		token, _ := cmd.Flags().GetString("token")
-		register(token)
+		annotations, _ := cmd.Flags().GetStringToString("annotation")
+		register(token, annotations)
 	},
 }
 
-func register(token string) {
+func register(token string, annotations map[string]string) {
 	var err error
 	var credential *upstream.ServiceAccountCredentials
 
@@ -142,7 +144,7 @@ func register(token string) {
 		viper.Set("mrn", confirmation.Credential.Mrn)
 		viper.Set("private_key", confirmation.Credential.PrivateKey)
 		viper.Set("certificate", confirmation.Credential.Certificate)
-
+		viper.Set("annotations", annotations)
 		credential = confirmation.Credential
 	} else {
 		// try to read local options

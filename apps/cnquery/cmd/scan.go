@@ -146,6 +146,8 @@ type scanConfig struct {
 	Props          map[string]string
 	Bundle         *explorer.Bundle
 	runtime        *providers.Runtime
+	// annotations that will be applied to all discovered assets
+	annotations map[string]string
 
 	IsIncognito bool
 }
@@ -167,6 +169,20 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse inventory")
 	}
+
+	annotations, err := cmd.Flags().GetStringToString("annotation")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse annotations")
+	}
+
+	// merge the config and the user-provided annotations with the latter having precedence
+	optAnnotations := opts.Annotations
+	if optAnnotations == nil {
+		optAnnotations = map[string]string{}
+	}
+	for k, v := range annotations {
+		optAnnotations[k] = v
+	}
 	conf := scanConfig{
 		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
@@ -175,6 +191,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
 		runtime:        runtime,
+		annotations:    optAnnotations,
 	}
 
 	// if users want to get more information on available output options,
@@ -292,6 +309,7 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 				Bundle:           config.Bundle,
 				QueryPackFilters: config.QueryPackNames,
 				Props:            config.Props,
+				Annotations:      config.annotations,
 			})
 	}
 	return scanner.Run(
@@ -301,6 +319,7 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 			Bundle:           config.Bundle,
 			QueryPackFilters: config.QueryPackNames,
 			Props:            config.Props,
+			Annotations:      config.annotations,
 		})
 }
 

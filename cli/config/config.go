@@ -199,6 +199,9 @@ type CommonOpts struct {
 
 	// labels that will be applied to all assets
 	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
+
+	// annotations that will be applied to all assets
+	Annotations map[string]string `json:"annotations,omitempty" mapstructure:"annotations"`
 }
 
 type CliConfigAuthentication struct {
