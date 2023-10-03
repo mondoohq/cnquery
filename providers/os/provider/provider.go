@@ -88,7 +88,31 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		port = 5985
 	case "vagrant":
 		conf.Type = "vagrant"
-	case "container", "docker":
+	case "docker":
+		if len(req.Args) > 1 {
+			switch req.Args[0] {
+			case "image":
+				conf.Type = "docker-image"
+				conf.Host = req.Args[1]
+			case "registry":
+				conf.Type = "docker-registry"
+				conf.Host = req.Args[1]
+			case "tar":
+				conf.Type = "docker-snapshot"
+				conf.Path = req.Args[1]
+			case "container":
+				conf.Type = "docker-container"
+				conf.Host = req.Args[1]
+			}
+		} else {
+			connType, err := connection.FetchConnectionType(req.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			conf.Type = connType
+			containerID = req.Args[0]
+		}
+	case "container":
 		if len(req.Args) > 1 {
 			switch req.Args[0] {
 			case "image":
