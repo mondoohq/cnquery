@@ -21,6 +21,10 @@ func init() {
 			// to override args, implement: initTerraform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraform,
 		},
+		"terraform.resources": {
+			// to override args, implement: initTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTerraformResources,
+		},
 		"terraform.file": {
 			// to override args, implement: initTerraformFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTerraformFile,
@@ -159,14 +163,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.datasources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraform).GetDatasources()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
-	"terraform.resources": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlTerraform).GetResources()).ToDataRes(types.Array(types.Resource("terraform.block")))
-	},
 	"terraform.variables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraform).GetVariables()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
 	"terraform.outputs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraform).GetOutputs()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
+	"terraform.resources.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResources).GetFilter()).ToDataRes(types.Resource("any"))
+	},
+	"terraform.resources.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformResources).GetList()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
 	"terraform.file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformFile).GetPath()).ToDataRes(types.String)
@@ -415,16 +422,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlTerraform).Datasources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"terraform.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlTerraform).Resources, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
 	"terraform.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraform).Variables, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"terraform.outputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraform).Outputs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"terraform.resources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlTerraformResources).__id, ok = v.Value.(string)
+			return
+		},
+	"terraform.resources.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResources).Filter, ok = plugin.RawDataToAnyTValue(v, v.Error)
+		return
+	},
+	"terraform.resources.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformResources).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"terraform.file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -790,7 +805,6 @@ type mqlTerraform struct {
 	Blocks plugin.TValue[[]interface{}]
 	Providers plugin.TValue[[]interface{}]
 	Datasources plugin.TValue[[]interface{}]
-	Resources plugin.TValue[[]interface{}]
 	Variables plugin.TValue[[]interface{}]
 	Outputs plugin.TValue[[]interface{}]
 }
@@ -918,22 +932,6 @@ func (c *mqlTerraform) GetDatasources() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlTerraform) GetResources() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Resources, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform", c.__id, "resources")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.resources()
-	})
-}
-
 func (c *mqlTerraform) GetVariables() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Variables, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -963,6 +961,72 @@ func (c *mqlTerraform) GetOutputs() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.outputs()
+	})
+}
+
+// mqlTerraformResources for the terraform.resources resource
+type mqlTerraformResources struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlTerraformResourcesInternal it will be used here
+	Filter plugin.TValue[interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createTerraformResources creates a new instance of this resource
+func createTerraformResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTerraformResources{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("terraform.resources", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTerraformResources) MqlName() string {
+	return "terraform.resources"
+}
+
+func (c *mqlTerraformResources) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTerraformResources) GetFilter() *plugin.TValue[interface{}] {
+	return &c.Filter
+}
+
+func (c *mqlTerraformResources) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.resources", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 

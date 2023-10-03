@@ -209,6 +209,13 @@ func RawToTValue[T any](value interface{}, err error) (TValue[T], bool) {
 	return TValue[T]{Data: tv, State: StateIsSet, Error: err}, true
 }
 
+func RawDataToAnyTValue(value *llx.RawData, err error) (TValue[interface{}], bool) {
+	if value == nil {
+		return TValue[interface{}]{State: StateIsNull | StateIsSet, Error: err}, true
+	}
+	return TValue[interface{}]{Data: value, State: StateIsSet, Error: err}, true
+}
+
 type State byte
 
 type notReady struct{}
