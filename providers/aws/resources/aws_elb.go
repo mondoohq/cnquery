@@ -73,9 +73,11 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 						map[string]*llx.RawData{
 							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
 							"listenerDescriptions": llx.AnyData(jsonListeners),
-							"dnsName":              llx.StringData(convert.ToString(lb.DNSName)),
-							"name":                 llx.StringData(convert.ToString(lb.LoadBalancerName)),
-							"scheme":               llx.StringData(convert.ToString(lb.Scheme)),
+							"dnsName":              llx.StringDataPtr(lb.DNSName),
+							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
+							"scheme":               llx.StringDataPtr(lb.Scheme),
+							"vpcID":                llx.StringDataPtr(lb.VPCId),
+							"createdTime":          llx.TimeData(toTime(lb.CreatedTime)),
 						})
 					if err != nil {
 						return nil, err
