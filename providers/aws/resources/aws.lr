@@ -1000,7 +1000,7 @@ private aws.s3.bucket @defaults("arn") {
   // False if the bucket no longer exists (stale reference)
   exists bool
   // Date the bucket was created
-  creationDate time
+  createdTime time
 }
 
 // Amazon S3 Bucket Grant
@@ -1262,7 +1262,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // Indicates whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
   // The creation date of the RDS instance
-  creationDate time
+  createdTime time
 }
 
 // Amazon ElastiCache

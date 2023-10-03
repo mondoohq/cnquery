@@ -1809,7 +1809,7 @@ resources:
       availabilityZone:
         min_mondoo_version: 9.0.0
       backupRetentionPeriod: {}
-      creationDate:
+      createdTime:
         min_mondoo_version: 9.0.0
       dbInstanceClass:
         min_mondoo_version: 5.19.1
@@ -1977,7 +1977,7 @@ resources:
       acl: {}
       arn: {}
       cors: {}
-      creationDate:
+      createdTime:
         min_mondoo_version: 9.0.0
       defaultLock: {}
       encryption: {}
