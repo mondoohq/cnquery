@@ -639,6 +639,9 @@ func getSubConfig(rootConf *inventory.Config, sub subscriptions.Subscription) *i
 	// note: we make sure to wipe out the discovery here, we don't want to re-discover when
 	// connecting to an asset
 	cfg.Discover = nil
+	if cfg.Options == nil {
+		cfg.Options = map[string]string{}
+	}
 	cfg.Options[connection.OptionSubscriptionID] = *sub.SubscriptionID
 	cfg.Options[connection.OptionTenantID] = *sub.TenantID
 	return cfg
