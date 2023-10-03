@@ -31,10 +31,10 @@ packs:
             This query retrieves data for all Role definitions in the subscription
         mql: azure.subscription.authorization.roleDefinitions
       - uid: mondoo-asset-inventory-azure-cloudDefender
-        title: Retrieve data for all Azure CloudDefender
+        title: Retrieve data for Microsoft Defender for Cloud
         docs:
           desc: |
-            This query retrieves data for cloudDefender
+            This query retrieves data for Microsoft Defender for Cloud
         mql: azure.subscription.cloudDefender
       - uid: mondoo-asset-inventory-azure-storageAccounts
         title: Retrieve data for all Azure storage accounts
