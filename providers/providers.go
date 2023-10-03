@@ -350,10 +350,12 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		return nil, errors.Wrap(err, "failed to create temporary directory to unpack files")
 	}
 
+	log.Debug().Str("path", tmpdir).Msg("unpacking providers")
 	files := map[string]struct{}{}
 	err = walkTarXz(reader, func(reader *tar.Reader, header *tar.Header) error {
 		files[header.Name] = struct{}{}
 		dst := filepath.Join(tmpdir, header.Name)
+		log.Debug().Str("name", header.Name).Str("dest", dst).Msg("unpacking file")
 		writer, err := os.Create(dst)
 		if err != nil {
 			return err
@@ -376,43 +378,56 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		}
 	}()
 
+	log.Debug().Msg("move provider to destination")
 	providerDirs := []string{}
 	for name := range files {
 		// we only want to identify the binary and then all associated files from it
-		if strings.Contains(name, ".") {
+		// NOTE: we need special handling for windows since binaries have the .exe extension
+		if !strings.HasSuffix(name, ".exe") && strings.Contains(name, ".") {
 			continue
 		}
 
-		if _, ok := files[name+".json"]; !ok {
-			return nil, errors.New("cannot find " + name + ".json in the archive")
-		}
-		if _, ok := files[name+".resources.json"]; !ok {
-			return nil, errors.New("cannot find " + name + ".resources.json in the archive")
+		providerName := name
+		if strings.HasSuffix(name, ".exe") {
+			providerName = strings.TrimSuffix(name, ".exe")
 		}
 
-		dstPath := filepath.Join(conf.Dst, name)
+		if _, ok := files[providerName+".json"]; !ok {
+			return nil, errors.New("cannot find " + providerName + ".json in the archive")
+		}
+		if _, ok := files[providerName+".resources.json"]; !ok {
+			return nil, errors.New("cannot find " + providerName + ".resources.json in the archive")
+		}
+
+		dstPath := filepath.Join(conf.Dst, providerName)
 		if err = os.MkdirAll(dstPath, 0o755); err != nil {
 			return nil, err
 		}
 
+		// move the binary and the associated files
 		srcBin := filepath.Join(tmpdir, name)
 		dstBin := filepath.Join(dstPath, name)
+		log.Debug().Str("src", srcBin).Str("dst", dstBin).Msg("move provider binary")
 		if err = os.Rename(srcBin, dstBin); err != nil {
 			return nil, err
 		}
 		if err = os.Chmod(dstBin, 0o755); err != nil {
 			return nil, err
 		}
-		if err = os.Rename(srcBin+".json", dstBin+".json"); err != nil {
+
+		srcMeta := filepath.Join(tmpdir, providerName)
+		dstMeta := filepath.Join(dstPath, providerName)
+		if err = os.Rename(srcMeta+".json", dstMeta+".json"); err != nil {
 			return nil, err
 		}
-		if err = os.Rename(srcBin+".resources.json", dstBin+".resources.json"); err != nil {
+		if err = os.Rename(srcMeta+".resources.json", dstMeta+".resources.json"); err != nil {
 			return nil, err
 		}
 
 		providerDirs = append(providerDirs, dstPath)
 	}
 
+	log.Debug().Msg("loading providers")
 	res := []*Provider{}
 	for i := range providerDirs {
 		pdir := providerDirs[i]
