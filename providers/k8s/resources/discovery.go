@@ -16,7 +16,7 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	"go.mondoo.com/cnquery/types"
-	"golang.org/x/exp/slices"
+	"go.mondoo.com/cnquery/utils/stringx"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,7 +125,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			Platform:    conn.Platform(),
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 		}
-		if slices.Contains(invConfig.Discover.Targets, DiscoveryClusters) {
+		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryClusters) {
 			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
 
