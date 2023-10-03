@@ -123,6 +123,7 @@ message Config {
   // This is replaced by type. We use a different number here so it doesn't
   // conflict with the old "backend" while allowing us to load the field from yaml.
   ProviderType backend = 28;
+  DeprecatedV8_Kind kind = 24;
   // ^^
 
   string host = 2;
@@ -163,6 +164,28 @@ message Discovery {
   map<string,string> filter = 2;
 }
 
+enum DeprecatedV8_Kind {
+  KIND_UNKNOWN = 0;
+
+  // at rest
+  KIND_VIRTUAL_MACHINE_IMAGE = 1;
+  KIND_CONTAINER_IMAGE = 2;
+  KIND_CODE = 3;
+  KIND_PACKAGE = 4;
+
+  // in motion
+  KIND_VIRTUAL_MACHINE = 5;
+  KIND_CONTAINER = 6;
+  KIND_PROCESS = 7;
+  KIND_API = 8;
+  KIND_BARE_METAL = 9;
+  KIND_NETWORK = 10;
+  KIND_K8S_OBJECT = 11;
+  KIND_AWS_OBJECT = 12;
+  KIND_GCP_OBJECT = 13;
+  KIND_AZURE_OBJECT= 14;
+}
+
 message Platform {
   string name = 1;
   string arch = 3;
@@ -171,6 +194,10 @@ message Platform {
   string build = 6;
   string version = 7;
   string kind = 8;
+
+  // FIXME: DEPRECATED, remove in v10 vv
+  DeprecatedV8_Kind deprecated_v8_kind = 20;
+  // ^^
 
   string runtime = 21;
   map<string, string> labels = 22;
