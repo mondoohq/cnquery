@@ -467,7 +467,7 @@ func init() {
 			Create: createAwsEc2InstanceDevice,
 		},
 		"aws.ec2.securitygroup": {
-			// to override args, implement: initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsEc2Securitygroup,
 			Create: createAwsEc2Securitygroup,
 		},
 		"aws.ec2.securitygroup.ippermission": {

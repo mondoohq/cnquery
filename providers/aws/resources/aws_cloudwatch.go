@@ -176,7 +176,7 @@ func initAwsCloudwatchMetric(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, err
 	}
 	if len(metrics.Metrics) == 0 {
-		return nil, nil, nil
+		return nil, nil, errors.New("no metrics found")
 	}
 	if len(metrics.Metrics) > 1 {
 		return nil, nil, errors.New("more than one metric found for " + namespace + " " + name + " in region " + region)

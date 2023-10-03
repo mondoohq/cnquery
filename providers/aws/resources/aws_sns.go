@@ -60,7 +60,7 @@ func (a *mqlAwsSnsTopic) init(runtime *plugin.Runtime, args map[string]*llx.RawD
 	arnVal := args["arn"].Value.(string)
 	arn, err := arn.Parse(arnVal)
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil, err
 	}
 
 	args["arn"] = llx.StringData(arnVal)

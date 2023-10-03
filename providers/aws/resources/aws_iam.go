@@ -854,6 +854,9 @@ func (a *mqlAwsIamUser) attachedPolicies() ([]interface{}, error) {
 }
 
 func (a *mqlAwsIamPolicy) id() (string, error) {
+	if a == nil {
+		return "", nil
+	}
 	return a.Arn.Data, nil
 }
 
