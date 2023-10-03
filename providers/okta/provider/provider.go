@@ -161,7 +161,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OktaConnection) error {
-	asset.Id = conn.Conf.Type
 	asset.Name = "Okta Organization " + conn.OrganizationID()
 	asset.Platform = &inventory.Platform{
 		Name:   "okta-org",

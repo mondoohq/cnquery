@@ -152,8 +152,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.VcdConnection) error {
-	// TODO: adjust asset detection
-	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	c := conn.Client()

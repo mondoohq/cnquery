@@ -274,7 +274,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) error {
-	asset.Id = conn.Config().Type
 	asset.Name = conn.Config().Host
 
 	switch conn.Config().Type {

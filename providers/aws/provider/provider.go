@@ -199,7 +199,6 @@ func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 		return nil
 	}
 	if c, ok := conn.(*connection.AwsConnection); ok {
-		asset.Id = c.Conf.Type + "://" + c.AccountId()
 		asset.Name = c.Conf.Host
 		asset.Platform = c.PlatformInfo()
 		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + c.AccountId()}

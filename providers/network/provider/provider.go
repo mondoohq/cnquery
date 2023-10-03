@@ -171,7 +171,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 		return errors.New("a port for the network connection is required")
 	}
 
-	asset.Id = conn.Conf.Type + "://" + conn.Conf.Host + ":" + strconv.Itoa(int(conn.Conf.Port)) + conn.Conf.Path
 	asset.Name = conn.Conf.Host
 	asset.Platform = &inventory.Platform{
 		Name:   "host",

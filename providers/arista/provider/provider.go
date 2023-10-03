@@ -161,9 +161,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnection) error {
-	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
-
 	version := ""
 	arch := ""
 	aristaVersion, err := conn.GetVersion()

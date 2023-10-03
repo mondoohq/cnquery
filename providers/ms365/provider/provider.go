@@ -149,7 +149,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.Ms365Connection) error {
-	asset.Id = conn.PlatformId()
 	asset.PlatformIds = append(asset.PlatformIds, conn.PlatformId())
 	asset.Platform = &inventory.Platform{
 		Name:    "ms365",

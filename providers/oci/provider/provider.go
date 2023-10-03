@@ -181,7 +181,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OciConnection) error {
-	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	info, err := conn.Tenant(context.Background())
