@@ -172,7 +172,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnection) error {
-	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	repoOpt := conn.Conf.Options["repository"]

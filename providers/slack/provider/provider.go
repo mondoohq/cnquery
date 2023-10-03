@@ -167,7 +167,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.SlackConnection) error {
-	asset.Id = conn.Conf.Type + "://" + conn.TeamID()
 	asset.Name = "Slack team " + conn.TeamName()
 	asset.Platform = &inventory.Platform{
 		Name:    "slack-team",

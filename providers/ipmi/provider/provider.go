@@ -161,7 +161,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.IpmiConnection) error {
-	asset.Id = conn.Conf.Type
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
