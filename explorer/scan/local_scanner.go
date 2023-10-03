@@ -235,10 +235,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	for i := range assetCandidates {
 		candidate := assetCandidates[i]
 
-		runtime, err := providers.Coordinator.RuntimeFor(candidate.asset, candidate.runtime)
+		runtime, err := providers.Coordinator.EphemeralRuntimeFor(candidate.asset)
 		if err != nil {
 			return nil, false, err
 		}
+		runtime.SetRecording(candidate.runtime.Recording)
 
 		err = runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
