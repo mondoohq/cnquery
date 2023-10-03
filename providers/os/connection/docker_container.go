@@ -372,3 +372,31 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	tarConn.Metadata.Labels = ii.Labels
 	return tarConn, nil
 }
+
+// based on the target, try and find out what kind of connection we are dealing with, this can be either a
+// 1. a container, referenced by name or id
+// 2. a locally present image, referenced by tag or digest
+// 3. a remote image, referenced by tag or digest
+func FetchConnectionType(target string) (string, error) {
+	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	if err != nil {
+		return "", err
+	}
+
+	if ded != nil {
+		_, err = ded.ContainerInfo(target)
+		if err == nil {
+			return "docker-container", nil
+		}
+		_, err = ded.ImageInfo(target)
+		if err == nil {
+			return "docker-image", nil
+		}
+	}
+	_, err = name.ParseReference(target, name.WeakValidation)
+	if err == nil {
+		return "docker-image", nil
+	}
+
+	return "", errors.New("could not find container or image " + target)
+}
