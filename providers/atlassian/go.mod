@@ -2,7 +2,10 @@ module go.mondoo.com/cnquery/providers/atlassian
 
 go 1.20
 
-require go.mondoo.com/cnquery v0.0.0-20231002111758-82a0179e7dbd
+require (
+	github.com/ctreminiom/go-atlassian v1.5.1
+	go.mondoo.com/cnquery v0.0.0-20231002111758-82a0179e7dbd
+)
 
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
@@ -22,16 +25,20 @@ require (
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
+	github.com/imdario/mergo v0.3.16 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
+	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
