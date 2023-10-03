@@ -24,13 +24,15 @@ import (
 var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator = coordinator{
-	Running:  []*RunningProvider{},
-	runtimes: map[string]*Runtime{},
+	RunningByID:      map[string]*RunningProvider{},
+	RunningEphemeral: map[*RunningProvider]struct{}{},
+	runtimes:         map[string]*Runtime{},
 }
 
 type coordinator struct {
-	Providers Providers
-	Running   []*RunningProvider
+	Providers        Providers
+	RunningByID      map[string]*RunningProvider
+	RunningEphemeral map[*RunningProvider]struct{}
 
 	unprocessedRuntimes []*Runtime
 	runtimes            map[string]*Runtime
@@ -101,7 +103,7 @@ type UpdateProvidersConfig struct {
 	RefreshInterval int
 }
 
-func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error) {
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).
@@ -189,7 +191,11 @@ func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningPr
 	}
 
 	c.mutex.Lock()
-	c.Running = append(c.Running, res)
+	if isEphemeral {
+		c.RunningEphemeral[res] = struct{}{}
+	} else {
+		c.RunningByID[res.ID] = res
+	}
 	c.mutex.Unlock()
 
 	return res, nil
@@ -265,6 +271,10 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 }
 
 func (c *coordinator) NewRuntime() *Runtime {
+	return c.newRuntime(false)
+}
+
+func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 	res := &Runtime{
 		coordinator: c,
 		providers:   map[string]*ConnectedProvider{},
@@ -276,19 +286,21 @@ func (c *coordinator) NewRuntime() *Runtime {
 		},
 		Recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
+		isEphemeral:     isEphemeral,
 	}
 	res.schema.runtime = res
 
 	// TODO: do this dynamically in the future
 	res.schema.loadAllSchemas()
 
-	c.mutex.Lock()
-	c.unprocessedRuntimes = append(c.unprocessedRuntimes, res)
-	c.runtimeCnt++
-	cnt := c.runtimeCnt
-	c.mutex.Unlock()
-
-	log.Debug().Msg("Started a new runtime (" + strconv.Itoa(cnt) + " total)")
+	if !isEphemeral {
+		c.mutex.Lock()
+		c.unprocessedRuntimes = append(c.unprocessedRuntimes, res)
+		c.runtimeCnt++
+		cnt := c.runtimeCnt
+		c.mutex.Unlock()
+		log.Debug().Msg("Started a new runtime (" + strconv.Itoa(cnt) + " total)")
+	}
 
 	return res
 }
@@ -317,6 +329,18 @@ func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runt
 	}
 
 	res = c.NewRuntimeFrom(parent)
+	return res, res.DetectProvider(asset)
+}
+
+// EphemeralRuntimeFor an asset, creates a new ephemeral runtime and connectors.
+// These are designed to be thrown away at the end of their use.
+// Note: at the time of writing they may still share auxiliary providers with
+// other runtimes, e.g. if provider X spawns another provider Y, the latter
+// may be a shared provider. The majority of memory load should be on the
+// primary provider (eg X in this case) so that it can effectively clear
+// its memory at the end of its use.
+func (c *coordinator) EphemeralRuntimeFor(asset *inventory.Asset) (*Runtime, error) {
+	res := c.newRuntime(true)
 	return res, res.DetectProvider(asset)
 }
 
@@ -361,31 +385,46 @@ func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Run
 	return found
 }
 
-func (c *coordinator) Close(p *RunningProvider) {
-	if !p.isClosed {
-		p.isClosed = true
-		if p.Client != nil {
-			p.Client.Kill()
+func (c *coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
+	if provider == nil {
+		return nil
+	}
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	if isEphemeral {
+		delete(c.RunningEphemeral, provider)
+	} else {
+		found := c.RunningByID[provider.ID]
+		if found != nil {
+			delete(c.RunningByID, provider.ID)
 		}
 	}
 
-	c.mutex.Lock()
-	for i := range c.Running {
-		if c.Running[i] == p {
-			c.Running = append(c.Running[0:i], c.Running[i+1:]...)
-			break
-		}
-	}
-	c.mutex.Unlock()
+	return provider.Shutdown()
 }
 
 func (c *coordinator) Shutdown() {
 	c.mutex.Lock()
-	for i := range c.Running {
-		cur := c.Running[i]
+
+	for cur := range c.RunningEphemeral {
+		if err := cur.Shutdown(); err != nil {
+			log.Warn().Err(err).Str("provider", cur.Name).Msg("failed to shut down provider")
+		}
 		cur.isClosed = true
 		cur.Client.Kill()
 	}
+	c.RunningEphemeral = map[*RunningProvider]struct{}{}
+
+	for _, runtime := range c.RunningByID {
+		if err := runtime.Shutdown(); err != nil {
+			log.Warn().Err(err).Str("provider", runtime.Name).Msg("failed to shut down provider")
+		}
+		runtime.isClosed = true
+		runtime.Client.Kill()
+	}
+	c.RunningByID = map[string]*RunningProvider{}
+
 	c.mutex.Unlock()
 }
 
