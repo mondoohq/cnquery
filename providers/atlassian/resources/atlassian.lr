@@ -10,7 +10,12 @@ atlassian.admin {
   organizations() []atlassian.admin.organization
 }
 
-atlassian.admin.organization { 
+atlassian.admin.organization @defaults("id") { 
+  // Organization ID
+  id string
+  // Organization type
+  type string
+  // Organization users
   users() []atlassian.admin.user
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/atlassian/connection"
 )
 
@@ -20,7 +21,14 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, org := range organizations.Data {
-		res = append(res, org)
+		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
+			map[string]*llx.RawData{
+				"id": llx.StringData(org.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminOrg)
 	}
 	return res, nil
 }

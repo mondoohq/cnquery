@@ -107,6 +107,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organizations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdmin).GetOrganizations()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization")))
 	},
+	"atlassian.admin.organization.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetType()).ToDataRes(types.String)
+	},
 	"atlassian.admin.organization.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.user")))
 	},
@@ -142,6 +148,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAtlassianAdminOrganization).__id, ok = v.Value.(string)
 			return
 		},
+	"atlassian.admin.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganization).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -291,6 +305,8 @@ type mqlAtlassianAdminOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianAdminOrganizationInternal it will be used here
+	Id plugin.TValue[string]
+	Type plugin.TValue[string]
 	Users plugin.TValue[[]interface{}]
 }
 
@@ -324,6 +340,14 @@ func (c *mqlAtlassianAdminOrganization) MqlName() string {
 
 func (c *mqlAtlassianAdminOrganization) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganization) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianAdminOrganization) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 func (c *mqlAtlassianAdminOrganization) GetUsers() *plugin.TValue[[]interface{}] {
