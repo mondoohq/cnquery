@@ -115,10 +115,10 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordRequired"] = *agdc.GetPasswordRequired()
 		}
 		if agdc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
-			props["passwordSignInFailureCountBeforeFactoryReset"] = *agdc.GetPasswordSignInFailureCountBeforeFactoryReset()
+			props["passwordSignInFailureCountBeforeFactoryReset"] = int64(*agdc.GetPasswordSignInFailureCountBeforeFactoryReset())
 		}
 		if agdc.GetPasswordMinimumLength() != nil {
-			props["passwordMinimumLength"] = *agdc.GetPasswordMinimumLength()
+			props["passwordMinimumLength"] = int64(*agdc.GetPasswordMinimumLength())
 		}
 		if agdc.GetStorageRequireDeviceEncryption() != nil {
 			props["storageRequireDeviceEncryption"] = *agdc.GetStorageRequireDeviceEncryption()
@@ -127,10 +127,10 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordRequiredType"] = agdc.GetPasswordRequiredType().String()
 		}
 		if agdc.GetPasswordExpirationDays() != nil {
-			props["passwordExpirationDays"] = *agdc.GetPasswordExpirationDays()
+			props["passwordExpirationDays"] = int64(*agdc.GetPasswordExpirationDays())
 		}
 		if agdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *agdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = int64(*agdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout())
 		}
 	}
 	w10gc, ok := config.(*models.Windows10GeneralConfiguration)
@@ -142,34 +142,34 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordBlockSimple"] = *w10gc.GetPasswordBlockSimple()
 		}
 		if w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = int64(*w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout())
 		}
 		if w10gc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
-			props["passwordSignInFailureCountBeforeFactoryReset"] = *w10gc.GetPasswordSignInFailureCountBeforeFactoryReset()
+			props["passwordSignInFailureCountBeforeFactoryReset"] = int64(*w10gc.GetPasswordSignInFailureCountBeforeFactoryReset())
 		}
 		if w10gc.GetPasswordMinimumLength() != nil {
-			props["passwordMinimumLength"] = *w10gc.GetPasswordMinimumLength()
+			props["passwordMinimumLength"] = int64(*w10gc.GetPasswordMinimumLength())
 		}
 		if w10gc.GetPasswordRequiredType() != nil {
 			props["passwordRequiredType"] = w10gc.GetPasswordRequiredType().String()
 		}
 		if w10gc.GetPasswordExpirationDays() != nil {
-			props["passwordExpirationDays"] = *w10gc.GetPasswordExpirationDays()
+			props["passwordExpirationDays"] = int64(*w10gc.GetPasswordExpirationDays())
 		}
 		if w10gc.GetPasswordExpirationDays() != nil {
-			props["passwordExpirationDays"] = *w10gc.GetPasswordExpirationDays()
+			props["passwordExpirationDays"] = int64(*w10gc.GetPasswordExpirationDays())
 		}
 	}
 	macdc, ok := config.(*models.MacOSGeneralDeviceConfiguration)
 	if ok {
 		if macdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *macdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = int64(*macdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout())
 		}
 		if macdc.GetPasswordMinimumLength() != nil {
-			props["passwordMinimumLength"] = *macdc.GetPasswordMinimumLength()
+			props["passwordMinimumLength"] = int64(*macdc.GetPasswordMinimumLength())
 		}
 		if macdc.GetPasswordMinutesOfInactivityBeforeLock() != nil {
-			props["passwordMinutesOfInactivityBeforeLock"] = *macdc.GetPasswordMinutesOfInactivityBeforeLock()
+			props["passwordMinutesOfInactivityBeforeLock"] = int64(*macdc.GetPasswordMinutesOfInactivityBeforeLock())
 		}
 		if macdc.GetPasswordRequiredType() != nil {
 			props["passwordRequiredType"] = macdc.GetPasswordRequiredType().String()
@@ -181,23 +181,23 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordRequired"] = *macdc.GetPasswordRequired()
 		}
 		if macdc.GetPasswordExpirationDays() != nil {
-			props["passwordExpirationDays"] = *macdc.GetPasswordExpirationDays()
+			props["passwordExpirationDays"] = int64(*macdc.GetPasswordExpirationDays())
 		}
 	}
 
 	iosdc, ok := config.(*models.IosGeneralDeviceConfiguration)
 	if ok {
 		if iosdc.GetPasscodeSignInFailureCountBeforeWipe() != nil {
-			props["passcodeSignInFailureCountBeforeWipe"] = *iosdc.GetPasscodeSignInFailureCountBeforeWipe()
+			props["passcodeSignInFailureCountBeforeWipe"] = int64(*iosdc.GetPasscodeSignInFailureCountBeforeWipe())
 		}
 		if iosdc.GetPasscodeMinimumLength() != nil {
-			props["passcodeMinimumLength"] = *iosdc.GetPasscodeMinimumLength()
+			props["passcodeMinimumLength"] = int64(*iosdc.GetPasscodeMinimumLength())
 		}
 		if iosdc.GetPasscodeMinutesOfInactivityBeforeLock() != nil {
-			props["passcodeMinutesOfInactivityBeforeLock"] = *iosdc.GetPasscodeMinutesOfInactivityBeforeLock()
+			props["passcodeMinutesOfInactivityBeforeLock"] = int64(*iosdc.GetPasscodeMinutesOfInactivityBeforeLock())
 		}
 		if iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["passcodeMinutesOfInactivityBeforeScreenTimeout"] = *iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout()
+			props["passcodeMinutesOfInactivityBeforeScreenTimeout"] = int64(*iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout())
 		}
 		if iosdc.GetPasscodeRequiredType() != nil {
 			props["passcodeRequiredType"] = iosdc.GetPasscodeRequiredType().String()
@@ -209,22 +209,22 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passcodeRequired"] = *iosdc.GetPasscodeRequired()
 		}
 		if iosdc.GetPasscodeExpirationDays() != nil {
-			props["passcodeExpirationDays"] = *iosdc.GetPasscodeExpirationDays()
+			props["passcodeExpirationDays"] = int64(*iosdc.GetPasscodeExpirationDays())
 		}
 	}
 	awpgdc, ok := config.(*models.AndroidWorkProfileGeneralDeviceConfiguration)
 	if ok {
 		if awpgdc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
-			props["passwordSignInFailureCountBeforeFactoryReset"] = *awpgdc.GetPasswordSignInFailureCountBeforeFactoryReset()
+			props["passwordSignInFailureCountBeforeFactoryReset"] = int64(*awpgdc.GetPasswordSignInFailureCountBeforeFactoryReset())
 		}
 		if awpgdc.GetPasswordMinimumLength() != nil {
-			props["passwordMinimumLength"] = *awpgdc.GetPasswordMinimumLength()
+			props["passwordMinimumLength"] = int64(*awpgdc.GetPasswordMinimumLength())
 		}
 		if awpgdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *awpgdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = int64(*awpgdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout())
 		}
 		if awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
-			props["workProfilePasswordMinutesOfInactivityBeforeScreenTimeout"] = *awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout()
+			props["workProfilePasswordMinutesOfInactivityBeforeScreenTimeout"] = int64(*awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout())
 		}
 		if awpgdc.GetPasswordRequiredType() != nil {
 			props["passwordRequiredType"] = awpgdc.GetPasswordRequiredType().String()
@@ -233,7 +233,7 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["workProfilePasswordRequiredType"] = awpgdc.GetWorkProfilePasswordRequiredType().String()
 		}
 		if awpgdc.GetPasswordExpirationDays() != nil {
-			props["passwordExpirationDays"] = *awpgdc.GetPasswordExpirationDays()
+			props["passwordExpirationDays"] = int64(*awpgdc.GetPasswordExpirationDays())
 		}
 	}
 	return props
