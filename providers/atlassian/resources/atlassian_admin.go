@@ -15,9 +15,12 @@ func (a *mqlAtlassianAdmin) id() (string, error) {
 func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	admin := conn.Admin()
-	organizations, _, err := admin.Organization.Gets(context.Background(), "")
+	organizations, response, err := admin.Organization.Gets(context.Background(), "")
 	if err != nil {
 		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response)
 	}
 	res := []interface{}{}
 	for _, org := range organizations.Data {
@@ -36,6 +39,10 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
 	//conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	//admin := conn.Admin()
+
+	//permissions, response, err := admin.User
+
+	//fmt.Println("Response HTTP Code", response.StatusCode)
 
 	res := []interface{}{}
 	return res, nil
