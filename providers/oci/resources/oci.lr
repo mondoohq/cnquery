@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/providers/oci"
 option go_package = "go.mondoo.com/cnquery/providers/oci/resources"
 
-// Oracle Cloud Infrastructure Tenant
+// Oracle Cloud Infrastructure (OCI) Tenancy
 oci {
   // Regions
   regions() []oci.region
@@ -12,7 +12,7 @@ oci {
   compartments() []oci.compartment
 }
 
-// OCI Tenancy
+// Oracle Cloud Infrastructure (OCI) Tenancy
 oci.tenancy @defaults("name") {
   // Compartment ID
   id string
@@ -24,7 +24,7 @@ oci.tenancy @defaults("name") {
   retentionPeriod() time
 }
 
-// OCI Region
+// Oracle Cloud Infrastructure (OCI) Region
 private oci.region @defaults("id name") {
   // Region's key
   id string
@@ -36,7 +36,7 @@ private oci.region @defaults("id name") {
   status string
 }
 
-// OCI Compartment
+// Oracle Cloud Infrastructure (OCI) Compartment
 private oci.compartment @defaults("name") {
   // Compartment ID
   id string
@@ -50,7 +50,7 @@ private oci.compartment @defaults("name") {
   state string
 }
 
-// OCI Identity
+// Oracle Cloud Infrastructure (OCI) Identity
 oci.identity {
   // Users
   users() []oci.identity.user
@@ -60,7 +60,7 @@ oci.identity {
   policies() []oci.identity.policy
 }
 
-// OCI Identity User
+// Oracle Cloud Infrastructure (OCI) Identity User
 private oci.identity.user @defaults("name") {
   // User ID
   id string
@@ -96,7 +96,7 @@ private oci.identity.user @defaults("name") {
   groups() []oci.identity.group
 }
 
-// OCI API Key a PEM-format RSA credential
+// Oracle Cloud Infrastructure (OCI) API Key a PEM-format RSA credential
 private oci.identity.apiKey @defaults("fingerprint") {
   // Key ID
   id string
@@ -110,7 +110,7 @@ private oci.identity.apiKey @defaults("fingerprint") {
   state string
 }
 
-// OCI CustomerSecretKey for OCI Object Storage Service
+// Oracle Cloud Infrastructure (OCI) CustomerSecretKey for OCI Object Storage Service
 private oci.identity.customerSecretKey @defaults("name") {
   // Key ID
   id string
@@ -122,7 +122,7 @@ private oci.identity.customerSecretKey @defaults("name") {
   state string
 }
 
-// OCI token string
+// Oracle Cloud Infrastructure (OCI) token string
 private oci.identity.authToken @defaults("description") {
   // Token ID
   id string
@@ -136,7 +136,7 @@ private oci.identity.authToken @defaults("description") {
   state string
 }
 
-// OCI collection of users
+// Oracle Cloud Infrastructure (OCI) collection of users
 private oci.identity.group @defaults("name") {
   // User ID
   id string
@@ -170,7 +170,7 @@ private oci.identity.policy @defaults("name description") {
   statements []string
 }
 
-// OCI compute
+// Oracle Cloud Infrastructure (OCI) Compute
 oci.compute {
   // Instances
   instances() []oci.compute.instance
@@ -178,7 +178,7 @@ oci.compute {
   images() []oci.compute.image
 }
 
-// OCI Compute Instance
+// Oracle Cloud Infrastructure (OCI) Compute Instance
 private oci.compute.instance @defaults("name") {
   // Instance ID
   id string
@@ -192,7 +192,7 @@ private oci.compute.instance @defaults("name") {
   state string
 }
 
-// OCI Compute Image
+// Oracle Cloud Infrastructure (OCI) Compute Image
 private oci.compute.image @defaults("name") {
   // Image ID
   id string
@@ -206,7 +206,7 @@ private oci.compute.image @defaults("name") {
   state string
 }
 
-// OCI Networking
+// Oracle Cloud Infrastructure (OCI) Networking
 oci.network {
   // Virtual Cloud Networks
   vcns() []oci.network.vcn
@@ -214,7 +214,7 @@ oci.network {
   securityLists() []oci.network.securityList
 }
 
-// OCI Virtual Cloud Network (VCN)
+// Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN)
 private oci.network.vcn @defaults("name") {
   // Vcn ID
   id string
@@ -232,7 +232,7 @@ private oci.network.vcn @defaults("name") {
   cidrBlocks []string
 }
 
-// OCI VCN SecurityList virtual firewall rules
+// Oracle Cloud Infrastructure (OCI) VCN SecurityList virtual firewall rules
 private oci.network.securityList @defaults("name") {
   // SecurityList ID
   id string
@@ -250,7 +250,7 @@ private oci.network.securityList @defaults("name") {
   ingressSecurityRules []dict
 }
 
-// OCI Object Storage
+// Oracle Cloud Infrastructure (OCI) Object Storage
 oci.objectStorage {
   // Namespace
   namespace() string
@@ -258,7 +258,7 @@ oci.objectStorage {
   buckets() []oci.objectStorage.bucket
 }
 
-// OCI Object Storage Bucket
+// Oracle Cloud Infrastructure (OCI) Object Storage Bucket
 private oci.objectStorage.bucket {
   // Bucket namespace
   namespace string

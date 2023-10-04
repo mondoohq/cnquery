@@ -1866,7 +1866,7 @@ resources:
   aws.redshift:
     docs:
       desc: |
-        The `aws.redshift` resource can be used to assess the configuration of AWS RedShift deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
+        The `aws.redshift` resource can be used to assess the configuration of Amazon Redshift deployments. The resource returns lists of `aws.rds.dbcluster`, `aws.rds.dbinstance`, and `aws.rds.snapshot` resources, each with fields for assessing the configuration of those assets.
     fields:
       clusters: {}
     min_mondoo_version: 5.15.0
@@ -1892,7 +1892,7 @@ resources:
           region
           clusterParameterGroupNames
         }
-      title: Return a list of Amazon RedShift clusters deployed across all enabled
+      title: Return a list of Amazon Redshift clusters deployed across all enabled
         regions and the values for specified fields
     - query: |
         aws.redshift.clusters.where( encrypted == false ) {
@@ -1900,8 +1900,8 @@ resources:
           region
           name
         }
-      title: Return a list of RedShift clusters that are not encrypted and the values
-        for the `arn` `region` and `name` fields
+      title: Return a list of Amazon Redshift clusters that are not encrypted and
+        the values for the `arn` `region` and `name` fields
   aws.redshift.cluster:
     fields:
       allowVersionUpgrade: {}
