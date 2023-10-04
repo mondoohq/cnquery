@@ -51,6 +51,11 @@ platform.eol @defaults("date") {
   date time
 }
 
+platform {
+  // Full advisory & vulnerability report
+  vulnerabilityReport() dict
+}
+
 // Returns all platform/package advisories
 platform.advisories {
   []audit.advisory

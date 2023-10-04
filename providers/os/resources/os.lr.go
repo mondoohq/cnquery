@@ -34,6 +34,10 @@ func init() {
 			Init: initPlatformEol,
 			Create: createPlatformEol,
 		},
+		"platform": {
+			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPlatform,
+		},
 		"platform.advisories": {
 			// to override args, implement: initPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPlatformAdvisories,
@@ -495,6 +499,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"platform.eol.date": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPlatformEol).GetDate()).ToDataRes(types.Time)
+	},
+	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
 	"platform.advisories.cvss": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPlatformAdvisories).GetCvss()).ToDataRes(types.Resource("audit.cvss"))
@@ -1954,6 +1961,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"platform.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatformEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPlatform).__id, ok = v.Value.(string)
+			return
+		},
+	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"platform.advisories.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4413,6 +4428,52 @@ func (c *mqlPlatformEol) GetProductUrl() *plugin.TValue[string] {
 
 func (c *mqlPlatformEol) GetDate() *plugin.TValue[*time.Time] {
 	return &c.Date
+}
+
+// mqlPlatform for the platform resource
+type mqlPlatform struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPlatformInternal it will be used here
+	VulnerabilityReport plugin.TValue[interface{}]
+}
+
+// createPlatform creates a new instance of this resource
+func createPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPlatform{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("platform", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPlatform) MqlName() string {
+	return "platform"
+}
+
+func (c *mqlPlatform) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
+		return c.vulnerabilityReport()
+	})
 }
 
 // mqlPlatformAdvisories for the platform.advisories resource

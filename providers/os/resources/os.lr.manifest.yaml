@@ -639,6 +639,10 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
+  platform:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
   platform.advisories:
     fields:
       cvss: {}

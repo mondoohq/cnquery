@@ -53,9 +53,8 @@ func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugi
 	return sa, nil
 }
 
-// fetches the vulnerability report and returns the full report
-func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
-	mcc := p.MqlRuntime.Upstream
+func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
+	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
 	}
@@ -67,13 +66,13 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	conn := p.MqlRuntime.Connection.(shared.Connection)
+	conn := runtime.Connection.(shared.Connection)
 	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
 	if conn.Capabilities().Has(shared.Capability_File) {
-		obj, err := CreateResource(p.MqlRuntime, "packages", map[string]*llx.RawData{})
+		obj, err := CreateResource(runtime, "packages", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +98,7 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 
 		// determine the kernel version if possible (just needed for linux at this point)
 		// therefore we ignore the error because its not important, worst case the user sees to many advisories
-		objKernel, err := CreateResource(p.MqlRuntime, "kernel", map[string]*llx.RawData{})
+		objKernel, err := CreateResource(runtime, "kernel", map[string]*llx.RawData{})
 		if err == nil {
 			kernelVersion = getKernelVersion(objKernel.(*mqlKernel))
 		}
@@ -119,6 +118,15 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 	}
 
 	return convert.JsonToDict(report)
+}
+
+func (p *mqlPlatform) vulnerabilityReport() (interface{}, error) {
+	return fetchVulnReport(p.MqlRuntime)
+}
+
+// fetches the vulnerability report and returns the full report
+func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
+	return fetchVulnReport(p.MqlRuntime)
 }
 
 func getAdvisoryReport(runtime *plugin.Runtime) (*mvd.VulnReport, error) {
