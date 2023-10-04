@@ -15,10 +15,10 @@ atlassian.admin.organization @defaults("id") {
   // Organization type
   type string
   // Organization users
-  users() []atlassian.admin.user
+  users() []atlassian.admin.organization.user
 }
 
-atlassian.admin.user {
+atlassian.admin.organization.user {
   // Account ID
 	id string
   // Account type
@@ -35,9 +35,24 @@ atlassian.admin.user {
 	accessBillable bool
   // Time when the user was last active
 	lastActive     string
-  // ProductAccess
-	productAccess  []atlassian.admin.user.products
 }
 
-atlassian.admin.user.products {
+atlassian.jira { 
+  // Jira users
+  users() []atlassian.jira.user
+}
+
+atlassian.jira.user { 
+  // AccountID
+  id string
+}
+
+atlassian.confluence { 
+  // Confluence users
+  users() []atlassian.confluence.user
+}
+
+atlassian.confluence.user { 
+  // AccountID
+  id string
 }

@@ -18,6 +18,17 @@ resources:
       type: {}
       users: {}
     min_mondoo_version: latest
+  atlassian.admin.organization.user:
+    fields:
+      accessBillable: {}
+      email: {}
+      id: {}
+      lastActive: {}
+      name: {}
+      picture: {}
+      status: {}
+      type: {}
+    min_mondoo_version: latest
   atlassian.admin.user:
     fields:
       accessBillable: {}
@@ -32,4 +43,20 @@ resources:
     min_mondoo_version: latest
   atlassian.admin.user.products:
     fields: {}
+    min_mondoo_version: latest
+  atlassian.confluence:
+    fields:
+      users: {}
+    min_mondoo_version: latest
+  atlassian.confluence.user:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira:
+    fields:
+      users: {}
+    min_mondoo_version: latest
+  atlassian.jira.user:
+    fields:
+      id: {}
     min_mondoo_version: latest

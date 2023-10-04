@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/ctreminiom/go-atlassian v1.5.1
+	github.com/rs/zerolog v1.31.0
 	go.mondoo.com/cnquery v0.0.0-20231002111758-82a0179e7dbd
 )
 
@@ -42,11 +43,13 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
+	github.com/tidwall/gjson v1.16.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	go.mondoo.com/ranger-rpc v0.5.1 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
