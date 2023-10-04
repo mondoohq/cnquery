@@ -1657,6 +1657,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.corsrule.maxAgeSeconds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketCorsrule).GetMaxAgeSeconds()).ToDataRes(types.Int)
 	},
+	"aws.s3.bucket.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketPolicy).GetId()).ToDataRes(types.String)
+	},
 	"aws.s3.bucket.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetName()).ToDataRes(types.String)
 	},
@@ -1665,9 +1668,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.policy.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetVersion()).ToDataRes(types.String)
-	},
-	"aws.s3.bucket.policy.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3BucketPolicy).GetId()).ToDataRes(types.String)
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketPolicy).GetStatements()).ToDataRes(types.Array(types.Dict))
@@ -4355,6 +4355,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsS3BucketPolicy).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.s3.bucket.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4365,10 +4369,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.s3.bucket.policy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketPolicy).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.s3.bucket.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.policy.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11602,10 +11602,10 @@ type mqlAwsS3BucketPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsS3BucketPolicyInternal it will be used here
+	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Document plugin.TValue[string]
 	Version plugin.TValue[string]
-	Id plugin.TValue[string]
 	Statements plugin.TValue[[]interface{}]
 }
 
@@ -11646,6 +11646,10 @@ func (c *mqlAwsS3BucketPolicy) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsS3BucketPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlAwsS3BucketPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -11658,10 +11662,6 @@ func (c *mqlAwsS3BucketPolicy) GetVersion() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
 		return c.version()
 	})
-}
-
-func (c *mqlAwsS3BucketPolicy) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAwsS3BucketPolicy) GetStatements() *plugin.TValue[[]interface{}] {
