@@ -136,8 +136,8 @@ func (a *mqlAwsCloudfront) functions() ([]interface{}, error) {
 			args := map[string]*llx.RawData{
 				"name":             llx.StringData(convert.ToString(funct.Name)),
 				"status":           llx.StringData(convert.ToString(funct.Status)),
-				"lastModifiedTime": llx.TimeData(toTime(lmTime)),
-				"createdTime":      llx.TimeData(toTime(crTime)),
+				"lastModifiedTime": llx.TimeDataPtr(lmTime),
+				"createdTime":      llx.TimeDataPtr(crTime),
 				"stage":            llx.StringData(stage),
 				"comment":          llx.StringData(comment),
 				"runtime":          llx.StringData(runtime),

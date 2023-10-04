@@ -122,9 +122,9 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	args["arn"] = llx.StringData(arnVal)
-	args["notBefore"] = llx.TimeData(toTime(certDetails.Certificate.NotBefore))
-	args["notAfter"] = llx.TimeData(toTime(certDetails.Certificate.NotAfter))
-	args["createdAt"] = llx.TimeData(toTime(certDetails.Certificate.CreatedAt))
+	args["notBefore"] = llx.TimeDataPtr(certDetails.Certificate.NotBefore)
+	args["notAfter"] = llx.TimeDataPtr(certDetails.Certificate.NotAfter)
+	args["createdAt"] = llx.TimeDataPtr(certDetails.Certificate.CreatedAt)
 	args["domainName"] = llx.StringData(convert.ToString(certDetails.Certificate.DomainName))
 	args["status"] = llx.StringData(string(certDetails.Certificate.Status))
 	args["subject"] = llx.StringData(convert.ToString(certDetails.Certificate.Subject))

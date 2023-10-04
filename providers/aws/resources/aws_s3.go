@@ -83,11 +83,11 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		}
 		mqlS3Bucket, err := CreateResource(a.MqlRuntime, "aws.s3.bucket",
 			map[string]*llx.RawData{
-				"name":         llx.StringData(convert.ToString(bucket.Name)),
-				"arn":          llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
-				"exists":       llx.BoolData(true),
-				"location":     llx.StringData(region),
-				"creationDate": llx.TimeData(toTime(bucket.CreationDate)),
+				"name":        llx.StringData(convert.ToString(bucket.Name)),
+				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
+				"exists":      llx.BoolData(true),
+				"location":    llx.StringData(region),
+				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err

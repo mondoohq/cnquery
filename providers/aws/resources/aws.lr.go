@@ -1111,6 +1111,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetAttributes()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.elb.loadbalancer.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetCreatedTime()).ToDataRes(types.Time)
+	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
@@ -1624,8 +1630,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetExists()).ToDataRes(types.Bool)
 	},
-	"aws.s3.bucket.creationDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3Bucket).GetCreationDate()).ToDataRes(types.Time)
+	"aws.s3.bucket.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetCreatedTime()).ToDataRes(types.Time)
 	},
 	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
@@ -1918,8 +1924,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
 	},
-	"aws.rds.dbinstance.creationDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsDbinstance).GetCreationDate()).ToDataRes(types.Time)
+	"aws.rds.dbinstance.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetCreatedTime()).ToDataRes(types.Time)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -3487,6 +3493,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsElbLoadbalancer).Attributes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.elb.loadbalancer.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsCodebuild).__id, ok = v.Value.(string)
 			return
@@ -4299,8 +4313,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsS3Bucket).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.s3.bucket.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3Bucket).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.s3.bucket.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4755,8 +4769,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbinstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.rds.dbinstance.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsDbinstance).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.rds.dbinstance.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8744,6 +8758,8 @@ type mqlAwsElbLoadbalancer struct {
 	Name plugin.TValue[string]
 	Scheme plugin.TValue[string]
 	Attributes plugin.TValue[[]interface{}]
+	VpcId plugin.TValue[string]
+	CreatedTime plugin.TValue[*time.Time]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -8809,6 +8825,14 @@ func (c *mqlAwsElbLoadbalancer) GetAttributes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Attributes, func() ([]interface{}, error) {
 		return c.attributes()
 	})
+}
+
+func (c *mqlAwsElbLoadbalancer) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsElbLoadbalancer) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource
@@ -11289,7 +11313,7 @@ type mqlAwsS3Bucket struct {
 	Encryption plugin.TValue[interface{}]
 	PublicAccessBlock plugin.TValue[interface{}]
 	Exists plugin.TValue[bool]
-	CreationDate plugin.TValue[*time.Time]
+	CreatedTime plugin.TValue[*time.Time]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -11455,8 +11479,8 @@ func (c *mqlAwsS3Bucket) GetExists() *plugin.TValue[bool] {
 	return &c.Exists
 }
 
-func (c *mqlAwsS3Bucket) GetCreationDate() *plugin.TValue[*time.Time] {
-	return &c.CreationDate
+func (c *mqlAwsS3Bucket) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
 }
 
 // mqlAwsS3BucketGrant for the aws.s3.bucket.grant resource
@@ -12637,7 +12661,7 @@ type mqlAwsRdsDbinstance struct {
 	SecurityGroups plugin.TValue[[]interface{}]
 	Status plugin.TValue[string]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
-	CreationDate plugin.TValue[*time.Time]
+	CreatedTime plugin.TValue[*time.Time]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -12785,8 +12809,8 @@ func (c *mqlAwsRdsDbinstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] 
 	return &c.AutoMinorVersionUpgrade
 }
 
-func (c *mqlAwsRdsDbinstance) GetCreationDate() *plugin.TValue[*time.Time] {
-	return &c.CreationDate
+func (c *mqlAwsRdsDbinstance) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

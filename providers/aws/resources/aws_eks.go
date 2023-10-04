@@ -99,7 +99,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
 					"status":             llx.StringData(string(cluster.Status)),
 					"encryptionConfig":   llx.ArrayData(encryptionConfig, types.Any),
-					"createdAt":          llx.TimeData(toTime(cluster.CreatedAt)),
+					"createdAt":          llx.TimeDataPtr(cluster.CreatedAt),
 					"endpoint":           llx.StringData(convert.ToString(cluster.Endpoint)),
 					"logging":            llx.MapData(logging, types.Any),
 					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),

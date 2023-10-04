@@ -10,7 +10,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/smithy-go/transport/http"
@@ -64,13 +63,6 @@ func Is400AccessDeniedError(err error) bool {
 		}
 	}
 	return false
-}
-
-func toTime(s *time.Time) time.Time {
-	if s == nil {
-		return time.Time{}
-	}
-	return *s
 }
 
 func strMapToInterface(m map[string]string) map[string]interface{} {

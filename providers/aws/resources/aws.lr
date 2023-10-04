@@ -523,6 +523,10 @@ private aws.elb.loadbalancer @defaults("arn name") {
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
+  // The ID of the VPC where the load balancer is located
+  vpcId string
+  // Date and time when the load balancer was created
+  createdTime time
 }
 
 // AWS CodeBuild for building and testing code
@@ -996,7 +1000,7 @@ private aws.s3.bucket @defaults("arn") {
   // False if the bucket no longer exists (stale reference)
   exists bool
   // Date the bucket was created
-  creationDate time
+  createdTime time
 }
 
 // Amazon S3 Bucket Grant
@@ -1258,7 +1262,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // Indicates whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
   // The creation date of the RDS instance
-  creationDate time
+  createdTime time
 }
 
 // Amazon ElastiCache

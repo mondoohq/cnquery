@@ -76,7 +76,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 							"id":          llx.StringData(convert.ToString(restApi.Id)),
 							"name":        llx.StringData(convert.ToString(restApi.Name)),
 							"description": llx.StringData(convert.ToString(restApi.Description)),
-							"createdDate": llx.TimeData(toTime(restApi.CreatedDate)),
+							"createdDate": llx.TimeDataPtr(restApi.CreatedDate),
 							"region":      llx.StringData(regionVal),
 							"tags":        llx.MapData(strMapToInterface(restApi.Tags), types.String),
 						})
