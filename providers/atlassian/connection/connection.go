@@ -1,6 +1,8 @@
 package connection
 
 import (
+	"os"
+
 	"github.com/ctreminiom/go-atlassian/admin"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -15,7 +17,7 @@ type AtlassianConnection struct {
 }
 
 func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AtlassianConnection, error) {
-	apiKey := "ThisIsNotAnAPIKey"
+	apiKey := os.Getenv("ATLASSIAN_KEY")
 	admin, err := admin.New(nil)
 	if err != nil {
 		log.Fatal().Err(err)

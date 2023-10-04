@@ -33,6 +33,10 @@ func init() {
 			// to override args, implement: initAtlassianAdminUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminUser,
 		},
+		"atlassian.admin.user.products": {
+			// to override args, implement: initAtlassianAdminUserProducts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminUserProducts,
+		},
 	}
 }
 
@@ -101,9 +105,6 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
-	"atlassian.field": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassian).GetField()).ToDataRes(types.String)
-	},
 	"atlassian.admin.organizations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdmin).GetOrganizations()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization")))
 	},
@@ -115,6 +116,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.admin.organization.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.user")))
+	},
+	"atlassian.admin.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.picture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetPicture()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetEmail()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.accessBillable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetAccessBillable()).ToDataRes(types.Bool)
+	},
+	"atlassian.admin.user.lastActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetLastActive()).ToDataRes(types.String)
+	},
+	"atlassian.admin.user.productAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminUser).GetProductAccess()).ToDataRes(types.Array(types.Resource("atlassian.admin.user.products")))
 	},
 }
 
@@ -132,10 +160,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAtlassian).__id, ok = v.Value.(string)
 			return
 		},
-	"atlassian.field": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassian).Field, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"atlassian.admin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdmin).__id, ok = v.Value.(string)
 			return
@@ -162,6 +186,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.admin.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdminUser).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.admin.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.picture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Picture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.accessBillable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).AccessBillable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.productAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminUser).ProductAccess, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.user.products.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminUserProducts).__id, ok = v.Value.(string)
 			return
 		},
 }
@@ -193,7 +257,6 @@ type mqlAtlassian struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianInternal it will be used here
-	Field plugin.TValue[string]
 }
 
 // createAtlassian creates a new instance of this resource
@@ -231,12 +294,6 @@ func (c *mqlAtlassian) MqlName() string {
 
 func (c *mqlAtlassian) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAtlassian) GetField() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Field, func() (string, error) {
-		return c.field()
-	})
 }
 
 // mqlAtlassianAdmin for the atlassian.admin resource
@@ -371,6 +428,15 @@ type mqlAtlassianAdminUser struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianAdminUserInternal it will be used here
+	Id plugin.TValue[string]
+	Type plugin.TValue[string]
+	Status plugin.TValue[string]
+	Name plugin.TValue[string]
+	Picture plugin.TValue[string]
+	Email plugin.TValue[string]
+	AccessBillable plugin.TValue[bool]
+	LastActive plugin.TValue[string]
+	ProductAccess plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminUser creates a new instance of this resource
@@ -402,5 +468,80 @@ func (c *mqlAtlassianAdminUser) MqlName() string {
 }
 
 func (c *mqlAtlassianAdminUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianAdminUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianAdminUser) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAtlassianAdminUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianAdminUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianAdminUser) GetPicture() *plugin.TValue[string] {
+	return &c.Picture
+}
+
+func (c *mqlAtlassianAdminUser) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlAtlassianAdminUser) GetAccessBillable() *plugin.TValue[bool] {
+	return &c.AccessBillable
+}
+
+func (c *mqlAtlassianAdminUser) GetLastActive() *plugin.TValue[string] {
+	return &c.LastActive
+}
+
+func (c *mqlAtlassianAdminUser) GetProductAccess() *plugin.TValue[[]interface{}] {
+	return &c.ProductAccess
+}
+
+// mqlAtlassianAdminUserProducts for the atlassian.admin.user.products resource
+type mqlAtlassianAdminUserProducts struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianAdminUserProductsInternal it will be used here
+}
+
+// createAtlassianAdminUserProducts creates a new instance of this resource
+func createAtlassianAdminUserProducts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminUserProducts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.user.products", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminUserProducts) MqlName() string {
+	return "atlassian.admin.user.products"
+}
+
+func (c *mqlAtlassianAdminUserProducts) MqlID() string {
 	return c.__id
 }

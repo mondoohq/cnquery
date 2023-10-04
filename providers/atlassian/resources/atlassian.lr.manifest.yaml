@@ -6,8 +6,7 @@ resources:
     docs:
       desc: |
         The `atlassian` can be used to assess the configuration of atlassian accounts.
-    fields:
-      field: {}
+    fields: {}
     min_mondoo_version: latest
   atlassian.admin:
     fields:
@@ -20,5 +19,17 @@ resources:
       users: {}
     min_mondoo_version: latest
   atlassian.admin.user:
+    fields:
+      accessBillable: {}
+      email: {}
+      id: {}
+      lastActive: {}
+      name: {}
+      picture: {}
+      productAccess: {}
+      status: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.user.products:
     fields: {}
     min_mondoo_version: latest

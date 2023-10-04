@@ -3,7 +3,6 @@ option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 
 // Atlassian
 atlassian {
-	field() string
 }
 
 atlassian.admin {
@@ -20,4 +19,25 @@ atlassian.admin.organization @defaults("id") {
 }
 
 atlassian.admin.user {
+  // Account ID
+	id string
+  // Account type
+	type string
+  // Account status
+	status string
+  // Name of the user
+	name string
+  // Picture of the user
+	picture string
+  // Email of the user
+	email string
+  // Billable
+	accessBillable bool
+  // Time when the user was last active
+	lastActive     string
+  // ProductAccess
+	productAccess  []atlassian.admin.user.products
+}
+
+atlassian.admin.user.products {
 }
