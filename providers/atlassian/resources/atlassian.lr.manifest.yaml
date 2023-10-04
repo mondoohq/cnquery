@@ -51,6 +51,7 @@ resources:
   atlassian.confluence.user:
     fields:
       id: {}
+      name: {}
     min_mondoo_version: latest
   atlassian.jira:
     fields:
@@ -59,4 +60,5 @@ resources:
   atlassian.jira.user:
     fields:
       id: {}
+      name: {}
     min_mondoo_version: latest

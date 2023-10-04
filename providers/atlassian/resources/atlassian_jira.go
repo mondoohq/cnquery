@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
@@ -16,7 +15,7 @@ func (a *mqlAtlassianJira) id() (string, error) {
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
-	users, response, err := jira.User.Search.Do(context.Background(), "", "", 0, 4)
+	users, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 20)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
@@ -24,18 +23,21 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 
-	fmt.Printf("response: %s\n", response.Status)
 	res := []interface{}{}
 	for _, user := range users {
-		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
+		mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
 			map[string]*llx.RawData{
 				"id":   llx.StringData(user.AccountID),
-				"name": llx.StringData(user.Name),
+				"name": llx.StringData(user.DisplayName),
 			})
 		if err != nil {
 			log.Fatal().Err(err)
 		}
-		res = append(res, mqlAtlassianAdminOrg)
+		res = append(res, mqlAtlassianJiraUser)
 	}
 	return res, nil
+}
+
+func (a *mqlAtlassianJiraUser) id() (string, error) {
+	return a.Id.Data, nil
 }

@@ -42,9 +42,11 @@ atlassian.jira {
   users() []atlassian.jira.user
 }
 
-atlassian.jira.user { 
+atlassian.jira.user @defaults("id") { 
   // AccountID
   id string
+  // Name
+  name string
 }
 
 atlassian.confluence { 
@@ -55,4 +57,6 @@ atlassian.confluence {
 atlassian.confluence.user { 
   // AccountID
   id string
+  // Name
+  name string
 }

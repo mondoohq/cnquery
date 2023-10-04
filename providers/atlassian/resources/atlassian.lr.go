@@ -159,11 +159,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUser).GetId()).ToDataRes(types.String)
 	},
+	"atlassian.jira.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUser).GetName()).ToDataRes(types.String)
+	},
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
 	},
 	"atlassian.confluence.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceUser).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceUser).GetName()).ToDataRes(types.String)
 	},
 }
 
@@ -257,6 +263,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianConfluence).__id, ok = v.Value.(string)
 			return
@@ -271,6 +281,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"atlassian.confluence.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -614,6 +628,7 @@ type mqlAtlassianJiraUser struct {
 	__id string
 	// optional: if you define mqlAtlassianJiraUserInternal it will be used here
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
 }
 
 // createAtlassianJiraUser creates a new instance of this resource
@@ -627,7 +642,12 @@ func createAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.jira.user", res.__id)
@@ -650,6 +670,10 @@ func (c *mqlAtlassianJiraUser) MqlID() string {
 
 func (c *mqlAtlassianJiraUser) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAtlassianJiraUser) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAtlassianConfluence for the atlassian.confluence resource
@@ -719,6 +743,7 @@ type mqlAtlassianConfluenceUser struct {
 	__id string
 	// optional: if you define mqlAtlassianConfluenceUserInternal it will be used here
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
 }
 
 // createAtlassianConfluenceUser creates a new instance of this resource
@@ -755,4 +780,8 @@ func (c *mqlAtlassianConfluenceUser) MqlID() string {
 
 func (c *mqlAtlassianConfluenceUser) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAtlassianConfluenceUser) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
