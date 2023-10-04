@@ -733,11 +733,11 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 			if instance.ImageId != nil {
 				mqlImage, err := NewResource(a.MqlRuntime, "aws.ec2.image",
 					map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.ImageId)))})
-				if err != nil {
-					return nil, err
-				}
-				if mqlImage != nil {
+				if err == nil {
 					args["image"] = llx.ResourceData(mqlImage, mqlImage.MqlName())
+				} else {
+					log.Error().Err(err).Msg("cannot find image")
+					args["image"] = llx.NilData
 				}
 			} else {
 				args["image"] = llx.NilData
@@ -749,11 +749,11 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 					map[string]*llx.RawData{
 						"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.VpcId))),
 					})
-				if err != nil {
-					return nil, err
-				}
-				if mqlVpcResource != nil {
+				if err == nil {
 					args["vpc"] = llx.ResourceData(mqlVpcResource, mqlVpcResource.MqlName())
+				} else {
+					log.Error().Err(err).Msg("cannot find vpc")
+					args["vpc"] = llx.NilData
 				}
 			} else {
 				args["vpc"] = llx.NilData
@@ -766,11 +766,11 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 						"region": llx.StringData(regionVal),
 						"name":   llx.StringData(convert.ToString(instance.KeyName)),
 					})
-				if err != nil {
-					return nil, err
-				}
-				if mqlKeyPair != nil {
+				if err == nil {
 					args["keypair"] = llx.ResourceData(mqlKeyPair, mqlKeyPair.MqlName())
+				} else {
+					log.Error().Err(err).Msg("cannot find keypair")
+					args["keypair"] = llx.NilData
 				}
 			} else {
 				args["keypair"] = llx.NilData
@@ -802,7 +802,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	arnVal := args["arn"].Value.(string)
 	arn, err := arn.Parse(arnVal)
 	if err != nil {
-		return nil, nil, nil
+		return nil, nil, err
 	}
 	resource := strings.Split(arn.Resource, "/")
 	conn := runtime.Connection.(*connection.AwsConnection)
@@ -824,14 +824,14 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return args, nil, nil
 	}
 
-	return args, nil, nil
+	return nil, nil, errors.New("image not found")
 }
 
 func (a *mqlAwsEc2Securitygroup) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func initAwsEc2SecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}

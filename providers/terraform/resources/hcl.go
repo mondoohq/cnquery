@@ -614,7 +614,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		// TODO: return modified arguments to load from recording
 		return nil, &mqlTerraformSettings{
 			Block:             plugin.TValue[*mqlTerraformBlock]{State: plugin.StateIsSet | plugin.StateIsNull},
-			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
+			RequiredProviders: plugin.TValue[interface{}]{State: plugin.StateIsSet | plugin.StateIsNull, Data: []interface{}{}},
 			Backend:           plugin.TValue[interface{}]{State: plugin.StateIsSet, Data: []interface{}{}},
 		}, nil
 	}
