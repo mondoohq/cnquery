@@ -19,9 +19,9 @@ import (
 	"go.mondoo.com/cnquery/providers/os/id/sshhostkey"
 )
 
+// default id detectors
 var IdDetectors = []string{
 	ids.IdDetector_Hostname,
-	ids.IdDetector_MachineID,
 	ids.IdDetector_CloudDetect,
 	ids.IdDetector_SshHostkey,
 }
