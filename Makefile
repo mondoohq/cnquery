@@ -398,8 +398,8 @@ lr/docs/markdown: providers/lr
 	./lr markdown providers/googleworkspace/resources/googleworkspace.lr \
 		--pack-name "Google Workspace" \
 		--description "The Google Workspace resource pack lets you use MQL to query and assess the security of your Google Workspace identities and configuration." \
-		--docs-file providers/googleworkspace/resources/googleworkspace.lr.manifest.yaml \
-		--output ../docs/docs/mql/resources/googleworkspace-pack
+		--docs-file providers/google-workspace/resources/google-workspace.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/google-workspace-pack
 	./lr markdown providers/ipmi/resources/ipmi.lr \
 		--pack-name "IPMI" \
 		--description "The IPMI resource pack lets you use MQL to query and assess the security of your IPMI devices." \
