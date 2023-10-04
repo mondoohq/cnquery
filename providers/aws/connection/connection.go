@@ -31,6 +31,13 @@ type AwsConnection struct {
 	connectionOptions map[string]string
 }
 
+func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *AwsConnection {
+	return &AwsConnection{
+		id:    id,
+		asset: asset,
+	}
+}
+
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
 	log.Debug().Msg("new aws connection")
 	// check flags for connection options
