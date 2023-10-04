@@ -29,18 +29,20 @@ func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 	admin.Auth.SetBearerToken(apiKey)
 	admin.Auth.SetUserAgent("curl/7.54.0")
 
-	jira, err := v2.New(nil, "lunalectric.atlassian.net")
+	jira, err := v2.New(nil, "https://lunalectric.atlassian.net")
 	if err != nil {
 		log.Fatal().Err(err)
 	}
 
 	jira.Auth.SetBasicAuth("marius@mondoo.com", token)
+	jira.Auth.SetUserAgent("curl/7.54.0")
 
 	conn := &AtlassianConnection{
 		Conf:  conf,
 		id:    id,
 		asset: asset,
 		admin: admin,
+		jira:  jira,
 	}
 
 	return conn, nil
