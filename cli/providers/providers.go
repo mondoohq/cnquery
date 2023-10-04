@@ -58,6 +58,7 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 	}
 
 	flags := pflag.NewFlagSet("set", pflag.ContinueOnError)
+	flags.ParseErrorsWhitelist.UnknownFlags = true
 	flags.Bool("auto-update", autoUpdate, "")
 	flags.BoolP("help", "h", false, "")
 
@@ -66,25 +67,17 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 		attachFlag(flags, builtins[i])
 	}
 
-	// To avoid warnings about flags, we need to mock every single flag across
-	// all commands that are attached to the runtime. This is done by adding
-	// flags from the root command and all its descendent commands. We don't
-	// care about these flags, we just want to avoid the errors and make sure
-	// they are parsed correctly (e.g. --key a,b --etc)
-	cobraCmds := []*cobra.Command{rootCmd}
-	for i := 0; i < len(cobraCmds); i++ {
-		cobraCmds = append(cobraCmds, cobraCmds[i].Commands()...)
-		cobraCmds[i].Flags().VisitAll(func(flag *pflag.Flag) {
-			if found := flags.Lookup(flag.Name); found != nil {
-				return
-			}
-			if flag.Shorthand != "" {
-				if found := flags.ShorthandLookup(flag.Shorthand); found != nil {
-					return
-				}
-			}
-			flags.AddFlag(flag)
-		})
+	// To avoid warnings about flags, we need to mock all flags on the root command.
+	// The command after root (eg: run, scan, shell, ...) are normal actions that
+	// we want to detect. We only need to add flags from the root command and the
+	// attaching subcommands (since those are the ones which end up giving us
+	// the connector)
+	attachPFlags(flags, rootCmd.Flags())
+	attachPFlags(flags, rootCmd.PersistentFlags())
+
+	for i := range commands {
+		cmd := commands[i]
+		attachPFlags(flags, cmd.Command.Flags())
 	}
 
 	for i := range providers {
@@ -248,6 +241,20 @@ var skipFlags = map[string]struct{}{
 	"ask-pass":      {},
 	"record":        {},
 	"use-recording": {},
+}
+
+func attachPFlags(base *pflag.FlagSet, nu *pflag.FlagSet) {
+	nu.VisitAll(func(flag *pflag.Flag) {
+		if found := base.Lookup(flag.Name); found != nil {
+			return
+		}
+		if flag.Shorthand != "" {
+			if found := base.ShorthandLookup(flag.Shorthand); found != nil {
+				return
+			}
+		}
+		base.AddFlag(flag)
+	})
 }
 
 func attachFlag(flagset *pflag.FlagSet, flag plugin.Flag) {
