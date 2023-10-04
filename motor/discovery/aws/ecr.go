@@ -56,6 +56,9 @@ func (ecri *EcrImages) addConnectionInfoToEcrAsset(image *asset.Asset, profile s
 	a.State = asset.State_STATE_ONLINE
 
 	imageTags := []string{}
+	if t := a.Labels["tag"]; t == "" {
+		a.Labels["tag"] = ""
+	}
 	for k, v := range a.Labels {
 		if k != "tag" {
 			continue
