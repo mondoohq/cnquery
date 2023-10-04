@@ -15,7 +15,7 @@ func (a *mqlAtlassianJira) id() (string, error) {
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
-	users, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 20)
+	users, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
