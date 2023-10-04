@@ -26,6 +26,7 @@ iap
 ilb
 ingresstls
 iotedge
+jira
 linux
 loggingservice
 managedzone
