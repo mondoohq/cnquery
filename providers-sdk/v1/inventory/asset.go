@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	fmt "fmt"
+	"regexp"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -139,13 +140,15 @@ func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+var mondooLabelRegex = regexp.MustCompile(`^[a-z0-9]*\.?(mondoo.com\/)[a-z0-9\-]*`)
+
 // Merges the mondoo-specific labels from the provided root into the provided asset
 func (a *Asset) AddMondooLabels(root *Asset) {
 	if a.Labels == nil {
 		a.Labels = map[string]string{}
 	}
 	for k, v := range root.Labels {
-		if strings.HasPrefix(k, "mondoo.com/") {
+		if mondooLabelRegex.MatchString(k) {
 			a.Labels[k] = v
 		}
 	}
