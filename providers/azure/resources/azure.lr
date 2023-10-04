@@ -778,7 +778,7 @@ private azure.subscription.sqlService.virtualNetworkRule  @defaults("id name") {
   virtualNetworkSubnetId string
 }
 
-// Azure MySQL
+// Azure Database for MySQL
 private azure.subscription.mySqlService {
   // The subscription identifier
   subscriptionId string
@@ -846,7 +846,7 @@ private azure.subscription.mySqlService.flexibleServer @defaults("id name locati
   firewallRules() []azure.subscription.sqlService.firewallrule
 }
 
-// Azure MariaDB
+// Azure Database for MariaDB
 private azure.subscription.mariaDbService {
   // The subscription identifier
   subscriptionId string
