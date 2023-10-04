@@ -76,7 +76,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
 							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
 							"scheme":               llx.StringDataPtr(lb.Scheme),
-							"vpcID":                llx.StringDataPtr(lb.VPCId),
+							"vpcId":                llx.StringDataPtr(lb.VPCId),
 							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 						})
 					if err != nil {
@@ -146,10 +146,12 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 				for _, lb := range lbs.LoadBalancers {
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":     llx.StringData(convert.ToString(lb.LoadBalancerArn)),
-							"dnsName": llx.StringData(convert.ToString(lb.DNSName)),
-							"name":    llx.StringData(convert.ToString(lb.LoadBalancerName)),
-							"scheme":  llx.StringData(string(lb.Scheme)),
+							"arn":         llx.StringData(convert.ToString(lb.LoadBalancerArn)),
+							"dnsName":     llx.StringData(convert.ToString(lb.DNSName)),
+							"name":        llx.StringData(convert.ToString(lb.LoadBalancerName)),
+							"scheme":      llx.StringData(string(lb.Scheme)),
+							"vpcId":       llx.StringDataPtr(lb.VpcId),
+							"createdTime": llx.TimeDataPtr(lb.CreatedTime),
 						})
 					if err != nil {
 						return nil, err

@@ -1381,7 +1381,7 @@ resources:
       listenerDescriptions: {}
       name: {}
       scheme: {}
-      vpcID:
+      vpcId:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0

@@ -1111,8 +1111,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetAttributes()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.elb.loadbalancer.vpcID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsElbLoadbalancer).GetVpcID()).ToDataRes(types.String)
+	"aws.elb.loadbalancer.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetVpcId()).ToDataRes(types.String)
 	},
 	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetCreatedTime()).ToDataRes(types.Time)
@@ -3493,8 +3493,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsElbLoadbalancer).Attributes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.elb.loadbalancer.vpcID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsElbLoadbalancer).VpcID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.elb.loadbalancer.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8758,7 +8758,7 @@ type mqlAwsElbLoadbalancer struct {
 	Name plugin.TValue[string]
 	Scheme plugin.TValue[string]
 	Attributes plugin.TValue[[]interface{}]
-	VpcID plugin.TValue[string]
+	VpcId plugin.TValue[string]
 	CreatedTime plugin.TValue[*time.Time]
 }
 
@@ -8827,8 +8827,8 @@ func (c *mqlAwsElbLoadbalancer) GetAttributes() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsElbLoadbalancer) GetVpcID() *plugin.TValue[string] {
-	return &c.VpcID
+func (c *mqlAwsElbLoadbalancer) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
 }
 
 func (c *mqlAwsElbLoadbalancer) GetCreatedTime() *plugin.TValue[*time.Time] {
