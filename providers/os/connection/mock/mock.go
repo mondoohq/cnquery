@@ -139,7 +139,8 @@ func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 	found, ok := c.data.Commands[command]
 	if !ok {
 		// try to fetch command by hash (more reliable for whitespace)
-		found, ok = c.data.Commands[hashCmd(command)]
+		hash := hashCmd(command)
+		found, ok = c.data.Commands[hash]
 	}
 	if !ok {
 		c.missing["command"][command] = true
