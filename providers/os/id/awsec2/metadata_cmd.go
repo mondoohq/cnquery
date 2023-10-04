@@ -22,8 +22,22 @@ import (
 
 const (
 	identityUrl = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/dynamic/instance-identity/document`
-	token       = `-X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+	tokenUrl    = `-X PUT "http://169.254.169.254/latest/api/token"`
 	tagNameUrl  = `-H "X-aws-ec2-metadata-token: %s" -v http://169.254.169.254/latest/meta-data/tags/instance/Name`
+
+	identityUrlWindows = `
+$Headers = @{
+    "X-aws-ec2-metadata-token" = %s
+}
+Invoke-RestMethod -TimeoutSec 1 -Headers $Headers -URI http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing | ConvertTo-Json
+`
+
+	tokenUrlWindows = `
+$Headers = @{
+    "X-aws-ec2-metadata-token-ttl-seconds" = "21600"
+}
+Invoke-RestMethod -Method Put -Uri "http://169.254.169.254/latest/api/token" -Headers $Headers -TimeoutSec 1 -UseBasicParsing
+`
 )
 
 func NewCommandInstanceMetadata(conn shared.Connection, pf *inventory.Platform, config *aws.Config) *CommandInstanceMetadata {
@@ -82,14 +96,10 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	}, nil
 }
 
-func curlWindows(url string) string {
-	return fmt.Sprintf("Invoke-RestMethod -TimeoutSec 1 -URI %s -UseBasicParsing | ConvertTo-Json", url)
-}
-
-func (m *CommandInstanceMetadata) curlDocument(token string, url string) (string, error) {
+func (m *CommandInstanceMetadata) curlDocument(url string, tokenUrl string) (string, error) {
 	switch {
 	case m.platform.IsFamily(inventory.FAMILY_UNIX):
-		cmd, err := m.conn.RunCommand("curl " + token)
+		cmd, err := m.conn.RunCommand("curl -H \"X-aws-ec2-metadata-token-ttl-seconds: 21600\" " + tokenUrl)
 		if err != nil {
 			return "", err
 		}
@@ -97,8 +107,8 @@ func (m *CommandInstanceMetadata) curlDocument(token string, url string) (string
 		if err != nil {
 			return "", err
 		}
-
 		tokenString := strings.TrimSpace(string(data))
+
 		cmd, err = m.conn.RunCommand("curl " + fmt.Sprintf(identityUrl, tokenString))
 		if err != nil {
 			return "", err
@@ -110,13 +120,24 @@ func (m *CommandInstanceMetadata) curlDocument(token string, url string) (string
 
 		return strings.TrimSpace(string(data)), nil
 	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
-		curlCmd := curlWindows(url)
-		encoded := powershell.Encode(curlCmd)
-		cmd, err := m.conn.RunCommand(encoded)
+
+		tokenPwshEncoded := powershell.Encode(fmt.Sprintf(tokenUrlWindows, tokenUrl))
+		cmd, err := m.conn.RunCommand(tokenPwshEncoded)
 		if err != nil {
 			return "", err
 		}
 		data, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			return "", err
+		}
+		tokenString := strings.TrimSpace(string(data))
+
+		curlPwshEncoded := powershell.Encode(fmt.Sprintf(identityUrlWindows, tokenString))
+		cmd, err = m.conn.RunCommand(curlPwshEncoded)
+		if err != nil {
+			return "", err
+		}
+		data, err = io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return "", err
 		}
@@ -128,7 +149,7 @@ func (m *CommandInstanceMetadata) curlDocument(token string, url string) (string
 }
 
 func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
-	res, err := m.curlDocument(token, tagNameUrl)
+	res, err := m.curlDocument(tagNameUrl, tokenUrl)
 	if err != nil {
 		return "", err
 	}
@@ -139,5 +160,5 @@ func (m *CommandInstanceMetadata) instanceNameTag() (string, error) {
 }
 
 func (m *CommandInstanceMetadata) instanceIdentityDocument() (string, error) {
-	return m.curlDocument(token, identityUrl)
+	return m.curlDocument(identityUrl, tokenUrl)
 }

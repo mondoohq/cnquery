@@ -66,12 +66,14 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	if hasDetector(detectors, ids.IdDetector_Hostname) {
+		log.Debug().Msg("run hostname id detector")
 		if id, ok := hostname.Hostname(conn, asset.Platform); ok {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 		}
 	}
 
 	if hasDetector(detectors, ids.IdDetector_CloudDetect) {
+		log.Debug().Msg("run cloud platform detector")
 		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.Platform.Name = name
@@ -92,6 +94,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	if hasDetector(detectors, ids.IdDetector_SshHostkey) {
+		log.Debug().Msg("run ssh id detector")
 		ids, err := sshhostkey.Detect(conn, asset.Platform)
 		if err != nil {
 			log.Warn().Err(err).Msg("failure in ssh hostkey detector")
@@ -101,6 +104,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	if hasDetector(detectors, ids.IdDetector_MachineID) {
+		log.Debug().Msg("run machineID id detector")
 		id, hostErr := machineid.MachineId(conn, asset.Platform)
 		if hostErr != nil {
 			log.Warn().Err(hostErr).Msg("failure in machineID detector")
