@@ -9,6 +9,7 @@ cavium
 cdn
 certificatechains
 cmek
+confluence
 cryptokey
 customresources
 datapath
