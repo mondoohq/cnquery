@@ -36,7 +36,7 @@ type Connection struct {
 	currentClusterName string
 }
 
-func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.DiscoveryCache) (shared.Connection, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -72,7 +72,7 @@ func NewConnection(id uint32, asset *inventory.Asset) (shared.Connection, error)
 	config.Burst = 1000
 
 	// initialize api
-	d, err := resources.NewDiscoveryCache().Get(config)
+	d, err := discoveryCache.Get(config)
 	if err != nil {
 		return nil, err
 	}

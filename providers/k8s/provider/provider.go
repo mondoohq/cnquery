@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/providers/k8s/connection/api"
 	"go.mondoo.com/cnquery/providers/k8s/connection/manifest"
 	"go.mondoo.com/cnquery/providers/k8s/connection/shared"
+	connectionResources "go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
 	"go.mondoo.com/cnquery/providers/k8s/resources"
 )
 
@@ -24,12 +25,14 @@ const ConnectionType = "k8s"
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
+	discoveryCache   *connectionResources.DiscoveryCache
 }
 
 func Init() *Service {
 	return &Service{
 		runtimes:         map[uint32]*plugin.Runtime{},
 		lastConnectionID: 0,
+		discoveryCache:   connectionResources.NewDiscoveryCache(),
 	}
 }
 
@@ -165,7 +168,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	} else {
 		s.lastConnectionID++
-		conn, err = api.NewConnection(s.lastConnectionID, asset)
+		conn, err = api.NewConnection(s.lastConnectionID, asset, s.discoveryCache)
 		if err != nil {
 			return nil, err
 		}
