@@ -164,13 +164,25 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func emptyAwsS3BucketPolicy(runtime *plugin.Runtime) (*mqlAwsS3BucketPolicy, error) {
+	res, err := CreateResource(runtime, "aws.s3.bucket.policy", map[string]*llx.RawData{
+		"name":       llx.StringData(""),
+		"document":   llx.StringData("{}"),
+		"version":    llx.StringData(""),
+		"id":         llx.StringData(""),
+		"statements": llx.ArrayData([]interface{}{}, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3BucketPolicy), nil
+}
+
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
-	bucketname := a.Name.Data
-
-	location := a.Location.Data
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
+	bucketname := a.Name.Data
+	location := a.Location.Data
 	svc := conn.S3(location)
 	ctx := context.Background()
 
@@ -179,9 +191,9 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	})
 	if err != nil {
 		if isNotFoundForS3(err) {
-			return &mqlAwsS3BucketPolicy{}, nil
+			return emptyAwsS3BucketPolicy(a.MqlRuntime)
 		}
-		return &mqlAwsS3BucketPolicy{}, err
+		return nil, err
 	}
 
 	if policy != nil && policy.Policy != nil {
@@ -198,7 +210,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	}
 
 	// no bucket policy found, return nil for the policy
-	return &mqlAwsS3BucketPolicy{}, nil
+	return emptyAwsS3BucketPolicy(a.MqlRuntime)
 }
 
 func (a *mqlAwsS3Bucket) tags() (map[string]interface{}, error) {
@@ -605,6 +617,8 @@ func (a *mqlAwsS3BucketPolicy) id() (string, error) {
 	if err != nil || policy == nil {
 		return "none", err
 	}
+
+	a.Id = plugin.TValue[string]{Data: policy.Id, State: plugin.StateIsSet}
 	return policy.Id, nil
 }
 
