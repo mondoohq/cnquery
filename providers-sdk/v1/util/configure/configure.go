@@ -72,12 +72,14 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 	var configs string
 
 	for _, provider := range conf.Builtin {
-		imports += fmt.Sprintf("\t%sconf \"go.mondoo.com/cnquery/providers/%s/config\"\n", provider, provider)
-		imports += fmt.Sprintf("\t%s \"go.mondoo.com/cnquery/providers/%s/provider\"\n", provider, provider)
+		// imports cannot contain dashes
+		trimProvider := strings.Replace(provider, "-", "", -1)
+		imports += fmt.Sprintf("\t%sconf \"go.mondoo.com/cnquery/providers/%s/config\"\n", trimProvider, provider)
+		imports += fmt.Sprintf("\t%s \"go.mondoo.com/cnquery/providers/%s/provider\"\n", trimProvider, provider)
 		infos += fmt.Sprintf(
 			"//go:embed %s.resources.json\n"+
 				"var %sInfo []byte\n",
-			provider, provider)
+			provider, trimProvider)
 		configs += fmt.Sprintf(`
 	builtinProviders[%sconf.Config.ID] = &builtinProvider{
 		Runtime: &RunningProvider{
@@ -89,7 +91,7 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 		},
 		Config: &%sconf.Config,
 	}
-`, provider, provider, provider, provider, provider, provider, provider)
+`, trimProvider, trimProvider, trimProvider, trimProvider, provider, trimProvider, trimProvider)
 	}
 
 	res := fmt.Sprintf(template, imports, infos, configs)
