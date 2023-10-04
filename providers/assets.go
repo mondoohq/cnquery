@@ -59,7 +59,7 @@ func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstream
 			Upstream: upstreamConfig,
 		})
 		if err != nil {
-			return err
+			continue
 		}
 		// Use the updated asset
 		assetCandidates[i] = runtime.Provider.Connection.Asset
