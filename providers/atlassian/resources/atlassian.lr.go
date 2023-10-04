@@ -41,6 +41,10 @@ func init() {
 			// to override args, implement: initAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraUser,
 		},
+		"atlassian.jira.user.group": {
+			// to override args, implement: initAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraUserGroup,
+		},
 		"atlassian.confluence": {
 			// to override args, implement: initAtlassianConfluence(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianConfluence,
@@ -165,6 +169,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.user.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUser).GetType()).ToDataRes(types.String)
 	},
+	"atlassian.jira.user.picture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUser).GetPicture()).ToDataRes(types.String)
+	},
+	"atlassian.jira.user.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.user.group")))
+	},
+	"atlassian.jira.user.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUserGroup).GetId()).ToDataRes(types.String)
+	},
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
 	},
@@ -275,6 +288,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.user.picture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUser).Picture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.user.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraUserGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.jira.user.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUserGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -644,6 +673,8 @@ type mqlAtlassianJiraUser struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
+	Picture plugin.TValue[string]
+	Groups plugin.TValue[[]interface{}]
 }
 
 // createAtlassianJiraUser creates a new instance of this resource
@@ -693,6 +724,75 @@ func (c *mqlAtlassianJiraUser) GetName() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraUser) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlAtlassianJiraUser) GetPicture() *plugin.TValue[string] {
+	return &c.Picture
+}
+
+func (c *mqlAtlassianJiraUser) GetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.user", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+// mqlAtlassianJiraUserGroup for the atlassian.jira.user.group resource
+type mqlAtlassianJiraUserGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianJiraUserGroupInternal it will be used here
+	Id plugin.TValue[string]
+}
+
+// createAtlassianJiraUserGroup creates a new instance of this resource
+func createAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraUserGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.user.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraUserGroup) MqlName() string {
+	return "atlassian.jira.user.group"
+}
+
+func (c *mqlAtlassianJiraUserGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraUserGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAtlassianConfluence for the atlassian.confluence resource

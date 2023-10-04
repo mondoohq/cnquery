@@ -52,15 +52,30 @@ resources:
     fields:
       id: {}
       name: {}
+      picture: {}
       type: {}
     min_mondoo_version: latest
   atlassian.jira:
     fields:
       users: {}
     min_mondoo_version: latest
-  atlassian.jira.user:
+  atlassian.jira.groups:
     fields:
       id: {}
+    min_mondoo_version: latest
+  atlassian.jira.user:
+    fields:
+      groups: {}
+      id: {}
       name: {}
+      picture: {}
       type: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.groups:
+    fields:
+      id: {}
     min_mondoo_version: latest

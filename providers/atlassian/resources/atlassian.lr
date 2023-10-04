@@ -49,6 +49,15 @@ atlassian.jira.user @defaults("id") {
   name string
   // Account type
 	type string
+  // Picture of the user
+	picture string
+  // Groups
+  groups() []atlassian.jira.user.group
+}
+
+atlassian.jira.user.group @defaults("id") { 
+  // GroupID
+  id string
 }
 
 atlassian.confluence { 
@@ -63,4 +72,5 @@ atlassian.confluence.user {
   name string
   // Account type
 	type string
+  // Picture of the user
 }
