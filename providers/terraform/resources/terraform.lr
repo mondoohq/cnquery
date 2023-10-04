@@ -24,9 +24,12 @@ terraform {
   outputs() []terraform.block
 }
 
+// Terraform resources are all blocks with a type set to resource
 terraform.resources {
   []terraform.block
+  // List all Terraform resources or search by name
   init(filter any)
+  // Filter applied to this list of Terraform resources. May be a string or regex.
   filter any
 }
 

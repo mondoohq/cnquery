@@ -120,6 +120,8 @@ vcd.networkPool {
 
 // VMware Cloud Director External Network
 private vcd.externalNetwork @defaults("name") {
+  // URN of the network. Deprecated: Please use the urn field instead.
+  id string
   // Unique name for the network
   name string
 	// URN of the network
