@@ -304,7 +304,7 @@ func initAwsCloudwatchMetricstatistics(runtime *plugin.Runtime, args map[string]
 	for _, datapoint := range statsResp.Datapoints {
 		mqlDatapoint, err := CreateResource(runtime, "aws.cloudwatch.metric.datapoint",
 			map[string]*llx.RawData{
-				"timestamp": llx.TimeData(toTime(datapoint.Timestamp)),
+				"timestamp": llx.TimeDataPtr(datapoint.Timestamp),
 				"maximum":   llx.FloatData(convert.ToFloat64(datapoint.Maximum)),
 				"minimum":   llx.FloatData(convert.ToFloat64(datapoint.Minimum)),
 				"average":   llx.FloatData(convert.ToFloat64(datapoint.Average)),
@@ -369,7 +369,7 @@ func (a *mqlAwsCloudwatchMetric) statistics() (*mqlAwsCloudwatchMetricstatistics
 		mqlDatapoint, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metric.datapoint",
 			map[string]*llx.RawData{
 				"id":        llx.StringData(formatDatapointId(datapoint)),
-				"timestamp": llx.TimeData(toTime(datapoint.Timestamp)),
+				"timestamp": llx.TimeDataPtr(datapoint.Timestamp),
 				"maximum":   llx.FloatData(convert.ToFloat64(datapoint.Maximum)),
 				"minimum":   llx.FloatData(convert.ToFloat64(datapoint.Minimum)),
 				"average":   llx.FloatData(convert.ToFloat64(datapoint.Average)),

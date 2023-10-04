@@ -112,7 +112,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"storageType":                   llx.StringData(convert.ToString(dbInstance.StorageType)),
 							"storageIops":                   llx.IntData(convert.ToInt64From32(dbInstance.Iops)),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
-							"createdTime":                   llx.TimeData(toTime(dbInstance.InstanceCreateTime)),
+							"createdTime":                   llx.TimeDataPtr(dbInstance.InstanceCreateTime),
 						})
 					if err != nil {
 						return nil, err

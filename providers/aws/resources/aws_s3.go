@@ -87,7 +87,7 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 				"arn":         llx.StringData(fmt.Sprintf(s3ArnPattern, convert.ToString(bucket.Name))),
 				"exists":      llx.BoolData(true),
 				"location":    llx.StringData(region),
-				"createdTime": llx.TimeData(toTime(bucket.CreationDate)),
+				"createdTime": llx.TimeDataPtr(bucket.CreationDate),
 			})
 		if err != nil {
 			return nil, err

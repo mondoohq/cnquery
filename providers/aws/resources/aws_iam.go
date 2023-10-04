@@ -273,8 +273,8 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 			"arn":              llx.StringData(convert.ToString(usr.Arn)),
 			"id":               llx.StringData(convert.ToString(usr.UserId)),
 			"name":             llx.StringData(convert.ToString(usr.UserName)),
-			"createDate":       llx.TimeData(toTime(usr.CreateDate)),
-			"passwordLastUsed": llx.TimeData(toTime(usr.PasswordLastUsed)),
+			"createDate":       llx.TimeDataPtr(usr.CreateDate),
+			"passwordLastUsed": llx.TimeDataPtr(usr.PasswordLastUsed),
 			"tags":             llx.MapData(iamTagsToMap(usr.Tags), types.String),
 		},
 	)
@@ -342,8 +342,8 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 				"description":     llx.StringData(convert.ToString(policy.Description)),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
 				"attachmentCount": llx.IntData(convert.ToInt64From32(policy.AttachmentCount)),
-				"createDate":      llx.TimeData(toTime(policy.CreateDate)),
-				"updateDate":      llx.TimeData(toTime(policy.UpdateDate)),
+				"createDate":      llx.TimeDataPtr(policy.CreateDate),
+				"updateDate":      llx.TimeDataPtr(policy.UpdateDate),
 			})
 		if err != nil {
 			return nil, err
@@ -443,7 +443,7 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 					"name":        llx.StringData(convert.ToString(role.RoleName)),
 					"description": llx.StringData(convert.ToString(role.Description)),
 					"tags":        llx.MapData(iamTagsToMap(role.Tags), types.String),
-					"createDate":  llx.TimeData(toTime(role.CreateDate)),
+					"createDate":  llx.TimeDataPtr(role.CreateDate),
 				})
 			if err != nil {
 				return nil, err
@@ -733,8 +733,8 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["arn"] = llx.StringData(convert.ToString(usr.Arn))
 		args["id"] = llx.StringData(convert.ToString(usr.UserId))
 		args["name"] = llx.StringData(convert.ToString(usr.UserName))
-		args["createDate"] = llx.TimeData(toTime(usr.CreateDate))
-		args["passwordLastUsed"] = llx.TimeData(toTime(usr.PasswordLastUsed))
+		args["createDate"] = llx.TimeDataPtr(usr.CreateDate)
+		args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
 		args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
 
 		return args, nil, nil
@@ -1102,7 +1102,7 @@ func (a *mqlAwsIamPolicy) defaultVersion() (*mqlAwsIamPolicyversion, error) {
 					"arn":              llx.StringData(arn),
 					"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),
 					"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-					"createDate":       llx.TimeData(toTime(policyversion.CreateDate)),
+					"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 				})
 			if err != nil {
 				return nil, err
@@ -1135,7 +1135,7 @@ func (a *mqlAwsIamPolicy) versions() ([]interface{}, error) {
 				"arn":              llx.StringData(arn),
 				"versionId":        llx.StringData(convert.ToString(policyversion.VersionId)),
 				"isDefaultVersion": llx.BoolData(policyversion.IsDefaultVersion),
-				"createDate":       llx.TimeData(toTime(policyversion.CreateDate)),
+				"createDate":       llx.TimeDataPtr(policyversion.CreateDate),
 			})
 		if err != nil {
 			return nil, err
@@ -1220,7 +1220,7 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["name"] = llx.StringData(convert.ToString(role.RoleName))
 		args["description"] = llx.StringData(convert.ToString(role.Description))
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
-		args["createDate"] = llx.TimeData(toTime(role.CreateDate))
+		args["createDate"] = llx.TimeDataPtr(role.CreateDate)
 		return args, nil, nil
 	}
 
@@ -1267,7 +1267,7 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["arn"] = llx.StringData(convert.ToString(grp.Arn))
 		args["id"] = llx.StringData(convert.ToString(grp.GroupId))
 		args["name"] = llx.StringData(convert.ToString(grp.GroupName))
-		args["createDate"] = llx.TimeData(toTime(grp.CreateDate))
+		args["createDate"] = llx.TimeDataPtr(grp.CreateDate)
 		args["usernames"] = llx.ArrayData(usernames, types.String)
 		return args, nil, nil
 	}

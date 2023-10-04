@@ -724,7 +724,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"ebsOptimized":          llx.BoolData(convert.ToBool(instance.EbsOptimized)),
 				"instanceType":          llx.StringData(string(instance.InstanceType)),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
-				"launchTime":            llx.TimeData(toTime(instance.LaunchTime)),
+				"launchTime":            llx.TimeDataPtr(instance.LaunchTime),
 				"privateIp":             llx.StringData(convert.ToString(instance.PrivateIpAddress)),
 				"privateDnsName":        llx.StringData(convert.ToString(instance.PrivateDnsName)),
 				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
@@ -1039,7 +1039,7 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 							"tags":             llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
 							"availabilityZone": llx.StringData(convert.ToString(vol.AvailabilityZone)),
 							"volumeType":       llx.StringData(string(vol.VolumeType)),
-							"createTime":       llx.TimeData(toTime(vol.CreateTime)),
+							"createTime":       llx.TimeDataPtr(vol.CreateTime),
 							"region":           llx.StringData(regionVal),
 						})
 					if err != nil {
@@ -1324,7 +1324,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 							"id":        llx.StringData(convert.ToString(snapshot.SnapshotId)),
 							"region":    llx.StringData(regionVal),
 							"volumeId":  llx.StringData(convert.ToString(snapshot.VolumeId)),
-							"startTime": llx.TimeData(toTime(snapshot.StartTime)),
+							"startTime": llx.TimeDataPtr(snapshot.StartTime),
 							"tags":      llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
 							"state":     llx.StringData(string(snapshot.State)),
 						})

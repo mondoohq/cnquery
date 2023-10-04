@@ -77,7 +77,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
 							"scheme":               llx.StringDataPtr(lb.Scheme),
 							"vpcID":                llx.StringDataPtr(lb.VPCId),
-							"createdTime":          llx.TimeData(toTime(lb.CreatedTime)),
+							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 						})
 					if err != nil {
 						return nil, err
