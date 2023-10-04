@@ -52,6 +52,7 @@ resources:
     fields:
       id: {}
       name: {}
+      type: {}
     min_mondoo_version: latest
   atlassian.jira:
     fields:
@@ -61,4 +62,5 @@ resources:
     fields:
       id: {}
       name: {}
+      type: {}
     min_mondoo_version: latest

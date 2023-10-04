@@ -26,7 +26,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, user := range users.Results {
-		mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
+		mqlAtlassianConfluenceUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
 			map[string]*llx.RawData{
 				"id":   llx.StringData(user.User.AccountID),
 				"name": llx.StringData(user.User.DisplayName),
@@ -34,7 +34,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 		if err != nil {
 			log.Fatal().Err(err)
 		}
-		res = append(res, mqlAtlassianJiraUser)
+		res = append(res, mqlAtlassianConfluenceUser)
 	}
 	return res, nil
 }

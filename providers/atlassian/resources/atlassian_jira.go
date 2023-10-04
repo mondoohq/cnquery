@@ -29,6 +29,7 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 			map[string]*llx.RawData{
 				"id":   llx.StringData(user.AccountID),
 				"name": llx.StringData(user.DisplayName),
+				"type": llx.StringData(user.AccountType),
 			})
 		if err != nil {
 			log.Fatal().Err(err)

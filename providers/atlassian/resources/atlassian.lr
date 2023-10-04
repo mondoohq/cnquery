@@ -47,6 +47,8 @@ atlassian.jira.user @defaults("id") {
   id string
   // Name
   name string
+  // Account type
+	type string
 }
 
 atlassian.confluence { 
@@ -59,4 +61,6 @@ atlassian.confluence.user {
   id string
   // Name
   name string
+  // Account type
+	type string
 }

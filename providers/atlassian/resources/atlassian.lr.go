@@ -162,6 +162,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUser).GetName()).ToDataRes(types.String)
 	},
+	"atlassian.jira.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUser).GetType()).ToDataRes(types.String)
+	},
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
 	},
@@ -170,6 +173,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.confluence.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceUser).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.user.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceUser).GetType()).ToDataRes(types.String)
 	},
 }
 
@@ -267,6 +273,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianConfluence).__id, ok = v.Value.(string)
 			return
@@ -285,6 +295,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.confluence.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -629,6 +643,7 @@ type mqlAtlassianJiraUser struct {
 	// optional: if you define mqlAtlassianJiraUserInternal it will be used here
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
+	Type plugin.TValue[string]
 }
 
 // createAtlassianJiraUser creates a new instance of this resource
@@ -674,6 +689,10 @@ func (c *mqlAtlassianJiraUser) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraUser) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraUser) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 // mqlAtlassianConfluence for the atlassian.confluence resource
@@ -744,6 +763,7 @@ type mqlAtlassianConfluenceUser struct {
 	// optional: if you define mqlAtlassianConfluenceUserInternal it will be used here
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
+	Type plugin.TValue[string]
 }
 
 // createAtlassianConfluenceUser creates a new instance of this resource
@@ -784,4 +804,8 @@ func (c *mqlAtlassianConfluenceUser) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianConfluenceUser) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianConfluenceUser) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
