@@ -168,19 +168,21 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
+	identityFileProvided := false
 	if x, ok := flags["identity-file"]; ok && len(x.Value) != 0 {
 		credential, err := vault.NewPrivateKeyCredentialFromPath(user, string(x.Value), "")
 		if err != nil {
 			return nil, err
 		}
 		conf.Credentials = append(conf.Credentials, credential)
+		identityFileProvided = true
 	}
 
 	if x, ok := flags["path"]; ok && len(x.Value) != 0 {
 		conf.Path = string(x.Value)
 	}
 
-	if user != "" {
+	if user != "" && !identityFileProvided {
 		conf.Credentials = append(conf.Credentials, &vault.Credential{Type: vault.CredentialType_ssh_agent, User: user})
 	}
 
