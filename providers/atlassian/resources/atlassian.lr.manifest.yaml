@@ -15,8 +15,15 @@ resources:
   atlassian.admin.organization:
     fields:
       id: {}
+      policies: {}
       type: {}
       users: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.policy:
+    fields:
+      id: {}
+      name: {}
+      type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.user:
     fields:

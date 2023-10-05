@@ -16,6 +16,17 @@ atlassian.admin.organization @defaults("id") {
   type string
   // Organization users
   users() []atlassian.admin.organization.user
+  // Policies
+  policies() []atlassian.admin.organization.policy
+}
+
+atlassian.admin.organization.policy @defaults("id") {
+  // Policy ID
+  id string
+  // Policy type
+  type string
+  // Policy Name
+  name string
 }
 
 atlassian.admin.organization.user {
