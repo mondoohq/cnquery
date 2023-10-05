@@ -147,18 +147,20 @@ var docsYamlCmd = &cobra.Command{
 }
 
 var platformMapping = map[string][]string{
-	"aws":       {"aws"},
-	"gcp":       {"gcloud"},
-	"k8s":       {"kubernetes"},
-	"azure":     {"azure"},
-	"azurerm":   {"azure"},
-	"arista":    {"arista-eos"},
-	"equinix":   {"equinix"},
-	"ms365":     {"microsoft365"},
-	"msgraph":   {"microsoft365"},
-	"vsphere":   {"vmware-esxi", "vmware-vsphere"},
-	"esxi":      {"vmware-esxi", "vmware-vsphere"},
-	"terraform": {"terraform"},
+	"aws":             {"aws"},
+	"gcp":             {"gcp"},
+	"k8s":             {"kubernetes"},
+	"azure":           {"azure"},
+	"azurerm":         {"azure"},
+	"arista":          {"arista-eos"},
+	"equinix":         {"equinix"},
+	"ms365":           {"microsoft365"},
+	"msgraph":         {"microsoft365"},
+	"vsphere":         {"vmware-esxi", "vmware-vsphere"},
+	"esxi":            {"vmware-esxi", "vmware-vsphere"},
+	"terraform.state": {"terraform-state"},
+	"terraform.plan":  {"terraform-plan"},
+	"terraform":       {"terraform-hcl"},
 }
 
 func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.LrDocsEntry {
@@ -176,6 +178,7 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 			entry.Platform = &docs.LrDocsPlatform{
 				Name: platformMapping[k],
 			}
+			continue // required to ensure that terraform.state is not overwritten by terraform
 		}
 	}
 	return entry
