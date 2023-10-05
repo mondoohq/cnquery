@@ -515,6 +515,12 @@ func commitChanges(confs updateConfs) error {
 		return errors.New("commit is not in repo: " + err.Error())
 	}
 
+	// Getting the GPG key is a hassle, so we use CLI for now...
+	err = exec.Command("git", "commit", "--amend", "--no-edit", "-S").Run()
+	if err != nil {
+		return err
+	}
+
 	log.Info().Msg("committed changes for " + strings.Join(confs.titles(), ", "))
 	log.Info().Msg("running: git push -u origin " + branchName)
 
