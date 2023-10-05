@@ -5,10 +5,11 @@ package resources
 
 import (
 	"context"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"strings"
+
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
 
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
@@ -23,7 +24,6 @@ func serviceName(name string) string {
 }
 
 func (g *mqlGcpProject) services() ([]interface{}, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}

@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
 
 	uuid "github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers"
 )
 
 // the job state

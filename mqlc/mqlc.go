@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/utils/sortx"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc/parser"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/sortx"
 )
 
 type variable struct {

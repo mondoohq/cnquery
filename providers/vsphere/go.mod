@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/vsphere
+module go.mondoo.com/cnquery/v9/providers/vsphere
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.20
 
@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware/govmomi v0.32.0
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 )
 
 require (

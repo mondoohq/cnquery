@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/equinix/provider"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/equinix/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "equinix",
-	ID:              "go.mondoo.com/cnquery/providers/equinix",
+	ID:              "go.mondoo.com/cnquery/v9/providers/equinix",
 	Version:         "9.0.4",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

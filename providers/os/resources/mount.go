@@ -7,11 +7,11 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/mount"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/mount"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (m *mqlMount) id() (string, error) {

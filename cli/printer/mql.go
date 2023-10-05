@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/utils/sortx"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/sortx"
 )
 
 // Results prints a full query with all data points

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 // UnsetPrimitive is the unset primitive

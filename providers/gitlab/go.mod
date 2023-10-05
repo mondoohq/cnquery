@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/gitlab
+module go.mondoo.com/cnquery/v9/providers/gitlab
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.21
 
@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.92.3
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/protobuf v1.31.0
 )

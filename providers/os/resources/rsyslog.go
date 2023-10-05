@@ -7,9 +7,9 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/checksums"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/checksums"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 )
 
 const defaultRsyslogConf = "/etc/rsyslog.conf"

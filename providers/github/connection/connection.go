@@ -11,8 +11,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v55/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 )
 

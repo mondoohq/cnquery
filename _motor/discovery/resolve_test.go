@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/discovery"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/v9/motor/discovery"
+	v1 "go.mondoo.com/cnquery/v9/motor/inventory/v1"
 )
 
 func TestResolverWithAssetName(t *testing.T) {

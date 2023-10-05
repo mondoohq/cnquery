@@ -7,15 +7,15 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/providers/os/resources/networkinterface"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/networkinterface"
 
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/cli/execruntime"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mql"
-	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/cli/execruntime"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mql"
+	"go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 )
 
 type sysInfoConfig struct {

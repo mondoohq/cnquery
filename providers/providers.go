@@ -19,9 +19,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
-	"go.mondoo.com/cnquery/cli/config"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/cli/config"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"golang.org/x/exp/slices"
 )
 

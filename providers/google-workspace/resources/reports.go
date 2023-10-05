@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v9/types"
 	reports "google.golang.org/api/admin/reports/v1"
 )
 

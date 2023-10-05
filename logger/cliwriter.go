@@ -5,12 +5,13 @@ package logger
 
 import (
 	"fmt"
-	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/cli/theme/colors"
 	"io"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/muesli/termenv"
+	"go.mondoo.com/cnquery/v9/cli/theme/colors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

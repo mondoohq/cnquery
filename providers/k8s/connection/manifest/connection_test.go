@@ -9,8 +9,8 @@ package manifest
 
 // 	"github.com/stretchr/testify/assert"
 // 	"github.com/stretchr/testify/require"
-// 	"go.mondoo.com/cnquery/motor/providers"
-// 	"go.mondoo.com/cnquery/providers/k8s/connection/shared/resources"
+// 	"go.mondoo.com/cnquery/v9/motor/providers"
+// 	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared/resources"
 // )
 
 // type K8sObjectKindTest struct {

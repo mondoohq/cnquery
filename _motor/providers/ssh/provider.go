@@ -14,12 +14,12 @@ import (
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/cmd"
-	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
-	"go.mondoo.com/cnquery/motor/providers/ssh/scp"
-	"go.mondoo.com/cnquery/motor/providers/ssh/sftp"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	os_provider "go.mondoo.com/cnquery/v9/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/os/cmd"
+	"go.mondoo.com/cnquery/v9/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/v9/motor/providers/ssh/scp"
+	"go.mondoo.com/cnquery/v9/motor/providers/ssh/sftp"
 	"golang.org/x/crypto/ssh"
 )
 

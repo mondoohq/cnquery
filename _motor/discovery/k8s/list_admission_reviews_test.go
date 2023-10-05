@@ -11,8 +11,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"

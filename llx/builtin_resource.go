@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 type Resource interface {

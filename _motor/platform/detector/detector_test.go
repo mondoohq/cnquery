@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/platform/detector"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/v9/motor/platform"
+	"go.mondoo.com/cnquery/v9/motor/platform/detector"
+	"go.mondoo.com/cnquery/v9/motor/providers/mock"
 )
 
 func newDetector(filepath string) (*detector.Detector, error) {

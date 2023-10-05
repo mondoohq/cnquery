@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/packethost/packngo"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 )
 
 func (r *mqlEquinixMetalUser) id() (string, error) {

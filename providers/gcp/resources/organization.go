@@ -6,12 +6,13 @@ package resources
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
 	"strconv"
+
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/cloudresourcemanager/v3"
@@ -140,7 +141,6 @@ func (g *mqlGcpOrganization) folders() (*mqlGcpFolders, error) {
 }
 
 func (g *mqlGcpOrganization) projects() (*mqlGcpProjects, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}

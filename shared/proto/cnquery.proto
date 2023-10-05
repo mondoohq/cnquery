@@ -3,7 +3,7 @@
 
 syntax = "proto3";
 package proto;
-option go_package = "go.mondoo.com/cnquery/shared/proto";
+option go_package = "go.mondoo.com/cnquery/v9/shared/proto";
 
 import "providers-sdk/v1/inventory/inventory.proto";
 

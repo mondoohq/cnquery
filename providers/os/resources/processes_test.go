@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func TestResource_Processes(t *testing.T) {

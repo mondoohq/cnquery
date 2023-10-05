@@ -8,8 +8,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/mrn"
+	"go.mondoo.com/cnquery/v9/explorer"
+	"go.mondoo.com/cnquery/v9/mrn"
 )
 
 type wrapQuery struct {

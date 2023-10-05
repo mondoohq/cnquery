@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/google-workspace
+module go.mondoo.com/cnquery/v9/providers/google-workspace
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.21
 
@@ -8,9 +8,14 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 	golang.org/x/oauth2 v0.12.0
 	google.golang.org/api v0.143.0
+)
+
+require (
+	github.com/gopherjs/gopherjs v1.17.2 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 )
 
 require (
@@ -133,7 +138,6 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20230610083614-0e73809eb601 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
@@ -155,7 +159,6 @@ require (
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/julz/importas v0.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect

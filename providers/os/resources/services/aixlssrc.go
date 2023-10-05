@@ -5,9 +5,10 @@ package services
 
 import (
 	"bufio"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"io"
 	"regexp"
+
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 type AixServiceManager struct {

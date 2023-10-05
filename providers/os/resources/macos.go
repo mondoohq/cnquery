@@ -11,9 +11,9 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/macos"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/macos"
 	"howett.net/plist"
 )
 

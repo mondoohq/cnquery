@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mqlc"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {

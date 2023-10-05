@@ -11,13 +11,13 @@ import (
 
 	"github.com/gobwas/glob"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
-	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 

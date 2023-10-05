@@ -5,10 +5,10 @@ package providers
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 )
 
-const DefaultOsID = "go.mondoo.com/cnquery/providers/os"
+const DefaultOsID = "go.mondoo.com/cnquery/v9/providers/os"
 
 var defaultRuntime *Runtime
 

@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

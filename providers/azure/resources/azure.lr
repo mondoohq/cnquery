@@ -1,5 +1,5 @@
-option provider = "go.mondoo.com/cnquery/providers/azure"
-option go_package = "go.mondoo.com/cnquery/providers/azure/resources"
+option provider = "go.mondoo.com/cnquery/v9/providers/azure"
+option go_package = "go.mondoo.com/cnquery/v9/providers/azure/resources"
 
 // Azure resource
 azure {

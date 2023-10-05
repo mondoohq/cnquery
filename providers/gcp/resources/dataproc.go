@@ -9,11 +9,11 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
 	"google.golang.org/api/compute/v1"
 	dataproc "google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/option"
@@ -656,7 +656,6 @@ func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDataprocServiceClusterConfig) id() (string, error) {
-
 	if g.ParentResourcePath.Error != nil {
 		return "", g.ParentResourcePath.Error
 	}

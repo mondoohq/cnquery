@@ -6,11 +6,11 @@ package resources
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/utils/stringx"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 )
 
 // Discovery Flags

@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/checksums"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/network/resources/certificates"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/checksums"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/network/resources/certificates"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func pkixnameToMql(runtime *plugin.Runtime, name pkix.Name, id string) (*mqlPkixName, error) {

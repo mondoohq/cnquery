@@ -6,12 +6,12 @@ package network
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/platform/detector"
-	"go.mondoo.com/cnquery/motor/providers"
-	network_transport "go.mondoo.com/cnquery/motor/providers/network"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/platform/detector"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	network_transport "go.mondoo.com/cnquery/v9/motor/providers/network"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 type Resolver struct{}

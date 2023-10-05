@@ -8,9 +8,9 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 )
 
 func (s *mqlMondooEol) id() (string, error) {

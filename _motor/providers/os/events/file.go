@@ -6,8 +6,8 @@ package events
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
 )
 
 // FileOp describes a set of file operations.

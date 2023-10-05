@@ -9,10 +9,10 @@ import (
 	"path"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 func (s *mqlFile) id() (string, error) {

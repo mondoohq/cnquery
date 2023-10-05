@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/opcua/provider"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/opcua/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "opcua",
-	ID:              "go.mondoo.com/cnquery/providers/opcua",
+	ID:              "go.mondoo.com/cnquery/v9/providers/opcua",
 	Version:         "9.0.5",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

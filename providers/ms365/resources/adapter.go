@@ -9,7 +9,7 @@ import (
 	absauth "github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdkgo "github.com/microsoftgraph/msgraph-sdk-go"
-	"go.mondoo.com/cnquery/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
 
 	msgraphclient "github.com/microsoftgraph/msgraph-sdk-go"
 )

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 )
 
 func TestRpmUpdateParser(t *testing.T) {

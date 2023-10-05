@@ -7,9 +7,9 @@ import (
 	"context"
 	"os"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/container/cache"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/container/cache"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 const (

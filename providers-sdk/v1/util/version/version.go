@@ -24,9 +24,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/cli/components"
-	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/cli/components"
+	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 )
 

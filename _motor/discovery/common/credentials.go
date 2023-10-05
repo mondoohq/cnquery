@@ -5,8 +5,8 @@ package common
 
 import (
 	"github.com/rs/zerolog/log"
-	inventory "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/vault"
+	inventory "go.mondoo.com/cnquery/v9/motor/inventory/v1"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 type (

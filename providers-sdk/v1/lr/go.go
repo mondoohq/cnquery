@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/utils/multierr"
+	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/multierr"
 )
 
 // Go produced go code for the LR file
@@ -117,9 +117,9 @@ package resources
 import (
 	"errors"%s
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/types"%s
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/types"%s
 )
 `
 

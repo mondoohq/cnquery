@@ -29,7 +29,7 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
   - id: macos
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -41,7 +41,7 @@ builds:
     flags: -tags production
     ldflags:
       # clang + macos does not support static: - -extldflags "-static"
-      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
     hooks:
       post:
         - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
@@ -59,7 +59,7 @@ builds:
     flags: -tags production -buildmode exe
     ldflags:
       - "-extldflags -static"
-      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
     hooks:
       post:
         - cmd: ./scripts/windows-upx.sh "{{ .Path }}"

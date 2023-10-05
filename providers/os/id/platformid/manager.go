@@ -4,8 +4,8 @@
 package platformid
 
 import (
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 type UniquePlatformIDProvider interface {

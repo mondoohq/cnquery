@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/core/resources"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/core/resources"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 const defaultConnection uint32 = 1

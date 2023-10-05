@@ -6,8 +6,8 @@ package shared
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/shared/proto"
+	"go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/shared/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

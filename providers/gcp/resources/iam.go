@@ -6,9 +6,10 @@ package resources
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
+
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
 	"google.golang.org/api/iterator"
@@ -25,7 +26,6 @@ func (g *mqlGcpProjectIamService) id() (string, error) {
 }
 
 func (g *mqlGcpProject) iam() (*mqlGcpProjectIamService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}

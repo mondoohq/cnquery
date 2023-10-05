@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/types"
 	"google.golang.org/protobuf/proto"
 )
 

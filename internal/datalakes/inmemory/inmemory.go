@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/v9/explorer"
+	"go.mondoo.com/cnquery/v9/llx"
 )
 
 // Db is the database backend, it allows the interaction with the underlying data.

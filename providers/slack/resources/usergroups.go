@@ -8,9 +8,9 @@ import (
 	"errors"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/slack/connection"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/slack/connection"
 )
 
 func (s *mqlSlack) userGroups() ([]interface{}, error) {

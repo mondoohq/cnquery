@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"go.mondoo.com/cnquery/utils/stringx"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"

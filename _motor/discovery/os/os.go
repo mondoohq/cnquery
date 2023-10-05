@@ -7,14 +7,14 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/motorid"
-	"go.mondoo.com/cnquery/motor/motorid/hostname"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/motorid"
+	"go.mondoo.com/cnquery/v9/motor/motorid/hostname"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/resolver"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 type Resolver struct{}

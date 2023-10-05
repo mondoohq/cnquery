@@ -10,8 +10,8 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 // ApplyDefaults applies all ssh defaults to the transport. It specifically set

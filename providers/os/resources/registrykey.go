@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"strings"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )

@@ -4,8 +4,8 @@
 package events
 
 import (
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
 )
 
 type CommandObservable struct {

@@ -6,11 +6,11 @@ package k8s
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 var _ common.ContextInitializer = (*NamespaceResolver)(nil)

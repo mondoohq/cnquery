@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
 )
 
 type CommandRunner struct {

@@ -15,10 +15,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/fs"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/snapshot"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/fs"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/os/snapshot"
 )
 
 var (

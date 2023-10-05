@@ -8,9 +8,9 @@ package resources_test
 // 	"testing"
 
 // 	"github.com/stretchr/testify/assert"
-// 	"go.mondoo.com/cnquery/resources/packs/k8s"
-// 	"go.mondoo.com/cnquery/resources/packs/os"
-// 	"go.mondoo.com/cnquery/resources/packs/testutils"
+// 	"go.mondoo.com/cnquery/v9/resources/packs/k8s"
+// 	"go.mondoo.com/cnquery/v9/resources/packs/os"
+// 	"go.mondoo.com/cnquery/v9/resources/packs/testutils"
 // )
 
 // func TestResource_K8sKubelet(t *testing.T) {

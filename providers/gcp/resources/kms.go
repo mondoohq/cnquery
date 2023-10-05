@@ -6,18 +6,19 @@ package resources
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
 	"strconv"
 	"sync"
 	"time"
 
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
+
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/v9/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
@@ -46,7 +47,6 @@ func initGcpProjectKmsService(runtime *plugin.Runtime, args map[string]*llx.RawD
 }
 
 func (g *mqlGcpProject) kms() (*mqlGcpProjectKmsService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -82,7 +82,6 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation) id() (string
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions) id() (string, error) {
-
 	if g.CryptoKeyVersionName.Error != nil {
 		return "", g.CryptoKeyVersionName.Error
 	}
@@ -296,7 +295,6 @@ func (g *mqlGcpProjectKmsServiceKeyring) cryptokeys() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]interface{}, error) {
-
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error
 	}

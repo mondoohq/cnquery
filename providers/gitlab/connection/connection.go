@@ -10,8 +10,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/xanzy/go-gitlab"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 )
 
 type GitLabConnection struct {

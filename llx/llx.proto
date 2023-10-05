@@ -4,7 +4,7 @@
 syntax = "proto3";
 
 package cnquery.llx;
-option go_package = "go.mondoo.com/cnquery/llx";
+option go_package = "go.mondoo.com/cnquery/v9/llx";
 
 message Primitive {
   string type = 1;

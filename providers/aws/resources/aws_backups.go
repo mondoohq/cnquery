@@ -11,12 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/providers/aws/connection"
-
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v9/providers/aws/connection"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (a *mqlAwsBackup) id() (string, error) {

@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/ms365
+module go.mondoo.com/cnquery/v9/providers/ms365
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.20
 
@@ -12,8 +12,7 @@ require (
 	github.com/microsoft/kiota-authentication-azure-go v1.0.0
 	github.com/microsoftgraph/msgraph-sdk-go v1.17.0
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.31.0
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 
 )
 
@@ -62,6 +61,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect

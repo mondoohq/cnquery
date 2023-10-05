@@ -3,7 +3,7 @@
 
 package packages
 
-import "go.mondoo.com/cnquery/providers/os/connection/shared"
+import "go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 
 type ScratchPkgManager struct {
 	conn shared.Connection

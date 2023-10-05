@@ -12,8 +12,8 @@ import (
 	"github.com/kevinburke/ssh_config"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 func ReadSSHConfig(cc *providers.Config) *providers.Config {

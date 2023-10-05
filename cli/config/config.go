@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 )
 
 /*

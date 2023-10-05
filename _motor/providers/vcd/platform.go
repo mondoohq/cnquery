@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/v9/motor/platform"
 )
 
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {

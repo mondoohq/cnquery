@@ -12,7 +12,7 @@ func TestGenerator(t *testing.T) {
 		Path:                "../../cnquery/providers/oci",
 		ProviderID:          "oci",
 		ProviderName:        "Oracle Cloud Infrastructure",
-		GoPackage:           "go.mondoo.com/cnquery/providers/oci",
+		GoPackage:           "go.mondoo.com/cnquery/v9/providers/oci",
 		CamelcaseProviderID: "Oci",
 	}
 

@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/k8s
+module go.mondoo.com/cnquery/v9/providers/k8s
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.20
 
@@ -11,8 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 	k8s.io/api v0.28.2
 	k8s.io/apiextensions-apiserver v0.28.2
 	k8s.io/apimachinery v0.28.2

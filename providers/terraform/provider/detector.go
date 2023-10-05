@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/terraform/connection"
 )
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) error {

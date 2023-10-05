@@ -1,13 +1,13 @@
-module go.mondoo.com/cnquery/providers/opcua
+module go.mondoo.com/cnquery/v9/providers/opcua
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.20
 
 require (
 	github.com/gopcua/opcua v0.5.1
 	github.com/mozillazg/go-slugify v0.2.0
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 )
 
 require (

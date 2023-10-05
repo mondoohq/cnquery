@@ -7,12 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
 	"time"
+
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
@@ -41,7 +42,6 @@ func (g *mqlGcpProjectBigqueryService) id() (string, error) {
 }
 
 func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}

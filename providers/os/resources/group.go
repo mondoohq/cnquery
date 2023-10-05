@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"sync"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/groups"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/groups"
 )
 
 type mqlGroupInternal struct {

@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
-	"go.mondoo.com/cnquery/providers/os/resources/npm"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/npm"
 )
 
 func TestYarnParser(t *testing.T) {

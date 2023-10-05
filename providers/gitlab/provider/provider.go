@@ -10,13 +10,13 @@ import (
 	"strings"
 
 	"github.com/xanzy/go-gitlab"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/gitlab/connection"
-	"go.mondoo.com/cnquery/providers/gitlab/resources"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers/gitlab/connection"
+	"go.mondoo.com/cnquery/v9/providers/gitlab/resources"
 )
 
 const (

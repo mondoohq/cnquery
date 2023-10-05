@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/motorid/gce"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/motorid/gce"
+	"go.mondoo.com/cnquery/v9/motor/platform"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
 )
 

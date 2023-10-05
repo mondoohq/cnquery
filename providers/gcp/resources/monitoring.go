@@ -6,15 +6,16 @@ package resources
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
-	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/v9/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -40,7 +41,6 @@ func initGcpProjectMonitoringService(runtime *plugin.Runtime, args map[string]*l
 }
 
 func (g *mqlGcpProject) monitoring() (*mqlGcpProjectMonitoringService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
