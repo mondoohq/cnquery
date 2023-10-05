@@ -102,6 +102,55 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+func (a *mqlAwsVpcEndpoint) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsVpc) endpoints() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	vpc := a.Id.Data
+
+	svc := conn.Ec2(a.Region.Data)
+	ctx := context.Background()
+	endpoints := []interface{}{}
+	filterKeyVal := "vpc-id"
+	nextToken := aws.String("no_token_to_start_with")
+	params := &ec2.DescribeVpcEndpointsInput{Filters: []vpctypes.Filter{{Name: &filterKeyVal, Values: []string{vpc}}}}
+	for nextToken != nil {
+		endpointsRes, err := svc.DescribeVpcEndpoints(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextToken = endpointsRes.NextToken
+		if endpointsRes.NextToken != nil {
+			params.NextToken = nextToken
+		}
+
+		for _, endpoint := range endpointsRes.VpcEndpoints {
+			var subnetIds []interface{}
+			for _, subnet := range endpoint.SubnetIds {
+				subnetIds = append(subnetIds, subnet)
+			}
+			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.endpoint",
+				map[string]*llx.RawData{
+					"id":             llx.StringData(fmt.Sprintf("%s/%s", a.Region.Data, *endpoint.VpcEndpointId)),
+					"type":           llx.StringData(string(endpoint.VpcEndpointType)),
+					"vpc":            llx.StringData(*endpoint.VpcId),
+					"region":         llx.StringData(a.Region.Data),
+					"serviceName":    llx.StringData(*endpoint.ServiceName),
+					"policyDocument": llx.StringData(*endpoint.PolicyDocument),
+					"subnets":        llx.ArrayData(subnetIds, types.String),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			endpoints = append(endpoints, mqlEndpoint)
+		}
+	}
+	return endpoints, nil
+}
+
 func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	vpc := a.Id.Data

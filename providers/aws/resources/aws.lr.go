@@ -42,6 +42,10 @@ func init() {
 			// to override args, implement: initAwsVpcSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcSubnet,
 		},
+		"aws.vpc.endpoint": {
+			// to override args, implement: initAwsVpcEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcEndpoint,
+		},
 		"aws.vpc.flowlog": {
 			// to override args, implement: initAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcFlowlog,
@@ -610,6 +614,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.vpc.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.vpc.endpoint")))
+	},
 	"aws.vpc.flowLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetFlowLogs()).ToDataRes(types.Array(types.Resource("aws.vpc.flowlog")))
 	},
@@ -639,6 +646,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetMapPublicIpOnLaunch()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetType()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetVpc()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetServiceName()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.policyDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetPolicyDocument()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetSubnets()).ToDataRes(types.Array(types.String))
 	},
 	"aws.vpc.flowlog.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetId()).ToDataRes(types.String)
@@ -2700,6 +2728,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpc).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).Endpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.flowLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).FlowLogs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -2746,6 +2778,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcSubnet).MapPublicIpOnLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcEndpoint).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Vpc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.policyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).PolicyDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6055,6 +6119,7 @@ type mqlAwsVpc struct {
 	IsDefault plugin.TValue[bool]
 	InstanceTenancy plugin.TValue[string]
 	Region plugin.TValue[string]
+	Endpoints plugin.TValue[[]interface{}]
 	FlowLogs plugin.TValue[[]interface{}]
 	RouteTables plugin.TValue[[]interface{}]
 	Subnets plugin.TValue[[]interface{}]
@@ -6124,6 +6189,22 @@ func (c *mqlAwsVpc) GetInstanceTenancy() *plugin.TValue[string] {
 
 func (c *mqlAwsVpc) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsVpc) GetEndpoints() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Endpoints, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.endpoints()
+	})
 }
 
 func (c *mqlAwsVpc) GetFlowLogs() *plugin.TValue[[]interface{}] {
@@ -6294,6 +6375,85 @@ func (c *mqlAwsVpcSubnet) GetCidrs() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcSubnet) GetMapPublicIpOnLaunch() *plugin.TValue[bool] {
 	return &c.MapPublicIpOnLaunch
+}
+
+// mqlAwsVpcEndpoint for the aws.vpc.endpoint resource
+type mqlAwsVpcEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcEndpointInternal it will be used here
+	Id plugin.TValue[string]
+	Type plugin.TValue[string]
+	Vpc plugin.TValue[string]
+	Region plugin.TValue[string]
+	ServiceName plugin.TValue[string]
+	PolicyDocument plugin.TValue[string]
+	Subnets plugin.TValue[[]interface{}]
+}
+
+// createAwsVpcEndpoint creates a new instance of this resource
+func createAwsVpcEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcEndpoint) MqlName() string {
+	return "aws.vpc.endpoint"
+}
+
+func (c *mqlAwsVpcEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcEndpoint) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsVpcEndpoint) GetVpc() *plugin.TValue[string] {
+	return &c.Vpc
+}
+
+func (c *mqlAwsVpcEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpcEndpoint) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlAwsVpcEndpoint) GetPolicyDocument() *plugin.TValue[string] {
+	return &c.PolicyDocument
+}
+
+func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]interface{}] {
+	return &c.Subnets
 }
 
 // mqlAwsVpcFlowlog for the aws.vpc.flowlog resource
