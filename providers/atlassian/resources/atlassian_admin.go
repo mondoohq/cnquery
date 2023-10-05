@@ -114,3 +114,28 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
+func (a *mqlAtlassianAdminOrganization) events() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	admin := conn.Admin()
+	orgId := a.Id.Data
+	events, response, err := admin.Organization.Events(context.Background(), orgId, nil, "")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	res := []interface{}{}
+	for _, event := range events.Data {
+		mqlAtlassianAdminDomain, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.event",
+			map[string]*llx.RawData{
+				"id": llx.StringData(event.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminDomain)
+	}
+	return res, nil
+}

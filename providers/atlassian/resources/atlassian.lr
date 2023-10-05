@@ -20,6 +20,8 @@ atlassian.admin.organization @defaults("id") {
   policies() []atlassian.admin.organization.policy
   // Domains 
   domains() []atlassian.admin.organization.domain
+  // Events 
+  events() []atlassian.admin.organization.event
 }
 
 atlassian.admin.organization.policy @defaults("id") {
@@ -33,6 +35,11 @@ atlassian.admin.organization.policy @defaults("id") {
 
 atlassian.admin.organization.domain @defaults("id") {
   // Domain ID
+  id string
+}
+
+atlassian.admin.organization.event @defaults("id") {
+  // Event ID
   id string
 }
 

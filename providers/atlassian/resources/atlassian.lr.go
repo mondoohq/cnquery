@@ -37,6 +37,10 @@ func init() {
 			// to override args, implement: initAtlassianAdminOrganizationDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationDomain,
 		},
+		"atlassian.admin.organization.event": {
+			// to override args, implement: initAtlassianAdminOrganizationEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationEvent,
+		},
 		"atlassian.admin.organization.user": {
 			// to override args, implement: initAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationUser,
@@ -147,6 +151,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetDomains()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.domain")))
 	},
+	"atlassian.admin.organization.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetEvents()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.event")))
+	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -158,6 +165,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.admin.organization.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationDomain).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.admin.organization.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetId()).ToDataRes(types.String)
@@ -264,6 +274,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganization).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Events, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdminOrganizationPolicy).__id, ok = v.Value.(string)
 			return
@@ -286,6 +300,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"atlassian.admin.organization.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminOrganizationEvent).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.admin.organization.event.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -527,6 +549,7 @@ type mqlAtlassianAdminOrganization struct {
 	Users plugin.TValue[[]interface{}]
 	Policies plugin.TValue[[]interface{}]
 	Domains plugin.TValue[[]interface{}]
+	Events plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminOrganization creates a new instance of this resource
@@ -614,6 +637,22 @@ func (c *mqlAtlassianAdminOrganization) GetDomains() *plugin.TValue[[]interface{
 		}
 
 		return c.domains()
+	})
+}
+
+func (c *mqlAtlassianAdminOrganization) GetEvents() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Events, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "events")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.events()
 	})
 }
 
@@ -712,6 +751,50 @@ func (c *mqlAtlassianAdminOrganizationDomain) MqlID() string {
 }
 
 func (c *mqlAtlassianAdminOrganizationDomain) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+// mqlAtlassianAdminOrganizationEvent for the atlassian.admin.organization.event resource
+type mqlAtlassianAdminOrganizationEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianAdminOrganizationEventInternal it will be used here
+	Id plugin.TValue[string]
+}
+
+// createAtlassianAdminOrganizationEvent creates a new instance of this resource
+func createAtlassianAdminOrganizationEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.event", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) MqlName() string {
+	return "atlassian.admin.organization.event"
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
