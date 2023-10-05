@@ -84,12 +84,12 @@ jobs:
 
   provider-build:
     name: "${{ matrix.provider }}"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 120
     needs: scoping
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 2
       matrix:
         provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
@@ -111,10 +111,6 @@ jobs:
 
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v1'
-
-      # Only for shared runners:
-      - name: 'Setup protoc'
-        uses: arduino/setup-protoc@v2
 
       - name: 'Build dependencies'
         run: |
