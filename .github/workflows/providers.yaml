@@ -39,6 +39,7 @@ jobs:
         id: providers
         run: |
           providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+          echo "providers=$(echo -n $providers | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
           build=""
           root=$PWD
           for p in $providers; do
@@ -65,15 +66,13 @@ jobs:
             cd $root
           done
 
-          echo "providers=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
+          echo "build_list=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
 
-          build_all=${{ github.event.inputs.build_all }}}
-          if [[ $build_all ]]; then
+          build_all=${{ github.event.inputs.build_all }}
+          if [[ $build_all == true ]]; then
             echo "=== BUILD OF ALL PROVIDERS FORCED ==="
             printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
             echo "build_list=$(cat providers.json)" >> $GITHUB_OUTPUT
-          else
-            echo "build_list=${build}" >> $GITHUB_OUTPUT
           fi
       - name: Build List
         run: |
