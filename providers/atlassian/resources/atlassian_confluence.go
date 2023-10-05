@@ -28,6 +28,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 		mqlAtlassianConfluenceUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
 			map[string]*llx.RawData{
 				"id":   llx.StringData(user.User.AccountID),
+				"type": llx.StringData(user.User.AccountType),
 				"name": llx.StringData(user.User.DisplayName),
 			})
 		if err != nil {

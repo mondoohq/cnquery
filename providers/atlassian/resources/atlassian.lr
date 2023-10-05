@@ -72,5 +72,4 @@ atlassian.confluence.user @defaults("id") {
   name string
   // Account type
 	type string
-  // Picture of the user
 }
