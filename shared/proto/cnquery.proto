@@ -16,6 +16,8 @@ message RunQueryConfig {
   bool do_record = 7;
   string format = 8;
   string platform_id = 9;
+  string output = 11;
+  string input = 12;
 }
 
 message Empty {}
