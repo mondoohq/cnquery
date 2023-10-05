@@ -109,6 +109,11 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		nsFilter.exclude = strings.Split(exclude, ",")
 	}
 
+	resFilters, err := resourceFilters(invConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	// If we can discover the cluster asset, then we use that as root and build all
 	// platform IDs for the assets based on it. If we cannot discover the cluster, we
 	// discover the individual namespaces according to the ns filter and then build
@@ -125,13 +130,13 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			Platform:    conn.Platform(),
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 		}
-		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryClusters) {
+		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryClusters) && resFilters.IsEmpty() {
 			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
 
 		od := NewPlatformIdOwnershipIndex(assetId)
 
-		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, od, false)
+		assets, err := discoverAssets(runtime, conn, invConfig, assetId, k8s, nsFilter, resFilters, od, false)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +148,9 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			return nil, err
 		}
 
-		in.Spec.Assets = append(in.Spec.Assets, nss...)
+		if resFilters.IsEmpty() {
+			in.Spec.Assets = append(in.Spec.Assets, nss...)
+		}
 
 		// Discover the assets for each namespace and use the namespace platform ID as root
 		for _, ns := range nss {
@@ -152,7 +159,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			od := NewPlatformIdOwnershipIndex(ns.PlatformIds[0])
 
 			// We don't want to discover the namespaces again since we have already done this above
-			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, od, true)
+			assets, err := discoverAssets(runtime, conn, invConfig, ns.PlatformIds[0], k8s, nsFilter, resFilters, od, true)
 			if err != nil {
 				return nil, err
 			}
@@ -171,6 +178,7 @@ func discoverAssets(
 	clusterId string,
 	k8s *mqlK8s,
 	nsFilter NamespaceFilterOpts,
+	resFilters *ResourceFilters,
 	od *PlatformIdOwnershipIndex,
 	skipNsDiscovery bool,
 ) ([]*inventory.Asset, error) {
@@ -179,56 +187,56 @@ func discoverAssets(
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
 		if target == DiscoveryPods || target == DiscoveryAuto {
-			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryJobs || target == DiscoveryAuto {
-			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryCronJobs || target == DiscoveryAuto {
-			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryStatefulSets || target == DiscoveryAuto {
-			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDeployments || target == DiscoveryAuto {
-			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryReplicaSets || target == DiscoveryAuto {
-			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryDaemonSets || target == DiscoveryAuto {
-			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
 		if target == DiscoveryIngresses || target == DiscoveryAuto {
-			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter)
+			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
@@ -266,10 +274,16 @@ func discoverPods(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	pods := k8s.GetPods()
 	if pods.Error != nil {
 		return nil, pods.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("pod") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(pods.Data))
@@ -277,6 +291,10 @@ func discoverPods(
 		pod := p.(*mqlK8sPod)
 
 		if skip := nsFilter.skipNamespace(pod.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("pod", pod.Name.Data, pod.Namespace.Data) {
 			continue
 		}
 
@@ -311,10 +329,16 @@ func discoverJobs(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	jobs := k8s.GetJobs()
 	if jobs.Error != nil {
 		return nil, jobs.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("job") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(jobs.Data))
@@ -322,6 +346,10 @@ func discoverJobs(
 		job := j.(*mqlK8sJob)
 
 		if skip := nsFilter.skipNamespace(job.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("job", job.Name.Data, job.Namespace.Data) {
 			continue
 		}
 
@@ -356,10 +384,16 @@ func discoverCronJobs(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	cjs := k8s.GetCronjobs()
 	if cjs.Error != nil {
 		return nil, cjs.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("cronjob") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(cjs.Data))
@@ -367,6 +401,10 @@ func discoverCronJobs(
 		cjob := cj.(*mqlK8sCronjob)
 
 		if skip := nsFilter.skipNamespace(cjob.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("cronjob", cjob.Name.Data, cjob.Namespace.Data) {
 			continue
 		}
 
@@ -401,10 +439,16 @@ func discoverStatefulSets(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ss := k8s.GetStatefulsets()
 	if ss.Error != nil {
 		return nil, ss.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("statefulset") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(ss.Data))
@@ -412,6 +456,10 @@ func discoverStatefulSets(
 		statefulset := j.(*mqlK8sStatefulset)
 
 		if skip := nsFilter.skipNamespace(statefulset.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("statefulset", statefulset.Name.Data, statefulset.Namespace.Data) {
 			continue
 		}
 
@@ -446,10 +494,16 @@ func discoverDeployments(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDeployments()
 	if ds.Error != nil {
 		return nil, ds.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("deployment") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(ds.Data))
@@ -457,6 +511,10 @@ func discoverDeployments(
 		deployment := d.(*mqlK8sDeployment)
 
 		if skip := nsFilter.skipNamespace(deployment.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("deployment", deployment.Name.Data, deployment.Namespace.Data) {
 			continue
 		}
 
@@ -491,10 +549,16 @@ func discoverReplicaSets(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	rs := k8s.GetReplicasets()
 	if rs.Error != nil {
 		return nil, rs.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("replicaset") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(rs.Data))
@@ -502,6 +566,10 @@ func discoverReplicaSets(
 		replicaset := r.(*mqlK8sReplicaset)
 
 		if skip := nsFilter.skipNamespace(replicaset.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("replicaset", replicaset.Name.Data, replicaset.Namespace.Data) {
 			continue
 		}
 
@@ -536,10 +604,16 @@ func discoverDaemonSets(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	ds := k8s.GetDaemonsets()
 	if ds.Error != nil {
 		return nil, ds.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("daemonset") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(ds.Data))
@@ -547,6 +621,10 @@ func discoverDaemonSets(
 		daemonset := d.(*mqlK8sDaemonset)
 
 		if skip := nsFilter.skipNamespace(daemonset.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("daemonset", daemonset.Name.Data, daemonset.Namespace.Data) {
 			continue
 		}
 
@@ -611,10 +689,16 @@ func discoverIngresses(
 	k8s *mqlK8s,
 	od *PlatformIdOwnershipIndex,
 	nsFilter NamespaceFilterOpts,
+	resFilter *ResourceFilters,
 ) ([]*inventory.Asset, error) {
 	is := k8s.GetIngresses()
 	if is.Error != nil {
 		return nil, is.Error
+	}
+
+	// If there is a resources filter we should only retrieve the workloads that are in the filter.
+	if !resFilter.IsEmpty() && resFilter.IsEmptyForType("ingress") {
+		return []*inventory.Asset{}, nil
 	}
 
 	assetList := make([]*inventory.Asset, 0, len(is.Data))
@@ -622,6 +706,10 @@ func discoverIngresses(
 		ingress := d.(*mqlK8sIngress)
 
 		if skip := nsFilter.skipNamespace(ingress.Namespace.Data); skip {
+			continue
+		}
+
+		if !resFilter.IsEmpty() && !resFilter.Match("ingress", ingress.Name.Data, ingress.Namespace.Data) {
 			continue
 		}
 
@@ -916,4 +1004,66 @@ func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*i
 			}
 		}
 	}
+}
+
+type K8sResourceIdentifier struct {
+	Type      string
+	Namespace string
+	Name      string
+}
+
+type ResourceFilters struct {
+	identifiers map[string][]K8sResourceIdentifier
+}
+
+func (f *ResourceFilters) IsEmpty() bool {
+	return len(f.identifiers) == 0
+}
+
+func (f *ResourceFilters) IsEmptyForType(resourceType string) bool {
+	return len(f.identifiers[resourceType]) == 0
+}
+
+func (f *ResourceFilters) Match(typ, name, namespace string) bool {
+	for _, res := range f.identifiers[typ] {
+		if res.Name == name && res.Namespace == namespace {
+			return true
+		}
+	}
+
+	// If the filter isn't matching we skip
+	return false
+}
+
+// resourceFilters parses the resource filters from the provider config
+func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
+	resourcesFilter := &ResourceFilters{identifiers: make(map[string][]K8sResourceIdentifier)}
+	if fOpt, ok := cfg.Options["k8s-resources"]; ok {
+		fs := strings.Split(fOpt, ",")
+		for _, f := range fs {
+			ids := strings.Split(strings.TrimSpace(f), ":")
+			resType := ids[0]
+			var ns, name string
+			if _, ok := resourcesFilter.identifiers[resType]; !ok {
+				resourcesFilter.identifiers[resType] = []K8sResourceIdentifier{}
+			}
+
+			switch len(ids) {
+			case 3:
+				// Namespaced resources have the format type:ns:name
+				ns = ids[1]
+				name = ids[2]
+			case 2:
+				// Non-namespaced resources have the format type:name
+				name = ids[1]
+			default:
+				return nil, fmt.Errorf("invalid k8s resource filter: %s", f)
+			}
+
+			resourcesFilter.identifiers[resType] = append(
+				resourcesFilter.identifiers[resType],
+				K8sResourceIdentifier{Type: resType, Namespace: ns, Name: name})
+		}
+	}
+	return resourcesFilter, nil
 }
