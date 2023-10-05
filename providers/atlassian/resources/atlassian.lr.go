@@ -33,6 +33,10 @@ func init() {
 			// to override args, implement: initAtlassianAdminOrganizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationPolicy,
 		},
+		"atlassian.admin.organization.domain": {
+			// to override args, implement: initAtlassianAdminOrganizationDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationDomain,
+		},
 		"atlassian.admin.organization.user": {
 			// to override args, implement: initAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationUser,
@@ -140,6 +144,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetPolicies()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.policy")))
 	},
+	"atlassian.admin.organization.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetDomains()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.domain")))
+	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -148,6 +155,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.admin.organization.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.domain.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationDomain).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.admin.organization.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetId()).ToDataRes(types.String)
@@ -250,6 +260,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganization).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Domains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdminOrganizationPolicy).__id, ok = v.Value.(string)
 			return
@@ -264,6 +278,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.admin.organization.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminOrganizationDomain).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.admin.organization.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -504,6 +526,7 @@ type mqlAtlassianAdminOrganization struct {
 	Type plugin.TValue[string]
 	Users plugin.TValue[[]interface{}]
 	Policies plugin.TValue[[]interface{}]
+	Domains plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminOrganization creates a new instance of this resource
@@ -578,6 +601,22 @@ func (c *mqlAtlassianAdminOrganization) GetPolicies() *plugin.TValue[[]interface
 	})
 }
 
+func (c *mqlAtlassianAdminOrganization) GetDomains() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Domains, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
 // mqlAtlassianAdminOrganizationPolicy for the atlassian.admin.organization.policy resource
 type mqlAtlassianAdminOrganizationPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -630,6 +669,50 @@ func (c *mqlAtlassianAdminOrganizationPolicy) GetType() *plugin.TValue[string] {
 
 func (c *mqlAtlassianAdminOrganizationPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+// mqlAtlassianAdminOrganizationDomain for the atlassian.admin.organization.domain resource
+type mqlAtlassianAdminOrganizationDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianAdminOrganizationDomainInternal it will be used here
+	Id plugin.TValue[string]
+}
+
+// createAtlassianAdminOrganizationDomain creates a new instance of this resource
+func createAtlassianAdminOrganizationDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminOrganizationDomain) MqlName() string {
+	return "atlassian.admin.organization.domain"
+}
+
+func (c *mqlAtlassianAdminOrganizationDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganizationDomain) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAtlassianAdminOrganizationUser for the atlassian.admin.organization.user resource

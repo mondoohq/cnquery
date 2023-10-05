@@ -18,6 +18,8 @@ atlassian.admin.organization @defaults("id") {
   users() []atlassian.admin.organization.user
   // Policies
   policies() []atlassian.admin.organization.policy
+  // Domains 
+  domains() []atlassian.admin.organization.domain
 }
 
 atlassian.admin.organization.policy @defaults("id") {
@@ -27,6 +29,11 @@ atlassian.admin.organization.policy @defaults("id") {
   type string
   // Policy Name
   name string
+}
+
+atlassian.admin.organization.domain @defaults("id") {
+  // Domain ID
+  id string
 }
 
 atlassian.admin.organization.user {

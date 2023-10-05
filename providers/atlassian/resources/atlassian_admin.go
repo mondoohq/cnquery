@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
@@ -87,6 +86,31 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 			log.Fatal().Err(err)
 		}
 		res = append(res, mqlAtlassianAdminPolicy)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	admin := conn.Admin()
+	orgId := a.Id.Data
+	domains, response, err := admin.Organization.Domains(context.Background(), orgId, "")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	res := []interface{}{}
+	for _, domain := range domains.Data {
+		mqlAtlassianAdminDomain, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.domain",
+			map[string]*llx.RawData{
+				"id": llx.StringData(domain.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminDomain)
 	}
 	return res, nil
 }
