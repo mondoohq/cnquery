@@ -6,8 +6,8 @@ package reboot
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 type Reboot interface {

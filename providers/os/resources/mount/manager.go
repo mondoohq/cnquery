@@ -5,7 +5,7 @@ package mount
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 type MountPoint struct {

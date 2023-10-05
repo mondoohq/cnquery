@@ -8,10 +8,10 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/ms365/connection"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (m *mqlMicrosoftDomain) id() (string, error) {

@@ -6,8 +6,8 @@ package explorer
 import (
 	"context"
 
-	llx "go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/types"
+	llx "go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 // DataLake provides a shared database access layer

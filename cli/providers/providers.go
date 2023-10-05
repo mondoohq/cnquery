@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/cli/components"
-	"go.mondoo.com/cnquery/cli/config"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/cli/components"
+	"go.mondoo.com/cnquery/v9/cli/config"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 type Command struct {

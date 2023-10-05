@@ -7,8 +7,8 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 
-	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/utils/sortx"
+	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/sortx"
 	"golang.org/x/crypto/blake2b"
 )
 

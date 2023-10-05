@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers"
 )
 
 // Subscriptions is a map to store all watcher subscriptions

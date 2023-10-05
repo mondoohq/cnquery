@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/shared"
+	"go.mondoo.com/cnquery/v9/explorer"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/shared"
 )
 
 func BundleResultsToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {

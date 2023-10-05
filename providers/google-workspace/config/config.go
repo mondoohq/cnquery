@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/google-workspace/provider"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/google-workspace/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "google-workspace",
-	ID:              "go.mondoo.com/cnquery/providers/google-workspace",
+	ID:              "go.mondoo.com/cnquery/v9/providers/google-workspace",
 	Version:         "9.0.4",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

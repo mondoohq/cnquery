@@ -16,7 +16,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v9/providers/os/fsutil"
 )
 
 func NewFs(source string) *FS {

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 // handleGlobal takes a global function and returns a handler if found.

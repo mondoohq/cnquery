@@ -8,16 +8,16 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/platform/detector"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
-	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/resources/packs/os/kubectl"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/platform/detector"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v9/motor/providers/local"
+	"go.mondoo.com/cnquery/v9/motor/vault"
+	"go.mondoo.com/cnquery/v9/resources/packs/os/kubectl"
 )
 
 var _ common.ContextInitializer = (*ClusterResolver)(nil)

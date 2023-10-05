@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers"
 
 	"github.com/spf13/afero"
 )

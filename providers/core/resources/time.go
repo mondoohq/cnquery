@@ -6,7 +6,7 @@ package resources
 import (
 	"time"
 
-	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/v9/llx"
 )
 
 func (p *mqlTime) now() (*time.Time, error) {

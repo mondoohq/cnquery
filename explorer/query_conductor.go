@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	llx "go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/utils/multierr"
+	llx "go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mrn"
+	"go.mondoo.com/cnquery/v9/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"

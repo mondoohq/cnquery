@@ -6,17 +6,18 @@ package resources
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
-	"go.mondoo.com/cnquery/types"
 	"sync"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v9/types"
 
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	run "cloud.google.com/go/run/apiv2"
 	runpb "cloud.google.com/go/run/apiv2/runpb"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/v9/llx"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -44,7 +45,6 @@ func initGcpProjectCloudRunService(runtime *plugin.Runtime, args map[string]*llx
 }
 
 func (g *mqlGcpProject) cloudRun() (*mqlGcpProjectCloudRunService, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -72,7 +72,6 @@ func (g *mqlGcpProjectCloudRunServiceOperation) id() (string, error) {
 }
 
 func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
-
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
@@ -81,7 +80,6 @@ func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
 }
 
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
-
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}

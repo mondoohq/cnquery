@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/segmentio/fasthash/fnv1a"
-	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/v9/checksums"
 )
 
 var result string

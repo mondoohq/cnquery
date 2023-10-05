@@ -6,9 +6,10 @@ package packages
 import (
 	"bufio"
 	"fmt"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"io"
 	"strings"
+
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 const (

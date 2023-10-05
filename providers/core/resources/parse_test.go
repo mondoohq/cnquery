@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
 func TestParse_Date(t *testing.T) {

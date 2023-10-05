@@ -7,9 +7,9 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers/core/resources/versions/rpm"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/rpm"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/packages"
 )
 
 // RpmNewestKernel works on all machines running rpm

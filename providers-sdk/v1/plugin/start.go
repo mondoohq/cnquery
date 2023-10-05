@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog"
-	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/v9/logger"
 )
 
 type Provider struct {

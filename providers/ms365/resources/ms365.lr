@@ -1,5 +1,5 @@
-option provider = "go.mondoo.com/cnquery/providers/ms365"
-option go_package = "go.mondoo.com/cnquery/providers/ms365/resources"
+option provider = "go.mondoo.com/cnquery/v9/providers/ms365"
+option go_package = "go.mondoo.com/cnquery/v9/providers/ms365/resources"
 
 // Microsoft
 microsoft {

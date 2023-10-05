@@ -4,11 +4,11 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/github/connection"
-	"go.mondoo.com/cnquery/utils/stringx"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/github/connection"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 )
 
 func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inventory, error) {

@@ -5,10 +5,10 @@ package detector
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/tar"
+	"go.mondoo.com/cnquery/v9/motor/platform"
+	"go.mondoo.com/cnquery/v9/motor/providers/container/docker_engine"
+	"go.mondoo.com/cnquery/v9/motor/providers/os"
+	"go.mondoo.com/cnquery/v9/motor/providers/tar"
 )
 
 type detect func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error)

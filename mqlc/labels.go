@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )

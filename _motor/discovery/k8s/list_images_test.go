@@ -6,14 +6,14 @@ package k8s
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/motor/motorid/containerid"
+	"go.mondoo.com/cnquery/v9/motor/motorid/containerid"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/k8s"
+	"go.mondoo.com/cnquery/v9/motor/providers/k8s"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

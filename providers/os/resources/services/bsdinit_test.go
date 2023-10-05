@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/providers/os/resources/services"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/services"
 )
 
 func TestParseBsdInit(t *testing.T) {

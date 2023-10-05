@@ -8,13 +8,13 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/platform/detector"
-	"go.mondoo.com/cnquery/motor/providers"
-	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
-	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/platform/detector"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	gcp_provider "go.mondoo.com/cnquery/v9/motor/providers/google"
+	"go.mondoo.com/cnquery/v9/motor/providers/resolver"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 var FolderDiscoveryTargets = append(ProjectDiscoveryTargets)

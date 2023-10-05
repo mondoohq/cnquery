@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc/parser"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 type fieldCompiler func(*compiler, string, *parser.Call) (types.Type, error)

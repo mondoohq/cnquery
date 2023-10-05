@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 // Stat represents a structured statistic entry.

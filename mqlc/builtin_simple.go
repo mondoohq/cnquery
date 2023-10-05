@@ -6,9 +6,9 @@ package mqlc
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc/parser"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func compileStringContains(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

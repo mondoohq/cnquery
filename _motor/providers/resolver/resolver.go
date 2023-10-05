@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor"
+	v1 "go.mondoo.com/cnquery/v9/motor/inventory/v1"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 	"google.golang.org/protobuf/proto"
 )
 

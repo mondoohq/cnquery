@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 )
 
 type WindowsSID struct {

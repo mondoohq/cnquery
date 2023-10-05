@@ -8,10 +8,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/id/gce"
-	"go.mondoo.com/cnquery/providers/os/resources/smbios"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/id/gce"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/smbios"
 )
 
 const (

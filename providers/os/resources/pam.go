@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/checksums"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/os/resources/pam"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/checksums"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/pam"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 const (

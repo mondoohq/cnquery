@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 )
 
 type LrDocs struct {

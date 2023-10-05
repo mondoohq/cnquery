@@ -3,11 +3,11 @@
 
 package config
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+import "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 
 var Config = plugin.Provider{
 	Name:       "core",
-	ID:         "go.mondoo.com/cnquery/providers/core",
+	ID:         "go.mondoo.com/cnquery/v9/providers/core",
 	Version:    "9.0.1",
 	Connectors: []plugin.Connector{},
 }

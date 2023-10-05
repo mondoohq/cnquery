@@ -12,9 +12,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	win "go.mondoo.com/cnquery/providers/os/detector/windows"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	win "go.mondoo.com/cnquery/v9/providers/os/detector/windows"
 )
 
 // Operating Systems

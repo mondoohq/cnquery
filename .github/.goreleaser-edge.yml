@@ -29,7 +29,7 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery/v9.Version={{.Version}} -X go.mondoo.com/cnquery/v9.Build={{.ShortCommit}} -X go.mondoo.com/cnquery/v9.Date={{.Date}}
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
   algorithm: sha256

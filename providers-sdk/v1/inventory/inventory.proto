@@ -3,7 +3,7 @@
 
 syntax = "proto3";
 package cnquery.providers.v1;
-option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/inventory";
+option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory";
 
 import "providers-sdk/v1/vault/vault.proto";
 import "providers-sdk/v1/upstream/upstream.proto";

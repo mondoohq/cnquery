@@ -8,9 +8,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor"
+	v1 "go.mondoo.com/cnquery/v9/motor/inventory/v1"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 func EstablishConnection(ctx context.Context, tc *v1.Config, credsResolver vault.Resolver, insecure bool, record bool) (*motor.Motor, error) {

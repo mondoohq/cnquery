@@ -3,7 +3,7 @@
 
 package main
 
-import "go.mondoo.com/cnquery/apps/cnquery/cmd"
+import "go.mondoo.com/cnquery/v9/apps/cnquery/cmd"
 
 func main() {
 	cmd.Execute()

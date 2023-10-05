@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func init() {

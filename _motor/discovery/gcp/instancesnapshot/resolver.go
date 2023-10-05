@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/gcpinstancesnapshot"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/providers/gcpinstancesnapshot"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 type Resolver struct{}

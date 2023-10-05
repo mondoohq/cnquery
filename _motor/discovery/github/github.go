@@ -10,12 +10,12 @@ import (
 
 	"github.com/google/go-github/v49/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/providers"
-	github_provider "go.mondoo.com/cnquery/motor/providers/github"
-	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/v9/motor/asset"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	github_provider "go.mondoo.com/cnquery/v9/motor/providers/github"
+	"go.mondoo.com/cnquery/v9/motor/providers/resolver"
+	"go.mondoo.com/cnquery/v9/motor/vault"
 )
 
 const (

@@ -4,9 +4,9 @@
 package scan
 
 import (
-	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/utils/multierr"
+	"go.mondoo.com/cnquery/v9/explorer"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/utils/multierr"
 )
 
 type Reporter interface {

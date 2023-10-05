@@ -9,12 +9,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mql"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mql"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 type CredentialQueryResponse struct {

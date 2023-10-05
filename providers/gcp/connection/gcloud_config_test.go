@@ -5,9 +5,10 @@ package connection_test
 
 import (
 	"bytes"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"os"
 	"testing"
+
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -6,12 +6,13 @@ package resources
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/providers/gcp/connection"
 	"strings"
 	"sync"
+
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
 
 	"google.golang.org/api/cloudresourcemanager/v1"
 
@@ -87,7 +88,6 @@ var recommenders = []string{
 
 // GetRecommendations returns recommendations from Google Cloud
 func (g *mqlGcpProject) recommendations() ([]interface{}, error) {
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}

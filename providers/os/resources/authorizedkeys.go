@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/os/resources/authorizedkeys"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/authorizedkeys"
 )
 
 func (x *mqlAuthorizedkeysEntry) id() (string, error) {

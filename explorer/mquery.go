@@ -11,14 +11,14 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/checksums"
-	llx "go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/utils/multierr"
-	"go.mondoo.com/cnquery/utils/sortx"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/checksums"
+	llx "go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
+	"go.mondoo.com/cnquery/v9/mrn"
+	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v9/utils/sortx"
 	"google.golang.org/protobuf/proto"
 )
 

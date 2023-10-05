@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/providers/ipmi
+module go.mondoo.com/cnquery/v9/providers/ipmi
 
-replace go.mondoo.com/cnquery => ../..
+replace go.mondoo.com/cnquery/v9 => ../..
 
 go 1.20
 
@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
-	go.mondoo.com/cnquery v0.0.0-20231002100120-266817c62cf4
+	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 )
 
 require (

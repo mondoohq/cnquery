@@ -7,10 +7,10 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mql/internal"
-	"go.mondoo.com/cnquery/mqlc"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mql/internal"
+	"go.mondoo.com/cnquery/v9/mqlc"
 )
 
 // New creates a new MQL executor instance. It allows you to easily run multiple queries against the

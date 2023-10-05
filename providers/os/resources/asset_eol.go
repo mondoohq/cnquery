@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
-	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 // convertPlatform2VulnPlatform converts the motor platform.Platform to the

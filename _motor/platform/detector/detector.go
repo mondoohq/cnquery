@@ -6,8 +6,8 @@ package detector
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/v9/motor/platform"
+	"go.mondoo.com/cnquery/v9/motor/providers"
 )
 
 func New(p providers.Instance) *Detector {

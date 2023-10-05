@@ -6,7 +6,7 @@ package k8s
 import (
 	"strings"
 
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/types"
 	v1 "k8s.io/api/core/v1"
 )
 

@@ -6,7 +6,8 @@ package connection
 import (
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 )
 
 func NewOrganizationPlatformID(id string) string {
@@ -53,8 +54,8 @@ func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 			Name:   c.platformOverride,
 			Title:  getTitleForPlatformName(c.platformOverride),
 			Family: []string{"google"},
-			//Kind:    providers.Kind_KIND_GCP_OBJECT,
-			//Runtime: providers.RUNTIME_GCP,
+			// Kind:    providers.Kind_KIND_GCP_OBJECT,
+			// Runtime: providers.RUNTIME_GCP,
 		}, nil
 	}
 
@@ -64,24 +65,24 @@ func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 			Name:   "gcp-org",
 			Title:  "GCP Organization",
 			Family: []string{"google"},
-			//Kind:    providers.Kind_KIND_GCP_OBJECT,
-			//Runtime: p.Runtime(),
+			// Kind:    providers.Kind_KIND_GCP_OBJECT,
+			// Runtime: p.Runtime(),
 		}, nil
 	case Project:
 		return &inventory.Platform{
 			Name:   "gcp-project",
 			Title:  "GCP Project",
 			Family: []string{"google"},
-			//Kind:    providers.Kind_KIND_GCP_OBJECT,
-			//Runtime: p.Runtime(),
+			// Kind:    providers.Kind_KIND_GCP_OBJECT,
+			// Runtime: p.Runtime(),
 		}, nil
 	case Folder:
 		return &inventory.Platform{
 			Name:   "gcp-folder",
 			Title:  "GCP Folder",
 			Family: []string{"google"},
-			//Kind:    providers.Kind_KIND_GCP_OBJECT,
-			//Runtime: p.Runtime(),
+			// Kind:    providers.Kind_KIND_GCP_OBJECT,
+			// Runtime: p.Runtime(),
 		}, nil
 	}
 

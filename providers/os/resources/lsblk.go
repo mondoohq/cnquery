@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (l *mqlLsblk) id() (string, error) {

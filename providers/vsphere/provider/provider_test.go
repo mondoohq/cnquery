@@ -4,15 +4,16 @@
 package provider
 
 import (
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/vsphere/connection/vsimulator"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers/vsphere/connection/vsimulator"
 )
 
 func newTestService() (*vsimulator.VsphereSimulator, *Service, *plugin.ConnectRes) {
@@ -166,5 +167,4 @@ func TestVsphereDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp.Asset)
 	assert.Equal(t, 8, len(resp.Inventory.Spec.Assets)) // api + esx + vm
-
 }

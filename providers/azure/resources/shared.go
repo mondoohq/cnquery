@@ -6,8 +6,8 @@ package resources
 import (
 	"strings"
 
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/azure/connection"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection"
 )
 
 type assetIdentifier struct {

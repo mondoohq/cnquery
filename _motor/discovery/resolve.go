@@ -19,12 +19,12 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/discovery/common"
-	inventory "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/providers"
-	pr "go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/stringx"
+	"go.mondoo.com/cnquery/v9/motor/discovery/common"
+	inventory "go.mondoo.com/cnquery/v9/motor/inventory/v1"
+	"go.mondoo.com/cnquery/v9/motor/providers"
+	pr "go.mondoo.com/cnquery/v9/motor/providers/resolver"
+	"go.mondoo.com/cnquery/v9/motor/vault"
+	"go.mondoo.com/cnquery/v9/stringx"
 )
 
 type Resolver interface {
