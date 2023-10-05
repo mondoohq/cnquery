@@ -133,7 +133,7 @@ jobs:
 
       - name: 'Save Artifacts'
         if: ${{ github.event.inputs.skip_publish == 'true' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.provider }}
           path: dist
