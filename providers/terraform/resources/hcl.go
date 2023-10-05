@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -131,6 +130,10 @@ func (t *mqlTerraform) datasources() ([]interface{}, error) {
 	return filterBlockByType(t.MqlRuntime, "data")
 }
 
+func (t *mqlTerraform) resources() ([]interface{}, error) {
+	return filterBlockByType(t.MqlRuntime, "resource")
+}
+
 func (t *mqlTerraform) variables() ([]interface{}, error) {
 	return filterBlockByType(t.MqlRuntime, "variable")
 }
@@ -165,68 +168,6 @@ func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
 	}
 
 	return sb.String()
-}
-
-func (c *mqlTerraformResources) id() (string, error) {
-	filter := c.Filter.Data
-	if filter == nil {
-		return "", nil
-	}
-	return filter.(*llx.RawData).String(), nil
-}
-
-func (c *mqlTerraformResources) list() ([]interface{}, error) {
-	blocks, err := filterBlockByType(c.MqlRuntime, "resource")
-	if err != nil {
-		return nil, err
-	}
-
-	filter := c.Filter.Data
-	if filter == nil {
-		return blocks, err
-	}
-
-	var isOK func(s string) bool
-	raw, ok := filter.(*llx.RawData)
-	if !ok {
-		return blocks, errors.New("can't use filters, incompatible internal typ")
-	}
-
-	switch raw.Type {
-	case types.String, types.Dict:
-		expected, ok := raw.Value.(string)
-		if !ok {
-			return blocks, errors.New("can't use filters, it should be a simple string")
-		}
-		isOK = func(s string) bool {
-			return s == expected
-		}
-	case types.Regex:
-		expected := raw.Value.(string)
-		re, err := regexp.Compile(expected)
-		if err != nil {
-			return blocks, errors.New("failed to compile regex for filter: " + expected)
-		}
-		isOK = func(s string) bool {
-			return re.MatchString(s)
-		}
-	default:
-		return blocks, err
-	}
-
-	var res []interface{}
-	for i := range blocks {
-		block := blocks[i].(*mqlTerraformBlock)
-		labels := block.Labels.Data
-		if len(labels) == 0 {
-			continue
-		}
-		if isOK(labels[0].(string)) {
-			res = append(res, block)
-		}
-	}
-
-	return res, nil
 }
 
 func newMqlHclBlock(runtime *plugin.Runtime, block *hcl.Block, file *hcl.File) (plugin.Resource, error) {

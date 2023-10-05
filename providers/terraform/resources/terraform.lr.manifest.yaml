@@ -130,14 +130,6 @@ resources:
     platform:
       name:
       - terraform
-  terraform.resources:
-    fields:
-      filter: {}
-      list: {}
-    min_mondoo_version: 9.0.0
-    platform:
-      name:
-      - terraform
   terraform.settings:
     fields:
       backend:
