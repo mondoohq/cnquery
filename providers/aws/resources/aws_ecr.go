@@ -111,15 +111,20 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 				return nil, err
 			}
 			for i := range repoResp.Repositories {
+				imageScanOnPush := false
 				r := repoResp.Repositories[i]
+				if r.ImageScanningConfiguration != nil {
+					imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
+				}
 				mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 					map[string]*llx.RawData{
-						"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
-						"name":       llx.StringData(convert.ToString(r.RepositoryName)),
-						"uri":        llx.StringData(convert.ToString(r.RepositoryUri)),
-						"registryId": llx.StringData(convert.ToString(r.RegistryId)),
-						"public":     llx.BoolData(false),
-						"region":     llx.StringData(region),
+						"arn":             llx.StringData(convert.ToString(r.RepositoryArn)),
+						"name":            llx.StringData(convert.ToString(r.RepositoryName)),
+						"uri":             llx.StringData(convert.ToString(r.RepositoryUri)),
+						"registryId":      llx.StringData(convert.ToString(r.RegistryId)),
+						"public":          llx.BoolData(false),
+						"region":          llx.StringData(region),
+						"imageScanOnPush": llx.BoolData(imageScanOnPush),
 					})
 				if err != nil {
 					return nil, err
@@ -276,14 +281,16 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 	}
 	for i := range repoResp.Repositories {
 		r := repoResp.Repositories[i]
+
 		mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 			map[string]*llx.RawData{
-				"arn":        llx.StringData(convert.ToString(r.RepositoryArn)),
-				"name":       llx.StringData(convert.ToString(r.RepositoryName)),
-				"uri":        llx.StringData(convert.ToString(r.RepositoryUri)),
-				"registryId": llx.StringData(convert.ToString(r.RegistryId)),
-				"public":     llx.BoolData(true),
-				"region":     llx.StringData("us-east-1"),
+				"arn":             llx.StringData(convert.ToString(r.RepositoryArn)),
+				"name":            llx.StringData(convert.ToString(r.RepositoryName)),
+				"uri":             llx.StringData(convert.ToString(r.RepositoryUri)),
+				"registryId":      llx.StringData(convert.ToString(r.RegistryId)),
+				"public":          llx.BoolData(true),
+				"region":          llx.StringData("us-east-1"),
+				"imageScanOnPush": llx.BoolData(false),
 			})
 		if err != nil {
 			return nil, err

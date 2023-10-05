@@ -2086,6 +2086,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecr.repository.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrRepository).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ecr.repository.imageScanOnPush": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcrRepository).GetImageScanOnPush()).ToDataRes(types.Bool)
+	},
 	"aws.ecr.image.digest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcrImage).GetDigest()).ToDataRes(types.String)
 	},
@@ -5007,6 +5010,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ecr.repository.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcrRepository).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecr.repository.imageScanOnPush": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcrRepository).ImageScanOnPush, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13341,6 +13348,7 @@ type mqlAwsEcrRepository struct {
 	Public plugin.TValue[bool]
 	Images plugin.TValue[[]interface{}]
 	Region plugin.TValue[string]
+	ImageScanOnPush plugin.TValue[bool]
 }
 
 // createAwsEcrRepository creates a new instance of this resource
@@ -13418,6 +13426,10 @@ func (c *mqlAwsEcrRepository) GetImages() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsEcrRepository) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEcrRepository) GetImageScanOnPush() *plugin.TValue[bool] {
+	return &c.ImageScanOnPush
 }
 
 // mqlAwsEcrImage for the aws.ecr.image resource

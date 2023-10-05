@@ -1100,6 +1100,8 @@ resources:
         The `aws.ecr.repository` resource can be used to assess the Amazon Elastic Container Registry repositories.
     fields:
       arn: {}
+      imageScanOnPush:
+        min_mondoo_version: 8.19.0
       images: {}
       name: {}
       public: {}
