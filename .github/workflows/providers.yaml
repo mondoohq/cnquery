@@ -10,12 +10,12 @@ on:
         description: 'Force build all providers'
         type: boolean
         required: false
-        default: 'false'
+        default: false
       skip_publish:
         description: 'Skip publishing'
         type: boolean
         required: false
-        default: 'false'
+        default: false
 
 
 env:
@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       providers: ${{ steps.providers.outputs.providers }}
+      build_list: ${{ steps.providers.outputs.build_list }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,16 +69,19 @@ jobs:
 
           build_all=${{ github.event.inputs.build_all }}}
           if [[ $build_all ]]; then
-            echo "Forced build of all providers"
+            echo "=== BUILD OF ALL PROVIDERS FORCED ==="
             printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
-            echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
+            echo "build_list=$(cat providers.json)" >> $GITHUB_OUTPUT
+          else
+            echo "build_list=${build}" >> $GITHUB_OUTPUT
           fi
+      - name: Build List
+        run: |
+          echo "=== Providers detected:"
+          echo ${{ steps.providers.outputs.providers }}
 
-          echo "Providers detected:"
-          echo $providers
-
-          echo "Providers to build:"
-          echo $build
+          echo "=== Providers select to build:"
+          echo ${{ steps.providers.outputs.build_list }}
 
   provider-build:
     name: "${{ matrix.provider }}"
@@ -87,7 +91,7 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        provider: ${{ fromJSON(needs.scoping.outputs.providers) }}
+        provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
