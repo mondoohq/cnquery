@@ -15,7 +15,7 @@ func (a *mqlAtlassianConfluence) id() (string, error) {
 func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	confluence := conn.Confluence()
-	cql := "type = page"
+	cql := "type = user"
 	users, response, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -23,7 +23,6 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 	if response.Status != "200 OK" {
 		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
-
 	res := []interface{}{}
 	for _, user := range users.Results {
 		mqlAtlassianConfluenceUser, err := CreateResource(a.MqlRuntime, "atlassian.confluence.user",
@@ -37,4 +36,8 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 		res = append(res, mqlAtlassianConfluenceUser)
 	}
 	return res, nil
+}
+
+func (a *mqlAtlassianConfluenceUser) id() (string, error) {
+	return a.Id.Data, nil
 }

@@ -65,7 +65,7 @@ atlassian.confluence {
   users() []atlassian.confluence.user
 }
 
-atlassian.confluence.user { 
+atlassian.confluence.user @defaults("id") { 
   // AccountID
   id string
   // Name
