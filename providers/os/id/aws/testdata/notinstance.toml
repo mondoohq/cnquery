@@ -22,7 +22,10 @@ content = "Red Hat Enterprise Linux Server release 7.2 (Maipo)"
     gid = 0
     size = 0
 
-[commands."curl http://169.254.169.254/latest/dynamic/instance-identity/document"]
+[commands."curl -H \"X-aws-ec2-metadata-token-ttl-seconds: 21600\" -X PUT \"http://169.254.169.254/latest/api/token\""]
+stdout = "MYTOKEN"
+
+[commands."curl -H \"X-aws-ec2-metadata-token: MYTOKEN\" -v http://169.254.169.254/latest/dynamic/instance-identity/document"]
 stdout = """
 {
   "devpayProductCodes" : null,

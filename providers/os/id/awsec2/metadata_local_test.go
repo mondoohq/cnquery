@@ -44,6 +44,13 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 	cfg := fakeConfig()
 	cfg.HTTPClient = smithyhttp.ClientDoFunc(func(r *http.Request) (*http.Response, error) {
 		url := r.URL.String()
+		if strings.Contains(url, "latest/api/token") {
+			return &http.Response{
+				StatusCode: 200,
+				Header:     http.Header{},
+				Body:       io.NopCloser(bytes.NewBufferString("mock-token")),
+			}, nil
+		}
 		if strings.Contains(url, "tags/instance/Name") {
 			return &http.Response{
 				StatusCode: 200,
@@ -75,6 +82,13 @@ func TestEC2RoleProviderInstanceIdentityLocalDisabledTagsService(t *testing.T) {
 	cfg := fakeConfig()
 	cfg.HTTPClient = smithyhttp.ClientDoFunc(func(r *http.Request) (*http.Response, error) {
 		url := r.URL.String()
+		if strings.Contains(url, "latest/api/token") {
+			return &http.Response{
+				StatusCode: 200,
+				Header:     http.Header{},
+				Body:       io.NopCloser(bytes.NewBufferString("mock-token")),
+			}, nil
+		}
 		if strings.Contains(url, "tags/instance/Name") {
 			return &http.Response{
 				StatusCode: 404,

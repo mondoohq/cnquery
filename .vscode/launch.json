@@ -177,6 +177,15 @@
       "args": [
         "status",
       ],
+    },
+    {
+      "name": "cnquery-shell",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "shell", "ssh", "user@18.215.249.49",
+      ],
     }
   ]
 }
