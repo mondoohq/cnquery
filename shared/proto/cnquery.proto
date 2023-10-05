@@ -20,6 +20,8 @@ message RunQueryConfig {
   string format = 8;
   string platform_id = 9;
   bool incognito = 10;
+  string output = 11;
+  string input = 12;
 }
 
 message Empty {}

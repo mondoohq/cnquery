@@ -24,6 +24,11 @@ func init() {
 	RunCmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
 	RunCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
 	RunCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
+
+	RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file.")
+	RunCmd.Flags().MarkHidden("llx")
+	RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
+	RunCmd.Flags().MarkHidden("use-llx")
 }
 
 var RunCmd = &cobra.Command{
@@ -45,6 +50,13 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 	conf.DoParse, _ = cmd.Flags().GetBool("parse")
 	if doJSON, _ := cmd.Flags().GetBool("json"); doJSON {
 		conf.Format = "json"
+	}
+	if llx, _ := cmd.Flags().GetString("llx"); llx != "" {
+		conf.Format = "llx"
+		conf.Output = llx
+	}
+	if llx, _ := cmd.Flags().GetString("use-llx"); llx != "" {
+		conf.Input = llx
 	}
 	conf.PlatformId, _ = cmd.Flags().GetString("platform-id")
 	conf.Inventory = &inventory.Inventory{
