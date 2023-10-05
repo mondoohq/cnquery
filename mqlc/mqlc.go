@@ -759,7 +759,7 @@ func (c *compiler) unnamedArgs(callerLabel string, init *resources.Init, args []
 			// This needs massive improvements to dynamically cast them in LLX.
 			// For a full description see: https://gitlab.com/mondoolabs/mondoo/-/issues/241
 			// This is ONLY a temporary workaround which works in a few cases:
-			if (vType == types.Dict && expectedType == types.String) || expectedType == types.Any {
+			if vType == types.Dict && expectedType == types.String {
 				// we are good, LLX will handle it
 			} else {
 				return nil, errors.New("Incorrect type on argument " + strconv.Itoa(idx) +

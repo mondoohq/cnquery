@@ -271,18 +271,6 @@ func (b *goBuilder) goSetData(r []*Resource) {
 				continue
 			}
 
-			if field.BasicField.Type.isAny() {
-				x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*%s).%s, ok = plugin.RawDataToAnyTValue(v, v.Error)
-		return
-	},`,
-					resource.ID, field.BasicField.ID,
-					resource.structName(b), field.BasicField.methodname(),
-				)
-				fields = append(fields, x)
-				continue
-			}
-
 			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*%s).%s, ok = plugin.RawToTValue[%s](v.Value, v.Error)
 		return
@@ -637,8 +625,6 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.Time
 	case "dict":
 		return types.Dict
-	case "any":
-		return types.Any
 	default:
 		return resourceType(t.Type, ast)
 	}
@@ -718,10 +704,6 @@ func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 
 	// TODO: check that this type if a proper resource
 	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
-}
-
-func (t *Type) isAny() bool {
-	return t != nil && t.SimpleType != nil && t.SimpleType.Type == "any"
 }
 
 func (t *Type) containsResource(b *goBuilder) bool {

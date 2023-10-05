@@ -18,19 +18,12 @@ terraform {
   providers() []terraform.block
   // Data sources blocks
   datasources() []terraform.block
+  // All blocks with type resource
+  resources() []terraform.block
   // Variable blocks
   variables() []terraform.block
   // Output blocks
   outputs() []terraform.block
-}
-
-// Terraform resources are all blocks with a type set to resource
-terraform.resources {
-  []terraform.block
-  // List all Terraform resources or search by name
-  init(filter any)
-  // Filter applied to this list of Terraform resources. May be a string or regex.
-  filter any
 }
 
 // Terraform Configuration File represents a .tf or .tf.json file
