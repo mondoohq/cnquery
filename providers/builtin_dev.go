@@ -6,25 +6,25 @@
 
 package providers
 
-import (
-	_ "embed"
-	// osconf "go.mondoo.com/cnquery/providers/os/config"
-	// os "go.mondoo.com/cnquery/providers/os/provider"
-)
+// import (
+// 	_ "embed"
+
+// 	osconf "go.mondoo.com/cnquery/providers/os/config"
+// 	os "go.mondoo.com/cnquery/providers/os/provider"
+// )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
 
-func init() {
-	// builtinProviders[osconf.Config.ID] = &builtinProvider{
-	// 	Runtime: &RunningProvider{
-	// 		Name:     osconf.Config.Name,
-	// 		ID:       osconf.Config.ID,
-	// 		Plugin:   os.Init(),
-	// 		Schema:   MustLoadSchema("os", osInfo),
-	// 		isClosed: false,
-	// 	},
-	// 	Config: &osconf.Config,
-	// }
-
-}
+// func init() {
+// 	builtinProviders[osconf.Config.ID] = &builtinProvider{
+// 		Runtime: &RunningProvider{
+// 			Name:     osconf.Config.Name,
+// 			ID:       osconf.Config.ID,
+// 			Plugin:   os.Init(),
+// 			Schema:   MustLoadSchema("os", osInfo),
+// 			isClosed: false,
+// 		},
+// 		Config: &osconf.Config,
+// 	}
+// }

@@ -131,7 +131,12 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 			return nil, out.Error
 		}
 
-		foundFiles = strings.Split(strings.Trim(out.Data, " \t\n"), "\n")
+		lines := strings.TrimSpace(out.Data)
+		if lines == "" {
+			foundFiles = []string{}
+		} else {
+			foundFiles = strings.Split(lines, "\n")
+		}
 	} else {
 		return nil, errors.New("find is not supported for your platform")
 	}
