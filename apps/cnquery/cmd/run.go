@@ -193,6 +193,11 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().StringToString("option", nil, "Additional connection options. You can pass in multiple options using `--option key=value`")
 		cmd.Flags().String("discover", discovery.DiscoveryAuto, "Enable the discovery of nested assets. Supported: 'all|auto|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
 		cmd.Flags().StringToString("discover-filter", nil, "Additional filter for asset discovery.")
+
+		cmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file.")
+		cmd.Flags().MarkHidden("llx")
+		cmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
+		cmd.Flags().MarkHidden("use-llx")
 	},
 	CommonPreRun: func(cmd *cobra.Command, args []string) {
 		// for all assets
@@ -270,6 +275,14 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 	}
 	if doJSON {
 		conf.Format = "json"
+	}
+
+	if llx, _ := cmd.Flags().GetString("llx"); llx != "" {
+		conf.Format = "llx"
+		conf.Output = llx
+	}
+	if llx, _ := cmd.Flags().GetString("use-llx"); llx != "" {
+		conf.Input = llx
 	}
 
 	conf.DoRecord = viper.GetBool("record")

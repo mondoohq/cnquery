@@ -2,18 +2,19 @@ package cmd
 
 import (
 	"context"
-	"github.com/spf13/viper"
 	"os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/shell"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
@@ -24,9 +25,10 @@ import (
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/shared"
-	"go.mondoo.com/cnquery/shared/proto"
+	run "go.mondoo.com/cnquery/shared/proto"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/ranger-rpc"
+	"google.golang.org/protobuf/proto"
 )
 
 // pluginCmd represents the version command
@@ -53,8 +55,8 @@ func init() {
 
 type cnqueryPlugin struct{}
 
-func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHelper) error {
-	if conf.Command == "" {
+func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, out shared.OutputHelper) error {
+	if conf.Command == "" && conf.Input == "" {
 		return errors.New("No command provided, nothing to do.")
 	}
 
@@ -169,9 +171,37 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		}
 		defer sh.Close()
 
-		code, results, err := sh.RunOnce(conf.Command)
+		var code *llx.CodeBundle
+		var results map[string]*llx.RawResult
+		if conf.Input != "" {
+			var raw []byte
+			raw, err = os.ReadFile(conf.Input)
+			if err != nil {
+				return errors.Wrap(err, "failed to read code bundle from file")
+			}
+			var b llx.CodeBundle
+			if err = proto.Unmarshal(raw, &b); err != nil {
+				return errors.Wrap(err, "failed to unmarshal code bundle")
+			}
+			code = &b
+			results, err = sh.RunOnceBundle(code)
+		} else {
+			code, results, err = sh.RunOnce(conf.Command)
+		}
 		if err != nil {
 			return errors.Wrap(err, "failed to run")
+		}
+
+		if conf.Format == "llx" && conf.Output != "" {
+			out, err := proto.Marshal(code)
+			if err != nil {
+				return errors.Wrap(err, "failed to marshal code bundle")
+			}
+			err = os.WriteFile(conf.Output, out, 0o644)
+			if err != nil {
+				return errors.Wrap(err, "failed to save code bundle")
+			}
+			return nil
 		}
 
 		if conf.Format != "json" {

@@ -325,12 +325,13 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 		return nil, nil, err
 	}
 
-	results, err := mql.ExecuteCode(s.Schema, s.Runtime, code, nil, s.features)
-	if err != nil {
-		panic(err)
-	}
+	res, err := s.RunOnceBundle(code)
+	return code, res, err
+}
 
-	return code, results, err
+// RunOnceBundle executes the given code bundle and returns results
+func (s *Shell) RunOnceBundle(code *llx.CodeBundle) (map[string]*llx.RawResult, error) {
+	return mql.ExecuteCode(s.Schema, s.Runtime, code, nil, s.features)
 }
 
 func (s *Shell) PrintResults(code *llx.CodeBundle, results map[string]*llx.RawResult) {
