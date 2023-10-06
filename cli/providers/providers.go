@@ -135,7 +135,11 @@ func attachProviders(existing providers.Providers, commands []*Command) {
 }
 
 func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
+	var osProvider *providers.Provider
 	for _, provider := range existing {
+		if provider.Name == "os" {
+			osProvider = provider
+		}
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
 			attachConnectorCmd(provider.Provider, &conn, cmd)
@@ -148,11 +152,11 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 	}
 
 	// the default is always os.local if it exists
-	if p, ok := existing[providers.DefaultOsID]; ok {
-		for i := range p.Connectors {
-			c := p.Connectors[i]
+	if osProvider != nil {
+		for i := range osProvider.Connectors {
+			c := osProvider.Connectors[i]
 			if c.Name == "local" {
-				setDefaultConnector(p.Provider, &c, cmd)
+				setDefaultConnector(osProvider.Provider, &c, cmd)
 				break
 			}
 		}
