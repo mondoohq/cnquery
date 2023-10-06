@@ -5,7 +5,7 @@
 
 **Open source, cloud-native asset inventory and discovery**
 
-cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+cnquery is a cloud-native tool for querying your entire infrastructure. It answers thousands of questions about your infrastructure and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
 ![cnquery run example](docs/images/cnquery-run.gif)
 
@@ -130,7 +130,7 @@ Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
 
 To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://www.mondoo.com).
 
-## Distribute queries across your fleet with private query packs
+## Distribute queries across your infrastructure with private query packs
 
 You can create and share query packs using the Registry in the Mondoo Console. The Registry is a secure, private environment in your account where you store both Mondoo query packs and custom query packs. This lets you use the same query packs for all assets.
 
@@ -194,7 +194,7 @@ cnquery bundle upload mypack.mql.yaml
 
 ## What's next?
 
-There are so many things cnquery can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, and share data with auditors… cnquery is nearly limitless in capabilities.
+There are so many things cnquery can do! Gather information about your infrastructure, find tool-sprawl across systems, run incident response, and share data with auditors… cnquery is nearly limitless in capabilities.
 
 Explore:
 
