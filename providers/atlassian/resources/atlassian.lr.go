@@ -693,7 +693,12 @@ func createAtlassianAdminOrganizationPolicy(runtime *plugin.Runtime, args map[st
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.policy", res.__id)

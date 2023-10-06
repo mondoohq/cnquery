@@ -141,3 +141,7 @@ func (a *mqlAtlassianAdminOrganization) events() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
+func (a *mqlAtlassianAdminOrganizationPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
