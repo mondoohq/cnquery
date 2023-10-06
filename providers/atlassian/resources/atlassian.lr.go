@@ -8,9 +8,9 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -163,6 +163,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetName()).ToDataRes(types.String)
 	},
+	"atlassian.admin.organization.policy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.policy.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetStatus()).ToDataRes(types.String)
+	},
 	"atlassian.admin.organization.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationDomain).GetId()).ToDataRes(types.String)
 	},
@@ -292,6 +298,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.admin.organization.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.policy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.policy.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationPolicy).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -664,6 +678,8 @@ type mqlAtlassianAdminOrganizationPolicy struct {
 	Id plugin.TValue[string]
 	Type plugin.TValue[string]
 	Name plugin.TValue[string]
+	PolicyType plugin.TValue[string]
+	Status plugin.TValue[string]
 }
 
 // createAtlassianAdminOrganizationPolicy creates a new instance of this resource
@@ -708,6 +724,14 @@ func (c *mqlAtlassianAdminOrganizationPolicy) GetType() *plugin.TValue[string] {
 
 func (c *mqlAtlassianAdminOrganizationPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianAdminOrganizationPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAtlassianAdminOrganizationPolicy) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAtlassianAdminOrganizationDomain for the atlassian.admin.organization.domain resource

@@ -1,4 +1,4 @@
-module go.mondoo.com/cnquery/providers/atlassian
+module go.mondoo.com/cnquery/v9/providers/atlassian
 
 go 1.20
 
@@ -6,6 +6,7 @@ require (
 	github.com/ctreminiom/go-atlassian v1.5.1
 	github.com/rs/zerolog v1.31.0
 	go.mondoo.com/cnquery v0.0.0-20231002111758-82a0179e7dbd
+	go.mondoo.com/cnquery/v9 v9.0.1
 )
 
 require (

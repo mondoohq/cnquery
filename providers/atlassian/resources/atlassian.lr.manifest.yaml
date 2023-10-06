@@ -33,6 +33,8 @@ resources:
     fields:
       id: {}
       name: {}
+      policyType: {}
+      status: {}
       type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.user:

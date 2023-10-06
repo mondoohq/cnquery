@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {

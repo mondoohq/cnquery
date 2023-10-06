@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
 )
 
 func (a *mqlAtlassianAdmin) id() (string, error) {
@@ -78,9 +78,11 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 	for _, policy := range policies.Data {
 		mqlAtlassianAdminPolicy, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.policy",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(policy.ID),
-				"type": llx.StringData(policy.Type),
-				"name": llx.StringData(policy.Attributes.Name),
+				"id":         llx.StringData(policy.ID),
+				"type":       llx.StringData(policy.Type),
+				"name":       llx.StringData(policy.Attributes.Name),
+				"status":     llx.StringData(policy.Attributes.Status),
+				"policyType": llx.StringData(policy.Attributes.Type),
 			})
 		if err != nil {
 			log.Fatal().Err(err)

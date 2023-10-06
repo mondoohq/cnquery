@@ -8,7 +8,7 @@ import (
 	"github.com/ctreminiom/go-atlassian/jira/v2"
 	_ "github.com/ctreminiom/go-atlassian/jira/v3"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 )
 
 type AtlassianConnection struct {

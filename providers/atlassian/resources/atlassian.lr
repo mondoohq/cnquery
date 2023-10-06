@@ -31,6 +31,10 @@ atlassian.admin.organization.policy @defaults("id") {
   type string
   // Policy Name
   name string
+  // PolicyType
+  policyType string
+  // Status
+  status string
 }
 
 atlassian.admin.organization.domain @defaults("id") {

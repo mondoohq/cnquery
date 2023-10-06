@@ -4,12 +4,12 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/providers/atlassian/connection"
-	"go.mondoo.com/cnquery/providers/atlassian/resources"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/resources"
 )
 
 type Service struct {
