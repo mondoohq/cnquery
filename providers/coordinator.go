@@ -424,6 +424,9 @@ func (c *coordinator) Shutdown() {
 		runtime.Client.Kill()
 	}
 	c.RunningByID = map[string]*RunningProvider{}
+	c.runtimes = map[string]*Runtime{}
+	c.runtimeCnt = 0
+	c.unprocessedRuntimes = []*Runtime{}
 
 	c.mutex.Unlock()
 }
