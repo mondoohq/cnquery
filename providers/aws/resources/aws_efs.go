@@ -72,12 +72,14 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 				for i := range describeFileSystemsRes.FileSystems {
 					fs := describeFileSystemsRes.FileSystems[i]
 					args := map[string]*llx.RawData{
-						"id":        llx.StringData(convert.ToString(fs.FileSystemId)),
-						"arn":       llx.StringData(convert.ToString(fs.FileSystemArn)),
-						"name":      llx.StringData(convert.ToString(fs.Name)),
-						"encrypted": llx.BoolData(convert.ToBool(fs.Encrypted)),
-						"region":    llx.StringData(regionVal),
-						"tags":      llx.MapData(efsTagsToMap(fs.Tags), types.String),
+						"id":               llx.StringData(convert.ToString(fs.FileSystemId)),
+						"arn":              llx.StringData(convert.ToString(fs.FileSystemArn)),
+						"name":             llx.StringData(convert.ToString(fs.Name)),
+						"encrypted":        llx.BoolData(convert.ToBool(fs.Encrypted)),
+						"region":           llx.StringData(regionVal),
+						"availabilityZone": llx.StringDataPtr(fs.AvailabilityZoneName),
+						"createdAt":        llx.TimeDataPtr(fs.CreationTime),
+						"tags":             llx.MapData(efsTagsToMap(fs.Tags), types.String),
 					}
 					// add kms key if there is one
 					if fs.KmsKeyId != nil {

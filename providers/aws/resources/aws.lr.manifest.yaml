@@ -1230,7 +1230,11 @@ resources:
         \n"
     fields:
       arn: {}
+      availabilityZone:
+        min_mondoo_version: 9.1.0
       backupPolicy: {}
+      createdAt:
+        min_mondoo_version: 9.1.0
       encrypted: {}
       id: {}
       kmsKey: {}
@@ -1458,6 +1462,12 @@ resources:
         The `aws.es.domain` provides fields for assessing the configuration of individual Amazon Elasticsearch domains. For usage see the `aws.es` resource documentation
     fields:
       arn: {}
+      domainId:
+        min_mondoo_version: 9.1.0
+      domainName:
+        min_mondoo_version: 9.1.0
+      elasticsearchVersion:
+        min_mondoo_version: 9.1.0
       encryptionAtRestEnabled: {}
       endpoint: {}
       name: {}

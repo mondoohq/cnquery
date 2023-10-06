@@ -137,28 +137,32 @@ private aws.accessanalyzer.analyzer @defaults("arn status") {
 
 // AWS Elastic File System (EFS) Service
 aws.efs {
-  // A list of filesystems managed by the service
+  // A list of file systems managed by the service
   filesystems() []aws.efs.filesystem
 }
 
 // AWS Elastic File System (EFS) Filesystem
 private aws.efs.filesystem @defaults("name arn") {
-  // Name of the filesystem
+  // Name of the file system
   name string
-  // ID of the filesystem
+  // ID of the file system
   id string
-  // ARN of the filesystem
+  // ARN of the file system
   arn string
-  // Denotes whether or not the filesystem id encrypted
+  // Denotes whether or not the file system is encrypted
   encrypted bool
-  // KMS key used for encryption of the filesystem
+  // KMS key used for encryption of the file system
   kmsKey() aws.kms.key
-  // Backup policy for the filesystem
+  // Backup policy for the file system
   backupPolicy() dict
-  // Region in which the filesystem exists
+  // Region in which the file system exists
   region string
-  // Tags for the filesystem
+  // Availability zone where the file system exists if a specific AZ is defined
+  availabilityZone string
+  // Tags for the file system
   tags map[string]string
+  // Creation timestamp
+  createdAt time
 }
 
 // AWS Key Management Service (KMS)
@@ -471,6 +475,12 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
+  // The version of Elasticsearch running
+  elasticsearchVersion string
+  // The Elasticsearch domain ID
+  domainId string
+  // The Elasticsearch domain name
+  domainName string
 }
 
 // AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager

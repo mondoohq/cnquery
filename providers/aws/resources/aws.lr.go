@@ -725,8 +725,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.efs.filesystem.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetAvailabilityZone()).ToDataRes(types.String)
+	},
 	"aws.efs.filesystem.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.efs.filesystem.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.kms.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKms).GetKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
@@ -1066,6 +1072,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.es.domain.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.es.domain.elasticsearchVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetElasticsearchVersion()).ToDataRes(types.String)
+	},
+	"aws.es.domain.domainId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDomainId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDomainName()).ToDataRes(types.String)
 	},
 	"aws.acm.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcm).GetCertificates()).ToDataRes(types.Array(types.Resource("aws.acm.certificate")))
@@ -2908,8 +2923,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEfsFilesystem).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.kms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3438,6 +3461,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.es.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.elasticsearchVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ElasticsearchVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.domainId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DomainId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.acm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6713,7 +6748,9 @@ type mqlAwsEfsFilesystem struct {
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	BackupPolicy plugin.TValue[interface{}]
 	Region plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -6795,8 +6832,16 @@ func (c *mqlAwsEfsFilesystem) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsEfsFilesystem) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
 func (c *mqlAwsEfsFilesystem) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsEfsFilesystem) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsKms for the aws.kms resource
@@ -8477,6 +8522,9 @@ type mqlAwsEsDomain struct {
 	Endpoint plugin.TValue[string]
 	Region plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	ElasticsearchVersion plugin.TValue[string]
+	DomainId plugin.TValue[string]
+	DomainName plugin.TValue[string]
 }
 
 // createAwsEsDomain creates a new instance of this resource
@@ -8542,6 +8590,18 @@ func (c *mqlAwsEsDomain) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsEsDomain) GetElasticsearchVersion() *plugin.TValue[string] {
+	return &c.ElasticsearchVersion
+}
+
+func (c *mqlAwsEsDomain) GetDomainId() *plugin.TValue[string] {
+	return &c.DomainId
+}
+
+func (c *mqlAwsEsDomain) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
 }
 
 // mqlAwsAcm for the aws.acm resource

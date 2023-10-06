@@ -22,7 +22,6 @@ gvnic
 hostkeys
 iap
 ilb
-IMDS
 ingresstls
 iotedge
 linux
