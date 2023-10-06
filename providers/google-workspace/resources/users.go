@@ -104,7 +104,7 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 	primaryEmail := g.PrimaryEmail.Data
 
 	date := time.Now()
-	report, err := reportsService.UserUsageReport.Get(primaryEmail, date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
+	report, err := reportsService.UserUsageReport.Get(primaryEmail, date.Format(time.DateOnly)).CustomerId(conn.CustomerID()).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, 
 		if len(report.UsageReports) == 0 {
 			date = date.Add(-24 * time.Hour)
 			// try fetching from a day before
-			report, err = reportsService.UserUsageReport.Get(primaryEmail, date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
+			report, err = reportsService.UserUsageReport.Get(primaryEmail, date.Format(time.DateOnly)).CustomerId(conn.CustomerID()).Do()
 			if err != nil {
 				return nil, err
 			}

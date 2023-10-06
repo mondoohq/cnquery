@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -40,9 +41,6 @@ const (
 	appDataStudio         = "data_studio"
 	appKeep               = "keep"
 )
-
-// ISO8601 is a date format required by Google Workspace Reports API
-const ISO8601 = "2006-01-02" // yyyy-mm-dd
 
 func (g *mqlGoogleworkspaceReportApps) id() (string, error) {
 	return "googleworkspace.report.apps", nil
@@ -125,46 +123,69 @@ func (g *mqlGoogleworkspaceReportUsers) list() ([]interface{}, error) {
 
 	res := []interface{}{}
 	date := time.Now()
-	usageReports, err := reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
-	if err != nil {
+	expectedErr := "googleapi: Error 400: Data for dates later than"
+
+	usageReports, err := fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
+	// we expect this error if there is no data for the current day, so we continue
+	if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
 		return nil, err
 	}
-	for {
-		if len(usageReports.UsageReports) == 0 {
+
+	if len(usageReports) == 0 {
+		// try and fetch usage for each of the past 7 days
+		attempts := 7
+		for attempts > 0 {
 			date = date.Add(-24 * time.Hour)
-			// try fetching from a day before
-			usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).Do()
-			if err != nil {
+			reports, err := fetchReportUsage(g.MqlRuntime, reportsService, conn.CustomerID(), date.Format(time.DateOnly))
+			// we expect this error if there is no data for the current day, so we continue
+			if err != nil && !strings.HasPrefix(err.Error(), expectedErr) {
 				return nil, err
 			}
-			continue
-		}
-
-		for i := range usageReports.UsageReports {
-			r, err := newMqlGoogleWorkspaceUsageReport(g.MqlRuntime, usageReports.UsageReports[i])
-			if err != nil {
-				return nil, err
+			if len(reports) > 0 {
+				res = append(res, reports...)
+				break
 			}
-			res = append(res, r)
-		}
-
-		if usageReports.NextPageToken == "" {
-			break
-		}
-
-		usageReports, err = reportsService.UserUsageReport.Get("all", date.Format(ISO8601)).CustomerId(conn.CustomerID()).
-			PageToken(usageReports.NextPageToken).Do()
-		if err != nil {
-			return nil, err
+			attempts--
 		}
 	}
 
 	return res, nil
 }
 
+func fetchReportUsage(runtime *plugin.Runtime, service *reports.Service, customerId, date string) ([]interface{}, error) {
+	res := []interface{}{}
+
+	usageReports, err := service.UserUsageReport.Get("all", date).CustomerId(customerId).Do()
+	if err != nil {
+		return nil, err
+	}
+	for _, u := range usageReports.UsageReports {
+		r, err := newMqlGoogleWorkspaceUsageReport(runtime, u)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+
+	for usageReports != nil && usageReports.NextPageToken != "" {
+		usageReports, err := service.UserUsageReport.Get("all", date).CustomerId(customerId).PageToken(usageReports.NextPageToken).Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, u := range usageReports.UsageReports {
+			r, err := newMqlGoogleWorkspaceUsageReport(runtime, u)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+	}
+	return res, nil
+}
+
 func newMqlGoogleWorkspaceUsageReport(runtime *plugin.Runtime, entry *reports.UsageReport) (*mqlGoogleworkspaceReportUsage, error) {
 	var date *time.Time
-	parsedDate, err := time.Parse(ISO8601, entry.Date)
+	parsedDate, err := time.Parse(time.DateOnly, entry.Date)
 	if err == nil {
 		date = &parsedDate
 	}
@@ -220,7 +241,7 @@ func (g *mqlGoogleworkspaceReportUsage) id() (string, error) {
 	}
 	date := g.Date.Data
 
-	return "googleworkspace.report.usage/" + customerId + "/" + profileId + "/" + date.Format(ISO8601), nil
+	return "googleworkspace.report.usage/" + customerId + "/" + profileId + "/" + date.Format(time.DateOnly), nil
 }
 
 type userReport struct {
