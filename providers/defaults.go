@@ -38,7 +38,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "arista",
-					Short: "Arista EOS",
+					Short: "an Arista EOS device",
 				},
 			},
 		},
@@ -50,7 +50,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "aws",
-					Short: "aws account",
+					Short: "an AWS account",
 				},
 			},
 		},
@@ -62,7 +62,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "azure",
-					Short: "azure",
+					Short: "an Azure subscription",
 				},
 			},
 		},
@@ -81,7 +81,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "equinix",
-					Short: "Equinix Metal",
+					Short: "an Equinix Metal organization",
 				},
 			},
 		},
@@ -93,7 +93,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "gcp",
-					Short: "GCP Cloud",
+					Short: "a GCP project",
 				},
 			},
 		},
@@ -105,7 +105,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "github",
-					Short: "GitHub",
+					Short: "a GitHub organization or repository",
 				},
 			},
 		},
@@ -117,7 +117,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "gitlab",
-					Short: "GitLab",
+					Short: "a GitLab group or project",
 				},
 			},
 		},
@@ -129,7 +129,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "google-workspace",
-					Short: "Google Workspace",
+					Short: "a Google Workspace account",
 				},
 			},
 		},
@@ -141,7 +141,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ipmi",
-					Short: "Ipmi",
+					Short: "an IPMI interface",
 				},
 			},
 		},
@@ -165,7 +165,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "ms365",
-					Short: "ms365",
+					Short: "a Microsoft 365 account",
 				},
 			},
 		},
@@ -189,7 +189,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "oci",
-					Short: "Oracle Cloud Infrastructure",
+					Short: "an Oracle Cloud Infrastructure tenancy",
 				},
 			},
 		},
@@ -213,7 +213,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "opcua",
-					Short: "OPC UA",
+					Short: "an OPC UA device",
 				},
 			},
 		},
@@ -245,7 +245,7 @@ var DefaultProviders Providers = map[string]*Provider{
 				},
 				{
 					Name:  "docker",
-					Short: "a running docker or docker image",
+					Short: "a running Docker or Docker image",
 				},
 				{
 					Name:  "filesystem",
@@ -261,7 +261,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "slack",
-					Short: "slack team",
+					Short: "a Slack team",
 				},
 			},
 		},
@@ -273,7 +273,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "terraform",
-					Short: "a terraform hcl file or directory.",
+					Short: "a Terraform HCL file or directory.",
 				},
 			},
 		},
@@ -285,7 +285,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "vcd",
-					Short: "VMware Cloud Director",
+					Short: "a VMware Cloud Director installation",
 				},
 			},
 		},
@@ -297,7 +297,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "vsphere",
-					Short: "VMware vSphere",
+					Short: "a VMware vSphere installation",
 				},
 			},
 		},
