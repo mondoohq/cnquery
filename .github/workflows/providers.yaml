@@ -123,7 +123,7 @@ jobs:
           scripts/provider_bundler.sh ${{ matrix.provider }}
 
       - name: 'Publish Provider'
-        if: ${{ github.event.inputs.skip_publish == 'false' }}
+        if: ${{ ! github.event.inputs.skip_publish == 'true' }}
         run: |
           for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
             PROVIDER=$(echo $pkg | cut -f1 -d_)
@@ -145,7 +145,7 @@ jobs:
   provider-index:
     needs: [provider-build, scoping]
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.skip_publish == 'false' }}
+    if: ${{ ! github.event.inputs.skip_publish == 'true' }}
     steps:
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v2
