@@ -10,12 +10,12 @@ on:
         description: 'Force build all providers'
         type: boolean
         required: false
-        default: 'false'
+        default: false
       skip_publish:
         description: 'Skip publishing'
         type: boolean
         required: false
-        default: 'false'
+        default: false
 
 
 env:
@@ -25,10 +25,11 @@ env:
 jobs:
   scoping:
     name: "Scoping"
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       providers: ${{ steps.providers.outputs.providers }}
+      build_list: ${{ steps.providers.outputs.build_list }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +39,7 @@ jobs:
         id: providers
         run: |
           providers=$(find providers -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+          echo "providers=$(echo -n $providers | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
           build=""
           root=$PWD
           for p in $providers; do
@@ -64,20 +66,21 @@ jobs:
             cd $root
           done
 
-          echo "providers=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
+          echo "build_list=$(echo -n $build | jq -Rsc 'split(" ")')" >> $GITHUB_OUTPUT
 
-          build_all=${{ github.event.inputs.build_all }}}
-          if [[ $build_all ]]; then
-            echo "Forced build of all providers"
+          build_all=${{ github.event.inputs.build_all }}
+          if [[ $build_all == true ]]; then
+            echo "=== BUILD OF ALL PROVIDERS FORCED ==="
             printf '%s\n' "${providers[@]}" | jq -R . | jq -sc . > providers.json
-            echo "providers=$(cat providers.json)" >> $GITHUB_OUTPUT
+            echo "build_list=$(cat providers.json)" >> $GITHUB_OUTPUT
           fi
+      - name: Build List
+        run: |
+          echo "=== Providers detected:"
+          echo ${{ steps.providers.outputs.providers }}
 
-          echo "Providers detected:"
-          echo $providers
-
-          echo "Providers to build:"
-          echo $build
+          echo "=== Providers select to build:"
+          echo ${{ steps.providers.outputs.build_list }}
 
   provider-build:
     name: "${{ matrix.provider }}"
@@ -85,9 +88,10 @@ jobs:
     timeout-minutes: 120
     needs: scoping
     strategy:
+      fail-fast: false
       max-parallel: 2
       matrix:
-        provider: ${{ fromJSON(needs.scoping.outputs.providers) }}
+        provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,7 +123,7 @@ jobs:
           scripts/provider_bundler.sh ${{ matrix.provider }}
 
       - name: 'Publish Provider'
-        if: ${{ github.event.inputs.skip_publish == 'false' }}
+        if: ${{ ! github.event.inputs.skip_publish == 'true' }}
         run: |
           for pkg in $(ls dist | cut -f1,2 -d_ | uniq); do
             PROVIDER=$(echo $pkg | cut -f1 -d_)
@@ -140,7 +144,8 @@ jobs:
 
   provider-index:
     needs: [provider-build, scoping]
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    if: ${{ ! github.event.inputs.skip_publish == 'true' }}
     steps:
       - name: Trigger Reindex of releases.mondoo.com
         uses: peter-evans/repository-dispatch@v2
