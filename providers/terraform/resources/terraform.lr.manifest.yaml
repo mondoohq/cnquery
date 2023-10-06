@@ -113,7 +113,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-hcl
+      - terraform-plan
   terraform.plan.resourceChange:
     fields:
       actionReason: {}
@@ -152,7 +152,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - terraform-hcl
   terraform.state.module:
     fields:
       address: {}
@@ -171,7 +171,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-hcl
+      - terraform-state
   terraform.state.resource:
     fields:
       address: {}
@@ -187,4 +187,4 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - terraform-hcl
