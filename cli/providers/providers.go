@@ -157,6 +157,18 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 			}
 		}
 	}
+
+	// temp for migrating v9 beta users
+	if p, ok := existing[providers.DeprecatedDefaultOsID]; ok {
+		for i := range p.Connectors {
+			c := p.Connectors[i]
+			if c.Name == "local" {
+				setDefaultConnector(p.Provider, &c, cmd)
+				break
+			}
+		}
+	}
+
 }
 
 func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
