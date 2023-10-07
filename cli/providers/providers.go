@@ -139,11 +139,6 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
 			attachConnectorCmd(provider.Provider, &conn, cmd)
-			for k := range conn.Aliases {
-				copyConn := conn
-				copyConn.Name = conn.Aliases[k]
-				attachConnectorCmd(provider.Provider, &copyConn, cmd)
-			}
 		}
 	}
 
