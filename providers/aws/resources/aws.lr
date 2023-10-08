@@ -627,10 +627,22 @@ aws.secretsmanager {
 private aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
-  // Denotes whether rotation is enabled for the secret
-  rotationEnabled bool
+  // Creation date of the secret
+  createdAt time
+  // Description of the secret
+  description string
+  // The last date the secret was changed
+  lastChangedDate time
+  // The last date the secret was automatically rotated
+  lastRotatedDate time
   // Name of the secret
   name string
+  // The date of the next secret rotation
+  nextRotationDate time
+  // The primary region of the secret
+  primaryRegion string
+  // Denotes whether rotation is enabled for the secret
+  rotationEnabled bool
   // Tags for the secret
   tags map[string]string
 }

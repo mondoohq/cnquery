@@ -74,10 +74,16 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 				for _, secret := range secrets.SecretList {
 					mqlSecret, err := CreateResource(a.MqlRuntime, "aws.secretsmanager.secret",
 						map[string]*llx.RawData{
-							"arn":             llx.StringData(convert.ToString(secret.ARN)),
-							"name":            llx.StringData(convert.ToString(secret.Name)),
-							"rotationEnabled": llx.BoolData(convert.ToBool(secret.RotationEnabled)),
-							"tags":            llx.MapData(secretTagsToMap(secret.Tags), types.String),
+							"arn":              llx.StringDataPtr(secret.ARN),
+							"createdAt":        llx.TimeDataPtr(secret.CreatedDate),
+							"description":      llx.StringDataPtr(secret.Description),
+							"lastChangedDate":  llx.TimeDataPtr(secret.LastChangedDate),
+							"lastRotatedDate":  llx.TimeDataPtr(secret.LastRotatedDate),
+							"name":             llx.StringDataPtr(secret.Name),
+							"nextRotationDate": llx.TimeDataPtr(secret.NextRotationDate),
+							"primaryRegion":    llx.StringDataPtr(secret.PrimaryRegion),
+							"rotationEnabled":  llx.BoolData(convert.ToBool(secret.RotationEnabled)),
+							"tags":             llx.MapData(secretTagsToMap(secret.Tags), types.String),
 						})
 					if err != nil {
 						return nil, err

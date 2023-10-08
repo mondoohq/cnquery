@@ -2116,7 +2116,19 @@ resources:
   aws.secretsmanager.secret:
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: 9.1.0
+      description:
+        min_mondoo_version: 9.1.0
+      lastChangedDate:
+        min_mondoo_version: 9.1.0
+      lastRotatedDate:
+        min_mondoo_version: 9.1.0
       name: {}
+      nextRotationDate:
+        min_mondoo_version: 9.1.0
+      primaryRegion:
+        min_mondoo_version: 9.1.0
       rotationEnabled: {}
       tags: {}
     is_private: true
