@@ -51,7 +51,15 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		return nil, errors.New("you need to provide GitLab token e.g. via GITLAB_TOKEN env")
 	}
 
-	client, err := gitlab.NewClient(token)
+	var opts gitlab.ClientOptionFunc
+	var client *gitlab.Client
+	var err error
+	url := conf.Options["url"]
+	if url != "" {
+		opts = gitlab.WithBaseURL(url)
+	}
+	client, err = gitlab.NewClient(token, opts)
+
 	if err != nil {
 		return nil, err
 	}

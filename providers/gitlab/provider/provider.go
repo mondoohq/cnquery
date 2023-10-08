@@ -77,6 +77,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	// it's ok if no group or project is defined.
 	// we will discover all the groups
+	if x, ok := flags["url"]; ok {
+		conf.Options["url"] = string(x.Value)
+	}
 
 	conf.Discover = parseDiscover(flags)
 	asset := inventory.Asset{
