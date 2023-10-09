@@ -48,6 +48,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "a GitLab project to scan",
 				},
+				{
+					Long:    "url",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "custom GitLab base url",
+				},
 			},
 		},
 	},
