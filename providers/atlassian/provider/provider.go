@@ -12,6 +12,11 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/atlassian/resources"
 )
 
+const (
+	defaultConnection     uint32 = 1
+	DefaultConnectionType        = "atlassian"
+)
+
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
