@@ -325,7 +325,7 @@ func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runt
 	c.mutex.Unlock()
 
 	if res != nil {
-		return res, nil
+		return res, res.DetectProvider(asset)
 	}
 
 	res = c.NewRuntimeFrom(parent)
