@@ -127,12 +127,10 @@ func parseSSHURL(url string) (string, string, string, error) {
 
 	// Now split the second part at the slash to separate the org and repo
 	orgRepoParts := strings.Split(providerParts[1], "/")
-	if len(orgRepoParts) != 2 {
-		return "", "", "", fmt.Errorf("malformed URL")
-	}
 
-	// The repo name includes .git, so we remove that
-	repo := strings.TrimSuffix(orgRepoParts[1], ".git")
+	// The repo name is the last part after the split. It includes .git,
+	// so we remove that
+	repo := strings.TrimSuffix(orgRepoParts[len(orgRepoParts)-1], ".git")
 
 	return provider, orgRepoParts[0], repo, nil
 }

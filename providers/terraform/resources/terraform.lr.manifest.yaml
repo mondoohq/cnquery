@@ -99,7 +99,7 @@ resources:
     min_mondoo_version: 8.10.0
     platform:
       name:
-      - terraform-hcl
+      - terraform-plan
   terraform.plan.proposedChange:
     fields:
       actions: {}
@@ -129,7 +129,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-hcl
+      - terraform-plan
   terraform.settings:
     fields:
       backend:
@@ -161,7 +161,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - terraform-hcl
   terraform.state.output:
     fields:
       identifier: {}
@@ -187,4 +187,4 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-hcl
+      - terraform-state

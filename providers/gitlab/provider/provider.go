@@ -225,30 +225,29 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GitLabConnecti
 		// we will discover the groups
 		return nil
 	}
-	group, err := conn.Group()
-	if err != nil {
-		return err
-	}
 
 	if conn.IsProject() {
 		project, err := conn.Project()
 		if err != nil {
 			return err
 		}
-		s.detectAsProject(asset, group, project)
-
+		s.detectAsProject(asset, conn.GroupID(), conn.GroupName(), project) // TODO fix 0
 	} else {
+		group, err := conn.Group()
+		if err != nil {
+			return err
+		}
 		s.detectAsGroup(asset, group)
 	}
 	return nil
 }
 
-func (s *Service) detectAsProject(asset *inventory.Asset, group *gitlab.Group, project *gitlab.Project) {
+func (s *Service) detectAsProject(asset *inventory.Asset, groupID int, groupFullPath string, project *gitlab.Project) {
 	asset.Platform = projectPlatform
 	asset.Name = "GitLab Project " + project.Name
 	asset.PlatformIds = []string{
-		newGitLabProjectID(group.ID, project.ID),
-		newGitLabProjectIDFromPaths(group.Path, project.Path), // for backwards compatibility with v8
+		newGitLabProjectID(groupID, project.ID),
+		newGitLabProjectIDFromPaths(groupFullPath, project.Path), // for backwards compatibility with v8
 	}
 }
 
@@ -257,7 +256,7 @@ func (s *Service) detectAsGroup(asset *inventory.Asset, group *gitlab.Group) err
 	asset.Name = "GitLab Group " + group.Name
 	asset.PlatformIds = []string{
 		newGitLabGroupID(group.ID),
-		newGitLabGroupIDFromPath(group.Path), // for backwards compatibility with v8
+		newGitLabGroupIDFromPath(group.FullPath), // for backwards compatibility with v8
 	}
 	return nil
 }
