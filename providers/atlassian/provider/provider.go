@@ -66,11 +66,17 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
+	inventory := &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{req.Asset},
+		},
+	}
+
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: nil,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -134,8 +140,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AtlassianConne
 		Title:  "Atlassian",
 	}
 
-	// TODO: Add platform IDs
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/oci/"}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/atlassian"}
 	return nil
 }
 
