@@ -52,14 +52,12 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 	}
 
 	var opts gitlab.ClientOptionFunc
-	var client *gitlab.Client
-	var err error
 	url := conf.Options["url"]
 	if url != "" {
 		opts = gitlab.WithBaseURL(url)
 	}
-	client, err = gitlab.NewClient(token, opts)
 
+	client, err := gitlab.NewClient(token, opts)
 	if err != nil {
 		return nil, err
 	}

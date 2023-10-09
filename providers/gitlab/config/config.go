@@ -52,7 +52,7 @@ var Config = plugin.Provider{
 					Long:    "url",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "custom url of the GitLab org",
+					Desc:    "custom GitLab base url",
 				},
 			},
 		},
