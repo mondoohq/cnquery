@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -42,7 +41,6 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
-	fmt.Println("user groups")
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
 	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
@@ -63,6 +61,32 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 			log.Fatal().Err(err)
 		}
 		res = append(res, mqlAtlassianJiraUserGroup)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	projects, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+
+	res := []interface{}{}
+	for _, project := range projects.Values {
+		mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.projects",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(project.GroupID),
+				"name": llx.StringData(project.Name),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianJiraProject)
 	}
 	return res, nil
 }

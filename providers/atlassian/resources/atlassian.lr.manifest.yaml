@@ -76,11 +76,17 @@ resources:
     min_mondoo_version: latest
   atlassian.jira:
     fields:
+      projects: {}
       users: {}
     min_mondoo_version: latest
   atlassian.jira.groups:
     fields:
       id: {}
+    min_mondoo_version: latest
+  atlassian.jira.project:
+    fields:
+      id: {}
+      name: {}
     min_mondoo_version: latest
   atlassian.jira.user:
     fields:
