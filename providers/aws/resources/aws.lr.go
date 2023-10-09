@@ -1217,11 +1217,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.secretsmanager.secret.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetArn()).ToDataRes(types.String)
 	},
-	"aws.secretsmanager.secret.rotationEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSecretsmanagerSecret).GetRotationEnabled()).ToDataRes(types.Bool)
+	"aws.secretsmanager.secret.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.secretsmanager.secret.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetLastChangedDate()).ToDataRes(types.Time)
+	},
+	"aws.secretsmanager.secret.lastRotatedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetLastRotatedDate()).ToDataRes(types.Time)
 	},
 	"aws.secretsmanager.secret.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetName()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.nextRotationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetNextRotationDate()).ToDataRes(types.Time)
+	},
+	"aws.secretsmanager.secret.primaryRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetPrimaryRegion()).ToDataRes(types.String)
+	},
+	"aws.secretsmanager.secret.rotationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecretsmanagerSecret).GetRotationEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecretsmanagerSecret).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -2060,44 +2078,80 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshift).GetClusters()).ToDataRes(types.Array(types.Resource("aws.redshift.cluster")))
 	},
-	"aws.redshift.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetArn()).ToDataRes(types.String)
-	},
-	"aws.redshift.cluster.encrypted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetEncrypted()).ToDataRes(types.Bool)
-	},
-	"aws.redshift.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetNodeType()).ToDataRes(types.String)
-	},
 	"aws.redshift.cluster.allowVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetAllowVersionUpgrade()).ToDataRes(types.Bool)
 	},
-	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	"aws.redshift.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetArn()).ToDataRes(types.String)
 	},
 	"aws.redshift.cluster.automatedSnapshotRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetAutomatedSnapshotRetentionPeriod()).ToDataRes(types.Int)
 	},
-	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
-	},
-	"aws.redshift.cluster.parameters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetParameters()).ToDataRes(types.Array(types.Dict))
-	},
-	"aws.redshift.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetLogging()).ToDataRes(types.Dict)
-	},
-	"aws.redshift.cluster.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetName()).ToDataRes(types.String)
-	},
-	"aws.redshift.cluster.region": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetRegion()).ToDataRes(types.String)
+	"aws.redshift.cluster.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetAvailabilityZone()).ToDataRes(types.String)
 	},
 	"aws.redshift.cluster.clusterParameterGroupNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetClusterParameterGroupNames()).ToDataRes(types.Array(types.String))
 	},
+	"aws.redshift.cluster.clusterRevisionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterRevisionNumber()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.clusterStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterStatus()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.clusterSubnetGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterSubnetGroupName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.clusterVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetClusterVersion()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetCreatedAt()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.dbName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetDbName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.enhancedVpcRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetEnhancedVpcRouting()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogging()).ToDataRes(types.Dict)
+	},
+	"aws.redshift.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.nextMaintenanceWindowStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetNextMaintenanceWindowStartTime()).ToDataRes(types.Time)
+	},
+	"aws.redshift.cluster.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetNodeType()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.numberOfNodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetNumberOfNodes()).ToDataRes(types.Int)
+	},
+	"aws.redshift.cluster.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetParameters()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.redshift.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.redshift.cluster.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetVpcId()).ToDataRes(types.String)
 	},
 	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
@@ -3711,12 +3765,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsSecretsmanagerSecret).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.secretsmanager.secret.rotationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSecretsmanagerSecret).RotationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"aws.secretsmanager.secret.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.lastChangedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).LastChangedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.lastRotatedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).LastRotatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecretsmanagerSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.nextRotationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).NextRotationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.primaryRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).PrimaryRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.secretsmanager.secret.rotationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecretsmanagerSecret).RotationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.secretsmanager.secret.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5011,56 +5089,104 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsRedshiftCluster).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.redshift.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.redshift.cluster.allowVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).AllowVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.redshift.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.automatedSnapshotRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).AutomatedSnapshotRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.redshift.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.redshift.cluster.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.clusterParameterGroupNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).ClusterParameterGroupNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.cluster.clusterRevisionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterRevisionNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.clusterStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.clusterSubnetGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterSubnetGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.clusterVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).ClusterVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.dbName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).DbName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.enhancedVpcRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).EnhancedVpcRouting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.nextMaintenanceWindowStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).NextMaintenanceWindowStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.numberOfNodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).NumberOfNodes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Parameters, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9516,8 +9642,14 @@ type mqlAwsSecretsmanagerSecret struct {
 	__id string
 	// optional: if you define mqlAwsSecretsmanagerSecretInternal it will be used here
 	Arn plugin.TValue[string]
-	RotationEnabled plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	Description plugin.TValue[string]
+	LastChangedDate plugin.TValue[*time.Time]
+	LastRotatedDate plugin.TValue[*time.Time]
 	Name plugin.TValue[string]
+	NextRotationDate plugin.TValue[*time.Time]
+	PrimaryRegion plugin.TValue[string]
+	RotationEnabled plugin.TValue[bool]
 	Tags plugin.TValue[map[string]interface{}]
 }
 
@@ -9562,12 +9694,36 @@ func (c *mqlAwsSecretsmanagerSecret) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
-func (c *mqlAwsSecretsmanagerSecret) GetRotationEnabled() *plugin.TValue[bool] {
-	return &c.RotationEnabled
+func (c *mqlAwsSecretsmanagerSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetLastChangedDate() *plugin.TValue[*time.Time] {
+	return &c.LastChangedDate
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetLastRotatedDate() *plugin.TValue[*time.Time] {
+	return &c.LastRotatedDate
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetNextRotationDate() *plugin.TValue[*time.Time] {
+	return &c.NextRotationDate
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetPrimaryRegion() *plugin.TValue[string] {
+	return &c.PrimaryRegion
+}
+
+func (c *mqlAwsSecretsmanagerSecret) GetRotationEnabled() *plugin.TValue[bool] {
+	return &c.RotationEnabled
 }
 
 func (c *mqlAwsSecretsmanagerSecret) GetTags() *plugin.TValue[map[string]interface{}] {
@@ -13353,19 +13509,31 @@ type mqlAwsRedshiftCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsRedshiftClusterInternal it will be used here
-	Arn plugin.TValue[string]
-	Encrypted plugin.TValue[bool]
-	NodeType plugin.TValue[string]
 	AllowVersionUpgrade plugin.TValue[bool]
-	PreferredMaintenanceWindow plugin.TValue[string]
+	Arn plugin.TValue[string]
 	AutomatedSnapshotRetentionPeriod plugin.TValue[int64]
-	PubliclyAccessible plugin.TValue[bool]
-	Parameters plugin.TValue[[]interface{}]
-	Logging plugin.TValue[interface{}]
-	Name plugin.TValue[string]
-	Region plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
 	ClusterParameterGroupNames plugin.TValue[[]interface{}]
+	ClusterRevisionNumber plugin.TValue[string]
+	ClusterStatus plugin.TValue[string]
+	ClusterSubnetGroupName plugin.TValue[string]
+	ClusterVersion plugin.TValue[string]
+	CreatedAt plugin.TValue[string]
+	DbName plugin.TValue[string]
+	Encrypted plugin.TValue[bool]
+	EnhancedVpcRouting plugin.TValue[bool]
+	Logging plugin.TValue[interface{}]
+	MasterUsername plugin.TValue[string]
+	Name plugin.TValue[string]
+	NextMaintenanceWindowStartTime plugin.TValue[*time.Time]
+	NodeType plugin.TValue[string]
+	NumberOfNodes plugin.TValue[int64]
+	Parameters plugin.TValue[[]interface{}]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	PubliclyAccessible plugin.TValue[bool]
+	Region plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	VpcId plugin.TValue[string]
 }
 
 // createAwsRedshiftCluster creates a new instance of this resource
@@ -13405,38 +13573,56 @@ func (c *mqlAwsRedshiftCluster) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsRedshiftCluster) GetArn() *plugin.TValue[string] {
-	return &c.Arn
-}
-
-func (c *mqlAwsRedshiftCluster) GetEncrypted() *plugin.TValue[bool] {
-	return &c.Encrypted
-}
-
-func (c *mqlAwsRedshiftCluster) GetNodeType() *plugin.TValue[string] {
-	return &c.NodeType
-}
-
 func (c *mqlAwsRedshiftCluster) GetAllowVersionUpgrade() *plugin.TValue[bool] {
 	return &c.AllowVersionUpgrade
 }
 
-func (c *mqlAwsRedshiftCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
-	return &c.PreferredMaintenanceWindow
+func (c *mqlAwsRedshiftCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
 }
 
 func (c *mqlAwsRedshiftCluster) GetAutomatedSnapshotRetentionPeriod() *plugin.TValue[int64] {
 	return &c.AutomatedSnapshotRetentionPeriod
 }
 
-func (c *mqlAwsRedshiftCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
-	return &c.PubliclyAccessible
+func (c *mqlAwsRedshiftCluster) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
 }
 
-func (c *mqlAwsRedshiftCluster) GetParameters() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
-		return c.parameters()
-	})
+func (c *mqlAwsRedshiftCluster) GetClusterParameterGroupNames() *plugin.TValue[[]interface{}] {
+	return &c.ClusterParameterGroupNames
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterRevisionNumber() *plugin.TValue[string] {
+	return &c.ClusterRevisionNumber
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterStatus() *plugin.TValue[string] {
+	return &c.ClusterStatus
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterSubnetGroupName() *plugin.TValue[string] {
+	return &c.ClusterSubnetGroupName
+}
+
+func (c *mqlAwsRedshiftCluster) GetClusterVersion() *plugin.TValue[string] {
+	return &c.ClusterVersion
+}
+
+func (c *mqlAwsRedshiftCluster) GetCreatedAt() *plugin.TValue[string] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsRedshiftCluster) GetDbName() *plugin.TValue[string] {
+	return &c.DbName
+}
+
+func (c *mqlAwsRedshiftCluster) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAwsRedshiftCluster) GetEnhancedVpcRouting() *plugin.TValue[bool] {
+	return &c.EnhancedVpcRouting
 }
 
 func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[interface{}] {
@@ -13445,20 +13631,50 @@ func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[interface{}] {
 	})
 }
 
+func (c *mqlAwsRedshiftCluster) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
 func (c *mqlAwsRedshiftCluster) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAwsRedshiftCluster) GetNextMaintenanceWindowStartTime() *plugin.TValue[*time.Time] {
+	return &c.NextMaintenanceWindowStartTime
+}
+
+func (c *mqlAwsRedshiftCluster) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlAwsRedshiftCluster) GetNumberOfNodes() *plugin.TValue[int64] {
+	return &c.NumberOfNodes
+}
+
+func (c *mqlAwsRedshiftCluster) GetParameters() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Parameters, func() ([]interface{}, error) {
+		return c.parameters()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsRedshiftCluster) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
 }
 
 func (c *mqlAwsRedshiftCluster) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
-func (c *mqlAwsRedshiftCluster) GetClusterParameterGroupNames() *plugin.TValue[[]interface{}] {
-	return &c.ClusterParameterGroupNames
-}
-
 func (c *mqlAwsRedshiftCluster) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsRedshiftCluster) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
 }
 
 // mqlAwsEcr for the aws.ecr resource

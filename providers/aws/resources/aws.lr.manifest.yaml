@@ -1919,16 +1919,40 @@ resources:
       allowVersionUpgrade: {}
       arn: {}
       automatedSnapshotRetentionPeriod: {}
+      availabilityZone:
+        min_mondoo_version: 9.1.0
       clusterParameterGroupNames: {}
+      clusterRevisionNumber:
+        min_mondoo_version: 9.1.0
+      clusterStatus:
+        min_mondoo_version: 9.1.0
+      clusterSubnetGroupName:
+        min_mondoo_version: 9.1.0
+      clusterVersion:
+        min_mondoo_version: 9.1.0
+      createdAt:
+        min_mondoo_version: 9.1.0
+      dbName:
+        min_mondoo_version: 9.1.0
       encrypted: {}
+      enhancedVpcRouting:
+        min_mondoo_version: 9.1.0
       logging: {}
+      masterUsername:
+        min_mondoo_version: 9.1.0
       name: {}
+      nextMaintenanceWindowStartTime:
+        min_mondoo_version: 9.1.0
       nodeType: {}
+      numberOfNodes:
+        min_mondoo_version: 9.1.0
       parameters: {}
       preferredMaintenanceWindow: {}
       publiclyAccessible: {}
       region: {}
       tags: {}
+      vpcId:
+        min_mondoo_version: 9.1.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
