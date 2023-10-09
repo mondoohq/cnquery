@@ -93,7 +93,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-plan
+      - terraform-hcl
   terraform.plan.configuration:
     fields:
       providerConfig: {}
@@ -115,7 +115,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-plan
+      - terraform-hcl
   terraform.plan.resourceChange:
     fields:
       actionReason: {}
