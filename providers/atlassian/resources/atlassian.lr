@@ -91,6 +91,20 @@ atlassian.jira.project @defaults("id") {
   id string
   // Project Name
   name string
+  // UUID 
+  uuid string
+  // Key 
+  key string
+  // URL 
+  url string
+  // Email 
+  email string
+  // Private 
+  private bool
+  // Deleted 
+  deleted bool
+  // Archived 
+  archived bool
 }
 
 atlassian.jira.user.group @defaults("id") { 

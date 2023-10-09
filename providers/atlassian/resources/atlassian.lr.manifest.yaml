@@ -85,8 +85,15 @@ resources:
     min_mondoo_version: latest
   atlassian.jira.project:
     fields:
+      archived: {}
+      deleted: {}
+      email: {}
       id: {}
+      key: {}
       name: {}
+      private: {}
+      url: {}
+      uuid: {}
     min_mondoo_version: latest
   atlassian.jira.user:
     fields:

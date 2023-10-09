@@ -80,8 +80,15 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 	for _, project := range projects.Values {
 		mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.project",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(project.ID),
-				"name": llx.StringData(project.Name),
+				"id":       llx.StringData(project.ID),
+				"name":     llx.StringData(project.Name),
+				"uuid":     llx.StringData(project.UUID),
+				"key":      llx.StringData(project.Key),
+				"url":      llx.StringData(project.URL),
+				"email":    llx.StringData(project.Email),
+				"private":  llx.BoolData(project.IsPrivate),
+				"deleted":  llx.BoolData(project.Deleted),
+				"archived": llx.BoolData(project.Archived),
 			})
 		if err != nil {
 			log.Fatal().Err(err)

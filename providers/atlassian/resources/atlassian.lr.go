@@ -230,6 +230,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.project.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetName()).ToDataRes(types.String)
 	},
+	"atlassian.jira.project.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetUuid()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetUrl()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetEmail()).ToDataRes(types.String)
+	},
+	"atlassian.jira.project.private": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetPrivate()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.archived": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetArchived()).ToDataRes(types.Bool)
+	},
 	"atlassian.jira.user.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUserGroup).GetId()).ToDataRes(types.String)
 	},
@@ -419,6 +440,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.project.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProject).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.private": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Private, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.archived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.user.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1101,6 +1150,13 @@ type mqlAtlassianJiraProject struct {
 	// optional: if you define mqlAtlassianJiraProjectInternal it will be used here
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
+	Uuid plugin.TValue[string]
+	Key plugin.TValue[string]
+	Url plugin.TValue[string]
+	Email plugin.TValue[string]
+	Private plugin.TValue[bool]
+	Deleted plugin.TValue[bool]
+	Archived plugin.TValue[bool]
 }
 
 // createAtlassianJiraProject creates a new instance of this resource
@@ -1146,6 +1202,34 @@ func (c *mqlAtlassianJiraProject) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraProject) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraProject) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlAtlassianJiraProject) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAtlassianJiraProject) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAtlassianJiraProject) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlAtlassianJiraProject) GetPrivate() *plugin.TValue[bool] {
+	return &c.Private
+}
+
+func (c *mqlAtlassianJiraProject) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+func (c *mqlAtlassianJiraProject) GetArchived() *plugin.TValue[bool] {
+	return &c.Archived
 }
 
 // mqlAtlassianJiraUserGroup for the atlassian.jira.user.group resource
