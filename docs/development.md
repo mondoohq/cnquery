@@ -81,11 +81,11 @@ To debug a provider locally with cnquery:
 Some providers need to run on specific VMs, e.g., GCP Snapshot scanning.
 The `launch.json` already includes a debug target for remote debugging.
 You only need to adjust the values to your setup.
-Aditioanlly, you need to set up the debugger on the remote VM:
+Additionally, you need to set up the debugger on the remote VM:
 
 - Install go
 - Install delve
-- Locally change the config to include the provider you want to debug as builtin as descrivbe above.
+- Locally change the config to include the provider you want to debug as builtin as describe above.
 - Copy the source to the remote VM (`rsync` makes multiple debug session easier)
 - Allow ingress traffic to the debugger in the firewall.
 - Run the debugger on the remove VM:
