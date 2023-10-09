@@ -207,7 +207,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAtlassianJira).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.jira.user")))
 	},
 	"atlassian.jira.projects": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJira).GetProjects()).ToDataRes(types.Array(types.Resource("atlassian.jira.projects")))
+		return (r.(*mqlAtlassianJira).GetProjects()).ToDataRes(types.Array(types.Resource("atlassian.jira.project")))
 	},
 	"atlassian.jira.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUser).GetId()).ToDataRes(types.String)
@@ -1114,7 +1114,12 @@ func createAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.jira.project", res.__id)

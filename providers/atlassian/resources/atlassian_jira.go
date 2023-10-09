@@ -68,7 +68,7 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
-	projects, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	projects, response, err := jira.Project.Search(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
@@ -78,9 +78,9 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, project := range projects.Values {
-		mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.projects",
+		mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.project",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(project.GroupID),
+				"id":   llx.StringData(project.ID),
 				"name": llx.StringData(project.Name),
 			})
 		if err != nil {
@@ -96,5 +96,9 @@ func (a *mqlAtlassianJiraUser) id() (string, error) {
 }
 
 func (a *mqlAtlassianJiraUserGroup) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAtlassianJiraProject) id() (string, error) {
 	return a.Id.Data, nil
 }

@@ -70,7 +70,7 @@ atlassian.jira {
   // Jira users
   users() []atlassian.jira.user
   // Jira projects
-  projects() []atlassian.jira.projects
+  projects() []atlassian.jira.project
 }
 
 atlassian.jira.user @defaults("id") { 
@@ -87,9 +87,9 @@ atlassian.jira.user @defaults("id") {
 }
 
 atlassian.jira.project @defaults("id") { 
-  // AccountID
+  // Project ID
   id string
-  // Name
+  // Project Name
   name string
 }
 
