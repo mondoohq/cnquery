@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -52,6 +53,9 @@ func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 		podSpec = &x.Spec.Template.Spec
 	case *appsv1.ReplicaSet:
 		podSpec = &x.Spec.Template.Spec
+	case *unstructured.Unstructured:
+		gvk := x.GetObjectKind().GroupVersionKind()
+		return nil, fmt.Errorf("object %s with version %s/%s is not supported", gvk.Kind, gvk.Group, gvk.Version)
 	default:
 		return nil, fmt.Errorf("object type %v is not supported", x)
 	}
