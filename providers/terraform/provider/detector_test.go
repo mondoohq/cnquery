@@ -23,3 +23,12 @@ func TestDetectNameFromSsh(t *testing.T) {
 	assert.Equal(t, "exampleorg", org)
 	assert.Equal(t, "example-gitlab", repo)
 }
+
+func TestDetectNameFromSsh_GitlabSubgroups(t *testing.T) {
+	url := "git@gitlab.example.com:exampleorg/group/example-gitlab.git"
+	domain, org, repo, err := parseSSHURL(url)
+	require.NoError(t, err)
+	assert.Equal(t, "gitlab.example.com", domain)
+	assert.Equal(t, "exampleorg", org)
+	assert.Equal(t, "example-gitlab", repo)
+}
