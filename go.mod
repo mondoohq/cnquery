@@ -108,10 +108,12 @@ require (
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.1.0 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
+	github.com/creack/pty v1.1.18 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/go-errors/errors v1.5.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
@@ -130,6 +132,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gotest.tools/v3 v3.5.1 // indirect
 )
 
 require (
