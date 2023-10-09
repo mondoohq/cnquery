@@ -180,6 +180,322 @@ private azure.subscription.networkService {
   publicIpAddresses() []azure.subscription.networkService.ipAddress
   // List of Bastion hosts
   bastionHosts() []azure.subscription.networkService.bastionHost
+  // List of load balancers
+  loadBalancers() []azure.subscription.networkService.loadBalancer
+  // List of NAT gateways
+  natGateways() []azure.subscription.networkService.natGateway
+  // List of virtual networks
+  virtualNetworks() []azure.subscription.networkService.virtualNetwork
+  // List of virtual network gateways
+  virtualNetworkGateways() []azure.subscription.networkService.virtualNetworkGateway
+}
+
+// Azure Network Virtual Network Gateway
+azure.subscription.networkService.virtualNetworkGateway @defaults("id name location") {
+  // Virtual Network Gateway ID
+  id string
+  // Virtual Network Gateway name
+  name string
+  // Virtual Network Gateway location
+  location string
+  // Virtual Network Gateway tags
+  tags map[string]string
+  // Virtual Network Gateway resource type
+  type string
+  // Virtual Network Gateway etag
+  etag string
+  // Virtual Network Gateway properties
+  properties dict
+  // Whether the virtual network gateway is active
+  active bool
+  // Whether BGP is enabled for this virtual network gateway
+  enableBgp bool
+  // Whether BGP route translation is enabled for this virtual network gateway
+  enableBgpRouteTranslationForNat bool
+  // Whether DNS forwarding is enabled for this virtual network gateway
+  enableDNSForwarding bool
+  // Whether private IP needs to be enabled on this gateway for connections
+  enablePrivateIPAddress bool
+  // Whether IP sec replay protection is disabled for this virtual network gateway
+  disableIPSecReplayProtection bool
+  // Virtual Network Gateway provisioning state
+  provisioningState string
+  // The IP address allocated by the gateway to which DNS requests can be sent
+  inboundDNSForwardingEndpoint string
+  // Virtual Network Gateway SKU name
+  skuName string
+  // Virtual Network Gateway SKU capacity
+  skuCapacity int
+  // A list of address blocks reserved for this virtual network in CIDR notation
+  addressPrefixes []string
+  // Virtual Network Gateway type
+  gatewayType string
+  // Virtual Network Gateway generation
+  vpnGatewayGeneration string
+  // Virtual Network Gateway VPN type
+  vpnType string
+  // Virtual Network Gateway IP configurations
+  ipConfigurations []azure.subscription.networkService.virtualNetworkGateway.ipConfig
+  // Virtual Network Gateway BGP settings
+  bgpSettings azure.subscription.networkService.bgpSettings
+  // Virtual Network Gateway NAT rules
+  natRules []azure.subscription.networkService.virtualNetworkGateway.natRule
+  // applicable connections the gateway
+  connections() []azure.subscription.networkService.virtualNetworkGateway.connection
+  // The VPN client configuration. Only set if P2S for the gateway is configured
+  vpnClientConfiguration dict
+}
+
+// Azure Network Virtual Network Gateway IP Configuration
+private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaults("id name") {
+  // Virtual Network Gateway IP Configuration id 
+  id string
+  // Virtual Network Gateway IP Configuration name
+  name string
+  // Virtual Network Gateway IP Configuration etag
+  etag string
+  // Virtual Network Gateway IP Configuration private IP address
+  privateIpAddress string
+  // Virtual Network Gateway IP Configuration properties
+  properties dict
+}
+
+// Azure Network Virtual Network Gateway Connection
+private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name") {
+  // Virtual Network Gateway Connection id 
+  id string
+  // Virtual Network Gateway Connection name
+  name string
+  // Virtual Network Gateway Connection type
+  type string
+  // Virtual Network Gateway Connection etag
+  etag string
+  // Virtual Network Gateway Connection properties
+  properties dict
+}
+  
+// Azure Network BGP Settings
+private azure.subscription.networkService.bgpSettings @defaults("asn bgpPeeringAddress") {
+  // BGP Settings id
+  id string
+  // BGP Settings speaker ASN
+  asn int
+  // The BGP peering address and BGP identifier of this BGP speaker
+  bgpPeeringAddress string
+  // The weight added to routes learned from this BGP speaker
+  peerWeight int
+  // The BGP peering addresses with IP configuration
+  bgpPeeringAddressesConfig []azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress
+}
+
+// Azure BGP Settings IP Configuration
+private azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress @defaults("defaultBgpIpAddresses") {
+  // BGP Settings IP Configuration id
+  id string
+  // BGP Settings IP Configuration custom BGP IP addresses
+  customBgpIpAddresses []string
+  // BGP Settings IP Configuration id
+  ipConfigurationId string
+  // BGP Settings IP Configuration default BGP IP addresses
+  defaultBgpIpAddresses []string
+  // BGP Settings IP Configuration tunnel public BGP IP addresses
+  tunnelIpAddresses []string
+}
+
+// Azure Network NAT gateway
+azure.subscription.networkService.natGateway @defaults("id name location") {
+  // NAT Gateway ID
+  id string
+  // NAT Gateway name
+  name string
+  // NAT Gateway location
+  location string
+  // NAT Gateway tags
+  tags map[string]string
+  // NAT Gateway type
+  type string
+  // NAT Gateway etag
+  etag string
+  // NAT Gateway properties
+  properties dict
+  // NAT Gateway availability zones
+  zones []string
+  // List of public IP addresses the NAT Gateway is associated with
+  publicIpAddresses() []azure.subscription.networkService.ipAddress
+  // List of subnets the NAT Gateway is associated with
+  subnets() []azure.subscription.networkService.subnet
+}
+
+// Azure Network Subnet
+azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
+  // Subnet id
+  id string
+  // Subnet name
+  name string
+  // Subnet type
+  type string
+  // Subnet etag
+  etag string
+  // Subnet address prefix
+  addressPrefix string
+  // Subnet properties
+  properties dict
+  // The NAT gateway this subnet is associated with, if any
+  natGateway() azure.subscription.networkService.natGateway
+}
+
+// Azure Network Virtual Network
+azure.subscription.networkService.virtualNetwork @defaults("id name location") {
+  // Virtual Network id
+  id string
+  // Virtual Network name
+  name string
+  // Virtual Network location
+  location string
+  // Virtual Network tags
+  tags map[string]string
+  // Virtual Network type
+  type string
+  // Virtual Network etag
+  etag string
+  // Virtual Network properties
+  properties dict
+  // List of subnets within the virtual network
+  subnets []azure.subscription.networkService.subnet
+}
+
+// Azure Network Load Balancer
+azure.subscription.networkService.loadBalancer @defaults("id name location") {
+  // Load Balancer id
+  id string
+  // Load Balancer name
+  name string
+  // Load Balancer location
+  location string
+  // Load Balancer tags
+  tags map[string]string
+  // Load Balancer type
+  type string
+  // Load Balancer properties
+  properties dict
+  // Load Balancer etag
+  etag string
+  // Load Balancer SKU
+  sku string
+  // List of Load Balancer probes
+  probes []azure.subscription.networkService.probe
+  // List of Load Balancer backend address pools
+  backendPools []azure.subscription.networkService.backendAddressPool
+  // List of Load Balancer frontend IP configurations
+  frontendIpConfigs []azure.subscription.networkService.frontendIpConfig
+  // List of Load Balancer inbound NAT pools
+  inboundNatPools []azure.subscription.networkService.inboundNatPool
+  // List of Load Balancer inbound NAT rules
+  inboundNatRules []azure.subscription.networkService.inboundNatRule 
+  // List of Load Balancer outbound rules
+  outboundRules []azure.subscription.networkService.outboundRule
+  // List of Load Balancer rules
+  loadBalancerRules []azure.subscription.networkService.loadBalancerRule
+}
+
+// Azure Network Probe
+private azure.subscription.networkService.probe @defaults("id name"){
+  // Probe id
+  id string
+  // Probe name
+  name string
+  // Probe type
+  type string
+  // Probe etag
+  etag string
+  // Probe properties
+  properties dict
+}
+
+// Azure Network Backend Address Pool
+private azure.subscription.networkService.backendAddressPool @defaults("id name") {
+  // Backend Address Pool id
+  id string
+  // Backend Address Pool name
+  name string
+  // Backend Address Pool type
+  type string
+  // Backend Address Pool etag
+  etag string
+  // Backend Address Pool properties
+  properties dict
+}
+
+// Azure Network Inbound NAT Pool
+private azure.subscription.networkService.inboundNatPool @defaults("id name") {
+  // Inbound NAT Pool id
+  id string
+  // Inbound NAT Pool name
+  name string
+  // Inbound NAT Pool type
+  type string
+  // Inbound NAT Pool etag
+  etag string
+  // Inbound NAT Pool properties
+  properties dict
+}
+
+// Azure Network Inbound NAT Rule
+private azure.subscription.networkService.inboundNatRule @defaults("id name") {
+  // Inbound NAT Rule id
+  id string
+  // Inbound NAT Rule name
+  name string
+  // Inbound NAT Rule type
+  type string
+  // Inbound NAT Rule etag
+  etag string
+  // Inbound NAT Rule properties
+  properties dict
+}
+
+// Azure Network Frontend IP Configuration
+private azure.subscription.networkService.frontendIpConfig @defaults("id name") {
+  // Frontend IP Configuration id
+  id string
+  // Frontend IP Configuration name
+  name string
+  // Frontend IP Configuration type
+  type string
+  // Frontend IP Configuration etag
+  etag string
+  // Frontend IP Configuration properties
+  properties dict
+  // Frontend IP Configuration zones
+  zones []string
+}
+
+// Azure Network Load Balancer Rule
+private azure.subscription.networkService.loadBalancerRule @defaults("id name") {
+  // Load Balancer Rule id
+  id string
+  // Load Balancer Rule name
+  name string
+  // Load Balancer Rule type
+  type string
+  // Load Balancer Rule etag
+  etag string
+  // Load Balancer Rule properties
+  properties dict
+}
+
+// Azure Network Outbound Rule
+private azure.subscription.networkService.outboundRule @defaults("id name") {
+  // Outbound Rule id
+  id string
+  // Outbound Rule name
+  name string
+  // Outbound Rule type
+  type string
+  // Outbound Rule etag
+  etag string
+  // Outbound Rule properties
+  properties dict
 }
 
 // Azure Network Interface

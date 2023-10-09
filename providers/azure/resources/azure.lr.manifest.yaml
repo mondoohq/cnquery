@@ -954,10 +954,27 @@ resources:
     fields:
       bastionHosts: {}
       interfaces: {}
+      loadBalancers: {}
+      natGateways: {}
       publicIpAddresses: {}
       securityGroups: {}
+      subnets: {}
       subscriptionId: {}
+      virtualNetworkGateways: {}
+      virtualNetworks: {}
       watchers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.backendAddressPool:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -971,6 +988,68 @@ resources:
       properties: {}
       sku: {}
       tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.bgpSettings:
+    fields:
+      asn: {}
+      bgpPeeringAddress: {}
+      bgpPeeringAddresses: {}
+      bgpPeeringAddressesConfig: {}
+      id: {}
+      peerWeight: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress:
+    fields:
+      customBgpIpAddresses: {}
+      defaultBgpIpAddresses: {}
+      id: {}
+      ipConfigurationId: {}
+      tunnelIpAddresses: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.frontendIpConfig:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+      zones: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.inboundNatPool:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.inboundNatRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
       type: {}
     is_private: true
     min_mondoo_version: latest
@@ -1004,6 +1083,81 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.networkService.loadBalancer:
+    fields:
+      backendPools: {}
+      etag: {}
+      frontendIpConfigs: {}
+      id: {}
+      inboundNatPools: {}
+      inboundNatRules: {}
+      loadBalancerRules: {}
+      location: {}
+      name: {}
+      outboundRules: {}
+      probes: {}
+      properties: {}
+      sku: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.loadBalancerRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.natGateway:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      publicIpAddresses: {}
+      subnets: {}
+      tags: {}
+      type: {}
+      zones: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.outboundRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.probe:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.subscription.networkService.securityGroup:
     fields:
       defaultSecurityRules: {}
@@ -1029,6 +1183,104 @@ resources:
       name: {}
       properties: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.subnet:
+    fields:
+      addressPrefix: {}
+      addressPrefixes: {}
+      addressesPrefixes: {}
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      natGateway: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetwork:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      subnets: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetworkGateway:
+    fields:
+      active: {}
+      addressPrefixes: {}
+      bgpSettings: {}
+      connections: {}
+      disableIPSecReplayProtection: {}
+      enableBgp: {}
+      enableBgpRouteTranslationForNat: {}
+      enableDNSForwarding: {}
+      enablePrivateIPAddress: {}
+      etag: {}
+      gatewayType: {}
+      id: {}
+      inboundDNSForwardingEndpoint: {}
+      ipConfigurations: {}
+      location: {}
+      name: {}
+      natRules: {}
+      properties: {}
+      provisioningState: {}
+      skuCapacity: {}
+      skuName: {}
+      tags: {}
+      type: {}
+      vpnClientConfiguration: {}
+      vpnGatewayGeneration: {}
+      vpnType: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetworkGateway.connection:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+      vpnClientConfiguration: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetworkGateway.ipConfig:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      privateIpAddress: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetworkGateway.natRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
     min_mondoo_version: latest
     platform:
       name:

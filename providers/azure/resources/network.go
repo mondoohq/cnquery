@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -14,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/azure/connection"
 	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 )
@@ -158,19 +160,13 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{},
 			return nil, err
 		}
 		for _, ip := range page.Value {
-			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
-				map[string]*llx.RawData{
-					"id":        llx.StringData(convert.ToString(ip.ID)),
-					"name":      llx.StringData(convert.ToString(ip.Name)),
-					"location":  llx.StringData(convert.ToString(ip.Location)),
-					"tags":      llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
-					"type":      llx.StringData(convert.ToString(ip.Type)),
-					"ipAddress": llx.StringData(convert.ToString(ip.Properties.IPAddress)),
-				})
-			if err != nil {
-				return nil, err
+			if ip != nil {
+				mqlAzure, err := azureIpToMql(a.MqlRuntime, *ip)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
 			}
-			res = append(res, mqlAzure)
 		}
 	}
 	return res, nil
@@ -307,6 +303,626 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewLoadBalancersClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.LoadBalancersClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, lb := range page.Value {
+			probes := []interface{}{}
+			backendPools := []interface{}{}
+			frontendIConfigs := []interface{}{}
+			inboundNatPools := []interface{}{}
+			inboundNatRules := []interface{}{}
+			outboundRules := []interface{}{}
+			loadBalancerRules := []interface{}{}
+			for _, p := range lb.Properties.Probes {
+				props, err := convert.JsonToDict(p.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlProbe, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.probe",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(p.ID)),
+						"type":       llx.StringData(convert.ToString(p.Type)),
+						"name":       llx.StringData(convert.ToString(p.Name)),
+						"etag":       llx.StringData(convert.ToString(p.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				probes = append(probes, mqlProbe)
+			}
+			for _, bap := range lb.Properties.BackendAddressPools {
+				props, err := convert.JsonToDict(bap.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlBap, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.backendAddressPool",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(bap.ID)),
+						"type":       llx.StringData(convert.ToString(bap.Type)),
+						"name":       llx.StringData(convert.ToString(bap.Name)),
+						"etag":       llx.StringData(convert.ToString(bap.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				backendPools = append(backendPools, mqlBap)
+			}
+
+			for _, ipConfig := range lb.Properties.FrontendIPConfigurations {
+				props, err := convert.JsonToDict(ipConfig.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.frontendIpConfig",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(ipConfig.ID)),
+						"type":       llx.StringData(convert.ToString(ipConfig.Type)),
+						"name":       llx.StringData(convert.ToString(ipConfig.Name)),
+						"etag":       llx.StringData(convert.ToString(ipConfig.Etag)),
+						"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				frontendIConfigs = append(frontendIConfigs, mqlIpConfig)
+			}
+
+			for _, natPool := range lb.Properties.InboundNatPools {
+				props, err := convert.JsonToDict(natPool.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlNatPool, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatPool",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(natPool.ID)),
+						"type":       llx.StringData(convert.ToString(natPool.Type)),
+						"name":       llx.StringData(convert.ToString(natPool.Name)),
+						"etag":       llx.StringData(convert.ToString(natPool.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				inboundNatPools = append(inboundNatPools, mqlNatPool)
+			}
+
+			for _, natRule := range lb.Properties.InboundNatRules {
+				props, err := convert.JsonToDict(natRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(natRule.ID)),
+						"type":       llx.StringData(convert.ToString(natRule.Type)),
+						"name":       llx.StringData(convert.ToString(natRule.Name)),
+						"etag":       llx.StringData(convert.ToString(natRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				inboundNatRules = append(inboundNatRules, mqlNatRule)
+			}
+
+			for _, outboundRule := range lb.Properties.OutboundRules {
+				props, err := convert.JsonToDict(outboundRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outbundRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(outboundRule.ID)),
+						"type":       llx.StringData(convert.ToString(outboundRule.Type)),
+						"name":       llx.StringData(convert.ToString(outboundRule.Name)),
+						"etag":       llx.StringData(convert.ToString(outboundRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				outboundRules = append(outboundRules, mqlOutbound)
+			}
+
+			for _, lbRule := range lb.Properties.LoadBalancingRules {
+				props, err := convert.JsonToDict(lbRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlLbRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancerRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(lbRule.ID)),
+						"type":       llx.StringData(convert.ToString(lbRule.Type)),
+						"name":       llx.StringData(convert.ToString(lbRule.Name)),
+						"etag":       llx.StringData(convert.ToString(lbRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				loadBalancerRules = append(loadBalancerRules, mqlLbRule)
+			}
+
+			lbProps, err := convert.JsonToDict(lb.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancer",
+				map[string]*llx.RawData{
+					"id":                llx.StringData(convert.ToString(lb.ID)),
+					"name":              llx.StringData(convert.ToString(lb.Name)),
+					"location":          llx.StringData(convert.ToString(lb.Location)),
+					"etag":              llx.StringData(convert.ToString(lb.Etag)),
+					"sku":               llx.StringData(convert.ToString((*string)(lb.SKU.Name))),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
+					"type":              llx.StringData(convert.ToString(lb.Type)),
+					"probes":            llx.ArrayData(probes, types.ResourceLike),
+					"backendPools":      llx.ArrayData(backendPools, types.ResourceLike),
+					"frontendIpConfigs": llx.ArrayData(frontendIConfigs, types.ResourceLike),
+					"inboundNatPools":   llx.ArrayData(inboundNatPools, types.ResourceLike),
+					"inboundNatRules":   llx.ArrayData(inboundNatRules, types.ResourceLike),
+					"outboundRules":     llx.ArrayData(outboundRules, types.ResourceLike),
+					"loadBalancerRules": llx.ArrayData(loadBalancerRules, types.ResourceLike),
+					"properties":        llx.DictData(lbProps),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewNatGatewaysClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.NatGatewaysClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ng := range page.Value {
+			if ng != nil {
+				mqlNg, err := azureNatGatewayToMql(a.MqlRuntime, *ng)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlNg)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewVirtualNetworksClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.VirtualNetworksClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, vn := range page.Value {
+			props, err := convert.JsonToDict(vn.Properties)
+			if err != nil {
+				return nil, err
+			}
+			subnets := []interface{}{}
+			for _, s := range vn.Properties.Subnets {
+				if s != nil {
+					mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, *s)
+					if err != nil {
+						return nil, err
+					}
+					subnets = append(subnets, mqlSubnet)
+				}
+			}
+			mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork",
+				map[string]*llx.RawData{
+					"id":         llx.StringData(convert.ToString(vn.ID)),
+					"name":       llx.StringData(convert.ToString(vn.Name)),
+					"type":       llx.StringData(convert.ToString(vn.Type)),
+					"location":   llx.StringData(convert.ToString(vn.Location)),
+					"tags":       llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
+					"etag":       llx.StringData(convert.ToString(vn.Etag)),
+					"properties": llx.DictData(props),
+					"subnets":    llx.ArrayData(subnets, types.ResourceLike),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVn)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewVirtualNetworkGatewaysClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// the virtual network gateways API works on resource-group level. therefore, we need to fetch all RGs first
+	sub, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(subId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	azureSub := sub.(*mqlAzureSubscription)
+	rgs := azureSub.GetResourceGroups()
+	if rgs.Error != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	for _, rg := range rgs.Data {
+		mqlRg := rg.(*mqlAzureSubscriptionResourcegroup)
+		pager := client.NewListPager(mqlRg.Name.Data, &network.VirtualNetworkGatewaysClientListOptions{})
+		for pager.More() {
+			page, err := pager.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, vng := range page.Value {
+				props, err := convert.JsonToDict(vng.Properties)
+				if err != nil {
+					return nil, err
+				}
+				bgpPeeringAddresses := []interface{}{}
+				bgpSettingsId := *vng.ID + "/bgpSettings"
+				for i, bpa := range vng.Properties.BgpSettings.BgpPeeringAddresses {
+					bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
+					mqlBpa, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
+						map[string]*llx.RawData{
+							"id":                    llx.StringData(bpaId),
+							"customBgpIpAddresses":  llx.ArrayData(convert.SliceStrPtrToInterface(bpa.CustomBgpIPAddresses), types.String),
+							"defaultBgpIpAddresses": llx.ArrayData(convert.SliceStrPtrToInterface(bpa.DefaultBgpIPAddresses), types.String),
+							"tunnelIpAddresses":     llx.ArrayData(convert.SliceStrPtrToInterface(bpa.TunnelIPAddresses), types.String),
+							"ipConfigurationId":     llx.StringDataPtr(bpa.IPConfigurationID),
+						})
+					if err != nil {
+						return nil, err
+					}
+					bgpPeeringAddresses = append(bgpPeeringAddresses, mqlBpa)
+				}
+				bgpSettings, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings",
+					map[string]*llx.RawData{
+						"id":                        llx.StringData(bgpSettingsId),
+						"asn":                       llx.IntDataPtr(vng.Properties.BgpSettings.Asn),
+						"bgpPeeringAddress":         llx.StringDataPtr(vng.Properties.BgpSettings.BgpPeeringAddress),
+						"peerWeight":                llx.IntData(convert.ToInt64From32(vng.Properties.BgpSettings.PeerWeight)),
+						"bgpPeeringAddressesConfig": llx.ArrayData(bgpPeeringAddresses, types.ResourceLike),
+					})
+				if err != nil {
+					return nil, err
+				}
+
+				ipConfigs := []interface{}{}
+				natRules := []interface{}{}
+
+				for _, nr := range vng.Properties.NatRules {
+					props, err := convert.JsonToDict(nr.Properties)
+					if err != nil {
+						return nil, err
+					}
+					mqlNr, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.natRule", map[string]*llx.RawData{
+						"id":         llx.StringDataPtr(nr.ID),
+						"name":       llx.StringDataPtr(nr.Name),
+						"etag":       llx.StringDataPtr(nr.Etag),
+						"properties": llx.DictData(props),
+					})
+					if err != nil {
+						return nil, err
+					}
+					natRules = append(natRules, mqlNr)
+				}
+				for _, ipc := range vng.Properties.IPConfigurations {
+					props, err := convert.JsonToDict(ipc.Properties)
+					if err != nil {
+						return nil, err
+					}
+					mqlIpc, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.ipConfig", map[string]*llx.RawData{
+						"id":               llx.StringDataPtr(ipc.ID),
+						"name":             llx.StringDataPtr(ipc.Name),
+						"etag":             llx.StringDataPtr(ipc.Etag),
+						"properties":       llx.DictData(props),
+						"privateIpAddress": llx.StringDataPtr(ipc.Properties.PrivateIPAddress),
+					})
+					if err != nil {
+						return nil, err
+					}
+					ipConfigs = append(ipConfigs, mqlIpc)
+				}
+				args := map[string]*llx.RawData{
+					"id":                              llx.StringDataPtr(vng.ID),
+					"name":                            llx.StringDataPtr(vng.Name),
+					"type":                            llx.StringDataPtr(vng.Type),
+					"location":                        llx.StringDataPtr(vng.Location),
+					"tags":                            llx.MapData(convert.PtrMapStrToInterface(vng.Tags), types.String),
+					"etag":                            llx.StringDataPtr(vng.Etag),
+					"active":                          llx.BoolDataPtr(vng.Properties.Active),
+					"enableBgp":                       llx.BoolDataPtr(vng.Properties.EnableBgp),
+					"enableBgpRouteTranslationForNat": llx.BoolDataPtr(vng.Properties.EnableBgpRouteTranslationForNat),
+					"enableDNSForwarding":             llx.BoolDataPtr(vng.Properties.EnableDNSForwarding),
+					"enablePrivateIPAddress":          llx.BoolDataPtr(vng.Properties.EnablePrivateIPAddress),
+					"disableIPSecReplayProtection":    llx.BoolDataPtr(vng.Properties.DisableIPSecReplayProtection),
+					"inboundDNSForwardingEndpoint":    llx.StringDataPtr(vng.Properties.InboundDNSForwardingEndpoint),
+					"skuName":                         llx.StringDataPtr((*string)(vng.Properties.SKU.Name)),
+					"skuCapacity":                     llx.IntData(convert.ToInt64From32(vng.Properties.SKU.Capacity)),
+					"provisioningState":               llx.StringDataPtr((*string)(vng.Properties.ProvisioningState)),
+					"properties":                      llx.DictData(props),
+					"vpnType":                         llx.StringDataPtr((*string)(vng.Properties.VPNType)),
+					"vpnGatewayGeneration":            llx.StringDataPtr((*string)(vng.Properties.VPNGatewayGeneration)),
+					"bgpSettings":                     llx.ResourceData(bgpSettings, "bgpSettings"),
+					"ipConfigurations":                llx.ArrayData(ipConfigs, types.ResourceLike),
+					"gatewayType":                     llx.StringDataPtr((*string)(vng.Properties.GatewayType)),
+					"natRules":                        llx.ArrayData(natRules, types.ResourceLike),
+				}
+				if vng.Properties.CustomRoutes != nil {
+					args["addressPrefixes"] = llx.ArrayData(convert.SliceStrPtrToInterface(vng.Properties.CustomRoutes.AddressPrefixes), types.String)
+				} else {
+					args["addressPrefixes"] = llx.ArrayData([]interface{}{}, types.String)
+				}
+				if vng.Properties.VPNClientConfiguration != nil {
+					vpnClientDict, err := convert.JsonToDict(vng.Properties.VPNClientConfiguration)
+					if err != nil {
+						return nil, err
+					}
+					args["vpnClientConfiguration"] = llx.DictData(vpnClientDict)
+				} else {
+					args["vpnClientConfiguration"] = llx.NilData
+				}
+				mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway", args)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlVn)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	publicIpAddresses := propsDict["publicIpAddresses"]
+	// if we have no present public ip addresses ids, we can just return nil
+	if publicIpAddresses == nil {
+		return nil, nil
+	}
+
+	res := []interface{}{}
+	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range publicIpAddresses.([]interface{}) {
+		pDict := p.(map[string]interface{})
+		pId := pDict["id"].(string)
+		resourceID, err := ParseResourceID(pId)
+		if err != nil {
+			return nil, err
+		}
+		publicIpName, err := resourceID.Component("publicIPAddresses")
+		if err != nil {
+			return nil, err
+		}
+		publicIp, err := client.Get(ctx, resourceID.ResourceGroup, publicIpName, &network.PublicIPAddressesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		mqlPublicIp, err := azureIpToMql(a.MqlRuntime, publicIp.PublicIPAddress)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPublicIp)
+	}
+
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewVirtualNetworkGatewayConnectionsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListPager(azureId.ResourceGroup, &network.VirtualNetworkGatewayConnectionsClientListOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range page.Value {
+			// the API does not let us get connections, applicable to a given gateway.
+			// Therefore we filter them manually here.
+			filter := []string{}
+			// primary gateway
+			if c.Properties.VirtualNetworkGateway1 != nil {
+				filter = append(filter, *c.Properties.VirtualNetworkGateway1.ID)
+			}
+			// secondary, optional (only if Vnet2Vnet connection)
+			if c.Properties.VirtualNetworkGateway2 != nil {
+				filter = append(filter, *c.Properties.VirtualNetworkGateway2.ID)
+			}
+			if !stringx.Contains(filter, id) {
+				continue
+			}
+			props, err := convert.JsonToDict(c.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection",
+				map[string]*llx.RawData{
+					"id":         llx.StringData(convert.ToString(c.ID)),
+					"type":       llx.StringData(convert.ToString(c.Type)),
+					"name":       llx.StringData(convert.ToString(c.Name)),
+					"etag":       llx.StringData(convert.ToString(c.Etag)),
+					"properties": llx.DictData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConnection)
+
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	subnets := propsDict["subnets"]
+	// if we have no present subnets in the dict, we can just return nil
+	if subnets == nil {
+		return nil, nil
+	}
+	res := []interface{}{}
+	client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range subnets.([]interface{}) {
+		sDict := s.(map[string]interface{})
+		sId := sDict["id"].(string)
+		resourceID, err := ParseResourceID(sId)
+		if err != nil {
+			return nil, err
+		}
+		virtualNetworkName, err := resourceID.Component("virtualNetworks")
+		if err != nil {
+			return nil, err
+		}
+		subnetName, err := resourceID.Component("subnets")
+		if err != nil {
+			return nil, err
+		}
+		subnet, err := client.Get(ctx, resourceID.ResourceGroup, virtualNetworkName, subnetName, &network.SubnetsClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		mqlSubnet, err := azureSubnetToMql(a.MqlRuntime, subnet.Subnet)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	natGatewayDict := propsDict["natGateway"]
+	if natGatewayDict == nil {
+		// TODO: Preslav: how do we define a 'nil' resource here? if i return nil, it panics
+		return nil, errors.New("subnet has no NAT gateway associated with it")
+	}
+	natGatewayFields := natGatewayDict.(map[string]interface{})
+	natGatewayId := natGatewayFields["id"].(string)
+	resourceID, err := ParseResourceID(natGatewayId)
+	if err != nil {
+		return nil, err
+	}
+	natGatewayName, err := resourceID.Component("natGateways")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	natGatewayRes, err := client.Get(ctx, resourceID.ResourceGroup, natGatewayName, &network.NatGatewaysClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	mqlNatGateway, err := azureNatGatewayToMql(a.MqlRuntime, natGatewayRes.NatGateway)
+	if err != nil {
+		return nil, err
+	}
+	return mqlNatGateway, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceInterface) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -333,6 +949,120 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) id() (string, error) 
 
 func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceBackendAddressPool) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceInboundNatPool) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceInboundNatRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceProbe) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceNatGateway) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceBgpSettings) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.ipAddress",
+		map[string]*llx.RawData{
+			"id":        llx.StringData(convert.ToString(ip.ID)),
+			"name":      llx.StringData(convert.ToString(ip.Name)),
+			"location":  llx.StringData(convert.ToString(ip.Location)),
+			"tags":      llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
+			"type":      llx.StringData(convert.ToString(ip.Type)),
+			"ipAddress": llx.StringData(convert.ToString(ip.Properties.IPAddress)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAzure.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+}
+
+func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlAzureSubscriptionNetworkServiceNatGateway, error) {
+	props, err := convert.JsonToDict(ng.Properties)
+	if err != nil {
+		return nil, err
+	}
+	mqlNg, err := CreateResource(runtime, "azure.subscription.networkService.natGateway",
+		map[string]*llx.RawData{
+			"id":         llx.StringData(convert.ToString(ng.ID)),
+			"name":       llx.StringData(convert.ToString(ng.Name)),
+			"type":       llx.StringData(convert.ToString(ng.Type)),
+			"location":   llx.StringData(convert.ToString(ng.Location)),
+			"tags":       llx.MapData(convert.PtrMapStrToInterface(ng.Tags), types.String),
+			"etag":       llx.StringData(convert.ToString(ng.Etag)),
+			"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ng.Zones), types.String),
+			"properties": llx.DictData(props),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlNg.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
+}
+
+func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	props, err := convert.JsonToDict(subnet.Properties)
+	if err != nil {
+		return nil, err
+	}
+	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{
+			"id":            llx.StringData(convert.ToString(subnet.ID)),
+			"name":          llx.StringData(convert.ToString(subnet.Name)),
+			"type":          llx.StringData(convert.ToString(subnet.Type)),
+			"etag":          llx.StringData(convert.ToString(subnet.Etag)),
+			"addressPrefix": llx.StringData(convert.ToString(subnet.Properties.AddressPrefix)),
+			"properties":    llx.DictData(props),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAzure.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mqlAzureSubscriptionNetworkServiceInterface, error) {
