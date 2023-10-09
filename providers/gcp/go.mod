@@ -28,7 +28,7 @@ require (
 	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.5.1
 	golang.org/x/oauth2 v0.12.0
-	google.golang.org/api v0.143.0
+	google.golang.org/api v0.145.0
 	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13
 	google.golang.org/protobuf v1.31.0
 )
