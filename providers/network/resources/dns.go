@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"net"
 	"strconv"
 	"strings"
 
@@ -58,7 +59,16 @@ func initDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 	_, ok := args["fqdn"]
 	if !ok {
 		conn := runtime.Connection.(*connection.HostConnection)
-		args["fqdn"] = llx.StringData(conn.FQDN())
+		fqdn := llx.StringData(conn.FQDN())
+
+		// Check whether the fqdn is valid
+		// In case of ssh connections, this could also be an ip address
+		ip := net.ParseIP(fqdn.Value.(string))
+		if ip == nil {
+			args["fqdn"] = fqdn
+		} else {
+			args["fqdn"] = llx.StringData("")
+		}
 	}
 
 	return args, nil, nil
