@@ -137,28 +137,32 @@ private aws.accessanalyzer.analyzer @defaults("arn status") {
 
 // AWS Elastic File System (EFS) Service
 aws.efs {
-  // A list of filesystems managed by the service
+  // A list of file systems managed by the service
   filesystems() []aws.efs.filesystem
 }
 
 // AWS Elastic File System (EFS) Filesystem
 private aws.efs.filesystem @defaults("name arn") {
-  // Name of the filesystem
+  // Name of the file system
   name string
-  // ID of the filesystem
+  // ID of the file system
   id string
-  // ARN of the filesystem
+  // ARN of the file system
   arn string
-  // Denotes whether or not the filesystem id encrypted
+  // Denotes whether or not the file system is encrypted
   encrypted bool
-  // KMS key used for encryption of the filesystem
+  // KMS key used for encryption of the file system
   kmsKey() aws.kms.key
-  // Backup policy for the filesystem
+  // Backup policy for the file system
   backupPolicy() dict
-  // Region in which the filesystem exists
+  // Region in which the file system exists
   region string
-  // Tags for the filesystem
+  // Availability zone where the file system exists if a specific AZ is defined
+  availabilityZone string
+  // Tags for the file system
   tags map[string]string
+  // Creation timestamp
+  createdAt time
 }
 
 // AWS Key Management Service (KMS)
@@ -471,6 +475,12 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
+  // The version of Elasticsearch running
+  elasticsearchVersion string
+  // The Elasticsearch domain ID
+  domainId string
+  // The Elasticsearch domain name
+  domainName string
 }
 
 // AWS Certificate Manager resource for assessing the configuration of AWS Certificate Manager
@@ -617,10 +627,22 @@ aws.secretsmanager {
 private aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
-  // Denotes whether rotation is enabled for the secret
-  rotationEnabled bool
+  // Creation date of the secret
+  createdAt time
+  // Description of the secret
+  description string
+  // The last date the secret was changed
+  lastChangedDate time
+  // The last date the secret was automatically rotated
+  lastRotatedDate time
   // Name of the secret
   name string
+  // The date of the next secret rotation
+  nextRotationDate time
+  // The primary region of the secret
+  primaryRegion string
+  // Denotes whether rotation is enabled for the secret
+  rotationEnabled bool
   // Tags for the secret
   tags map[string]string
 }
@@ -1359,32 +1381,56 @@ aws.redshift {
 
 // Amazon Redshift Cluster
 private aws.redshift.cluster @defaults("arn") {
-  // ARN for the cluster
-  arn string
-  // Denotes whether or not the cluster is encrypted
-  encrypted bool
-  // The node type for the nodes in the cluster
-  nodeType string
   // Denotes whether major upgrades will be applied automatically
   allowVersionUpgrade bool
-  // Weekly time range for system maintenance (in UTC)
-  preferredMaintenanceWindow string
+  // ARN for the cluster
+  arn string
   // Number of days automatic cluster snapshots are retained
   automatedSnapshotRetentionPeriod int
-  // Denotes whether or not cluster is publicly accessible
-  publiclyAccessible bool
-  // Detailed list of parameters for each parameter group name
-  parameters() []dict
-  // Logging configuration for the cluster
-  logging() dict
-  // Name of the initial database created when cluster was created
-  name string
-  // Region where the cluster exists
-  region string
+  // Availability zone where the cluster exists
+  availabilityZone string
   // List of cluster parameter group names
   clusterParameterGroupNames []string
+  // Specific revision number of the database in the cluster
+  clusterRevisionNumber string
+  // Current state of this cluster. Values: available, creating, deleting, rebooting, renaming, and resizing.
+  clusterStatus string
+  // Name of the subnet group that is associated with the cluster. 
+  clusterSubnetGroupName string
+  // The version of the Redshift engine running on the cluster
+  clusterVersion string
+  // Cluster creation timestamp
+  createdAt string
+  // Name of the initial database that was created when the cluster was created
+  dbName string
+  // Denotes whether or not the cluster is encrypted at rest
+  encrypted bool
+  // Denotes whether or not enhanced VPC routing is enabled for the cluster traffic
+  enhancedVpcRouting bool
+  // Logging configuration for the cluster
+  logging() dict
+  // Master user name for the cluster.
+  masterUsername string
+  // Name of the initial database created when cluster was created
+  name string
+  // The next scheduled maintenance window
+  nextMaintenanceWindowStartTime time
+  // The node type for the nodes in the cluster
+  nodeType string
+  // The number of nodes in the cluster
+  numberOfNodes int
+  // Detailed list of parameters for each parameter group name
+  parameters() []dict
+  // Weekly time range for system maintenance (in UTC)
+  preferredMaintenanceWindow string
+  // Denotes whether or not cluster is publicly accessible
+  publiclyAccessible bool
+  // Region where the cluster exists
+  region string
   // Tags for the cluster
   tags map[string]string
+  // The ID of the VPC where the cluster is running
+  vpcId string
 }
 
 // AWS Elastic Container Registry

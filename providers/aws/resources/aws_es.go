@@ -69,7 +69,7 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 				// the arn is not returned until we get to the describe call
 				mqlDomain, err := NewResource(a.MqlRuntime, "aws.es.domain",
 					map[string]*llx.RawData{
-						"name":   llx.StringData(convert.ToString(domain.DomainName)),
+						"name":   llx.StringDataPtr(domain.DomainName),
 						"region": llx.StringData(regionVal),
 					})
 				if err != nil {
@@ -109,8 +109,11 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	args["encryptionAtRestEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled))
 	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(convert.ToBool(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled))
-	args["endpoint"] = llx.StringData(convert.ToString(domainDetails.DomainStatus.Endpoint))
-	args["arn"] = llx.StringData(convert.ToString(domainDetails.DomainStatus.ARN))
+	args["endpoint"] = llx.StringDataPtr(domainDetails.DomainStatus.Endpoint)
+	args["arn"] = llx.StringDataPtr(domainDetails.DomainStatus.ARN)
+	args["elasticsearchVersion"] = llx.StringDataPtr(domainDetails.DomainStatus.ElasticsearchVersion)
+	args["domainId"] = llx.StringDataPtr(domainDetails.DomainStatus.DomainId)
+	args["domainName"] = llx.StringDataPtr(domainDetails.DomainStatus.DomainName)
 	args["tags"] = llx.MapData(tags, types.String)
 	return args, nil, nil
 }

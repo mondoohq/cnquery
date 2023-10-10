@@ -1230,7 +1230,11 @@ resources:
         \n"
     fields:
       arn: {}
+      availabilityZone:
+        min_mondoo_version: 9.1.0
       backupPolicy: {}
+      createdAt:
+        min_mondoo_version: 9.1.0
       encrypted: {}
       id: {}
       kmsKey: {}
@@ -1458,6 +1462,12 @@ resources:
         The `aws.es.domain` provides fields for assessing the configuration of individual Amazon Elasticsearch domains. For usage see the `aws.es` resource documentation
     fields:
       arn: {}
+      domainId:
+        min_mondoo_version: 9.1.0
+      domainName:
+        min_mondoo_version: 9.1.0
+      elasticsearchVersion:
+        min_mondoo_version: 9.1.0
       encryptionAtRestEnabled: {}
       endpoint: {}
       name: {}
@@ -1909,16 +1919,40 @@ resources:
       allowVersionUpgrade: {}
       arn: {}
       automatedSnapshotRetentionPeriod: {}
+      availabilityZone:
+        min_mondoo_version: 9.1.0
       clusterParameterGroupNames: {}
+      clusterRevisionNumber:
+        min_mondoo_version: 9.1.0
+      clusterStatus:
+        min_mondoo_version: 9.1.0
+      clusterSubnetGroupName:
+        min_mondoo_version: 9.1.0
+      clusterVersion:
+        min_mondoo_version: 9.1.0
+      createdAt:
+        min_mondoo_version: 9.1.0
+      dbName:
+        min_mondoo_version: 9.1.0
       encrypted: {}
+      enhancedVpcRouting:
+        min_mondoo_version: 9.1.0
       logging: {}
+      masterUsername:
+        min_mondoo_version: 9.1.0
       name: {}
+      nextMaintenanceWindowStartTime:
+        min_mondoo_version: 9.1.0
       nodeType: {}
+      numberOfNodes:
+        min_mondoo_version: 9.1.0
       parameters: {}
       preferredMaintenanceWindow: {}
       publiclyAccessible: {}
       region: {}
       tags: {}
+      vpcId:
+        min_mondoo_version: 9.1.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -2106,7 +2140,19 @@ resources:
   aws.secretsmanager.secret:
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: 9.1.0
+      description:
+        min_mondoo_version: 9.1.0
+      lastChangedDate:
+        min_mondoo_version: 9.1.0
+      lastRotatedDate:
+        min_mondoo_version: 9.1.0
       name: {}
+      nextRotationDate:
+        min_mondoo_version: 9.1.0
+      primaryRegion:
+        min_mondoo_version: 9.1.0
       rotationEnabled: {}
       tags: {}
     is_private: true
