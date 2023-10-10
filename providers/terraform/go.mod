@@ -6,7 +6,7 @@ go 1.20
 
 require (
 	github.com/go-git/go-git/v5 v5.9.0
-	github.com/hashicorp/hcl/v2 v2.18.0
+	github.com/hashicorp/hcl/v2 v2.18.1
 	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 )
 
