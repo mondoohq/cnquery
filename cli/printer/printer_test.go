@@ -70,7 +70,7 @@ type assessmentTest struct {
 func runAssessmentTests(t *testing.T, tests []assessmentTest) {
 	schemaPrinter := DefaultPrinter
 	schema := x.Runtime.Schema()
-	schemaPrinter.SetSchema(&schema)
+	schemaPrinter.SetSchema(schema)
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {

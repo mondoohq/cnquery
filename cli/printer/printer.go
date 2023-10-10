@@ -23,7 +23,7 @@ type Printer struct {
 	Disabled  func(...interface{}) string
 	Failed    func(...interface{}) string
 	Success   func(...interface{}) string
-	schema    *llx.Schema
+	schema    llx.Schema
 }
 
 // DefaultPrinter that can be used without additional configuration
@@ -54,7 +54,7 @@ var DefaultPrinter = Printer{
 	},
 }
 
-func (p *Printer) SetSchema(schema *llx.Schema) {
+func (p *Printer) SetSchema(schema llx.Schema) {
 	p.schema = schema
 }
 

@@ -334,7 +334,7 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 	nonDefaultFields := []string{}
 	defaultFields := []string{}
 	if listType != "" && print.schema != nil {
-		resourceInfo := (*print.schema).Lookup(listType)
+		resourceInfo := (print.schema).Lookup(listType)
 		if resourceInfo != nil {
 			defaultFields = strings.Split(resourceInfo.Defaults, " ")
 		}
