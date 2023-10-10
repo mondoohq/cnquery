@@ -402,6 +402,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}()
 
 	scanGroup.Wait()
+	providers.Coordinator.Shutdown()
 	return reporter.Reports(), finished, nil
 }
 
