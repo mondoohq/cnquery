@@ -63,6 +63,8 @@ terraform.block @defaults("type labels") {
   attributes() dict
   // Child Blocks
   blocks() []terraform.block
+  // Related blocks
+  related() []terraform.block
   // Block Snippet
   snippet string
 }
