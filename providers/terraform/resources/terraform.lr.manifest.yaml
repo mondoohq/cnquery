@@ -33,6 +33,8 @@ resources:
       end: {}
       labels: {}
       nameLabel: {}
+      related:
+        min_mondoo_version: 9.0.12
       snippet: {}
       start: {}
       type: {}

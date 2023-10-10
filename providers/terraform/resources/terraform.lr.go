@@ -210,6 +210,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"terraform.block.blocks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetBlocks()).ToDataRes(types.Array(types.Resource("terraform.block")))
 	},
+	"terraform.block.related": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTerraformBlock).GetRelated()).ToDataRes(types.Array(types.Resource("terraform.block")))
+	},
 	"terraform.block.snippet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTerraformBlock).GetSnippet()).ToDataRes(types.String)
 	},
@@ -493,6 +496,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"terraform.block.blocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTerraformBlock).Blocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"terraform.block.related": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTerraformBlock).Related, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"terraform.block.snippet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -783,7 +790,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlTerraform struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlTerraformInternal it will be used here
+	mqlTerraformInternal
 	Files plugin.TValue[[]interface{}]
 	Tfvars plugin.TValue[interface{}]
 	Modules plugin.TValue[[]interface{}]
@@ -806,12 +813,7 @@ func createTerraform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("terraform", res.__id)
@@ -1109,6 +1111,7 @@ type mqlTerraformBlock struct {
 	Arguments plugin.TValue[interface{}]
 	Attributes plugin.TValue[interface{}]
 	Blocks plugin.TValue[[]interface{}]
+	Related plugin.TValue[[]interface{}]
 	Snippet plugin.TValue[string]
 }
 
@@ -1196,6 +1199,22 @@ func (c *mqlTerraformBlock) GetBlocks() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.blocks()
+	})
+}
+
+func (c *mqlTerraformBlock) GetRelated() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Related, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("terraform.block", c.__id, "related")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.related()
 	})
 }
 

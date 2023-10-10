@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
@@ -23,8 +24,12 @@ import (
 	"go.mondoo.com/cnquery/v9/types"
 )
 
-func (t *mqlTerraform) id() (string, error) {
-	return "terraform", nil
+type mqlTerraformInternal struct {
+	blocksByName  map[string]*mqlTerraformBlock
+	relatedBlocks map[string][]*mqlTerraformBlock
+	// these are blocks with the type set to "terraform", used for settings
+	terraformBlocks []*mqlTerraformBlock
+	lock            sync.Mutex
 }
 
 func (t *mqlTerraform) files() ([]interface{}, error) {
@@ -90,56 +95,159 @@ func (t *mqlTerraform) blocks() ([]interface{}, error) {
 		}
 		mqlHclBlocks = append(mqlHclBlocks, blocks...)
 	}
-	return mqlHclBlocks, nil
+
+	return mqlHclBlocks, t.refreshCache(mqlHclBlocks)
 }
 
-func filterBlockByType(runtime *plugin.Runtime, filterType string) ([]interface{}, error) {
-	conn := runtime.Connection.(*connection.Connection)
-	parsed := conn.Parser()
-	if parsed == nil {
-		// no results, because this is not a regular parsed HCL
-		return []interface{}{}, nil
+func (t *mqlTerraform) refreshCache(blocks []interface{}) error {
+	if blocks == nil {
+		raw := t.GetBlocks()
+		return raw.Error
 	}
 
-	files := parsed.Files()
+	t.lock.Lock()
+	if t.blocksByName != nil {
+		return nil
+	}
+	defer t.lock.Unlock()
 
-	var mqlHclBlocks []interface{}
-	for k := range files {
-		f := files[k]
-		blocks, err := listHclBlocks(runtime, f.Body, f)
+	t.blocksByName = map[string]*mqlTerraformBlock{}
+	t.relatedBlocks = map[string][]*mqlTerraformBlock{}
+
+	t.Providers.State = plugin.StateIsSet
+	t.Providers.Data = []interface{}{}
+	t.Datasources.State = plugin.StateIsSet
+	t.Datasources.Data = []interface{}{}
+	t.Resources.State = plugin.StateIsSet
+	t.Resources.Data = []interface{}{}
+	t.Variables.State = plugin.StateIsSet
+	t.Variables.Data = []interface{}{}
+	t.Outputs.State = plugin.StateIsSet
+	t.Outputs.Data = []interface{}{}
+	t.terraformBlocks = []*mqlTerraformBlock{}
+
+	for i := range blocks {
+		block := blocks[i].(*mqlTerraformBlock)
+
+		// type must be pre-initialized
+		typ := block.Type.Data
+
+		switch typ {
+		case "provider":
+			t.Providers.Data = append(t.Providers.Data, block)
+		case "data":
+			t.Datasources.Data = append(t.Providers.Data, block)
+		case "resource":
+			t.Resources.Data = append(t.Resources.Data, block)
+		case "variable":
+			t.Variables.Data = append(t.Variables.Data, block)
+		case "output":
+			t.Outputs.Data = append(t.Outputs.Data, block)
+		case "terraform":
+			t.terraformBlocks = append(t.terraformBlocks, block)
+		default:
+			// Note: we don't do anything with these blocks yet.
+			// They might be worth looking into.
+		}
+
+		// labels must be pre-initialized
+		name := block.terraformID()
+		t.blocksByName[name] = block
+	}
+
+	// We need blocks by name before we can jump into
+	// related blocks, because we need to access them
+	// via their name
+	for i := range blocks {
+		block := blocks[i].(*mqlTerraformBlock)
+		name := block.terraformID()
+
+		rel, err := listRelatedBlocks(t, block.block.Data.Body)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		for i := range blocks {
-			b := blocks[i].(*mqlTerraformBlock)
-			blockType := b.Type.Data
-			if blockType == filterType {
-				mqlHclBlocks = append(mqlHclBlocks, b)
-			}
+		// connect from this block to all related blocks...
+		t.relatedBlocks[name] = append(t.relatedBlocks[name], rel...)
+		// ... and also connect the inverse (related to this block)
+		for i := range rel {
+			relBlock := rel[i]
+			relName := relBlock.terraformID()
+			t.relatedBlocks[relName] = append(t.relatedBlocks[relName], block)
 		}
 	}
-	return mqlHclBlocks, nil
+
+	for k, v := range t.relatedBlocks {
+		block, ok := t.blocksByName[k]
+		if !ok {
+			return errors.New("cannot find terraform block by name: " + k)
+		}
+
+		vi := make([]interface{}, len(v))
+		for i := range v {
+			vi[i] = v[i]
+		}
+
+		block.Related = plugin.TValue[[]interface{}]{
+			State: plugin.StateIsSet,
+			Data:  vi,
+		}
+	}
+
+	return nil
+}
+
+func (g *mqlTerraformBlock) terraformID() string {
+	labels := g.Labels.Data
+	var namearr []string
+	for i := range labels {
+		if s, ok := labels[i].(string); ok {
+			namearr = append(namearr, s)
+		}
+	}
+	return strings.Join(namearr, "\x00")
+}
+
+func listRelatedBlocks(t *mqlTerraform, rawBody interface{}) ([]*mqlTerraformBlock, error) {
+	var res []*mqlTerraformBlock
+	switch body := rawBody.(type) {
+	case *hclsyntax.Body:
+		for _, v := range body.Attributes {
+			refs := getReferences(v.Expr, &hcl.EvalContext{
+				Functions: hclFunctions(),
+			})
+			// we need the resource name and its ID at least
+			if len(refs) < 2 {
+				continue
+			}
+
+			refName := strings.Join(refs[0:2], "\x00")
+			res = append(res, t.blocksByName[refName])
+		}
+	case hcl.Body:
+		return nil, errors.New("cannot yet list related blocks for regular hcl Body")
+	}
+	return res, nil
 }
 
 func (t *mqlTerraform) providers() ([]interface{}, error) {
-	return filterBlockByType(t.MqlRuntime, "provider")
+	return nil, t.refreshCache(nil)
 }
 
 func (t *mqlTerraform) datasources() ([]interface{}, error) {
-	return filterBlockByType(t.MqlRuntime, "data")
+	return nil, t.refreshCache(nil)
 }
 
 func (t *mqlTerraform) resources() ([]interface{}, error) {
-	return filterBlockByType(t.MqlRuntime, "resource")
+	return nil, t.refreshCache(nil)
 }
 
 func (t *mqlTerraform) variables() ([]interface{}, error) {
-	return filterBlockByType(t.MqlRuntime, "variable")
+	return nil, t.refreshCache(nil)
 }
 
 func (t *mqlTerraform) outputs() ([]interface{}, error) {
-	return filterBlockByType(t.MqlRuntime, "output")
+	return nil, t.refreshCache(nil)
 }
 
 func extractHclCodeSnippet(file *hcl.File, fileRange hcl.Range) string {
@@ -399,6 +507,28 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 	}
 }
 
+func getReferences(expr hcl.Expression, ctx *hcl.EvalContext) []string {
+	switch t := expr.(type) {
+	case *hclsyntax.ScopeTraversalExpr:
+		traversal := t.Variables()
+		res := []string{}
+		for i := range traversal {
+			tr := traversal[i]
+			for j := range tr {
+				switch v := tr[j].(type) {
+				case hcl.TraverseRoot:
+					res = append(res, v.Name)
+				case hcl.TraverseAttr:
+					res = append(res, v.Name)
+				}
+			}
+		}
+		return res
+	default:
+		return nil
+	}
+}
+
 func GetKeyString(key interface{}) string {
 	switch v := key.(type) {
 	case []string:
@@ -463,6 +593,19 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody interface{}, file *hcl.File)
 	}
 
 	return mqlHclBlocks, nil
+}
+
+func (g *mqlTerraformBlock) related() ([]interface{}, error) {
+	// This field should be default be set by the Terraform routine that
+	// initializes all blocks. If we land here from a recording or other
+	// path, re-run it.
+	o, err := CreateResource(g.MqlRuntime, "terraform", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+
+	terraform := o.(*mqlTerraform)
+	return nil, terraform.refreshCache(nil)
 }
 
 func newFilePosRange(runtime *plugin.Runtime, r hcl.Range) (plugin.Resource, plugin.Resource, error) {
@@ -545,11 +688,17 @@ func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 }
 
 func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	blocks, err := filterBlockByType(runtime, "terraform")
+	o, err := CreateResource(runtime, "terraform", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, nil, err
 	}
 
+	terraform := o.(*mqlTerraform)
+	if err := terraform.refreshCache(nil); err != nil {
+		return nil, nil, err
+	}
+
+	blocks := terraform.terraformBlocks
 	if len(blocks) != 1 {
 		// no terraform settings block found, this is ok for terraform and not an error
 		// TODO: return modified arguments to load from recording
@@ -560,7 +709,7 @@ func initTerraformSettings(runtime *plugin.Runtime, args map[string]*llx.RawData
 		}, nil
 	}
 
-	settingsBlock := blocks[0].(*mqlTerraformBlock)
+	settingsBlock := blocks[0]
 	args["block"] = llx.ResourceData(settingsBlock, "terraform.block")
 	args["requiredProviders"] = llx.DictData(map[string]interface{}{})
 	args["backend"] = llx.DictData(map[string]interface{}{})
