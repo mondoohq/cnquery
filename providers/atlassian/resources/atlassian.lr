@@ -83,7 +83,16 @@ atlassian.jira.user @defaults("id") {
   // Picture of the user
 	picture string
   // Groups
-  groups() []atlassian.jira.user.group
+  groups() []atlassian.jira.group
+  // Roles
+  applicationRoles() []atlassian.jira.applicatonRole
+}
+
+atlassian.jira.applicatonRole @defaults("id") {
+  // Role ID
+  id string
+  // Role Name
+  name string
 }
 
 atlassian.jira.project @defaults("id") { 
@@ -107,9 +116,11 @@ atlassian.jira.project @defaults("id") {
   archived bool
 }
 
-atlassian.jira.user.group @defaults("id") { 
+atlassian.jira.group @defaults("id") { 
   // GroupID
   id string
+  // Group Name
+  name string
 }
 
 atlassian.confluence { 

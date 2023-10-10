@@ -79,6 +79,16 @@ resources:
       projects: {}
       users: {}
     min_mondoo_version: latest
+  atlassian.jira.applicatonRole:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.jira.group:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
   atlassian.jira.groups:
     fields:
       id: {}
@@ -97,10 +107,13 @@ resources:
     min_mondoo_version: latest
   atlassian.jira.user:
     fields:
+      applicationRoles: {}
+      applicatonRoles: {}
       groups: {}
       id: {}
       name: {}
       picture: {}
+      roles: {}
       type: {}
     min_mondoo_version: latest
   atlassian.jira.user.group:
@@ -110,4 +123,9 @@ resources:
   atlassian.jira.user.groups:
     fields:
       id: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.role:
+    fields:
+      id: {}
+      name: {}
     min_mondoo_version: latest

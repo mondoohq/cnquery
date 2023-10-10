@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -40,6 +41,34 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	expands := []string{"groups", "applicationRoles"}
+	user, response, err := jira.User.Get(context.Background(), a.Id.Data, expands)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	roles := user.ApplicationRoles
+
+	res := []interface{}{}
+	for _, role := range roles.Items {
+		mqlAtlassianJiraUserRole, err := CreateResource(a.MqlRuntime, "atlassian.jira.applicationRole",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(role.Key),
+				"name": llx.StringData(role.Name),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianJiraUserRole)
+	}
+	return res, nil
+}
+
 func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
@@ -53,9 +82,10 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 
 	res := []interface{}{}
 	for _, group := range groups.Values {
-		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.user.group",
+		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
 			map[string]*llx.RawData{
-				"id": llx.StringData(group.GroupID),
+				"id":   llx.StringData(group.GroupID),
+				"name": llx.StringData(group.Name),
 			})
 		if err != nil {
 			log.Fatal().Err(err)
@@ -102,7 +132,7 @@ func (a *mqlAtlassianJiraUser) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-func (a *mqlAtlassianJiraUserGroup) id() (string, error) {
+func (a *mqlAtlassianJiraGroup) id() (string, error) {
 	return a.Id.Data, nil
 }
 

@@ -53,13 +53,17 @@ func init() {
 			// to override args, implement: initAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraUser,
 		},
+		"atlassian.jira.applicatonRole": {
+			// to override args, implement: initAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraApplicatonRole,
+		},
 		"atlassian.jira.project": {
 			// to override args, implement: initAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraProject,
 		},
-		"atlassian.jira.user.group": {
-			// to override args, implement: initAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassianJiraUserGroup,
+		"atlassian.jira.group": {
+			// to override args, implement: initAtlassianJiraGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraGroup,
 		},
 		"atlassian.confluence": {
 			// to override args, implement: initAtlassianConfluence(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -222,7 +226,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAtlassianJiraUser).GetPicture()).ToDataRes(types.String)
 	},
 	"atlassian.jira.user.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.user.group")))
+		return (r.(*mqlAtlassianJiraUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.group")))
+	},
+	"atlassian.jira.user.applicationRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraUser).GetApplicationRoles()).ToDataRes(types.Array(types.Resource("atlassian.jira.applicatonRole")))
+	},
+	"atlassian.jira.applicatonRole.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicatonRole).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.applicatonRole.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicatonRole).GetName()).ToDataRes(types.String)
 	},
 	"atlassian.jira.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetId()).ToDataRes(types.String)
@@ -251,8 +264,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.project.archived": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetArchived()).ToDataRes(types.Bool)
 	},
-	"atlassian.jira.user.group.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraUserGroup).GetId()).ToDataRes(types.String)
+	"atlassian.jira.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraGroup).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraGroup).GetName()).ToDataRes(types.String)
 	},
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
@@ -430,6 +446,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraUser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.user.applicationRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraUser).ApplicationRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicatonRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraApplicatonRole).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.jira.applicatonRole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicatonRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicatonRole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicatonRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianJiraProject).__id, ok = v.Value.(string)
 			return
@@ -470,12 +502,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraProject).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"atlassian.jira.user.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraUserGroup).__id, ok = v.Value.(string)
+	"atlassian.jira.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraGroup).__id, ok = v.Value.(string)
 			return
 		},
-	"atlassian.jira.user.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraUserGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.jira.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1072,6 +1108,7 @@ type mqlAtlassianJiraUser struct {
 	Type plugin.TValue[string]
 	Picture plugin.TValue[string]
 	Groups plugin.TValue[[]interface{}]
+	ApplicationRoles plugin.TValue[[]interface{}]
 }
 
 // createAtlassianJiraUser creates a new instance of this resource
@@ -1141,6 +1178,71 @@ func (c *mqlAtlassianJiraUser) GetGroups() *plugin.TValue[[]interface{}] {
 
 		return c.groups()
 	})
+}
+
+func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ApplicationRoles, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.user", c.__id, "applicationRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.applicationRoles()
+	})
+}
+
+// mqlAtlassianJiraApplicatonRole for the atlassian.jira.applicatonRole resource
+type mqlAtlassianJiraApplicatonRole struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianJiraApplicatonRoleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+}
+
+// createAtlassianJiraApplicatonRole creates a new instance of this resource
+func createAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraApplicatonRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.applicatonRole", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraApplicatonRole) MqlName() string {
+	return "atlassian.jira.applicatonRole"
+}
+
+func (c *mqlAtlassianJiraApplicatonRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraApplicatonRole) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraApplicatonRole) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAtlassianJiraProject for the atlassian.jira.project resource
@@ -1232,17 +1334,18 @@ func (c *mqlAtlassianJiraProject) GetArchived() *plugin.TValue[bool] {
 	return &c.Archived
 }
 
-// mqlAtlassianJiraUserGroup for the atlassian.jira.user.group resource
-type mqlAtlassianJiraUserGroup struct {
+// mqlAtlassianJiraGroup for the atlassian.jira.group resource
+type mqlAtlassianJiraGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAtlassianJiraUserGroupInternal it will be used here
+	// optional: if you define mqlAtlassianJiraGroupInternal it will be used here
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
 }
 
-// createAtlassianJiraUserGroup creates a new instance of this resource
-func createAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassianJiraUserGroup{
+// createAtlassianJiraGroup creates a new instance of this resource
+func createAtlassianJiraGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraGroup{
 		MqlRuntime: runtime,
 	}
 
@@ -1259,7 +1362,7 @@ func createAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.
 	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian.jira.user.group", res.__id)
+		args, err = runtime.ResourceFromRecording("atlassian.jira.group", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -1269,16 +1372,20 @@ func createAtlassianJiraUserGroup(runtime *plugin.Runtime, args map[string]*llx.
 	return res, nil
 }
 
-func (c *mqlAtlassianJiraUserGroup) MqlName() string {
-	return "atlassian.jira.user.group"
+func (c *mqlAtlassianJiraGroup) MqlName() string {
+	return "atlassian.jira.group"
 }
 
-func (c *mqlAtlassianJiraUserGroup) MqlID() string {
+func (c *mqlAtlassianJiraGroup) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianJiraUserGroup) GetId() *plugin.TValue[string] {
+func (c *mqlAtlassianJiraGroup) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAtlassianJiraGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAtlassianConfluence for the atlassian.confluence resource
