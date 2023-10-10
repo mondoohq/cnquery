@@ -19,7 +19,7 @@ require (
 	cloud.google.com/go/recommender v1.11.0
 	cloud.google.com/go/run v1.3.0
 	cloud.google.com/go/serviceusage v1.8.0
-	github.com/aws/smithy-go v1.14.2
+	github.com/aws/smithy-go v1.15.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.16.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
