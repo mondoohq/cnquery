@@ -54,6 +54,30 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGateway,
 		},
+		"azure.subscription.networkService.firewall": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewall,
+		},
+		"azure.subscription.networkService.firewall.ipConfig": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallIpConfig,
+		},
+		"azure.subscription.networkService.firewall.networkRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallNetworkRule,
+		},
+		"azure.subscription.networkService.firewall.applicationRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallApplicationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallApplicationRule,
+		},
+		"azure.subscription.networkService.firewall.natRule": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallNatRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallNatRule,
+		},
+		"azure.subscription.networkService.firewallPolicy": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceFirewallPolicy,
+		},
 		"azure.subscription.networkService.virtualNetworkGateway.ipConfig": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig,
@@ -648,6 +672,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetVirtualNetworkGateways()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway")))
 	},
+	"azure.subscription.networkService.firewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetFirewalls()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall")))
+	},
+	"azure.subscription.networkService.firewallPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetFirewallPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetId()).ToDataRes(types.String)
 	},
@@ -725,6 +755,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetVpnClientConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewall.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.firewall.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewall.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.threatIntelMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetThreatIntelMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetPolicy()).ToDataRes(types.Resource("azure.subscription.networkService.firewallPolicy"))
+	},
+	"azure.subscription.networkService.firewall.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall.ipConfig")))
+	},
+	"azure.subscription.networkService.firewall.managementIpConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetManagementIpConfiguration()).ToDataRes(types.Resource("azure.subscription.networkService.firewall.ipConfig"))
+	},
+	"azure.subscription.networkService.firewall.networkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall.networkRule")))
+	},
+	"azure.subscription.networkService.firewall.natRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetNatRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall.natRule")))
+	},
+	"azure.subscription.networkService.firewall.applicationRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewall).GetApplicationRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall.applicationRule")))
+	},
+	"azure.subscription.networkService.firewall.ipConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.ipConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.ipConfig.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.ipConfig.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetPrivateIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.ipConfig.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewall.ipConfig.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
+	},
+	"azure.subscription.networkService.firewall.ipConfig.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.networkService.firewall.networkRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.networkRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.networkRule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.networkRule.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewall.applicationRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.applicationRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.applicationRule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.applicationRule.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewall.natRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.natRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.natRule.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewall.natRule.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.firewallPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.firewallPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetProperties()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetId()).ToDataRes(types.String)
@@ -2624,6 +2783,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionNetworkService).VirtualNetworkGateways, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).Firewalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).FirewallPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).__id, ok = v.Value.(string)
 			return
@@ -2730,6 +2897,202 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).VpnClientConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewall).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewall.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.threatIntelMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).ThreatIntelMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).Policy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).IpConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.managementIpConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).ManagementIpConfiguration, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.networkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).NetworkRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.natRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).NatRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.applicationRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewall).ApplicationRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewall.ipConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.ipConfig.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallIpConfig).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.networkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewall.networkRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.networkRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.networkRule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.networkRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNetworkRule).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.applicationRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewall.applicationRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.applicationRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.applicationRule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.applicationRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallApplicationRule).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.natRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewall.natRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.natRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.natRule.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewall.natRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallNatRule).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.firewallPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6016,6 +6379,8 @@ type mqlAzureSubscriptionNetworkService struct {
 	NatGateways plugin.TValue[[]interface{}]
 	VirtualNetworks plugin.TValue[[]interface{}]
 	VirtualNetworkGateways plugin.TValue[[]interface{}]
+	Firewalls plugin.TValue[[]interface{}]
+	FirewallPolicies plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionNetworkService creates a new instance of this resource
@@ -6203,6 +6568,38 @@ func (c *mqlAzureSubscriptionNetworkService) GetVirtualNetworkGateways() *plugin
 	})
 }
 
+func (c *mqlAzureSubscriptionNetworkService) GetFirewalls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Firewalls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "firewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.firewalls()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetFirewallPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.FirewallPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "firewallPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.firewallPolicies()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway for the azure.subscription.networkService.virtualNetworkGateway resource
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway struct {
 	MqlRuntime *plugin.Runtime
@@ -6387,6 +6784,521 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetConnections
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetVpnClientConfiguration() *plugin.TValue[interface{}] {
 	return &c.VpnClientConfiguration
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewall for the azure.subscription.networkService.firewall resource
+type mqlAzureSubscriptionNetworkServiceFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Location plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Type plugin.TValue[string]
+	Etag plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+	ProvisioningState plugin.TValue[string]
+	SkuName plugin.TValue[string]
+	SkuTier plugin.TValue[string]
+	ThreatIntelMode plugin.TValue[string]
+	Policy plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy]
+	IpConfigurations plugin.TValue[[]interface{}]
+	ManagementIpConfiguration plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig]
+	NetworkRules plugin.TValue[[]interface{}]
+	NatRules plugin.TValue[[]interface{}]
+	ApplicationRules plugin.TValue[[]interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceFirewall creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) MqlName() string {
+	return "azure.subscription.networkService.firewall"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetThreatIntelMode() *plugin.TValue[string] {
+	return &c.ThreatIntelMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetPolicy() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFirewallPolicy](&c.Policy, func() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall", c.__id, "policy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
+			}
+		}
+
+		return c.policy()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetIpConfigurations() *plugin.TValue[[]interface{}] {
+	return &c.IpConfigurations
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetManagementIpConfiguration() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallIpConfig] {
+	return &c.ManagementIpConfiguration
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetNetworkRules() *plugin.TValue[[]interface{}] {
+	return &c.NetworkRules
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetNatRules() *plugin.TValue[[]interface{}] {
+	return &c.NatRules
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewall) GetApplicationRules() *plugin.TValue[[]interface{}] {
+	return &c.ApplicationRules
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallIpConfig for the azure.subscription.networkService.firewall.ipConfig resource
+type mqlAzureSubscriptionNetworkServiceFirewallIpConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallIpConfigInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Etag plugin.TValue[string]
+	PrivateIpAddress plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+	PublicIpAddress plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
+	Subnet plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallIpConfig creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallIpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallIpConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewall.ipConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) MqlName() string {
+	return "azure.subscription.networkService.firewall.ipConfig"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetPrivateIpAddress() *plugin.TValue[string] {
+	return &c.PrivateIpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall.ipConfig", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewall.ipConfig", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallNetworkRule for the azure.subscription.networkService.firewall.networkRule resource
+type mqlAzureSubscriptionNetworkServiceFirewallNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallNetworkRuleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Etag plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallNetworkRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewall.networkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) MqlName() string {
+	return "azure.subscription.networkService.firewall.networkRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallApplicationRule for the azure.subscription.networkService.firewall.applicationRule resource
+type mqlAzureSubscriptionNetworkServiceFirewallApplicationRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallApplicationRuleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Etag plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallApplicationRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallApplicationRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallApplicationRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewall.applicationRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) MqlName() string {
+	return "azure.subscription.networkService.firewall.applicationRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallNatRule for the azure.subscription.networkService.firewall.natRule resource
+type mqlAzureSubscriptionNetworkServiceFirewallNatRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallNatRuleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Etag plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallNatRule creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallNatRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallNatRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewall.natRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) MqlName() string {
+	return "azure.subscription.networkService.firewall.natRule"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallNatRule) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
+}
+
+// mqlAzureSubscriptionNetworkServiceFirewallPolicy for the azure.subscription.networkService.firewallPolicy resource
+type mqlAzureSubscriptionNetworkServiceFirewallPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceFirewallPolicyInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Location plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Type plugin.TValue[string]
+	Etag plugin.TValue[string]
+	Properties plugin.TValue[interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceFirewallPolicy creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceFirewallPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.firewallPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) MqlName() string {
+	return "azure.subscription.networkService.firewallPolicy"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetProperties() *plugin.TValue[interface{}] {
+	return &c.Properties
 }
 
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig for the azure.subscription.networkService.virtualNetworkGateway.ipConfig resource

@@ -953,6 +953,8 @@ resources:
   azure.subscription.networkService:
     fields:
       bastionHosts: {}
+      firewallPolicies: {}
+      firewalls: {}
       interfaces: {}
       loadBalancers: {}
       natGateways: {}
@@ -1015,6 +1017,89 @@ resources:
       ipConfigurationId: {}
       tunnelIpAddresses: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewall:
+    fields:
+      applicationRules: {}
+      etag: {}
+      id: {}
+      ipConfigurations: {}
+      location: {}
+      managementIpConfiguration: {}
+      name: {}
+      natRules: {}
+      networkRules: {}
+      policy: {}
+      properties: {}
+      provisioningState: {}
+      skuName: {}
+      skuTier: {}
+      tags: {}
+      threatIntelMode: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewall.applicationRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewall.ipConfig:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      privateIpAddress: {}
+      properties: {}
+      publicIpAddress: {}
+      subnet: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewall.natRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewall.networkRule:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.firewallPolicy:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
     min_mondoo_version: latest
     platform:
       name:

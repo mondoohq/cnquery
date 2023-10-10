@@ -188,6 +188,10 @@ private azure.subscription.networkService {
   virtualNetworks() []azure.subscription.networkService.virtualNetwork
   // List of virtual network gateways
   virtualNetworkGateways() []azure.subscription.networkService.virtualNetworkGateway
+  // List of network firewalls
+  firewalls() []azure.subscription.networkService.firewall
+  // List of firewall policies
+  firewallPolicies() []azure.subscription.networkService.firewallPolicy
 }
 
 // Azure Network Virtual Network Gateway
@@ -244,6 +248,116 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   connections() []azure.subscription.networkService.virtualNetworkGateway.connection
   // The VPN client configuration. Only set if P2S for the gateway is configured
   vpnClientConfiguration dict
+}
+
+// Azure Network Firewall
+azure.subscription.networkService.firewall @defaults("id name location") {
+  // Firewall ID
+  id string
+  // Firewall name
+  name string
+  // Firewall location
+  location string
+  // Firewall tags
+  tags map[string]string
+  // Firewall type
+  type string
+  // Firewall etag
+  etag string
+  // Firewall properties
+  properties dict
+  // Firewall provisioning state
+  provisioningState string
+  // Firewall SKU name
+  skuName string
+  // Firewall SKU tier
+  skuTier string
+  // Firewall threat intel mode
+  threatIntelMode string
+  //  The policy, associated with this firewall
+  policy() azure.subscription.networkService.firewallPolicy
+  // List of IP configurations for the firewall
+  ipConfigurations []azure.subscription.networkService.firewall.ipConfig
+  // The IP configuration for the firewall, used for management traffic
+  managementIpConfiguration azure.subscription.networkService.firewall.ipConfig
+  // List of network rules for the firewall
+  networkRules []azure.subscription.networkService.firewall.networkRule
+  // List of NAT rules for the firewall
+  natRules []azure.subscription.networkService.firewall.natRule
+  // List of application rules for the firewall
+  applicationRules []azure.subscription.networkService.firewall.applicationRule
+}
+
+// Azure Network Firewall IP Configuration
+private azure.subscription.networkService.firewall.ipConfig @defaults("id name") {
+  // Firewall IP Configuration id 
+  id string
+  // Firewall IP Configuration name
+  name string
+  // Firewall IP Configuration etag
+  etag string
+  // Firewall IP Configuration private IP address
+  privateIpAddress string
+  // Firewall IP Configuration properties
+  properties dict
+  // The public IP adddress, associated with this IP configuration
+  publicIpAddress() azure.subscription.networkService.ipAddress
+  // The subnet, associated with this IP configuration
+  subnet() azure.subscription.networkService.subnet  
+}
+
+// Azure Network Firewall Network Rule
+private azure.subscription.networkService.firewall.networkRule @defaults("id name") {
+  // Firewall Network Rule id 
+  id string
+  // Firewall Network Rule name
+  name string
+  // Firewall Network Rule etag
+  etag string
+  // Firewall Network Rule properties
+  properties dict
+}
+
+// Azure Network Firewall Application Rule
+private azure.subscription.networkService.firewall.applicationRule @defaults("id name") {
+  // Firewall Application Rule id 
+  id string
+  // Firewall Application Rule name
+  name string
+  // Firewall Application Rule etag
+  etag string
+  // Firewall Application Rule properties
+  properties dict
+}
+
+// Azure Network Firewall NAT Rule
+private azure.subscription.networkService.firewall.natRule @defaults("id name") {
+  // Firewall NAT Rule id 
+  id string
+  // Firewall NAT Rule name
+  name string
+  // Firewall NAT Rule etag
+  etag string
+  // Firewall NAT Rule properties
+  properties dict
+}
+
+// Azure Network Firewall Policy
+azure.subscription.networkService.firewallPolicy @defaults("id name location") {
+  // Firewall ID
+  id string
+  // Virtual Network Gateway name
+  name string
+  // Virtual Network Gateway location
+  location string
+  // Virtual Network Gateway tags
+  tags map[string]string
+  // Virtual Network Gateway resource type
+  type string
+  // Virtual Network Gateway etag
+  etag string
+  // Virtual Network Gateway properties
+  properties dict
 }
 
 // Azure Network Virtual Network Gateway IP Configuration

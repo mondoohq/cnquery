@@ -524,6 +524,291 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := network.NewAzureFirewallsClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.AzureFirewallsClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, fw := range page.Value {
+			applicationRules := []interface{}{}
+			natRules := []interface{}{}
+			networkRules := []interface{}{}
+			ipConfigs := []interface{}{}
+			props, err := convert.JsonToDict(fw.Properties)
+			if err != nil {
+				return nil, err
+			}
+			for _, ipConfig := range fw.Properties.IPConfigurations {
+				props, err := convert.JsonToDict(ipConfig.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.ipConfig",
+					map[string]*llx.RawData{
+						"id":               llx.StringData(convert.ToString(ipConfig.ID)),
+						"name":             llx.StringData(convert.ToString(ipConfig.Name)),
+						"etag":             llx.StringData(convert.ToString(ipConfig.Etag)),
+						"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
+						"properties":       llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				ipConfigs = append(ipConfigs, mqlIpConfig)
+			}
+			for _, natRule := range fw.Properties.NatRuleCollections {
+				props, err := convert.JsonToDict(natRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.natRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(natRule.ID)),
+						"name":       llx.StringData(convert.ToString(natRule.Name)),
+						"etag":       llx.StringData(convert.ToString(natRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				natRules = append(natRules, mqlNatRule)
+			}
+			for _, networkRule := range fw.Properties.NetworkRuleCollections {
+				props, err := convert.JsonToDict(networkRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlNetworkRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.networkRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(networkRule.ID)),
+						"name":       llx.StringData(convert.ToString(networkRule.Name)),
+						"etag":       llx.StringData(convert.ToString(networkRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				networkRules = append(networkRules, mqlNetworkRule)
+			}
+			for _, appRule := range fw.Properties.ApplicationRuleCollections {
+				props, err := convert.JsonToDict(appRule.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlAppRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.applicationRule",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(convert.ToString(appRule.ID)),
+						"name":       llx.StringData(convert.ToString(appRule.Name)),
+						"etag":       llx.StringData(convert.ToString(appRule.Etag)),
+						"properties": llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				applicationRules = append(applicationRules, mqlAppRule)
+			}
+			args := map[string]*llx.RawData{
+				"id":                llx.StringData(convert.ToString(fw.ID)),
+				"name":              llx.StringData(convert.ToString(fw.Name)),
+				"type":              llx.StringData(convert.ToString(fw.Type)),
+				"location":          llx.StringData(convert.ToString(fw.Location)),
+				"tags":              llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
+				"etag":              llx.StringData(convert.ToString(fw.Etag)),
+				"properties":        llx.DictData(props),
+				"skuTier":           llx.StringDataPtr((*string)(fw.Properties.SKU.Tier)),
+				"skuName":           llx.StringDataPtr((*string)(fw.Properties.SKU.Name)),
+				"provisioningState": llx.StringDataPtr((*string)(fw.Properties.ProvisioningState)),
+				"threatIntelMode":   llx.StringDataPtr((*string)(fw.Properties.ThreatIntelMode)),
+				"natRules":          llx.ArrayData(natRules, types.ResourceLike),
+				"applicationRules":  llx.ArrayData(applicationRules, types.ResourceLike),
+				"networkRules":      llx.ArrayData(networkRules, types.ResourceLike),
+				"ipConfigurations":  llx.ArrayData(ipConfigs, types.ResourceLike),
+			}
+			if fw.Properties.ManagementIPConfiguration != nil {
+				ipConfig := fw.Properties.ManagementIPConfiguration
+				props, err := convert.JsonToDict(ipConfig.Properties)
+				if err != nil {
+					return nil, err
+				}
+				mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall.ipConfig",
+					map[string]*llx.RawData{
+						"id":               llx.StringData(convert.ToString(ipConfig.ID)),
+						"name":             llx.StringData(convert.ToString(ipConfig.Name)),
+						"etag":             llx.StringData(convert.ToString(ipConfig.Etag)),
+						"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
+						"properties":       llx.DictData(props),
+					})
+				if err != nil {
+					return nil, err
+				}
+				args["managementIpConfiguration"] = llx.ResourceData(mqlIpConfig, "managementIpConfiguration")
+			} else {
+				args["managementIpConfiguration"] = llx.NilData
+			}
+			mqlFw, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.firewall", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFw)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	fwp := propsDict["firewallPolicy"]
+	if fwp == nil {
+		return nil, errors.New("no firewall policy is associated with the ip configuration")
+	}
+	fwpDict := fwp.(map[string]interface{})
+	id := fwpDict["id"]
+	if id != nil {
+		strId := id.(string)
+		azureId, err := ParseResourceID(strId)
+		if err != nil {
+			return nil, err
+		}
+		client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+		policyName, err := azureId.Component("firewallPolicies")
+		if err != nil {
+			return nil, err
+		}
+		fwp, err := client.Get(ctx, azureId.ResourceGroup, policyName, &network.FirewallPoliciesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		return azureFirewallPolicyToMql(a.MqlRuntime, fwp.FirewallPolicy)
+	}
+	return nil, errors.New("no firewall policy is associated with the ip configuration")
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	publicIpAddress := propsDict["publicIPAddress"]
+	if publicIpAddress == nil {
+		return nil, errors.New("no public ip address is associated with the ip configuration")
+	}
+	ipAddressDict := publicIpAddress.(map[string]interface{})
+	id := ipAddressDict["id"]
+	if id != nil {
+		strId := id.(string)
+		azureId, err := ParseResourceID(strId)
+		if err != nil {
+			return nil, err
+		}
+		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+		ipAddressName, err := azureId.Component("publicIPAddresses")
+		if err != nil {
+			return nil, err
+		}
+		ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+	}
+	return nil, errors.New("no public ip address is associated with the ip configuration")
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	subnet := propsDict["subnet"]
+	if subnet == nil {
+		return nil, errors.New("no subnet is associated with the ip configuration")
+	}
+	subnetDict := subnet.(map[string]interface{})
+	id := subnetDict["id"]
+	if id != nil {
+		strId := id.(string)
+		azureId, err := ParseResourceID(strId)
+		if err != nil {
+			return nil, err
+		}
+		client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+		vnName, err := azureId.Component("virtualNetworks")
+		if err != nil {
+			return nil, err
+		}
+		subnetName, err := azureId.Component("subnets")
+		if err != nil {
+			return nil, err
+		}
+		subnet, err := client.Get(ctx, azureId.ResourceGroup, vnName, subnetName, &network.SubnetsClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		return azureSubnetToMql(a.MqlRuntime, subnet.Subnet)
+	}
+	return nil, errors.New("no subnet is associated with the ip configuration")
+}
+
+func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+	client, err := network.NewFirewallPoliciesClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.FirewallPoliciesClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, fwp := range page.Value {
+			if fwp != nil {
+				mqlFw, err := azureFirewallPolicyToMql(a.MqlRuntime, *fwp)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlFw)
+			}
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -1005,6 +1290,52 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) id() (
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewall) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallApplicationRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallNetworkRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallNatRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolicy) (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
+	props, err := convert.JsonToDict(fwp.Properties)
+	if err != nil {
+		return nil, err
+	}
+	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewallPolicy",
+		map[string]*llx.RawData{
+			"id":         llx.StringData(convert.ToString(fwp.ID)),
+			"name":       llx.StringData(convert.ToString(fwp.Name)),
+			"type":       llx.StringData(convert.ToString(fwp.Type)),
+			"location":   llx.StringData(convert.ToString(fwp.Location)),
+			"tags":       llx.MapData(convert.PtrMapStrToInterface(fwp.Tags), types.String),
+			"etag":       llx.StringData(convert.ToString(fwp.Etag)),
+			"properties": llx.DictData(props),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlFw.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
 }
 
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
