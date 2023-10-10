@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.5.1
-	golang.org/x/oauth2 v0.12.0
+	golang.org/x/oauth2 v0.13.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -261,13 +261,13 @@ require (
 	go.tmz.dev/musttag v0.7.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
