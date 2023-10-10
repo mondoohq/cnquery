@@ -300,7 +300,7 @@ private azure.subscription.networkService.firewall.ipConfig @defaults("id name")
   privateIpAddress string
   // Firewall IP Configuration properties
   properties dict
-  // The public IP adddress, associated with this IP configuration
+  // The public IP address, associated with this IP configuration
   publicIpAddress() azure.subscription.networkService.ipAddress
   // The subnet, associated with this IP configuration
   subnet() azure.subscription.networkService.subnet  
