@@ -163,7 +163,6 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 			}
 		}
 	}
-
 }
 
 func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
@@ -474,6 +473,18 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			runtime.Close()
 			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
+			return // adding this here as a compiler hint to stop warning about nil-dereferences
+		}
+
+		if cliRes.Asset == nil {
+			log.Warn().Err(err).Msg("failed to discover assets after processing CLI arguments")
+		} else {
+			assetRuntime, err := providers.Coordinator.RuntimeFor(cliRes.Asset, runtime)
+			if err != nil {
+				log.Warn().Err(err).Msg("failed to get runtime for an asset that was detected after parsing the CLI")
+			} else {
+				runtime = assetRuntime
+			}
 		}
 
 		run(cc, runtime, cliRes)
