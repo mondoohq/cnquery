@@ -9,16 +9,33 @@ import (
 	"io"
 	"regexp"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 var (
 	LINUX_PS_REGEX = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)?$`)
 	UNIX_PS_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+
+	// "lrwx------ 1 0 0 64 Dec  6 13:56 /proc/1/fd/12 -> socket:[37364]"
+	reFindSockets = regexp.MustCompile(
+		"^[lrwx-]+\\.?\\s+" +
+			"\\d+\\s+" +
+			"\\d+\\s+" + // uid
+			"\\d+\\s+" + // gid
+			"\\d+\\s+" +
+			"[^ ]+\\s+" + // month, e.g. Dec
+			"\\d+\\s+" + // day
+			"\\d+:\\d+\\s+" + // time
+			"/proc/(\\d+)/fd/\\d+\\s+" + // path
+			"->\\s+" +
+			".*socket:\\[(\\d+)\\].*\\s*") // target
 )
 
 type ProcessEntry struct {
@@ -197,6 +214,39 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 	return ps, nil
 }
 
+// ListSocketInodesByProcess returns a map with a pid as key and a list of socket inodes as value
+func (upm *UnixProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
+	startTime := time.Now()
+	c, err := upm.conn.RunCommand("find /proc -maxdepth 4 -path '/proc/*/fd/*' -exec ls -n {} \\;")
+	if err != nil {
+		return nil, fmt.Errorf("processes> could not run command: %v", err)
+	}
+
+	processesInodesByPid := map[int64]plugin.TValue[[]int64]{}
+	scanner := bufio.NewScanner(c.Stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		pid, inode, err := ParseLinuxFindLine(line)
+		if err != nil || (pid == 0 && inode == 0) {
+			pluginValue := processesInodesByPid[pid]
+			pluginValue.Error = err
+			processesInodesByPid[pid] = pluginValue
+			continue
+		}
+		pluginValue := plugin.TValue[[]int64]{}
+		if _, ok := processesInodesByPid[pid]; ok {
+			pluginValue = processesInodesByPid[pid]
+			pluginValue.Data = append(pluginValue.Data, inode)
+		} else {
+			pluginValue.Data = []int64{inode}
+		}
+		processesInodesByPid[pid] = pluginValue
+	}
+	log.Debug().Int64("duration (ms)", time.Duration(time.Since(startTime)).Milliseconds()).Msg("parsing find for process socket inodes")
+
+	return processesInodesByPid, nil
+}
+
 func (upm *UnixProcessManager) Exists(pid int64) (bool, error) {
 	process, err := upm.Process(pid)
 	if err != nil {
@@ -223,4 +273,29 @@ func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
 	}
 
 	return nil, nil
+}
+
+func ParseLinuxFindLine(line string) (int64, int64, error) {
+	if strings.HasSuffix(line, "Permission denied") || strings.HasSuffix(line, "No such file or directory") {
+		return 0, 0, nil
+	}
+
+	m := reFindSockets.FindStringSubmatch(line)
+	if len(m) == 0 {
+		return 0, 0, nil
+	}
+
+	pid, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
+		return 0, 0, err
+	}
+
+	inode, err := strconv.ParseInt(m[2], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse socket inode " + m[2])
+		return 0, 0, err
+	}
+
+	return pid, inode, nil
 }

@@ -84,20 +84,6 @@ var reLinuxProcNet = regexp.MustCompile(
 		"", // lots of other stuff if we want it...
 )
 
-// "lrwx------ 1 0 0 64 Dec  6 13:56 /proc/1/fd/12 -> socket:[37364]"
-var reFindSockets = regexp.MustCompile(
-	"^[lrwx-]+\\s+" +
-		"\\d+\\s+" +
-		"\\d+\\s+" + // uid
-		"\\d+\\s+" + // gid
-		"\\d+\\s+" +
-		"[^ ]+\\s+" + // month, e.g. Dec
-		"\\d+\\s+" + // day
-		"\\d+:\\d+\\s+" + // time
-		"/proc/(\\d+)/fd/\\d+\\s+" + // path
-		"->\\s+" +
-		".*socket:\\[(\\d+)\\].*\\s*") // target
-
 var TCP_STATES = map[int64]string{
 	1:  "established",
 	2:  "syn sent",
@@ -249,63 +235,11 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 		return nil, err
 	}
 
-	conn := p.MqlRuntime.Connection.(shared.Connection)
-	res := map[int64]*mqlProcess{}
-	if len(res) == 0 {
-		c, err := conn.RunCommand("find /proc -maxdepth 4 -path '/proc/*/fd/*' -exec ls -n {} \\;")
-		if err != nil {
-			p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
-				State: plugin.StateIsSet,
-				Error: errors.New("processes> could not run command: " + err.Error()),
-			}
-			return nil, p.processes2ports.Error
-		}
-
-		processesBySocket := map[int64]*mqlProcess{}
-		scanner := bufio.NewScanner(c.Stdout)
-		for scanner.Scan() {
-			line := scanner.Text()
-			pid, inode, err := parseLinuxFindLine(line)
-			if err != nil || (pid == 0 && inode == 0) {
-				continue
-			}
-
-			processesBySocket[inode] = processes.ByPID[pid]
-		}
-		processes.BySocketID = processesBySocket
-		res = processesBySocket
-	}
-
 	p.processes2ports = plugin.TValue[map[int64]*mqlProcess]{
-		Data:  res,
+		Data:  processes.BySocketID,
 		State: plugin.StateIsSet,
 	}
-	return res, err
-}
-
-func parseLinuxFindLine(line string) (int64, int64, error) {
-	if strings.HasSuffix(line, "Permission denied") || strings.HasSuffix(line, "No such file or directory") {
-		return 0, 0, nil
-	}
-
-	m := reFindSockets.FindStringSubmatch(line)
-	if len(m) == 0 {
-		return 0, 0, nil
-	}
-
-	pid, err := strconv.ParseInt(m[1], 10, 64)
-	if err != nil {
-		log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
-		return 0, 0, err
-	}
-
-	inode, err := strconv.ParseInt(m[2], 10, 64)
-	if err != nil {
-		log.Error().Err(err).Msg("cannot parse socket inode " + m[2])
-		return 0, 0, err
-	}
-
-	return pid, inode, nil
+	return processes.BySocketID, err
 }
 
 // See:

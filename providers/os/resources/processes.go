@@ -134,6 +134,12 @@ func (p *mqlProcesses) list() ([]interface{}, error) {
 	}
 	log.Debug().Int("processes", len(processes)).Msg("mql[processes]> running processes")
 
+	processesInodesByPid, err := opm.ListSocketInodesByProcess()
+	if err != nil {
+		log.Warn().Err(err).Msg("mql[processes]> could not retrieve processes socket inodes")
+		return nil, fmt.Errorf("could not retrieve processes socket inodes")
+	}
+
 	procs := make([]interface{}, len(processes))
 
 	for i := range processes {
@@ -149,10 +155,21 @@ func (p *mqlProcesses) list() ([]interface{}, error) {
 			return nil, err
 		}
 
+		socketInodes := []int64{}
+		var socketInodesErr error
+		if _, ok := processesInodesByPid[proc.Pid]; ok {
+			socketInodes = processesInodesByPid[proc.Pid].Data
+			socketInodesErr = processesInodesByPid[proc.Pid].Error
+		} else {
+			if len(proc.SocketInodes) > 0 {
+				socketInodes = proc.SocketInodes
+				socketInodesErr = proc.SocketInodesError
+			}
+		}
 		process := o.(*mqlProcess)
 		process.SocketInodes = plugin.TValue[[]int64]{
-			Data:  proc.SocketInodes,
-			Error: proc.SocketInodesError,
+			Data:  socketInodes,
+			Error: socketInodesErr,
 			State: plugin.StateIsSet,
 		}
 

@@ -6,6 +6,7 @@ package processes
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
@@ -26,6 +27,7 @@ type OSProcessManager interface {
 	Exists(pid int64) (bool, error)
 	Process(pid int64) (*OSProcess, error)
 	List() ([]*OSProcess, error)
+	ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error)
 }
 
 func ResolveManager(conn shared.Connection) (OSProcessManager, error) {

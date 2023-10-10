@@ -4,9 +4,12 @@
 package processes_test
 
 import (
+	"bufio"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/processes"
@@ -98,4 +101,53 @@ func TestUnixPSProcessParser(t *testing.T) {
 	assert.Equal(t, "[Timer]", m[20].Command, "process command detected")
 	assert.Equal(t, int64(88), m[20].Pid, "process pid detected")
 	assert.Equal(t, int64(0), m[20].Uid, "process uid detected")
+}
+
+func TestParseLinuxFind(t *testing.T) {
+	fi, err := os.Open("./testdata/find_nginx_container.txt")
+	require.NoError(t, err)
+	defer fi.Close()
+
+	scanner := bufio.NewScanner(fi)
+	scanner.Scan()
+	line := scanner.Text()
+	pid, inode, err := processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+
+	scanner.Scan()
+	line = scanner.Text()
+	pid, inode, err = processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+
+	scanner.Scan()
+	line = scanner.Text()
+	pid, inode, err = processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), pid)
+	require.Equal(t, int64(41866685), inode)
+
+	scanner.Scan()
+	line = scanner.Text()
+	pid, inode, err = processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+
+	scanner.Scan()
+	line = scanner.Text()
+	pid, inode, err = processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(0), pid)
+	require.Equal(t, int64(0), inode)
+
+	scanner.Scan()
+	line = scanner.Text()
+	pid, inode, err = processes.ParseLinuxFindLine(line)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), pid)
+	require.Equal(t, int64(18472), inode)
 }
