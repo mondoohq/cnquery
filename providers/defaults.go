@@ -8,7 +8,10 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 )
 
-const DefaultOsID = "go.mondoo.com/cnquery/v9/providers/os"
+const (
+	DefaultOsID           = "go.mondoo.com/cnquery/v9/providers/os"
+	DeprecatedDefaultOsID = "go.mondoo.com/cnquery/providers/os" // temp to migrate v9 beta users
+)
 
 var defaultRuntime *Runtime
 
