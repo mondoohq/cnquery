@@ -953,24 +953,24 @@ resources:
   azure.subscription.networkService:
     fields:
       applicationSecurityGroups:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       bastionHosts: {}
       firewallPolicies:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       firewalls:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       interfaces: {}
       loadBalancers:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       natGateways:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       publicIpAddresses: {}
       securityGroups: {}
       subscriptionId: {}
       virtualNetworkGateways:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       virtualNetworks:
-        min_mondoo_version: 9.0.4
+        min_mondoo_version: 9.0.3
       watchers: {}
     is_private: true
     min_mondoo_version: latest
@@ -986,7 +986,7 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -998,7 +998,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1024,7 +1024,7 @@ resources:
       id: {}
       peerWeight: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1036,7 +1036,7 @@ resources:
       ipConfigurationId: {}
       tunnelIpAddresses: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1059,7 +1059,7 @@ resources:
       tags: {}
       threatIntelMode: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1070,7 +1070,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1084,7 +1084,7 @@ resources:
       publicIpAddress: {}
       subnet: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1095,7 +1095,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1106,7 +1106,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1123,7 +1123,7 @@ resources:
       provisioningState: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1136,7 +1136,7 @@ resources:
       type: {}
       zones: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1148,7 +1148,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1160,7 +1160,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1208,7 +1208,7 @@ resources:
       sku: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1220,7 +1220,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1236,7 +1236,7 @@ resources:
       tags: {}
       type: {}
       zones: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1248,7 +1248,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1260,7 +1260,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1302,7 +1302,7 @@ resources:
       natGateway: {}
       properties: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1316,7 +1316,7 @@ resources:
       subnets: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1348,7 +1348,7 @@ resources:
       vpnClientConfiguration: {}
       vpnGatewayGeneration: {}
       vpnType: {}
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1360,7 +1360,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
@@ -1372,7 +1372,7 @@ resources:
       privateIpAddress: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.4
+    min_mondoo_version: 9.0.3
     platform:
       name:
       - azure
