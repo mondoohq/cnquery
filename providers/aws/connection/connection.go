@@ -6,6 +6,7 @@ package connection
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -29,6 +30,34 @@ type AwsConnection struct {
 	profile           string
 	PlatformOverride  string
 	connectionOptions map[string]string
+	Filters           DiscoveryFilters
+	RegionLimits      []string
+}
+
+type DiscoveryFilters struct {
+	Ec2DiscoveryFilters     Ec2DiscoveryFilters
+	EcrDiscoveryFilters     EcrDiscoveryFilters
+	EcsDiscoveryFilters     EcsDiscoveryFilters
+	GeneralDiscoveryFilters GeneralResourceDiscoveryFilters
+}
+
+type GeneralResourceDiscoveryFilters struct {
+	Tags    map[string]string
+	Regions []string
+}
+
+type Ec2DiscoveryFilters struct {
+	Regions     []string
+	Tags        map[string]string
+	InstanceIds []string
+}
+type EcrDiscoveryFilters struct {
+	Tags []string
+}
+type EcsDiscoveryFilters struct {
+	OnlyRunningContainers bool
+	DiscoverImages        bool
+	DiscoverInstances     bool
 }
 
 func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *AwsConnection {
@@ -77,7 +106,38 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.accountId = *identity.Account
 	c.profile = asset.Options["profile"]
 	c.connectionOptions = asset.Options
+	c.Filters = parseOptsToFilters(conf.Discover.Filter)
+	c.RegionLimits = c.Filters.GeneralDiscoveryFilters.Regions
 	return c, nil
+}
+
+func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
+	d := DiscoveryFilters{
+		Ec2DiscoveryFilters:     Ec2DiscoveryFilters{Tags: map[string]string{}},
+		EcsDiscoveryFilters:     EcsDiscoveryFilters{},
+		EcrDiscoveryFilters:     EcrDiscoveryFilters{Tags: []string{}},
+		GeneralDiscoveryFilters: GeneralResourceDiscoveryFilters{Tags: map[string]string{}},
+	}
+	for k, v := range opts {
+		switch {
+		case strings.HasPrefix(k, "ec2:tag:"):
+			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix("ec2:tag:", k)] = v
+		case k == "ec2:region":
+			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
+		case k == "all:region":
+			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
+		case k == "region":
+			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
+			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
+		case k == "instance-id":
+			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, v)
+		case strings.HasPrefix(k, "all:tag:"):
+			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix("all:tag:", k)] = v
+		case k == "ecr:tag":
+			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, v)
+		}
+	}
+	return d
 }
 
 func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
@@ -229,6 +289,12 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	}
 	log.Debug().Msg("no region cache found. fetching regions")
 
+	if len(h.RegionLimits) > 0 {
+		log.Debug().Interface("regions", h.RegionLimits).Msg("using region limits")
+		// cache the regions as part of the provider instance
+		h.clientcache.Store("_regions", &CacheEntry{Data: h.RegionLimits})
+		return h.RegionLimits, nil
+	}
 	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
 	regions := []string{}
 	svc := h.Ec2("us-east-1")
