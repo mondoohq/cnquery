@@ -21,7 +21,7 @@
       "debugAdapter": "dlv-dap",
       "remotePath": "${workspaceFolder}",
       "port": 12345,
-      "host": "35.241.232.183",
+      "host": "34.79.179.217",
       "substitutePath":[
         {
           "from": "${workspaceFolder}",

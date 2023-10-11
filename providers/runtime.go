@@ -208,10 +208,21 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		runtime: r,
 	}
 
+	connTypeForDetection := asset.Connections[0].Type
 	var err error
 	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
 	if err != nil {
 		return err
+	}
+	connTypeForQueries := r.Provider.Connection.Asset.Connections[0].Type
+
+	// Make sure the provider which is needed to later execute the query is actually present
+	// E.g. for snapshot scanning, we start with a cloud provider and then switch to the os provider
+	if connTypeForDetection != connTypeForQueries {
+		log.Debug().Msgf("connection type changed from '%s' to '%s'", connTypeForDetection, connTypeForQueries)
+		usedConnection := r.Provider.Connection
+		r.DetectProvider(r.Provider.Connection.Asset)
+		r.Provider.Connection = usedConnection
 	}
 	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	return nil
