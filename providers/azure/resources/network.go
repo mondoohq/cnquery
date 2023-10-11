@@ -1367,6 +1367,10 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) id() (string, error
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceAppSecurityGroup) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mqlAzureSubscriptionNetworkServiceFirewall, error) {
 	applicationRules := []interface{}{}
 	natRules := []interface{}{}
