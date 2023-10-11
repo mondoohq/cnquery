@@ -1405,7 +1405,7 @@ private aws.redshift.cluster @defaults("arn") {
   dbName string
   // Whether the cluster is encrypted at rest
   encrypted bool
-  // Whether or not enhanced VPC routing is enabled for the cluster traffic
+  // Whether enhanced VPC routing is enabled for the cluster traffic
   enhancedVpcRouting bool
   // Logging configuration for the cluster
   logging() dict
