@@ -1694,7 +1694,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
   id string
   // Information about the volume attachments
   attachments []dict
-  // Whether volume is encrypted
+  // Whether the volume is encrypted
   encrypted bool
   // State of the volume (creating, available, in-use, etc.) 
   state string
