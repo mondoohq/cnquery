@@ -1275,7 +1275,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Whether or not the instance is publicly accessible
+  // Whether the instance is publicly accessible
   publiclyAccessible bool
   // List of log types the instance is configured to export to cloudwatch logs
   enabledCloudwatchLogsExports []string
