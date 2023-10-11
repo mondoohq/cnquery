@@ -1423,7 +1423,7 @@ private aws.redshift.cluster @defaults("arn") {
   parameters() []dict
   // Weekly time range for system maintenance (in UTC)
   preferredMaintenanceWindow string
-  // Whether or not cluster is publicly accessible
+  // Whether the cluster is publicly accessible
   publiclyAccessible bool
   // Region where the cluster exists
   region string
