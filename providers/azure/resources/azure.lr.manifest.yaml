@@ -1093,11 +1093,15 @@ resources:
       - azure
   azure.subscription.networkService.firewallPolicy:
     fields:
+      basePolicy: {}
+      childPolicies: {}
       etag: {}
+      firewalls: {}
       id: {}
       location: {}
       name: {}
       properties: {}
+      provisioningState: {}
       tags: {}
       type: {}
     min_mondoo_version: latest

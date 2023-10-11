@@ -344,20 +344,28 @@ private azure.subscription.networkService.firewall.natRule @defaults("id name") 
 
 // Azure Network Firewall Policy
 azure.subscription.networkService.firewallPolicy @defaults("id name location") {
-  // Firewall ID
+  // Firewall Policy ID
   id string
-  // Virtual Network Gateway name
+  // Firewall Policy name
   name string
-  // Virtual Network Gateway location
+  // Firewall Policy location
   location string
-  // Virtual Network Gateway tags
+  // Firewall Policy tags
   tags map[string]string
-  // Virtual Network Gateway resource type
+  // Firewall Policy type
   type string
-  // Virtual Network Gateway etag
+  // Firewall Policy etag
   etag string
-  // Virtual Network Gateway properties
+  // Firewall Policy properties
   properties dict
+  // Firewall Policy provisioning state
+  provisioningState string
+  // The parent firewall policy from which rules are inherited
+  basePolicy() azure.subscription.networkService.firewallPolicy
+  // List of child policies this policy is associated with
+  childPolicies() []azure.subscription.networkService.firewallPolicy
+  // List of firewalls the policy is associated with
+  firewalls() []azure.subscription.networkService.firewall
 }
 
 // Azure Network Virtual Network Gateway IP Configuration

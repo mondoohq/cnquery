@@ -885,6 +885,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.firewallPolicy.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.firewallPolicy.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.firewallPolicy.basePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetBasePolicy()).ToDataRes(types.Resource("azure.subscription.networkService.firewallPolicy"))
+	},
+	"azure.subscription.networkService.firewallPolicy.childPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetChildPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewallPolicy")))
+	},
+	"azure.subscription.networkService.firewallPolicy.firewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).GetFirewalls()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall")))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetId()).ToDataRes(types.String)
 	},
@@ -3093,6 +3105,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.networkService.firewallPolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.basePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).BasePolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.childPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).ChildPolicies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.firewallPolicy.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy).Firewalls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7234,6 +7262,10 @@ type mqlAzureSubscriptionNetworkServiceFirewallPolicy struct {
 	Type plugin.TValue[string]
 	Etag plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
+	ProvisioningState plugin.TValue[string]
+	BasePolicy plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy]
+	ChildPolicies plugin.TValue[[]interface{}]
+	Firewalls plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionNetworkServiceFirewallPolicy creates a new instance of this resource
@@ -7299,6 +7331,58 @@ func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetEtag() *plugin.TVa
 
 func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetProperties() *plugin.TValue[interface{}] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetBasePolicy() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFirewallPolicy] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFirewallPolicy](&c.BasePolicy, func() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy", c.__id, "basePolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFirewallPolicy), nil
+			}
+		}
+
+		return c.basePolicy()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetChildPolicies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ChildPolicies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy", c.__id, "childPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.childPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceFirewallPolicy) GetFirewalls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Firewalls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.firewallPolicy", c.__id, "firewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.firewalls()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig for the azure.subscription.networkService.virtualNetworkGateway.ipConfig resource
