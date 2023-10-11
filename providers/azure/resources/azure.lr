@@ -192,6 +192,8 @@ private azure.subscription.networkService {
   firewalls() []azure.subscription.networkService.firewall
   // List of firewall policies
   firewallPolicies() []azure.subscription.networkService.firewallPolicy
+  // List of application security groups
+  applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
 }
 
 // Azure Network Virtual Network Gateway
@@ -248,6 +250,24 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   connections() []azure.subscription.networkService.virtualNetworkGateway.connection
   // The VPN client configuration. Only set if P2S for the gateway is configured
   vpnClientConfiguration dict
+}
+
+// Azure Network Application Security Group
+azure.subscription.networkService.appSecurityGroup @defaults("id name location") {
+  // Application Security Group ID
+  id string
+  // Application Security Group name
+  name string
+  // Application Security Group location
+  location string
+  // Application Security Group tags
+  tags map[string]string
+  // Application Security Group type
+  type string
+  // Application Security Group etag
+  etag string
+  // Application Security Group properties
+  properties dict
 }
 
 // Azure Network Firewall

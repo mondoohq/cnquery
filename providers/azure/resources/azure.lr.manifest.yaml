@@ -952,6 +952,7 @@ resources:
       - azure
   azure.subscription.networkService:
     fields:
+      applicationSecurityGroups: {}
       bastionHosts: {}
       firewallPolicies: {}
       firewalls: {}
@@ -966,6 +967,32 @@ resources:
       virtualNetworks: {}
       watchers: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.appSecurityGroup:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.appSecuritysGroup:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
     min_mondoo_version: latest
     platform:
       name:

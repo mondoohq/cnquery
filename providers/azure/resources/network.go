@@ -749,6 +749,48 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewApplicationSecurityGroupsClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.ApplicationSecurityGroupsClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, asg := range page.Value {
+			props, err := convert.JsonToDict(asg.Properties)
+			if err != nil {
+				return nil, err
+			}
+			mqlAppSecGroup, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.appSecurityGroup",
+				map[string]*llx.RawData{
+					"id":         llx.StringData(convert.ToString(asg.ID)),
+					"name":       llx.StringData(convert.ToString(asg.Name)),
+					"type":       llx.StringData(convert.ToString(asg.Type)),
+					"location":   llx.StringData(convert.ToString(asg.Location)),
+					"tags":       llx.MapData(convert.PtrMapStrToInterface(asg.Tags), types.String),
+					"etag":       llx.StringData(convert.ToString(asg.Etag)),
+					"properties": llx.DictData(props),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAppSecGroup)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
