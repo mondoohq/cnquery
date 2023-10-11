@@ -256,17 +256,6 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"location":    llx.StringData(convert.ToString(entry.Location)),
 				})
-			// alert, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.activitylog.alert",
-			// 	"conditions", conditionsDict,
-			// 	"id", convert.ToString(entry.ID),
-			// 	"name", convert.ToString(entry.Name),
-			// 	"actions", actionsDict,
-			// 	"description", convert.ToString(entry.Properties.Description),
-			// 	"scopes", convert.PtrSliceToInterface(entry.Properties.Scopes),
-			// 	"type", convert.ToString(entry.Type),
-			// 	"tags", convert.PtrMapStrToInterface(entry.Tags),
-			// 	"location", convert.ToString(entry.Location),
-			// )
 			if err != nil {
 				return nil, err
 			}
