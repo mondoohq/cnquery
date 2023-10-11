@@ -121,8 +121,7 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAtlassianJira) serverInfo() (*mqlAtlassianJiraServerInfo, error) {
-	fmt.Println("Hello serverInfo")
+func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
 	info, response, err := jira.Server.Info(context.Background())
@@ -132,19 +131,14 @@ func (a *mqlAtlassianJira) serverInfo() (*mqlAtlassianJiraServerInfo, error) {
 	if response.Status != "200 OK" {
 		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
-	fmt.Println(info.BaseURL)
-	fmt.Println(info.ServerTitle)
 	res, err := CreateResource(a.MqlRuntime, "atlassian.jira.serverInfo",
 		map[string]*llx.RawData{
 			"baseUrl":        llx.StringData(info.BaseURL),
-			"buildNumber":    llx.IntData(int64(info.BuildNumber)),
 			"serverTitle":    llx.StringData(info.ServerTitle),
+			"buildNumber":    llx.IntData(int64(info.BuildNumber)),
 			"deploymentType": llx.StringData(info.DeploymentType),
 		})
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	return res.(*mqlAtlassianJiraServerInfo), nil
+	return res.(*mqlAtlassianJiraServerInfo), err
 }
 
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {

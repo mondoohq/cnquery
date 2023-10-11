@@ -79,6 +79,8 @@ resources:
       groups: {}
       projects: {}
       serverInfo: {}
+      serverInfos: {}
+      serverinfo: {}
       users: {}
     min_mondoo_version: latest
   atlassian.jira.applicatonRole:

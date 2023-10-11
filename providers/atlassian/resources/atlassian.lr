@@ -74,14 +74,14 @@ atlassian.jira {
   // Jira groups
   groups() []atlassian.jira.group
   // Jira server info
-  serverInfo() atlassian.jira.serverInfo
+  serverInfos() atlassian.jira.serverInfo
 }
 
 atlassian.jira.serverInfo @defaults("serverTitle") {
   // baseUrl
   baseUrl string 
   // buildNumber
-  buildNumber string
+  buildNumber int
   // serverTitle
   serverTitle string
   // deploymentType

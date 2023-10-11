@@ -7,7 +7,6 @@ package resources
 
 import (
 	"errors"
-	"fmt"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -221,14 +220,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.group")))
 	},
-	"atlassian.jira.serverInfo": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJira).GetServerInfo()).ToDataRes(types.Resource("atlassian.jira.serverInfo"))
+	"atlassian.jira.serverInfos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetServerInfos()).ToDataRes(types.Resource("atlassian.jira.serverInfo"))
 	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
 	},
 	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraServerInfo).GetBuildNumber()).ToDataRes(types.String)
+		return (r.(*mqlAtlassianJiraServerInfo).GetBuildNumber()).ToDataRes(types.Int)
 	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetServerTitle()).ToDataRes(types.String)
@@ -449,8 +448,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJira).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"atlassian.jira.serverInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJira).ServerInfo, ok = plugin.RawToTValue[*mqlAtlassianJiraServerInfo](v.Value, v.Error)
+	"atlassian.jira.serverInfos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).ServerInfos, ok = plugin.RawToTValue[*mqlAtlassianJiraServerInfo](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -462,7 +461,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraServerInfo).BuildNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAtlassianJiraServerInfo).BuildNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1079,7 +1078,7 @@ type mqlAtlassianJira struct {
 	Users plugin.TValue[[]interface{}]
 	Projects plugin.TValue[[]interface{}]
 	Groups plugin.TValue[[]interface{}]
-	ServerInfo plugin.TValue[*mqlAtlassianJiraServerInfo]
+	ServerInfos plugin.TValue[*mqlAtlassianJiraServerInfo]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -1167,11 +1166,10 @@ func (c *mqlAtlassianJira) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAtlassianJira) GetServerInfo() *plugin.TValue[*mqlAtlassianJiraServerInfo] {
-  fmt.Println("GetServerInfo")
-	return plugin.GetOrCompute[*mqlAtlassianJiraServerInfo](&c.ServerInfo, func() (*mqlAtlassianJiraServerInfo, error) {
+func (c *mqlAtlassianJira) GetServerInfos() *plugin.TValue[*mqlAtlassianJiraServerInfo] {
+	return plugin.GetOrCompute[*mqlAtlassianJiraServerInfo](&c.ServerInfos, func() (*mqlAtlassianJiraServerInfo, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "serverInfo")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "serverInfos")
 			if err != nil {
 				return nil, err
 			}
@@ -1180,7 +1178,7 @@ func (c *mqlAtlassianJira) GetServerInfo() *plugin.TValue[*mqlAtlassianJiraServe
 			}
 		}
 
-		return c.serverInfo()
+		return c.serverInfos()
 	})
 }
 
@@ -1190,7 +1188,7 @@ type mqlAtlassianJiraServerInfo struct {
 	__id string
 	// optional: if you define mqlAtlassianJiraServerInfoInternal it will be used here
 	BaseUrl plugin.TValue[string]
-	BuildNumber plugin.TValue[string]
+	BuildNumber plugin.TValue[int64]
 	ServerTitle plugin.TValue[string]
 	DeploymentType plugin.TValue[string]
 }
@@ -1231,7 +1229,7 @@ func (c *mqlAtlassianJiraServerInfo) GetBaseUrl() *plugin.TValue[string] {
 	return &c.BaseUrl
 }
 
-func (c *mqlAtlassianJiraServerInfo) GetBuildNumber() *plugin.TValue[string] {
+func (c *mqlAtlassianJiraServerInfo) GetBuildNumber() *plugin.TValue[int64] {
 	return &c.BuildNumber
 }
 
