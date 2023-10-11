@@ -1231,10 +1231,10 @@ resources:
     fields:
       arn: {}
       availabilityZone:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       backupPolicy: {}
       createdAt:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       encrypted: {}
       id: {}
       kmsKey: {}
@@ -1463,11 +1463,11 @@ resources:
     fields:
       arn: {}
       domainId:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       domainName:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       elasticsearchVersion:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       encryptionAtRestEnabled: {}
       endpoint: {}
       name: {}
@@ -1920,39 +1920,39 @@ resources:
       arn: {}
       automatedSnapshotRetentionPeriod: {}
       availabilityZone:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       clusterParameterGroupNames: {}
       clusterRevisionNumber:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       clusterStatus:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       clusterSubnetGroupName:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       clusterVersion:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       createdAt:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       dbName:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       encrypted: {}
       enhancedVpcRouting:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       logging: {}
       masterUsername:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       name: {}
       nextMaintenanceWindowStartTime:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       nodeType: {}
       numberOfNodes:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       parameters: {}
       preferredMaintenanceWindow: {}
       publiclyAccessible: {}
       region: {}
       tags: {}
       vpcId:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -2141,18 +2141,18 @@ resources:
     fields:
       arn: {}
       createdAt:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       description:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       lastChangedDate:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       lastRotatedDate:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       name: {}
       nextRotationDate:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       primaryRegion:
-        min_mondoo_version: 9.1.0
+        min_mondoo_version: 9.0.3
       rotationEnabled: {}
       tags: {}
     is_private: true
