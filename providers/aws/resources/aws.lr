@@ -1319,7 +1319,7 @@ aws.elasticache {
 private aws.elasticache.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
-  // Whether or not the cluster has at rest encryption enabled
+  // Whether the cluster has at rest encryption enabled
   atRestEncryptionEnabled bool
   // Whether Redis authentication tokens, or passwords, enable Redis to require a password before allowing clients to run commands
   authTokenEnabled bool
