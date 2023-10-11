@@ -69,6 +69,14 @@ atlassian.admin.organization.user {
 }
 
 atlassian.admin.organization.user.lastActive {
+  // ID
+  id string
+  // URL
+  url string
+  // Key
+  key string
+  // LastActive
+  lastActive string
 }
 
 atlassian.jira { 

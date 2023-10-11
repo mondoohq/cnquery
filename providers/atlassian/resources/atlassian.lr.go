@@ -222,6 +222,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.user.lastActive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetLastActive()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.user.lastActive")))
 	},
+	"atlassian.admin.organization.user.lastActive.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.user.lastActive.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetUrl()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.user.lastActive.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetKey()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.user.lastActive.lastActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetLastActive()).ToDataRes(types.String)
+	},
 	"atlassian.jira.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.jira.user")))
 	},
@@ -457,6 +469,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAtlassianAdminOrganizationUserLastActive).__id, ok = v.Value.(string)
 			return
 		},
+	"atlassian.admin.organization.user.lastActive.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationUserLastActive).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.user.lastActive.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationUserLastActive).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.user.lastActive.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationUserLastActive).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.user.lastActive.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationUserLastActive).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianJira).__id, ok = v.Value.(string)
 			return
@@ -1134,6 +1162,10 @@ type mqlAtlassianAdminOrganizationUserLastActive struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAtlassianAdminOrganizationUserLastActiveInternal it will be used here
+	Id plugin.TValue[string]
+	Url plugin.TValue[string]
+	Key plugin.TValue[string]
+	LastActive plugin.TValue[string]
 }
 
 // createAtlassianAdminOrganizationUserLastActive creates a new instance of this resource
@@ -1166,6 +1198,22 @@ func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlName() string {
 
 func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) GetLastActive() *plugin.TValue[string] {
+	return &c.LastActive
 }
 
 // mqlAtlassianJira for the atlassian.jira resource

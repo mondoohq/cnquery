@@ -50,7 +50,11 @@ resources:
       type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.user.lastActive:
-    fields: {}
+    fields:
+      id: {}
+      key: {}
+      lastActive: {}
+      url: {}
     min_mondoo_version: latest
   atlassian.admin.user:
     fields:

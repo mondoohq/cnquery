@@ -123,28 +123,32 @@ loopMark:
 }
 
 func (a *mqlAtlassianAdminOrganizationUser) lastActive() ([]interface{}, error) {
-	//conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	//admin := conn.Admin()
-	//accountId := a.Id.Data
-	//organizations, response, err := admin.Organization.Directory.Activity(context.Background(), a.Id.Data)
-	//if err != nil {
-	//	log.Fatal().Err(err)
-	//}
-	//if response.Status != "200 OK" {
-	//	log.Fatal().Msgf("Received response: %s\n", response.Status)
-	//}
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	admin := conn.Admin()
+	accountId := a.Id.Data
+	orgId := a.OrgId.Data
+	lastActive, response, err := admin.Organization.Directory.Activity(context.Background(), orgId, accountId)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+
 	res := []interface{}{}
-	//for _, org := range organizations.Data {
-	//	mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
-	//		map[string]*llx.RawData{
-	//			"id":   llx.StringData(org.ID),
-	//			"type": llx.StringData(org.Type),
-	//		})
-	//	if err != nil {
-	//		log.Fatal().Err(err)
-	//	}
-	//	res = append(res, mqlAtlassianAdminOrg)
-	//}
+	for _, access := range lastActive.Data.ProductAccess {
+		mqlAtlassianAdminUserLastActive, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.user.lastActive",
+			map[string]*llx.RawData{
+				"id":         llx.StringData(access.Id),
+				"url":        llx.StringData(access.Url),
+				"key":        llx.StringData(access.Key),
+				"lastActive": llx.StringData(access.LastActive),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminUserLastActive)
+	}
 	return res, nil
 
 }
