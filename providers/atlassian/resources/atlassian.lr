@@ -78,13 +78,13 @@ atlassian.jira {
 }
 
 atlassian.jira.serverInfo @defaults("serverTitle") {
-  // baseUrl
+  // BaseUrl
   baseUrl string 
-  // buildNumber
+  // BuildNumber
   buildNumber int
-  // serverTitle
+  // ServerTitle
   serverTitle string
-  // deploymentType
+  // DeploymentType
   deploymentType string
 }
 
