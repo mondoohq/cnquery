@@ -76,7 +76,9 @@ resources:
     min_mondoo_version: latest
   atlassian.jira:
     fields:
+      groups: {}
       projects: {}
+      serverInfo: {}
       users: {}
     min_mondoo_version: latest
   atlassian.jira.applicatonRole:
@@ -104,6 +106,13 @@ resources:
       private: {}
       url: {}
       uuid: {}
+    min_mondoo_version: latest
+  atlassian.jira.serverInfo:
+    fields:
+      baseUrl: {}
+      buildNumber: {}
+      deploymentType: {}
+      serverTitle: {}
     min_mondoo_version: latest
   atlassian.jira.user:
     fields:

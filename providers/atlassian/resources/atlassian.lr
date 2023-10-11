@@ -71,6 +71,21 @@ atlassian.jira {
   users() []atlassian.jira.user
   // Jira projects
   projects() []atlassian.jira.project
+  // Jira groups
+  groups() []atlassian.jira.group
+  // Jira server info
+  serverInfo() atlassian.jira.serverInfo
+}
+
+atlassian.jira.serverInfo @defaults("serverTitle") {
+  // baseUrl
+  baseUrl string 
+  // buildNumber
+  buildNumber string
+  // serverTitle
+  serverTitle string
+  // deploymentType
+  deploymentType string
 }
 
 atlassian.jira.user @defaults("id") { 
@@ -87,6 +102,7 @@ atlassian.jira.user @defaults("id") {
   // Roles
   applicationRoles() []atlassian.jira.applicatonRole
 }
+
 
 atlassian.jira.applicatonRole @defaults("id") {
   // Role ID

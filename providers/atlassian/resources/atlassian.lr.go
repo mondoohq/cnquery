@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -48,6 +49,10 @@ func init() {
 		"atlassian.jira": {
 			// to override args, implement: initAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJira,
+		},
+		"atlassian.jira.serverInfo": {
+			// to override args, implement: initAtlassianJiraServerInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraServerInfo,
 		},
 		"atlassian.jira.user": {
 			// to override args, implement: initAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -212,6 +217,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetProjects()).ToDataRes(types.Array(types.Resource("atlassian.jira.project")))
+	},
+	"atlassian.jira.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.group")))
+	},
+	"atlassian.jira.serverInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetServerInfo()).ToDataRes(types.Resource("atlassian.jira.serverInfo"))
+	},
+	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
+	},
+	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetBuildNumber()).ToDataRes(types.String)
+	},
+	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetServerTitle()).ToDataRes(types.String)
+	},
+	"atlassian.jira.serverInfo.deploymentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraServerInfo).GetDeploymentType()).ToDataRes(types.String)
 	},
 	"atlassian.jira.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraUser).GetId()).ToDataRes(types.String)
@@ -420,6 +443,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJira).Projects, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).ServerInfo, ok = plugin.RawToTValue[*mqlAtlassianJiraServerInfo](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraServerInfo).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).BaseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.buildNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).BuildNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.serverTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).ServerTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.serverInfo.deploymentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraServerInfo).DeploymentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1027,6 +1078,8 @@ type mqlAtlassianJira struct {
 	// optional: if you define mqlAtlassianJiraInternal it will be used here
 	Users plugin.TValue[[]interface{}]
 	Projects plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]interface{}]
+	ServerInfo plugin.TValue[*mqlAtlassianJiraServerInfo]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -1096,6 +1149,98 @@ func (c *mqlAtlassianJira) GetProjects() *plugin.TValue[[]interface{}] {
 
 		return c.projects()
 	})
+}
+
+func (c *mqlAtlassianJira) GetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+func (c *mqlAtlassianJira) GetServerInfo() *plugin.TValue[*mqlAtlassianJiraServerInfo] {
+  fmt.Println("GetServerInfo")
+	return plugin.GetOrCompute[*mqlAtlassianJiraServerInfo](&c.ServerInfo, func() (*mqlAtlassianJiraServerInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "serverInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAtlassianJiraServerInfo), nil
+			}
+		}
+
+		return c.serverInfo()
+	})
+}
+
+// mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource
+type mqlAtlassianJiraServerInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianJiraServerInfoInternal it will be used here
+	BaseUrl plugin.TValue[string]
+	BuildNumber plugin.TValue[string]
+	ServerTitle plugin.TValue[string]
+	DeploymentType plugin.TValue[string]
+}
+
+// createAtlassianJiraServerInfo creates a new instance of this resource
+func createAtlassianJiraServerInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraServerInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.serverInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraServerInfo) MqlName() string {
+	return "atlassian.jira.serverInfo"
+}
+
+func (c *mqlAtlassianJiraServerInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetBaseUrl() *plugin.TValue[string] {
+	return &c.BaseUrl
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetBuildNumber() *plugin.TValue[string] {
+	return &c.BuildNumber
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetServerTitle() *plugin.TValue[string] {
+	return &c.ServerTitle
+}
+
+func (c *mqlAtlassianJiraServerInfo) GetDeploymentType() *plugin.TValue[string] {
+	return &c.DeploymentType
 }
 
 // mqlAtlassianJiraUser for the atlassian.jira.user resource

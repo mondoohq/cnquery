@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -92,6 +93,58 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 		res = append(res, mqlAtlassianJiraUserGroup)
 	}
 	return res, nil
+}
+
+func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+
+	res := []interface{}{}
+	for _, group := range groups.Values {
+		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(group.GroupID),
+				"name": llx.StringData(group.Name),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianJiraUserGroup)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJira) serverInfo() (*mqlAtlassianJiraServerInfo, error) {
+	fmt.Println("Hello serverInfo")
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	info, response, err := jira.Server.Info(context.Background())
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	fmt.Println(info.BaseURL)
+	fmt.Println(info.ServerTitle)
+	res, err := CreateResource(a.MqlRuntime, "atlassian.jira.serverInfo",
+		map[string]*llx.RawData{
+			"baseUrl":        llx.StringData(info.BaseURL),
+			"buildNumber":    llx.IntData(int64(info.BuildNumber)),
+			"serverTitle":    llx.StringData(info.ServerTitle),
+			"deploymentType": llx.StringData(info.DeploymentType),
+		})
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	return res.(*mqlAtlassianJiraServerInfo), nil
 }
 
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
