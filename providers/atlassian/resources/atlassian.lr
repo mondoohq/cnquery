@@ -50,6 +50,8 @@ atlassian.admin.organization.event @defaults("id") {
 atlassian.admin.organization.user {
   // Account ID
 	id string
+  // Organization ID
+	orgId string
   // Account type
 	type string
   // Account status
@@ -63,7 +65,10 @@ atlassian.admin.organization.user {
   // Billable
 	accessBillable bool
   // Time when the user was last active
-	lastActive     string
+	lastActive() []atlassian.admin.organization.user.lastActive
+}
+
+atlassian.admin.organization.user.lastActive {
 }
 
 atlassian.jira { 

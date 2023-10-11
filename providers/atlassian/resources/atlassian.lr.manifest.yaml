@@ -44,9 +44,13 @@ resources:
       id: {}
       lastActive: {}
       name: {}
+      orgId: {}
       picture: {}
       status: {}
       type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.user.lastActive:
+    fields: {}
     min_mondoo_version: latest
   atlassian.admin.user:
     fields:

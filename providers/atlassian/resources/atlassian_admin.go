@@ -41,6 +41,7 @@ type atlassianUser struct {
 	AccountID string
 	Name      string
 	Type      string
+	OrgID     string
 }
 
 func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
@@ -71,6 +72,7 @@ func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
 			AccountID: jiraUser.AccountID,
 			Name:      jiraUser.DisplayName,
 			Type:      jiraUser.AccountType,
+			OrgID:     a.Id.Data,
 		}
 		atlassianUsers = append(atlassianUsers, user)
 	}
@@ -79,6 +81,7 @@ func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
 			AccountID: confluenceUser.User.AccountID,
 			Name:      confluenceUser.User.DisplayName,
 			Type:      confluenceUser.User.AccountType,
+			OrgID:     a.Id.Data,
 		}
 		atlassianUsers = append(atlassianUsers, user)
 	}
@@ -106,9 +109,10 @@ loopMark:
 	for _, user := range uniqueAtlassianUsers {
 		mqlAtlassianAdminUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.user",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(user.AccountID),
-				"name": llx.StringData(user.Name),
-				"type": llx.StringData(user.Type),
+				"id":    llx.StringData(user.AccountID),
+				"name":  llx.StringData(user.Name),
+				"type":  llx.StringData(user.Type),
+				"orgId": llx.StringData(user.OrgID),
 			})
 		if err != nil {
 			log.Fatal().Err(err)
@@ -116,6 +120,33 @@ loopMark:
 		res = append(res, mqlAtlassianAdminUser)
 	}
 	return res, nil
+}
+
+func (a *mqlAtlassianAdminOrganizationUser) lastActive() ([]interface{}, error) {
+	//conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	//admin := conn.Admin()
+	//accountId := a.Id.Data
+	//organizations, response, err := admin.Organization.Directory.Activity(context.Background(), a.Id.Data)
+	//if err != nil {
+	//	log.Fatal().Err(err)
+	//}
+	//if response.Status != "200 OK" {
+	//	log.Fatal().Msgf("Received response: %s\n", response.Status)
+	//}
+	res := []interface{}{}
+	//for _, org := range organizations.Data {
+	//	mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
+	//		map[string]*llx.RawData{
+	//			"id":   llx.StringData(org.ID),
+	//			"type": llx.StringData(org.Type),
+	//		})
+	//	if err != nil {
+	//		log.Fatal().Err(err)
+	//	}
+	//	res = append(res, mqlAtlassianAdminOrg)
+	//}
+	return res, nil
+
 }
 
 func (a *mqlAtlassianAdminOrganizationUser) id() (string, error) {

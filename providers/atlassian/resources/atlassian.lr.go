@@ -45,6 +45,10 @@ func init() {
 			// to override args, implement: initAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationUser,
 		},
+		"atlassian.admin.organization.user.lastActive": {
+			// to override args, implement: initAtlassianAdminOrganizationUserLastActive(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationUserLastActive,
+		},
 		"atlassian.jira": {
 			// to override args, implement: initAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJira,
@@ -194,6 +198,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetId()).ToDataRes(types.String)
 	},
+	"atlassian.admin.organization.user.orgId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationUser).GetOrgId()).ToDataRes(types.String)
+	},
 	"atlassian.admin.organization.user.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetType()).ToDataRes(types.String)
 	},
@@ -213,7 +220,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAtlassianAdminOrganizationUser).GetAccessBillable()).ToDataRes(types.Bool)
 	},
 	"atlassian.admin.organization.user.lastActive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetLastActive()).ToDataRes(types.String)
+		return (r.(*mqlAtlassianAdminOrganizationUser).GetLastActive()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.user.lastActive")))
 	},
 	"atlassian.jira.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.jira.user")))
@@ -414,6 +421,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganizationUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.user.orgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationUser).OrgId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -439,9 +450,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"atlassian.admin.organization.user.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganizationUser).LastActive, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.user.lastActive.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminOrganizationUserLastActive).__id, ok = v.Value.(string)
+			return
+		},
 	"atlassian.jira.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianJira).__id, ok = v.Value.(string)
 			return
@@ -1019,13 +1034,14 @@ type mqlAtlassianAdminOrganizationUser struct {
 	__id string
 	// optional: if you define mqlAtlassianAdminOrganizationUserInternal it will be used here
 	Id plugin.TValue[string]
+	OrgId plugin.TValue[string]
 	Type plugin.TValue[string]
 	Status plugin.TValue[string]
 	Name plugin.TValue[string]
 	Picture plugin.TValue[string]
 	Email plugin.TValue[string]
 	AccessBillable plugin.TValue[bool]
-	LastActive plugin.TValue[string]
+	LastActive plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminOrganizationUser creates a new instance of this resource
@@ -1069,6 +1085,10 @@ func (c *mqlAtlassianAdminOrganizationUser) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlAtlassianAdminOrganizationUser) GetOrgId() *plugin.TValue[string] {
+	return &c.OrgId
+}
+
 func (c *mqlAtlassianAdminOrganizationUser) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
@@ -1093,8 +1113,59 @@ func (c *mqlAtlassianAdminOrganizationUser) GetAccessBillable() *plugin.TValue[b
 	return &c.AccessBillable
 }
 
-func (c *mqlAtlassianAdminOrganizationUser) GetLastActive() *plugin.TValue[string] {
-	return &c.LastActive
+func (c *mqlAtlassianAdminOrganizationUser) GetLastActive() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.LastActive, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization.user", c.__id, "lastActive")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.lastActive()
+	})
+}
+
+// mqlAtlassianAdminOrganizationUserLastActive for the atlassian.admin.organization.user.lastActive resource
+type mqlAtlassianAdminOrganizationUserLastActive struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianAdminOrganizationUserLastActiveInternal it will be used here
+}
+
+// createAtlassianAdminOrganizationUserLastActive creates a new instance of this resource
+func createAtlassianAdminOrganizationUserLastActive(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationUserLastActive{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.user.lastActive", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlName() string {
+	return "atlassian.admin.organization.user.lastActive"
+}
+
+func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlID() string {
+	return c.__id
 }
 
 // mqlAtlassianJira for the atlassian.jira resource
