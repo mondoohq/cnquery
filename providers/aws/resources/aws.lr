@@ -1325,7 +1325,7 @@ private aws.elasticache.cluster @defaults("arn") {
   authTokenEnabled bool
   // Date and time auth token was last modified
   authTokenLastModifiedDate time 
-  // Whether cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
+  // Whether the cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
   autoMinorVersionUpgrade bool
   // The date and time when the cluster was created.
   cacheClusterCreateTime time 
