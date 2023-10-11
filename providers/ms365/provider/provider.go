@@ -6,6 +6,7 @@ package provider
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
@@ -209,7 +210,43 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 }
 
 func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	return nil, errors.New("not yet implemented")
+	runtime, ok := s.runtimes[req.Connection]
+	if !ok {
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
+	}
+
+	var errs []string
+	for i := range req.Resources {
+		info := req.Resources[i]
+
+		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
+		if err != nil {
+			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
+			continue
+		}
+
+		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
+		if !ok {
+			resource, err = resources.CreateResource(runtime, info.Name, args)
+			if err != nil {
+				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), creation failed: "+err.Error())
+				continue
+			}
+
+			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
+		}
+
+		for k, v := range args {
+			if err := resources.SetData(resource, k, v); err != nil {
+				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
+			}
+		}
+	}
+
+	if len(errs) != 0 {
+		return nil, errors.New(strings.Join(errs, ", "))
+	}
+	return &plugin.StoreRes{}, nil
 }
 
 func (s *Service) discover(conn *connection.Ms365Connection, conf *inventory.Config) (*inventory.Inventory, error) {
