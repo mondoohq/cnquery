@@ -1243,7 +1243,7 @@ private aws.rds.snapshot @defaults("arn") {
   attributes() []dict
   // Type of snapshot (manual, automated)
   type string
-  // Whether or not snapshot is encrypted
+  // Whether the snapshot is encrypted
   encrypted bool
   // Region where the snapshot exists
   region string
