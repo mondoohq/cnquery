@@ -40,7 +40,7 @@ slack.users {
 }
 
 // Slack User
-slack.user @defaults("id") {
+slack.user @defaults("id name") {
   // Identifier for workspace user
   id string
   // User name
