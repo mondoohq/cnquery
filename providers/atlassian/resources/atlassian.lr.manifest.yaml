@@ -106,8 +106,13 @@ resources:
       key: {}
       name: {}
       private: {}
+      properties: {}
       url: {}
       uuid: {}
+    min_mondoo_version: latest
+  atlassian.jira.project.property:
+    fields:
+      id: {}
     min_mondoo_version: latest
   atlassian.jira.serverInfo:
     fields:

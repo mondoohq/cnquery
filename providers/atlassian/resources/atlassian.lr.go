@@ -65,6 +65,10 @@ func init() {
 			// to override args, implement: initAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraProject,
 		},
+		"atlassian.jira.project.property": {
+			// to override args, implement: initAtlassianJiraProjectProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraProjectProperty,
+		},
 		"atlassian.jira.group": {
 			// to override args, implement: initAtlassianJiraGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraGroup,
@@ -285,6 +289,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.project.archived": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetArchived()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.project.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetProperties()).ToDataRes(types.Array(types.Resource("atlassian.jira.project.property")))
+	},
+	"atlassian.jira.project.property.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProjectProperty).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.jira.group.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraGroup).GetId()).ToDataRes(types.String)
@@ -550,6 +560,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.project.archived": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProject).Archived, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).Properties, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.project.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraProjectProperty).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.jira.project.property.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProjectProperty).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1017,7 +1039,12 @@ func createAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[stri
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.user", res.__id)
@@ -1402,6 +1429,7 @@ type mqlAtlassianJiraProject struct {
 	Private plugin.TValue[bool]
 	Deleted plugin.TValue[bool]
 	Archived plugin.TValue[bool]
+	Properties plugin.TValue[[]interface{}]
 }
 
 // createAtlassianJiraProject creates a new instance of this resource
@@ -1475,6 +1503,71 @@ func (c *mqlAtlassianJiraProject) GetDeleted() *plugin.TValue[bool] {
 
 func (c *mqlAtlassianJiraProject) GetArchived() *plugin.TValue[bool] {
 	return &c.Archived
+}
+
+func (c *mqlAtlassianJiraProject) GetProperties() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Properties, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.project", c.__id, "properties")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.properties()
+	})
+}
+
+// mqlAtlassianJiraProjectProperty for the atlassian.jira.project.property resource
+type mqlAtlassianJiraProjectProperty struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianJiraProjectPropertyInternal it will be used here
+	Id plugin.TValue[string]
+}
+
+// createAtlassianJiraProjectProperty creates a new instance of this resource
+func createAtlassianJiraProjectProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraProjectProperty{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.project.property", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraProjectProperty) MqlName() string {
+	return "atlassian.jira.project.property"
+}
+
+func (c *mqlAtlassianJiraProjectProperty) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraProjectProperty) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAtlassianJiraGroup for the atlassian.jira.group resource

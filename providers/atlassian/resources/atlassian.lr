@@ -130,6 +130,13 @@ atlassian.jira.project @defaults("id") {
   deleted bool
   // Archived 
   archived bool
+  // Properties
+  properties() []atlassian.jira.project.property
+}
+
+atlassian.jira.project.property @defaults("id") {
+  // Property Key
+  id string
 }
 
 atlassian.jira.group @defaults("id") { 

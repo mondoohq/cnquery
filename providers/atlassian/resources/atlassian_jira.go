@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -171,6 +172,36 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 		res = append(res, mqlAtlassianJiraProject)
 	}
 	return res, nil
+}
+
+func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	properties, response, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+
+	res := []interface{}{}
+	for _, property := range properties.Keys {
+		fmt.Println(property.Key)
+		mqlAtlassianJiraProjectProperty, err := CreateResource(a.MqlRuntime, "atlassian.jira.project.property",
+			map[string]*llx.RawData{
+				"id": llx.StringData(property.Key),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianJiraProjectProperty)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraProjectProperty) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func (a *mqlAtlassianJiraUser) id() (string, error) {
