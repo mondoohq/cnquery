@@ -1453,7 +1453,7 @@ private aws.ecr.repository {
   uri string
   // AWS Account ID associated with public registry for this repository
   registryId string
-  // Whether or not the repository is public
+  // Whether the repository is public
   public bool
   // List of images in the repository
   images() []aws.ecr.image
