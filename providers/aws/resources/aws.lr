@@ -149,7 +149,7 @@ private aws.efs.filesystem @defaults("name arn") {
   id string
   // ARN of the file system
   arn string
-  // Denotes whether or not the file system is encrypted
+  // Whether or not the file system is encrypted
   encrypted bool
   // KMS key used for encryption of the file system
   kmsKey() aws.kms.key
@@ -407,7 +407,7 @@ private aws.sagemaker.notebookinstance.details @defaults("arn") {
   arn string
   // KMS key used to encrypt data
   kmsKey() aws.kms.key
-  // Denotes whether SageMaker provides internet access to the instance
+  // Whether SageMaker provides internet access to the instance
   directInternetAccess string
 }
 
@@ -463,7 +463,7 @@ aws.es {
 private aws.es.domain @defaults("arn name") {
   // ARN for the Elasticsearch domain
   arn string
-  // Denotes whether encryption at rest is enabled
+  // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
   // Denoted whether node to node encryption is enabled
   nodeToNodeEncryptionEnabled bool
@@ -641,7 +641,7 @@ private aws.secretsmanager.secret @defaults("arn name") {
   nextRotationDate time
   // The primary region of the secret
   primaryRegion string
-  // Denotes whether rotation is enabled for the secret
+  // Whether rotation is enabled for the secret
   rotationEnabled bool
   // Tags for the secret
   tags map[string]string
@@ -1031,7 +1031,7 @@ private aws.s3.bucket @defaults("arn") {
   logging() map[string]string
   // Website configuration for a bucket
   staticWebsiteHosting() map[string]string
-  // Denotes whether bucket is locked by default
+  // Whether bucket is locked by default
   defaultLock() string
   // Bucket cross-region replication configuration
   replication() dict
@@ -1243,7 +1243,7 @@ private aws.rds.snapshot @defaults("arn") {
   attributes() []dict
   // Type of snapshot (manual, automated)
   type string
-  // Denotes whether or not snapshot is encrypted
+  // Whether or not snapshot is encrypted
   encrypted bool
   // Region where the snapshot exists
   region string
@@ -1263,7 +1263,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   backupRetentionPeriod int
   // List of snapshots for the database instance
   snapshots() []aws.rds.snapshot
-  // Denotes whether the instance is encrypted
+  // Whether the instance is encrypted
   storageEncrypted bool
   // The amount of storage, in GiB, provisioned on the instance
   storageAllocated int
@@ -1275,7 +1275,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   region string
   // Availability zone where the instance exists
   availabilityZone string
-  // Denotes whether or not the instance is publicly accessible
+  // Whether or not the instance is publicly accessible
   publiclyAccessible bool
   // List of log types the instance is configured to export to cloudwatch logs
   enabledCloudwatchLogsExports []string
@@ -1319,13 +1319,13 @@ aws.elasticache {
 private aws.elasticache.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
-  // Denotes whether or not the cluster has at rest encryption enabled
+  // Whether or not the cluster has at rest encryption enabled
   atRestEncryptionEnabled bool
-  // Denotes whether Redis authentication tokens, or passwords, enable Redis to require a password before allowing clients to run commands
+  // Whether Redis authentication tokens, or passwords, enable Redis to require a password before allowing clients to run commands
   authTokenEnabled bool
   // Date and time auth token was last modified
   authTokenLastModifiedDate time 
-  // Denotes whether cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
+  // Whether cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
   autoMinorVersionUpgrade bool
   // The date and time when the cluster was created.
   cacheClusterCreateTime time 
@@ -1381,7 +1381,7 @@ aws.redshift {
 
 // Amazon Redshift Cluster
 private aws.redshift.cluster @defaults("arn") {
-  // Denotes whether major upgrades will be applied automatically
+  // Whether major upgrades will be applied automatically
   allowVersionUpgrade bool
   // ARN for the cluster
   arn string
@@ -1397,15 +1397,15 @@ private aws.redshift.cluster @defaults("arn") {
   clusterStatus string
   // Name of the subnet group that is associated with the cluster. 
   clusterSubnetGroupName string
-  // The version of the Redshift engine running on the cluster
+  // Version of the Redshift engine running on the cluster
   clusterVersion string
   // Cluster creation timestamp
   createdAt string
   // Name of the initial database that was created when the cluster was created
   dbName string
-  // Denotes whether or not the cluster is encrypted at rest
+  // Whether or not the cluster is encrypted at rest
   encrypted bool
-  // Denotes whether or not enhanced VPC routing is enabled for the cluster traffic
+  // Whether or not enhanced VPC routing is enabled for the cluster traffic
   enhancedVpcRouting bool
   // Logging configuration for the cluster
   logging() dict
@@ -1423,7 +1423,7 @@ private aws.redshift.cluster @defaults("arn") {
   parameters() []dict
   // Weekly time range for system maintenance (in UTC)
   preferredMaintenanceWindow string
-  // Denotes whether or not cluster is publicly accessible
+  // Whether or not cluster is publicly accessible
   publiclyAccessible bool
   // Region where the cluster exists
   region string
@@ -1453,7 +1453,7 @@ private aws.ecr.repository {
   uri string
   // AWS Account ID associated with public registry for this repository
   registryId string
-  // Denotes whether or not the repository is public
+  // Whether or not the repository is public
   public bool
   // List of images in the repository
   images() []aws.ecr.image
@@ -1618,7 +1618,7 @@ private aws.ec2.networkacl @defaults("arn") {
 
 // Amazon EC2 Network ACL Entry
 private aws.ec2.networkacl.entry {
-  // Denotes whether this is an entry for egress rules
+  // Whether this is an entry for egress rules
   egress bool
   // Allow or deny
   ruleAction string
@@ -1694,7 +1694,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
   id string
   // Information about the volume attachments
   attachments []dict
-  // Denotes whether volume is encrypted
+  // Whether volume is encrypted
   encrypted bool
   // State of the volume (creating, available, in-use, etc.) 
   state string
@@ -1748,7 +1748,7 @@ private aws.ec2.instance @defaults("arn state") {
   stateReason dict
   // Reason for the most recent state transition
   stateTransitionReason string
-  // Denotes whether or not instance has ebs optimization turned on
+  // Whether or not instance has ebs optimization turned on
   ebsOptimized bool
   // Instance type, e.g. t2.micro
   instanceType string

@@ -301,7 +301,7 @@ file @defaults("path size permissions.string") {
   user() user
   // Ownership information about the group
   group() group
-  // Denotes whether the path is empty
+  // Whether the path is empty
   empty(path) bool
 }
 
