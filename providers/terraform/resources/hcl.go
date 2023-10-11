@@ -222,6 +222,9 @@ func listRelatedBlocks(t *mqlTerraform, rawBody interface{}) ([]*mqlTerraformBlo
 			}
 
 			refName := strings.Join(refs[0:2], "\x00")
+			if t.blocksByName[refName] == nil { // do not add nil blocks
+				continue
+			}
 			res = append(res, t.blocksByName[refName])
 		}
 	case hcl.Body:
