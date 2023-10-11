@@ -1748,7 +1748,7 @@ private aws.ec2.instance @defaults("arn state") {
   stateReason dict
   // Reason for the most recent state transition
   stateTransitionReason string
-  // Whether or not instance has ebs optimization turned on
+  // Whether the instance has EBS optimization turned on
   ebsOptimized bool
   // Instance type, e.g. t2.micro
   instanceType string
