@@ -1403,7 +1403,7 @@ private aws.redshift.cluster @defaults("arn") {
   createdAt string
   // Name of the initial database that was created when the cluster was created
   dbName string
-  // Whether or not the cluster is encrypted at rest
+  // Whether the cluster is encrypted at rest
   encrypted bool
   // Whether or not enhanced VPC routing is enabled for the cluster traffic
   enhancedVpcRouting bool
