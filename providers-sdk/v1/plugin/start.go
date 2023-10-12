@@ -17,7 +17,18 @@ type Provider struct {
 	ID              string
 	Version         string
 	ConnectionTypes []string
-	Connectors      []Connector
+	// CrossProviderTypes are asset providers that already
+	// have a primary provider set, but which may need to use
+	// resources from a different provider. For example:
+	// The primary provider of an asset may be the "os" provider.
+	// However, it now wants to use resources from the "network" provider.
+	// The "network" provider can indicate that it also supports
+	// assets from the "os" provider.
+	// TODO: This is only a hotfix and will be solved by
+	// each provider creating an asset object when it tries to
+	// call out.
+	CrossProviderTypes []string
+	Connectors         []Connector
 }
 
 type Connector struct {

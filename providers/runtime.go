@@ -537,6 +537,10 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return provider, info, nil
 	}
 
+	if info.Provider == "core???"
+	r.coordinator.Providers[info.Provider].Provider.CrossProviderType
+	  does it include r.Provider.Instance.ID
+
 	res, err := r.addProvider(info.Provider, false)
 	if err != nil {
 		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
