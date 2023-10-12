@@ -58,7 +58,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("appautoscaling>getTargets>calling aws with region %s", regionVal)
 
 			svc := conn.ApplicationAutoscaling(regionVal)
 			ctx := context.Background()

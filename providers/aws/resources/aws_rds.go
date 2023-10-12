@@ -53,7 +53,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getDbInstances>calling aws with region %s", regionVal)
 
 			res := []interface{}{}
 			svc := conn.Rds(regionVal)
@@ -209,7 +209,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("rds>getDbClusters>calling aws with region %s", regionVal)
 
 			res := []interface{}{}
 			svc := conn.Rds(regionVal)

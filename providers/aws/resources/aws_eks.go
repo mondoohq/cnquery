@@ -49,7 +49,7 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("eks>getClusters>calling aws with region %s", regionVal)
 
 			svc := conn.Eks(regionVal)
 			ctx := context.Background()

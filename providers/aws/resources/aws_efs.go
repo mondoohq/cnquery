@@ -52,7 +52,7 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 	for i := range regions {
 		regionVal := regions[i]
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("efs>getFilesystems>calling aws with region %s", regionVal)
 
 			svc := conn.Efs(regionVal)
 			ctx := context.Background()

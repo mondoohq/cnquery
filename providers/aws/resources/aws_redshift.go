@@ -58,7 +58,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("redshift>getClusters>calling aws with region %s", regionVal)
 
 			svc := conn.Redshift(regionVal)
 			ctx := context.Background()

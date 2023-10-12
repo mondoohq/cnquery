@@ -2531,6 +2531,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.stateTransitionTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateTransitionTime()).ToDataRes(types.Time)
 	},
+	"aws.ec2.instance.vpcArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetVpcArn()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -5775,6 +5778,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.stateTransitionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).StateTransitionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.vpcArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).VpcArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15312,6 +15319,7 @@ type mqlAwsEc2Instance struct {
 	PrivateDnsName plugin.TValue[string]
 	Keypair plugin.TValue[*mqlAwsEc2Keypair]
 	StateTransitionTime plugin.TValue[*time.Time]
+	VpcArn plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -15487,6 +15495,10 @@ func (c *mqlAwsEc2Instance) GetKeypair() *plugin.TValue[*mqlAwsEc2Keypair] {
 
 func (c *mqlAwsEc2Instance) GetStateTransitionTime() *plugin.TValue[*time.Time] {
 	return &c.StateTransitionTime
+}
+
+func (c *mqlAwsEc2Instance) GetVpcArn() *plugin.TValue[string] {
+	return &c.VpcArn
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

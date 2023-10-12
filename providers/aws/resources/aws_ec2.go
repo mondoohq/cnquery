@@ -77,7 +77,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getNetworkACLs>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -217,7 +217,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getSecurityGroups>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -381,7 +381,7 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getKeypairs>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -518,7 +518,7 @@ func (a *mqlAwsEc2) getEbsEncryptionPerRegion(conn *connection.AwsConnection) []
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getEbsEncryptionPerRegion>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -614,7 +614,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("ec2>getInstances>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -745,18 +745,10 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 
 			// add vpc if there is one
 			if instance.VpcId != nil {
-				mqlVpcResource, err := NewResource(a.MqlRuntime, "aws.vpc",
-					map[string]*llx.RawData{
-						"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.VpcId))),
-					})
-				if err == nil {
-					args["vpc"] = llx.ResourceData(mqlVpcResource, mqlVpcResource.MqlName())
-				} else {
-					log.Error().Err(err).Msg("cannot find vpc")
-					args["vpc"] = llx.NilData
-				}
+				arn := fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.VpcId))
+				args["vpcArn"] = llx.StringData(arn)
 			} else {
-				args["vpc"] = llx.NilData
+				args["vpcArn"] = llx.NilData
 			}
 
 			// only add a keypair if the ec2 instance has one attached
@@ -898,7 +890,18 @@ func (a *mqlAwsEc2Instance) id() (string, error) {
 }
 
 func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
-	return a.Vpc.Data, nil
+	vpcArn := a.VpcArn
+	if vpcArn.State == plugin.StateIsNull {
+		return nil, errors.New("ec2 instance has no vpc associated with it")
+	} else if vpcArn.Error != nil {
+		return nil, vpcArn.Error
+	} else {
+		res, err := NewResource(a.MqlRuntime, "aws.vpc", map[string]*llx.RawData{"arn": llx.StringData(vpcArn.Data)})
+		if err != nil {
+			return nil, err
+		}
+		return res.(*mqlAwsVpc), nil
+	}
 }
 
 func (a *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {

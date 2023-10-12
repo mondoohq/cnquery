@@ -52,7 +52,7 @@ func (a *mqlAws) getVpcs(conn *connection.AwsConnection) []*jobpool.Job {
 	for i := range regions {
 		regionVal := regions[i]
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("vpc>getVpcs>calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()

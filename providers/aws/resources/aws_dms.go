@@ -46,7 +46,7 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("dms>getReplicationInstances>calling aws with region %s", regionVal)
 
 			svc := conn.Dms(regionVal)
 			ctx := context.Background()
