@@ -50,6 +50,10 @@ func init() {
 			// to override args, implement: initMicrosoftServiceprincipal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftServiceprincipal,
 		},
+		"microsoft.serviceprincipal.assignment": {
+			// to override args, implement: initMicrosoftServiceprincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftServiceprincipalAssignment,
+		},
 		"microsoft.security": {
 			// to override args, implement: initMicrosoftSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurity,
@@ -183,6 +187,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetServiceprincipals()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
+	},
+	"microsoft.enterpriseApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetEnterpriseApplications()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
 	},
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
@@ -369,6 +376,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.serviceprincipal.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.serviceprincipal.homepageUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetHomepageUrl()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.termsOfServiceUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetTermsOfServiceUrl()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.replyUrls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetReplyUrls()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.serviceprincipal.assignmentRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAssignmentRequired()).ToDataRes(types.Bool)
+	},
+	"microsoft.serviceprincipal.visibleToUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetVisibleToUsers()).ToDataRes(types.Bool)
+	},
+	"microsoft.serviceprincipal.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetNotes()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.assignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetAssignments()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal.assignment")))
+	},
+	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.assignment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.assignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetType()).ToDataRes(types.String)
 	},
 	"microsoft.security.secureScores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetSecureScores()).ToDataRes(types.Array(types.Resource("microsoft.security.securityscore")))
@@ -615,6 +664,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.serviceprincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).Serviceprincipals, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.enterpriseApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).EnterpriseApplications, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -891,6 +944,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"microsoft.serviceprincipal.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.homepageUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).HomepageUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.termsOfServiceUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).TermsOfServiceUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.replyUrls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).ReplyUrls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.assignmentRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).AssignmentRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.visibleToUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).VisibleToUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Assignments, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMicrosoftServiceprincipalAssignment).__id, ok = v.Value.(string)
+			return
+		},
+	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipalAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.assignment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipalAssignment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.assignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipalAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1252,6 +1365,7 @@ type mqlMicrosoft struct {
 	Domains plugin.TValue[[]interface{}]
 	Applications plugin.TValue[[]interface{}]
 	Serviceprincipals plugin.TValue[[]interface{}]
+	EnterpriseApplications plugin.TValue[[]interface{}]
 	Settings plugin.TValue[interface{}]
 }
 
@@ -1380,6 +1494,22 @@ func (c *mqlMicrosoft) GetServiceprincipals() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.serviceprincipals()
+	})
+}
+
+func (c *mqlMicrosoft) GetEnterpriseApplications() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.EnterpriseApplications, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "enterpriseApplications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.enterpriseApplications()
 	})
 }
 
@@ -1985,6 +2115,17 @@ type mqlMicrosoftServiceprincipal struct {
 	__id string
 	// optional: if you define mqlMicrosoftServiceprincipalInternal it will be used here
 	Id plugin.TValue[string]
+	Type plugin.TValue[string]
+	Name plugin.TValue[string]
+	Tags plugin.TValue[[]interface{}]
+	Enabled plugin.TValue[bool]
+	HomepageUrl plugin.TValue[string]
+	TermsOfServiceUrl plugin.TValue[string]
+	ReplyUrls plugin.TValue[[]interface{}]
+	AssignmentRequired plugin.TValue[bool]
+	VisibleToUsers plugin.TValue[bool]
+	Notes plugin.TValue[string]
+	Assignments plugin.TValue[[]interface{}]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -2026,6 +2167,109 @@ func (c *mqlMicrosoftServiceprincipal) MqlID() string {
 
 func (c *mqlMicrosoftServiceprincipal) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetHomepageUrl() *plugin.TValue[string] {
+	return &c.HomepageUrl
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetTermsOfServiceUrl() *plugin.TValue[string] {
+	return &c.TermsOfServiceUrl
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetReplyUrls() *plugin.TValue[[]interface{}] {
+	return &c.ReplyUrls
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAssignmentRequired() *plugin.TValue[bool] {
+	return &c.AssignmentRequired
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetVisibleToUsers() *plugin.TValue[bool] {
+	return &c.VisibleToUsers
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetAssignments() *plugin.TValue[[]interface{}] {
+	return &c.Assignments
+}
+
+// mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource
+type mqlMicrosoftServiceprincipalAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMicrosoftServiceprincipalAssignmentInternal it will be used here
+	Id plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createMicrosoftServiceprincipalAssignment creates a new instance of this resource
+func createMicrosoftServiceprincipalAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftServiceprincipalAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.serviceprincipal.assignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftServiceprincipalAssignment) MqlName() string {
+	return "microsoft.serviceprincipal.assignment"
+}
+
+func (c *mqlMicrosoftServiceprincipalAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftServiceprincipalAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftServiceprincipalAssignment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftServiceprincipalAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
 
 // mqlMicrosoftSecurity for the microsoft.security resource

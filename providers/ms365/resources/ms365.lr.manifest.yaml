@@ -6,6 +6,8 @@ resources:
     fields:
       applications: {}
       domains: {}
+      enterpriseApplications:
+        min_mondoo_version: latest
       groups: {}
       organizations: {}
       serviceprincipals: {}
@@ -78,6 +80,13 @@ resources:
       ttl: {}
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.enterpriseApplication:
+    fields:
+      id: {}
+      name: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
   microsoft.group:
     fields:
       displayName: {}
@@ -152,9 +161,52 @@ resources:
     min_mondoo_version: 5.15.0
   microsoft.serviceprincipal:
     fields:
+      appRoleAssignments:
+        min_mondoo_version: latest
+      assignmentRequired:
+        min_mondoo_version: latest
+      assignments:
+        min_mondoo_version: latest
+      enabled:
+        min_mondoo_version: latest
+      homepageUrl:
+        min_mondoo_version: latest
       id: {}
+      name:
+        min_mondoo_version: latest
+      notes:
+        min_mondoo_version: latest
+      properties:
+        min_mondoo_version: latest
+      replyUrls:
+        min_mondoo_version: latest
+      tags:
+        min_mondoo_version: latest
+      termsOfServiceUrl:
+        min_mondoo_version: latest
+      type:
+        min_mondoo_version: latest
+      userAccessUrl:
+        min_mondoo_version: latest
+      visibleToUsers:
+        min_mondoo_version: latest
     is_private: true
     min_mondoo_version: 5.15.0
+  microsoft.serviceprincipal.appRoleAssignment:
+    fields:
+      displayName: {}
+      id: {}
+      type: {}
+    min_mondoo_version: latest
+  microsoft.serviceprincipal.assignment:
+    fields:
+      appId: {}
+      displayName: {}
+      id: {}
+      resourceName: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
   microsoft.user:
     fields:
       accountEnabled: {}

@@ -15,6 +15,8 @@ microsoft {
   applications() []microsoft.application
   // List of service principals
   serviceprincipals() []microsoft.serviceprincipal
+  // List of enterprise applications
+  enterpriseApplications() []microsoft.serviceprincipal
   // Microsoft 365 settings
   settings() dict
 }
@@ -164,9 +166,41 @@ private microsoft.application @defaults("id displayName") {
 }
 
 // Microsoft Service Principal
-private microsoft.serviceprincipal @defaults("id") {
+private microsoft.serviceprincipal @defaults("name") {
   // Service principal ID
   id string
+  // Service principal type
+  type string
+  // Service principal name
+  name string
+  // Service principal tags
+  tags []string
+  // Whether users can sign into the service principal (application)
+  enabled bool
+  // Service principal homepage URL
+  homepageUrl string
+  // Service principal terms of service URL
+  termsOfServiceUrl string
+  // Service principal reply URLs
+  replyUrls []string
+  // Whether users or other apps must be assigned to this service principal before using it
+  assignmentRequired bool
+  // Whether the service principal is visible to users
+  visibleToUsers bool
+  // Service principal notes
+  notes string
+  // The list of assignments (users and groups) this service principal has
+  assignments []microsoft.serviceprincipal.assignment
+}
+
+// Microsoft Service Principal Assignment
+private microsoft.serviceprincipal.assignment @defaults("id") {
+  // Service Principal Assignment ID
+  id string
+  // Service Principal Assignment name
+  displayName string
+  // Service Principal Assignment type
+  type string
 }
 
 // Microsoft Security
