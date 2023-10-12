@@ -153,6 +153,10 @@ func (a *mqlAtlassianAdminOrganizationUser) lastActive() ([]interface{}, error) 
 
 }
 
+func (a *mqlAtlassianAdminOrganizationUserLastActive) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAtlassianAdminOrganizationUser) id() (string, error) {
 	return a.Id.Data, nil
 }

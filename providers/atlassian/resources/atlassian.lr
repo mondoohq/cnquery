@@ -68,7 +68,7 @@ atlassian.admin.organization.user {
 	lastActive() []atlassian.admin.organization.user.lastActive
 }
 
-atlassian.admin.organization.user.lastActive {
+atlassian.admin.organization.user.lastActive @defaults("id") {
   // ID
   id string
   // URL
