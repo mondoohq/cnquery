@@ -2,21 +2,21 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 packs:
-  - uid: mondoo-slack-incident-response
-    name: Slack Incident Response Pack
-    version: 1.1.0
+  - uid: mondoo-slack-inventory
+    name: Slack Inventory Pack
+    version: 1.0.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
     tags:
       mondoo.com/platform: slack-team,saas
-      mondoo.com/category: security
+      mondoo.com/category: best-practices
     docs:
       desc: |
         ### Overview
 
-        The Slack Incident Response query pack retrieves configuration data about your Slack configuration during a security incident.
+        The Slack Inventory Pack retrieves information about Slack teams for asset inventory.
 
         ### Prerequisites
 
@@ -29,7 +29,7 @@ packs:
         4. Enter an "App Name" e.g. cnquery and select the workspace, then select "Create App"
         5. In the section "Add features & functionality" select "Permissions"
         6. Scroll to "Scopes" and then "User Token Scopes"
- 
+
         Note: Bots are very limited in their access; therefore we need to set the user scopes
 
         7. Add the required permissions to "User Token Scopes"
@@ -53,28 +53,43 @@ packs:
 
         ```bash
         export SLACK_TOKEN=xoxp-TOKEN
-        cnquery scan slack --query-pack mondoo-incident-response-slack
+        cnquery scan slack --query-pack mondoo-slack-inventory
         ```
     filters:
       - asset.platform == "slack" || asset.platform == "slack-team"
     queries:
-      - uid: mondoo-slack-incident-response-team-domain
-        title: Retrieve Slack Team Domain
+      - uid: mondoo-slack-inventory-team-domain
+        title: Slack Team Domain
         mql: |
           slack.team.domain
-      - uid: mondoo-slack-incident-response-team-id
-        title: Retrieve Slack Team ID
+      - uid: mondoo-slack-inventory-team-id
+        title: Slack Team ID
         mql: |
           slack.team.id
-      - uid: mondoo-slack-incident-response-mfa-status
-        title: Retrieve Slack Team MFA status 
+      - uid: mondoo-slack-inventory-mfa-status
+        title: Slack Team MFA status
         docs:
           desc: |
-            This query retrieves the status of whether MFA is configured for all users. 
+            This query retrieves the status of whether MFA is configured for all users.
         mql: |
           slack.users { id name profile["email"] isBot teamId has2FA }
-      - uid: mondoo-slack-incident-response-owners
+      - uid: mondoo-slack-inventory-owners
         title: Retrieve Slack Team Owners
+        docs:
+          desc: |
+            This query retrieves the list of all users with the Owner privilege.
         mql: |
           slack.users.owners.length
           slack.users.owners { id name profile["email"] isBot teamId has2FA }
+      - uid: mondoo-slack-inventory-admins
+        title: Slack Admins
+        docs:
+          desc: |
+            This query retrieves the list of all users with the Admin privilege.
+        mql: slack.users.admins { id name }
+      - uid: mondoo-slack-inventory-external-channels
+        title: Externally shared channels
+        docs:
+          desc: |
+            This query retrieves the list of all channels that have been externally shared.
+        mql: slack.conversations.where(isExtShared == true) { id name }
