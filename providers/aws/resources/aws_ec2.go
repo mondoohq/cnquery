@@ -614,7 +614,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("calling aws func with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
@@ -854,8 +854,8 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
 
-	rawResources, err := awsEc2.securityGroups()
-	if err != nil {
+	rawResources := awsEc2.GetSecurityGroups()
+	if rawResources.Error != nil {
 		return nil, nil, err
 	}
 
@@ -875,8 +875,8 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		}
 	}
 
-	for i := range rawResources {
-		securityGroup := rawResources[i].(*mqlAwsEc2Securitygroup)
+	for i := range rawResources.Data {
+		securityGroup := rawResources.Data[i].(*mqlAwsEc2Securitygroup)
 		if match(securityGroup) {
 			return args, securityGroup, nil
 		}
@@ -1111,6 +1111,7 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return args, nil, nil
 	}
 
+	log.Debug().Msg("init an ec2 instance")
 	if len(args) == 0 {
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["arn"] = llx.StringData(ids.arn)
@@ -1127,14 +1128,14 @@ func initAwsEc2Instance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	ec2 := obj.(*mqlAwsEc2)
 
-	rawResources, err := ec2.instances()
-	if err != nil {
+	rawResources := ec2.GetInstances()
+	if rawResources.Error != nil {
 		return nil, nil, err
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		instance := rawResources[i].(*mqlAwsEc2Instance)
+	for i := range rawResources.Data {
+		instance := rawResources.Data[i].(*mqlAwsEc2Instance)
 		if instance.Arn.Data == arnVal {
 			return args, instance, nil
 		}
