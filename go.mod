@@ -1,6 +1,6 @@
 module go.mondoo.com/cnquery
 
-go 1.20
+go 1.21
 
 require (
 	cloud.google.com/go/accessapproval v1.7.1
@@ -175,15 +175,15 @@ require (
 	github.com/xanzy/go-gitlab v0.92.1
 	github.com/zclconf/go-cty v1.10.0
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f
-	go.opentelemetry.io/otel v1.14.0
-	golang.org/x/crypto v0.13.0
-	golang.org/x/net v0.15.0
+	go.opentelemetry.io/otel v1.19.0
+	golang.org/x/crypto v0.14.0
+	golang.org/x/net v0.17.0
 	golang.org/x/oauth2 v0.10.0
-	golang.org/x/sync v0.3.0
-	golang.org/x/sys v0.12.0
-	golang.org/x/term v0.12.0
+	golang.org/x/sync v0.4.0
+	golang.org/x/sys v0.13.0
+	golang.org/x/term v0.13.0
 	golang.org/x/text v0.13.0
-	golang.org/x/tools v0.13.0
+	golang.org/x/tools v0.14.0
 	google.golang.org/api v0.132.0
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98
@@ -516,14 +516,15 @@ require (
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	gitlab.com/bosi/decorder v0.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/otel/trace v1.14.0 // indirect
+	go.opentelemetry.io/otel/metric v1.19.0 // indirect
+	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.tmz.dev/musttag v0.7.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230224173230-c95f2b4c22f2 // indirect
-	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
