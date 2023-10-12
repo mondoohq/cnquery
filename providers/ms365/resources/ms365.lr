@@ -166,7 +166,7 @@ private microsoft.application @defaults("id displayName") {
 }
 
 // Microsoft Service Principal
-private microsoft.serviceprincipal @defaults("id") {
+private microsoft.serviceprincipal @defaults("name") {
   // Service principal ID
   id string
   // Service principal type
