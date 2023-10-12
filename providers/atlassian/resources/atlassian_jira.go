@@ -179,7 +179,7 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	jira := conn.Jira()
 	validate := ""
 	jql := "order by created DESC"
-	fields := []string{"status"}
+	fields := []string{"status", "project"}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
 	issues, response, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
 	if err != nil {
@@ -193,7 +193,9 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	for _, issue := range issues.Issues {
 		mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 			map[string]*llx.RawData{
-				"id": llx.StringData(issue.ID),
+				"id":      llx.StringData(issue.ID),
+				"project": llx.StringData(issue.Fields.Project.Name),
+				"status":  llx.StringData(issue.Fields.Status.Name),
 			})
 		if err != nil {
 			log.Fatal().Err(err)

@@ -109,6 +109,8 @@ resources:
   atlassian.jira.issue:
     fields:
       id: {}
+      project: {}
+      status: {}
     min_mondoo_version: latest
   atlassian.jira.project:
     fields:

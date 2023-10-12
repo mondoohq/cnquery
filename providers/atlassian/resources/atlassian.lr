@@ -95,6 +95,10 @@ atlassian.jira {
 atlassian.jira.issue @defaults("id") {
   // ID
   id string
+  // Project
+  project string
+  // Status
+  status string
 }
 
 atlassian.jira.serverInfo @defaults("serverTitle") {

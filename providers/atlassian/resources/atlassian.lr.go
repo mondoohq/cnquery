@@ -256,6 +256,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetId()).ToDataRes(types.String)
 	},
+	"atlassian.jira.issue.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetProject()).ToDataRes(types.String)
+	},
+	"atlassian.jira.issue.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetStatus()).ToDataRes(types.String)
+	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
 	},
@@ -525,6 +531,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"atlassian.jira.issue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1378,6 +1392,8 @@ type mqlAtlassianJiraIssue struct {
 	__id string
 	// optional: if you define mqlAtlassianJiraIssueInternal it will be used here
 	Id plugin.TValue[string]
+	Project plugin.TValue[string]
+	Status plugin.TValue[string]
 }
 
 // createAtlassianJiraIssue creates a new instance of this resource
@@ -1419,6 +1435,14 @@ func (c *mqlAtlassianJiraIssue) MqlID() string {
 
 func (c *mqlAtlassianJiraIssue) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAtlassianJiraIssue) GetProject() *plugin.TValue[string] {
+	return &c.Project
+}
+
+func (c *mqlAtlassianJiraIssue) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource
