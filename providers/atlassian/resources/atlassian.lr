@@ -85,9 +85,16 @@ atlassian.jira {
   // Jira projects
   projects() []atlassian.jira.project
   // Jira groups
+  issues() []atlassian.jira.issue
+  // Jira groups
   groups() []atlassian.jira.group
   // Jira server info
   serverInfos() atlassian.jira.serverInfo
+}
+
+atlassian.jira.issue @defaults("id") {
+  // ID
+  id string
 }
 
 atlassian.jira.serverInfo @defaults("serverTitle") {

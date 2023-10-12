@@ -85,6 +85,7 @@ resources:
   atlassian.jira:
     fields:
       groups: {}
+      issues: {}
       projects: {}
       serverInfo: {}
       serverInfos: {}
@@ -102,6 +103,10 @@ resources:
       name: {}
     min_mondoo_version: latest
   atlassian.jira.groups:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.issue:
     fields:
       id: {}
     min_mondoo_version: latest

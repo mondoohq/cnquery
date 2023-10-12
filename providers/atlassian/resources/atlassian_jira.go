@@ -174,6 +174,39 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	jira := conn.Jira()
+	validate := ""
+	jql := "order by created DESC"
+	fields := []string{"status"}
+	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
+	issues, response, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+
+	res := []interface{}{}
+	for _, issue := range issues.Issues {
+		mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
+			map[string]*llx.RawData{
+				"id": llx.StringData(issue.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianJiraIssue)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraIssue) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 	jira := conn.Jira()
