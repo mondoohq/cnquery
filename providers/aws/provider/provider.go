@@ -214,6 +214,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		conn = connection.NewMockConnection(s.lastConnectionID, asset, conf)
 
 	case string(awsec2ebsconn.EBSConnectionType):
+		// A AwsEbsConnection is a wrapper around a FilesystemConnection
+		// To make sure the connection is later handled by the os provider, override the type
+		conf.Type = "filesystem"
 		s.lastConnectionID++
 		conn, err = awsec2ebsconn.NewAwsEbsConnection(s.lastConnectionID, conf, asset)
 

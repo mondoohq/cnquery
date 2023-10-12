@@ -62,6 +62,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs provider only valid on ec2 instances")
 	}
+	log.Debug().Interface("info", i).Msg("received instance info")
 
 	// ec2 client for the scanner region
 	cfg.Region = i.Region
@@ -69,7 +70,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 
 	targetRegion := conf.Options["region"]
 	if targetRegion == "" {
-		log.Info().Msg("flag --region not specified, using scanner instance region")
+		log.Info().Msg("flag --region not specified, using instance region")
 		targetRegion = i.Region
 	}
 
@@ -86,6 +87,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 			PlatformId: conf.PlatformId,
 			Region:     targetRegion,
 			Id:         conf.Options["id"],
+			AccountId:  i.AccountID,
 		},
 		targetType: conf.Options["type"],
 		scannerInstance: &awsec2ebstypes.InstanceId{
@@ -180,6 +182,10 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
+
+	// The filesystem connection later relies on this option being set to access the correct path
+	conf.Options["path"] = volumeMounter.ScanDir
+
 	// Create and initialize fs provider
 	conf.Options["path"] = volumeMounter.ScanDir
 	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
