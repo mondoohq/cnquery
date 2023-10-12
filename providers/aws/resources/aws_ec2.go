@@ -614,7 +614,7 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws func with region %s", regionVal)
+			log.Debug().Msgf("calling aws with region %s", regionVal)
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
