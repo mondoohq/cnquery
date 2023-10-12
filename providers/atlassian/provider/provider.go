@@ -129,17 +129,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AtlassianConnection) error {
-	// TODO: adjust asset detection
 	asset.Id = conn.Conf.Type
-	asset.Name = conn.Conf.Host
+	asset.Name = conn.Host
 
-	asset.Platform = &inventory.Platform{
-		Name:   "atlassian",
-		Family: []string{"atlassian"},
-		Kind:   "api",
-		Title:  "Atlassian",
-	}
-
+	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/atlassian"}
 	return nil
 }

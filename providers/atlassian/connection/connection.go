@@ -18,6 +18,7 @@ type AtlassianConnection struct {
 	admin     *admin.Client
 	jira      *v2.Client
 	confluece *confluence.Client
+	Host      string
 	// Add custom connection fields here
 }
 
@@ -51,6 +52,7 @@ func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 
 	conn := &AtlassianConnection{
 		Conf:      conf,
+		Host:      host,
 		id:        id,
 		asset:     asset,
 		admin:     admin,

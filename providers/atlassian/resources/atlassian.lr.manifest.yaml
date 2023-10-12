@@ -18,6 +18,7 @@ resources:
       events: {}
       id: {}
       policies: {}
+      scim: {}
       type: {}
       users: {}
     min_mondoo_version: latest
@@ -36,6 +37,14 @@ resources:
       policyType: {}
       status: {}
       type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.scim:
+    fields:
+      users: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.scim.user:
+    fields:
+      id: {}
     min_mondoo_version: latest
   atlassian.admin.organization.user:
     fields:

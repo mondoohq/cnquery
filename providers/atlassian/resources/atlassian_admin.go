@@ -37,6 +37,39 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAtlassianAdminOrganization) scim() (*mqlAtlassianAdminOrganizationScim, error) {
+	mqlAtlassianAdminSCIM, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.scim",
+		map[string]*llx.RawData{})
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	return mqlAtlassianAdminSCIM.(*mqlAtlassianAdminOrganizationScim), nil
+}
+
+func (a *mqlAtlassianAdminOrganizationScim) users() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	admin := conn.Admin()
+	scimUsers, response, err := admin.SCIM.User.Gets(context.Background(), "786d6a74-k7b3-14jk-7863-5b83a48k8c43", nil, 0, 1000)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	res := []interface{}{}
+	for _, scimUser := range scimUsers.Resources {
+		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.scim.user",
+			map[string]*llx.RawData{
+				"id": llx.StringData(scimUser.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminSCIMuser)
+	}
+	return res, nil
+}
+
 type atlassianUser struct {
 	AccountID string
 	Name      string

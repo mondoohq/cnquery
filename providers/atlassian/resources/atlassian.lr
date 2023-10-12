@@ -22,6 +22,18 @@ atlassian.admin.organization @defaults("id") {
   domains() []atlassian.admin.organization.domain
   // Events 
   events() []atlassian.admin.organization.event
+  // SCIM
+  scim() atlassian.admin.organization.scim
+}
+
+atlassian.admin.organization.scim {
+  // SCIM users
+  users() []atlassian.admin.organization.scim.user
+}
+
+atlassian.admin.organization.scim.user {
+  // ID
+  id string
 }
 
 atlassian.admin.organization.policy @defaults("id") {
