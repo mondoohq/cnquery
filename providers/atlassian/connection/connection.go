@@ -12,13 +12,12 @@ import (
 )
 
 type AtlassianConnection struct {
-	id               uint32
-	Conf             *inventory.Config
-	asset            *inventory.Asset
-	admin            *admin.Client
-	jira             *v2.Client
-	confluece        *confluence.Client
-	PlatformOverride string
+	id        uint32
+	Conf      *inventory.Config
+	asset     *inventory.Asset
+	admin     *admin.Client
+	jira      *v2.Client
+	confluece *confluence.Client
 	// Add custom connection fields here
 }
 
