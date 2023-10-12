@@ -40,10 +40,13 @@ jobs:
           echo "skip-publish=true" >> $GITHUB_OUTPUT
           echo "skip-publish=true" >> $GITHUB_ENV
 
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+      
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: ">=1.21.0"
+          go-version: ">=${{ env.golang-version }}"
           cache: false
 
       - name: 'Authenticate to Google Cloud'
