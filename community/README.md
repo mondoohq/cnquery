@@ -4,7 +4,7 @@ Community policies are primarily maintained by the community with support of the
 
 ## Contributing
 
-We welcome all contributions. For more information on contributing to cnquery-packs, see our [Contributing](https://github.com/mondoohq/.github/blob/master/CONTRIBUTING.md) guide. 
+We welcome all contributions. For more information on contributing to cnquery-packs, see our [Contributing](https://github.com/mondoohq/.github/blob/master/CONTRIBUTING.md) guide.
 
 ### Join the community!
 

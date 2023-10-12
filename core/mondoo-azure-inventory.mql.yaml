@@ -15,8 +15,7 @@ packs:
     docs:
       desc: |
         The Azure Asset Inventory by Mondoo query pack retrieves information about Azure subscriptions and resources for asset inventory.
-    filters:
-      asset.platform == "azure"
+    filters: asset.platform == "azure"
     queries:
       - uid: mondoo-asset-inventory-azure-subscription-id
         title: Retrieve Azure subscription ID
@@ -78,20 +77,20 @@ packs:
           desc: |
             This query retrieves data for all databases in Azure SQL Database servers
         mql: azure.subscription.sql.servers { databases }
-      - uid: mondoo-asset-inventory-azure-postgresql                                                                                                                                                         
-        title: Retrieve data for all Azure PostgreSQL servers                                                                                                                                                         
+      - uid: mondoo-asset-inventory-azure-postgresql
+        title: Retrieve data for all Azure PostgreSQL servers
         docs:
           desc: |
             This query retrieves data for all PostgreSQL servers
         mql: azure.subscription.postgreSql.servers
-      - uid: mondoo-asset-inventory-azure-postgresql-firewallrules                                                                                                                                                        
-        title: Retrieve data for all firewall rules in Azure PostgreSQL servers                                                                                                                                                         
+      - uid: mondoo-asset-inventory-azure-postgresql-firewallrules
+        title: Retrieve data for all firewall rules in Azure PostgreSQL servers
         docs:
           desc: |
             This query retrieves data for all firewall rules in Azure PostgreSQL servers
         mql: azure.subscription.postgreSql.servers { firewallRules }
-      - uid: mondoo-asset-inventory-azure-mysql                                                                                                                                                        
-        title: Retrieve data for all Azure MySQL servers                                                                                                                                                         
+      - uid: mondoo-asset-inventory-azure-mysql
+        title: Retrieve data for all Azure MySQL servers
         docs:
           desc: |
             This query retrieves data for all Azure MySQL servers
@@ -102,8 +101,8 @@ packs:
           desc: |
             This query retrieves data for all Azure MariaDB servers
         mql: azure.subscription.mariaDb.servers
-      - uid: mondoo-asset-inventory-azure-diagnosticSettings                                                                                                                                                       
-        title: Retrieve data for all Azure diagnostic settings                                                                                                                                                         
+      - uid: mondoo-asset-inventory-azure-diagnosticSettings
+        title: Retrieve data for all Azure diagnostic settings
         docs:
           desc: |
             This query retrieves data for all diagnostic settings

@@ -187,7 +187,7 @@ packs:
         title: Number GitHub repository watchers
         mql: github.repository.watchersCount
       - uid: mondoo-github-inventory-repo-license
-        title: GitHub repository license 
+        title: GitHub repository license
         mql: github.repository.license.spdxId
       - uid: mondoo-github-inventory-repo-default-branch
         title: GitHub repo default branch

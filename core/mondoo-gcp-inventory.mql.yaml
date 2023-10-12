@@ -47,32 +47,32 @@ packs:
             This query retrieves all roles defined for a GCP project
         mql: gcp.project.iamPolicy { role }
       - uid: mondoo-asset-inventory-gcp-enabled-services
-        title: Retrieve all services enabled in the GCP project 
-        docs: 
+        title: Retrieve all services enabled in the GCP project
+        docs:
           desc: |
             This query retrieves all services enabled in the GCP Project
         mql: gcp.project.services.where( enabled == true )
       - uid: mondoo-asset-inventory-gcp-gke-clusters-count
         title: Retrieve count of GKE clusters in a GCP project
-        docs: 
+        docs:
           desc: |
             This query retrieves a count of GKE clusters running in a GCP project
         mql: gcp.project.gke.clusters.length
       - uid: mondoo-asset-inventory-gcp-gke-clusters-data
         title: Retrieve data on GKE clusters
-        docs: 
+        docs:
           desc: |
             This query retrieves all of the configuration data for GKE clusters within a project
         mql: gcp.project.gke.clusters
       - uid: mondoo-asset-inventory-gcp-compute-instances-count
         title: Retrieve a count of GCP compute instances in a GCP project
-        docs: 
+        docs:
           desc: |
             This query retrieves a count of running GCP compute instances in a GCP project
         mql: gcp.compute.instances.where( status == "RUNNING" ).length
       - uid: mondoo-asset-inventory-gcp-compute-instances-data
         title: Retrieve data from all running GCP compute instances in a GCP project
-        docs: 
+        docs:
           desc: |
             This query retrieves the data for all running GCP compute instances in a GCP project
         mql: gcp.compute.instances.where( status == "RUNNING" )
@@ -80,18 +80,18 @@ packs:
         title: Retrieve data on public GCP Compute Engine instances
         docs:
           desc: |
-            This query retrieves the data for all GCP Compute Engine instances that have been configured with an external IP address. 
+            This query retrieves the data for all GCP Compute Engine instances that have been configured with an external IP address.
         mql: |
           gcp.compute.instances.where( networkInterfaces[0]['accessConfigs'][0]['name'] == "External NAT" )
       - uid: mondoo-asset-inventory-gcp-compute-networks-count
         title: Retrieve a count of GCP Compute Engine networks in a GCP project
-        docs: 
+        docs:
           desc: |
             This query retrieves a count of GCP Compute Engine networks configured in a GCP project
         mql: gcp.compute.networks.length
       - uid: mondoo-asset-inventory-gcp-compute-networks-data
         title: Retrieve data for all GCP Compute Engine networks in a GCP project
-        docs: 
+        docs:
           desc: |
             This query retrieves the data for all GCP Compute Engine networks configured in a GCP project.
         mql: gcp.compute.networks

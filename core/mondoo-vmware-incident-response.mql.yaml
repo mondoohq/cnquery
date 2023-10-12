@@ -29,7 +29,7 @@ packs:
         ## Join the community!
 
         Our goal is to build policies that are simple to deploy, accurate, and actionable. 
-        
+
         If you have any suggestions for improving this policy, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
       - asset.platform == "vmware-esxi"
@@ -51,7 +51,7 @@ packs:
       - uid: mondoo-vmware-incident-response-acceptance-level
         title: Retrieve host acceptance level
         docs:
-          desc: The host acceptance level determines which VIBs can be installed on a host. 
+          desc: The host acceptance level determines which VIBs can be installed on a host.
         mql: vsphere.host.acceptanceLevel
         refs:
           - title:

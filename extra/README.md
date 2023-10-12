@@ -4,7 +4,7 @@ Extra packs are a mix of community- and Mondoo-maintained query packs that are o
 
 ## Contributing
 
-We welcome all contributions. For more information on contributing to cnquery-packs, see our [Contributing](https://github.com/mondoohq/.github/blob/master/CONTRIBUTING.md) guide. 
+We welcome all contributions. For more information on contributing to cnquery-packs, see our [Contributing](https://github.com/mondoohq/.github/blob/master/CONTRIBUTING.md) guide.
 
 ### Join the community!
 

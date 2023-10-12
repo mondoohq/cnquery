@@ -23,14 +23,14 @@ packs:
         mql: |
           aws.account.id
       - uid: mondoo-asset-inventory-aws-enabled-regions
-        title: Retrieve all regions enabled in the AWS account 
-        docs: 
+        title: Retrieve all regions enabled in the AWS account
+        docs:
           desc: |
             This query retrieves all AWS regions enabled in the account
         mql: aws { regions }
       - uid: mondoo-asset-inventory-aws-vpcs
         title: Retrieve data on all VPCs
-        docs: 
+        docs:
           desc: |
             This query retrieves all of the configuration data for AWS VPCs
         mql: aws.vpcs

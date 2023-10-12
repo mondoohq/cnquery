@@ -38,7 +38,7 @@ packs:
           }
       - uid: mondoo-linux-incident-response-mounts
         title: Retrieve mounted devices
-        mql: mount.list { * } 
+        mql: mount.list { * }
       - uid: mondoo-linux-incident-response-listening-ports
         title: Retrieve all listening ports
         mql: |

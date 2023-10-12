@@ -32,8 +32,8 @@ packs:
 
         ## Join the community!
         Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
-        
-        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
       - asset.platform.contains("macos")
     queries:
@@ -67,18 +67,18 @@ packs:
       - uid: mondoo-hostname
         title: Retrieve the hostname
         mql: os.hostname
-      - uid: mondoo-macos-users 
-        title: Retrieve regular users 
+      - uid: mondoo-macos-users
+        title: Retrieve regular users
         mql: users.where( name != /^_/ && shell != "/usr/bin/false" && name != "root")
       - uid: mondoo-macos-packages
-        title: Retrieve macOS packages 
+        title: Retrieve macOS packages
         mql: packages
       - uid: mondoo-macos-running-services
         title: Retrieve data on running services
         mql: services.where( running == true )
       - uid: mondoo-macos-ports-listening
-        title: Retrieve data on listening ports 
-        mql: ports.listening 
+        title: Retrieve data on listening ports
+        mql: ports.listening
       - uid: mondoo-macos-interface-configuration
         title: Retrieve interface configuration of the system
         mql: command("ifconfig").stdout
