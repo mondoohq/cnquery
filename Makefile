@@ -1,3 +1,6 @@
+lint:
+	cnquery bundle validate . 
+
 # Copywrite Check Tool: https://github.com/hashicorp/copywrite
 license: license/headers/check
 

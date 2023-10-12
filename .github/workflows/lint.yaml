@@ -16,6 +16,22 @@ jobs:
       - name: Installing cnquery
         run: |
           bash -c "$(curl -sSL https://install.mondoo.com/sh/cnquery)"
+      - name: Ensure providers are installed
+        # can be removed once https://github.com/mondoohq/cnquery/issues/2188 is solved
+        run: |
+          cnquery providers install aws
+          cnquery providers install azure
+          cnquery providers install gcp
+          cnquery providers install github
+          cnquery providers install k8s
+          cnquery providers install os
+          cnquery providers install slack
+          cnquery providers install vsphere
+          cnquery providers install gitlab  
+          cnquery providers install network
+          cnquery providers install ms365
+          cnquery providers install google-workspace
+          cnquery providers install okta 
       - name: Lint packs
         run: |
           cnquery bundle validate .

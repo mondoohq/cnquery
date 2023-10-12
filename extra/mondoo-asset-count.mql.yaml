@@ -106,12 +106,12 @@ packs:
       - uid: mondoo-asset-count-on-azure
         title: Retrieve all VMs from Azure
         query: |
-          azure.compute.vms.length
+          azure.subscription.compute.vms.length
 
       - uid: mondoo-count-users-in-azure
         title: Retrieve all users from Azure
         query: |
-          azuread.users.length
+          microsoft.users.length
 
       - uid: mondoo-asset-count-aws-account-id
         title: AWS account ID
