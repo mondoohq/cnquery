@@ -29,9 +29,16 @@ atlassian.admin.organization @defaults("id") {
 atlassian.admin.organization.scim {
   // SCIM users
   users() []atlassian.admin.organization.scim.user
+  // SCIM groups
+  groups() []atlassian.admin.organization.scim.group
 }
 
-atlassian.admin.organization.scim.user {
+atlassian.admin.organization.scim.user @defaults("id") {
+  // ID
+  id string
+}
+
+atlassian.admin.organization.scim.group @defaults("id") {
   // ID
   id string
 }

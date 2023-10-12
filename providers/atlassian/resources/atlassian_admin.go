@@ -70,6 +70,38 @@ func (a *mqlAtlassianAdminOrganizationScim) users() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAtlassianAdminOrganizationScim) groups() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	admin := conn.Admin()
+	scimGroup, response, err := admin.SCIM.Group.Gets(context.Background(), "786d6a74-k7b3-14jk-7863-5b83a48k8c43", "", 0, 1000)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	res := []interface{}{}
+	for _, scimGroup := range scimGroup.Resources {
+		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.scim.group",
+			map[string]*llx.RawData{
+				"id": llx.StringData(scimGroup.ID),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminSCIMgroup)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianAdminOrganizationScimUser) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAtlassianAdminOrganizationScimGroup) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 type atlassianUser struct {
 	AccountID string
 	Name      string

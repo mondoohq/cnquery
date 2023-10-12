@@ -37,6 +37,10 @@ func init() {
 			// to override args, implement: initAtlassianAdminOrganizationScimUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationScimUser,
 		},
+		"atlassian.admin.organization.scim.group": {
+			// to override args, implement: initAtlassianAdminOrganizationScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationScimGroup,
+		},
 		"atlassian.admin.organization.policy": {
 			// to override args, implement: initAtlassianAdminOrganizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationPolicy,
@@ -192,8 +196,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.scim.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationScim).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.scim.user")))
 	},
+	"atlassian.admin.organization.scim.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationScim).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.scim.group")))
+	},
 	"atlassian.admin.organization.scim.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationScimUser).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.scim.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationScimGroup).GetId()).ToDataRes(types.String)
 	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetId()).ToDataRes(types.String)
@@ -430,12 +440,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganizationScim).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.scim.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationScim).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.scim.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdminOrganizationScimUser).__id, ok = v.Value.(string)
 			return
 		},
 	"atlassian.admin.organization.scim.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationScimUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.scim.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminOrganizationScimGroup).__id, ok = v.Value.(string)
+			return
+		},
+	"atlassian.admin.organization.scim.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationScimGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -995,6 +1017,7 @@ type mqlAtlassianAdminOrganizationScim struct {
 	__id string
 	// optional: if you define mqlAtlassianAdminOrganizationScimInternal it will be used here
 	Users plugin.TValue[[]interface{}]
+	Groups plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminOrganizationScim creates a new instance of this resource
@@ -1045,6 +1068,22 @@ func (c *mqlAtlassianAdminOrganizationScim) GetUsers() *plugin.TValue[[]interfac
 	})
 }
 
+func (c *mqlAtlassianAdminOrganizationScim) GetGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization.scim", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
 // mqlAtlassianAdminOrganizationScimUser for the atlassian.admin.organization.scim.user resource
 type mqlAtlassianAdminOrganizationScimUser struct {
 	MqlRuntime *plugin.Runtime
@@ -1064,7 +1103,12 @@ func createAtlassianAdminOrganizationScimUser(runtime *plugin.Runtime, args map[
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.scim.user", res.__id)
@@ -1086,6 +1130,55 @@ func (c *mqlAtlassianAdminOrganizationScimUser) MqlID() string {
 }
 
 func (c *mqlAtlassianAdminOrganizationScimUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+// mqlAtlassianAdminOrganizationScimGroup for the atlassian.admin.organization.scim.group resource
+type mqlAtlassianAdminOrganizationScimGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAtlassianAdminOrganizationScimGroupInternal it will be used here
+	Id plugin.TValue[string]
+}
+
+// createAtlassianAdminOrganizationScimGroup creates a new instance of this resource
+func createAtlassianAdminOrganizationScimGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationScimGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.scim.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminOrganizationScimGroup) MqlName() string {
+	return "atlassian.admin.organization.scim.group"
+}
+
+func (c *mqlAtlassianAdminOrganizationScimGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganizationScimGroup) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
