@@ -32,10 +32,6 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 	res := []interface{}{}
 	apps := resp.GetValue()
 	for _, app := range apps {
-		identifierUris := []interface{}{}
-		for _, uri := range app.GetIdentifierUris() {
-			identifierUris = append(identifierUris, uri)
-		}
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.application",
 			map[string]*llx.RawData{
 				"id":              llx.StringData(convert.ToString(app.GetId())),
@@ -44,7 +40,7 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 				"displayName":     llx.StringData(convert.ToString(app.GetDisplayName())),
 				"publisherDomain": llx.StringData(convert.ToString(app.GetPublisherDomain())),
 				"signInAudience":  llx.StringData(convert.ToString(app.GetSignInAudience())),
-				"identifierUris":  llx.ArrayData(identifierUris, types.String),
+				"identifierUris":  llx.ArrayData(convert.SliceAnyToInterface(app.GetIdentifierUris()), types.String),
 			})
 		if err != nil {
 			return nil, err
