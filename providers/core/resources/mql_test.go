@@ -644,6 +644,18 @@ func TestArray(t *testing.T) {
 			Expectation: []interface{}{int64(2), int64(2)},
 		},
 		{
+			Code:        "[3,3,2,2].containsAll([1,2])",
+			Expectation: []interface{}{int64(1)},
+		},
+		{
+			Code:        "[2,1,2,1].containsAll([1,2])",
+			ResultIndex: 0, Expectation: []interface{}(nil),
+		},
+		{
+			Code:        "a = [1,3]; [2,1,2,1].containsAll(a)",
+			Expectation: []interface{}{int64(3)},
+		},
+		{
 			Code:        "[2,1,2,2].containsNone([1])",
 			Expectation: []interface{}{int64(1)},
 		},
