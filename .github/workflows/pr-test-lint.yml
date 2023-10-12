@@ -50,7 +50,8 @@ jobs:
           version: latest
 
   go-test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    timeout-minutes: 120
     steps:
       - name: Install Go
         uses: actions/setup-go@v4
