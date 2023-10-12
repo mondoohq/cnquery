@@ -537,6 +537,11 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return provider, info, nil
 	}
 
+	providerConn := r.Provider.Instance.ID
+	if info.Provider != providerConn && info.Provider != "go.mondoo.com/cnquery/v9/providers/core" && info.Provider != "go.mondoo.com/cnquery/v9/providers/network" {
+		return nil, nil, errors.New("incorrect provider for asset, not adding")
+	}
+
 	res, err := r.addProvider(info.Provider, false)
 	if err != nil {
 		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
