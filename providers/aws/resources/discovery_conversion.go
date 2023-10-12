@@ -636,7 +636,7 @@ func SSMConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	}
 	asset := &inventory.Asset{}
 	opts["instance"] = id
-	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",
 		Host:     id,
@@ -664,7 +664,7 @@ func InstanceConnectAsset(args []string, opts map[string]string) *inventory.Asse
 		}
 	}
 	asset := &inventory.Asset{}
-	asset.IdDetector = []string{ids.IdDetector_CloudDetect}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 	opts["instance"] = id
 	asset.Connections = []*inventory.Config{{
 		Type:     "ssh",
@@ -705,7 +705,7 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	opts["type"] = targetType
 	opts["id"] = target
 	asset.Name = target
-	asset.IdDetector = []string{ids.IdDetector_Hostname}
+	asset.IdDetector = []string{ids.IdDetector_Hostname} // do not use cloud detect or host key here
 	asset.Connections = []*inventory.Config{{
 		Type:     string(awsec2ebsconn.EBSConnectionType),
 		Host:     target,
