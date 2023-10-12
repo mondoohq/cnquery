@@ -1766,6 +1766,8 @@ private aws.ec2.instance @defaults("arn state") {
   keypair() aws.ec2.keypair
   // Time when the last state transition occurred
   stateTransitionTime time
+  // The ARN of the VPC associated with the instance
+  vpcArn string
 }
 
 // Amazon EC2 Key Pair

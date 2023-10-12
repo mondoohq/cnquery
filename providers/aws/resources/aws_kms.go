@@ -49,7 +49,7 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("kms>getKeys>calling aws with region %s", regionVal)
 
 			svc := conn.Kms(regionVal)
 			ctx := context.Background()

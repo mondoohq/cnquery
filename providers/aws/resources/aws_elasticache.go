@@ -53,7 +53,7 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("elasticache>getClusters>calling aws with region %s", regionVal)
 
 			svc := conn.Elasticache(regionVal)
 			ctx := context.Background()
@@ -123,7 +123,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("elasticache>getCacheClusters>calling aws with region %s", regionVal)
 
 			svc := conn.Elasticache(regionVal)
 			ctx := context.Background()

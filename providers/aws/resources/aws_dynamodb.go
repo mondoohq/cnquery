@@ -53,7 +53,7 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getBackups>calling aws with region %s", regionVal)
 
 			svc := conn.Dynamodb(regionVal)
 			ctx := context.Background()
@@ -173,7 +173,7 @@ func (a *mqlAwsDynamodb) getLimits(conn *connection.AwsConnection) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getLimits>calling aws with region %s", regionVal)
 
 			svc := conn.Dynamodb(regionVal)
 			ctx := context.Background()
@@ -261,7 +261,7 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("dynamodb>getTables>calling aws with region %s", regionVal)
 
 			svc := conn.Dynamodb(regionVal)
 			ctx := context.Background()

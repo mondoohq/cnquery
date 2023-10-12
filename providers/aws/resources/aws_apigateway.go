@@ -52,7 +52,7 @@ func (a *mqlAwsApigateway) getRestApis(conn *connection.AwsConnection) []*jobpoo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling AWS with region %s", regionVal)
+			log.Debug().Msgf("gateway>getRestApis>calling AWS with region %s", regionVal)
 
 			svc := conn.Apigateway(regionVal)
 			ctx := context.Background()

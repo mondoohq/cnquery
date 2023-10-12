@@ -46,7 +46,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("config>getRecorders>calling aws with region %s", regionVal)
 
 			svc := conn.ConfigService(regionVal)
 			ctx := context.Background()
@@ -153,7 +153,7 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("config>getRules>calling aws with region %s", regionVal)
 
 			svc := conn.ConfigService(regionVal)
 			ctx := context.Background()

@@ -54,7 +54,7 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("lambda>getFunctions>calling aws with region %s", regionVal)
 
 			svc := conn.Lambda(regionVal)
 			ctx := context.Background()

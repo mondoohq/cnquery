@@ -90,7 +90,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("cloudtrail>getTrails>calling aws with region %s", regionVal)
 
 			svc := conn.Cloudtrail(regionVal)
 			ctx := context.Background()

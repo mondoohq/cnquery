@@ -582,7 +582,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("cloudwatch>getLogGroups>calling aws with region %s", regionVal)
 
 			svc := conn.CloudwatchLogs(regionVal)
 			ctx := context.Background()
