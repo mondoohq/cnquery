@@ -1018,14 +1018,12 @@ func (a *mqlAwsIamPolicy) attachedUsers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	res := []interface{}{}
 	for i := range entities.PolicyUsers {
 		usr := entities.PolicyUsers[i]
-
-		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.user",
+		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.user",
 			map[string]*llx.RawData{
-				"name": llx.StringData(convert.ToString(usr.UserName)),
+				"name": llx.StringDataPtr(usr.UserName),
 			})
 		if err != nil {
 			return nil, err
