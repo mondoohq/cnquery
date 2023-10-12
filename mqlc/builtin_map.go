@@ -218,7 +218,7 @@ func compileDictContainsOnly(c *compiler, typ types.Type, ref uint64, id string,
 	return types.Bool, nil
 }
 
-func compileDictContainsNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileDictContainsEq(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call, method string) (types.Type, error) {
 	if call == nil || len(call.Function) != 1 {
 		return types.Nil, errors.New("function " + id + " needs one argument (dict)")
 	}
@@ -250,7 +250,7 @@ func compileDictContainsNone(c *compiler, typ types.Type, ref uint64, id string,
 	// .containsNone
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   "containsNone",
+		Id:   method,
 		Function: &llx.Function{
 			Type:    string(typ),
 			Binding: ref,
@@ -274,9 +274,17 @@ func compileDictContainsNone(c *compiler, typ types.Type, ref uint64, id string,
 	})
 
 	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
-	c.Result.Labels.Labels[checksum] = "[].containsNone()"
+	c.Result.Labels.Labels[checksum] = "[]." + method + "()"
 
 	return types.Bool, nil
+}
+
+func compileDictContainsAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	return compileDictContainsEq(c, typ, ref, id, call, "containsAll")
+}
+
+func compileDictContainsNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	return compileDictContainsEq(c, typ, ref, id, call, "containsNone")
 }
 
 func compileDictAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

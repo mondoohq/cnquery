@@ -993,7 +993,55 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	return &RawData{Type: bind.Type, Value: res}, 0, nil
 }
 
-func dictContainsNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func dictContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	args := chunk.Function.Args
+	// TODO: all this needs to go into the compile phase
+	if len(args) < 1 {
+		return nil, 0, errors.New("Called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	if len(args) > 1 {
+		return nil, 0, errors.New("called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	// ^^ TODO
+
+	argRef := args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	org, ok := bind.Value.([]interface{})
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
+	}
+
+	filters, ok := arg.Value.([]interface{})
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
+		// filters = []interface{}{arg.Value}
+	}
+
+	for i := range org {
+		for j := range filters {
+			if org[i] == filters[j] {
+				filters = append(filters[0:j], filters[j+1:]...)
+				break
+			}
+		}
+		if len(filters) == 0 {
+			filters = nil
+			break
+		}
+	}
+
+	return &RawData{Type: bind.Type, Value: filters}, 0, nil
+}
+
+func dictContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}

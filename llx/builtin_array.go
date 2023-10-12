@@ -739,7 +739,58 @@ func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	return &RawData{Type: bind.Type, Value: res}, 0, nil
 }
 
-func arrayContainsNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	args := chunk.Function.Args
+	// TODO: all this needs to go into the compile phase
+	if len(args) < 1 {
+		return nil, 0, errors.New("Called `arrayContainsNone` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	if len(args) > 1 {
+		return nil, 0, errors.New("called `arrayContainsNone` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	// ^^ TODO
+
+	argRef := args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	t := types.Type(arg.Type)
+	if t != bind.Type {
+		return nil, 0, errors.New("called `arrayNone` with wrong type (got: " + t.Label() + ", expected:" + bind.Type.Label() + ")")
+	}
+
+	ct := bind.Type.Child()
+	equalFunc, ok := types.Equal[ct]
+	if !ok {
+		return nil, 0, errors.New("cannot compare array entries")
+	}
+
+	org := bind.Value.([]interface{})
+	filters := arg.Value.([]interface{})
+
+	for i := range org {
+		for j := range filters {
+			if equalFunc(org[i], filters[j]) {
+				filters = append(filters[0:j], filters[j+1:]...)
+				break
+			}
+		}
+		if len(filters) == 0 {
+			filters = nil
+			break
+		}
+	}
+
+	return &RawData{Type: bind.Type, Value: filters}, 0, nil
+}
+
+func arrayContainsNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
 	}
