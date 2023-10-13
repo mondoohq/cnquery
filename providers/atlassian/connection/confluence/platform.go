@@ -2,7 +2,7 @@ package connection
 
 import "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 
-func (a *AtlassianConnection) PlatformInfo() *inventory.Platform {
+func (a *ConfluenceConnection) PlatformInfo() *inventory.Platform {
 	return GetPlatformForObject("atlassian")
 }
 

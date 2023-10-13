@@ -1,0 +1,72 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+package connection
+
+import (
+	"errors"
+	"os"
+
+	"github.com/ctreminiom/go-atlassian/admin"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
+)
+
+const (
+	Admin shared.ConnectionType = "admin"
+)
+
+type AdminConnection struct {
+	id     uint32
+	Conf   *inventory.Config
+	asset  *inventory.Asset
+	client *admin.Client
+}
+
+func NewAdminConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
+	adminToken := conf.Options["admintoken"]
+	if adminToken == "" {
+		adminToken = os.Getenv("ATLASSIAN_ADMIN_TOKEN")
+	}
+	if adminToken == "" {
+		return nil, errors.New("you need to provide atlassian admin token via ATLASSIAN_ADMIN_TOKEN env")
+	}
+
+	client, err := admin.New(nil)
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+
+	client.Auth.SetBearerToken(adminToken)
+	client.Auth.SetUserAgent("curl/7.54.0")
+
+	conn := &AdminConnection{
+		Conf:   conf,
+		id:     id,
+		asset:  asset,
+		client: client,
+	}
+
+	return conn, nil
+}
+
+func (c *AdminConnection) Name() string {
+	return "atlassian"
+}
+
+func (c *AdminConnection) ID() uint32 {
+	return c.id
+}
+
+func (c *AdminConnection) Asset() *inventory.Asset {
+	return c.asset
+}
+
+func (c *AdminConnection) Client() *admin.Client {
+	return c.client
+}
+
+func (p *AdminConnection) Type() shared.ConnectionType {
+	return Admin
+}
