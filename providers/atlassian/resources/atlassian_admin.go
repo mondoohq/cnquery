@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
 )
 
 func (a *mqlAtlassianAdmin) id() (string, error) {
@@ -13,8 +13,8 @@ func (a *mqlAtlassianAdmin) id() (string, error) {
 }
 
 func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	organizations, response, err := admin.Organization.Gets(context.Background(), "")
 	if err != nil {
 		log.Fatal().Err(err)
@@ -47,8 +47,8 @@ func (a *mqlAtlassianAdminOrganization) scim() (*mqlAtlassianAdminOrganizationSc
 }
 
 func (a *mqlAtlassianAdminOrganizationScim) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	scimUsers, response, err := admin.SCIM.User.Gets(context.Background(), "786d6a74-k7b3-14jk-7863-5b83a48k8c43", nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -71,8 +71,8 @@ func (a *mqlAtlassianAdminOrganizationScim) users() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganizationScim) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	scimGroup, response, err := admin.SCIM.Group.Gets(context.Background(), "786d6a74-k7b3-14jk-7863-5b83a48k8c43", "", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -110,9 +110,9 @@ type atlassianUser struct {
 }
 
 func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
 
-	admin := conn.Admin()
+	admin := conn.Client()
 
 	managedUsers, response, err := admin.Organization.Users(context.Background(), a.Id.Data, "")
 	if err != nil {
@@ -137,126 +137,9 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-
-	jira := conn.Jira()
-	confluence := conn.Confluence()
-
-	jiraUsers, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-
-	cql := "type = user"
-	confluenceUsers, response, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-	var atlassianUsers []atlassianUser
-	for _, jiraUser := range jiraUsers {
-		user := atlassianUser{
-			AccountID: jiraUser.AccountID,
-			Name:      jiraUser.DisplayName,
-			Type:      jiraUser.AccountType,
-			OrgID:     a.Id.Data,
-		}
-		atlassianUsers = append(atlassianUsers, user)
-	}
-	for _, confluenceUser := range confluenceUsers.Results {
-		user := atlassianUser{
-			AccountID: confluenceUser.User.AccountID,
-			Name:      confluenceUser.User.DisplayName,
-			Type:      confluenceUser.User.AccountType,
-			OrgID:     a.Id.Data,
-		}
-		atlassianUsers = append(atlassianUsers, user)
-	}
-
-	//TODO: is there a better way to get unique users?
-	var uniqueAtlassianUsers []atlassianUser
-loopMark:
-	for _, v := range atlassianUsers {
-		for i, u := range uniqueAtlassianUsers {
-			if v.AccountID == u.AccountID {
-				uniqueAtlassianUsers[i] = v
-				continue loopMark
-			}
-		}
-		uniqueAtlassianUsers = append(uniqueAtlassianUsers, v)
-	}
-
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-	res := []interface{}{}
-	for _, user := range uniqueAtlassianUsers {
-		mqlAtlassianAdminUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.user",
-			map[string]*llx.RawData{
-				"id":    llx.StringData(user.AccountID),
-				"name":  llx.StringData(user.Name),
-				"type":  llx.StringData(user.Type),
-				"orgId": llx.StringData(user.OrgID),
-			})
-		if err != nil {
-			log.Fatal().Err(err)
-		}
-		res = append(res, mqlAtlassianAdminUser)
-	}
-	return res, nil
-}
-
-func (a *mqlAtlassianAdminOrganizationUser) lastActive() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
-	accountId := a.Id.Data
-	orgId := a.OrgId.Data
-	lastActive, response, err := admin.Organization.Directory.Activity(context.Background(), orgId, accountId)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-
-	res := []interface{}{}
-	for _, access := range lastActive.Data.ProductAccess {
-		mqlAtlassianAdminUserLastActive, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.user.lastActive",
-			map[string]*llx.RawData{
-				"id":         llx.StringData(access.Id),
-				"url":        llx.StringData(access.Url),
-				"key":        llx.StringData(access.Key),
-				"lastActive": llx.StringData(access.LastActive),
-			})
-		if err != nil {
-			log.Fatal().Err(err)
-		}
-		res = append(res, mqlAtlassianAdminUserLastActive)
-	}
-	return res, nil
-
-}
-
-func (a *mqlAtlassianAdminOrganizationUserLastActive) id() (string, error) {
-	return a.Id.Data, nil
-}
-
-func (a *mqlAtlassianAdminOrganizationUser) id() (string, error) {
-	return a.Id.Data, nil
-}
-
 func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	orgId := a.Id.Data
 	policies, response, err := admin.Organization.Policy.Gets(context.Background(), orgId, "", "")
 	if err != nil {
@@ -284,8 +167,8 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	orgId := a.Id.Data
 	domains, response, err := admin.Organization.Domains(context.Background(), orgId, "")
 	if err != nil {
@@ -309,8 +192,8 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganization) events() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	admin := conn.Admin()
+	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
 	orgId := a.Id.Data
 	events, response, err := admin.Organization.Events(context.Background(), orgId, nil, "")
 	if err != nil {

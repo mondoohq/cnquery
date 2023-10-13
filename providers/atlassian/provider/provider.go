@@ -102,6 +102,18 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
+	case "admin":
+		s.lastConnectionID++
+		conn, err = admin.NewConnection(s.lastConnectionID, asset, conf)
+	case "scim":
+		s.lastConnectionID++
+		conn, err = scim.NewConnection(s.lastConnectionID, asset, conf)
+	case "jira":
+		s.lastConnectionID++
+		conn, err = jira.NewConnection(s.lastConnectionID, asset, conf)
+	case "confluence":
+		s.lastConnectionID++
+		conn, err = confluence.NewConnection(s.lastConnectionID, asset, conf)
 	default:
 		s.lastConnectionID++
 		conn, err = admin.NewConnection(s.lastConnectionID, asset, conf)
@@ -133,8 +145,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
-	asset.Id = conn.Conf.Type
-	asset.Name = conn.Host
+	asset.Id = string(conn.Type())
+	asset.Name = conn.Host()
 
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/atlassian"}

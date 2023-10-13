@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
 )
 
 func (a *mqlAtlassianConfluence) id() (string, error) {
@@ -13,8 +13,8 @@ func (a *mqlAtlassianConfluence) id() (string, error) {
 }
 
 func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	confluence := conn.Confluence()
+	conn := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
+	confluence := conn.Client()
 	cql := "type = user"
 	users, response, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
 	if err != nil {

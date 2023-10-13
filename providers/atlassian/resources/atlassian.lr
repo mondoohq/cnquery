@@ -14,8 +14,6 @@ atlassian.admin.organization @defaults("id") {
   id string
   // Organization type
   type string
-  // Organization users
-  users() []atlassian.admin.organization.user
   // Policies
   policies() []atlassian.admin.organization.policy
   // Domains 
@@ -77,37 +75,7 @@ atlassian.admin.organization.event @defaults("id") {
   id string
 }
 
-atlassian.admin.organization.user {
-  // Account ID
-	id string
-  // Organization ID
-	orgId string
-  // Account type
-	type string
-  // Account status
-	status string
-  // Name of the user
-	name string
-  // Picture of the user
-	picture string
-  // Email of the user
-	email string
-  // Billable
-	accessBillable bool
-  // Time when the user was last active
-	lastActive() []atlassian.admin.organization.user.lastActive
-}
 
-atlassian.admin.organization.user.lastActive @defaults("id") {
-  // ID
-  id string
-  // URL
-  url string
-  // Key
-  key string
-  // LastActive
-  lastActive string
-}
 
 atlassian.jira { 
   // Jira users

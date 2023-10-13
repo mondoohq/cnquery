@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/jira"
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {
@@ -14,8 +14,8 @@ func (a *mqlAtlassianJira) id() (string, error) {
 }
 
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	users, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -42,8 +42,8 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	expands := []string{"groups", "applicationRoles"}
 	user, response, err := jira.User.Get(context.Background(), a.Id.Data, expands)
 	if err != nil {
@@ -70,8 +70,8 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -96,8 +96,8 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -122,8 +122,8 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	info, response, err := jira.Server.Info(context.Background())
 	if err != nil {
 		log.Fatal().Err(err)
@@ -142,8 +142,8 @@ func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 }
 
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	projects, response, err := jira.Project.Search(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -175,8 +175,8 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	validate := ""
 	jql := "order by created DESC"
 	fields := []string{"status", "project"}
@@ -210,8 +210,8 @@ func (a *mqlAtlassianJiraIssue) id() (string, error) {
 }
 
 func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
-	jira := conn.Jira()
+	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	jira := conn.Client()
 	properties, response, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
 	if err != nil {
 		log.Fatal().Err(err)

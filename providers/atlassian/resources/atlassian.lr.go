@@ -57,14 +57,6 @@ func init() {
 			// to override args, implement: initAtlassianAdminOrganizationEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdminOrganizationEvent,
 		},
-		"atlassian.admin.organization.user": {
-			// to override args, implement: initAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassianAdminOrganizationUser,
-		},
-		"atlassian.admin.organization.user.lastActive": {
-			// to override args, implement: initAtlassianAdminOrganizationUserLastActive(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassianAdminOrganizationUserLastActive,
-		},
 		"atlassian.jira": {
 			// to override args, implement: initAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJira,
@@ -182,9 +174,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetType()).ToDataRes(types.String)
 	},
-	"atlassian.admin.organization.users": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganization).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.user")))
-	},
 	"atlassian.admin.organization.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetPolicies()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.policy")))
 	},
@@ -241,45 +230,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.admin.organization.event.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationEvent).GetId()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetId()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.orgId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetOrgId()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetType()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.status": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetStatus()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetName()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.picture": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetPicture()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.email": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetEmail()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.accessBillable": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetAccessBillable()).ToDataRes(types.Bool)
-	},
-	"atlassian.admin.organization.user.lastActive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUser).GetLastActive()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.user.lastActive")))
-	},
-	"atlassian.admin.organization.user.lastActive.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetId()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.lastActive.url": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetUrl()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.lastActive.key": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetKey()).ToDataRes(types.String)
-	},
-	"atlassian.admin.organization.user.lastActive.lastActive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationUserLastActive).GetLastActive()).ToDataRes(types.String)
 	},
 	"atlassian.jira.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.jira.user")))
@@ -428,10 +378,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganization).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganization).Users, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
 	"atlassian.admin.organization.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganization).Policies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -534,66 +480,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"atlassian.admin.organization.event.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganizationEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationUser).__id, ok = v.Value.(string)
-			return
-		},
-	"atlassian.admin.organization.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.orgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).OrgId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.picture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Picture, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.accessBillable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).AccessBillable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUser).LastActive, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.lastActive.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationUserLastActive).__id, ok = v.Value.(string)
-			return
-		},
-	"atlassian.admin.organization.user.lastActive.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUserLastActive).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.lastActive.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUserLastActive).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.lastActive.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUserLastActive).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"atlassian.admin.organization.user.lastActive.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationUserLastActive).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -920,7 +806,6 @@ type mqlAtlassianAdminOrganization struct {
 	// optional: if you define mqlAtlassianAdminOrganizationInternal it will be used here
 	Id plugin.TValue[string]
 	Type plugin.TValue[string]
-	Users plugin.TValue[[]interface{}]
 	Policies plugin.TValue[[]interface{}]
 	Domains plugin.TValue[[]interface{}]
 	Events plugin.TValue[[]interface{}]
@@ -966,22 +851,6 @@ func (c *mqlAtlassianAdminOrganization) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianAdminOrganization) GetType() *plugin.TValue[string] {
 	return &c.Type
-}
-
-func (c *mqlAtlassianAdminOrganization) GetUsers() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Users, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "users")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.users()
-	})
 }
 
 func (c *mqlAtlassianAdminOrganization) GetPolicies() *plugin.TValue[[]interface{}] {
@@ -1444,171 +1313,6 @@ func (c *mqlAtlassianAdminOrganizationEvent) MqlID() string {
 
 func (c *mqlAtlassianAdminOrganizationEvent) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-// mqlAtlassianAdminOrganizationUser for the atlassian.admin.organization.user resource
-type mqlAtlassianAdminOrganizationUser struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlAtlassianAdminOrganizationUserInternal it will be used here
-	Id plugin.TValue[string]
-	OrgId plugin.TValue[string]
-	Type plugin.TValue[string]
-	Status plugin.TValue[string]
-	Name plugin.TValue[string]
-	Picture plugin.TValue[string]
-	Email plugin.TValue[string]
-	AccessBillable plugin.TValue[bool]
-	LastActive plugin.TValue[[]interface{}]
-}
-
-// createAtlassianAdminOrganizationUser creates a new instance of this resource
-func createAtlassianAdminOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassianAdminOrganizationUser{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.user", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) MqlName() string {
-	return "atlassian.admin.organization.user"
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetOrgId() *plugin.TValue[string] {
-	return &c.OrgId
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetType() *plugin.TValue[string] {
-	return &c.Type
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetStatus() *plugin.TValue[string] {
-	return &c.Status
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetPicture() *plugin.TValue[string] {
-	return &c.Picture
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetEmail() *plugin.TValue[string] {
-	return &c.Email
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetAccessBillable() *plugin.TValue[bool] {
-	return &c.AccessBillable
-}
-
-func (c *mqlAtlassianAdminOrganizationUser) GetLastActive() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.LastActive, func() ([]interface{}, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization.user", c.__id, "lastActive")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]interface{}), nil
-			}
-		}
-
-		return c.lastActive()
-	})
-}
-
-// mqlAtlassianAdminOrganizationUserLastActive for the atlassian.admin.organization.user.lastActive resource
-type mqlAtlassianAdminOrganizationUserLastActive struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlAtlassianAdminOrganizationUserLastActiveInternal it will be used here
-	Id plugin.TValue[string]
-	Url plugin.TValue[string]
-	Key plugin.TValue[string]
-	LastActive plugin.TValue[string]
-}
-
-// createAtlassianAdminOrganizationUserLastActive creates a new instance of this resource
-func createAtlassianAdminOrganizationUserLastActive(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassianAdminOrganizationUserLastActive{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.user.lastActive", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlName() string {
-	return "atlassian.admin.organization.user.lastActive"
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) GetUrl() *plugin.TValue[string] {
-	return &c.Url
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) GetKey() *plugin.TValue[string] {
-	return &c.Key
-}
-
-func (c *mqlAtlassianAdminOrganizationUserLastActive) GetLastActive() *plugin.TValue[string] {
-	return &c.LastActive
 }
 
 // mqlAtlassianJira for the atlassian.jira resource
