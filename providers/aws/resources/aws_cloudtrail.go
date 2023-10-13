@@ -70,10 +70,13 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	awsCloudtrail := obj.(*mqlAwsCloudtrail)
 
-	rawResources := awsCloudtrail.GetTrails().Data
+	rawResources := awsCloudtrail.GetTrails()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
-	for i := range rawResources {
-		trail := rawResources[i].(*mqlAwsCloudtrailTrail)
+	for i := range rawResources.Data {
+		trail := rawResources.Data[i].(*mqlAwsCloudtrailTrail)
 		if trail.Arn.Data == arn {
 			return args, trail, nil
 		}

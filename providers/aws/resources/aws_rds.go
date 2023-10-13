@@ -185,14 +185,14 @@ func initAwsRdsDbinstance(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 	rds := obj.(*mqlAwsRds)
 
-	rawResources, err := rds.dbInstances()
+	rawResources := rds.GetDbInstances()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		dbInstance := rawResources[i].(*mqlAwsRdsDbinstance)
+	for i := range rawResources.Data {
+		dbInstance := rawResources.Data[i].(*mqlAwsRdsDbinstance)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}

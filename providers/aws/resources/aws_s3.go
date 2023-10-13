@@ -130,14 +130,14 @@ func initAwsS3Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	awsS3 := obj.(*mqlAwsS3)
 
-	rawResources, err := awsS3.buckets()
-	if err != nil {
-		return nil, nil, err
+	rawResources := awsS3.GetBuckets()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	// iterate over security groups and find the one with the arn
-	for i := range rawResources {
-		bucket := rawResources[i].(*mqlAwsS3Bucket)
+	for i := range rawResources.Data {
+		bucket := rawResources.Data[i].(*mqlAwsS3Bucket)
 		if bucket.Arn.Data == arn {
 			return args, bucket, nil
 		}

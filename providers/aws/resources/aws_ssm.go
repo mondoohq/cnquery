@@ -135,14 +135,14 @@ func initAwsSsmInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	ssm := obj.(*mqlAwsSsm)
 
-	rawResources, err := ssm.instances()
-	if err != nil {
-		return nil, nil, err
+	rawResources := ssm.GetInstances()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		instance := rawResources[i].(*mqlAwsSsmInstance)
+	for i := range rawResources.Data {
+		instance := rawResources.Data[i].(*mqlAwsSsmInstance)
 
 		if instance.Arn.Data == arnVal {
 			return args, instance, nil

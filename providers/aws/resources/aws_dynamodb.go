@@ -79,7 +79,7 @@ func (a *mqlAwsDynamodb) getBackups(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
-func initDynamoDbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
@@ -102,14 +102,17 @@ func initDynamoDbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 	dynamodb := obj.(*mqlAwsDynamodb)
 
-	rawResources, err := dynamodb.tables()
+	rawResources := dynamodb.GetTables()
 	if err != nil {
 		return nil, nil, err
 	}
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		dbInstance := rawResources[i].(*mqlAwsDynamodbTable)
+	for i := range rawResources.Data {
+		dbInstance := rawResources.Data[i].(*mqlAwsDynamodbTable)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}
@@ -360,14 +363,17 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	dynamodb := obj.(*mqlAwsDynamodb)
 
-	rawResources, err := dynamodb.globalTables()
+	rawResources := dynamodb.GetGlobalTables()
 	if err != nil {
 		return nil, nil, err
 	}
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		dbInstance := rawResources[i].(*mqlAwsDynamodbGlobaltable)
+	for i := range rawResources.Data {
+		dbInstance := rawResources.Data[i].(*mqlAwsDynamodbGlobaltable)
 		if dbInstance.Arn.Data == arnVal {
 			return args, dbInstance, nil
 		}

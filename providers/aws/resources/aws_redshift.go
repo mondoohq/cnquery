@@ -162,14 +162,14 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	redshift := obj.(*mqlAwsRedshift)
 
-	rawResources, err := redshift.clusters()
-	if err != nil {
-		return nil, nil, err
+	rawResources := redshift.GetClusters()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		cluster := rawResources[i].(*mqlAwsRedshiftCluster)
+	for i := range rawResources.Data {
+		cluster := rawResources.Data[i].(*mqlAwsRedshiftCluster)
 
 		if cluster.Arn.Data == arnVal {
 			return args, cluster, nil

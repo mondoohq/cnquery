@@ -659,11 +659,14 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return nil, nil, err
 	}
 	cloudwatch := obj.(*mqlAwsCloudwatch)
-	rawResources := cloudwatch.GetLogGroups().Data
+	rawResources := cloudwatch.GetLogGroups()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		loggroup := rawResources[i].(*mqlAwsCloudwatchLoggroup)
+	for i := range rawResources.Data {
+		loggroup := rawResources.Data[i].(*mqlAwsCloudwatchLoggroup)
 		mqlLgArn := loggroup.Arn.Data
 
 		if mqlLgArn == arnVal {
@@ -766,11 +769,14 @@ func initAwsCloudwatchMetricsalarm(runtime *plugin.Runtime, args map[string]*llx
 	}
 	aws := obj.(*mqlAwsCloudwatch)
 
-	rawResources := aws.GetAlarms().Data
+	rawResources := aws.GetAlarms()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		alarm := rawResources[i].(*mqlAwsCloudwatchMetricsalarm)
+	for i := range rawResources.Data {
+		alarm := rawResources.Data[i].(*mqlAwsCloudwatchMetricsalarm)
 		if alarm.Arn.Data == arnVal {
 			return args, alarm, nil
 		}

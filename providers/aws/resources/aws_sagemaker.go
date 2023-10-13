@@ -207,14 +207,14 @@ func initAwsSagemakerNotebookinstance(runtime *plugin.Runtime, args map[string]*
 	}
 	sm := obj.(*mqlAwsSagemaker)
 
-	rawResources, err := sm.notebookInstances()
-	if err != nil {
-		return nil, nil, err
+	rawResources := sm.GetNotebookInstances()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		ni := rawResources[i].(*mqlAwsSagemakerNotebookinstance)
+	for i := range rawResources.Data {
+		ni := rawResources.Data[i].(*mqlAwsSagemakerNotebookinstance)
 		if ni.Arn.Data == arnVal {
 			return args, ni, nil
 		}
