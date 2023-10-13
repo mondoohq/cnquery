@@ -103,9 +103,6 @@ func initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	dynamodb := obj.(*mqlAwsDynamodb)
 
 	rawResources := dynamodb.GetTables()
-	if err != nil {
-		return nil, nil, err
-	}
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
@@ -364,9 +361,6 @@ func initAwsDynamodbGlobaltable(runtime *plugin.Runtime, args map[string]*llx.Ra
 	dynamodb := obj.(*mqlAwsDynamodb)
 
 	rawResources := dynamodb.GetGlobalTables()
-	if err != nil {
-		return nil, nil, err
-	}
 	if rawResources.Error != nil {
 		return nil, nil, rawResources.Error
 	}
