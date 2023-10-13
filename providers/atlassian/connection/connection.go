@@ -25,14 +25,21 @@ type AtlassianConnection struct {
 
 func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AtlassianConnection, error) {
 	apiKey := os.Getenv("ATLASSIAN_ADMIN_TOKEN")
-
 	if apiKey == "" {
-		return nil, errors.New("you need to provide atlassian admin token e.g. via ATLASSIAN_ADMIN_TOKEN env")
+		return nil, errors.New("you need to provide atlassian admin token via ATLASSIAN_ADMIN_TOKEN env")
+	}
+
+	host := os.Getenv("ATLASSIAN_HOST")
+	if host == "" {
+		log.Warn().Msg("ATLASSIAN_HOST not set")
+	}
+
+	mail := os.Getenv("ATLASSIAN_USER")
+	if mail == "" {
+		log.Warn().Msg("ATLASSIAN_USER not set")
 	}
 
 	token := os.Getenv("ATLASSIAN_TOKEN")
-	host := "https://lunalectric.atlassian.net"
-	mail := "marius@mondoo.com"
 	admin, err := admin.New(nil)
 	if err != nil {
 		log.Fatal().Err(err)
