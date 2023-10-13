@@ -2,7 +2,6 @@ package provider
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -45,16 +44,39 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Options: map[string]string{},
 	}
 
-	fmt.Println("req.connector: ", req.Connector)
 	switch req.Connector {
 	case "jira":
 		conf.Type = "jira"
+		if x, ok := flags["host"]; ok && len(x.Value) != 0 {
+			conf.Options["host"] = string(x.Value)
+		}
+		if x, ok := flags["user"]; ok && len(x.Value) != 0 {
+			conf.Options["user"] = string(x.Value)
+		}
+		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+			conf.Options["token"] = string(x.Value)
+		}
 	case "confluence":
 		conf.Type = "confluece"
+		if x, ok := flags["host"]; ok && len(x.Value) != 0 {
+			conf.Options["host"] = string(x.Value)
+		}
+		if x, ok := flags["user"]; ok && len(x.Value) != 0 {
+			conf.Options["user"] = string(x.Value)
+		}
+		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+			conf.Options["token"] = string(x.Value)
+		}
 	case "admin":
 		conf.Type = "admin"
+		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+			conf.Options["token"] = string(x.Value)
+		}
 	case "scim":
 		conf.Type = "scim"
+		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+			conf.Options["token"] = string(x.Value)
+		}
 	}
 
 	asset := inventory.Asset{
@@ -112,7 +134,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
-	fmt.Println("type: ", conf.Type)
 	switch conf.Type {
 	case "admin":
 		s.lastConnectionID++
