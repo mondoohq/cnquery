@@ -516,8 +516,11 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   enableVmProtection bool
 }
 
+// Azure Virtual Network DHCP Options
 private azure.subscription.networkService.virtualNetwork.dhcpOptions {
+  // DHCP options id
   id string
+  // The DNS servers, used by the virtual network
   dnsServers []string
 }
 

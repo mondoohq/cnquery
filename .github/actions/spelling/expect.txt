@@ -1,5 +1,4 @@
 aks
-asn
 Auths
 autoaccept
 autoscaler
@@ -12,6 +11,7 @@ cmek
 cryptokey
 customresources
 datapath
+Ddos
 dfw
 dlq
 ekm
