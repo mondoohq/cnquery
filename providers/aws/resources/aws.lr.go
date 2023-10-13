@@ -339,7 +339,7 @@ func init() {
 			Create: createAwsDynamodbGlobaltable,
 		},
 		"aws.dynamodb.table": {
-			// to override args, implement: initAwsDynamodbTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsDynamodbTable,
 			Create: createAwsDynamodbTable,
 		},
 		"aws.rds": {

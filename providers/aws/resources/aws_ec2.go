@@ -1085,8 +1085,8 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
 
-	rawResources, err := awsEc2.volumes()
-	if err != nil {
+	rawResources := awsEc2.GetVolumes()
+	if rawResources.Error != nil {
 		return nil, nil, err
 	}
 
@@ -1099,8 +1099,8 @@ func initAwsEc2Volume(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		}
 	}
 
-	for i := range rawResources {
-		volume := rawResources[i].(*mqlAwsEc2Volume)
+	for i := range rawResources.Data {
+		volume := rawResources.Data[i].(*mqlAwsEc2Volume)
 		if match(volume) {
 			return args, volume, nil
 		}
@@ -1168,11 +1168,10 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 	awsEc2 := obj.(*mqlAwsEc2)
 
-	rawResources, err := awsEc2.snapshots()
-	if err != nil {
+	rawResources := awsEc2.GetSnapshots()
+	if rawResources.Error != nil {
 		return nil, nil, err
 	}
-
 	var match func(snapshot *mqlAwsEc2Snapshot) bool
 
 	if args["arn"] != nil {
@@ -1189,8 +1188,8 @@ func initAwsEc2Snapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		}
 	}
 
-	for i := range rawResources {
-		snapshot := rawResources[i].(*mqlAwsEc2Snapshot)
+	for i := range rawResources.Data {
+		snapshot := rawResources.Data[i].(*mqlAwsEc2Snapshot)
 		if match(snapshot) {
 			return args, snapshot, nil
 		}

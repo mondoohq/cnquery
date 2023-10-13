@@ -152,13 +152,12 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	}
 	kms := obj.(*mqlAwsKms)
 
-	rawResources, err := kms.keys()
-	if err != nil {
-		return nil, nil, err
+	rawResources := kms.GetKeys()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
-
-	for i := range rawResources {
-		key := rawResources[i].(*mqlAwsKmsKey)
+	for i := range rawResources.Data {
+		key := rawResources.Data[i].(*mqlAwsKmsKey)
 		if key.Arn.Data == a {
 			return args, key, nil
 		}

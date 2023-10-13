@@ -192,14 +192,14 @@ func initAwsElbLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 	elb := obj.(*mqlAwsElb)
 
-	rawResources, err := elb.loadBalancers()
-	if err != nil {
-		return nil, nil, err
+	rawResources := elb.GetLoadBalancers()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		lb := rawResources[i].(*mqlAwsElbLoadbalancer)
+	for i := range rawResources.Data {
+		lb := rawResources.Data[i].(*mqlAwsElbLoadbalancer)
 		if lb.Arn.Data == arnVal {
 			return args, lb, nil
 		}

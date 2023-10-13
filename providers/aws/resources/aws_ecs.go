@@ -441,14 +441,15 @@ func initAwsEcsContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 	ecs := obj.(*mqlAwsEcs)
 
-	rawResources, err := ecs.containers()
-	if err != nil {
-		return nil, nil, err
+	rawResources := ecs.GetContainers()
+
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
 	}
 
 	arnVal := args["arn"].Value.(string)
-	for i := range rawResources {
-		container := rawResources[i].(*mqlAwsEcsContainer)
+	for i := range rawResources.Data {
+		container := rawResources.Data[i].(*mqlAwsEcsContainer)
 		if container.Arn.Data == arnVal {
 			return args, container, nil
 		}
