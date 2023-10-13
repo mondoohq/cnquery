@@ -17,6 +17,7 @@ resources:
       domains: {}
       events: {}
       id: {}
+      managedUsers: {}
       policies: {}
       scim: {}
       type: {}
@@ -29,6 +30,12 @@ resources:
   atlassian.admin.organization.event:
     fields:
       id: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.managedUsers:
+    fields:
+      id: {}
+      name: {}
+      type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.policy:
     fields:

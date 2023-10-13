@@ -24,6 +24,17 @@ atlassian.admin.organization @defaults("id") {
   events() []atlassian.admin.organization.event
   // SCIM
   scim() atlassian.admin.organization.scim
+  // Managed Users
+  managedUsers() []atlassian.admin.organization.managedUsers
+}
+
+atlassian.admin.organization.managedUsers {
+  // ID
+  id string
+  // Name
+  name string
+  // Type
+  type string
 }
 
 atlassian.admin.organization.scim {

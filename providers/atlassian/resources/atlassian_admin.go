@@ -109,6 +109,34 @@ type atlassianUser struct {
 	OrgID     string
 }
 
+func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
+
+	admin := conn.Admin()
+
+	managedUsers, response, err := admin.Organization.Users(context.Background(), a.Id.Data, "")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	if response.Status != "200 OK" {
+		log.Fatal().Msgf("Received response: %s\n", response.Status)
+	}
+	res := []interface{}{}
+	for _, user := range managedUsers.Data {
+		mqlAtlassianAdminManagedUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(user.AccountID),
+				"name": llx.StringData(user.Name),
+				"type": llx.StringData(user.AccountType),
+			})
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		res = append(res, mqlAtlassianAdminManagedUser)
+	}
+	return res, nil
+}
+
 func (a *mqlAtlassianAdminOrganization) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AtlassianConnection)
 
