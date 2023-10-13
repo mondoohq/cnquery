@@ -23,7 +23,6 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	if response.Status != "200 OK" {
 		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
-
 	res := []interface{}{}
 	for _, user := range users {
 		mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",

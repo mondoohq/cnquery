@@ -42,11 +42,11 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		return nil, errors.New("you need to provide atlassian user e.g. via ATLASSIAN_USER env")
 	}
 
-	userToken := conf.Options["token"]
-	if userToken == "" {
-		userToken = os.Getenv("ATLASSIAN_USER_TOKEN")
+	token := conf.Options["token"]
+	if token == "" {
+		token = os.Getenv("ATLASSIAN_USER_TOKEN")
 	}
-	if userToken == "" {
+	if token == "" {
 		return nil, errors.New("you need to provide atlassian user token e.g. via ATLASSIAN_USER_TOKEN env")
 	}
 
@@ -55,7 +55,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		log.Fatal().Err(err)
 	}
 
-	client.Auth.SetBasicAuth(user, userToken)
+	client.Auth.SetBasicAuth(user, token)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
 	conn := &JiraConnection{
