@@ -6,15 +6,28 @@ import (
 )
 
 var Config = plugin.Provider{
-	Name:            "atlassian",
-	ID:              "go.mondoo.com/cnquery/providers/atlassian",
-	Version:         "9.0.0",
-	ConnectionTypes: []string{provider.DefaultConnectionType},
+	Name:    "atlassian",
+	ID:      "go.mondoo.com/cnquery/providers/atlassian",
+	Version: "9.0.0",
+	ConnectionTypes: []string{
+		provider.DefaultConnectionType,
+		"jira",
+		"admin",
+		"confluence",
+		"scim",
+	},
 	Connectors: []plugin.Connector{
 		{
 			Name:      "atlassian",
 			Use:       "atlassian",
-			Short:     "Atlassian",
+			Short:     "atlassian",
+			Discovery: []string{},
+			Flags:     []plugin.Flag{},
+		},
+		{
+			Name:      "admin",
+			Use:       "admin",
+			Short:     "admin",
 			Discovery: []string{},
 			Flags:     []plugin.Flag{},
 		},

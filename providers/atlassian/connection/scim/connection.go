@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Scim shared.ConnectionType = "jira"
+	Scim shared.ConnectionType = "scim"
 )
 
 type ScimConnection struct {

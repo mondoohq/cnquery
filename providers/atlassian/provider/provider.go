@@ -2,6 +2,7 @@ package provider
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -44,7 +45,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Options: map[string]string{},
 	}
 
-	// Do custom flag parsing here
+	fmt.Println("req.connector: ", req.Connector)
+	switch req.Connector {
+	case "jira":
+		conf.Type = "jira"
+	case "confluence":
+		conf.Type = "confluece"
+	case "admin":
+		conf.Type = "admin"
+	case "scim":
+		conf.Type = "scim"
+	}
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
@@ -101,6 +112,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
+	fmt.Println("type: ", conf.Type)
 	switch conf.Type {
 	case "admin":
 		s.lastConnectionID++
