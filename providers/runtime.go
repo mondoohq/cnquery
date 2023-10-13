@@ -550,6 +550,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
 		Asset:    r.Provider.Connection.Asset,
+		Upstream: r.UpstreamConfig,
 	}, nil)
 	if err != nil {
 		return nil, nil, err
