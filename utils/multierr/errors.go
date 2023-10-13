@@ -48,7 +48,7 @@ func (m *Errors) Error() string {
 	if n == "1" {
 		res.WriteString("1 error occurred:\n")
 	} else {
-		res.WriteString(n + " errors occured:\n")
+		res.WriteString(n + " errors occurred:\n")
 	}
 
 	for i := range m.errors {
