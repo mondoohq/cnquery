@@ -31,5 +31,12 @@ var Config = plugin.Provider{
 			Discovery: []string{},
 			Flags:     []plugin.Flag{},
 		},
+		{
+			Name:      "jira",
+			Use:       "jira",
+			Short:     "jira",
+			Discovery: []string{},
+			Flags:     []plugin.Flag{},
+		},
 	},
 }
