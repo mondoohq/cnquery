@@ -84,8 +84,12 @@ func (t *mqlTerraform) modules() ([]interface{}, error) {
 
 func (t *mqlTerraform) blocks() ([]interface{}, error) {
 	conn := t.MqlRuntime.Connection.(*connection.Connection)
-	files := conn.Parser().Files()
+	parser := conn.Parser()
+	if parser == nil {
+		return []interface{}{}, nil
+	}
 
+	files := parser.Files()
 	var mqlHclBlocks []interface{}
 	for k := range files {
 		f := files[k]
