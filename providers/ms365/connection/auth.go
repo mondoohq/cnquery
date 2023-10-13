@@ -18,7 +18,10 @@ func getTokenCredential(credential *vault.Credential, tenantId, clientId string)
 	var azCred azcore.TokenCredential
 	var err error
 	if credential == nil {
-		return nil, errors.New("no credentials provided")
+		azCred, err = azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating CLI credentials")
+		}
 	} else {
 		// we only support private key authentication for ms 365
 		switch credential.Type {
