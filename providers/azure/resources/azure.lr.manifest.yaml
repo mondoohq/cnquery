@@ -1298,6 +1298,8 @@ resources:
       addressPrefix: {}
       etag: {}
       id: {}
+      ipConfigurations:
+        min_mondoo_version: latest
       name: {}
       natGateway: {}
       properties: {}
@@ -1306,8 +1308,25 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.networkService.subnet.ipConfig:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      privateIpAddress: {}
+      properties: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.subscription.networkService.virtualNetwork:
     fields:
+      dhcpOptions:
+        min_mondoo_version: latest
+      enableDdosProtection:
+        min_mondoo_version: latest
+      enableVmProtection:
+        min_mondoo_version: latest
       etag: {}
       id: {}
       location: {}
@@ -1317,6 +1336,15 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: 9.0.3
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.virtualNetwork.dhcpOptions:
+    fields:
+      dnsServers: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - azure
@@ -1371,6 +1399,8 @@ resources:
       name: {}
       privateIpAddress: {}
       properties: {}
+      publicIpAddress:
+        min_mondoo_version: latest
     is_private: true
     min_mondoo_version: 9.0.3
     platform:
