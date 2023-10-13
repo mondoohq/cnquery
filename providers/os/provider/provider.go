@@ -424,6 +424,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.PlatformIds = fingerprint.PlatformIDs
 		}
 
+	case "vsphere":
+		// We need some sort of dummy connection to create asset.eol and platform.advisories, ...
+		s.lastConnectionID++
+		conn = connection.NewPlatformConnection(s.lastConnectionID, conf, asset)
+
 	// Do not expose mock connection as a supported type
 	case "mock":
 		s.lastConnectionID++

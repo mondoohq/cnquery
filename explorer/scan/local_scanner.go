@@ -246,6 +246,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			}
 		}
 		runtime.SetRecording(candidate.runtime.Recording)
+		runtime.UpstreamConfig = upstream
 
 		err = runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
