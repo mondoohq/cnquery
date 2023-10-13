@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package confluence
 
 import (
 	"errors"
@@ -22,9 +22,10 @@ type ConfluenceConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *confluence.Client
+	host   string
 }
 
-func NewConfluenceConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ConfluenceConnection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ConfluenceConnection, error) {
 	host := conf.Options["host"]
 	if host == "" {
 		host = os.Getenv("ATLASSIAN_HOST")
@@ -62,6 +63,7 @@ func NewConfluenceConnection(id uint32, asset *inventory.Asset, conf *inventory.
 		id:     id,
 		asset:  asset,
 		client: client,
+		host:   host,
 	}
 
 	return conn, nil
@@ -83,6 +85,10 @@ func (c *ConfluenceConnection) Client() *confluence.Client {
 	return c.client
 }
 
-func (p *ConfluenceConnection) Type() shared.ConnectionType {
+func (c *ConfluenceConnection) Type() shared.ConnectionType {
 	return Confluence
+}
+
+func (c *ConfluenceConnection) Host() string {
+	return c.host
 }

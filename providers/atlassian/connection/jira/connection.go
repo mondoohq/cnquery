@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package jira
 
 import (
 	"errors"
@@ -22,9 +22,10 @@ type JiraConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *v2.Client
+	host   string
 }
 
-func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
 	host := conf.Options["host"]
 	if host == "" {
 		host = os.Getenv("ATLASSIAN_HOST")
@@ -62,6 +63,7 @@ func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		id:     id,
 		asset:  asset,
 		client: client,
+		host:   host,
 	}
 
 	return conn, nil
@@ -85,4 +87,8 @@ func (c *JiraConnection) Client() *v2.Client {
 
 func (p *JiraConnection) Type() shared.ConnectionType {
 	return Jira
+}
+
+func (c *JiraConnection) Host() string {
+	return c.host
 }

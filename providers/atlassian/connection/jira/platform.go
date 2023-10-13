@@ -1,4 +1,4 @@
-package connection
+package jira
 
 import "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 

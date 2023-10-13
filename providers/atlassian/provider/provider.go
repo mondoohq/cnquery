@@ -8,7 +8,11 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/jira"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/scim"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/resources"
 )
 
@@ -87,20 +91,20 @@ func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error)
 	return &plugin.ShutdownRes{}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.AtlassianConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.Connection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.AtlassianConnection
+	var conn shared.Connection
 	var err error
 
 	switch conf.Type {
 	default:
 		s.lastConnectionID++
-		conn, err = connection.NewAtlassianConnection(s.lastConnectionID, asset, conf)
+		conn, err = admin.NewConnection(s.lastConnectionID, asset, conf)
 	}
 
 	if err != nil {
@@ -128,7 +132,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.AtlassianConnection) error {
+func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	asset.Id = conn.Conf.Type
 	asset.Name = conn.Host
 

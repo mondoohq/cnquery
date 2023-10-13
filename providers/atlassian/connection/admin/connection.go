@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package admin
 
 import (
 	"errors"
@@ -22,9 +22,10 @@ type AdminConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
+	host   string
 }
 
-func NewAdminConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
 	adminToken := conf.Options["admintoken"]
 	if adminToken == "" {
 		adminToken = os.Getenv("ATLASSIAN_ADMIN_TOKEN")
@@ -46,6 +47,7 @@ func NewAdminConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		id:     id,
 		asset:  asset,
 		client: client,
+		host:   "admin.atlassian.com",
 	}
 
 	return conn, nil
@@ -67,6 +69,10 @@ func (c *AdminConnection) Client() *admin.Client {
 	return c.client
 }
 
-func (p *AdminConnection) Type() shared.ConnectionType {
+func (c *AdminConnection) Type() shared.ConnectionType {
 	return Admin
+}
+
+func (c *AdminConnection) Host() string {
+	return c.host
 }

@@ -14,4 +14,5 @@ type Connection interface {
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
+	Host() string
 }

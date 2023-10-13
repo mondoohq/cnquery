@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package scim
 
 import (
 	"errors"
@@ -22,9 +22,10 @@ type ScimConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
+	host   string
 }
 
-func NewAdminConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
 	token := conf.Options["token"]
 	if token == "" {
 		token = os.Getenv("ATLASSIAN_SCIM_TOKEN")
@@ -46,6 +47,7 @@ func NewAdminConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		id:     id,
 		asset:  asset,
 		client: client,
+		host:   "admin.atlassian.com",
 	}
 
 	return conn, nil
@@ -69,4 +71,8 @@ func (c *ScimConnection) Client() *admin.Client {
 
 func (p *ScimConnection) Type() shared.ConnectionType {
 	return Scim
+}
+
+func (c *ScimConnection) Host() string {
+	return c.host
 }
