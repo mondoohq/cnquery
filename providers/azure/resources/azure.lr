@@ -400,6 +400,8 @@ private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaul
   privateIpAddress string
   // Virtual Network Gateway IP Configuration properties
   properties dict
+  // The public IP address, associated with this IP configuration
+  publicIpAddress() azure.subscription.networkService.ipAddress
 }
 
 // Azure Network Virtual Network Gateway Connection
@@ -484,6 +486,8 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   properties dict
   // The NAT gateway this subnet is associated with, if any
   natGateway() azure.subscription.networkService.natGateway
+  // List of IP configurations for the subnet
+  ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
 }
 
 // Azure Network Virtual Network
@@ -504,6 +508,17 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   properties dict
   // List of subnets within the virtual network
   subnets []azure.subscription.networkService.subnet
+  // Virtual Network DHCP options
+  dhcpOptions azure.subscription.networkService.virtualNetwork.dhcpOptions
+  // Indicates if DDoS protection is enabled for all the protected resources in the virtual network.
+  enableDdosProtection bool
+  // Indicates if VM protection is enabled for all the subnets in the virtual network
+  enableVmProtection bool
+}
+
+private azure.subscription.networkService.virtualNetwork.dhcpOptions {
+  id string
+  dnsServers []string
 }
 
 // Azure Network Load Balancer

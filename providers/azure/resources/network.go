@@ -626,6 +626,42 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 	return nil, errors.New("no public ip address is associated with the ip configuration")
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	publicIpAddress := propsDict["publicIPAddress"]
+	if publicIpAddress == nil {
+		return nil, errors.New("no public ip address is associated with the ip configuration")
+	}
+	ipAddressDict := publicIpAddress.(map[string]interface{})
+	id := ipAddressDict["id"]
+	if id != nil {
+		strId := id.(string)
+		azureId, err := ParseResourceID(strId)
+		if err != nil {
+			return nil, err
+		}
+		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+		ipAddressName, err := azureId.Component("publicIPAddresses")
+		if err != nil {
+			return nil, err
+		}
+		ipAddress, err := client.Get(ctx, azureId.ResourceGroup, ipAddressName, &network.PublicIPAddressesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		return azureIpToMql(a.MqlRuntime, ipAddress.PublicIPAddress)
+	}
+	return nil, errors.New("no public ip address is associated with the ip configuration")
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -729,17 +765,34 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 					subnets = append(subnets, mqlSubnet)
 				}
 			}
-			mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork",
-				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(vn.ID)),
-					"name":       llx.StringData(convert.ToString(vn.Name)),
-					"type":       llx.StringData(convert.ToString(vn.Type)),
-					"location":   llx.StringData(convert.ToString(vn.Location)),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
-					"etag":       llx.StringData(convert.ToString(vn.Etag)),
-					"properties": llx.DictData(props),
-					"subnets":    llx.ArrayData(subnets, types.ResourceLike),
-				})
+			args := map[string]*llx.RawData{
+				"id":                   llx.StringData(convert.ToString(vn.ID)),
+				"name":                 llx.StringData(convert.ToString(vn.Name)),
+				"type":                 llx.StringData(convert.ToString(vn.Type)),
+				"location":             llx.StringData(convert.ToString(vn.Location)),
+				"tags":                 llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
+				"etag":                 llx.StringData(convert.ToString(vn.Etag)),
+				"properties":           llx.DictData(props),
+				"enableDdosProtection": llx.BoolDataPtr(vn.Properties.EnableDdosProtection),
+				"enableVmProtection":   llx.BoolDataPtr(vn.Properties.EnableVMProtection),
+				"subnets":              llx.ArrayData(subnets, types.ResourceLike),
+			}
+			if vn.Properties.DhcpOptions != nil {
+				id := convert.ToString(vn.ID) + "/dhcpOptions"
+				dhcpOpts, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.dhcpOptions",
+					map[string]*llx.RawData{
+						"id":         llx.StringData(id),
+						"dnsServers": llx.ArrayData(convert.SliceStrPtrToInterface(vn.Properties.DhcpOptions.DNSServers), types.String),
+					})
+				if err != nil {
+					return nil, err
+				}
+				args["dhcpOptions"] = llx.ResourceData(dhcpOpts, dhcpOpts.MqlName())
+			} else {
+				args["dhcpOptions"] = llx.NilData
+			}
+
+			mqlVn, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork", args)
 			if err != nil {
 				return nil, err
 			}
@@ -1137,6 +1190,53 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 	return mqlNatGateway, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) ipConfigurations() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	subId := conn.SubId()
+	props := a.Properties.Data
+	propsDict := props.(map[string]interface{})
+	ipConfigsDict := propsDict["ipConfigurations"]
+	if ipConfigsDict == nil {
+		return nil, nil
+	}
+	res := []interface{}{}
+	ipConfigIds := []string{}
+	ipConfigsList := ipConfigsDict.([]interface{})
+	for _, ipc := range ipConfigsList {
+		ipcDict := ipc.(map[string]interface{})
+		ipcId := ipcDict["id"].(string)
+		ipConfigIds = append(ipConfigIds, strings.ToLower(ipcId))
+	}
+
+	network, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(subId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlNetwork := network.(*mqlAzureSubscriptionNetworkService)
+	// the subnet ip configs are referencing the virtual network gateways ip config. There seems to be no
+	// no API to fetch this so we fetch the gateaways and iterate through them
+	gateways := mqlNetwork.GetVirtualNetworkGateways()
+	if gateways.Error != nil {
+		return nil, err
+	}
+	for _, gw := range gateways.Data {
+		mqlGw := gw.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway)
+		// we need to check if the gateway has the ip configuration
+		for _, ipc := range mqlGw.IpConfigurations.Data {
+			mqlIpc := ipc.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig)
+			// Note: for some reason, the azure API returns the resource id capitalized, e.g.
+			// .../ipConfigurations/MY-IP-CONFIGURATION whereas those are all lower case in the virtual network gateways
+			// object. To make this work, we make sure everything's lower case
+			if stringx.Contains(ipConfigIds, strings.ToLower(mqlIpc.Id.Data)) {
+				res = append(res, mqlIpc)
+			}
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzureSubscriptionNetworkServiceFirewallPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -1371,6 +1471,10 @@ func (a *mqlAzureSubscriptionNetworkServiceAppSecurityGroup) id() (string, error
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mqlAzureSubscriptionNetworkServiceFirewall, error) {
 	applicationRules := []interface{}{}
 	natRules := []interface{}{}
@@ -1560,6 +1664,7 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 	if err != nil {
 		return nil, err
 	}
+
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.subnet",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(convert.ToString(subnet.ID)),

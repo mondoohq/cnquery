@@ -110,6 +110,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetwork,
 		},
+		"azure.subscription.networkService.virtualNetwork.dhcpOptions": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions,
+		},
 		"azure.subscription.networkService.loadBalancer": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceLoadBalancer,
@@ -940,6 +944,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetId()).ToDataRes(types.String)
 	},
@@ -1036,6 +1043,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.subnet.natGateway": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetNatGateway()).ToDataRes(types.Resource("azure.subscription.networkService.natGateway"))
 	},
+	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway.ipConfig")))
+	},
 	"azure.subscription.networkService.virtualNetwork.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetId()).ToDataRes(types.String)
 	},
@@ -1059,6 +1069,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.virtualNetwork.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetSubnets()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet")))
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetDhcpOptions()).ToDataRes(types.Resource("azure.subscription.networkService.virtualNetwork.dhcpOptions"))
+	},
+	"azure.subscription.networkService.virtualNetwork.enableDdosProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetEnableDdosProtection()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualNetwork.enableVmProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetEnableVmProtection()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions.dnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions).GetDnsServers()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.networkService.loadBalancer.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancer).GetId()).ToDataRes(types.String)
@@ -3211,6 +3236,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).Properties, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.ipConfig.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).__id, ok = v.Value.(string)
 			return
@@ -3359,6 +3388,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).NatGateway, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceNatGateway](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).IpConfigurations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).__id, ok = v.Value.(string)
 			return
@@ -3393,6 +3426,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.networkService.virtualNetwork.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).DhcpOptions, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetwork.enableDdosProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).EnableDdosProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetwork.enableVmProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).EnableVmProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions).__id, ok = v.Value.(string)
+			return
+		},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetwork.dhcpOptions.dnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions).DnsServers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.loadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7555,6 +7612,7 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig struct {
 	Etag plugin.TValue[string]
 	PrivateIpAddress plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
+	PublicIpAddress plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
 }
 
 // createAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig creates a new instance of this resource
@@ -7612,6 +7670,22 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) GetPri
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) GetProperties() *plugin.TValue[interface{}] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway.ipConfig", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection for the azure.subscription.networkService.virtualNetworkGateway.connection resource
@@ -7951,6 +8025,7 @@ type mqlAzureSubscriptionNetworkServiceSubnet struct {
 	AddressPrefix plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	NatGateway plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway]
+	IpConfigurations plugin.TValue[[]interface{}]
 }
 
 // createAzureSubscriptionNetworkServiceSubnet creates a new instance of this resource
@@ -8030,6 +8105,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetNatGateway() *plugin.TValu
 	})
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetIpConfigurations() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IpConfigurations, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.subnet", c.__id, "ipConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ipConfigurations()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceVirtualNetwork for the azure.subscription.networkService.virtualNetwork resource
 type mqlAzureSubscriptionNetworkServiceVirtualNetwork struct {
 	MqlRuntime *plugin.Runtime
@@ -8043,6 +8134,9 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetwork struct {
 	Etag plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	Subnets plugin.TValue[[]interface{}]
+	DhcpOptions plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions]
+	EnableDdosProtection plugin.TValue[bool]
+	EnableVmProtection plugin.TValue[bool]
 }
 
 // createAzureSubscriptionNetworkServiceVirtualNetwork creates a new instance of this resource
@@ -8112,6 +8206,72 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetwork) GetProperties() *plug
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetwork) GetSubnets() *plugin.TValue[[]interface{}] {
 	return &c.Subnets
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetwork) GetDhcpOptions() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions] {
+	return &c.DhcpOptions
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetwork) GetEnableDdosProtection() *plugin.TValue[bool] {
+	return &c.EnableDdosProtection
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetwork) GetEnableVmProtection() *plugin.TValue[bool] {
+	return &c.EnableVmProtection
+}
+
+// mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions for the azure.subscription.networkService.virtualNetwork.dhcpOptions resource
+type mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptionsInternal it will be used here
+	Id plugin.TValue[string]
+	DnsServers plugin.TValue[[]interface{}]
+}
+
+// createAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.virtualNetwork.dhcpOptions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) MqlName() string {
+	return "azure.subscription.networkService.virtualNetwork.dhcpOptions"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) GetDnsServers() *plugin.TValue[[]interface{}] {
+	return &c.DnsServers
 }
 
 // mqlAzureSubscriptionNetworkServiceLoadBalancer for the azure.subscription.networkService.loadBalancer resource
