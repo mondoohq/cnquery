@@ -373,7 +373,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 		res[k] = convert.ToString(metadata.Properties[k])
 	}
 
-	return llx.MapData(res, types.String), nil
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{}, error) {
@@ -425,7 +425,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 
 	config := configPlugin.Data
 	// read configuration into go struct
-	configProperties := config.Properties
+	configProperties := config.Properties.Data
 
 	// unmarshal into go struct for easier access
 	data, err := json.Marshal(configProperties)
@@ -438,7 +438,6 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) stack() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	// get metadata
 	metadataPlugin := a.GetMetadata()
 	if metadataPlugin.Error != nil {
@@ -578,5 +577,5 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface
 		res[k] = convert.ToString(settings.Properties[k])
 	}
 
-	return llx.MapData(res, types.String), nil
+	return res, nil
 }
