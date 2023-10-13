@@ -9,7 +9,7 @@ import (
 )
 
 func (a *mqlAtlassianAdmin) id() (string, error) {
-	return "wip", nil
+	return "admin", nil
 }
 
 func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {

@@ -9,7 +9,7 @@ import (
 )
 
 func (a *mqlAtlassianConfluence) id() (string, error) {
-	return "wip", nil
+	return "confluence", nil
 }
 
 func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {

@@ -10,7 +10,7 @@ import (
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {
-	return "wip", nil
+	return "jira", nil
 }
 
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
