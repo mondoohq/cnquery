@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"errors"
 	"os"
 
 	"github.com/ctreminiom/go-atlassian/admin"
@@ -23,7 +24,12 @@ type AtlassianConnection struct {
 }
 
 func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AtlassianConnection, error) {
-	apiKey := os.Getenv("ATLASSIAN_KEY")
+	apiKey := os.Getenv("ATLASSIAN_ADMIN_TOKEN")
+
+	if apiKey == "" {
+		return nil, errors.New("you need to provide atlassian admin token e.g. via ATLASSIAN_ADMIN_TOKEN env")
+	}
+
 	token := os.Getenv("ATLASSIAN_TOKEN")
 	host := "https://lunalectric.atlassian.net"
 	mail := "marius@mondoo.com"
@@ -39,6 +45,7 @@ func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		log.Fatal().Err(err)
 	}
 
+	//jira.Auth.SetBearerToken(apiKey)
 	jira.Auth.SetBasicAuth(mail, token)
 	jira.Auth.SetUserAgent("curl/7.54.0")
 
@@ -47,6 +54,7 @@ func NewAtlassianConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		log.Fatal().Err(err)
 	}
 
+	//confluence.Auth.SetBearerToken(apiKey)
 	confluence.Auth.SetBasicAuth(mail, token)
 	confluence.Auth.SetUserAgent("curl/7.54.0")
 
