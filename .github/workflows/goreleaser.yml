@@ -168,7 +168,7 @@ jobs:
               "version":  "${{  github.ref_name }}"
             }'
 
-      - name: Publish Release to releases.mondoo.com
+      - name: Save Artifacts
         if: ${{ steps.skip-publish.outputs.skip-publish }}
         uses: actions/upload-artifact@v3
         with:
