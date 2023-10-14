@@ -127,13 +127,13 @@ jobs:
           QUILL_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           QUILL_NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER }}
 
-      - name: Run GoReleaser (w/o Docker Release)
+      - name: Run GoReleaser (Build Binaries Only)
         if: ${{ steps.skip-publish.outputs.skip-publish == 'true' }}
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
-          args: release -f .github/.goreleaser-unstable.yml --clean --timeout 120m
+          args: build -f .github/.goreleaser-unstable.yml --timeout 120m --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
