@@ -90,16 +90,29 @@ func (x *mqlHttpGet) header() (*mqlHttpHeader, error) {
 		for j := range vals {
 			ivals[j] = vals[j]
 		}
-		params[mkey] = ivals
+		params[normalizeHeaderKey(mkey)] = ivals
 	}
 
 	o, err := CreateResource(x.MqlRuntime, "http.header", map[string]*llx.RawData{
+		"__id":   llx.StringData(x.__id),
 		"params": llx.MapData(params, types.Array(types.String)),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return o.(*mqlHttpHeader), nil
+}
+
+var normHeaderKeys = map[string]string{
+	"X-Xss-Protection": "X-XSS-Protection",
+}
+
+// adds a few more key normalizations
+func normalizeHeaderKey(key string) string {
+	if res, ok := normHeaderKeys[key]; ok {
+		return res
+	}
+	return key
 }
 
 func (x *mqlHttpGet) statusCode() (int64, error) {
@@ -118,6 +131,43 @@ func (x *mqlHttpGet) body() (string, error) {
 	return string(raw), err
 }
 
+func parseHeaderFields(raw []interface{}, f func(key string, value string)) {
+	for i := range raw {
+		h := raw[i].(string)
+		fields := strings.Split(h, ";")
+		for j := range fields {
+			field := strings.TrimSpace(fields[j])
+			s := strings.SplitN(field, "=", 2)
+			if len(s) == 1 {
+				f(s[0], "")
+			} else {
+				f(s[0], s[1])
+			}
+		}
+	}
+}
+
+func parseSingleHeaderValue[T any](raw interface{}, found bool, field *plugin.TValue[T]) (string, error) {
+	if !found {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+
+	arr := raw.([]interface{})
+	var res strings.Builder
+	for i := range arr {
+		if i != 0 {
+			res.WriteByte(' ')
+		}
+		res.WriteString(arr[i].(string))
+	}
+	return res.String(), nil
+}
+
+func (x *mqlHttpHeader) id() (string, error) {
+	return "", errors.New("http header not initialized")
+}
+
 func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 	params, ok := x.Params.Data["Strict-Transport-Security"]
 	if !ok {
@@ -129,34 +179,22 @@ func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 	includeSubDomains := false
 	maxAge := llx.NilData
 
-	sts := params.([]interface{})
-	for i := range sts {
-		h := sts[i].(string)
-		fields := strings.Split(h, ";")
-		for j := range fields {
-			field := strings.TrimSpace(fields[j])
-			switch field {
-			case "preload":
-				preload = true
-			case "includeSubDomains":
-				includeSubDomains = true
-			default:
-				s := strings.SplitN(field, "=", 2)
-				// only max-age supported at the time of writing
-				if s[0] != "max-age" {
-					continue
-				}
-
-				if len(s) != 2 {
-					maxAge = llx.TimeData(time.Time{})
-					maxAge.Error = errors.New("maxAge is invalid: " + field)
-				} else {
-					age, _ := strconv.Atoi(s[1])
-					maxAge = llx.TimeData(llx.DurationToTime(int64(age)))
-				}
+	parseHeaderFields(params.([]interface{}), func(key string, value string) {
+		switch key {
+		case "preload":
+			preload = true
+		case "includeSubDomains":
+			includeSubDomains = true
+		case "max-age":
+			age, err := strconv.Atoi(value)
+			if err != nil {
+				maxAge = llx.TimeData(time.Time{})
+				maxAge.Error = errors.New("maxAge is invalid: " + value)
+			} else {
+				maxAge = llx.TimeData(llx.DurationToTime(int64(age)))
 			}
 		}
-	}
+	})
 
 	o, err := CreateResource(x.MqlRuntime, "http.header.sts", map[string]*llx.RawData{
 		"preload":           llx.BoolData(preload),
@@ -167,4 +205,83 @@ func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 		return nil, err
 	}
 	return o.(*mqlHttpHeaderSts), nil
+}
+
+func (x *mqlHttpHeaderSts) id() (string, error) {
+	id := ""
+	if x.MaxAge.Data != nil {
+		id += "maxAge=" + strconv.Itoa(int(x.MaxAge.Data.Unix()))
+	}
+	if x.Preload.Data {
+		id += ";preload"
+	}
+	if x.IncludeSubDomains.Data {
+		id += ";includeSubdomains"
+	}
+	return id, nil
+}
+
+func (x *mqlHttpHeader) xFrameOptions() (string, error) {
+	params, ok := x.Params.Data["X-Frame-Options"]
+	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
+}
+
+func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
+	params, ok := x.Params.Data["X-XSS-Protection"]
+	if !ok {
+		x.XXssProtection.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	enabled := llx.NilData
+	mode := llx.NilData
+	report := llx.NilData
+	parseHeaderFields(params.([]interface{}), func(key string, value string) {
+		switch key {
+		case "0":
+			enabled = llx.BoolFalse
+		case "1":
+			enabled = llx.BoolTrue
+		case "mode":
+			mode = llx.StringData(value)
+		case "max-age":
+			report = llx.StringData(value)
+		}
+	})
+
+	o, err := CreateResource(x.MqlRuntime, "http.header.xssProtection", map[string]*llx.RawData{
+		"enabled": enabled,
+		"mode":    mode,
+		"report":  report,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlHttpHeaderXssProtection), nil
+}
+
+func (x *mqlHttpHeaderXssProtection) id() (string, error) {
+	var id string
+	if x.Enabled.Data {
+		id = "1"
+	} else {
+		id = "0"
+	}
+	if x.Mode.Data != "" {
+		id += ";mode=" + x.Mode.Data
+	}
+	if x.Report.Data != "" {
+		id += ";report=" + x.Report.Data
+	}
+	return id, nil
+}
+
+func (x *mqlHttpHeader) xContentTypeOptions() (string, error) {
+	params, ok := x.Params.Data["X-Content-Type-Options"]
+	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
+}
+
+func (x *mqlHttpHeader) referrerPolicy() (string, error) {
+	params, ok := x.Params.Data["Referrer-Policy"]
+	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
 }

@@ -37,6 +37,14 @@ private http.header @defaults("length=params.length") {
   params map[string][]string
   // Strict-Transport-Security header
   sts() http.header.sts
+  // X-Frame-Options header: DENY, SAMEORIGIN, or ALLOW-FROM origin (obsolete)
+  xFrameOptions() string
+  // X-XSS-Protection header
+  xXssProtection() http.header.xssProtection
+  // X-Content-Type-Options header: nosniff
+  xContentTypeOptions() string
+  // Referrer-Policy header
+  referrerPolicy() string
 }
 
 // HTTP Header for Strict-Transport-Security
@@ -47,6 +55,17 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
   includeSubDomains bool
   // Non-standard directive for preloading STS
   preload bool
+}
+
+// HTTP Header for X-XSS-Protection, which is now outdated (replaced by CSP)
+// and may even cause security vulnerabilities
+private http.header.xssProtection @defaults("enabled mode report") {
+  // Enabled when the header value is set to 1. Disabled if set to 0
+  enabled bool
+  // Mode for XSS filtering.
+  mode string
+  // Report endpoint for violations (Chromium only).
+  report string
 }
 
 // URL resource, generally represented as:

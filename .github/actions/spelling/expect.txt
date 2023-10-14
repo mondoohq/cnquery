@@ -34,6 +34,7 @@ mfs
 mgroup
 Mpim
 nodepool
+nosniff
 nullgroup
 opcplc
 Pids
@@ -42,6 +43,7 @@ pushconfig
 querypack
 resourcegroup
 Sas
+SAMEORIGIN
 serviceprincipals
 Snat
 spdx
