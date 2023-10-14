@@ -34,7 +34,7 @@ resources:
     fields:
       list: {}
       pem: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.1.0
   dns:
     fields:
       dkim: {}
@@ -81,6 +81,30 @@ resources:
       tld: {}
       tldIcannManaged: {}
     min_mondoo_version: 5.15.0
+  http:
+    fields: {}
+    min_mondoo_version: 9.1.0
+  http.get:
+    fields:
+      body: {}
+      header: {}
+      statusCode: {}
+      url: {}
+      version: {}
+    min_mondoo_version: 9.1.0
+  http.header:
+    fields:
+      params: {}
+      sts: {}
+    is_private: true
+    min_mondoo_version: 9.1.0
+  http.header.sts:
+    fields:
+      includeSubDomains: {}
+      maxAge: {}
+      preload: {}
+    is_private: true
+    min_mondoo_version: 9.1.0
   openpgp.entities:
     fields:
       content: {}
@@ -167,3 +191,16 @@ resources:
       socket: {}
       versions: {}
     min_mondoo_version: 5.15.0
+  url:
+    fields:
+      host: {}
+      password: {}
+      path: {}
+      port: {}
+      query: {}
+      rawFragment: {}
+      rawQuery: {}
+      scheme: {}
+      string: {}
+      user: {}
+    min_mondoo_version: 9.1.0

@@ -22,6 +22,26 @@ func init() {
 			// to override args, implement: initSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSocket,
 		},
+		"http": {
+			// to override args, implement: initHttp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttp,
+		},
+		"http.get": {
+			Init: initHttpGet,
+			Create: createHttpGet,
+		},
+		"http.header": {
+			// to override args, implement: initHttpHeader(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttpHeader,
+		},
+		"http.header.sts": {
+			// to override args, implement: initHttpHeaderSts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttpHeaderSts,
+		},
+		"url": {
+			Init: initUrl,
+			Create: createUrl,
+		},
 		"tls": {
 			Init: initTls,
 			Create: createTls,
@@ -158,6 +178,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"socket.address": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSocket).GetAddress()).ToDataRes(types.String)
+	},
+	"http.get.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetUrl()).ToDataRes(types.Resource("url"))
+	},
+	"http.get.header": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetHeader()).ToDataRes(types.Resource("http.header"))
+	},
+	"http.get.statusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetStatusCode()).ToDataRes(types.Int)
+	},
+	"http.get.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetVersion()).ToDataRes(types.String)
+	},
+	"http.get.body": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpGet).GetBody()).ToDataRes(types.String)
+	},
+	"http.header.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetParams()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"http.header.sts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetSts()).ToDataRes(types.Resource("http.header.sts"))
+	},
+	"http.header.sts.maxAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSts).GetMaxAge()).ToDataRes(types.Time)
+	},
+	"http.header.sts.includeSubDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSts).GetIncludeSubDomains()).ToDataRes(types.Bool)
+	},
+	"http.header.sts.preload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSts).GetPreload()).ToDataRes(types.Bool)
+	},
+	"url.string": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetString()).ToDataRes(types.String)
+	},
+	"url.scheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetScheme()).ToDataRes(types.String)
+	},
+	"url.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetUser()).ToDataRes(types.String)
+	},
+	"url.password": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetPassword()).ToDataRes(types.String)
+	},
+	"url.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetHost()).ToDataRes(types.String)
+	},
+	"url.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetPort()).ToDataRes(types.Int)
+	},
+	"url.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetPath()).ToDataRes(types.String)
+	},
+	"url.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetQuery()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"url.rawQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetRawQuery()).ToDataRes(types.String)
+	},
+	"url.rawFragment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUrl).GetRawFragment()).ToDataRes(types.String)
 	},
 	"tls.socket": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTls).GetSocket()).ToDataRes(types.Resource("socket"))
@@ -500,6 +580,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"socket.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSocket).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttp).__id, ok = v.Value.(string)
+			return
+		},
+	"http.get.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpGet).__id, ok = v.Value.(string)
+			return
+		},
+	"http.get.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).Url, ok = plugin.RawToTValue[*mqlUrl](v.Value, v.Error)
+		return
+	},
+	"http.get.header": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).Header, ok = plugin.RawToTValue[*mqlHttpHeader](v.Value, v.Error)
+		return
+	},
+	"http.get.statusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).StatusCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"http.get.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.get.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpGet).Body, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpHeader).__id, ok = v.Value.(string)
+			return
+		},
+	"http.header.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"http.header.sts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).Sts, ok = plugin.RawToTValue[*mqlHttpHeaderSts](v.Value, v.Error)
+		return
+	},
+	"http.header.sts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpHeaderSts).__id, ok = v.Value.(string)
+			return
+		},
+	"http.header.sts.maxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSts).MaxAge, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"http.header.sts.includeSubDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSts).IncludeSubDomains, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"http.header.sts.preload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSts).Preload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"url.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUrl).__id, ok = v.Value.(string)
+			return
+		},
+	"url.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.scheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Scheme, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.password": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Password, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"url.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).Query, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"url.rawQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).RawQuery, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"url.rawFragment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUrl).RawFragment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"tls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1063,6 +1243,343 @@ func (c *mqlSocket) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlSocket) GetAddress() *plugin.TValue[string] {
 	return &c.Address
+}
+
+// mqlHttp for the http resource
+type mqlHttp struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpInternal it will be used here
+}
+
+// createHttp creates a new instance of this resource
+func createHttp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttp) MqlName() string {
+	return "http"
+}
+
+func (c *mqlHttp) MqlID() string {
+	return c.__id
+}
+
+// mqlHttpGet for the http.get resource
+type mqlHttpGet struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlHttpGetInternal
+	Url plugin.TValue[*mqlUrl]
+	Header plugin.TValue[*mqlHttpHeader]
+	StatusCode plugin.TValue[int64]
+	Version plugin.TValue[string]
+	Body plugin.TValue[string]
+}
+
+// createHttpGet creates a new instance of this resource
+func createHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpGet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.get", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpGet) MqlName() string {
+	return "http.get"
+}
+
+func (c *mqlHttpGet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpGet) GetUrl() *plugin.TValue[*mqlUrl] {
+	return &c.Url
+}
+
+func (c *mqlHttpGet) GetHeader() *plugin.TValue[*mqlHttpHeader] {
+	return plugin.GetOrCompute[*mqlHttpHeader](&c.Header, func() (*mqlHttpHeader, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.get", c.__id, "header")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHttpHeader), nil
+			}
+		}
+
+		return c.header()
+	})
+}
+
+func (c *mqlHttpGet) GetStatusCode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.StatusCode, func() (int64, error) {
+		return c.statusCode()
+	})
+}
+
+func (c *mqlHttpGet) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlHttpGet) GetBody() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Body, func() (string, error) {
+		return c.body()
+	})
+}
+
+// mqlHttpHeader for the http.header resource
+type mqlHttpHeader struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpHeaderInternal it will be used here
+	Params plugin.TValue[map[string]interface{}]
+	Sts plugin.TValue[*mqlHttpHeaderSts]
+}
+
+// createHttpHeader creates a new instance of this resource
+func createHttpHeader(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpHeader{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.header", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpHeader) MqlName() string {
+	return "http.header"
+}
+
+func (c *mqlHttpHeader) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpHeader) GetParams() *plugin.TValue[map[string]interface{}] {
+	return &c.Params
+}
+
+func (c *mqlHttpHeader) GetSts() *plugin.TValue[*mqlHttpHeaderSts] {
+	return plugin.GetOrCompute[*mqlHttpHeaderSts](&c.Sts, func() (*mqlHttpHeaderSts, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.header", c.__id, "sts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHttpHeaderSts), nil
+			}
+		}
+
+		return c.sts()
+	})
+}
+
+// mqlHttpHeaderSts for the http.header.sts resource
+type mqlHttpHeaderSts struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpHeaderStsInternal it will be used here
+	MaxAge plugin.TValue[*time.Time]
+	IncludeSubDomains plugin.TValue[bool]
+	Preload plugin.TValue[bool]
+}
+
+// createHttpHeaderSts creates a new instance of this resource
+func createHttpHeaderSts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpHeaderSts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.header.sts", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpHeaderSts) MqlName() string {
+	return "http.header.sts"
+}
+
+func (c *mqlHttpHeaderSts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpHeaderSts) GetMaxAge() *plugin.TValue[*time.Time] {
+	return &c.MaxAge
+}
+
+func (c *mqlHttpHeaderSts) GetIncludeSubDomains() *plugin.TValue[bool] {
+	return &c.IncludeSubDomains
+}
+
+func (c *mqlHttpHeaderSts) GetPreload() *plugin.TValue[bool] {
+	return &c.Preload
+}
+
+// mqlUrl for the url resource
+type mqlUrl struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUrlInternal it will be used here
+	String plugin.TValue[string]
+	Scheme plugin.TValue[string]
+	User plugin.TValue[string]
+	Password plugin.TValue[string]
+	Host plugin.TValue[string]
+	Port plugin.TValue[int64]
+	Path plugin.TValue[string]
+	Query plugin.TValue[map[string]interface{}]
+	RawQuery plugin.TValue[string]
+	RawFragment plugin.TValue[string]
+}
+
+// createUrl creates a new instance of this resource
+func createUrl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUrl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("url", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUrl) MqlName() string {
+	return "url"
+}
+
+func (c *mqlUrl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUrl) GetString() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.String, func() (string, error) {
+		return c.string()
+	})
+}
+
+func (c *mqlUrl) GetScheme() *plugin.TValue[string] {
+	return &c.Scheme
+}
+
+func (c *mqlUrl) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlUrl) GetPassword() *plugin.TValue[string] {
+	return &c.Password
+}
+
+func (c *mqlUrl) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlUrl) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlUrl) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlUrl) GetQuery() *plugin.TValue[map[string]interface{}] {
+	return &c.Query
+}
+
+func (c *mqlUrl) GetRawQuery() *plugin.TValue[string] {
+	return &c.RawQuery
+}
+
+func (c *mqlUrl) GetRawFragment() *plugin.TValue[string] {
+	return &c.RawFragment
 }
 
 // mqlTls for the tls resource

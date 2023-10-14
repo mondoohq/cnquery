@@ -14,6 +14,67 @@ socket @defaults("protocol port address") {
   address string
 }
 
+// HTTP endpoint
+http {}
+
+// HTTP GET requests
+http.get @defaults("url statusCode") {
+  init(rawUrl string)
+  // URL for this request
+  url url
+  // Returned header for this request
+  header() http.header
+  // Status returned by this request
+  statusCode() int
+  // Version of the HTTP request, e.g. 1.1
+  version() string
+  // Body returned from this request
+  body() string
+}
+
+private http.header @defaults("length=params.length") {
+  // Raw list of parameters for this header
+  params map[string][]string
+  // Strict-Transport-Security header
+  sts() http.header.sts
+}
+
+// HTTP Header for Strict-Transport-Security
+private http.header.sts @defaults("maxAge includeSubDomains preload") {
+  // How long to cache HTTPS-only policy in seconds
+  maxAge time
+  // Whether caching applies to subdomains
+  includeSubDomains bool
+  // Non-standard directive for preloading STS
+  preload bool
+}
+
+// URL resource, generally represented as:
+// [scheme:][//[user[:password]@]host[:port]][/]path[?query][#fragment]
+url @defaults("string") {
+  init(raw string)
+  // The full URL as a string
+  string() string
+  // Scheme, e.g. http, https, ssh
+  scheme string
+  // User component, may contain username or token (no password)
+  user string
+  // Password, an additional optional component of the user info
+  password string
+  // Host, either registered name or IP; e.g. mondoo.com
+  host string
+  // Port, optional decimal number; e.g. 80
+  port int
+  // Path, consisting of segments separated by '/'
+  path string
+  // Query, optional, attached to path via '?', parsed via '&' and ';' delimiters
+  query map[string]string
+  // Raw Query, optional raw string attched to path after '?'
+  rawQuery string
+  // Fragment, optional raw string attached to path after '#'
+  rawFragment string
+}
+
 // TLS
 tls @defaults("socket domainName") {
   init(target string)
