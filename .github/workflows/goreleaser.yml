@@ -34,7 +34,7 @@ jobs:
 
       - name: Skip Publish for Alpha and Beta Tags
         id: skip-publish
-        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') || inputs.skip-publish == 'true'
+        if: contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') || inputs.skip-publish == true
         run: |
           echo "Skipping publish for alpha and beta tags"
           echo "skip-publish=true" >> $GITHUB_OUTPUT
