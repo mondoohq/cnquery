@@ -42,6 +42,14 @@ func init() {
 			// to override args, implement: initHttpHeaderXssProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHttpHeaderXssProtection,
 		},
+		"http.header.contentType": {
+			// to override args, implement: initHttpHeaderContentType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttpHeaderContentType,
+		},
+		"http.header.setCookie": {
+			// to override args, implement: initHttpHeaderSetCookie(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttpHeaderSetCookie,
+		},
 		"url": {
 			Init: initUrl,
 			Create: createUrl,
@@ -216,6 +224,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"http.header.referrerPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeader).GetReferrerPolicy()).ToDataRes(types.String)
 	},
+	"http.header.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetContentType()).ToDataRes(types.Resource("http.header.contentType"))
+	},
+	"http.header.setCookie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetSetCookie()).ToDataRes(types.Resource("http.header.setCookie"))
+	},
 	"http.header.sts.maxAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeaderSts).GetMaxAge()).ToDataRes(types.Time)
 	},
@@ -233,6 +247,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"http.header.xssProtection.report": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeaderXssProtection).GetReport()).ToDataRes(types.String)
+	},
+	"http.header.contentType.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderContentType).GetType()).ToDataRes(types.String)
+	},
+	"http.header.contentType.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderContentType).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"http.header.setCookie.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSetCookie).GetName()).ToDataRes(types.String)
+	},
+	"http.header.setCookie.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSetCookie).GetValue()).ToDataRes(types.String)
+	},
+	"http.header.setCookie.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderSetCookie).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"url.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUrl).GetString()).ToDataRes(types.String)
@@ -663,6 +692,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlHttpHeader).ReferrerPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"http.header.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).ContentType, ok = plugin.RawToTValue[*mqlHttpHeaderContentType](v.Value, v.Error)
+		return
+	},
+	"http.header.setCookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).SetCookie, ok = plugin.RawToTValue[*mqlHttpHeaderSetCookie](v.Value, v.Error)
+		return
+	},
 	"http.header.sts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlHttpHeaderSts).__id, ok = v.Value.(string)
 			return
@@ -693,6 +730,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"http.header.xssProtection.report": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderXssProtection).Report, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.contentType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpHeaderContentType).__id, ok = v.Value.(string)
+			return
+		},
+	"http.header.contentType.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderContentType).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.contentType.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderContentType).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"http.header.setCookie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpHeaderSetCookie).__id, ok = v.Value.(string)
+			return
+		},
+	"http.header.setCookie.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSetCookie).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.setCookie.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSetCookie).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.setCookie.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderSetCookie).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"url.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1439,6 +1504,8 @@ type mqlHttpHeader struct {
 	XXssProtection plugin.TValue[*mqlHttpHeaderXssProtection]
 	XContentTypeOptions plugin.TValue[string]
 	ReferrerPolicy plugin.TValue[string]
+	ContentType plugin.TValue[*mqlHttpHeaderContentType]
+	SetCookie plugin.TValue[*mqlHttpHeaderSetCookie]
 }
 
 // createHttpHeader creates a new instance of this resource
@@ -1529,6 +1596,38 @@ func (c *mqlHttpHeader) GetXContentTypeOptions() *plugin.TValue[string] {
 func (c *mqlHttpHeader) GetReferrerPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ReferrerPolicy, func() (string, error) {
 		return c.referrerPolicy()
+	})
+}
+
+func (c *mqlHttpHeader) GetContentType() *plugin.TValue[*mqlHttpHeaderContentType] {
+	return plugin.GetOrCompute[*mqlHttpHeaderContentType](&c.ContentType, func() (*mqlHttpHeaderContentType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.header", c.__id, "contentType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHttpHeaderContentType), nil
+			}
+		}
+
+		return c.contentType()
+	})
+}
+
+func (c *mqlHttpHeader) GetSetCookie() *plugin.TValue[*mqlHttpHeaderSetCookie] {
+	return plugin.GetOrCompute[*mqlHttpHeaderSetCookie](&c.SetCookie, func() (*mqlHttpHeaderSetCookie, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.header", c.__id, "setCookie")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHttpHeaderSetCookie), nil
+			}
+		}
+
+		return c.setCookie()
 	})
 }
 
@@ -1648,6 +1747,119 @@ func (c *mqlHttpHeaderXssProtection) GetMode() *plugin.TValue[string] {
 
 func (c *mqlHttpHeaderXssProtection) GetReport() *plugin.TValue[string] {
 	return &c.Report
+}
+
+// mqlHttpHeaderContentType for the http.header.contentType resource
+type mqlHttpHeaderContentType struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpHeaderContentTypeInternal it will be used here
+	Type plugin.TValue[string]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createHttpHeaderContentType creates a new instance of this resource
+func createHttpHeaderContentType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpHeaderContentType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.header.contentType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpHeaderContentType) MqlName() string {
+	return "http.header.contentType"
+}
+
+func (c *mqlHttpHeaderContentType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpHeaderContentType) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlHttpHeaderContentType) GetParams() *plugin.TValue[map[string]interface{}] {
+	return &c.Params
+}
+
+// mqlHttpHeaderSetCookie for the http.header.setCookie resource
+type mqlHttpHeaderSetCookie struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpHeaderSetCookieInternal it will be used here
+	Name plugin.TValue[string]
+	Value plugin.TValue[string]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createHttpHeaderSetCookie creates a new instance of this resource
+func createHttpHeaderSetCookie(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpHeaderSetCookie{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.header.setCookie", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpHeaderSetCookie) MqlName() string {
+	return "http.header.setCookie"
+}
+
+func (c *mqlHttpHeaderSetCookie) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpHeaderSetCookie) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHttpHeaderSetCookie) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlHttpHeaderSetCookie) GetParams() *plugin.TValue[map[string]interface{}] {
+	return &c.Params
 }
 
 // mqlUrl for the url resource

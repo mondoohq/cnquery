@@ -13,9 +13,11 @@ import (
 	"sync"
 	"time"
 
+	"go.mondoo.com/cnquery/v9/checksums"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/utils/sortx"
 )
 
 type mqlHttpGetInternal struct {
@@ -169,7 +171,7 @@ func (x *mqlHttpHeader) id() (string, error) {
 }
 
 func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
-	params, ok := x.Params.Data["Strict-Transport-Security"]
+	raw, ok := x.Params.Data["Strict-Transport-Security"]
 	if !ok {
 		x.Sts.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -179,7 +181,7 @@ func (x *mqlHttpHeader) sts() (*mqlHttpHeaderSts, error) {
 	includeSubDomains := false
 	maxAge := llx.NilData
 
-	parseHeaderFields(params.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
 		switch key {
 		case "preload":
 			preload = true
@@ -227,7 +229,7 @@ func (x *mqlHttpHeader) xFrameOptions() (string, error) {
 }
 
 func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
-	params, ok := x.Params.Data["X-XSS-Protection"]
+	raw, ok := x.Params.Data["X-XSS-Protection"]
 	if !ok {
 		x.XXssProtection.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -236,7 +238,7 @@ func (x *mqlHttpHeader) xXssProtection() (*mqlHttpHeaderXssProtection, error) {
 	enabled := llx.NilData
 	mode := llx.NilData
 	report := llx.NilData
-	parseHeaderFields(params.([]interface{}), func(key string, value string) {
+	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
 		switch key {
 		case "0":
 			enabled = llx.BoolFalse
@@ -284,4 +286,92 @@ func (x *mqlHttpHeader) xContentTypeOptions() (string, error) {
 func (x *mqlHttpHeader) referrerPolicy() (string, error) {
 	params, ok := x.Params.Data["Referrer-Policy"]
 	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
+}
+
+func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
+	raw, ok := x.Params.Data["Content-Type"]
+	if !ok {
+		x.ContentType.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	typ := llx.NilData
+	params := llx.NilData
+	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+		if typ.Value == nil && value == "" {
+			typ = llx.StringData(key)
+			return
+		}
+		if params.Value == nil {
+			params = llx.MapData(map[string]interface{}{}, types.String)
+		}
+		params.Value.(map[string]interface{})[key] = value
+	})
+
+	o, err := CreateResource(x.MqlRuntime, "http.header.contentType", map[string]*llx.RawData{
+		"type":   typ,
+		"params": params,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlHttpHeaderContentType), nil
+}
+
+func (x *mqlHttpHeaderContentType) id() (string, error) {
+	id := x.Type.Data
+	if x.Params.Data != nil {
+		keys := sortx.Keys(x.Params.Data)
+		for _, key := range keys {
+			id += ";" + key + "=" + x.Params.Data[key].(string)
+		}
+	}
+	return id, nil
+}
+
+func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
+	raw, ok := x.Params.Data["Set-Cookie"]
+	if !ok {
+		x.SetCookie.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	cname := llx.NilData
+	cval := llx.NilData
+	params := llx.NilData
+	parseHeaderFields(raw.([]interface{}), func(key string, value string) {
+		if cname.Value == nil && value != "" {
+			cname = llx.StringData(key)
+			cval = llx.StringData(value)
+			return
+		}
+		if params.Value == nil {
+			params = llx.MapData(map[string]interface{}{}, types.String)
+		}
+		params.Value.(map[string]interface{})[key] = value
+	})
+
+	o, err := CreateResource(x.MqlRuntime, "http.header.setCookie", map[string]*llx.RawData{
+		"name":   cname,
+		"value":  cval,
+		"params": params,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlHttpHeaderSetCookie), nil
+}
+
+func (x *mqlHttpHeaderSetCookie) id() (string, error) {
+	// cookies may be very long, so it's more efficient to checksum them
+	res := checksums.New.Add(x.Name.Data).Add(x.Value.Data)
+	if x.Params.Data != nil {
+		keys := sortx.Keys(x.Params.Data)
+		for _, key := range keys {
+			res = res.
+				Add(key).
+				Add(x.Params.Data[key].(string))
+		}
+	}
+	return res.String(), nil
 }
