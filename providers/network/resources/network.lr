@@ -69,7 +69,7 @@ url @defaults("string") {
   path string
   // Query, optional, attached to path via '?', parsed via '&' and ';' delimiters
   query map[string]string
-  // Raw Query, optional raw string attched to path after '?'
+  // Raw Query, optional raw string attached to path after '?'
   rawQuery string
   // Fragment, optional raw string attached to path after '#'
   rawFragment string
