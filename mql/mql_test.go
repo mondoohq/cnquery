@@ -170,6 +170,11 @@ func TestNullResources(t *testing.T) {
 			Expectation: nil,
 		},
 		{
+			Code:        "muser.nullgroup.name",
+			ResultIndex: 0,
+			Expectation: nil,
+		},
+		{
 			Code:        "muser.nullgroup == null",
 			ResultIndex: 1,
 			Expectation: true,

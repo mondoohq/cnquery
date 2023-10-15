@@ -724,6 +724,13 @@ func validateBuiltinFunctionsV2() {
 }
 
 func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		e.cache.Store(ref, &stepCache{
+			Result: NilData,
+		})
+		return NilData, 0, nil
+	}
+
 	rr, ok := bind.Value.(Resource)
 	if !ok {
 		// TODO: can we get rid of this fmt call
