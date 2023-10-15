@@ -230,6 +230,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"http.header.setCookie": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeader).GetSetCookie()).ToDataRes(types.Resource("http.header.setCookie"))
 	},
+	"http.header.csp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetCsp()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"http.header.sts.maxAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeaderSts).GetMaxAge()).ToDataRes(types.Time)
 	},
@@ -698,6 +701,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"http.header.setCookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeader).SetCookie, ok = plugin.RawToTValue[*mqlHttpHeaderSetCookie](v.Value, v.Error)
+		return
+	},
+	"http.header.csp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).Csp, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"http.header.sts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1506,6 +1513,7 @@ type mqlHttpHeader struct {
 	ReferrerPolicy plugin.TValue[string]
 	ContentType plugin.TValue[*mqlHttpHeaderContentType]
 	SetCookie plugin.TValue[*mqlHttpHeaderSetCookie]
+	Csp plugin.TValue[map[string]interface{}]
 }
 
 // createHttpHeader creates a new instance of this resource
@@ -1628,6 +1636,12 @@ func (c *mqlHttpHeader) GetSetCookie() *plugin.TValue[*mqlHttpHeaderSetCookie] {
 		}
 
 		return c.setCookie()
+	})
+}
+
+func (c *mqlHttpHeader) GetCsp() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Csp, func() (map[string]interface{}, error) {
+		return c.csp()
 	})
 }
 

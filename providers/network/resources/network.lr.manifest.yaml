@@ -95,20 +95,23 @@ resources:
   http.header:
     fields:
       contentType: {}
+      csp:
+        min_mondoo_version: 9.1.0
       params: {}
       referrerPolicy: {}
-      setCookie:
-        min_mondoo_version: 9.1.0
+      setCookie: {}
       sts: {}
       xContentTypeOptions: {}
       xFrameOptions: {}
       xXssProtection: {}
+    maturity: experimental
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.contentType:
     fields:
       params: {}
       type: {}
+    maturity: experimental
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.setCookie:
@@ -116,6 +119,7 @@ resources:
       name: {}
       params: {}
       value: {}
+    maturity: experimental
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.sts:
@@ -123,6 +127,7 @@ resources:
       includeSubDomains: {}
       maxAge: {}
       preload: {}
+    maturity: experimental
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.xssProtection:
@@ -132,6 +137,7 @@ resources:
       mode: {}
       preload: {}
       report: {}
+    maturity: experimental
     is_private: true
     min_mondoo_version: 9.1.0
   openpgp.entities:
