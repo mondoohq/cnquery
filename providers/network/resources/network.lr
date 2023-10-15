@@ -50,6 +50,8 @@ private http.header @defaults("length=params.length") {
   contentType() http.header.contentType
   // Set-Cookie header
   setCookie() http.header.setCookie
+  // Content-Security-Policy header
+  csp() map[string]string
 }
 
 // HTTP header for Strict-Transport-Security

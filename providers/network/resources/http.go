@@ -134,12 +134,16 @@ func (x *mqlHttpGet) body() (string, error) {
 }
 
 func parseHeaderFields(raw []interface{}, f func(key string, value string)) {
+	parseHeaderFieldsD(raw, f, ";", "=")
+}
+
+func parseHeaderFieldsD(raw []interface{}, f func(key string, value string), delimFields string, delimKV string) {
 	for i := range raw {
 		h := raw[i].(string)
-		fields := strings.Split(h, ";")
+		fields := strings.Split(h, delimFields)
 		for j := range fields {
 			field := strings.TrimSpace(fields[j])
-			s := strings.SplitN(field, "=", 2)
+			s := strings.SplitN(field, delimKV, 2)
 			if len(s) == 1 {
 				f(s[0], "")
 			} else {
@@ -360,6 +364,21 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 		return nil, err
 	}
 	return o.(*mqlHttpHeaderSetCookie), nil
+}
+
+func (x *mqlHttpHeader) csp() (map[string]interface{}, error) {
+	raw, ok := x.Params.Data["Content-Security-Policy"]
+	if !ok {
+		x.Csp.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	m := map[string]interface{}{}
+	parseHeaderFieldsD(raw.([]interface{}), func(key string, value string) {
+		m[key] = value
+	}, ";", " ")
+
+	return m, nil
 }
 
 func (x *mqlHttpHeaderSetCookie) id() (string, error) {
