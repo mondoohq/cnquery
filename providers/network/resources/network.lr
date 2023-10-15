@@ -32,6 +32,7 @@ http.get @defaults("url statusCode") {
   body() string
 }
 
+// HTTP header
 private http.header @defaults("length=params.length") {
   // Raw list of parameters for this header
   params map[string][]string
@@ -45,9 +46,13 @@ private http.header @defaults("length=params.length") {
   xContentTypeOptions() string
   // Referrer-Policy header
   referrerPolicy() string
+  // Content-Type header
+  contentType() http.header.contentType
+  // Set-Cookie header
+  setCookie() http.header.setCookie
 }
 
-// HTTP Header for Strict-Transport-Security
+// HTTP header for Strict-Transport-Security
 private http.header.sts @defaults("maxAge includeSubDomains preload") {
   // How long to cache HTTPS-only policy in seconds
   maxAge time
@@ -57,7 +62,7 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
   preload bool
 }
 
-// HTTP Header for X-XSS-Protection, which is now outdated (replaced by CSP)
+// HTTP header for X-XSS-Protection, which is now outdated (replaced by CSP)
 // and may even cause security vulnerabilities
 private http.header.xssProtection @defaults("enabled mode report") {
   // Enabled when the header value is set to 1. Disabled if set to 0
@@ -66,6 +71,24 @@ private http.header.xssProtection @defaults("enabled mode report") {
   mode string
   // Report endpoint for violations (Chromium only).
   report string
+}
+
+// Content-Type header
+private http.header.contentType @defaults("type") {
+  // MIME type for the content
+  type string
+  // Additional parameters for this content type
+  params map[string]string
+}
+
+// Set-Cookie header
+private http.header.setCookie @defaults("name value") {
+  // Name of the cookie to be set
+  name string
+  // Value of the cookie to be set
+  value string
+  // Additional parameters for setting this cookie
+  params map[string]string
 }
 
 // URL resource, generally represented as:

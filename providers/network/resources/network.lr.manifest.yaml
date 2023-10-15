@@ -94,16 +94,28 @@ resources:
     min_mondoo_version: 9.1.0
   http.header:
     fields:
+      contentType: {}
       params: {}
-      referrerPolicy:
+      referrerPolicy: {}
+      setCookie:
         min_mondoo_version: 9.1.0
       sts: {}
-      xContentTypeOptions:
-        min_mondoo_version: 9.1.0
-      xFrameOptions:
-        min_mondoo_version: 9.1.0
-      xXssProtection:
-        min_mondoo_version: 9.1.0
+      xContentTypeOptions: {}
+      xFrameOptions: {}
+      xXssProtection: {}
+    is_private: true
+    min_mondoo_version: 9.1.0
+  http.header.contentType:
+    fields:
+      params: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: 9.1.0
+  http.header.setCookie:
+    fields:
+      name: {}
+      params: {}
+      value: {}
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.sts:
