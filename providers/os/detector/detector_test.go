@@ -69,3 +69,12 @@ func TestIsFamily(t *testing.T) {
 		assert.Equal(t, test[i].Expected, test[i].Val, i)
 	}
 }
+
+func TestFamilies(t *testing.T) {
+	di := &inventory.Platform{}
+	di.Family = []string{"unix", "bsd", "darwin"}
+
+	assert.Equal(t, true, di.IsFamily("unix"), "unix should be a family")
+	assert.Equal(t, true, di.IsFamily("bsd"), "bsd should be a family")
+	assert.Equal(t, true, di.IsFamily("darwin"), "darwin should be a family")
+}
