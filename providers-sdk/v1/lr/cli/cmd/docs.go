@@ -146,6 +146,11 @@ var docsYamlCmd = &cobra.Command{
 	},
 }
 
+// required to be before more detail platform to ensure the right mapping
+var platformMappingKeys = []string{
+	"aws", "gcp", "k8s", "azure", "azurerm", "arista", "equinix", "ms365", "msgraph", "vsphere", "esxi", "terraform", "terraform.state", "terraform.plan",
+}
+
 var platformMapping = map[string][]string{
 	"aws":             {"aws"},
 	"gcp":             {"gcp"},
@@ -158,13 +163,13 @@ var platformMapping = map[string][]string{
 	"msgraph":         {"microsoft365"},
 	"vsphere":         {"vmware-esxi", "vmware-vsphere"},
 	"esxi":            {"vmware-esxi", "vmware-vsphere"},
+	"terraform":       {"terraform-hcl"},
 	"terraform.state": {"terraform-state"},
 	"terraform.plan":  {"terraform-plan"},
-	"terraform":       {"terraform-hcl"},
 }
 
 func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.LrDocsEntry {
-	for k := range platformMapping {
+	for _, k := range platformMappingKeys {
 		if entry == nil {
 			entry = &docs.LrDocsEntry{}
 		}
@@ -178,7 +183,6 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 			entry.Platform = &docs.LrDocsPlatform{
 				Name: platformMapping[k],
 			}
-			continue // required to ensure that terraform.state is not overwritten by terraform
 		}
 	}
 	return entry

@@ -154,7 +154,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-hcl
+      - terraform-state
   terraform.state.module:
     fields:
       address: {}
@@ -163,7 +163,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-hcl
+      - terraform-state
   terraform.state.output:
     fields:
       identifier: {}
