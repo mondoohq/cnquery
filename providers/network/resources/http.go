@@ -52,7 +52,7 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	if _, ok := args["url"]; !ok {
 		conn := runtime.Connection.(*connection.HostConnection)
 		if conn.Conf == nil {
-			return nil, nil, errors.New("missing ")
+			return nil, nil, errors.New("missing URL for http.get")
 		}
 
 		// FIXME: pure workaround to get this working, but we need to retain the scheme on parsing!
