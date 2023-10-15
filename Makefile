@@ -164,7 +164,8 @@ providers/lr:
 
 .PHONY: providers/build
 # Note we need \ to escape the target line into multiple lines
-providers/build: providers/build/mock \
+providers/build: \
+	providers/build/mock \
 	providers/build/core \
 	providers/build/network \
 	providers/build/os \
@@ -187,6 +188,30 @@ providers/build: providers/build/mock \
 	providers/build/ms365 \
 	providers/build/aws
 
+.PHONY: providers/install
+# Note we need \ to escape the target line into multiple lines
+providers/install: \
+	providers/install/network \
+	providers/install/os \
+	providers/install/ipmi \
+	providers/install/oci \
+	providers/install/slack \
+	providers/install/github \
+	providers/install/gitlab \
+	providers/install/terraform \
+	providers/install/vsphere \
+	providers/install/opcua \
+	providers/install/okta \
+	providers/install/google-workspace \
+	providers/install/arista \
+	providers/install/equinix \
+	providers/install/vcd \
+	providers/install/gcp \
+	providers/install/k8s \
+	providers/install/azure \
+	providers/install/ms365 \
+	providers/install/aws
+
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
 
@@ -195,63 +220,103 @@ providers/build/core: providers/lr
 
 providers/build/network: providers/lr
 	@$(call buildProvider, providers/network)
+providers/install/network:
+	@$(call installProvider, providers/network)
 
 providers/build/os: providers/lr
 	@$(call buildProvider, providers/os)
+providers/install/os:
+	@$(call installProvider, providers/os)
 
 providers/build/ipmi: providers/lr
 	@$(call buildProvider, providers/ipmi)
+providers/install/ipmi:
+	@$(call installProvider, providers/ipmi)
 	
 providers/build/oci: providers/lr
 	@$(call buildProvider, providers/oci)
+providers/install/oci:
+	@$(call installProvider, providers/oci)
 
 providers/build/slack: providers/lr
 	@$(call buildProvider, providers/slack)
+providers/install/slack:
+	@$(call installProvider, providers/slack)
 
 providers/build/github: providers/lr
 	@$(call buildProvider, providers/github)
+providers/install/github:
+	@$(call installProvider, providers/github)
 
 providers/build/gitlab: providers/lr
 	@$(call buildProvider, providers/gitlab)
+providers/install/gitlab:
+	@$(call installProvider, providers/gitlab)
 
 providers/build/terraform: providers/lr
 	@$(call buildProvider, providers/terraform)
+providers/install/terraform:
+	@$(call installProvider, providers/terraform)
 
 providers/build/vsphere: providers/lr
 	@$(call buildProvider, providers/vsphere)
+providers/install/vsphere:
+	@$(call installProvider, providers/vsphere)
 
 providers/build/opcua: providers/lr
 	@$(call buildProvider, providers/opcua)
+providers/install/opcua:
+	@$(call installProvider, providers/opcua)
 
 providers/build/okta: providers/lr
 	@$(call buildProvider, providers/okta)
+providers/install/okta:
+	@$(call installProvider, providers/okta)
 
 providers/build/google-workspace: providers/lr
 	@$(call buildProvider, providers/google-workspace)
+providers/install/google-workspace:
+	@$(call installProvider, providers/google-workspace)
 
 providers/build/arista: providers/lr
 	@$(call buildProvider, providers/arista)
+providers/install/arista:
+	@$(call installProvider, providers/arista)
 
 providers/build/equinix: providers/lr
 	@$(call buildProvider, providers/equinix)
+providers/install/equinix:
+	@$(call installProvider, providers/equinix)
 
 providers/build/vcd: providers/lr
 	@$(call buildProvider, providers/vcd)
+providers/install/vcd:
+	@$(call installProvider, providers/vcd)
 
 providers/build/k8s: providers/lr
 	@$(call buildProvider, providers/k8s)
+providers/install/k8s:
+	@$(call installProvider, providers/k8s)
 
 providers/build/gcp: providers/lr
 	@$(call buildProvider, providers/gcp)
+providers/install/gcp:
+	@$(call installProvider, providers/gcp)
 
 providers/build/azure: providers/lr
 	@$(call buildProvider, providers/azure)
+providers/install/azure:
+	@$(call installProvider, providers/azure)
 	
 providers/build/aws: providers/lr
 	@$(call buildProvider, providers/aws)
+providers/install/aws:
+	@$(call installProvider, providers/aws)
 
 providers/build/ms365: providers/lr
 	@$(call buildProvider, providers/ms365)
+providers/install/ms365:
+	@$(call installProvider, providers/ms365)
 
 providers/dist:
 	@$(call buildProviderDist, providers/network)
@@ -274,29 +339,6 @@ providers/dist:
 	@$(call buildProviderDist, providers/azure)
 	@$(call buildProviderDist, providers/ms365)
 	@$(call buildProviderDist, providers/aws)
-
-providers/install:
-#	@$(call installProvider, providers/core)
-	@$(call installProvider, providers/network)
-	@$(call installProvider, providers/os)
-	@$(call installProvider, providers/ipmi)
-	@$(call installProvider, providers/oci)
-	@$(call installProvider, providers/slack)
-	@$(call installProvider, providers/github)
-	@$(call installProvider, providers/gitlab)
-	@$(call installProvider, providers/terraform)
-	@$(call installProvider, providers/vsphere)
-	@$(call installProvider, providers/opcua)
-	@$(call installProvider, providers/okta)
-	@$(call installProvider, providers/google-workspace)
-	@$(call installProvider, providers/arista)
-	@$(call installProvider, providers/equinix)
-	@$(call installProvider, providers/vcd)
-	@$(call installProvider, providers/gcp)
-	@$(call installProvider, providers/k8s)
-	@$(call installProvider, providers/azure)
-	@$(call installProvider, providers/ms365)
-	@$(call installProvider, providers/aws)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
