@@ -38,6 +38,10 @@ func init() {
 			// to override args, implement: initHttpHeaderSts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHttpHeaderSts,
 		},
+		"http.header.xssProtection": {
+			// to override args, implement: initHttpHeaderXssProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHttpHeaderXssProtection,
+		},
 		"url": {
 			Init: initUrl,
 			Create: createUrl,
@@ -200,6 +204,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"http.header.sts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeader).GetSts()).ToDataRes(types.Resource("http.header.sts"))
 	},
+	"http.header.xFrameOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetXFrameOptions()).ToDataRes(types.String)
+	},
+	"http.header.xXssProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetXXssProtection()).ToDataRes(types.Resource("http.header.xssProtection"))
+	},
+	"http.header.xContentTypeOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetXContentTypeOptions()).ToDataRes(types.String)
+	},
+	"http.header.referrerPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetReferrerPolicy()).ToDataRes(types.String)
+	},
 	"http.header.sts.maxAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeaderSts).GetMaxAge()).ToDataRes(types.Time)
 	},
@@ -208,6 +224,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"http.header.sts.preload": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeaderSts).GetPreload()).ToDataRes(types.Bool)
+	},
+	"http.header.xssProtection.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderXssProtection).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"http.header.xssProtection.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderXssProtection).GetMode()).ToDataRes(types.String)
+	},
+	"http.header.xssProtection.report": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeaderXssProtection).GetReport()).ToDataRes(types.String)
 	},
 	"url.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUrl).GetString()).ToDataRes(types.String)
@@ -622,6 +647,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlHttpHeader).Sts, ok = plugin.RawToTValue[*mqlHttpHeaderSts](v.Value, v.Error)
 		return
 	},
+	"http.header.xFrameOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).XFrameOptions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.xXssProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).XXssProtection, ok = plugin.RawToTValue[*mqlHttpHeaderXssProtection](v.Value, v.Error)
+		return
+	},
+	"http.header.xContentTypeOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).XContentTypeOptions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.referrerPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).ReferrerPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"http.header.sts.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlHttpHeaderSts).__id, ok = v.Value.(string)
 			return
@@ -636,6 +677,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"http.header.sts.preload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeaderSts).Preload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"http.header.xssProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlHttpHeaderXssProtection).__id, ok = v.Value.(string)
+			return
+		},
+	"http.header.xssProtection.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderXssProtection).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"http.header.xssProtection.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderXssProtection).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"http.header.xssProtection.report": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeaderXssProtection).Report, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"url.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1378,6 +1435,10 @@ type mqlHttpHeader struct {
 	// optional: if you define mqlHttpHeaderInternal it will be used here
 	Params plugin.TValue[map[string]interface{}]
 	Sts plugin.TValue[*mqlHttpHeaderSts]
+	XFrameOptions plugin.TValue[string]
+	XXssProtection plugin.TValue[*mqlHttpHeaderXssProtection]
+	XContentTypeOptions plugin.TValue[string]
+	ReferrerPolicy plugin.TValue[string]
 }
 
 // createHttpHeader creates a new instance of this resource
@@ -1391,7 +1452,12 @@ func createHttpHeader(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("http.header", res.__id)
@@ -1432,6 +1498,40 @@ func (c *mqlHttpHeader) GetSts() *plugin.TValue[*mqlHttpHeaderSts] {
 	})
 }
 
+func (c *mqlHttpHeader) GetXFrameOptions() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.XFrameOptions, func() (string, error) {
+		return c.xFrameOptions()
+	})
+}
+
+func (c *mqlHttpHeader) GetXXssProtection() *plugin.TValue[*mqlHttpHeaderXssProtection] {
+	return plugin.GetOrCompute[*mqlHttpHeaderXssProtection](&c.XXssProtection, func() (*mqlHttpHeaderXssProtection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.header", c.__id, "xXssProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHttpHeaderXssProtection), nil
+			}
+		}
+
+		return c.xXssProtection()
+	})
+}
+
+func (c *mqlHttpHeader) GetXContentTypeOptions() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.XContentTypeOptions, func() (string, error) {
+		return c.xContentTypeOptions()
+	})
+}
+
+func (c *mqlHttpHeader) GetReferrerPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReferrerPolicy, func() (string, error) {
+		return c.referrerPolicy()
+	})
+}
+
 // mqlHttpHeaderSts for the http.header.sts resource
 type mqlHttpHeaderSts struct {
 	MqlRuntime *plugin.Runtime
@@ -1453,7 +1553,12 @@ func createHttpHeaderSts(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("http.header.sts", res.__id)
@@ -1484,6 +1589,65 @@ func (c *mqlHttpHeaderSts) GetIncludeSubDomains() *plugin.TValue[bool] {
 
 func (c *mqlHttpHeaderSts) GetPreload() *plugin.TValue[bool] {
 	return &c.Preload
+}
+
+// mqlHttpHeaderXssProtection for the http.header.xssProtection resource
+type mqlHttpHeaderXssProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlHttpHeaderXssProtectionInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Mode plugin.TValue[string]
+	Report plugin.TValue[string]
+}
+
+// createHttpHeaderXssProtection creates a new instance of this resource
+func createHttpHeaderXssProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHttpHeaderXssProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("http.header.xssProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHttpHeaderXssProtection) MqlName() string {
+	return "http.header.xssProtection"
+}
+
+func (c *mqlHttpHeaderXssProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHttpHeaderXssProtection) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlHttpHeaderXssProtection) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlHttpHeaderXssProtection) GetReport() *plugin.TValue[string] {
+	return &c.Report
 }
 
 // mqlUrl for the url resource

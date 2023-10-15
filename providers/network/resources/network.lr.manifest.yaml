@@ -95,7 +95,15 @@ resources:
   http.header:
     fields:
       params: {}
+      referrerPolicy:
+        min_mondoo_version: 9.1.0
       sts: {}
+      xContentTypeOptions:
+        min_mondoo_version: 9.1.0
+      xFrameOptions:
+        min_mondoo_version: 9.1.0
+      xXssProtection:
+        min_mondoo_version: 9.1.0
     is_private: true
     min_mondoo_version: 9.1.0
   http.header.sts:
@@ -103,6 +111,15 @@ resources:
       includeSubDomains: {}
       maxAge: {}
       preload: {}
+    is_private: true
+    min_mondoo_version: 9.1.0
+  http.header.xssProtection:
+    fields:
+      enabled: {}
+      includeSubDomains: {}
+      mode: {}
+      preload: {}
+      report: {}
     is_private: true
     min_mondoo_version: 9.1.0
   openpgp.entities:
