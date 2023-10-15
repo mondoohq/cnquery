@@ -55,10 +55,16 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 			return nil, nil, errors.New("missing URL for http.get")
 		}
 
-		// FIXME: pure workaround to get this working, but we need to retain the scheme on parsing!
-		scheme := "http"
-		if conn.Conf.Port == 443 {
-			scheme = "https"
+		scheme := conn.Conf.Runtime
+		if scheme == "" {
+			// At this point we are in best effort territory. Which means we will
+			// go HTTP unless port 443 is specified. Users can always provide a
+			// scheme to be prescriptive.
+			if conn.Conf.Port == 443 {
+				scheme = "https"
+			} else {
+				scheme = "http"
+			}
 		}
 
 		url, err := NewResource(runtime, "url", map[string]*llx.RawData{

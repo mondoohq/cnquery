@@ -76,6 +76,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			Port:     int32(port),
 			Host:     host,
 			Path:     url.Path,
+			Runtime:  url.Scheme,
 			Insecure: insecure,
 		}},
 	}
