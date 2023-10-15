@@ -182,7 +182,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 		Kind:   "network",
 		Title:  "Network API",
 	}
-
+	asset.Fqdn = conn.FQDN()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Host}
 
 	return nil

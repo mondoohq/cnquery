@@ -75,6 +75,7 @@ message Asset {
   string url = 35;
 
   string kind_string = 36;
+  string fqdn = 37;
 }
 
 // FIXME: DEPRECATED, remove in v10.0 (or later) vv

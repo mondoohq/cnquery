@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/v9/providers/arista/resources/eos"
 	"net/url"
 	"strconv"
 	"strings"
@@ -177,6 +178,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnecti
 		Family:  []string{"arista"},
 		Kind:    "api",
 		Title:   "Arista EOS",
+	}
+
+	eosClient := eos.NewEos(conn.Client())
+	hostname, err := eosClient.ShowHostname()
+	if err == nil {
+		asset.Fqdn = hostname.Fqdn
 	}
 
 	id, err := conn.Identifier()
