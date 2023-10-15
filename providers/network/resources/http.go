@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v9/checksums"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/network/connection"
 	"go.mondoo.com/cnquery/v9/types"
 	"go.mondoo.com/cnquery/v9/utils/sortx"
 )
@@ -47,6 +48,30 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		delete(args, "rawUrl")
 		args["url"] = llx.ResourceData(url, "url")
 	}
+
+	if _, ok := args["url"]; !ok {
+		conn := runtime.Connection.(*connection.HostConnection)
+		if conn.Conf == nil {
+			return nil, nil, errors.New("missing URL for http.get")
+		}
+
+		// FIXME: pure workaround to get this working, but we need to retain the scheme on parsing!
+		scheme := "http"
+		if conn.Conf.Port == 443 {
+			scheme = "https"
+		}
+
+		url, err := NewResource(runtime, "url", map[string]*llx.RawData{
+			"host":   llx.StringData(conn.Conf.Host),
+			"port":   llx.IntData(int64(conn.Conf.Port)),
+			"scheme": llx.StringData(scheme),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["url"] = llx.ResourceData(url, "url")
+	}
+
 	return args, nil, nil
 }
 
@@ -60,6 +85,10 @@ func (x *mqlHttpGet) do() error {
 
 	if x.resp.State&plugin.StateIsSet != 0 {
 		return x.resp.Error
+	}
+
+	if x.Url.Data == nil {
+		return errors.New("missing URL for http.get")
 	}
 
 	resp, err := http.Get(x.Url.Data.String.Data)
