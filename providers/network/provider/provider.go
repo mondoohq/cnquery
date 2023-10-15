@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	defaultConnection uint32 = 1
-	ConnectionType           = "host"
+	defaultConnection  uint32 = 1
+	HostConnectionType        = "host"
 )
 
 // This is a small selection of common ports that are supported.
@@ -132,7 +132,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case "host":
+	case HostConnectionType:
 		s.lastConnectionID++
 		conn = connection.NewHostConnection(s.lastConnectionID, asset, conf)
 
@@ -145,6 +145,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	if err != nil {
 		return nil, err
 	}
+
+	conf.Backend = inventory.ProviderType_HOST
+	conf.Kind = inventory.DeprecatedV8_Kind_KIND_NETWORK
 
 	var upstream *upstream.UpstreamClient
 	if req.Upstream != nil && !req.Upstream.Incognito {
