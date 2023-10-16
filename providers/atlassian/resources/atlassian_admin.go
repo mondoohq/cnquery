@@ -17,6 +17,8 @@ func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*ll
 		return nil, nil, err
 	}
 
+	// We should only ever receive one organization that is scoped to the api key
+	// https://community.atlassian.com/t5/Atlassian-Access-questions/Can-we-access-multiple-organisations-using-one-API-Token/qaq-p/1541337
 	if len(organization.Data) > 1 {
 		return nil, nil, errors.New("Unexpectedly received more than 1 organization")
 	}
