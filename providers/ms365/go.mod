@@ -10,7 +10,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.8.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.3.1
 	github.com/cockroachdb/errors v1.11.1
-	github.com/microsoft/kiota-abstractions-go v1.2.3
+	github.com/microsoft/kiota-abstractions-go v1.3.0
 	github.com/microsoft/kiota-authentication-azure-go v1.0.0
 	github.com/microsoftgraph/msgraph-sdk-go v1.17.0
 	github.com/pkg/errors v0.9.1
