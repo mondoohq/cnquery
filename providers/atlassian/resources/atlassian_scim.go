@@ -15,7 +15,7 @@ func (a *mqlAtlassianScim) id() (string, error) {
 func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	admin := conn.Client()
-	directoryID := "9766e0d0-5319-494c-b216-f85c3882490f"
+	directoryID := conn.Directory()
 	scimUsers, response, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -40,7 +40,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	admin := conn.Client()
-	directoryID := "9766e0d0-5319-494c-b216-f85c3882490f"
+	directoryID := conn.Directory()
 	scimGroup, response, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)

@@ -34,6 +34,10 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		return nil, errors.New("you need to provide atlassian scim token via ATLASSIAN_SCIM_TOKEN env")
 	}
 
+	if conf.Options["directory-id"] == "" {
+		return nil, errors.New("you need to provide a directory id for scim")
+	}
+
 	client, err := admin.New(nil)
 	if err != nil {
 		log.Fatal().Err(err)
@@ -75,4 +79,8 @@ func (p *ScimConnection) Type() shared.ConnectionType {
 
 func (c *ScimConnection) Host() string {
 	return c.host
+}
+
+func (c *ScimConnection) Directory() string {
+	return c.Conf.Options["directory-id"]
 }

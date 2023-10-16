@@ -36,8 +36,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
-	if len(req.Args) != 1 {
-		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim`")
+	if len(req.Args) == 0 {
+		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim {directoryID}`")
+	}
+
+	if req.Args[0] == "scim" {
+		if len(req.Args) != 2 {
+			return nil, errors.New("missing argument, scim requires a directoryID `atlassian scim {directoryID}`")
+		}
 	}
 
 	conf := &inventory.Config{
@@ -54,6 +60,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["product"] = req.Args[0]
 	case "scim":
 		conf.Options["product"] = req.Args[0]
+		conf.Options["directory-id"] = req.Args[1]
 	}
 
 	asset := inventory.Asset{
