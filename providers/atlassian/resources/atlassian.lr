@@ -11,23 +11,23 @@ atlassian.scim {
 
 // SCIM user
 atlassian.scim.user @defaults("displayName") {
-  // ID
+  // User ID
   id string
-  // Name
+  // User name
   name string
-  // Display Name
+  // User's display name
   displayName string
-  // Organization
+  // Organization the user belongs to
   organization string
-  // Title
+  // User's title
   title string
 }
 
 // SCIM group
 atlassian.scim.group @defaults("name") {
-  // ID
+  // Group ID
   id string
-  // Name
+  // Group name
   name string
 }
 
@@ -43,7 +43,7 @@ atlassian.admin.organization @defaults("name") {
   policies() []atlassian.admin.organization.policy
   // Domains 
   domains() []atlassian.admin.organization.domain
-  // Managed Users
+  // Managed users
   managedUsers() []atlassian.admin.organization.managedUsers
 }
 
@@ -65,11 +65,11 @@ atlassian.admin.organization.managedUsers @defaults("name") {
 atlassian.admin.organization.policy @defaults("name") {
   // Policy ID
   id string
-  // Policy type
+  // Object type (always "policy")
   type string
-  // Policy Name
+  // Policy name
   name string
-  // PolicyType
+  // Type of policy
   policyType string
   // Status
   status string
@@ -101,7 +101,7 @@ atlassian.jira {
 
 // Issue
 atlassian.jira.issue @defaults("id") {
-  // ID
+  // Issue ID
   id string
   // Project
   project string
@@ -115,17 +115,17 @@ atlassian.jira.issue @defaults("id") {
 atlassian.jira.serverInfo @defaults("serverTitle") {
   // BaseUrl
   baseUrl string 
-  // BuildNumber
+  // Build number
   buildNumber int
-  // ServerTitle
+  // Server title
   serverTitle string
-  // DeploymentType
+  // Deployment type
   deploymentType string
 }
 
 // Jira user
 atlassian.jira.user @defaults("name") { 
-  // AccountID
+  // Account ID
   id string
   // Name
   name string
@@ -144,7 +144,7 @@ atlassian.jira.user @defaults("name") {
 atlassian.jira.applicationRole @defaults("name") {
   // Role ID
   id string
-  // Role Name
+  // Role name
   name string
 }
 
@@ -152,7 +152,7 @@ atlassian.jira.applicationRole @defaults("name") {
 atlassian.jira.project @defaults("name") { 
   // Project ID
   id string
-  // Project Name
+  // Project name
   name string
   // UUID 
   uuid string
@@ -174,7 +174,7 @@ atlassian.jira.project @defaults("name") {
 
 // Jira project property
 atlassian.jira.project.property @defaults("id") {
-  // Property Key
+  // Property key
   id string
 }
 
@@ -182,7 +182,7 @@ atlassian.jira.project.property @defaults("id") {
 atlassian.jira.group @defaults("name") { 
   // Group ID
   id string
-  // Group Name
+  // Group name
   name string
 }
 
@@ -196,7 +196,7 @@ atlassian.confluence {
 atlassian.confluence.user @defaults("name") { 
   // Account ID
   id string
-  // Name
+  // Account name
   name string
   // Account type
 	type string
