@@ -26,6 +26,8 @@ resources:
   atlassian.admin.organization.domain:
     fields:
       id: {}
+      name: {}
+      type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.event:
     fields:
@@ -33,7 +35,9 @@ resources:
     min_mondoo_version: latest
   atlassian.admin.organization.managedUsers:
     fields:
+      email: {}
       id: {}
+      lastActive: {}
       name: {}
       type: {}
     min_mondoo_version: latest
@@ -190,6 +194,7 @@ resources:
   atlassian.scim.group:
     fields:
       id: {}
+      name: {}
     min_mondoo_version: latest
   atlassian.scim.organization:
     fields:
@@ -212,5 +217,9 @@ resources:
     min_mondoo_version: latest
   atlassian.scim.user:
     fields:
+      displayName: {}
       id: {}
+      name: {}
+      organization: {}
+      title: {}
     min_mondoo_version: latest

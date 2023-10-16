@@ -2,6 +2,7 @@ package provider
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -149,7 +150,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	asset.Name = conn.Host()
 
 	asset.Platform = conn.PlatformInfo()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/atlassian"}
+	asset.PlatformIds = []string{conn.PlatformID()}
 	return nil
 }
 
