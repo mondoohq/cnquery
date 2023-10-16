@@ -10,21 +10,21 @@ import (
 )
 
 func (a *JiraConnection) PlatformInfo() *inventory.Platform {
-	return GetPlatformForObject("atlassian")
+	return GetPlatformForObject("atlassian-jira")
 }
 
 func GetPlatformForObject(platformName string) *inventory.Platform {
-	if platformName != "atlassian" && platformName != "" {
+	if platformName != "atlassian-jira" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian",
+			Title:   "atlassian-jira",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian",
-		Title:   "atlassian",
+		Name:    "atlassian-jira",
+		Title:   "atlassian-jira",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}

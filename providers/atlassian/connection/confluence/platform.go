@@ -10,21 +10,21 @@ import (
 )
 
 func (a *ConfluenceConnection) PlatformInfo() *inventory.Platform {
-	return GetPlatformForObject("atlassian")
+	return GetPlatformForObject("atlassian-confluence")
 }
 
 func GetPlatformForObject(platformName string) *inventory.Platform {
-	if platformName != "atlassian" && platformName != "" {
+	if platformName != "atlassian-confluence" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian",
+			Title:   "atlassian-confluence",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian",
-		Title:   "atlassian",
+		Name:    "atlassian-confluence",
+		Title:   "atlassian-confluence",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}

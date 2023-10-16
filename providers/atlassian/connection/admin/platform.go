@@ -8,21 +8,21 @@ import (
 )
 
 func (a *AdminConnection) PlatformInfo() *inventory.Platform {
-	return GetPlatformForObject("atlassian")
+	return GetPlatformForObject("atlassian-admin")
 }
 
 func GetPlatformForObject(platformName string) *inventory.Platform {
-	if platformName != "atlassian" && platformName != "" {
+	if platformName != "atlassian-admin" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian",
+			Title:   "atlassian-admin",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian",
-		Title:   "atlassian",
+		Name:    "atlassian-admin",
+		Title:   "atlassian-admin",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}

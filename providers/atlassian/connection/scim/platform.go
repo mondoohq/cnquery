@@ -8,21 +8,21 @@ import (
 )
 
 func (a *ScimConnection) PlatformInfo() *inventory.Platform {
-	return GetPlatformForObject("atlassian")
+	return GetPlatformForObject("atlassian-scim")
 }
 
 func GetPlatformForObject(platformName string) *inventory.Platform {
-	if platformName != "atlassian" && platformName != "" {
+	if platformName != "atlassian-scim" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian",
+			Title:   "atlassian-scim",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
-		Name:    "atlassian",
-		Title:   "atlassian",
+		Name:    "atlassian-scim",
+		Title:   "atlassian-scim",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}
