@@ -48,8 +48,14 @@ var DefaultProviders Providers = map[string]*Provider{
 	},
 	"atlassian": {
 		Provider: &plugin.Provider{
-			Name:            "atlassian",
-			ConnectionTypes: []string{"atlassian"},
+			Name: "atlassian",
+			ConnectionTypes: []string{
+				"atlassian",
+				"jira",
+				"admin",
+				"confluence",
+				"scim",
+			},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "atlassian",
