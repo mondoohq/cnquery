@@ -46,9 +46,11 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	for _, user := range managedUsers.Data {
 		mqlAtlassianAdminManagedUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser",
 			map[string]*llx.RawData{
-				"id":   llx.StringData(user.AccountID),
-				"name": llx.StringData(user.Name),
-				"type": llx.StringData(user.AccountType),
+				"id":         llx.StringData(user.AccountID),
+				"name":       llx.StringData(user.Name),
+				"type":       llx.StringData(user.AccountType),
+				"email":      llx.StringData(user.Email),
+				"lastActive": llx.StringData(user.LastActive),
 			})
 		if err != nil {
 			return nil, err
@@ -96,7 +98,9 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 	for _, domain := range domains.Data {
 		mqlAtlassianAdminDomain, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.domain",
 			map[string]*llx.RawData{
-				"id": llx.StringData(domain.ID),
+				"id":   llx.StringData(domain.ID),
+				"name": llx.StringData(domain.Attributes.Name),
+				"type": llx.StringData(domain.Type),
 			})
 		if err != nil {
 			return nil, err

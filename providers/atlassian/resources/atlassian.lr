@@ -50,6 +50,10 @@ atlassian.admin.organization.managedUsers {
   name string
   // Type
   type string
+  // Email
+  email string
+  // Last active
+  lastActive string
 }
 
 atlassian.admin.organization.policy @defaults("id") {
@@ -68,6 +72,10 @@ atlassian.admin.organization.policy @defaults("id") {
 atlassian.admin.organization.domain @defaults("id") {
   // Domain ID
   id string
+  // Name
+  name string
+  // Type
+  type string
 }
 
 atlassian.jira { 
