@@ -1,8 +1,6 @@
 package scim
 
 import (
-	"fmt"
-
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 )
 
@@ -28,5 +26,5 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 }
 
 func (a *ScimConnection) PlatformID() string {
-	return "//platformid.api.mondoo.app/runtime/atlassian/scim/" + fmt.Sprint(a.id)
+	return "//platformid.api.mondoo.app/runtime/atlassian/scim"
 }

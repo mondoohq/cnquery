@@ -1,7 +1,7 @@
 package confluence
 
 import (
-	"fmt"
+	"strings"
 
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 )
@@ -28,5 +28,7 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 }
 
 func (a *ConfluenceConnection) PlatformID() string {
-	return "//platformid.api.mondoo.app/runtime/atlassian/confluence/" + fmt.Sprint(a.id)
+	hostname := strings.TrimPrefix(a.host, "https://")
+	host := strings.Replace(hostname, ".", "-", -1)
+	return "//platformid.api.mondoo.app/runtime/atlassian/confluence/" + host
 }
