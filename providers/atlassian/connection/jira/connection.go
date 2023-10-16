@@ -30,7 +30,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		host = os.Getenv("ATLASSIAN_HOST")
 	}
 	if host == "" {
-		return nil, errors.New("you need to provide atlassian host e.g. via ATLASSIAN_HOST env")
+		return nil, errors.New("you need to provide atlassian host e.g. via ATLASSIAN_HOST env or via --host flag")
 	}
 
 	user := conf.Options["user"]
@@ -38,7 +38,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		user = os.Getenv("ATLASSIAN_USER")
 	}
 	if user == "" {
-		return nil, errors.New("you need to provide atlassian user e.g. via ATLASSIAN_USER env")
+		return nil, errors.New("you need to provide atlassian user e.g. via ATLASSIAN_USER env or via --user flag")
 	}
 
 	token := conf.Options["user-token"]
@@ -46,7 +46,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		token = os.Getenv("ATLASSIAN_USER_TOKEN")
 	}
 	if token == "" {
-		return nil, errors.New("you need to provide atlassian user token e.g. via ATLASSIAN_USER_TOKEN env")
+		return nil, errors.New("you need to provide atlassian user token e.g. via ATLASSIAN_USER_TOKEN env or via --user-token flag")
 	}
 
 	client, err := v2.New(nil, host)

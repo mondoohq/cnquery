@@ -30,7 +30,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		token = os.Getenv("ATLASSIAN_SCIM_TOKEN")
 	}
 	if token == "" {
-		return nil, errors.New("you need to provide atlassian scim token via ATLASSIAN_SCIM_TOKEN env")
+		return nil, errors.New("you need to provide atlassian scim token via ATLASSIAN_SCIM_TOKEN env or via --admin-token flag")
 	}
 
 	if conf.Options["directory-id"] == "" {
