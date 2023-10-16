@@ -49,8 +49,8 @@ cloud.google.com/go/logging v1.8.1 h1:26skQWPeYhvIasWKm48+Eq7oUqdcdbwsCVwz5Ys0Fv
 cloud.google.com/go/logging v1.8.1/go.mod h1:TJjR+SimHwuC8MZ9cjByQulAMgni+RkXeI3wwctHJEI=
 cloud.google.com/go/longrunning v0.5.1 h1:Fr7TXftcqTudoyRJa113hyaqlGdiBQkp0Gq7tErFDWI=
 cloud.google.com/go/longrunning v0.5.1/go.mod h1:spvimkwdz6SPWKEt/XBij79E9fiTkHSQl/fRUUQJYJc=
-cloud.google.com/go/monitoring v1.16.0 h1:rlndy4K8yknMY9JuGe2aK4SbCh21FXoCdX7SAGHmRgI=
-cloud.google.com/go/monitoring v1.16.0/go.mod h1:Ptp15HgAyM1fNICAojDMoNc/wUmn67mLHQfyqbw+poY=
+cloud.google.com/go/monitoring v1.16.1 h1:CTklIuUkS5nCricGojPwdkSgPsCTX2HmYTxFDg+UvpU=
+cloud.google.com/go/monitoring v1.16.1/go.mod h1:6HsxddR+3y9j+o/cMJH6q/KJ/CBTvM/38L/1m7bTRJ4=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/pubsub v1.1.0/go.mod h1:EwwdRX2sKPjnvnqCa270oGRyludottCI76h+R3AArQw=
 cloud.google.com/go/pubsub v1.2.0/go.mod h1:jhfEVHT8odbXTkndysNHCcx0awwzvfOlguIAii9o8iA=
