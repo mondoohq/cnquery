@@ -136,12 +136,12 @@ atlassian.jira.user @defaults("name") {
   // Groups
   groups() []atlassian.jira.group
   // Roles
-  applicationRoles() []atlassian.jira.applicatonRole
+  applicationRoles() []atlassian.jira.applicationRole
 }
 
 
 // Jira application role
-atlassian.jira.applicatonRole @defaults("name") {
+atlassian.jira.applicationRole @defaults("name") {
   // Role ID
   id string
   // Role Name

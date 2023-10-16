@@ -47,6 +47,7 @@ querypack
 resourcegroup
 Sas
 SAMEORIGIN
+scim
 serviceprincipals
 Snat
 spdx

@@ -61,9 +61,9 @@ func init() {
 			// to override args, implement: initAtlassianJiraUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraUser,
 		},
-		"atlassian.jira.applicatonRole": {
-			// to override args, implement: initAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassianJiraApplicatonRole,
+		"atlassian.jira.applicationRole": {
+			// to override args, implement: initAtlassianJiraApplicationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraApplicationRole,
 		},
 		"atlassian.jira.project": {
 			// to override args, implement: initAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -292,13 +292,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAtlassianJiraUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.jira.group")))
 	},
 	"atlassian.jira.user.applicationRoles": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraUser).GetApplicationRoles()).ToDataRes(types.Array(types.Resource("atlassian.jira.applicatonRole")))
+		return (r.(*mqlAtlassianJiraUser).GetApplicationRoles()).ToDataRes(types.Array(types.Resource("atlassian.jira.applicationRole")))
 	},
-	"atlassian.jira.applicatonRole.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraApplicatonRole).GetId()).ToDataRes(types.String)
+	"atlassian.jira.applicationRole.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetId()).ToDataRes(types.String)
 	},
-	"atlassian.jira.applicatonRole.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianJiraApplicatonRole).GetName()).ToDataRes(types.String)
+	"atlassian.jira.applicationRole.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetName()).ToDataRes(types.String)
 	},
 	"atlassian.jira.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetId()).ToDataRes(types.String)
@@ -595,16 +595,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianJiraUser).ApplicationRoles, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"atlassian.jira.applicatonRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianJiraApplicatonRole).__id, ok = v.Value.(string)
+	"atlassian.jira.applicationRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianJiraApplicationRole).__id, ok = v.Value.(string)
 			return
 		},
-	"atlassian.jira.applicatonRole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraApplicatonRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.jira.applicationRole.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.jira.applicatonRole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianJiraApplicatonRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.jira.applicationRole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1567,18 +1567,18 @@ func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]interface{
 	})
 }
 
-// mqlAtlassianJiraApplicatonRole for the atlassian.jira.applicatonRole resource
-type mqlAtlassianJiraApplicatonRole struct {
+// mqlAtlassianJiraApplicationRole for the atlassian.jira.applicationRole resource
+type mqlAtlassianJiraApplicationRole struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAtlassianJiraApplicatonRoleInternal it will be used here
+	// optional: if you define mqlAtlassianJiraApplicationRoleInternal it will be used here
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
-// createAtlassianJiraApplicatonRole creates a new instance of this resource
-func createAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassianJiraApplicatonRole{
+// createAtlassianJiraApplicationRole creates a new instance of this resource
+func createAtlassianJiraApplicationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraApplicationRole{
 		MqlRuntime: runtime,
 	}
 
@@ -1590,7 +1590,7 @@ func createAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian.jira.applicatonRole", res.__id)
+		args, err = runtime.ResourceFromRecording("atlassian.jira.applicationRole", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -1600,19 +1600,19 @@ func createAtlassianJiraApplicatonRole(runtime *plugin.Runtime, args map[string]
 	return res, nil
 }
 
-func (c *mqlAtlassianJiraApplicatonRole) MqlName() string {
-	return "atlassian.jira.applicatonRole"
+func (c *mqlAtlassianJiraApplicationRole) MqlName() string {
+	return "atlassian.jira.applicationRole"
 }
 
-func (c *mqlAtlassianJiraApplicatonRole) MqlID() string {
+func (c *mqlAtlassianJiraApplicationRole) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianJiraApplicatonRole) GetId() *plugin.TValue[string] {
+func (c *mqlAtlassianJiraApplicationRole) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAtlassianJiraApplicatonRole) GetName() *plugin.TValue[string] {
+func (c *mqlAtlassianJiraApplicationRole) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 

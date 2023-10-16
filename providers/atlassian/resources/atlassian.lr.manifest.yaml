@@ -118,6 +118,11 @@ resources:
       serverinfo: {}
       users: {}
     min_mondoo_version: latest
+  atlassian.jira.applicationRole:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
   atlassian.jira.applicatonRole:
     fields:
       id: {}
