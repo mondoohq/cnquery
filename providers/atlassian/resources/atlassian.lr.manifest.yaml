@@ -1,0 +1,232 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  atlassian:
+    docs:
+      desc: |
+        The `atlassian` can be used to assess the configuration of atlassian accounts.
+    fields: {}
+    min_mondoo_version: latest
+  atlassian.admin:
+    fields:
+      organizations: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization:
+    fields:
+      domains: {}
+      events: {}
+      id: {}
+      managedUsers: {}
+      name: {}
+      policies: {}
+      scim: {}
+      type: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.domain:
+    fields:
+      id: {}
+      name: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.event:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.managedUsers:
+    fields:
+      email: {}
+      id: {}
+      lastActive: {}
+      name: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.policy:
+    fields:
+      id: {}
+      name: {}
+      policyType: {}
+      status: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.scim:
+    fields:
+      groups: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.scim.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.scim.user:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.user:
+    fields:
+      accessBillable: {}
+      email: {}
+      id: {}
+      lastActive: {}
+      name: {}
+      orgId: {}
+      picture: {}
+      status: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.organization.user.lastActive:
+    fields:
+      id: {}
+      key: {}
+      lastActive: {}
+      url: {}
+    min_mondoo_version: latest
+  atlassian.admin.user:
+    fields:
+      accessBillable: {}
+      email: {}
+      id: {}
+      lastActive: {}
+      name: {}
+      picture: {}
+      productAccess: {}
+      status: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.admin.user.products:
+    fields: {}
+    min_mondoo_version: latest
+  atlassian.confluence:
+    fields:
+      users: {}
+    min_mondoo_version: latest
+  atlassian.confluence.user:
+    fields:
+      id: {}
+      name: {}
+      picture: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.jira:
+    fields:
+      groups: {}
+      issues: {}
+      projects: {}
+      serverInfo: {}
+      serverInfos: {}
+      serverinfo: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.jira.applicationRole:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.jira.applicatonRole:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.jira.group:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.jira.groups:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.issue:
+    fields:
+      description: {}
+      id: {}
+      project: {}
+      status: {}
+    min_mondoo_version: latest
+  atlassian.jira.project:
+    fields:
+      archived: {}
+      deleted: {}
+      email: {}
+      id: {}
+      key: {}
+      name: {}
+      private: {}
+      properties: {}
+      url: {}
+      uuid: {}
+    min_mondoo_version: latest
+  atlassian.jira.project.property:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.serverInfo:
+    fields:
+      baseUrl: {}
+      buildNumber: {}
+      deploymentType: {}
+      serverTitle: {}
+    min_mondoo_version: latest
+  atlassian.jira.user:
+    fields:
+      applicationRoles: {}
+      applicatonRoles: {}
+      groups: {}
+      id: {}
+      name: {}
+      picture: {}
+      roles: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.groups:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.jira.user.role:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.scim:
+    fields:
+      groups: {}
+      organizations: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.scim.group:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization:
+    fields:
+      id: {}
+      scim: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim:
+    fields:
+      groups: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim.user:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.scim.user:
+    fields:
+      displayName: {}
+      id: {}
+      name: {}
+      organization: {}
+      title: {}
+    min_mondoo_version: latest

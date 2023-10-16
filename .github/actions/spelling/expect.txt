@@ -1,4 +1,5 @@
 aks
+atlassian
 Auths
 autoaccept
 autoscaler
@@ -8,6 +9,7 @@ cavium
 cdn
 certificatechains
 cmek
+confluence
 cryptokey
 customresources
 datapath
@@ -25,6 +27,7 @@ iap
 ilb
 ingresstls
 iotedge
+jira
 linux
 loggingservice
 managedzone
@@ -44,6 +47,7 @@ querypack
 resourcegroup
 Sas
 SAMEORIGIN
+scim
 serviceprincipals
 Snat
 spdx

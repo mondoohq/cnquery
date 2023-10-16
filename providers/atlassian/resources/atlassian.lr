@@ -1,0 +1,203 @@
+option provider = "go.mondoo.com/cnquery/providers/atlassian"
+option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
+
+// Cross-domain Identity Management (SCIM)
+atlassian.scim {
+  // SCIM users
+  users() []atlassian.scim.organization.scim.user
+  // SCIM groups
+  groups() []atlassian.scim.organization.scim.group
+}
+
+// SCIM user
+atlassian.scim.user @defaults("displayName") {
+  // ID
+  id string
+  // Name
+  name string
+  // Display Name
+  displayName string
+  // Organization
+  organization string
+  // Title
+  title string
+}
+
+// SCIM group
+atlassian.scim.group @defaults("name") {
+  // ID
+  id string
+  // Name
+  name string
+}
+
+// Organization
+atlassian.admin.organization @defaults("name") { 
+  // Organization ID
+  id string
+  // Name
+  name string
+  // Organization type
+  type string
+  // Policies
+  policies() []atlassian.admin.organization.policy
+  // Domains 
+  domains() []atlassian.admin.organization.domain
+  // Managed Users
+  managedUsers() []atlassian.admin.organization.managedUsers
+}
+
+// Managed users
+atlassian.admin.organization.managedUsers @defaults("name") {
+  // ID
+  id string
+  // Name
+  name string
+  // Type
+  type string
+  // Email
+  email string
+  // Last active
+  lastActive string
+}
+
+// Policies (except authentication policies)
+atlassian.admin.organization.policy @defaults("name") {
+  // Policy ID
+  id string
+  // Policy type
+  type string
+  // Policy Name
+  name string
+  // PolicyType
+  policyType string
+  // Status
+  status string
+}
+
+// Domains
+atlassian.admin.organization.domain @defaults("name") {
+  // Domain ID
+  id string
+  // Name
+  name string
+  // Type
+  type string
+}
+
+// Jira
+atlassian.jira { 
+  // Jira users
+  users() []atlassian.jira.user
+  // Jira projects
+  projects() []atlassian.jira.project
+  // Jira groups
+  issues() []atlassian.jira.issue
+  // Jira groups
+  groups() []atlassian.jira.group
+  // Jira server info
+  serverInfos() atlassian.jira.serverInfo
+}
+
+// Issue
+atlassian.jira.issue @defaults("id") {
+  // ID
+  id string
+  // Project
+  project string
+  // Status
+  status string
+  // Description
+  description string
+}
+
+// Jira server info
+atlassian.jira.serverInfo @defaults("serverTitle") {
+  // BaseUrl
+  baseUrl string 
+  // BuildNumber
+  buildNumber int
+  // ServerTitle
+  serverTitle string
+  // DeploymentType
+  deploymentType string
+}
+
+// Jira user
+atlassian.jira.user @defaults("name") { 
+  // AccountID
+  id string
+  // Name
+  name string
+  // Account type
+  type string
+  // Picture of the user
+  picture string
+  // Groups
+  groups() []atlassian.jira.group
+  // Roles
+  applicationRoles() []atlassian.jira.applicationRole
+}
+
+
+// Jira application role
+atlassian.jira.applicationRole @defaults("name") {
+  // Role ID
+  id string
+  // Role Name
+  name string
+}
+
+// Jira project
+atlassian.jira.project @defaults("name") { 
+  // Project ID
+  id string
+  // Project Name
+  name string
+  // UUID 
+  uuid string
+  // Key 
+  key string
+  // URL 
+  url string
+  // Email 
+  email string
+  // Private 
+  private bool
+  // Deleted 
+  deleted bool
+  // Archived 
+  archived bool
+  // Properties
+  properties() []atlassian.jira.project.property
+}
+
+// Jira project property
+atlassian.jira.project.property @defaults("id") {
+  // Property Key
+  id string
+}
+
+// Jira group
+atlassian.jira.group @defaults("name") { 
+  // GroupID
+  id string
+  // Group Name
+  name string
+}
+
+// Confluence
+atlassian.confluence { 
+  // Confluence users
+  users() []atlassian.confluence.user
+}
+
+// Confluence user
+atlassian.confluence.user @defaults("name") { 
+  // AccountID
+  id string
+  // Name
+  name string
+  // Account type
+	type string
+}

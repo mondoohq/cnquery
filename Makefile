@@ -186,7 +186,8 @@ providers/build: \
 	providers/build/k8s \
 	providers/build/azure \
 	providers/build/ms365 \
-	providers/build/aws
+	providers/build/aws \
+	providers/build/atlassian
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -210,6 +211,7 @@ providers/install: \
 	providers/install/k8s \
 	providers/install/azure \
 	providers/install/ms365 \
+	providers/install/atlassian \
 	providers/install/aws
 
 providers/build/mock: providers/lr
@@ -313,6 +315,11 @@ providers/build/aws: providers/lr
 providers/install/aws:
 	@$(call installProvider, providers/aws)
 
+providers/build/atlassian: providers/lr
+	@$(call buildProvider, providers/atlassian)
+providers/install/atlassian:
+	@$(call installProvider, providers/atlassian)
+
 providers/build/ms365: providers/lr
 	@$(call buildProvider, providers/ms365)
 providers/install/ms365:
@@ -339,6 +346,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/azure)
 	@$(call buildProviderDist, providers/ms365)
 	@$(call buildProviderDist, providers/aws)
+	@$(call buildProviderDist, providers/atlassian)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -361,6 +369,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/azure)
 	@$(call bundleProvider, providers/ms365)
 	@$(call bundleProvider, providers/aws)
+	@$(call bundleProvider, providers/atlassian)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -384,6 +393,7 @@ providers/test:
 	@$(call testGpModProvider, providers/azure)
 	@$(call testGpModProvider, providers/ms365)
 	@$(call testGpModProvider, providers/aws)
+	@$(call testGpModProvider, providers/atlassian)
 
 lr/test:
 	go test ./resources/lr/...
