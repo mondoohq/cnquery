@@ -6,6 +6,7 @@ package connection
 import (
 	"log"
 
+	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
@@ -25,22 +26,22 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (s
 	case "admin":
 		conn, err = admin.NewConnection(id, asset, conf)
 		if err != nil {
-			log.Fatal("Failed to create admin connection")
+			return nil, errors.Wrap(err, "Failed to create admin connection")
 		}
 	case "jira":
 		conn, err = jira.NewConnection(id, asset, conf)
 		if err != nil {
-			log.Fatal("Failed to create jira connection")
+			return nil, errors.Wrap(err, "Failed to create jira connection")
 		}
 	case "confluence":
 		conn, err = confluence.NewConnection(id, asset, conf)
 		if err != nil {
-			log.Fatal("Failed to create confluence connection")
+			return nil, errors.Wrap(err, "Failed to create confluence connection")
 		}
 	case "scim":
 		conn, err = scim.NewConnection(id, asset, conf)
 		if err != nil {
-			log.Fatal("Failed to create scim connection")
+			return nil, errors.Wrap(err, "Failed to create scim connection")
 		}
 	}
 	return conn, nil
