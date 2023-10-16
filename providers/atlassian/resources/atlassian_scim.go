@@ -27,7 +27,11 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	for _, scimUser := range scimUsers.Resources {
 		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.scim.organization.scim.user",
 			map[string]*llx.RawData{
-				"id": llx.StringData(scimUser.ID),
+				"id":           llx.StringData(scimUser.ID),
+				"name":         llx.StringData(scimUser.Name.Formatted),
+				"displayName":  llx.StringData(scimUser.DisplayName),
+				"organization": llx.StringData(scimUser.Organization),
+				"title":        llx.StringData(scimUser.Title),
 			})
 		if err != nil {
 			log.Fatal().Err(err)

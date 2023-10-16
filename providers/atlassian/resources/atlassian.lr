@@ -15,6 +15,14 @@ atlassian.scim {
 atlassian.scim.user @defaults("id") {
   // ID
   id string
+  // Name
+  name string
+  // Display Name
+  displayName string
+  // Organization
+  organization string
+  // Title
+  title string
 }
 
 atlassian.scim.group @defaults("id") {
