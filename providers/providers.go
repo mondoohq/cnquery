@@ -6,6 +6,7 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
+	"go.mondoo.com/ranger-rpc"
 	"io"
 	"net/http"
 	"os"
@@ -50,6 +51,14 @@ type Provider struct {
 	*plugin.Provider
 	Schema *resources.Schema
 	Path   string
+}
+
+func httpClient() (*http.Client, error) {
+	proxy, err := config.GetAPIProxy()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+	return ranger.NewHttpClient(ranger.WithProxy(proxy)), nil
 }
 
 // List providers that are going to be used in their default order:
@@ -227,11 +236,17 @@ func installVersion(name string, version string) (*Provider, error) {
 	url = strings.ReplaceAll(url, "{ARCH}", runtime.GOARCH)
 
 	log.Debug().Str("url", url).Msg("installing provider from URL")
-	res, err := http.Get(url)
+	client, err := httpClient()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Get(url)
 	if err != nil {
 		log.Debug().Str("url", url).Msg("failed to install from URL (get request)")
 		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
 	}
+
 	if res.StatusCode == http.StatusNotFound {
 		return nil, errors.New("cannot find provider " + name + "-" + version + " under url " + url)
 	} else if res.StatusCode != http.StatusOK {
@@ -266,9 +281,12 @@ func installVersion(name string, version string) (*Provider, error) {
 }
 
 func LatestVersion(name string) (string, error) {
-	client := http.Client{
-		Timeout: time.Duration(5 * time.Second),
+	client, err := httpClient()
+	if err != nil {
+		return "", err
 	}
+	client.Timeout = time.Duration(5 * time.Second)
+
 	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
 	if err != nil {
 		return "", err
