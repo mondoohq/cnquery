@@ -22,9 +22,9 @@ http.get @defaults("url statusCode") {
   init(rawUrl string)
   // URL for this request
   url url
-  // Returned header for this request
+  // Header returned from this request
   header() http.header
-  // Status returned by this request
+  // Status returned from this request
   statusCode() int
   // Version of the HTTP request, e.g. 1.1
   version() string
@@ -75,7 +75,7 @@ private http.header.xssProtection @defaults("enabled mode report") {
   report string
 }
 
-// Content-Type header
+// Content-type header
 private http.header.contentType @defaults("type") {
   // MIME type for the content
   type string
@@ -83,11 +83,11 @@ private http.header.contentType @defaults("type") {
   params map[string]string
 }
 
-// Set-Cookie header
+// Set-cookie header
 private http.header.setCookie @defaults("name value") {
-  // Name of the cookie to be set
+  // Name of the cookie to set
   name string
-  // Value of the cookie to be set
+  // Value of the cookie to set
   value string
   // Additional parameters for setting this cookie
   params map[string]string
@@ -113,7 +113,7 @@ url @defaults("string") {
   path string
   // Query, optional, attached to path via '?', parsed via '&' and ';' delimiters
   query map[string]string
-  // Raw Query, optional raw string attached to path after '?'
+  // Raw query, optional raw string attached to path after '?'
   rawQuery string
   // Fragment, optional raw string attached to path after '#'
   rawFragment string
@@ -124,13 +124,13 @@ tls @defaults("socket domainName") {
   init(target string)
   // Socket of this connection
   socket socket
-  // An optional domain name which will be tested
+  // An optional domain name to test
   domainName string
-  // Params is a list of all parameters for this TLS/SSL connection
+  // List of all parameters for this TLS/SSL connection
   params(socket, domainName) dict
   // Version of TLS/SSL that is being used
   versions(params) []string
-  // Ciphers supported by a given TLS/SSL connection
+  // Ciphers supported by this TLS/SSL connection
   ciphers(params) []string
   // Extensions supported by this TLS/SSL connection
   extensions(params) []string
@@ -151,45 +151,45 @@ certificates {
 certificate @defaults("serial subject.commonName subject.dn") {
   // PEM content
   pem string
-  // Certificate Fingerprints
+  // Certificate fingerprints
   fingerprints() map[string]string
-  // Serial Number
+  // Serial number
   serial() string
-  // Subject Unique Identifier
+  // Subject unique identifier
   subjectKeyID() string
-  // Authority Key Identifier
+  // Authority key identifier
   authorityKeyID() string
   // Subject
   subject() pkix.name
   // Issuer
   issuer() pkix.name
-  // Version Number
+  // Version number
   version() int
-  // Validity period Validity period
+  // Validity period validity period
   notBefore() time
-  // Validity period Not After
+  // Validity period not after
   notAfter() time
-  // Expiration Duration
+  // Expiration duration
   expiresIn() time
   // Signature
   signature() string
-  // Signature Algorithm ID
+  // Signature algorithm ID
   signingAlgorithm() string
-  // Flag if Certificate Authority
+  // Flag if certificate authority
   isCA() bool
-  // Key Usage
+  // Key usage
   keyUsage() []string
-  // Extended Key Usage
+  // Extended key usage
   extendedKeyUsage() []string
   // Extensions
   extensions() []pkix.extension
-  // Policy Identifier
+  // Policy identifier
   policyIdentifier() []string
-  // CRL Distribution Points
+  // CRL distribution points
   crlDistributionPoints() []string
   // OCSP
   ocspServer() []string
-  // Issuing Certificate Url
+  // Issuing certificate URL
   issuingCertificateUrl() []string
   // Identifies if this certificate has been revoked
   isRevoked() bool
@@ -203,24 +203,24 @@ certificate @defaults("serial subject.commonName subject.dn") {
 pkix.name @defaults("id dn commonName") {
   // ID
   id string
-  // Distinguished Name Qualifier
+  // Distinguished name qualifier
   dn string
-  // Serial Number
+  // Serial number
   serialNumber string
-  // Common Name
+  // Common name
   commonName string
   // Country
   country []string
   // Organization
   organization []string
-  // Organizational Unit
+  // Organizational unit
   organizationalUnit []string
   locality []string
-  // State or Province
+  // State or province
   province []string
-  // Street Address
+  // Street address
   streetAddress []string
-  // Postal Code
+  // Postal code
   postalCode []string
   names      map[string]string
   extraNames map[string]string
@@ -228,11 +228,11 @@ pkix.name @defaults("id dn commonName") {
 
 // x509 certificate PKIX extension
 pkix.extension {
-  // Extension Identifier
+  // Extension identifier
   identifier string
-  // Flag for Critical Extension
+  // Flag for critical extension
   critical bool
-  // Extension Value
+  // Extension value
   value string
 }
 
@@ -241,33 +241,33 @@ private openpgp.entities {
   content string
 }
 
-// OpenPGP Entity
+// OpenPGP entity
 private openpgp.entity {
   // primary public key, which must be a signing key
   primaryPublicKey openpgp.publicKey
-  // Entity's Identities
+  // Entity's identities
   identities() []openpgp.identity
 }
 
-// OpenPGP Public Key
+// OpenPGP public key
 private openpgp.publicKey {
   // Key ID
   id string
-  // Key Version
+  // Key version
   version int
-  // Key Fingerprint
+  // Key fingerprint
   fingerprint string
-  // Key Algorithm
+  // Key algorithm
   keyAlgorithm string
-  // Key Bit Length
+  // Key bit length
   bitLength int
   // Key creation time
   creationTime time
 }
 
-// OpenPGP Identity
+// OpenPGP identity
 private openpgp.identity {
-  // Primary Key Fingerprint
+  // Primary key fingerprint
   fingerprint string
   // Full name in form of "Full Name (comment) <email@example.com>"
   id string
@@ -281,29 +281,29 @@ private openpgp.identity {
   signatures() []openpgp.signature
 }
 
-// OpenPGP Signature
+// OpenPGP signature
 private openpgp.signature {
-  // Primary Key Fingerprint
+  // Primary key fingerprint
   fingerprint string
-  // Identity Name
+  // Identity name
   identityName string
-  // Signature Hash
+  // Signature hash
   hash string
-  // Signature Version
+  // Signature version
   version int
-  // Signature Type
+  // Signature type
   signatureType string
-  // Hash Algorithm
+  // Hash algorithm
   keyAlgorithm string
-  // Creation Time
+  // Creation time
   creationTime time
-  // Signature Lifetime in Seconds
+  // Signature lifetime in seconds
   lifetimeSecs int
-  // Expiration Duration
+  // Expiration duration
   expiresIn time
-  // Key Lifetime in Seconds
+  // Key lifetime in seconds
   keyLifetimeSecs int
-  // Key Expiration Duration
+  // Key expiration duration
   keyExpiresIn time
 }
 
@@ -314,11 +314,11 @@ domainName @defaults("fqdn") {
   fqdn string
   // effectiveTLDPlusOne returns the effective top level domain plus one more label
   effectiveTLDPlusOne string
-  // Top-Level Domain
+  // Top-level domain
   tld string
   // Flag indicates if the TLD is ICANN managed
   tldIcannManaged bool
-  // Domain Labels
+  // Domain labels
   labels []string
 }
 
@@ -360,21 +360,21 @@ dns.mxRecord @defaults("domainName") {
 
 // DKIM public key representation as defined in RFC 6376
 dns.dkimRecord @defaults("dnsTxt") {
-  // DNS Text Representation
+  // DNS Text representation
   dnsTxt string
-  // DKIM Selector Domain
+  // DKIM Selector domain
   domain string
   // Version
   version string
-  // Acceptable Hash Algorithms
+  // Acceptable hash algorithms
   hashAlgorithms []string
-  // Key Type
+  // Key type
   keyType string
   // Notes
   notes string
-  // Public Key Data base64-Encoded
+  // Public key data base64-encoded
   publicKeyData string
-  // Service Types
+  // Service types
   serviceTypes []string
   // Flags
   flags []string
