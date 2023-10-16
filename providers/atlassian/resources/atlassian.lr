@@ -117,9 +117,9 @@ atlassian.jira.user @defaults("id") {
   // Name
   name string
   // Account type
-	type string
+  type string
   // Picture of the user
-	picture string
+  picture string
   // Groups
   groups() []atlassian.jira.group
   // Roles
