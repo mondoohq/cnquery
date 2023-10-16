@@ -1,6 +1,7 @@
 option provider = "go.mondoo.com/cnquery/providers/atlassian"
 option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 
+// Cross-domain Identity Management (SCIM)
 atlassian.scim {
   // SCIM users
   users() []atlassian.scim.organization.scim.user
@@ -8,6 +9,7 @@ atlassian.scim {
   groups() []atlassian.scim.organization.scim.group
 }
 
+// SCIM user
 atlassian.scim.user @defaults("id") {
   // ID
   id string
@@ -21,6 +23,7 @@ atlassian.scim.user @defaults("id") {
   title string
 }
 
+// SCIM group
 atlassian.scim.group @defaults("id") {
   // ID
   id string
@@ -28,6 +31,7 @@ atlassian.scim.group @defaults("id") {
   name string
 }
 
+// Organization
 atlassian.admin.organization @defaults("id") { 
   // Organization ID
   id string
@@ -43,6 +47,7 @@ atlassian.admin.organization @defaults("id") {
   managedUsers() []atlassian.admin.organization.managedUsers
 }
 
+// Managed users
 atlassian.admin.organization.managedUsers {
   // ID
   id string
@@ -56,6 +61,7 @@ atlassian.admin.organization.managedUsers {
   lastActive string
 }
 
+// Policies (except authentication policies)
 atlassian.admin.organization.policy @defaults("id") {
   // Policy ID
   id string
@@ -69,6 +75,7 @@ atlassian.admin.organization.policy @defaults("id") {
   status string
 }
 
+// Domains
 atlassian.admin.organization.domain @defaults("id") {
   // Domain ID
   id string
@@ -78,6 +85,7 @@ atlassian.admin.organization.domain @defaults("id") {
   type string
 }
 
+// Jira
 atlassian.jira { 
   // Jira users
   users() []atlassian.jira.user
@@ -91,6 +99,7 @@ atlassian.jira {
   serverInfos() atlassian.jira.serverInfo
 }
 
+// Issue
 atlassian.jira.issue @defaults("id") {
   // ID
   id string
@@ -102,6 +111,7 @@ atlassian.jira.issue @defaults("id") {
   description string
 }
 
+// Jira server info
 atlassian.jira.serverInfo @defaults("serverTitle") {
   // BaseUrl
   baseUrl string 
@@ -113,6 +123,7 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
   deploymentType string
 }
 
+// Jira user
 atlassian.jira.user @defaults("id") { 
   // AccountID
   id string
@@ -129,6 +140,7 @@ atlassian.jira.user @defaults("id") {
 }
 
 
+// Jira application role
 atlassian.jira.applicatonRole @defaults("id") {
   // Role ID
   id string
@@ -136,6 +148,7 @@ atlassian.jira.applicatonRole @defaults("id") {
   name string
 }
 
+// Jira project
 atlassian.jira.project @defaults("id") { 
   // Project ID
   id string
@@ -159,11 +172,13 @@ atlassian.jira.project @defaults("id") {
   properties() []atlassian.jira.project.property
 }
 
+// Jira project property
 atlassian.jira.project.property @defaults("id") {
   // Property Key
   id string
 }
 
+// Jira group
 atlassian.jira.group @defaults("id") { 
   // GroupID
   id string
@@ -171,11 +186,13 @@ atlassian.jira.group @defaults("id") {
   name string
 }
 
+// Confluence
 atlassian.confluence { 
   // Confluence users
   users() []atlassian.confluence.user
 }
 
+// Confluence user
 atlassian.confluence.user @defaults("id") { 
   // AccountID
   id string
