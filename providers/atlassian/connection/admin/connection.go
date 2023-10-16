@@ -5,7 +5,6 @@ package admin
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/ctreminiom/go-atlassian/admin"
