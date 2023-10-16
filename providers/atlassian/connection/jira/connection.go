@@ -96,3 +96,7 @@ func (c *JiraConnection) Host() string {
 func (c *JiraConnection) ConnectionType() string {
 	return "jira"
 }
+
+func (c *JiraConnection) Config() *inventory.Config {
+	return c.Conf
+}

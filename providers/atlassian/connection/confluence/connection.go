@@ -96,3 +96,7 @@ func (c *ConfluenceConnection) Host() string {
 func (c *ConfluenceConnection) ConnectionType() string {
 	return "confluence"
 }
+
+func (c *ConfluenceConnection) Config() *inventory.Config {
+	return c.Conf
+}

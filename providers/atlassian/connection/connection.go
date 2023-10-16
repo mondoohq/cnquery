@@ -14,6 +14,13 @@ import (
 )
 
 const (
+	// Discovery flags
+	DiscoveryAuto         = "auto"
+	DiscoveryAll          = "all"
+	DiscoveryOrganization = "organization"
+)
+
+const (
 	Admin shared.ConnectionType = "atlassian"
 )
 

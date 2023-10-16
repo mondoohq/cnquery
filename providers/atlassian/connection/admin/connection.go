@@ -80,3 +80,7 @@ func (c *AdminConnection) Host() string {
 func (c *AdminConnection) ConnectionType() string {
 	return "admin"
 }
+
+func (c *AdminConnection) Config() *inventory.Config {
+	return c.Conf
+}

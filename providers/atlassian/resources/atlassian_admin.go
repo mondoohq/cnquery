@@ -4,11 +4,23 @@ import (
 	"context"
 
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
 )
 
 func (a *mqlAtlassianAdmin) id() (string, error) {
 	return "admin", nil
+}
+
+func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	//conn := runtime.Connection.(*admin.AdminConnection)
+
+	//client := conn.Client()
+
+	return args, nil, nil
 }
 
 func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
@@ -23,6 +35,7 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
 			map[string]*llx.RawData{
 				"id":   llx.StringData(org.ID),
+				"name": llx.StringData(org.Attributes.Name),
 				"type": llx.StringData(org.Type),
 			})
 		if err != nil {
@@ -111,5 +124,9 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganizationPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAtlassianAdminOrganization) id() (string, error) {
 	return a.Id.Data, nil
 }

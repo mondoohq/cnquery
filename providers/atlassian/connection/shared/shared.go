@@ -17,4 +17,5 @@ type Connection interface {
 	Host() string
 	PlatformInfo() *inventory.Platform
 	PlatformID() string
+	Config() *inventory.Config
 }

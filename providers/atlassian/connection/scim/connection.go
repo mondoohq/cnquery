@@ -88,3 +88,7 @@ func (c *ScimConnection) Directory() string {
 func (c *ScimConnection) ConnectionType() string {
 	return "scim"
 }
+
+func (c *ScimConnection) Config() *inventory.Config {
+	return c.Conf
+}

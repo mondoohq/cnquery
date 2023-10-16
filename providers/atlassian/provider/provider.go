@@ -2,7 +2,6 @@ package provider
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -48,9 +47,22 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	conf := &inventory.Config{
-		Type:    req.Connector,
-		Options: map[string]string{},
+		Type:     req.Connector,
+		Options:  map[string]string{},
+		Discover: &inventory.Discovery{},
 	}
+
+	// discovery flags
+	discoverTargets := []string{}
+	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {
+		for i := range x.Array {
+			entry := string(x.Array[i].Value)
+			discoverTargets = append(discoverTargets, entry)
+		}
+	} else {
+		discoverTargets = []string{"auto"}
+	}
+	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
 	switch req.Args[0] {
 	case "admin":
@@ -88,17 +100,22 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	inventory := &inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{req.Asset},
-		},
+	//inventory := &inventory.Inventory{
+	//Spec: &inventory.InventorySpec{
+	//Assets: []*inventory.Asset{req.Asset},
+	//},
+	//}
+
+	inv, err := s.discover(conn)
+	if err != nil {
+		return nil, err
 	}
 
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: inventory,
+		Inventory: inv,
 	}, nil
 }
 
@@ -208,4 +225,19 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
+}
+
+func (s *Service) discover(conn shared.Connection) (*inventory.Inventory, error) {
+	conf := conn.Config()
+	if conf.Discover == nil {
+		return nil, nil
+	}
+
+	runtime, ok := s.runtimes[conn.ID()]
+	if !ok {
+		// no connection found, this should never happen
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
+	}
+
+	return resources.Discover(runtime, conf.Options)
 }

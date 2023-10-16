@@ -18,6 +18,7 @@ resources:
       events: {}
       id: {}
       managedUsers: {}
+      name: {}
       policies: {}
       scim: {}
       type: {}
@@ -133,6 +134,7 @@ resources:
     min_mondoo_version: latest
   atlassian.jira.issue:
     fields:
+      description: {}
       id: {}
       project: {}
       status: {}

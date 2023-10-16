@@ -35,6 +35,8 @@ atlassian.scim.group @defaults("id") {
 atlassian.admin.organization @defaults("id") { 
   // Organization ID
   id string
+  // Name
+  name string
   // Organization type
   type string
   // Policies

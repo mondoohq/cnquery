@@ -34,7 +34,7 @@ func init() {
 			Create: createAtlassianScimGroup,
 		},
 		"atlassian.admin.organization": {
-			// to override args, implement: initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAtlassianAdminOrganization,
 			Create: createAtlassianAdminOrganization,
 		},
 		"atlassian.admin.organization.managedUsers": {
@@ -190,6 +190,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetId()).ToDataRes(types.String)
 	},
+	"atlassian.admin.organization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetName()).ToDataRes(types.String)
+	},
 	"atlassian.admin.organization.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetType()).ToDataRes(types.String)
 	},
@@ -264,6 +267,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.issue.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.jira.issue.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetDescription()).ToDataRes(types.String)
 	},
 	"atlassian.jira.serverInfo.baseUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraServerInfo).GetBaseUrl()).ToDataRes(types.String)
@@ -428,6 +434,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganization).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -546,6 +556,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"atlassian.jira.issue.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.serverInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -988,6 +1002,7 @@ type mqlAtlassianAdminOrganization struct {
 	__id string
 	// optional: if you define mqlAtlassianAdminOrganizationInternal it will be used here
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 	Policies plugin.TValue[[]interface{}]
 	Domains plugin.TValue[[]interface{}]
@@ -1005,7 +1020,12 @@ func createAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.admin.organization", res.__id)
@@ -1028,6 +1048,10 @@ func (c *mqlAtlassianAdminOrganization) MqlID() string {
 
 func (c *mqlAtlassianAdminOrganization) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAtlassianAdminOrganization) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 func (c *mqlAtlassianAdminOrganization) GetType() *plugin.TValue[string] {
@@ -1406,6 +1430,7 @@ type mqlAtlassianJiraIssue struct {
 	Id plugin.TValue[string]
 	Project plugin.TValue[string]
 	Status plugin.TValue[string]
+	Description plugin.TValue[string]
 }
 
 // createAtlassianJiraIssue creates a new instance of this resource
@@ -1455,6 +1480,10 @@ func (c *mqlAtlassianJiraIssue) GetProject() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraIssue) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+func (c *mqlAtlassianJiraIssue) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlAtlassianJiraServerInfo for the atlassian.jira.serverInfo resource
