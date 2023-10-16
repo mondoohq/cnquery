@@ -26,5 +26,5 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 }
 
 func (a *ScimConnection) PlatformID() string {
-	return "//platformid.api.mondoo.app/runtime/atlassian/scim"
+	return "//platformid.api.mondoo.app/runtime/atlassian/scim/" + a.Directory()
 }
