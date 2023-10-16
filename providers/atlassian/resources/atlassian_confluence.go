@@ -16,12 +16,9 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
 	confluence := conn.Client()
 	cql := "type = user"
-	users, response, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
+	users, _, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	res := []interface{}{}
 	for _, user := range users.Results {

@@ -16,12 +16,9 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	admin := conn.Client()
 	directoryID := conn.Directory()
-	scimUsers, response, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
+	scimUsers, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	res := []interface{}{}
 	for _, scimUser := range scimUsers.Resources {
@@ -45,12 +42,9 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
 	admin := conn.Client()
 	directoryID := conn.Directory()
-	scimGroup, response, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)
+	scimGroup, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	res := []interface{}{}
 	for _, scimGroup := range scimGroup.Resources {

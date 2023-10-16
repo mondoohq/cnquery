@@ -16,12 +16,9 @@ func (a *mqlAtlassianJira) id() (string, error) {
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	users, response, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
+	users, _, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	res := []interface{}{}
 	for _, user := range users {
@@ -44,12 +41,9 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
 	expands := []string{"groups", "applicationRoles"}
-	user, response, err := jira.User.Get(context.Background(), a.Id.Data, expands)
+	user, _, err := jira.User.Get(context.Background(), a.Id.Data, expands)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	roles := user.ApplicationRoles
 
@@ -71,14 +65,10 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-
 	res := []interface{}{}
 	for _, group := range groups.Values {
 		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
@@ -97,14 +87,10 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	groups, response, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
+	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-
 	res := []interface{}{}
 	for _, group := range groups.Values {
 		mqlAtlassianJiraUserGroup, err := CreateResource(a.MqlRuntime, "atlassian.jira.group",
@@ -123,12 +109,9 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	info, response, err := jira.Server.Info(context.Background())
+	info, _, err := jira.Server.Info(context.Background())
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 	res, err := CreateResource(a.MqlRuntime, "atlassian.jira.serverInfo",
 		map[string]*llx.RawData{
@@ -143,12 +126,9 @@ func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	projects, response, err := jira.Project.Search(context.Background(), nil, 0, 1000)
+	projects, _, err := jira.Project.Search(context.Background(), nil, 0, 1000)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 
 	res := []interface{}{}
@@ -180,14 +160,10 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	jql := "order by created DESC"
 	fields := []string{"status", "project"}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
-	issues, response, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
+	issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
-	}
-
 	res := []interface{}{}
 	for _, issue := range issues.Issues {
 		mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
@@ -211,12 +187,9 @@ func (a *mqlAtlassianJiraIssue) id() (string, error) {
 func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	jira := conn.Client()
-	properties, response, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
+	properties, _, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
 	if err != nil {
 		log.Fatal().Err(err)
-	}
-	if response.Status != "200 OK" {
-		log.Fatal().Msgf("Received response: %s\n", response.Status)
 	}
 
 	res := []interface{}{}
