@@ -37,13 +37,6 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 	return res, nil
 }
 
-type atlassianUser struct {
-	AccountID string
-	Name      string
-	Type      string
-	OrgID     string
-}
-
 func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
 
