@@ -18,44 +18,12 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "admin",
-			Use:       "admin",
-			Short:     "admin",
+			Name:      "atlassian",
+			Use:       "atlassian",
+			Short:     "atlassian",
+			MaxArgs:   2,
 			Discovery: []string{},
-			Flags: []plugin.Flag{
-				{
-					Long:    "token",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "admin api token",
-				},
-			},
-		},
-		{
-			Name:      "jira",
-			Use:       "jira",
-			Short:     "jira",
-			Discovery: []string{},
-			Flags: []plugin.Flag{
-				{
-					Long:    "host",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "hostname of the jira instance",
-				},
-				{
-					Long:    "user",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "email address of the user",
-				},
-				{
-					Long:    "token",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "token of the user",
-				},
-			},
+			Flags:     []plugin.Flag{},
 		},
 	},
 }

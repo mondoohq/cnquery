@@ -8,10 +8,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/jira"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/scim"
+	"go.mondoo.com/cnquery/v9/providers/atlassian/connection"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/resources"
 )
@@ -39,44 +36,24 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		flags = map[string]*llx.Primitive{}
 	}
 
+	if len(req.Args) != 1 {
+		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim`")
+	}
+
 	conf := &inventory.Config{
 		Type:    req.Connector,
 		Options: map[string]string{},
 	}
 
-	switch req.Connector {
-	case "jira":
-		conf.Type = "jira"
-		if x, ok := flags["host"]; ok && len(x.Value) != 0 {
-			conf.Options["host"] = string(x.Value)
-		}
-		if x, ok := flags["user"]; ok && len(x.Value) != 0 {
-			conf.Options["user"] = string(x.Value)
-		}
-		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
-			conf.Options["token"] = string(x.Value)
-		}
-	case "confluence":
-		conf.Type = "confluece"
-		if x, ok := flags["host"]; ok && len(x.Value) != 0 {
-			conf.Options["host"] = string(x.Value)
-		}
-		if x, ok := flags["user"]; ok && len(x.Value) != 0 {
-			conf.Options["user"] = string(x.Value)
-		}
-		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
-			conf.Options["token"] = string(x.Value)
-		}
+	switch req.Args[0] {
 	case "admin":
-		conf.Type = "admin"
-		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
-			conf.Options["token"] = string(x.Value)
-		}
+		conf.Options["product"] = req.Args[0]
+	case "jira":
+		conf.Options["product"] = req.Args[0]
+	case "confluence":
+		conf.Options["product"] = req.Args[0]
 	case "scim":
-		conf.Type = "scim"
-		if x, ok := flags["token"]; ok && len(x.Value) != 0 {
-			conf.Options["token"] = string(x.Value)
-		}
+		conf.Options["product"] = req.Args[0]
 	}
 
 	asset := inventory.Asset{
@@ -134,23 +111,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var conn shared.Connection
 	var err error
 
-	switch conf.Type {
-	case "admin":
-		s.lastConnectionID++
-		conn, err = admin.NewConnection(s.lastConnectionID, asset, conf)
-	case "scim":
-		s.lastConnectionID++
-		conn, err = scim.NewConnection(s.lastConnectionID, asset, conf)
-	case "jira":
-		s.lastConnectionID++
-		conn, err = jira.NewConnection(s.lastConnectionID, asset, conf)
-	case "confluence":
-		s.lastConnectionID++
-		conn, err = confluence.NewConnection(s.lastConnectionID, asset, conf)
-	default:
-		s.lastConnectionID++
-		conn, err = admin.NewConnection(s.lastConnectionID, asset, conf)
-	}
+	conn, err = connection.NewConnection(s.lastConnectionID, asset, conf)
 
 	if err != nil {
 		return nil, err
