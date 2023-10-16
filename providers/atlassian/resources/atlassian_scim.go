@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/scim"
 )
@@ -18,7 +17,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	directoryID := conn.Directory()
 	scimUsers, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, scimUser := range scimUsers.Resources {
@@ -31,7 +30,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 				"title":        llx.StringData(scimUser.Title),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminSCIMuser)
 	}
@@ -44,7 +43,7 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	directoryID := conn.Directory()
 	scimGroup, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, scimGroup := range scimGroup.Resources {
@@ -53,7 +52,7 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 				"id": llx.StringData(scimGroup.ID),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminSCIMgroup)
 	}

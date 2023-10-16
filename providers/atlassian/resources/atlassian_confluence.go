@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
 )
@@ -18,7 +17,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 	cql := "type = user"
 	users, _, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, user := range users.Results {
@@ -29,7 +28,7 @@ func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
 				"name": llx.StringData(user.User.DisplayName),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianConfluenceUser)
 	}

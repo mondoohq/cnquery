@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
 )
@@ -17,7 +16,7 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 	admin := conn.Client()
 	organizations, _, err := admin.Organization.Gets(context.Background(), "")
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, org := range organizations.Data {
@@ -27,7 +26,7 @@ func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
 				"type": llx.StringData(org.Type),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminOrg)
 	}
@@ -41,7 +40,7 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 
 	managedUsers, _, err := admin.Organization.Users(context.Background(), a.Id.Data, "")
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, user := range managedUsers.Data {
@@ -52,7 +51,7 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 				"type": llx.StringData(user.AccountType),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminManagedUser)
 	}
@@ -65,7 +64,7 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 	orgId := a.Id.Data
 	policies, _, err := admin.Organization.Policy.Gets(context.Background(), orgId, "", "")
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, policy := range policies.Data {
@@ -78,7 +77,7 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 				"policyType": llx.StringData(policy.Attributes.Type),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminPolicy)
 	}
@@ -91,7 +90,7 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 	orgId := a.Id.Data
 	domains, _, err := admin.Organization.Domains(context.Background(), orgId, "")
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, domain := range domains.Data {
@@ -100,7 +99,7 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 				"id": llx.StringData(domain.ID),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianAdminDomain)
 	}

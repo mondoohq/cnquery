@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/jira"
 )
@@ -18,7 +17,7 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 	jira := conn.Client()
 	users, _, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, user := range users {
@@ -30,7 +29,7 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 				"picture": llx.StringData(user.AvatarUrls.One6X16),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraUser)
 	}
@@ -43,7 +42,7 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 	expands := []string{"groups", "applicationRoles"}
 	user, _, err := jira.User.Get(context.Background(), a.Id.Data, expands)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	roles := user.ApplicationRoles
 
@@ -55,7 +54,7 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 				"name": llx.StringData(role.Name),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraUserRole)
 	}
@@ -67,7 +66,7 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 	jira := conn.Client()
 	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, group := range groups.Values {
@@ -77,7 +76,7 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 				"name": llx.StringData(group.Name),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraUserGroup)
 	}
@@ -89,7 +88,7 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 	jira := conn.Client()
 	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, group := range groups.Values {
@@ -99,7 +98,7 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 				"name": llx.StringData(group.Name),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraUserGroup)
 	}
@@ -111,7 +110,7 @@ func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 	jira := conn.Client()
 	info, _, err := jira.Server.Info(context.Background())
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res, err := CreateResource(a.MqlRuntime, "atlassian.jira.serverInfo",
 		map[string]*llx.RawData{
@@ -128,7 +127,7 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 	jira := conn.Client()
 	projects, _, err := jira.Project.Search(context.Background(), nil, 0, 1000)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 
 	res := []interface{}{}
@@ -146,7 +145,7 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 				"archived": llx.BoolData(project.Archived),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraProject)
 	}
@@ -162,7 +161,7 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
 	issues, _, err := jira.Issue.Search.Get(context.Background(), jql, fields, expands, 0, 1000, validate)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 	res := []interface{}{}
 	for _, issue := range issues.Issues {
@@ -173,7 +172,7 @@ func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
 				"status":  llx.StringData(issue.Fields.Status.Name),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraIssue)
 	}
@@ -189,7 +188,7 @@ func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
 	jira := conn.Client()
 	properties, _, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 
 	res := []interface{}{}
@@ -200,7 +199,7 @@ func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
 				"id": llx.StringData(property.Key),
 			})
 		if err != nil {
-			log.Fatal().Err(err)
+			return nil, err
 		}
 		res = append(res, mqlAtlassianJiraProjectProperty)
 	}
