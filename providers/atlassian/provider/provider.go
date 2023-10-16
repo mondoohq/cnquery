@@ -37,19 +37,24 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) == 0 {
-		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim {directoryID}`")
+		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin {organizationID}`, `atlassian confluence`, or `atlassian scim {directoryID}`")
 	}
 
 	if req.Args[0] == "scim" {
 		if len(req.Args) != 2 {
-			return nil, errors.New("missing argument, scim requires a directoryID `atlassian scim {directoryID}`")
+			return nil, errors.New("missing argument, scim requires a directory id `atlassian scim {directoryID}`")
+		}
+	}
+
+	if req.Args[0] == "admin" {
+		if len(req.Args) != 2 {
+			return nil, errors.New("missing argument, admin requires an organization id `atlassian scim {organizationID}`")
 		}
 	}
 
 	conf := &inventory.Config{
-		Type:     req.Connector,
-		Options:  map[string]string{},
-		Discover: &inventory.Discovery{},
+		Type:    req.Connector,
+		Options: map[string]string{},
 	}
 
 	// discovery flags
@@ -67,6 +72,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	switch req.Args[0] {
 	case "admin":
 		conf.Options["product"] = req.Args[0]
+		conf.Options["organization-id"] = req.Args[1]
 	case "jira":
 		conf.Options["product"] = req.Args[0]
 	case "confluence":
@@ -100,22 +106,17 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	//inventory := &inventory.Inventory{
-	//Spec: &inventory.InventorySpec{
-	//Assets: []*inventory.Asset{req.Asset},
-	//},
-	//}
-
-	inv, err := s.discover(conn)
-	if err != nil {
-		return nil, err
+	inventory := &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{req.Asset},
+		},
 	}
 
 	return &plugin.ConnectRes{
 		Id:        conn.ID(),
 		Name:      conn.Name(),
 		Asset:     req.Asset,
-		Inventory: inv,
+		Inventory: inventory,
 	}, nil
 }
 
@@ -225,19 +226,4 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
-}
-
-func (s *Service) discover(conn shared.Connection) (*inventory.Inventory, error) {
-	conf := conn.Config()
-	if conf.Discover == nil {
-		return nil, nil
-	}
-
-	runtime, ok := s.runtimes[conn.ID()]
-	if !ok {
-		// no connection found, this should never happen
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
-	}
-
-	return resources.Discover(runtime, conf.Options)
 }

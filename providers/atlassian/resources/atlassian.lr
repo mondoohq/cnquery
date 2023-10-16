@@ -1,10 +1,6 @@
 option provider = "go.mondoo.com/cnquery/providers/atlassian"
 option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 
-atlassian.admin {
-  organizations() []atlassian.admin.organization
-}
-
 atlassian.scim {
   // SCIM users
   users() []atlassian.scim.organization.scim.user

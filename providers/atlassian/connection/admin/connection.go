@@ -38,6 +38,10 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		return nil, err
 	}
 
+	if conf.Options["organization-id"] == "" {
+		return nil, errors.New("you need to provide a organization id for admin")
+	}
+
 	client.Auth.SetBearerToken(adminToken)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
@@ -82,4 +86,8 @@ func (c *AdminConnection) ConnectionType() string {
 
 func (c *AdminConnection) Config() *inventory.Config {
 	return c.Conf
+}
+
+func (c *AdminConnection) OrgId() string {
+	return c.Conf.Options["organization-id"]
 }

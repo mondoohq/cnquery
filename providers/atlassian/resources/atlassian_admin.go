@@ -8,43 +8,44 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"
 )
 
-func (a *mqlAtlassianAdmin) id() (string, error) {
-	return "admin", nil
-}
-
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
-		return args, nil, nil
+	conn := runtime.Connection.(*admin.AdminConnection)
+	admin := conn.Client()
+	orgId := conn.OrgId()
+	organization, _, err := admin.Organization.Get(context.Background(), orgId)
+	if err != nil {
+		return nil, nil, err
 	}
-	//conn := runtime.Connection.(*admin.AdminConnection)
 
-	//client := conn.Client()
+	args["id"] = llx.StringData(organization.Data.ID)
+	args["name"] = llx.StringData(organization.Data.Attributes.Name)
+	args["type"] = llx.StringData(organization.Data.Type)
 
 	return args, nil, nil
 }
 
-func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
-	admin := conn.Client()
-	organizations, _, err := admin.Organization.Gets(context.Background(), "")
-	if err != nil {
-		return nil, err
-	}
-	res := []interface{}{}
-	for _, org := range organizations.Data {
-		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
-			map[string]*llx.RawData{
-				"id":   llx.StringData(org.ID),
-				"name": llx.StringData(org.Attributes.Name),
-				"type": llx.StringData(org.Type),
-			})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlAtlassianAdminOrg)
-	}
-	return res, nil
-}
+//func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
+//	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+//	admin := conn.Client()
+//	organizations, _, err := admin.Organization.Gets(context.Background(), "")
+//	if err != nil {
+//		return nil, err
+//	}
+//	res := []interface{}{}
+//	for _, org := range organizations.Data {
+//		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
+//			map[string]*llx.RawData{
+//				"id":   llx.StringData(org.ID),
+//				"name": llx.StringData(org.Attributes.Name),
+//				"type": llx.StringData(org.Type),
+//			})
+//		if err != nil {
+//			return nil, err
+//		}
+//		res = append(res, mqlAtlassianAdminOrg)
+//	}
+//	return res, nil
+//}
 
 func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
