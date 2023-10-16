@@ -22,7 +22,6 @@ const (
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (shared.Connection, error) {
 	var conn shared.Connection
 	var err error
-	fmt.Println("Product: ", conf.Options["product"])
 	switch conf.Options["product"] {
 	case "admin":
 		conn, err = admin.NewConnection(id, asset, conf)
