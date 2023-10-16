@@ -31,7 +31,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		token = os.Getenv("ATLASSIAN_SCIM_TOKEN")
 	}
 	if token == "" {
-		return nil, errors.New("you need to provide atlassian admin token via ATLASSIAN_SCIM_TOKEN env")
+		return nil, errors.New("you need to provide atlassian scim token via ATLASSIAN_SCIM_TOKEN env")
 	}
 
 	client, err := admin.New(nil)
@@ -54,7 +54,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 }
 
 func (c *ScimConnection) Name() string {
-	return "jira"
+	return "scim"
 }
 
 func (c *ScimConnection) ID() uint32 {

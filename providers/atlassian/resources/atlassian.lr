@@ -9,6 +9,23 @@ atlassian.admin {
   organizations() []atlassian.admin.organization
 }
 
+atlassian.scim {
+  // SCIM users
+  users() []atlassian.scim.organization.scim.user
+  // SCIM groups
+  groups() []atlassian.scim.organization.scim.group
+}
+
+atlassian.scim.user @defaults("id") {
+  // ID
+  id string
+}
+
+atlassian.scim.group @defaults("id") {
+  // ID
+  id string
+}
+
 atlassian.admin.organization @defaults("id") { 
   // Organization ID
   id string
@@ -18,10 +35,6 @@ atlassian.admin.organization @defaults("id") {
   policies() []atlassian.admin.organization.policy
   // Domains 
   domains() []atlassian.admin.organization.domain
-  // Events 
-  events() []atlassian.admin.organization.event
-  // SCIM
-  scim() atlassian.admin.organization.scim
   // Managed Users
   managedUsers() []atlassian.admin.organization.managedUsers
 }
@@ -33,23 +46,6 @@ atlassian.admin.organization.managedUsers {
   name string
   // Type
   type string
-}
-
-atlassian.admin.organization.scim {
-  // SCIM users
-  users() []atlassian.admin.organization.scim.user
-  // SCIM groups
-  groups() []atlassian.admin.organization.scim.group
-}
-
-atlassian.admin.organization.scim.user @defaults("id") {
-  // ID
-  id string
-}
-
-atlassian.admin.organization.scim.group @defaults("id") {
-  // ID
-  id string
 }
 
 atlassian.admin.organization.policy @defaults("id") {
@@ -69,13 +65,6 @@ atlassian.admin.organization.domain @defaults("id") {
   // Domain ID
   id string
 }
-
-atlassian.admin.organization.event @defaults("id") {
-  // Event ID
-  id string
-}
-
-
 
 atlassian.jira { 
   // Jira users

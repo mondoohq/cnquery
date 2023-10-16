@@ -181,3 +181,36 @@ resources:
       id: {}
       name: {}
     min_mondoo_version: latest
+  atlassian.scim:
+    fields:
+      groups: {}
+      organizations: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.scim.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization:
+    fields:
+      id: {}
+      scim: {}
+      type: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim:
+    fields:
+      groups: {}
+      users: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim.group:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.scim.organization.scim.user:
+    fields:
+      id: {}
+    min_mondoo_version: latest
+  atlassian.scim.user:
+    fields:
+      id: {}
+    min_mondoo_version: latest
