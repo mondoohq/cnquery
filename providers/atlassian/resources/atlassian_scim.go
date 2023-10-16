@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/scim"
@@ -15,7 +16,10 @@ func (a *mqlAtlassianScim) id() (string, error) {
 }
 
 func (a *mqlAtlassianScim) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
+	conn, ok := a.MqlRuntime.Connection.(*scim.ScimConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow scim access")
+	}
 	admin := conn.Client()
 	directoryID := conn.Directory()
 	scimUsers, _, err := admin.SCIM.User.Gets(context.Background(), directoryID, nil, 0, 1000)
@@ -41,7 +45,10 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*scim.ScimConnection)
+	conn, ok := a.MqlRuntime.Connection.(*scim.ScimConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow scim access")
+	}
 	admin := conn.Client()
 	directoryID := conn.Directory()
 	scimGroup, _, err := admin.SCIM.Group.Gets(context.Background(), directoryID, "", 0, 1000)

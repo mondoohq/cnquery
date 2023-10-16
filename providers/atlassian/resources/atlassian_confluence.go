@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/confluence"
@@ -15,7 +16,10 @@ func (a *mqlAtlassianConfluence) id() (string, error) {
 }
 
 func (a *mqlAtlassianConfluence) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
+	conn, ok := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow confluence access")
+	}
 	confluence := conn.Client()
 	cql := "type = user"
 	users, _, err := confluence.Search.Users(context.Background(), cql, 0, 1000, nil)

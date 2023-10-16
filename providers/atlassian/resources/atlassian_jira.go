@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/cnquery/v9/llx"
@@ -16,7 +17,10 @@ func (a *mqlAtlassianJira) id() (string, error) {
 }
 
 func (a *mqlAtlassianJira) users() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	users, _, err := jira.User.Search.Do(context.Background(), "", " ", 0, 1000)
 	if err != nil {
@@ -40,7 +44,10 @@ func (a *mqlAtlassianJira) users() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	expands := []string{"groups", "applicationRoles"}
 	user, _, err := jira.User.Get(context.Background(), a.Id.Data, expands)
@@ -65,7 +72,10 @@ func (a *mqlAtlassianJiraUser) applicationRoles() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
@@ -87,7 +97,10 @@ func (a *mqlAtlassianJiraUser) groups() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	groups, _, err := jira.Group.Bulk(context.Background(), nil, 0, 1000)
 	if err != nil {
@@ -109,7 +122,10 @@ func (a *mqlAtlassianJira) groups() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	info, _, err := jira.Server.Info(context.Background())
 	if err != nil {
@@ -126,7 +142,10 @@ func (a *mqlAtlassianJira) serverInfos() (*mqlAtlassianJiraServerInfo, error) {
 }
 
 func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	projects, _, err := jira.Project.Search(context.Background(), nil, 0, 1000)
 	if err != nil {
@@ -156,7 +175,10 @@ func (a *mqlAtlassianJira) projects() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianJira) issues() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	validate := ""
 	jql := "order by created DESC"
@@ -188,7 +210,10 @@ func (a *mqlAtlassianJiraIssue) id() (string, error) {
 }
 
 func (a *mqlAtlassianJiraProject) properties() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
 	jira := conn.Client()
 	properties, _, err := jira.Project.Property.Gets(context.Background(), a.Id.Data)
 	if err != nil {

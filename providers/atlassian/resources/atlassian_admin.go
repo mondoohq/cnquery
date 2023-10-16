@@ -13,7 +13,10 @@ import (
 )
 
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	conn := runtime.Connection.(*admin.AdminConnection)
+	conn, ok := runtime.Connection.(*admin.AdminConnection)
+	if !ok {
+		return nil, nil, errors.New("Current connection does not allow admin access")
+	}
 	admin := conn.Client()
 	organization, _, err := admin.Organization.Gets(context.Background(), "")
 	if err != nil {
@@ -35,7 +38,10 @@ func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*ll
 }
 
 func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow admin access")
+	}
 
 	admin := conn.Client()
 
@@ -62,7 +68,10 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow admin access")
+	}
 	admin := conn.Client()
 	orgId := a.Id.Data
 	policies, _, err := admin.Organization.Policy.Gets(context.Background(), orgId, "", "")
@@ -88,7 +97,10 @@ func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 }
 
 func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow admin access")
+	}
 	admin := conn.Client()
 	orgId := a.Id.Data
 	domains, _, err := admin.Organization.Domains(context.Background(), orgId, "")
