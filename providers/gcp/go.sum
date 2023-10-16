@@ -59,8 +59,8 @@ cloud.google.com/go/pubsub v1.33.0 h1:6SPCPvWav64tj0sVX/+npCBKhUi/UjJehy9op/V3p2
 cloud.google.com/go/pubsub v1.33.0/go.mod h1:f+w71I33OMyxf9VpMVcZbnG5KSUkCOUHYpFd5U1GdRc=
 cloud.google.com/go/recommender v1.11.0 h1:SuzbMJhDAiPro7tR9QP7EX97+TI31urjsIgNh9XQHl8=
 cloud.google.com/go/recommender v1.11.0/go.mod h1:kPiRQhPyTJ9kyXPCG6u/dlPLbYfFlkwHNRwdzPVAoII=
-cloud.google.com/go/run v1.3.0 h1:NR3ibstYygrvNZQ+7+rSWmD+oKvbjB/B9Ve9mqhkj6s=
-cloud.google.com/go/run v1.3.0/go.mod h1:S/osX/4jIPZGg+ssuqh6GNgg7syixKe3YnprwehzHKU=
+cloud.google.com/go/run v1.3.1 h1:xc46W9kxJI2De9hmpqHEBSSLJhP3bSZl86LdlJa5zm8=
+cloud.google.com/go/run v1.3.1/go.mod h1:cymddtZOzdwLIAsmS6s+Asl4JoXIDm/K1cpZTxV4Q5s=
 cloud.google.com/go/serviceusage v1.8.0 h1:RPNiGxTnc/oBPC/y2L7jNi521Av1EbeEDgWTc35HR+M=
 cloud.google.com/go/serviceusage v1.8.0/go.mod h1:fgHNnITDlWfZjPa1oaZes9NklvRThlb2+/8tYuRxipk=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
