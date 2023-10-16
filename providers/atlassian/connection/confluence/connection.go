@@ -21,7 +21,7 @@ type ConfluenceConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *confluence.Client
-	host   string
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ConfluenceConnection, error) {
@@ -62,14 +62,14 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		id:     id,
 		asset:  asset,
 		client: client,
-		host:   host,
+		name:   host,
 	}
 
 	return conn, nil
 }
 
 func (c *ConfluenceConnection) Name() string {
-	return "atlassian"
+	return c.name
 }
 
 func (c *ConfluenceConnection) ID() uint32 {
@@ -86,10 +86,6 @@ func (c *ConfluenceConnection) Client() *confluence.Client {
 
 func (c *ConfluenceConnection) Type() shared.ConnectionType {
 	return Confluence
-}
-
-func (c *ConfluenceConnection) Host() string {
-	return c.host
 }
 
 func (c *ConfluenceConnection) ConnectionType() string {

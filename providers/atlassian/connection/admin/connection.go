@@ -21,7 +21,7 @@ type AdminConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
-	host   string
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
@@ -46,14 +46,14 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		id:     id,
 		asset:  asset,
 		client: client,
-		host:   "admin.atlassian.com",
+		name:   "admin.atlassian.com",
 	}
 
 	return conn, nil
 }
 
 func (c *AdminConnection) Name() string {
-	return "atlassian-admin"
+	return c.name
 }
 
 func (c *AdminConnection) ID() uint32 {
@@ -70,10 +70,6 @@ func (c *AdminConnection) Client() *admin.Client {
 
 func (c *AdminConnection) Type() shared.ConnectionType {
 	return Admin
-}
-
-func (c *AdminConnection) Host() string {
-	return c.host
 }
 
 func (c *AdminConnection) ConnectionType() string {

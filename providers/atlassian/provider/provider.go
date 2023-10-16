@@ -178,7 +178,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	asset.Id = string(conn.Type())
-	asset.Name = conn.Host()
+	asset.Name = conn.Name()
 
 	asset.Platform = conn.PlatformInfo()
 	asset.PlatformIds = []string{conn.PlatformID()}

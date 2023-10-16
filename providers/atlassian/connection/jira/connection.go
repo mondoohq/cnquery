@@ -21,7 +21,7 @@ type JiraConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *v2.Client
-	host   string
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
@@ -62,14 +62,14 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		id:     id,
 		asset:  asset,
 		client: client,
-		host:   host,
+		name:   host,
 	}
 
 	return conn, nil
 }
 
 func (c *JiraConnection) Name() string {
-	return "jira"
+	return c.name
 }
 
 func (c *JiraConnection) ID() uint32 {
@@ -86,10 +86,6 @@ func (c *JiraConnection) Client() *v2.Client {
 
 func (p *JiraConnection) Type() shared.ConnectionType {
 	return Jira
-}
-
-func (c *JiraConnection) Host() string {
-	return c.host
 }
 
 func (c *JiraConnection) ConnectionType() string {

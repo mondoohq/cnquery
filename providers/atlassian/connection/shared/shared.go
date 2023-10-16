@@ -14,7 +14,6 @@ type Connection interface {
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
-	Host() string
 	PlatformInfo() *inventory.Platform
 	PlatformID() string
 	Config() *inventory.Config

@@ -22,7 +22,7 @@ type ScimConnection struct {
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
-	host   string
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
@@ -46,20 +46,20 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetBearerToken(token)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
-	host := fmt.Sprintf("Directory %s", conf.Options["directory-id"])
+	name := fmt.Sprintf("Directory %s", conf.Options["directory-id"])
 	conn := &ScimConnection{
 		Conf:   conf,
 		id:     id,
 		asset:  asset,
 		client: client,
-		host:   host,
+		name:   name,
 	}
 
 	return conn, nil
 }
 
 func (c *ScimConnection) Name() string {
-	return "scim"
+	return c.name
 }
 
 func (c *ScimConnection) ID() uint32 {
@@ -76,10 +76,6 @@ func (c *ScimConnection) Client() *admin.Client {
 
 func (p *ScimConnection) Type() shared.ConnectionType {
 	return Scim
-}
-
-func (c *ScimConnection) Host() string {
-	return c.host
 }
 
 func (c *ScimConnection) Directory() string {

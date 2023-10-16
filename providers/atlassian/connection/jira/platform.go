@@ -31,7 +31,7 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 }
 
 func (a *JiraConnection) PlatformID() string {
-	hostname := strings.TrimPrefix(a.host, "https://")
+	hostname := strings.TrimPrefix(a.name, "https://")
 	host := strings.Replace(hostname, ".", "-", -1)
 	return "//platformid.api.mondoo.app/runtime/atlassian/jira/" + host
 }
