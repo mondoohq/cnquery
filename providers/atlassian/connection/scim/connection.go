@@ -5,6 +5,7 @@ package scim
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/ctreminiom/go-atlassian/admin"
@@ -45,12 +46,13 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetBearerToken(token)
 	client.Auth.SetUserAgent("curl/7.54.0")
 
+	host := fmt.Sprintf("Directory %s", conf.Options["directory-id"])
 	conn := &ScimConnection{
 		Conf:   conf,
 		id:     id,
 		asset:  asset,
 		client: client,
-		host:   "admin.atlassian.com",
+		host:   host,
 	}
 
 	return conn, nil
