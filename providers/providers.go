@@ -6,6 +6,7 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
+	"go.mondoo.com/ranger-rpc"
 	"io"
 	"net/http"
 	"os"
@@ -57,7 +58,7 @@ func httpClient() (*http.Client, error) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
-	return &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}, nil
+	return ranger.NewHttpClient(ranger.WithProxy(proxy)), nil
 }
 
 // List providers that are going to be used in their default order:
