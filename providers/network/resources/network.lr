@@ -318,7 +318,7 @@ domainName @defaults("fqdn") {
   tld string
   // Flag indicates if the TLD is ICANN managed
   tldIcannManaged bool
-  // Domain Licenseabels
+  // Domain labels
   labels []string
 }
 
