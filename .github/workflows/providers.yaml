@@ -55,7 +55,12 @@ jobs:
             fi
             cd providers/$p
             REPO_VERSION=$(grep Version config/config.go | cut -f2 -d\")
-            DIST_VERSION=$(curl -s https://releases.mondoo.com/providers/${p}/latest.json | jq -r .version)
+            STATUS_CODE=(curl -s -o /dev/null -I -w "%{http_code}" https://releases.mondoo.com/providers/atlassian/latest.json)
+            if [ "$STATUS_CODE" -eq "404" ]; then
+              DIST_VERSION="unreleased"
+            else
+              DIST_VERSION=$(curl -s https://releases.mondoo.com/providers/${p}/latest.json | jq -r .version)
+            fi
             printf "PROVIDER $p:\n  Local version: $REPO_VERSION\n  Remote version: $DIST_VERSION\n"
             if [[ $REPO_VERSION != $DIST_VERSION ]]; then
               echo "  Adding $p to build list"
