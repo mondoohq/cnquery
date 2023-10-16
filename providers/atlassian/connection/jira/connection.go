@@ -8,7 +8,6 @@ import (
 	"os"
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
 )
@@ -52,7 +51,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 
 	client, err := v2.New(nil, host)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 
 	client.Auth.SetBasicAuth(user, token)

@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/ctreminiom/go-atlassian/admin"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
 )
@@ -36,7 +35,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 
 	client, err := admin.New(nil)
 	if err != nil {
-		log.Fatal().Err(err)
+		return nil, err
 	}
 
 	client.Auth.SetBearerToken(adminToken)
