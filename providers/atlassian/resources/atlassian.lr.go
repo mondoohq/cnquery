@@ -17,10 +17,6 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
-		"atlassian": {
-			// to override args, implement: initAtlassian(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassian,
-		},
 		"atlassian.admin": {
 			// to override args, implement: initAtlassianAdmin(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianAdmin,
@@ -341,10 +337,6 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
-	"atlassian.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassian).__id, ok = v.Value.(string)
-			return
-		},
 	"atlassian.admin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAtlassianAdmin).__id, ok = v.Value.(string)
 			return
@@ -663,50 +655,6 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
-}
-
-// mqlAtlassian for the atlassian resource
-type mqlAtlassian struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlAtlassianInternal it will be used here
-}
-
-// createAtlassian creates a new instance of this resource
-func createAtlassian(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassian{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-	res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAtlassian) MqlName() string {
-	return "atlassian"
-}
-
-func (c *mqlAtlassian) MqlID() string {
-	return c.__id
 }
 
 // mqlAtlassianAdmin for the atlassian.admin resource

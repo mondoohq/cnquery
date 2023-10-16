@@ -134,8 +134,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection: conn,
-		//Resources:      map[string]plugin.Resource{},
+		Connection:     conn,
 		Callback:       callback,
 		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,

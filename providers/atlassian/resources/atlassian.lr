@@ -1,10 +1,6 @@
 option provider = "go.mondoo.com/cnquery/providers/atlassian"
 option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 
-// Atlassian
-atlassian {
-}
-
 atlassian.admin {
   organizations() []atlassian.admin.organization
 }
