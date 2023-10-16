@@ -37,18 +37,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) == 0 {
-		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin {organizationID}`, `atlassian confluence`, or `atlassian scim {directoryID}`")
+		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim {directoryID}`")
 	}
 
 	if req.Args[0] == "scim" {
 		if len(req.Args) != 2 {
 			return nil, errors.New("missing argument, scim requires a directory id `atlassian scim {directoryID}`")
-		}
-	}
-
-	if req.Args[0] == "admin" {
-		if len(req.Args) != 2 {
-			return nil, errors.New("missing argument, admin requires an organization id `atlassian scim {organizationID}`")
 		}
 	}
 
@@ -72,7 +66,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	switch req.Args[0] {
 	case "admin":
 		conf.Options["product"] = req.Args[0]
-		conf.Options["organization-id"] = req.Args[1]
 	case "jira":
 		conf.Options["product"] = req.Args[0]
 	case "confluence":

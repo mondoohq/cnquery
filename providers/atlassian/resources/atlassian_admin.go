@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -11,41 +12,22 @@ import (
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*admin.AdminConnection)
 	admin := conn.Client()
-	orgId := conn.OrgId()
-	organization, _, err := admin.Organization.Get(context.Background(), orgId)
+	organization, _, err := admin.Organization.Gets(context.Background(), "")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	args["id"] = llx.StringData(organization.Data.ID)
-	args["name"] = llx.StringData(organization.Data.Attributes.Name)
-	args["type"] = llx.StringData(organization.Data.Type)
+	if len(organization.Data) > 1 {
+		return nil, nil, errors.New("Unexpectedly received more than 1 organization")
+	}
+	org := organization.Data[0]
+
+	args["id"] = llx.StringData(org.ID)
+	args["name"] = llx.StringData(org.Attributes.Name)
+	args["type"] = llx.StringData(org.Type)
 
 	return args, nil, nil
 }
-
-//func (a *mqlAtlassianAdmin) organizations() ([]interface{}, error) {
-//	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
-//	admin := conn.Client()
-//	organizations, _, err := admin.Organization.Gets(context.Background(), "")
-//	if err != nil {
-//		return nil, err
-//	}
-//	res := []interface{}{}
-//	for _, org := range organizations.Data {
-//		mqlAtlassianAdminOrg, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization",
-//			map[string]*llx.RawData{
-//				"id":   llx.StringData(org.ID),
-//				"name": llx.StringData(org.Attributes.Name),
-//				"type": llx.StringData(org.Type),
-//			})
-//		if err != nil {
-//			return nil, err
-//		}
-//		res = append(res, mqlAtlassianAdminOrg)
-//	}
-//	return res, nil
-//}
 
 func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*admin.AdminConnection)
