@@ -54,6 +54,23 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Options: map[string]string{},
 	}
 
+	// flags
+	if x, ok := flags["usertoken"]; ok && len(x.Value) != 0 {
+		conf.Options["usertoken"] = string(x.Value)
+	}
+	if x, ok := flags["user"]; ok && len(x.Value) != 0 {
+		conf.Options["user"] = string(x.Value)
+	}
+	if x, ok := flags["host"]; ok && len(x.Value) != 0 {
+		conf.Options["host"] = string(x.Value)
+	}
+	if x, ok := flags["admintoken"]; ok && len(x.Value) != 0 {
+		conf.Options["admintoken"] = string(x.Value)
+	}
+	if x, ok := flags["scimtoken"]; ok && len(x.Value) != 0 {
+		conf.Options["scimtoken"] = string(x.Value)
+	}
+
 	// discovery flags
 	discoverTargets := []string{}
 	if x, ok := flags["discover"]; ok && len(x.Array) != 0 {

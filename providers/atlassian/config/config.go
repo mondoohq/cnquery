@@ -26,7 +26,38 @@ var Config = plugin.Provider{
 			Short:     "atlassian",
 			MaxArgs:   2,
 			Discovery: []string{},
-			Flags:     []plugin.Flag{},
+			Flags: []plugin.Flag{
+				{
+					Long:    "admintoken",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Provide atlassian admin api token (used for atlassian admin).",
+				},
+				{
+					Long:    "host",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Provide atlassian hostname (e.g. https://example.atlassian.net).",
+				},
+				{
+					Long:    "user",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Provide atlassian user name (e.g. example@example.com).",
+				},
+				{
+					Long:    "usertoken",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Provide atlassian user api token (used for jira / confluence).",
+				},
+				{
+					Long:    "scimtoken",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Provide atlassian scim api token (used for scim).",
+				},
+			},
 		},
 	},
 }

@@ -25,7 +25,7 @@ type ScimConnection struct {
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
-	token := conf.Options["token"]
+	token := conf.Options["scimtoken"]
 	if token == "" {
 		token = os.Getenv("ATLASSIAN_SCIM_TOKEN")
 	}
