@@ -28,6 +28,8 @@ atlassian.scim.user @defaults("id") {
 atlassian.scim.group @defaults("id") {
   // ID
   id string
+  // Name
+  name string
 }
 
 atlassian.admin.organization @defaults("id") { 

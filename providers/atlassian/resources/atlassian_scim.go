@@ -49,7 +49,8 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	for _, scimGroup := range scimGroup.Resources {
 		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.organization.scim.group",
 			map[string]*llx.RawData{
-				"id": llx.StringData(scimGroup.ID),
+				"id":   llx.StringData(scimGroup.ID),
+				"name": llx.StringData(scimGroup.DisplayName),
 			})
 		if err != nil {
 			return nil, err
