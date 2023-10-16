@@ -55,8 +55,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// flags
-	if x, ok := flags["usertoken"]; ok && len(x.Value) != 0 {
-		conf.Options["usertoken"] = string(x.Value)
+	if x, ok := flags["user-token"]; ok && len(x.Value) != 0 {
+		conf.Options["user-token"] = string(x.Value)
 	}
 	if x, ok := flags["user"]; ok && len(x.Value) != 0 {
 		conf.Options["user"] = string(x.Value)
@@ -64,11 +64,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if x, ok := flags["host"]; ok && len(x.Value) != 0 {
 		conf.Options["host"] = string(x.Value)
 	}
-	if x, ok := flags["admintoken"]; ok && len(x.Value) != 0 {
-		conf.Options["admintoken"] = string(x.Value)
+	if x, ok := flags["admin-token"]; ok && len(x.Value) != 0 {
+		conf.Options["admin-token"] = string(x.Value)
 	}
-	if x, ok := flags["scimtoken"]; ok && len(x.Value) != 0 {
-		conf.Options["scimtoken"] = string(x.Value)
+	if x, ok := flags["scim-token"]; ok && len(x.Value) != 0 {
+		conf.Options["scim-token"] = string(x.Value)
 	}
 
 	// discovery flags

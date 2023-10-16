@@ -28,7 +28,7 @@ var Config = plugin.Provider{
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{
-					Long:    "admintoken",
+					Long:    "admin-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Provide atlassian admin api token (used for atlassian admin).",
@@ -46,13 +46,13 @@ var Config = plugin.Provider{
 					Desc:    "Provide atlassian user name (e.g. example@example.com).",
 				},
 				{
-					Long:    "usertoken",
+					Long:    "user-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Provide atlassian user api token (used for jira / confluence).",
 				},
 				{
-					Long:    "scimtoken",
+					Long:    "scim-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Provide atlassian scim api token (used for scim).",

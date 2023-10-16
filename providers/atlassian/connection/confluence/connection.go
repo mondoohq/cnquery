@@ -41,7 +41,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		return nil, errors.New("you need to provide atlassian username via ATLASSIAN_USER env")
 	}
 
-	token := conf.Options["usertoken"]
+	token := conf.Options["user-token"]
 	if token == "" {
 		token = os.Getenv("ATLASSIAN_USER_TOKEN")
 	}

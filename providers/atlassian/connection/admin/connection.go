@@ -25,7 +25,7 @@ type AdminConnection struct {
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
-	adminToken := conf.Options["admintoken"]
+	adminToken := conf.Options["admin-token"]
 	if adminToken == "" {
 		adminToken = os.Getenv("ATLASSIAN_ADMIN_TOKEN")
 	}
@@ -53,7 +53,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 }
 
 func (c *AdminConnection) Name() string {
-	return "atlassian"
+	return "atlassian-admin"
 }
 
 func (c *AdminConnection) ID() uint32 {
