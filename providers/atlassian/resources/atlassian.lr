@@ -180,7 +180,7 @@ atlassian.jira.project.property @defaults("id") {
 
 // Jira group
 atlassian.jira.group @defaults("name") { 
-  // GroupID
+  // Group ID
   id string
   // Group Name
   name string
@@ -194,7 +194,7 @@ atlassian.confluence {
 
 // Confluence user
 atlassian.confluence.user @defaults("name") { 
-  // AccountID
+  // Account ID
   id string
   // Name
   name string
