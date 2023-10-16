@@ -10,7 +10,7 @@ atlassian.scim {
 }
 
 // SCIM user
-atlassian.scim.user @defaults("id") {
+atlassian.scim.user @defaults("displayName") {
   // ID
   id string
   // Name
@@ -24,7 +24,7 @@ atlassian.scim.user @defaults("id") {
 }
 
 // SCIM group
-atlassian.scim.group @defaults("id") {
+atlassian.scim.group @defaults("name") {
   // ID
   id string
   // Name
@@ -32,7 +32,7 @@ atlassian.scim.group @defaults("id") {
 }
 
 // Organization
-atlassian.admin.organization @defaults("id") { 
+atlassian.admin.organization @defaults("name") { 
   // Organization ID
   id string
   // Name
@@ -48,7 +48,7 @@ atlassian.admin.organization @defaults("id") {
 }
 
 // Managed users
-atlassian.admin.organization.managedUsers {
+atlassian.admin.organization.managedUsers @defaults("name") {
   // ID
   id string
   // Name
@@ -62,7 +62,7 @@ atlassian.admin.organization.managedUsers {
 }
 
 // Policies (except authentication policies)
-atlassian.admin.organization.policy @defaults("id") {
+atlassian.admin.organization.policy @defaults("name") {
   // Policy ID
   id string
   // Policy type
@@ -76,7 +76,7 @@ atlassian.admin.organization.policy @defaults("id") {
 }
 
 // Domains
-atlassian.admin.organization.domain @defaults("id") {
+atlassian.admin.organization.domain @defaults("name") {
   // Domain ID
   id string
   // Name
@@ -124,7 +124,7 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
 }
 
 // Jira user
-atlassian.jira.user @defaults("id") { 
+atlassian.jira.user @defaults("name") { 
   // AccountID
   id string
   // Name
@@ -141,7 +141,7 @@ atlassian.jira.user @defaults("id") {
 
 
 // Jira application role
-atlassian.jira.applicatonRole @defaults("id") {
+atlassian.jira.applicatonRole @defaults("name") {
   // Role ID
   id string
   // Role Name
@@ -149,7 +149,7 @@ atlassian.jira.applicatonRole @defaults("id") {
 }
 
 // Jira project
-atlassian.jira.project @defaults("id") { 
+atlassian.jira.project @defaults("name") { 
   // Project ID
   id string
   // Project Name
@@ -179,7 +179,7 @@ atlassian.jira.project.property @defaults("id") {
 }
 
 // Jira group
-atlassian.jira.group @defaults("id") { 
+atlassian.jira.group @defaults("name") { 
   // GroupID
   id string
   // Group Name
@@ -193,7 +193,7 @@ atlassian.confluence {
 }
 
 // Confluence user
-atlassian.confluence.user @defaults("id") { 
+atlassian.confluence.user @defaults("name") { 
   // AccountID
   id string
   // Name
