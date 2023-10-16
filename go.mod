@@ -78,7 +78,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.11
-	go.mondoo.com/ranger-rpc v0.5.1
+	go.mondoo.com/ranger-rpc v0.5.2
 	go.opentelemetry.io/otel v1.19.0
 	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.17.0
@@ -116,7 +116,9 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
+	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -124,7 +126,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
-	github.com/smartystreets/goconvey v1.8.1 // indirect
+	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
