@@ -325,9 +325,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
 		}
-		if asset.Name == "" && len(asset.Connections) > 0 {
-			asset.Name = asset.Connections[0].Host
-		}
 
 	case SshConnectionType:
 		s.lastConnectionID++

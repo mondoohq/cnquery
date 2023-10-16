@@ -56,6 +56,9 @@ func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 			}
 		}
 	}
+	if name == "" {
+		name = doc.InstanceID
+	}
 	return Identity{
 		InstanceName: name,
 		InstanceID:   MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID),

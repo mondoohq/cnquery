@@ -10,15 +10,10 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/cnquery/v9/providers/os/config"
 	// os "go.mondoo.com/cnquery/v9/providers/os/provider"
-	osconf "go.mondoo.com/cnquery/v9/providers/os/config"
-	os "go.mondoo.com/cnquery/v9/providers/os/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
-
-//go:embed os.resources.json
-var osInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -31,16 +26,5 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
-
-	builtinProviders[osconf.Config.ID] = &builtinProvider{
-		Runtime: &RunningProvider{
-			Name:     osconf.Config.Name,
-			ID:       osconf.Config.ID,
-			Plugin:   os.Init(),
-			Schema:   MustLoadSchema("os", osInfo),
-			isClosed: false,
-		},
-		Config: &osconf.Config,
-	}
 
 }
