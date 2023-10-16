@@ -92,3 +92,7 @@ func (p *JiraConnection) Type() shared.ConnectionType {
 func (c *JiraConnection) Host() string {
 	return c.host
 }
+
+func (c *JiraConnection) ConnectionType() string {
+	return "jira"
+}

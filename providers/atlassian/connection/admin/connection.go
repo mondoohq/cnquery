@@ -76,3 +76,7 @@ func (c *AdminConnection) Type() shared.ConnectionType {
 func (c *AdminConnection) Host() string {
 	return c.host
 }
+
+func (c *AdminConnection) ConnectionType() string {
+	return "admin"
+}

@@ -4,8 +4,6 @@
 package connection
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/admin"

@@ -1,6 +1,10 @@
 package jira
 
-import "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+import (
+	"fmt"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+)
 
 func (a *JiraConnection) PlatformInfo() *inventory.Platform {
 	return GetPlatformForObject("atlassian")
@@ -21,4 +25,8 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 		Kind:    "api",
 		Runtime: "atlassian",
 	}
+}
+
+func (a *JiraConnection) PlatformID() string {
+	return "//platformid.api.mondoo.app/runtime/atlassian/jira/" + fmt.Sprint(a.id)
 }

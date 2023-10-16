@@ -1,6 +1,10 @@
 package admin
 
-import "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+import (
+	"fmt"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+)
 
 func (a *AdminConnection) PlatformInfo() *inventory.Platform {
 	return GetPlatformForObject("atlassian")
@@ -21,4 +25,8 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 		Kind:    "api",
 		Runtime: "atlassian",
 	}
+}
+
+func (a *AdminConnection) PlatformID() string {
+	return "//platformid.api.mondoo.app/runtime/atlassian/admin/" + fmt.Sprint(a.id)
 }

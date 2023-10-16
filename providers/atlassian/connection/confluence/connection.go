@@ -92,3 +92,7 @@ func (c *ConfluenceConnection) Type() shared.ConnectionType {
 func (c *ConfluenceConnection) Host() string {
 	return c.host
 }
+
+func (c *ConfluenceConnection) ConnectionType() string {
+	return "confluence"
+}

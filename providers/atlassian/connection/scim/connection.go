@@ -84,3 +84,7 @@ func (c *ScimConnection) Host() string {
 func (c *ScimConnection) Directory() string {
 	return c.Conf.Options["directory-id"]
 }
+
+func (c *ScimConnection) ConnectionType() string {
+	return "scim"
+}
