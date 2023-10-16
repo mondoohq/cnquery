@@ -17,14 +17,14 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 	if platformName != "atlassian-confluence" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian-confluence",
+			Title:   "Atlassian Confluence",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
 		Name:    "atlassian-confluence",
-		Title:   "atlassian-confluence",
+		Title:   "Atlassian Confluence",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}

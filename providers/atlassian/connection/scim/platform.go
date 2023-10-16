@@ -15,14 +15,14 @@ func GetPlatformForObject(platformName string) *inventory.Platform {
 	if platformName != "atlassian-scim" && platformName != "" {
 		return &inventory.Platform{
 			Name:    platformName,
-			Title:   "atlassian-scim",
+			Title:   "Atlassian SCIM",
 			Kind:    "api",
 			Runtime: "atlassian",
 		}
 	}
 	return &inventory.Platform{
 		Name:    "atlassian-scim",
-		Title:   "atlassian-scim",
+		Title:   "Atlassian SCIM",
 		Kind:    "api",
 		Runtime: "atlassian",
 	}
