@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/rs/zerolog v1.31.0
 	github.com/slack-go/slack v0.12.3
-	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
+	go.mondoo.com/cnquery/v9 v9.1.0
 )
 
 require (

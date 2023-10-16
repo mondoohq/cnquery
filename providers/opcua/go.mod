@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/gopcua/opcua v0.5.1
 	github.com/mozillazg/go-slugify v0.2.0
-	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
+	go.mondoo.com/cnquery/v9 v9.1.0
 )
 
 require (

@@ -7,31 +7,31 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	cloud.google.com/go/accessapproval v1.7.1
+	cloud.google.com/go/accessapproval v1.7.2
 	cloud.google.com/go/bigquery v1.56.0
-	cloud.google.com/go/compute v1.23.0
-	cloud.google.com/go/container v1.26.0
-	cloud.google.com/go/functions v1.15.1
-	cloud.google.com/go/iam v1.1.2
-	cloud.google.com/go/kms v1.15.2
+	cloud.google.com/go/compute v1.23.1
+	cloud.google.com/go/container v1.26.1
+	cloud.google.com/go/functions v1.15.2
+	cloud.google.com/go/iam v1.1.3
+	cloud.google.com/go/kms v1.15.3
 	cloud.google.com/go/logging v1.8.1
-	cloud.google.com/go/longrunning v0.5.1
-	cloud.google.com/go/monitoring v1.16.0
+	cloud.google.com/go/longrunning v0.5.2
+	cloud.google.com/go/monitoring v1.16.1
 	cloud.google.com/go/pubsub v1.33.0
-	cloud.google.com/go/recommender v1.11.0
-	cloud.google.com/go/run v1.3.0
-	cloud.google.com/go/serviceusage v1.8.0
+	cloud.google.com/go/recommender v1.11.1
+	cloud.google.com/go/run v1.3.1
+	cloud.google.com/go/serviceusage v1.8.1
 	github.com/aws/smithy-go v1.15.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.16.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
-	go.mondoo.com/ranger-rpc v0.5.1
+	go.mondoo.com/cnquery/v9 v9.1.0
+	go.mondoo.com/ranger-rpc v0.5.2
 	golang.org/x/oauth2 v0.13.0
-	google.golang.org/api v0.146.0
-	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c
+	google.golang.org/api v0.147.0
+	google.golang.org/genproto v0.0.0-20231012201019-e917dd12ba7a
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -42,7 +42,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
-	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.21.1 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
-	github.com/klauspost/compress v1.17.0 // indirect
+	github.com/klauspost/compress v1.17.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -141,8 +141,8 @@ require (
 	golang.org/x/tools v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231009173412-8bfb1ae86b6c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231009173412-8bfb1ae86b6c // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231012201019-e917dd12ba7a // indirect
 	google.golang.org/grpc v1.58.3 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

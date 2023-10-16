@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/packethost/packngo v0.30.0
 	github.com/rs/zerolog v1.31.0
-	go.mondoo.com/cnquery/v9 v9.0.0-00010101000000-000000000000
+	go.mondoo.com/cnquery/v9 v9.1.0
 )
 
 require (
