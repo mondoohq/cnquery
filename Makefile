@@ -412,6 +412,11 @@ lr/docs/markdown: providers/lr
 		--description "The Arista EOS resource pack lets you use MQL to query and assess the security of your Arista EOS network devices." \
 		--docs-file providers/arista/resources/arista.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/arista-pack
+	./lr markdown providers/atlassian/resources/atlassian.lr \
+		--pack-name "Atlassian" \
+		--description "The Atlassian resource pack lets you use MQL to query and assess the security of your Atlassian Cloud services." \
+		--docs-file providers/atlassian/resources/atlassian.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/atlassian-pack
 	./lr markdown providers/aws/resources/aws.lr \
     --pack-name "Amazon Web Services (AWS)" \
 		--description "The Amazon Web Services (AWS) resource pack lets you use MQL to query and assess the security of your AWS cloud services." \
