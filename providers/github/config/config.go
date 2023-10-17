@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "github",
 			Use:       "github",
-			Short:     "GitHub",
+			Short:     "a GitHub organization or repository",
 			MinArgs:   2,
 			MaxArgs:   2,
 			Discovery: []string{},

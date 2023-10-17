@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:  "google-workspace",
 			Use:   "google-workspace [--credentials-path <credentials-path>] [--customer-id <customer-id>] [--impersonated-user-email <impersonated-user-email>]",
-			Short: "Google Workspace",
+			Short: "a Google Workspace account",
 			Long: `google-workspace is designed for querying resources within for a Google Workspace domain.
 
 The provider requires three flags to be set:

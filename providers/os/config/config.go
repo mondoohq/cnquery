@@ -200,7 +200,7 @@ var Config = plugin.Provider{
 		{
 			Name:    "docker",
 			Use:     "docker",
-			Short:   "a running docker or docker image",
+			Short:   "a running Docker container or Docker image",
 			MinArgs: 1,
 			MaxArgs: 2,
 			Discovery: []string{
@@ -234,7 +234,7 @@ var Config = plugin.Provider{
 			Name:    "filesystem",
 			Aliases: []string{"fs"},
 			Use:     "filesystem [flags]",
-			Short:   "a mounted file system target.",
+			Short:   "a mounted file system target",
 			MinArgs: 0,
 			MaxArgs: 0,
 			Flags: []plugin.Flag{

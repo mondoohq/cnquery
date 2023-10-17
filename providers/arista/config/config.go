@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "arista",
 			Use:       "arista user@host",
-			Short:     "Arista EOS",
+			Short:     "an Arista EOS device",
 			Discovery: []string{},
 			MinArgs:   1,
 			MaxArgs:   1,
