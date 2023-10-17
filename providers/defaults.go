@@ -59,7 +59,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "atlassian",
-					Short: "atlassian cloud",
+					Short: "Atlassian Cloud",
 				},
 			},
 		},
