@@ -196,7 +196,7 @@ private azure.subscription.networkService {
   applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
 }
 
-// Azure Network Virtual Network Gateway
+// Azure Virtual Network (VNet) Gateway
 azure.subscription.networkService.virtualNetworkGateway @defaults("id name location") {
   // Virtual Network Gateway ID
   id string
@@ -388,7 +388,7 @@ azure.subscription.networkService.firewallPolicy @defaults("id name location") {
   firewalls() []azure.subscription.networkService.firewall
 }
 
-// Azure Network Virtual Network Gateway IP Configuration
+// Azure Virtual Network (VNet) Gateway IP Configuration
 private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaults("id name") {
   // Virtual Network Gateway IP Configuration id 
   id string
@@ -404,7 +404,7 @@ private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaul
   publicIpAddress() azure.subscription.networkService.ipAddress
 }
 
-// Azure Network Virtual Network Gateway Connection
+// Azure Virtual Network (VNet) Gateway Connection
 private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name") {
   // Virtual Network Gateway Connection id 
   id string
@@ -490,7 +490,7 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
 }
 
-// Azure Network Virtual Network
+// Azure Virtual Network
 azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   // Virtual Network id
   id string
