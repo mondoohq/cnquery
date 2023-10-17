@@ -23,9 +23,7 @@ func ProcessAssetCandidates(runtime *Runtime, connectRes *pp.ConnectRes, upstrea
 	}
 	log.Debug().Msgf("resolved %d assets", len(assetCandidates))
 
-	if err := detectAssets(runtime, assetCandidates, upstreamConfig); err != nil {
-		return nil, err
-	}
+	detectAssets(runtime, assetCandidates, upstreamConfig)
 
 	if platformID != "" {
 		res, err := filterAssetByPlatformID(assetCandidates, platformID)
@@ -39,7 +37,7 @@ func ProcessAssetCandidates(runtime *Runtime, connectRes *pp.ConnectRes, upstrea
 }
 
 // detectAssets connects to all assets that do not have a platform ID yet
-func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstreamConfig *upstream.UpstreamConfig) error {
+func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstreamConfig *upstream.UpstreamConfig) {
 	for i := range assetCandidates {
 		asset := assetCandidates[i]
 		// If the assets have platform IDs, then we have already connected to them via the
@@ -50,7 +48,9 @@ func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstream
 
 		// Make sure the provider for the asset is present
 		if err := runtime.DetectProvider(asset); err != nil {
-			return err
+			log.Error().Err(err).Str("asset", asset.Name).Msg("could not detect provider for asset")
+			asset.State = inventory.State_STATE_ERROR
+			continue
 		}
 
 		err := runtime.Connect(&pp.ConnectReq{
@@ -59,12 +59,13 @@ func detectAssets(runtime *Runtime, assetCandidates []*inventory.Asset, upstream
 			Upstream: upstreamConfig,
 		})
 		if err != nil {
+			log.Error().Err(err).Str("asset", asset.Name).Msg("could not connect to asset")
+			asset.State = inventory.State_STATE_ERROR
 			continue
 		}
 		// Use the updated asset
 		assetCandidates[i] = runtime.Provider.Connection.Asset
 	}
-	return nil
 }
 
 func filterAssetByPlatformID(assetList []*inventory.Asset, selectionID string) (*inventory.Asset, error) {

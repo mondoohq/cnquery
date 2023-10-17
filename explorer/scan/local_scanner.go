@@ -187,7 +187,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		asset := assetList[i]
 		resolvedAsset, err := im.ResolveAsset(asset)
 		if err != nil {
-			return nil, false, err
+			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to resolve asset")
+			continue
 		}
 
 		runtime, err := providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
@@ -202,7 +203,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			Asset:    resolvedAsset,
 			Upstream: upstream,
 		}); err != nil {
-			log.Error().Err(err).Msg("unable to connect to asset")
+			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to connect to asset")
 			continue
 		}
 
@@ -215,18 +216,15 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, false, err
 		}
 		for i := range processedAssets {
+			if processedAssets[i].State == inventory.State_STATE_ERROR {
+				// we couldn't connect to the asset or something else happened, so skip it for further steps
+				continue
+			}
 			assetCandidates = append(assetCandidates, &assetWithRuntime{
 				asset:   processedAssets[i],
 				runtime: runtime,
 			})
 		}
-		// TODO: we want to keep better track of errors, since there may be
-		// multiple assets coming in. It's annoying to abort the scan if we get one
-		// error at this stage.
-
-		// we grab the asset from the connection, because it contains all the
-		// detected metadata (and IDs)
-		// assets = append(assets, runtime.Provider.Connection.Asset)
 	}
 
 	// for each asset candidate, we initialize a new runtime and connect to it.
