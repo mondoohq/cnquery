@@ -9,7 +9,6 @@ cavium
 cdn
 certificatechains
 cmek
-confluence
 cryptokey
 customresources
 datapath
@@ -37,7 +36,6 @@ mfs
 mgroup
 Mpim
 nodepool
-nosniff
 nullgroup
 opcplc
 Pids
@@ -46,7 +44,6 @@ pushconfig
 querypack
 resourcegroup
 Sas
-SAMEORIGIN
 scim
 serviceprincipals
 Snat
