@@ -22,6 +22,10 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: gomod
+    directory: /providers/atlassian/
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
     directory: /providers/okta/
     schedule:
       interval: weekly
