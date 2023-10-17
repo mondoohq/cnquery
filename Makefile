@@ -158,6 +158,10 @@ providers/proto:
 providers/config:
 	go run ./providers-sdk/v1/util/configure/configure.go -f providers.yaml -o providers/builtin_dev.go
 
+.PHONY: providers/defaults
+providers/defaults:
+	go run ./providers-sdk/v1/util/defaults/defaults.go -o providers/defaults.go
+
 .PHONY: providers/lr
 providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
