@@ -84,6 +84,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Override option for EBS scanning that tells it to not create the snapshot or volume",
 				},
+				{
+					Long:    "filters",
+					Type:    plugin.FlagType_KeyValue,
+					Default: "",
+					Desc:    "Filter options",
+				},
 			},
 		},
 	},

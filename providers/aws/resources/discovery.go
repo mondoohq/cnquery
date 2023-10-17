@@ -89,7 +89,93 @@ var AllAPIResources = []string{
 	DiscoverySagemakerNotebookInstances,
 }
 
-func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
+func contains(sl []string, s string) bool {
+	for i := range sl {
+		if sl[i] == s {
+			return true
+		}
+	}
+	return false
+}
+
+func containsInterfaceSlice(sl []interface{}, s string) bool {
+	for i := range sl {
+		if sl[i].(string) == s {
+			return true
+		}
+	}
+	return false
+}
+
+func instanceMatchesFilters(instance *mqlAwsEc2Instance, filters connection.DiscoveryFilters) bool {
+	matches := true
+	f := filters.Ec2DiscoveryFilters
+	if len(f.Regions) > 0 {
+		if !contains(f.Regions, instance.Region.Data) {
+			matches = false
+		}
+	}
+	if len(f.InstanceIds) > 0 {
+		if !contains(f.InstanceIds, instance.InstanceId.Data) {
+			matches = false
+		}
+	}
+	if len(f.Tags) > 0 {
+		for k, v := range f.Tags {
+			if instance.Tags.Data[k] == nil {
+				return false
+			}
+			if instance.Tags.Data[k].(string) != v {
+				return false
+			}
+		}
+	}
+	return matches
+}
+
+func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.DiscoveryFilters) bool {
+	f := filters.EcrDiscoveryFilters
+	if len(f.Tags) > 0 {
+		for i := range f.Tags {
+			t := f.Tags[i]
+			if !containsInterfaceSlice(image.Tags.Data, t) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func containerMatchesFilters(container *mqlAwsEcsContainer, filters connection.DiscoveryFilters) bool {
+	f := filters.EcsDiscoveryFilters
+	if f.OnlyRunningContainers {
+		if container.Status.Data != "RUNNING" {
+			return false
+		}
+	}
+	return true
+}
+
+func shouldScanEcsContainerInstances(filters connection.DiscoveryFilters) bool {
+	return filters.EcsDiscoveryFilters.DiscoverInstances
+}
+
+func shouldScanEcsContainerImages(filters connection.DiscoveryFilters) bool {
+	return filters.EcsDiscoveryFilters.DiscoverImages
+}
+
+func discoveredAssetMatchesGeneralFilters(asset *inventory.Asset, filters connection.GeneralResourceDiscoveryFilters) bool {
+	if len(filters.Tags) > 0 {
+		for k, v := range filters.Tags {
+			if asset.Labels[k] != v {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
@@ -106,10 +192,19 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	targets := handleTargets(conn.Conf.Discover.Targets)
 	for i := range targets {
 		target := targets[i]
-		list, err := discover(runtime, awsAccount, target)
+		list, err := discover(runtime, awsAccount, target, filters)
 		if err != nil {
 			log.Error().Err(err).Msg("error during discovery")
 			continue
+		}
+		if len(filters.GeneralDiscoveryFilters.Tags) > 0 {
+			newList := []*inventory.Asset{}
+			for i := range list {
+				if discoveredAssetMatchesGeneralFilters(list[i], filters.GeneralDiscoveryFilters) {
+					newList = append(newList, list[i])
+				}
+			}
+			list = newList
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
@@ -133,7 +228,10 @@ func handleTargets(targets []string) []string {
 	return targets
 }
 
-func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string) ([]*inventory.Asset, error) {
+// for now we have to post proces the filters
+// more ideally, we should pass the filters in when discovering
+// so that we dont unnecesarily discover assets we will later discard
+func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string, filters connection.DiscoveryFilters) ([]*inventory.Asset, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	accountId := trimAwsAccountIdToJustId(awsAccount.Id.Data)
 	assetList := []*inventory.Asset{}
@@ -156,7 +254,11 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
+			if !instanceMatchesFilters(instance, filters) {
+				continue
+			}
 			assetList = append(assetList, addConnectionInfoToEc2Asset(instance, accountId, conn))
+
 		}
 	case DiscoverySSMInstances:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
@@ -173,6 +275,9 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range ins.Data {
 			instance := ins.Data[i].(*mqlAwsEc2Instance)
+			if !instanceMatchesFilters(instance, filters) {
+				continue
+			}
 			if instance.GetSsm() != nil {
 				if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil && s == "Online" {
 					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn))
@@ -210,6 +315,9 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range images.Data {
 			a := images.Data[i].(*mqlAwsEcrImage)
+			if !imageMatchesFilters(a, filters) {
+				continue
+			}
 			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn))
 		}
 	case DiscoveryECS:
@@ -227,18 +335,23 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string)
 
 		for i := range containers.Data {
 			c := containers.Data[i].(*mqlAwsEcsContainer)
+			if !containerMatchesFilters(c, filters) {
+				continue
+			}
 			assetList = append(assetList, addConnectionInfoToECSContainerAsset(c, accountId, conn))
 		}
-		containerInst := ecs.GetContainerInstances()
-		if containerInst == nil {
-			return assetList, nil
-		}
+		if shouldScanEcsContainerInstances(filters) {
+			containerInst := ecs.GetContainerInstances()
+			if containerInst == nil {
+				return assetList, nil
+			}
 
-		for i := range containerInst.Data {
-			if a, ok := containerInst.Data[i].(*mqlAwsEc2Instance); ok {
-				assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId, conn))
-			} else if b, ok := containerInst.Data[i].(*mqlAwsEcsInstance); ok {
-				assetList = append(assetList, addConnectionInfoToECSContainerInstanceAsset(b, accountId, conn))
+			for i := range containerInst.Data {
+				if a, ok := containerInst.Data[i].(*mqlAwsEc2Instance); ok {
+					assetList = append(assetList, addConnectionInfoToEc2Asset(a, accountId, conn))
+				} else if b, ok := containerInst.Data[i].(*mqlAwsEcsInstance); ok {
+					assetList = append(assetList, addConnectionInfoToECSContainerInstanceAsset(b, accountId, conn))
+				}
 			}
 		}
 	// case DiscoveryECSContainersAPI:

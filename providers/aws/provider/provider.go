@@ -6,6 +6,7 @@ package provider
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
@@ -57,8 +58,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			discoverTargets = append(discoverTargets, entry)
 		}
 	}
+	filterOpts := parseFlagsToFiltersOpts(flags)
 
-	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets}
+	inventoryConfig.Discover = &inventory.Discovery{Targets: discoverTargets, Filter: filterOpts}
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{inventoryConfig},
 		Options:     opts,
@@ -77,6 +79,26 @@ func handleAwsEc2Subcommands(args []string, opts map[string]string) *inventory.A
 		return resources.EbsConnectAsset(args, opts)
 	}
 	return asset
+}
+
+func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
+	o := make(map[string]string, 0)
+
+	if x, ok := m["filters"]; ok && len(x.Map) != 0 {
+		for k, v := range x.Map {
+			if strings.Contains(k, "tag:") {
+				o[k] = string(v.Value)
+			}
+			if k == "instance-id" {
+				o[k] = string(v.Value)
+			}
+			if strings.Contains(k, ":region") {
+				o[k] = string(v.Value)
+			}
+		}
+	}
+
+	return o
 }
 
 func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
@@ -300,5 +322,5 @@ func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
 	}
 
-	return resources.Discover(runtime)
+	return resources.Discover(runtime, conn.Filters)
 }
