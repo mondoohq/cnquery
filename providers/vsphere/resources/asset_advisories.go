@@ -1,39 +1,29 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package resources
 
 import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/logger"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
-	"go.mondoo.com/ranger-rpc"
-	"net/http"
 )
 
-func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugin, httpClient *http.Client) (*mvd.AdvisoryScannerClient, error) {
-	sa, err := mvd.NewAdvisoryScannerClient(mondooapi, httpClient)
-	if err != nil {
-		return nil, err
-	}
+// fetches the vulnerability report and returns the full report
+func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
+	runtime := p.MqlRuntime
 
-	for i := range plugins {
-		sa.AddPlugin(plugins[i])
-	}
-	return sa, nil
-}
-
-func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
 	}
 
-	// get new advisory report
-	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	// get new mvd client
+	scannerClient, err := mvd.NewAdvisoryScannerClient(mcc.ApiEndpoint, mcc.HttpClient, mcc.Plugins...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +33,7 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	kernelVersion := ""
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform:      convertPlatform2VulnPlatform(conn.Asset().Platform),
+		Platform:      mvd.MvdPlatform(conn.Asset().Platform),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}
@@ -56,9 +46,4 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	}
 
 	return convert.JsonToDict(report)
-}
-
-// fetches the vulnerability report and returns the full report
-func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
-	return fetchVulnReport(p.MqlRuntime)
 }

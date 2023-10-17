@@ -21,16 +21,6 @@ extend asset {
   vulnerabilityReport() dict
 }
 
-// Information about the assets platform end-of-life.
-asset.eol @defaults("date") {
-  // Documentation URL
-  docsUrl string
-  // Product URL
-  productUrl string
-  // End-of-Life date
-  date time
-}
-
 // Returns platform EOL date information.
 private mondoo.eol {
   // Product Name
@@ -39,6 +29,11 @@ private mondoo.eol {
   version string
   // End-of-Life date for the product
   date() time
+}
+
+platform {
+  // Full advisory & vulnerability report
+  vulnerabilityReport() dict
 }
 
 // Information about the platform end-of-life. Deprecated in favor of `asset.eol`. This resource will be removed in version 10.0.
@@ -50,11 +45,6 @@ platform.eol @defaults("date") {
   productUrl string
   // End-of-Life date
   date time
-}
-
-platform {
-  // Full advisory & vulnerability report
-  vulnerabilityReport() dict
 }
 
 // Returns all platform/package advisories

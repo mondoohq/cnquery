@@ -18,6 +18,12 @@ resources:
       version: {}
       vulnerabilityReport: {}
     min_mondoo_version: 6.13.0
+  asset.eol:
+    fields:
+      date: {}
+      docsUrl: {}
+      productUrl: {}
+    min_mondoo_version: latest
   audit.advisory:
     fields:
       description: {}

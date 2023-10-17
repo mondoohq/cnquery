@@ -6,12 +6,6 @@ resources:
     fields:
       vulnerabilityReport: {}
     min_mondoo_version: latest
-  asset.eol:
-    fields:
-      date: {}
-      docsUrl: {}
-      productUrl: {}
-    min_mondoo_version: latest
   esxi:
     docs:
       desc: |

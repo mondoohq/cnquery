@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 )
 
+// FIXME: DEPRECATED, update in v10.0 vv
 func (s *mqlMondooEol) id() (string, error) {
 	return "product:" + s.Product.Data + ":" + s.Version.Data, nil
 }
@@ -21,14 +22,13 @@ func (s *mqlMondooEol) date() (*time.Time, error) {
 	name := s.Product.Data
 	version := s.Version.Data
 
-	upstream := s.MqlRuntime.Upstream
-	if upstream == nil || upstream.ApiEndpoint == "" {
+	mcc := s.MqlRuntime.Upstream
+	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
 	}
 
-	// get new advisory report
-	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(upstream.ApiEndpoint, upstream.Plugins, upstream.HttpClient)
+	// get new mvd client
+	scannerClient, err := mvd.NewAdvisoryScannerClient(mcc.ApiEndpoint, mcc.HttpClient, mcc.Plugins...)
 	if err != nil {
 		return nil, err
 	}
@@ -59,3 +59,5 @@ func (s *mqlMondooEol) date() (*time.Time, error) {
 
 	return eolDate, nil
 }
+
+// ^^

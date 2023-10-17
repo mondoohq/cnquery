@@ -263,12 +263,3 @@ extend asset {
   vulnerabilityReport() dict
 }
 
-// Information about the assets platform end-of-life.
-asset.eol @defaults("date") {
-  // Documentation URL
-  docsUrl string
-  // Product URL
-  productUrl string
-  // End-of-Life date
-  date time
-}
