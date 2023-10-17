@@ -81,6 +81,23 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
+	if conf.DoInfo {
+		ast, err := parser.Parse(mqlc.Dedent(conf.Command))
+		if ast == nil {
+			return errors.Wrap(err, "failed to parse command")
+		}
+
+		conf := mqlc.NewConfig(runtime.Schema(), conf.Features)
+		conf.EnableStats()
+		_, err = mqlc.CompileAST(ast, nil, conf)
+		if err != nil {
+			return errors.Wrap(err, "failed to compile command")
+		}
+
+		out.WriteString(printer.DefaultPrinter.CompilerStats(conf.Stats))
+		return nil
+	}
+
 	var upstreamConfig *upstream.UpstreamConfig
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
