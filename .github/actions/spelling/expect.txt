@@ -13,6 +13,7 @@ cryptokey
 customresources
 datapath
 Ddos
+DIRECTORYID
 dfw
 dlq
 ekm
