@@ -19,7 +19,7 @@ var Config = plugin.Provider{
 		{
 			Name:    "aws",
 			Use:     "aws",
-			Short:   "aws account",
+			Short:   "AWS account",
 			MinArgs: 0,
 			MaxArgs: 4,
 			Discovery: []string{

@@ -200,7 +200,7 @@ var Config = plugin.Provider{
 		{
 			Name:    "docker",
 			Use:     "docker",
-			Short:   "a running docker or docker image",
+			Short:   "a running Docker container or Docker image",
 			MinArgs: 1,
 			MaxArgs: 2,
 			Discovery: []string{
