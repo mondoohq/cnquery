@@ -113,17 +113,24 @@ func (c *GitLabConnection) Group() (*gitlab.Group, error) {
 	if c.group != nil {
 		return c.group, nil
 	}
-	if c.groupName == "" {
+	if c.groupName == "" && c.groupID == "" {
 		return nil, errors.New("cannot look up gitlab group, no group name defined")
 	}
+	gid := c.groupID
+	if gid == "" {
+		gid = c.groupName
+	}
+	log.Debug().Str("id", gid).Msgf("finding group")
 
-	// if group name has a slash, we know its a subgroup
-	if names := strings.Split(c.groupName, "/"); len(names) > 1 {
-		return c.findSubgroup(names[0], names[1])
+	if c.groupID == "" {
+		// if group name has a slash, we know its a subgroup
+		if names := strings.Split(c.groupName, "/"); len(names) > 1 {
+			return c.findSubgroup(names[0], names[1])
+		}
 	}
 
 	var err error
-	c.group, _, err = c.Client().Groups.GetGroup(c.groupName, nil)
+	c.group, _, err = c.Client().Groups.GetGroup(gid, nil)
 	return c.group, err
 }
 
@@ -179,6 +186,8 @@ func (c *GitLabConnection) Project() (*gitlab.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Debug().Interface("id", pid).Msgf("finding project")
+
 	c.project, _, err = c.Client().Projects.GetProject(pid, nil)
 	return c.project, err
 }
