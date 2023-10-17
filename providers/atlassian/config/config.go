@@ -21,9 +21,28 @@ var Config = plugin.Provider{
 	},
 	Connectors: []plugin.Connector{
 		{
-			Name:      "atlassian",
-			Use:       "atlassian",
-			Short:     "Atlassian",
+			Name:  "atlassian",
+			Use:   "atlassian",
+			Short: "Atlassian",
+			Long: `atlassian is designed for querying resources within Atlassian Cloud, including Jira, Confluence, and SCIM.
+
+Available Commands:
+  admin                     Specifies the Atlassian admin to interact with.
+  jira                      Specifies the Jira instance to interact with.
+  confluence                Specifies the Confluence instance to interact with.
+  scim                      Specifies the SCIM instance to interact with.
+
+Examples: 
+  cnquery shell atlassian admin --admin-token <token>
+  cnquery shell atlassian jira --host <host> --user <user> --user-token <token>
+  cnquery shell atlassian confluence --host <host> --user <user> --user-token <token>
+  cnquery shell atlassian scim <directory-id> --scim-token <token>
+
+If the ATLASSIAN_ADMIN_TOKEN environment variable is set, the admin-token flag is not required. If the ATLASSIAN_USER, 
+ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables are set, the user, host, and user-token flags are not required.
+
+For scim, you receive both the token and the directory-id from atlassian when you setup an identity provider.
+`,
 			MaxArgs:   2,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
