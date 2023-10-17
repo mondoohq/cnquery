@@ -84,7 +84,7 @@ func (a *mqlMicrosoftUser) settings() (interface{}, error) {
 	}
 	ctx := context.Background()
 	id := a.Id.Data
-	userSettings, err := graphClient.Users().ByUserIdString(id).Settings().Get(ctx, &users.ItemSettingsRequestBuilderGetRequestConfiguration{})
+	userSettings, err := graphClient.Users().ByUserId(id).Settings().Get(ctx, &users.ItemSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, transformError(err)
 	}
