@@ -319,12 +319,12 @@ func (x *mqlHttpHeaderXssProtection) id() (string, error) {
 
 func (x *mqlHttpHeader) xContentTypeOptions() (string, error) {
 	params, ok := x.Params.Data["X-Content-Type-Options"]
-	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
+	return parseSingleHeaderValue(params, ok, &x.XContentTypeOptions)
 }
 
 func (x *mqlHttpHeader) referrerPolicy() (string, error) {
 	params, ok := x.Params.Data["Referrer-Policy"]
-	return parseSingleHeaderValue(params, ok, &x.XFrameOptions)
+	return parseSingleHeaderValue(params, ok, &x.ReferrerPolicy)
 }
 
 func (x *mqlHttpHeader) contentType() (*mqlHttpHeaderContentType, error) {
