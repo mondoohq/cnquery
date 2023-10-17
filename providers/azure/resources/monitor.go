@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -265,20 +266,30 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 	return res, nil
 }
 
-// TODO: we should check how the plugin generic struct works when the value isn't set, can we rely on default value
-// or need to use something else? goes for both storageAccount implementations
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+	if a.StorageAccountId.State&plugin.StateIsNull != 0 {
+		return nil, errors.New("diagnostic settings has no storage account")
+	}
+	if a.StorageAccountId.Error != nil {
+		return nil, a.StorageAccountId.Error
+	}
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
-		return nil, nil
+		return nil, errors.New("diagnostic settings has no storage account")
 	}
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
+	if a.StorageAccountId.State&plugin.StateIsNull != 0 {
+		return nil, errors.New("diagnostic settings has no storage account")
+	}
+	if a.StorageAccountId.Error != nil {
+		return nil, a.StorageAccountId.Error
+	}
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
-		return nil, nil
+		return nil, errors.New("diagnostic settings has no storage account")
 	}
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
