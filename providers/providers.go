@@ -6,7 +6,6 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
-	"go.mondoo.com/ranger-rpc"
 	"io"
 	"net/http"
 	"os"
@@ -23,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/config"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/exp/slices"
 )
 
@@ -158,6 +158,19 @@ func ListAll() ([]*Provider, error) {
 
 	CachedProviders = res
 	return res, nil
+}
+
+// AddMissingDefaults to a list of existing providers. A system may have
+// a set of providers already installed. This command cycles through
+// the list of default providers and adds them to the list of existing
+// providers to create a full list of possible providers (existing + potential).
+// Useful when generating the CLI without having all providers installed.
+func AddMissingDefaults(existing Providers) {
+	for _, v := range DefaultProviders {
+		if _, ok := existing[v.ID]; !ok {
+			existing[v.ID] = v
+		}
+	}
 }
 
 // EnsureProvider makes sure that a given provider exists and returns it.
