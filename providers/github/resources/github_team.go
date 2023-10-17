@@ -108,7 +108,7 @@ func (g *mqlGithubTeam) members() ([]interface{}, error) {
 	for i := range allMembers {
 		member := allMembers[i]
 
-		r, err := CreateResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(member.ID),
 			"login": llx.StringDataPtr(member.Login),
 		})
