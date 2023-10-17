@@ -23,7 +23,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "atlassian",
 			Use:       "atlassian",
-			Short:     "Atlassian Cloud",
+			Short:     "Atlassian",
 			MaxArgs:   2,
 			Discovery: []string{},
 			Flags: []plugin.Flag{

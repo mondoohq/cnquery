@@ -19,7 +19,7 @@ var Config = plugin.Provider{
 			Name:    "k8s",
 			Aliases: []string{"kubernetes"},
 			Use:     "k8s (optional MANIFEST path)",
-			Short:   "a Kubernetes cluster or local manifest file(s).",
+			Short:   "a Kubernetes cluster or local manifest file(s)",
 			MinArgs: 0,
 			MaxArgs: 1,
 			Discovery: []string{

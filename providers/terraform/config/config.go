@@ -23,7 +23,7 @@ var Config = plugin.Provider{
 			Name:      "terraform",
 			Aliases:   []string{},
 			Use:       "terraform PATH",
-			Short:     "a terraform hcl file or directory.",
+			Short:     "a Terraform HCL file or directory.",
 			MinArgs:   1,
 			MaxArgs:   2,
 			Discovery: []string{},

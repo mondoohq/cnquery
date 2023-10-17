@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "ms365",
 			Use:       "ms365",
-			Short:     "ms365",
+			Short:     "Microsoft 365 (MS365)",
 			MinArgs:   0,
 			MaxArgs:   5,
 			Discovery: []string{},

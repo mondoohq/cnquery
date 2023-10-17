@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "slack",
 			Use:       "slack",
-			Short:     "slack team",
+			Short:     "a Slack team",
 			MinArgs:   0,
 			MaxArgs:   0,
 			Discovery: []string{},

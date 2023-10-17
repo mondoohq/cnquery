@@ -22,7 +22,7 @@ var Config = plugin.Provider{
 		{
 			Name:    "gcp",
 			Use:     "gcp",
-			Short:   "GCP Cloud",
+			Short:   "Google Cloud (GCP)",
 			MaxArgs: 2,
 			Discovery: []string{
 				resources.DiscoveryAll,
