@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -82,7 +83,9 @@ func (g *mqlGithubTeam) members() ([]interface{}, error) {
 		return nil, g.Organization.Error
 	}
 	org := g.Organization.Data
-
+	if org == nil {
+		return nil, errors.New("no organization specified")
+	}
 	if org.Id.Error != nil {
 		return nil, org.Id.Error
 	}
