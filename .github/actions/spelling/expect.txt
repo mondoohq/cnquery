@@ -15,6 +15,7 @@ customresources
 datapath
 Ddos
 dfw
+DIRECTORYID
 dlq
 ekm
 elbv
