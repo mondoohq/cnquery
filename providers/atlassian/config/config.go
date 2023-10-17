@@ -24,23 +24,24 @@ var Config = plugin.Provider{
 			Name:  "atlassian",
 			Use:   "atlassian",
 			Short: "Atlassian",
-			Long: `atlassian is designed for querying resources within Atlassian Cloud.
+			Long: `atlassian is designed for querying resources within Atlassian Cloud, including Jira, Confluence, and SCIM.
 
-The provider offers 4 subcommands:
-1. Admin
-"cnquery shell atlassian admin" requires either the env variable "ATLASSIAN_ADMIN_TOKEN" or the --admin-token flag to be set
+Available Commands:
+  admin                     Specifies the Atlassian admin to interact with.
+  jira                      Specifies the Jira instance to interact with.
+  confluence                Specifies the Confluence instance to interact with.
+  scim                      Specifies the SCIM instance to interact with.
 
-2. Jira
-"cnquery shell atlassian jira" requires either the env variables "ATLASSIAN_USER", "ATLASSIAN_HOST" and "ATLASSIAN_USER_TOKEN" or 
-the flags --user, --host, --user-token to be set
+Examples: 
+  cnquery shell atlassian admin --admin-token <token>
+  cnquery shell atlassian jira --host <host> --user <user> --user-token <token>
+  cnquery shell atlassian confluence --host <host> --user <user> --user-token <token>
+  cnquery shell atlassian scim <directory-id> --scim-token <token>
 
-3. Confluence
-"cnquery shell atlassian confluence" requires either the env variables "ATLASSIAN_USER", "ATLASSIAN_HOST" and "ATLASSIAN_USER_TOKEN" or 
-the flags --user, --host, --user-token to be set
+If the ATLASSIAN_ADMIN_TOKEN environment variable is set, the admin-token flag is not required. If the ATLASSIAN_USER, 
+ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables are set, the user, host, and user-token flags are not required.
 
-4. SCIM
-"cnquery shell atlassian scim DIRECTORYID" requires a directory-id and either the env variable "ATLASSIAN_SCIM_TOKEN" or the --scim-token flag to be set
-You receiv both the token and the directory-id from atlassian when you setup an identity provider.
+For scim, you receive both the token and the directory-id from atlassian when you setup an identity provider.
 `,
 			MaxArgs:   2,
 			Discovery: []string{},
