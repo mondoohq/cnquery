@@ -2,6 +2,16 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 resources:
+  asset:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
+  asset.eol:
+    fields:
+      date: {}
+      docsUrl: {}
+      productUrl: {}
+    min_mondoo_version: latest
   esxi:
     docs:
       desc: |
@@ -105,6 +115,16 @@ resources:
       name:
       - vmware-esxi
       - vmware-vsphere
+  platform:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
+  platform.eol:
+    fields:
+      date: {}
+      docsUrl: {}
+      productUrl: {}
+    min_mondoo_version: latest
   vsphere:
     fields:
       about: {}
