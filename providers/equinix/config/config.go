@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:  "equinix",
 			Use:   "equinix [org <org id>] [project <project-id>] [--token <token>]",
-			Short: "Equinix Metal",
+			Short: "an Equinix Metal organization",
 			Long: `equinix is designed for querying resources within a specified 
 project or organization on the Equinix Metal platform.
 

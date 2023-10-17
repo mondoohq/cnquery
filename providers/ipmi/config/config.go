@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:  "ipmi",
 			Use:   "ipmi user@host",
-			Short: "Intelligent Platform Management Interface (IPMI)",
+			Short: "an IPMI interface",
 			Long: `ipmi is designed for querying resources via the Intelligent Platform Management Interface (IPMI).
 IPMI provides management and monitoring capabilities  independently of the host system's CPU,
 firmware (BIOS or UEFI), and operating system.

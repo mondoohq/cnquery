@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:  "vcd",
 			Use:   "vcd [--user <user>] [--host <host>] [--organization <organization>] [--ask-pass] [--password <password>]",
-			Short: "VMware Cloud Director",
+			Short: "a VMware Cloud Director installation",
 			Long: `vcd is designed for querying resources within for a VMware Cloud Director environment. VMware's 
 vCloud Director (vCD), a platform that facilitates the operation and management of virtual resources within
 a multi-tenant cloud environment.

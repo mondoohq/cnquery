@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:  "opcua",
 			Use:   "opcua [--endpoint <endpoint>]",
-			Short: "OPC UA",
+			Short: "an OPC UA device",
 			Long: `opcua is designed for querying resources on an OPC UA (Open Platform 
 Communications Unified Architecture) server, a protocol facilitating machine-to-machine communications within 
 the realm of industrial automation.

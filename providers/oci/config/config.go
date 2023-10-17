@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "oci",
 			Use:       "oci",
-			Short:     "Oracle Cloud Infrastructure (OCI)",
+			Short:     "an Oracle Cloud Infrastructure tenancy",
 			Discovery: []string{},
 			Flags: []plugin.Flag{
 				{

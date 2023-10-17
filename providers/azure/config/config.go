@@ -18,7 +18,7 @@ var Config = plugin.Provider{
 		{
 			Name:    "azure",
 			Use:     "azure",
-			Short:   "Azure subscription",
+			Short:   "an Azure subscription",
 			MinArgs: 0,
 			MaxArgs: 8,
 			Discovery: []string{
