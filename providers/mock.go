@@ -17,7 +17,7 @@ var mockProvider = Provider{
 		Connectors: []plugin.Connector{{
 			Name:  "mock",
 			Use:   "mock",
-			Short: "use a recording without an active connection",
+			Short: "a recording without an active connection",
 		}},
 	},
 }
