@@ -748,7 +748,7 @@ func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.C
 	return b.String()
 }
 
-func (print *Printer) CompilerStats(stats *mqlc.CompilerStats) string {
+func (print *Printer) CompilerStats(stats mqlc.CompilerStats) string {
 	var res strings.Builder
 	res.WriteString("Resources and Fields used:\n")
 
@@ -757,7 +757,13 @@ func (print *Printer) CompilerStats(stats *mqlc.CompilerStats) string {
 			res.WriteString("- " + print.Yellow(resource) + "\n")
 			return
 		}
-		res.WriteString("  - " + print.Primary(field) + "  type=" + info.Type.Label() + "\n")
+
+		autoexpand := ""
+		if info.AutoExpand {
+			autoexpand = print.Disabled(" [auto-expand]")
+		}
+
+		res.WriteString("  - " + print.Primary(field) + "  type=" + info.Type.Label() + autoexpand + "\n")
 	})
 
 	return res.String()
