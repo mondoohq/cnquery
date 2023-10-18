@@ -276,6 +276,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) error {
 	asset.Name = conn.Config().Host
 
+	// TODO: integrate the PlatformInfo() of the GCP connection or merge it with this!
+
 	switch conn.Config().Type {
 	default:
 		asset.Platform = &inventory.Platform{

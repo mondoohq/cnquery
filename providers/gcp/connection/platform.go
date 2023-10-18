@@ -51,38 +51,38 @@ func (c *GcpConnection) PlatformInfo() (*inventory.Platform, error) {
 	// TODO: this is a hack and we need to find a better way to do this
 	if c.platformOverride != "" && c.platformOverride != "gcp" {
 		return &inventory.Platform{
-			Name:   c.platformOverride,
-			Title:  getTitleForPlatformName(c.platformOverride),
-			Family: []string{"google"},
-			// Kind:    providers.Kind_KIND_GCP_OBJECT,
-			// Runtime: providers.RUNTIME_GCP,
+			Name:    c.platformOverride,
+			Title:   getTitleForPlatformName(c.platformOverride),
+			Family:  []string{"google"},
+			Kind:    "gcp-object",
+			Runtime: "gcp",
 		}, nil
 	}
 
 	switch c.resourceType {
 	case Organization:
 		return &inventory.Platform{
-			Name:   "gcp-org",
-			Title:  "GCP Organization",
-			Family: []string{"google"},
-			// Kind:    providers.Kind_KIND_GCP_OBJECT,
-			// Runtime: p.Runtime(),
+			Name:    "gcp-org",
+			Title:   "GCP Organization",
+			Family:  []string{"google"},
+			Kind:    "gcp-object",
+			Runtime: "gcp",
 		}, nil
 	case Project:
 		return &inventory.Platform{
-			Name:   "gcp-project",
-			Title:  "GCP Project",
-			Family: []string{"google"},
-			// Kind:    providers.Kind_KIND_GCP_OBJECT,
-			// Runtime: p.Runtime(),
+			Name:    "gcp-project",
+			Title:   "GCP Project",
+			Family:  []string{"google"},
+			Kind:    "gcp-object",
+			Runtime: "gcp",
 		}, nil
 	case Folder:
 		return &inventory.Platform{
-			Name:   "gcp-folder",
-			Title:  "GCP Folder",
-			Family: []string{"google"},
-			// Kind:    providers.Kind_KIND_GCP_OBJECT,
-			// Runtime: p.Runtime(),
+			Name:    "gcp-folder",
+			Title:   "GCP Folder",
+			Family:  []string{"google"},
+			Kind:    "gcp-object",
+			Runtime: "gcp",
 		}, nil
 	}
 
