@@ -203,16 +203,10 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	// We only need to run the detection step when we don't have any asset information yet.
-	if req.Asset.Platform == nil {
-		if err := s.detect(req.Asset, conn); err != nil {
-			return nil, err
-		}
-	}
-
 	var inventory *inventory.Inventory
 	// discovery assets for further scanning
 	if conn.Config().Discover != nil {
+		// detection of the platform is done in the discovery phase
 		inventory, err = s.discover(conn)
 		if err != nil {
 			return nil, err
@@ -271,23 +265,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return conn, err
-}
-
-func (s *Service) detect(asset *inventory.Asset, conn shared.GcpConnection) error {
-	asset.Name = conn.Config().Host
-
-	switch conn.Config().Type {
-	default:
-		asset.Platform = &inventory.Platform{
-			Name:   "gcp",
-			Family: []string{"gcp"},
-			Kind:   "api",
-			Title:  "GCP Cloud",
-		}
-		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/gcp/"}
-	}
-
-	return nil
 }
 
 func (s *Service) discover(conn shared.GcpConnection) (*inventory.Inventory, error) {
