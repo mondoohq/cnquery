@@ -40,11 +40,25 @@ func (x *extensibleSchema) loadAllSchemas() {
 	}
 
 	for name := range providers {
+		if name == BuiltinCoreID {
+			continue
+		}
 		schema, err := x.runtime.coordinator.LoadSchema(name)
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
 		} else {
 			x.Add(name, schema)
+		}
+	}
+
+	// We are loading the core provider last, so it overrides all other schemas.
+	// It will ensure that core fields are preferred.
+	if _, ok := providers[BuiltinCoreID]; ok {
+		schema, err := x.runtime.coordinator.LoadSchema(BuiltinCoreID)
+		if err != nil {
+			log.Error().Err(err).Msg("load schema failed")
+		} else {
+			x.Add(BuiltinCoreID, schema)
 		}
 	}
 }
