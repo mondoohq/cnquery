@@ -69,11 +69,11 @@ func (vm *varmap) len() int {
 type compilerConfig struct {
 	Schema          llx.Schema
 	UseAssetContext bool
-	Stats           *CompilerStats
+	Stats           CompilerStats
 }
 
 func (c *compilerConfig) EnableStats() {
-	c.Stats = &CompilerStats{
+	c.Stats = &compilerStats{
 		ResourceFields: map[string]map[string]FieldStat{},
 	}
 }
@@ -82,6 +82,7 @@ func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
 	return compilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
+		Stats:           compilerStatsNull{},
 	}
 }
 
@@ -963,9 +964,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		fieldPath, fieldinfos, ok := c.findField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
-			if c.compilerConfig.Stats != nil {
-				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo)
-			}
+			c.compilerConfig.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -1059,9 +1058,7 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		}
 
 		if fieldinfo != nil {
-			if c.compilerConfig.Stats != nil {
-				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo)
-			}
+			c.compilerConfig.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -1131,9 +1128,7 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		calls = calls[1:]
 	}
 
-	if c.compilerConfig.Stats != nil {
-		c.compilerConfig.Stats.calledResource(resource.Name)
-	}
+	c.compilerConfig.Stats.CallResource(resource.Name)
 
 	var call *parser.Call
 	if len(calls) > 0 && calls[0].Function != nil {
@@ -1967,6 +1962,9 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 }
 
 func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
+	c.Stats.SetAutoExpand(true)
+	defer c.Stats.SetAutoExpand(false)
+
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
