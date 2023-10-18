@@ -4,6 +4,7 @@
 package jira
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -56,6 +57,14 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 
 	client.Auth.SetBasicAuth(user, token)
 	client.Auth.SetUserAgent("curl/7.54.0")
+
+	expand := []string{""}
+	_, response, _ := client.MySelf.Details(context.Background(), expand)
+	if response != nil {
+		if response.StatusCode == 401 {
+			return nil, errors.New("Failed to authenticate")
+		}
+	}
 
 	conn := &JiraConnection{
 		Conf:   conf,
