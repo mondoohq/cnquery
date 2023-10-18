@@ -98,7 +98,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	args := plugin.PrimitiveArgsToRawDataArgs(req.Args, runtime)
 
 	if req.ResourceId == "" && req.Field == "" {
-		res, err := resources.CreateResource(runtime, req.Resource, args)
+		res, err := resources.NewResource(runtime, req.Resource, args)
 		if err != nil {
 			return nil, err
 		}
