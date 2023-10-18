@@ -751,12 +751,15 @@ func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.C
 func (print *Printer) CompilerStats(stats *mqlc.CompilerStats) string {
 	var res strings.Builder
 	res.WriteString("Resources and Fields used:\n")
-	for resource, fields := range stats.ResourceFields {
-		res.WriteString("- " + print.Yellow(resource) + "\n")
-		for field := range fields {
-			res.WriteString("  - " + print.Primary(field) + "\n")
+
+	stats.WalkSorted(func(resource string, field string, info mqlc.FieldStat) {
+		if field == "" {
+			res.WriteString("- " + print.Yellow(resource) + "\n")
+			return
 		}
-	}
+		res.WriteString("  - " + print.Primary(field) + "  type=" + info.Type.Label() + "\n")
+	})
+
 	return res.String()
 }
 

@@ -74,23 +74,8 @@ type compilerConfig struct {
 
 func (c *compilerConfig) EnableStats() {
 	c.Stats = &CompilerStats{
-		ResourceFields: map[string]map[string]struct{}{},
+		ResourceFields: map[string]map[string]FieldStat{},
 	}
-}
-
-type CompilerStats struct {
-	ResourceFields map[string]map[string]struct{}
-}
-
-func (c *CompilerStats) calledResource(name string) {
-	if _, ok := c.ResourceFields[name]; !ok {
-		c.ResourceFields[name] = map[string]struct{}{}
-	}
-}
-
-func (c *CompilerStats) calledField(resource string, field string) {
-	c.calledResource(resource)
-	c.ResourceFields[resource][field] = struct{}{}
 }
 
 func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
@@ -979,7 +964,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
 			if c.compilerConfig.Stats != nil {
-				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo.Name)
+				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo)
 			}
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
@@ -1075,7 +1060,7 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 
 		if fieldinfo != nil {
 			if c.compilerConfig.Stats != nil {
-				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo.Name)
+				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo)
 			}
 
 			if call != nil && len(call.Function) > 0 {
