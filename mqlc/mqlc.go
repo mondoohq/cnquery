@@ -69,6 +69,28 @@ func (vm *varmap) len() int {
 type compilerConfig struct {
 	Schema          llx.Schema
 	UseAssetContext bool
+	Stats           *CompilerStats
+}
+
+func (c *compilerConfig) EnableStats() {
+	c.Stats = &CompilerStats{
+		ResourceFields: map[string]map[string]struct{}{},
+	}
+}
+
+type CompilerStats struct {
+	ResourceFields map[string]map[string]struct{}
+}
+
+func (c *CompilerStats) calledResource(name string) {
+	if _, ok := c.ResourceFields[name]; !ok {
+		c.ResourceFields[name] = map[string]struct{}{}
+	}
+}
+
+func (c *CompilerStats) calledField(resource string, field string) {
+	c.calledResource(resource)
+	c.ResourceFields[resource][field] = struct{}{}
 }
 
 func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
@@ -956,12 +978,15 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		fieldPath, fieldinfos, ok := c.findField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
+			if c.compilerConfig.Stats != nil {
+				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo.Name)
+			}
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
 
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, typ.ResourceName(), id)
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, resource.Name, id)
 
 			// this only happens when we call a field of a bridging resource,
 			// in which case we don't call the field (since there is nothing to do)
@@ -1049,6 +1074,10 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		}
 
 		if fieldinfo != nil {
+			if c.compilerConfig.Stats != nil {
+				c.compilerConfig.Stats.calledField(resource.Name, fieldinfo.Name)
+			}
+
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
@@ -1057,7 +1086,7 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 				return true, types.Nil, fmt.Errorf("field '%s' on '%s' requires the MQLAssetContext feature", id, typ.Label())
 			}
 
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, typ.ResourceName(), id)
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, resource.Name, id)
 
 			// this only happens when we call a field of a bridging resource,
 			// in which case we don't call the field (since there is nothing to do)
@@ -1115,6 +1144,10 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		}
 		resource, id = nuResource, nuID
 		calls = calls[1:]
+	}
+
+	if c.compilerConfig.Stats != nil {
+		c.compilerConfig.Stats.calledResource(resource.Name)
 	}
 
 	var call *parser.Call

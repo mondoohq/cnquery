@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/types"
 	"go.mondoo.com/cnquery/v9/utils/sortx"
 	"golang.org/x/exp/slices"
@@ -747,7 +748,19 @@ func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.C
 	return b.String()
 }
 
-// CodeBundle prints a bundle to a string
+func (print *Printer) CompilerStats(stats *mqlc.CompilerStats) string {
+	var res strings.Builder
+	res.WriteString("Resources and Fields used:\n")
+	for resource, fields := range stats.ResourceFields {
+		res.WriteString("- " + print.Yellow(resource) + "\n")
+		for field := range fields {
+			res.WriteString("  - " + print.Primary(field) + "\n")
+		}
+	}
+	return res.String()
+}
+
+// CodeBundle prints the contents of the MQL query
 func (print *Printer) CodeBundle(bundle *llx.CodeBundle) string {
 	var res strings.Builder
 
