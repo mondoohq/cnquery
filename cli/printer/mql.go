@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/types"
 	"go.mondoo.com/cnquery/v9/utils/sortx"
+	"golang.org/x/exp/slices"
 )
 
 // Results prints a full query with all data points
@@ -181,6 +182,42 @@ func (print *Printer) label(ref string, bundle *llx.CodeBundle, isResource bool)
 	return print.Primary(label) + ": "
 }
 
+func (print *Printer) defaultLabel(ref string, bundle *llx.CodeBundle) string {
+	if bundle == nil {
+		return ""
+	}
+
+	labels := bundle.Labels
+	if labels == nil {
+		return fmt.Sprintf("["+print.Primary("%s")+"] ", ref)
+	}
+
+	label := labels.Labels[ref]
+	if label == "" {
+		return ""
+	}
+
+	return print.Primary(label) + "="
+}
+
+func isDefaultField(ref string, bundle *llx.CodeBundle, defaultFields []string) bool {
+	if bundle == nil {
+		return false
+	}
+
+	labels := bundle.Labels
+	if labels == nil {
+		return false
+	}
+
+	label := labels.Labels[ref]
+	if label == "" {
+		return false
+	}
+
+	return slices.Contains(defaultFields, label)
+}
+
 func (print *Printer) array(typ types.Type, data []interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
 	if len(data) == 0 {
 		return "[]"
@@ -273,7 +310,6 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 	}
 
 	var res strings.Builder
-	res.WriteString("{\n")
 
 	// we need to separate entries that are unlabelled (eg part of an assertion)
 	labeledKeys := []string{}
@@ -284,35 +320,82 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 		}
 	}
 
+	code := bundle.CodeV2
+	ep := code.Blocks[0].Entrypoints[0]
+	chunk := code.Chunk(ep)
+	listType := ""
+	switch chunk.Id {
+	case "$one", "$all", "$none", "$any":
+		ref := chunk.Function.Binding
+		listChunk := code.Chunk(ref)
+		listType = types.Type(listChunk.Type()).Child().Label()
+	}
+
+	nonDefaultFields := []string{}
+	defaultFields := []string{}
+	if listType != "" && print.schema != nil {
+		resourceInfo := (print.schema).Lookup(listType)
+		if resourceInfo != nil {
+			defaultFields = strings.Split(resourceInfo.Defaults, " ")
+		}
+	}
+
 	for _, k := range labeledKeys {
 		if k == "_" {
 			continue
 		}
 
-		v := data[k]
-		label := print.label(k, bundle, true)
-		val := v.(*llx.RawData)
-
-		if val.Error != nil {
-			res.WriteString(indent + "  " + label + print.Error(val.Error.Error()) + "\n")
+		if !isDefaultField(k, bundle, defaultFields) {
+			// save for later output after we wrote all the default fields
+			nonDefaultFields = append(nonDefaultFields, k)
 			continue
 		}
 
-		if truthy, _ := val.IsTruthy(); !truthy {
-			assertion := print.dataAssessment(k, data, bundle)
-			if assertion != "" {
-				assertion = print.Failed("[failed]") + " " + strings.Trim(assertion, "\n\t ")
-				assertion = indentBlock(assertion, indent+"  ")
-				res.WriteString(indent + "  " + assertion + "\n")
-				continue
-			}
+		v := data[k]
+		label := print.defaultLabel(k, bundle)
+		val := v.(*llx.RawData)
+
+		if val.Error != nil {
+			res.WriteString("  " + label + print.Error(val.Error.Error()) + " ")
+			continue
 		}
 
-		data := print.Data(val.Type, val.Value, k, bundle, indent+"  ")
-		res.WriteString(indent + "  " + label + data + "\n")
+		data := print.Data(val.Type, val.Value, k, bundle, "")
+		res.WriteString(label + data + " ")
 	}
 
-	res.WriteString(indent + "}")
+	if len(nonDefaultFields) > 0 {
+		res.WriteString("{\n")
+		for _, k := range nonDefaultFields {
+			if k == "_" {
+				continue
+			}
+
+			v := data[k]
+			label := print.label(k, bundle, true)
+			val := v.(*llx.RawData)
+
+			if val.Error != nil {
+				res.WriteString(indent + "  " + label + print.Error(val.Error.Error()) + "\n")
+				continue
+			}
+
+			if truthy, _ := val.IsTruthy(); !truthy {
+				assertion := print.dataAssessment(k, data, bundle)
+				if assertion != "" {
+					assertion = print.Failed("[failed]") + " " + strings.Trim(assertion, "\n\t ")
+					assertion = indentBlock(assertion, indent+"  ")
+					res.WriteString(indent + "  " + assertion + "\n")
+					continue
+				}
+			}
+
+			data := print.Data(val.Type, val.Value, k, bundle, indent+"  ")
+			res.WriteString(indent + "  " + label + data + "\n")
+		}
+
+		res.WriteString(indent + "}")
+	}
 	return res.String()
 }
 
