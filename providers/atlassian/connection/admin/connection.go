@@ -4,6 +4,7 @@
 package admin
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -40,6 +41,13 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 
 	client.Auth.SetBearerToken(adminToken)
 	client.Auth.SetUserAgent("curl/7.54.0")
+
+	_, response, _ := client.Organization.Gets(context.Background(), "")
+	if response != nil {
+		if response.StatusCode == 401 {
+			return nil, errors.New("Failed to authenticate")
+		}
+	}
 
 	conn := &AdminConnection{
 		Conf:   conf,
