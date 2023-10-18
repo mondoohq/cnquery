@@ -80,15 +80,13 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 
-		if id, name, related := azure.Detect(conn, asset.Platform); id != "" {
+		if id, _, related := azure.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
-			asset.Name = name
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 
-		if id, name, related := gcp.Detect(conn, asset.Platform); id != "" {
+		if id, _, related := gcp.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
-			asset.Name = name
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 	}
