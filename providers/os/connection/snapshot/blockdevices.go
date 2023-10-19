@@ -112,7 +112,7 @@ func (blockEntries blockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 }
 
 func (entry blockDevice) IsNoBootVolume() bool {
-	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI"
+	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot"
 }
 
 func (entry blockDevice) IsNoBootVolumeAndUnmounted() bool {
