@@ -166,10 +166,10 @@ type TValue[T any] struct {
 }
 
 func (x *TValue[T]) ToDataRes(typ types.Type) *DataRes {
-	if x.State&StateIsSet == 0 {
+	if !x.IsSet() {
 		return &DataRes{}
 	}
-	if x.State&StateIsNull != 0 {
+	if x.IsNull() {
 		if x.Error != nil {
 			return &DataRes{
 				Error: x.Error.Error(),
@@ -219,13 +219,21 @@ func (n notReady) Error() string {
 
 var NotReady = notReady{}
 
+func (x *TValue[T]) IsSet() bool {
+	return x.State&StateIsSet != 0
+}
+
+func (x *TValue[T]) IsNull() bool {
+	return x.State&StateIsNull != 0
+}
+
 const (
 	StateIsSet State = 0x1 << iota
 	StateIsNull
 )
 
 func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T] {
-	if cached.State&StateIsSet != 0 {
+	if cached.IsSet() {
 		return cached
 	}
 
@@ -240,7 +248,7 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 
 	// this only happens if the function set the field proactively, in which
 	// case we grab the value from the cached entry for consistency
-	if cached.State&StateIsSet != 0 {
+	if cached.IsSet() {
 		return cached
 	}
 
