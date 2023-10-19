@@ -33,9 +33,9 @@ func init() {
 			Init: initAtlassianAdminOrganization,
 			Create: createAtlassianAdminOrganization,
 		},
-		"atlassian.admin.organization.managedUsers": {
-			// to override args, implement: initAtlassianAdminOrganizationManagedUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAtlassianAdminOrganizationManagedUsers,
+		"atlassian.admin.organization.managedUser": {
+			// to override args, implement: initAtlassianAdminOrganizationManagedUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationManagedUser,
 		},
 		"atlassian.admin.organization.policy": {
 			// to override args, implement: initAtlassianAdminOrganizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -196,22 +196,22 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAtlassianAdminOrganization).GetDomains()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.domain")))
 	},
 	"atlassian.admin.organization.managedUsers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganization).GetManagedUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.managedUsers")))
+		return (r.(*mqlAtlassianAdminOrganization).GetManagedUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.managedUser")))
 	},
-	"atlassian.admin.organization.managedUsers.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUsers).GetId()).ToDataRes(types.String)
+	"atlassian.admin.organization.managedUser.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetId()).ToDataRes(types.String)
 	},
-	"atlassian.admin.organization.managedUsers.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUsers).GetName()).ToDataRes(types.String)
+	"atlassian.admin.organization.managedUser.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetName()).ToDataRes(types.String)
 	},
-	"atlassian.admin.organization.managedUsers.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUsers).GetType()).ToDataRes(types.String)
+	"atlassian.admin.organization.managedUser.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetType()).ToDataRes(types.String)
 	},
-	"atlassian.admin.organization.managedUsers.email": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUsers).GetEmail()).ToDataRes(types.String)
+	"atlassian.admin.organization.managedUser.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetEmail()).ToDataRes(types.String)
 	},
-	"atlassian.admin.organization.managedUsers.lastActive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUsers).GetLastActive()).ToDataRes(types.String)
+	"atlassian.admin.organization.managedUser.lastActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetLastActive()).ToDataRes(types.String)
 	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetId()).ToDataRes(types.String)
@@ -439,28 +439,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganization).ManagedUsers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.managedUsers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAtlassianAdminOrganizationManagedUsers).__id, ok = v.Value.(string)
+	"atlassian.admin.organization.managedUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAtlassianAdminOrganizationManagedUser).__id, ok = v.Value.(string)
 			return
 		},
-	"atlassian.admin.organization.managedUsers.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUsers).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.admin.organization.managedUser.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.managedUsers.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUsers).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.admin.organization.managedUser.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.managedUsers.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUsers).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.admin.organization.managedUser.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.managedUsers.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUsers).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.admin.organization.managedUser.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"atlassian.admin.organization.managedUsers.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUsers).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"atlassian.admin.organization.managedUser.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1030,11 +1030,11 @@ func (c *mqlAtlassianAdminOrganization) GetManagedUsers() *plugin.TValue[[]inter
 	})
 }
 
-// mqlAtlassianAdminOrganizationManagedUsers for the atlassian.admin.organization.managedUsers resource
-type mqlAtlassianAdminOrganizationManagedUsers struct {
+// mqlAtlassianAdminOrganizationManagedUser for the atlassian.admin.organization.managedUser resource
+type mqlAtlassianAdminOrganizationManagedUser struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAtlassianAdminOrganizationManagedUsersInternal it will be used here
+	// optional: if you define mqlAtlassianAdminOrganizationManagedUserInternal it will be used here
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
@@ -1042,9 +1042,9 @@ type mqlAtlassianAdminOrganizationManagedUsers struct {
 	LastActive plugin.TValue[string]
 }
 
-// createAtlassianAdminOrganizationManagedUsers creates a new instance of this resource
-func createAtlassianAdminOrganizationManagedUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAtlassianAdminOrganizationManagedUsers{
+// createAtlassianAdminOrganizationManagedUser creates a new instance of this resource
+func createAtlassianAdminOrganizationManagedUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationManagedUser{
 		MqlRuntime: runtime,
 	}
 
@@ -1053,10 +1053,15 @@ func createAtlassianAdminOrganizationManagedUsers(runtime *plugin.Runtime, args 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.managedUsers", res.__id)
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.managedUser", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -1066,31 +1071,31 @@ func createAtlassianAdminOrganizationManagedUsers(runtime *plugin.Runtime, args 
 	return res, nil
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) MqlName() string {
-	return "atlassian.admin.organization.managedUsers"
+func (c *mqlAtlassianAdminOrganizationManagedUser) MqlName() string {
+	return "atlassian.admin.organization.managedUser"
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) MqlID() string {
+func (c *mqlAtlassianAdminOrganizationManagedUser) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) GetId() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) GetName() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) GetType() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) GetEmail() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetEmail() *plugin.TValue[string] {
 	return &c.Email
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUsers) GetLastActive() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetLastActive() *plugin.TValue[string] {
 	return &c.LastActive
 }
 
