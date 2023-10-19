@@ -21,7 +21,7 @@
       "connections": [
         {
           "url": "local://",
-          "provider": "os",
+          "provider": "go.mondoo.com/cnquery/v9/providers/os",
           "connector": "local",
           "version": ""
         },
@@ -54,6 +54,26 @@
             "stdout": {
               "type": "\u0007",
               "value": "overlay on / type overlay (rw,relatime)\nproc on /proc type proc (rw,nosuid,nodev,noexec,relatime)\ntmpfs on /dev type tmpfs (rw,nosuid,size=65536k,mode=755)"
+            }
+          }
+        },
+        {
+          "Resource": "command",
+          "ID": "uname -m",
+          "Fields": {
+            "stdout": {
+              "type": "\u0007",
+              "value": "x86_64\n"
+            }
+          }
+        },
+        {
+          "Resource": "command",
+          "ID": "uname -s",
+          "Fields": {
+            "stdout": {
+              "type": "\u0007",
+              "value": "Linux\n"
             }
           }
         },
@@ -499,9 +519,13 @@
               "type": "\u0007",
               "value": "# Amazon Root CA 1\n-----BEGIN CERTIFICATE-----\nMIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\nADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\nb24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\nMAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\nb3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\nca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\nIFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\nVOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\njgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\nAYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\nA4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\nU5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\nN+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\no/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\nrqXRfboQnoZsG4q5WTP468SQvvG5\n-----END CERTIFICATE-----\n"
             },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
             "path": {
               "type": "\u0007",
-              "value": "/dummy.plist"
+              "value": "/etc/ssl/cert.pem"
             },
             "permissions": {
               "type": "\u001bfile.permissions",
@@ -509,6 +533,10 @@
                 "Name": "file.permissions",
                 "ID": "-rw-r--r--"
               }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 1207
             }
           }
         },
@@ -564,30 +592,10 @@
         },
         {
           "Resource": "file",
-          "ID": "/etc/ssl/cert.pem",
+          "ID": "yo",
           "Fields": {
             "content": {
-              "type": "\u0007",
-              "value": "# Amazon Root CA 1\n-----BEGIN CERTIFICATE-----\nMIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\nADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\nb24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\nMAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\nb3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\nca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\nIFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\nVOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\njgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\nAYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\nA4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\nU5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\nN+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\no/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\nrqXRfboQnoZsG4q5WTP468SQvvG5\n-----END CERTIFICATE-----\n"
-            },
-            "exists": {
-              "type": "\u0004",
-              "value": true
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/etc/ssl/cert.pem"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 1207
+              "error": "file 'yo' not found"
             }
           }
         },
@@ -611,7 +619,6 @@
               "type": "\u0007",
               "value": "-rw-r--r--"
             }
-
           }
         },
         {
@@ -783,6 +790,31 @@
         },
         {
           "Resource": "mount",
+          "ID": "A/ugmt63k4w=2",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bmount.point",
+              "value": [
+                {
+                  "Name": "mount.point",
+                  "ID": "/proc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "mount",
+          "ID": "ZZ0A6W8WSFA=2",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bmount.point",
+              "value": []
+            }
+          }
+        },
+        {
+          "Resource": "mount",
           "ID": "mount",
           "Fields": {
             "list": {
@@ -872,6 +904,16 @@
         },
         {
           "Resource": "package",
+          "ID": "",
+          "Fields": {
+            "installed": {
+              "type": "\u0004",
+              "value": false
+            }
+          }
+        },
+        {
+          "Resource": "package",
           "ID": "package/acl",
           "Fields": {
             "installed": {
@@ -947,6 +989,16 @@
                   "ID": "1"
                 }
               ]
+            }
+          }
+        },
+        {
+          "Resource": "service",
+          "ID": "",
+          "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
             }
           }
         },
