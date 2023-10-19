@@ -28,7 +28,7 @@ func (a *mqlAtlassianScim) users() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, scimUser := range scimUsers.Resources {
-		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.scim.organization.scim.user",
+		mqlAtlassianAdminSCIMuser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user",
 			map[string]*llx.RawData{
 				"id":           llx.StringData(scimUser.ID),
 				"name":         llx.StringData(scimUser.Name.Formatted),
@@ -57,7 +57,7 @@ func (a *mqlAtlassianScim) groups() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, scimGroup := range scimGroup.Resources {
-		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.organization.scim.group",
+		mqlAtlassianAdminSCIMgroup, err := CreateResource(a.MqlRuntime, "atlassian.scim.group",
 			map[string]*llx.RawData{
 				"id":   llx.StringData(scimGroup.ID),
 				"name": llx.StringData(scimGroup.DisplayName),

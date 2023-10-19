@@ -154,10 +154,10 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.scim.users": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianScim).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.scim.organization.scim.user")))
+		return (r.(*mqlAtlassianScim).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.scim.user")))
 	},
 	"atlassian.scim.groups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianScim).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.scim.organization.scim.group")))
+		return (r.(*mqlAtlassianScim).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.scim.group")))
 	},
 	"atlassian.scim.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimUser).GetId()).ToDataRes(types.String)
