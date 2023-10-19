@@ -267,6 +267,19 @@ func (p *AwsConnection) Type() shared.ConnectionType {
 	return "aws"
 }
 
+const MISSING_REGION_MSG = `The AWS region must be set for the deployment. Please use environment variables
+or AWS profiles. Further details are available at:
+- https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+- https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html`
+
+// CheckRegion verifies that the config includes a region
+func CheckRegion(cfg aws.Config) error {
+	if len(cfg.Region) == 0 {
+		return errors.New(MISSING_REGION_MSG)
+	}
+	return nil
+}
+
 func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {
 	ctx := context.Background()
 	svc := sts.NewFromConfig(cfg)
