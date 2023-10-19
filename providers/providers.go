@@ -6,7 +6,6 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
-	"go.mondoo.com/ranger-rpc"
 	"io"
 	"net/http"
 	"os"
@@ -23,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/config"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/exp/slices"
 )
 
@@ -49,8 +49,9 @@ type Providers map[string]*Provider
 
 type Provider struct {
 	*plugin.Provider
-	Schema *resources.Schema
-	Path   string
+	Schema    *resources.Schema
+	Path      string
+	HasBinary bool
 }
 
 func httpClient() (*http.Client, error) {
@@ -562,10 +563,6 @@ func readProviderDir(pdir string) (*Provider, error) {
 	conf := filepath.Join(pdir, name+".json")
 	resources := filepath.Join(pdir, name+".resources.json")
 
-	if !config.ProbeFile(bin) {
-		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin")
-		return nil, nil
-	}
 	if !config.ProbeFile(conf) {
 		log.Debug().Str("path", conf).Msg("ignoring provider, can't access the plugin config")
 		return nil, nil
@@ -579,12 +576,13 @@ func readProviderDir(pdir string) (*Provider, error) {
 		Provider: &plugin.Provider{
 			Name: name,
 		},
-		Path: pdir,
+		Path:      pdir,
+		HasBinary: config.ProbeFile(bin),
 	}, nil
 }
 
 func (p *Provider) LoadJSON() error {
-	path := filepath.Join(p.Path, p.Name+".json")
+	path := p.confJSONPath()
 	res, err := afero.ReadFile(config.AppFs, path)
 	if err != nil {
 		return errors.New("failed to read provider json from " + path + ": " + err.Error())
@@ -607,6 +605,10 @@ func (p *Provider) LoadResources() error {
 		return errors.New("failed to parse provider resources json from " + path + ": " + err.Error())
 	}
 	return nil
+}
+
+func (p *Provider) confJSONPath() string {
+	return filepath.Join(p.Path, p.Name+".json")
 }
 
 func (p *Provider) binPath() string {

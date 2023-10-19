@@ -215,8 +215,8 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 		return nil, errors.New("cannot determine installation path for provider")
 	}
 
-	binPath := provider.binPath()
-	stat, err := os.Stat(binPath)
+	statPath := provider.confJSONPath()
+	stat, err := os.Stat(statPath)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 	}
 	PrintInstallResults([]*Provider{provider})
 	now := time.Now()
-	if err := os.Chtimes(binPath, now, now); err != nil {
+	if err := os.Chtimes(statPath, now, now); err != nil {
 		log.Warn().
 			Str("provider", provider.Name).
 			Msg("failed to update refresh time on provider")
