@@ -67,9 +67,15 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	cfg.Region = i.Region
 	scannerSvc := ec2.NewFromConfig(cfg)
 
+	targetRegion := conf.Options["region"]
+	if targetRegion == "" {
+		log.Info().Msg("flag --region not specified, using scanner instance region")
+		targetRegion = i.Region
+	}
+
 	// ec2 client for the target region
 	cfgCopy := cfg.Copy()
-	cfgCopy.Region = conf.Options["region"]
+	cfgCopy.Region = targetRegion
 	targetSvc := ec2.NewFromConfig(cfgCopy)
 
 	// 2. create provider instance
@@ -78,7 +84,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		opts:   conf.Options,
 		target: awsec2ebstypes.TargetInfo{
 			PlatformId: conf.PlatformId,
-			Region:     conf.Options["region"],
+			Region:     targetRegion,
 			Id:         conf.Options["id"],
 		},
 		targetType: conf.Options["type"],
@@ -101,6 +107,10 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	if err != nil {
 		return c, errors.Wrap(err, "unable to validate")
 	}
+
+	// In case of an error, c.Close() needs this:
+	asset.Connections[0].Options["scanner-id"] = c.scannerInstance.Id
+	asset.Connections[0].Options["scanner-region"] = c.scannerInstance.Region
 
 	// 4. setup the volume for scanning
 	// check if we got the no setup override option. this implies the target volume is already attached to the instance
@@ -170,8 +180,8 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
-
 	// Create and initialize fs provider
+	conf.Options["path"] = volumeMounter.ScanDir
 	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
 		Type:       "filesystem",
 		Path:       volumeMounter.ScanDir,
@@ -194,8 +204,6 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	}
 	asset.Id = conf.Type
 	asset.Platform.Runtime = c.Runtime()
-	asset.Connections[0].Options["scanner-id"] = c.scannerInstance.Id
-	asset.Connections[0].Options["scanner-region"] = c.scannerInstance.Region
 	return c, nil
 }
 
