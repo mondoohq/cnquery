@@ -44,11 +44,11 @@ atlassian.admin.organization @defaults("name") {
   // Domains 
   domains() []atlassian.admin.organization.domain
   // Managed users
-  managedUsers() []atlassian.admin.organization.managedUsers
+  managedUsers() []atlassian.admin.organization.managedUser
 }
 
 // Managed users
-atlassian.admin.organization.managedUsers @defaults("name") {
+atlassian.admin.organization.managedUser @defaults("name") {
   // ID
   id string
   // Name

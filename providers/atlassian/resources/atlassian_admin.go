@@ -67,6 +67,10 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAtlassianAdminOrganizationManagedUser) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAtlassianAdminOrganization) policies() ([]interface{}, error) {
 	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
 	if !ok {
