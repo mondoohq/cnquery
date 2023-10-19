@@ -76,6 +76,24 @@ To debug a provider locally with cnquery:
 4. Once done, please remember to restore `providers.yaml` (or just set back: `builtin: []`) and
    re-run `make providers/config`.
 
+### Remote debug providers
+
+Some providers need to run on specific VMs, e.g., GCP Snapshot scanning.
+The `launch.json` already includes a debug target for remote debugging.
+You only need to adjust the values to your setup.
+Additionally, you need to set up the debugger on the remote VM:
+
+- Install go
+- Install delve
+- Locally change the config to include the provider you want to debug as builtin as describe above.
+- Copy the source to the remote VM (`rsync` makes multiple debug session easier)
+- Allow ingress traffic to the debugger in the firewall.
+- Run the debugger on the remove VM:
+  ```
+  dlv debug <path>/apps/cnquery/cnquery.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 suse15 -c "asset{ name ids }" --verbose
+  ```
+
+Further information and possible other ways to remote debug: https://github.com/golang/vscode-go/blob/master/docs/debugging.md
 
 ## Update provider versions
 
