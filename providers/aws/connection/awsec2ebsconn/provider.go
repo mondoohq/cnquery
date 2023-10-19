@@ -173,6 +173,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 
 	// Create and initialize fs provider
 	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
+		Type:       "filesystem",
 		Path:       volumeMounter.ScanDir,
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
