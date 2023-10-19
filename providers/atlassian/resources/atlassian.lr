@@ -4,9 +4,9 @@ option go_package = "go.mondoo.com/cnquery/providers/atlassian/resources"
 // Cross-domain Identity Management (SCIM)
 atlassian.scim {
   // SCIM users
-  users() []atlassian.scim.organization.scim.user
+  users() []atlassian.scim.user
   // SCIM groups
-  groups() []atlassian.scim.organization.scim.group
+  groups() []atlassian.scim.group
 }
 
 // SCIM user
