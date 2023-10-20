@@ -459,13 +459,13 @@ func (r *Runtime) SetRecording(recording Recording) error {
 	return nil
 }
 
-func baseRecording(anyRecording Recording) *recording {
-	var baseRecording *recording
+func baseRecording(anyRecording Recording) *AssetRecording {
+	var baseRecording *AssetRecording
 	switch x := anyRecording.(type) {
-	case *recording:
+	case *AssetRecording:
 		baseRecording = x
 	case *readOnlyRecording:
-		baseRecording = x.recording
+		baseRecording = x.AssetRecording
 	}
 	return baseRecording
 }

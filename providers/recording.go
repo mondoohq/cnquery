@@ -24,7 +24,7 @@ type Recording interface {
 	GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool)
 }
 
-type recording struct {
+type AssetRecording struct {
 	Assets []assetRecording `json:"assets"`
 	Path   string           `json:"-"`
 	// assets is used for fast connection to asset lookup
@@ -32,8 +32,56 @@ type recording struct {
 	prettyPrintJSON bool                       `json:"-"`
 }
 
+func (r *AssetRecording) SetAsset(asset *inventory.Asset) error {
+	id := asset.Mrn
+	if id == "" {
+		id = asset.Id
+	}
+	if id == "" && asset.Platform != nil {
+		id = asset.Platform.Title
+	}
+	ai := assetInfo{
+		ID:          id,
+		Name:        asset.Name,
+		PlatformIDs: asset.PlatformIds,
+	}
+
+	if asset.Platform != nil {
+		ai.Arch = asset.Platform.Arch
+		ai.Title = asset.Platform.Title
+		ai.Family = asset.Platform.Family
+		ai.Build = asset.Platform.Build
+		ai.Version = asset.Platform.Version
+		ai.Kind = asset.Platform.Kind
+		ai.Runtime = asset.Platform.Runtime
+		ai.Labels = asset.Platform.Labels
+	}
+	if r.Assets == nil {
+		r.Assets = []assetRecording{}
+	}
+	if len(r.Assets) == 0 {
+		r.Assets[0] = assetRecording{
+			Asset:       ai,
+			connections: map[string]*connectionRecording{},
+			resources:   map[string]*resourceRecording{},
+			Connections: []connectionRecording{},
+			Resources:   []resourceRecording{},
+		}
+	} else {
+		// we want to only overwrite the asset info. some tests use mock policies/queries where there are filters
+		// such as "asset.name == 'custom-asset'"
+		r.Assets[0].Asset = ai
+	}
+	r.refreshCache()
+	if err := r.reconnectResources(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ReadOnly converts the recording into a read-only recording
-func (r *recording) ReadOnly() *readOnlyRecording {
+func (r *AssetRecording) ReadOnly() *readOnlyRecording {
 	return &readOnlyRecording{r}
 }
 
@@ -95,7 +143,7 @@ func (n NullRecording) GetResource(connectionID uint32, resource string, id stri
 }
 
 type readOnlyRecording struct {
-	*recording
+	*AssetRecording
 }
 
 func (n *readOnlyRecording) Save() error {
@@ -150,7 +198,7 @@ func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 
 	} else if errors.Is(err, os.ErrNotExist) {
 		if opts.DoRecord {
-			res := &recording{
+			res := &AssetRecording{
 				Path:            path,
 				prettyPrintJSON: opts.PrettyPrintJSON,
 			}
@@ -165,13 +213,13 @@ func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 	}
 }
 
-func LoadRecordingFile(path string) (*recording, error) {
+func LoadRecordingFile(path string) (*AssetRecording, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var res recording
+	var res AssetRecording
 	err = json.Unmarshal(raw, &res)
 	if err != nil {
 		return nil, err
@@ -187,7 +235,7 @@ func LoadRecordingFile(path string) (*recording, error) {
 	return pres, err
 }
 
-func (r *recording) Save() error {
+func (r *AssetRecording) Save() error {
 	r.finalize()
 
 	var raw []byte
@@ -209,7 +257,7 @@ func (r *recording) Save() error {
 	return nil
 }
 
-func (r *recording) refreshCache() {
+func (r *AssetRecording) refreshCache() {
 	r.assets = make(map[uint32]*assetRecording, len(r.Assets))
 	for i := range r.Assets {
 		asset := &r.Assets[i]
@@ -235,7 +283,7 @@ func (r *recording) refreshCache() {
 	}
 }
 
-func (r *recording) reconnectResources() error {
+func (r *AssetRecording) reconnectResources() error {
 	var err error
 	for i := range r.Assets {
 		asset := r.Assets[i]
@@ -248,7 +296,7 @@ func (r *recording) reconnectResources() error {
 	return nil
 }
 
-func (r *recording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
+func (r *AssetRecording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
 	var err error
 	for k, v := range resource.Fields {
 		if v.Error != nil {
@@ -329,7 +377,7 @@ func reconnectResource(v interface{}, resource *resourceRecording) (interface{},
 	return &llx.MockResource{Name: name, ID: id}, nil
 }
 
-func (r *recording) finalize() {
+func (r *AssetRecording) finalize() {
 	for i := range r.Assets {
 		asset := &r.Assets[i]
 		asset.Resources = make([]resourceRecording, len(asset.resources))
@@ -358,7 +406,7 @@ func (r *recording) finalize() {
 	}
 }
 
-func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Config) (int, string) {
+func (r *AssetRecording) findAssetConnID(asset *inventory.Asset, conf *inventory.Config) (int, string) {
 	var id string
 	if asset.Mrn != "" {
 		id = asset.Mrn
@@ -395,7 +443,7 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 	return found, id
 }
 
-func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
+func (r *AssetRecording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
 	found, _ := r.findAssetConnID(asset, conf)
 
 	if found == -1 {
@@ -438,7 +486,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	r.assets[connectionID] = assetObj
 }
 
-func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (r *AssetRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
 		log.Error().Uint32("connectionID", connectionID).Msg("cannot store recording, cannot find connection ID")
@@ -460,7 +508,7 @@ func (r *recording) AddData(connectionID uint32, resource string, id string, fie
 	}
 }
 
-func (r *recording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
+func (r *AssetRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
 		return nil, false
@@ -483,7 +531,7 @@ func (r *recording) GetData(connectionID uint32, resource string, id string, fie
 	return data, ok
 }
 
-func (r *recording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
+func (r *AssetRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
 		return nil, false

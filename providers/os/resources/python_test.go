@@ -12,7 +12,7 @@ import (
 )
 
 func TestResource_Python(t *testing.T) {
-	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/linux.json"))
+	x := testutils.InitTester(testutils.MockFromPath("./python/testdata/linux.json"))
 
 	t.Run("parse all packages", func(t *testing.T) {
 		res := x.TestQuery(t, "python.packages")
@@ -34,7 +34,7 @@ func TestResource_Python(t *testing.T) {
 }
 
 func TestResource_PythonPackage(t *testing.T) {
-	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/python-package.json"))
+	x := testutils.InitTester(testutils.MockFromPath("./python/testdata/python-package.json"))
 
 	t.Run("parse single package", func(t *testing.T) {
 		res := x.TestQuery(t, "python.package(\"/usr/lib/python3/dist-packages/python_ftp_server-1.3.17.dist-info/METADATA\").name")

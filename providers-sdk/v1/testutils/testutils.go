@@ -233,9 +233,36 @@ func mockRuntime(testdata string) llx.Runtime {
 	return mockRuntimeAbs(filepath.Join(TestutilsDir, testdata))
 }
 
-func mockRuntimeAbs(testdata string) llx.Runtime {
+func MockFromRecording(recording providers.Recording) llx.Runtime {
 	runtime := Local().(*providers.Runtime)
 
+	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetMockRecording(recording, networkconf.Config.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetMockRecording(recording, mockprovider.Config.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+
+	return runtime
+}
+
+func getRecording(path string) providers.Recording {
+	p := filepath.Join(TestutilsDir, path)
+	abs, _ := filepath.Abs(p)
+	recording, err := providers.LoadRecordingFile(abs)
+	if err != nil {
+		panic("failed to load recording: " + err.Error())
+	}
+	return recording
+}
+
+func mockRuntimeAbs(testdata string) llx.Runtime {
 	abs, _ := filepath.Abs(testdata)
 	recording, err := providers.LoadRecordingFile(abs)
 	if err != nil {
@@ -243,20 +270,15 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 	}
 	roRecording := recording.ReadOnly()
 
-	err = runtime.SetMockRecording(roRecording, runtime.Provider.Instance.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
-	err = runtime.SetMockRecording(roRecording, networkconf.Config.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
-	err = runtime.SetMockRecording(roRecording, mockprovider.Config.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
+	return MockFromRecording(roRecording)
+}
 
-	return runtime
+func LinuxAssetRecording() *providers.AssetRecording {
+	return getRecording("testdata/arch.json").(*providers.AssetRecording)
+}
+
+func WindowsAssetRecording() *providers.AssetRecording {
+	return getRecording("testdata/windows.json").(*providers.AssetRecording)
 }
 
 func LinuxMock() llx.Runtime {
@@ -275,7 +297,7 @@ func WindowsMock() llx.Runtime {
 	return mockRuntime("testdata/windows.json")
 }
 
-func RecordingMock(absTestdataPath string) llx.Runtime {
+func MockFromPath(absTestdataPath string) llx.Runtime {
 	return mockRuntimeAbs(absTestdataPath)
 }
 
