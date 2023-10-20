@@ -52,7 +52,7 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 		cfg.runtime = providers.Coordinator.NewRuntime()
 
 		// init runtime
-		if _, err := providers.EnsureProvider("local", "", true, nil); err != nil {
+		if _, err := providers.EnsureProvider(providers.ProviderLookup{ConnName: "local"}, true, nil); err != nil {
 			return nil, err
 		}
 		if err := cfg.runtime.UseProvider(providers.DefaultOsID); err != nil {

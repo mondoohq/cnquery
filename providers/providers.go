@@ -51,7 +51,70 @@ func init() {
 	LastProviderInstall = time.Now().Unix()
 }
 
+type ProviderLookup struct {
+	ID       string
+	ConnName string
+	ConnType string
+}
+
+func (s ProviderLookup) String() string {
+	res := []string{}
+	if s.ID != "" {
+		res = append(res, "id="+s.ID)
+	}
+	if s.ConnName != "" {
+		res = append(res, "name="+s.ConnName)
+	}
+	if s.ConnType != "" {
+		res = append(res, "name="+s.ConnType)
+	}
+	return strings.Join(res, " ")
+}
+
 type Providers map[string]*Provider
+
+// Lookup a provider in this list. If you search via ProviderID we will
+// try to find the exact provider. Otherwise we will try to find a matching
+// connector type first and name second.
+func (p Providers) Lookup(search ProviderLookup) *Provider {
+	if search.ID != "" {
+		return p[search.ID]
+	}
+
+	if search.ConnType != "" {
+		for _, provider := range p {
+			if slices.Contains(provider.ConnectionTypes, search.ConnType) {
+				return provider
+			}
+			for i := range provider.Connectors {
+				if slices.Contains(provider.Connectors[i].Aliases, search.ConnType) {
+					return provider
+				}
+			}
+		}
+	}
+
+	if search.ConnName != "" {
+		for _, provider := range p {
+			for i := range provider.Connectors {
+				if provider.Connectors[i].Name == search.ConnName {
+					return provider
+				}
+				if slices.Contains(provider.Connectors[i].Aliases, search.ConnName) {
+					return provider
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (p Providers) Add(nu *Provider) {
+	if nu != nil {
+		p[nu.ID] = nu
+	}
+}
 
 type Provider struct {
 	*plugin.Provider
@@ -169,15 +232,16 @@ func ListAll() ([]*Provider, error) {
 
 // EnsureProvider makes sure that a given provider exists and returns it.
 // You can supply providers either via:
-//  1. connectorName, which is what you see in the CLI e.g. "local", "ssh", ...
-//  2. connectorType, which is how assets define the connector type when
+//  1. providerID, which universally identifies it, e.g. "go.mondoo.com/cnquery/v9/providers/os"
+//  2. connectorName, which is what you see in the CLI e.g. "local", "ssh", ...
+//  3. connectorType, which is how assets define the connector type when
 //     they are moved between discovery and execution, e.g. "registry-image".
 //
 // If you disable autoUpdate, it will neither update NOR install missing providers.
 //
 // If you don't supply existing providers, it will look for alist of all
 // active providers first.
-func EnsureProvider(connectorName string, connectorType string, autoUpdate bool, existing Providers) (*Provider, error) {
+func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) (*Provider, error) {
 	if existing == nil {
 		var err error
 		existing, err = ListActive()
@@ -186,17 +250,17 @@ func EnsureProvider(connectorName string, connectorType string, autoUpdate bool,
 		}
 	}
 
-	provider := existing.ForConnection(connectorName, connectorType)
+	provider := existing.Lookup(search)
 	if provider != nil {
 		return provider, nil
 	}
 
-	if connectorName == "mock" || connectorType == "mock" {
+	if search.ID == mockProvider.ID || search.ConnName == "mock" || search.ConnType == "mock" {
 		existing.Add(&mockProvider)
 		return &mockProvider, nil
 	}
 
-	upstream := DefaultProviders.ForConnection(connectorName, connectorType)
+	upstream := DefaultProviders.Lookup(search)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
 		// FIXME: This causes a panic in the CLI, we should handle this better
@@ -204,13 +268,14 @@ func EnsureProvider(connectorName string, connectorType string, autoUpdate bool,
 	}
 
 	if !autoUpdate {
-		return nil, errors.New("cannot find installed provider for connection " + connectorName)
+		return nil, errors.New("cannot find installed provider for " + search.String())
 	}
 
 	nu, err := Install(upstream.Name, "")
 	if err != nil {
 		return nil, err
 	}
+
 	existing.Add(nu)
 	PrintInstallResults([]*Provider{nu})
 	return nu, nil
@@ -624,42 +689,6 @@ func (p *Provider) binPath() string {
 		name += ".exe"
 	}
 	return filepath.Join(p.Path, name)
-}
-
-func (p Providers) ForConnection(name string, typ string) *Provider {
-	if name != "" {
-		for _, provider := range p {
-			for i := range provider.Connectors {
-				if provider.Connectors[i].Name == name {
-					return provider
-				}
-				if slices.Contains(provider.Connectors[i].Aliases, name) {
-					return provider
-				}
-			}
-		}
-	}
-
-	if typ != "" {
-		for _, provider := range p {
-			if slices.Contains(provider.ConnectionTypes, typ) {
-				return provider
-			}
-			for i := range provider.Connectors {
-				if slices.Contains(provider.Connectors[i].Aliases, typ) {
-					return provider
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-func (p Providers) Add(nu *Provider) {
-	if nu != nil {
-		p[nu.ID] = nu
-	}
 }
 
 func MustLoadSchema(name string, data []byte) *resources.Schema {
