@@ -500,6 +500,8 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 func (a assetInfo) ToInventory() *inventory.Asset {
 	return &inventory.Asset{
 		Id:          a.ID,
+		Name:        a.Name,
+		Labels:      a.Labels,
 		PlatformIds: a.PlatformIDs,
 		Platform: &inventory.Platform{
 			Name:    a.Name,
