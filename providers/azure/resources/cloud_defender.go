@@ -42,7 +42,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
 	return "azure.subscription.cloudDefender/" + a.SubscriptionId.Data, nil
 }
 
-func initAzureSubscriptionCloudDefender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func initAzureSubscriptionCloudDefenderService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}

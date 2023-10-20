@@ -996,6 +996,149 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewApplicationGatewaysClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	pager := client.NewListAllPager(&network.ApplicationGatewaysClientListAllOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ag := range page.Value {
+			if ag != nil {
+				mqlAg, err := azureAppGatewayToMql(a.MqlRuntime, *ag)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAg)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewWebApplicationFirewallPoliciesClient(subId, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	pager := client.NewListAllPager(&network.WebApplicationFirewallPoliciesClientListAllOptions{})
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, waf := range page.Value {
+			if waf != nil {
+				mqlWaf, err := azureAppFirewallPolicyToMql(a.MqlRuntime, *waf)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlWaf)
+			}
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy, error) {
+	props := a.Properties
+	if props.Error != nil {
+		return nil, props.Error
+	}
+	propsDict := props.Data.(map[string]interface{})
+	fwDict := propsDict["firewallPolicy"]
+	if fwDict == nil {
+		return nil, errors.New("no firewall policy is associated with the application gateway")
+	}
+	fwId := fwDict.(map[string]interface{})["id"]
+	if fwId == nil {
+		return nil, errors.New("no firewall policy is associated with the application gateway")
+	}
+	strId := fwId.(string)
+	azureId, err := ParseResourceID(strId)
+	if err != nil {
+		return nil, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	client, err := network.NewWebApplicationFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	policyName, err := azureId.Component("ApplicationGatewayWebApplicationFirewallPolicies")
+	if err != nil {
+		return nil, err
+	}
+	policy, err := client.Get(ctx, azureId.ResourceGroup, policyName, &network.WebApplicationFirewallPoliciesClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return azureAppFirewallPolicyToMql(a.MqlRuntime, policy.WebApplicationFirewallPolicy)
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways() ([]interface{}, error) {
+	props := a.Properties
+	if props.Error != nil {
+		return nil, props.Error
+	}
+	propsDict := props.Data.(map[string]interface{})
+	gateways := propsDict["applicationGateways"]
+	if gateways == nil {
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	client, err := network.NewApplicationGatewaysClient(conn.SubId(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	gatewaysList := gateways.([]interface{})
+	res := []interface{}{}
+	for _, g := range gatewaysList {
+		id := g.(map[string]interface{})["id"]
+		strId := id.(string)
+		azureId, err := ParseResourceID(strId)
+		if err != nil {
+			return nil, err
+		}
+		gatewayName, err := azureId.Component("applicationGateways")
+		if err != nil {
+			return nil, err
+		}
+		gateway, err := client.Get(ctx, azureId.ResourceGroup, gatewayName, &network.ApplicationGatewaysClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		mqlGateway, err := azureAppGatewayToMql(a.MqlRuntime, gateway.ApplicationGateway)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGateway)
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -1473,6 +1616,60 @@ func (a *mqlAzureSubscriptionNetworkServiceAppSecurityGroup) id() (string, error
 
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func azureAppFirewallPolicyToMql(runtime *plugin.Runtime, waf network.WebApplicationFirewallPolicy) (*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy, error) {
+	props, err := convert.JsonToDict(waf.Properties)
+	if err != nil {
+		return nil, err
+	}
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(waf.ID),
+		"name":       llx.StringDataPtr(waf.Name),
+		"type":       llx.StringDataPtr(waf.Type),
+		"location":   llx.StringDataPtr(waf.Location),
+		"tags":       llx.MapData(convert.PtrMapStrToInterface(waf.Tags), types.String),
+		"etag":       llx.StringDataPtr(waf.Etag),
+		"properties": llx.DictData(props),
+	}
+
+	mqlWaf, err := CreateResource(runtime, "azure.subscription.networkService.applicationFirewallPolicy", args)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlWaf.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy), nil
+}
+
+func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway) (*mqlAzureSubscriptionNetworkServiceApplicationGateway, error) {
+	props, err := convert.JsonToDict(ag.Properties)
+	if err != nil {
+		return nil, err
+	}
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(ag.ID),
+		"name":       llx.StringDataPtr(ag.Name),
+		"type":       llx.StringDataPtr(ag.Type),
+		"location":   llx.StringDataPtr(ag.Location),
+		"tags":       llx.MapData(convert.PtrMapStrToInterface(ag.Tags), types.String),
+		"etag":       llx.StringDataPtr(ag.Etag),
+		"properties": llx.DictData(props),
+	}
+
+	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlAg.(*mqlAzureSubscriptionNetworkServiceApplicationGateway), nil
 }
 
 func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mqlAzureSubscriptionNetworkServiceFirewall, error) {

@@ -214,3 +214,14 @@ func (a *mqlAzureSubscription) monitor() (*mqlAzureSubscriptionMonitorService, e
 	monitorSvc := svc.(*mqlAzureSubscriptionMonitorService)
 	return monitorSvc, nil
 }
+
+func (a *mqlAzureSubscription) advisor() (*mqlAzureSubscriptionAdvisorService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.advisorService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	advisorSvc := svc.(*mqlAzureSubscriptionAdvisorService)
+	return advisorSvc, nil
+}
