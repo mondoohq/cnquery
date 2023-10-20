@@ -55,6 +55,8 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 			},
 		}
 
+		// This should work and use the proxy
+		// TODO: double check
 		httpClient, err := opts.GetHttpClient()
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to set up Mondoo API client")

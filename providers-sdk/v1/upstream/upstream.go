@@ -6,6 +6,7 @@ package upstream
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
@@ -60,8 +61,19 @@ func (c *UpstreamConfig) InitClient() (*UpstreamClient, error) {
 	res := UpstreamClient{
 		UpstreamConfig: *c,
 		Plugins:        []ranger.ClientPlugin{certAuth},
-		HttpClient:     ranger.DefaultHttpClient(),
+		HttpClient:     c.httpClient(),
 	}
 
 	return &res, nil
+}
+
+func (c *UpstreamConfig) httpClient() *http.Client {
+	if c.ApiProxy == "" {
+		return ranger.DefaultHttpClient()
+	}
+	proxy, err := url.Parse(c.ApiProxy)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+	return ranger.NewHttpClient(ranger.WithProxy(proxy))
 }
