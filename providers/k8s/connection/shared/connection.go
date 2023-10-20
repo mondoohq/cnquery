@@ -23,6 +23,7 @@ const (
 	OPTION_ADMISSION         = "k8s-admission-review"
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"
+	idPrefix                 = "//platformid.api.mondoo.app/runtime/k8s/uid/"
 )
 
 type ConnectionType string
@@ -63,56 +64,6 @@ type ResourceResult struct {
 	AllNs     bool
 }
 
-func getPlatformInfo(objectKind string, runtime string) *inventory.Platform {
-	// We need this at two places (discovery and provider)
-	// Here it is needed for the transport and this is what is shown on the cli
-	platformData := &inventory.Platform{
-		Family:  []string{"k8s", "k8s-workload"},
-		Kind:    "k8s-object",
-		Runtime: runtime,
-	}
-	switch objectKind {
-	case "pod":
-		platformData.Name = "k8s-pod"
-		platformData.Title = "Kubernetes Pod"
-		return platformData
-	case "cronjob":
-		platformData.Name = "k8s-cronjob"
-		platformData.Title = "Kubernetes CronJob"
-		return platformData
-	case "statefulset":
-		platformData.Name = "k8s-statefulset"
-		platformData.Title = "Kubernetes StatefulSet"
-		return platformData
-	case "deployment":
-		platformData.Name = "k8s-deployment"
-		platformData.Title = "Kubernetes Deployment"
-		return platformData
-	case "job":
-		platformData.Name = "k8s-job"
-		platformData.Title = "Kubernetes Job"
-		return platformData
-	case "replicaset":
-		platformData.Name = "k8s-replicaset"
-		platformData.Title = "Kubernetes ReplicaSet"
-		return platformData
-	case "daemonset":
-		platformData.Name = "k8s-daemonset"
-		platformData.Title = "Kubernetes DaemonSet"
-		return platformData
-	case "ingress":
-		platformData.Name = "k8s-ingress"
-		platformData.Title = "Kubernetes Ingress"
-		return platformData
-	case "namespace":
-		platformData.Name = "k8s-namespace"
-		platformData.Title = "Kubernetes Namespace"
-		return platformData
-	}
-
-	return nil
-}
-
 func sliceToPtrSlice[T any](items []T) []*T {
 	ptrItems := make([]*T, 0, len(items))
 	for i := range items {
@@ -122,7 +73,7 @@ func sliceToPtrSlice[T any](items []T) []*T {
 }
 
 func NewPlatformId(assetId string) string {
-	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + assetId
+	return idPrefix + assetId
 }
 
 func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid string) string {
@@ -143,7 +94,7 @@ func NewWorkloadPlatformId(clusterIdentifier, workloadType, namespace, name, uid
 
 func NewNamespacePlatformId(clusterIdentifier, name, uid string) string {
 	if clusterIdentifier == "" {
-		return fmt.Sprintf("//platformid.api.mondoo.app/runtime/k8s/namespace/%s", name)
+		return fmt.Sprintf("%snamespace/%s", idPrefix, name)
 	}
 
 	return fmt.Sprintf("%s/namespace/%s/uid/%s", clusterIdentifier, name, uid)
