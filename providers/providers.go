@@ -35,9 +35,8 @@ var (
 	// ListActive or ListAll have been called
 	CachedProviders []*Provider
 	// LastProviderInstall keeps track of when the last provider installation
-	// took place relative to this runtime. This means:
-	// - 0 = no provider was installed during this run
-	// - unix time seconds = time of last install during this run
+	// took place relative to this runtime. It is initialized to a non-zero
+	// timestamp during this file's init() method. Timestamps are unix seconds.
 	LastProviderInstall int64
 )
 
@@ -48,6 +47,8 @@ func init() {
 		HomePath, _ = config.HomePath("providers")
 		DefaultPath = HomePath
 	}
+
+	LastProviderInstall = time.Now().Unix()
 }
 
 type Providers map[string]*Provider
