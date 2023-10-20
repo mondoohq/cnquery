@@ -13,11 +13,11 @@ import (
 type extensibleSchema struct {
 	resources.Schema
 
-	loaded    map[string]struct{}
-	runtime   *Runtime
-	allLoaded bool
-	lockAll   sync.Mutex // only used in getting all schemas
-	lockAdd   sync.Mutex // only used when adding a schema
+	loaded        map[string]struct{}
+	runtime       *Runtime
+	lastRefreshed int64
+	lockAll       sync.Mutex // only used in getting all schemas
+	lockAdd       sync.Mutex // only used when adding a schema
 }
 
 func (x *extensibleSchema) loadAllSchemas() {
@@ -28,10 +28,10 @@ func (x *extensibleSchema) loadAllSchemas() {
 	// we complete to load everything and then it will be dumped into this
 	// position. At this point, if it has been loaded we can return safely, since
 	// we don't unlock until we are finished loading.
-	if x.allLoaded {
+	if x.lastRefreshed >= LastProviderInstall {
 		return
 	}
-	x.allLoaded = true
+	x.lastRefreshed = LastProviderInstall
 
 	providers, err := ListActive()
 	if err != nil {
@@ -72,7 +72,7 @@ func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
 	if found, ok := x.Resources[name]; ok {
 		return found
 	}
-	if x.allLoaded {
+	if x.lastRefreshed >= LastProviderInstall {
 		return nil
 	}
 
@@ -83,7 +83,7 @@ func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
 func (x *extensibleSchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
 	found, ok := x.Resources[resource]
 	if !ok {
-		if x.allLoaded {
+		if x.lastRefreshed >= LastProviderInstall {
 			return nil, nil
 		}
 
@@ -100,7 +100,7 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	if ok {
 		return found, fieldObj
 	}
-	if x.allLoaded {
+	if x.lastRefreshed >= LastProviderInstall {
 		return found, nil
 	}
 
@@ -129,7 +129,7 @@ func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
 }
 
 func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
-	if !x.allLoaded {
+	if x.lastRefreshed < LastProviderInstall {
 		x.loadAllSchemas()
 	}
 

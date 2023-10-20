@@ -34,6 +34,11 @@ var (
 	// CachedProviders contains all providers that have been loaded the last time
 	// ListActive or ListAll have been called
 	CachedProviders []*Provider
+	// LastProviderInstall keeps track of when the last provider installation
+	// took place relative to this runtime. This means:
+	// - 0 = no provider was installed during this run
+	// - unix time seconds = time of last install during this run
+	LastProviderInstall int64
 )
 
 func init() {
@@ -277,6 +282,7 @@ func installVersion(name string, version string) (*Provider, error) {
 	// we need to clear out the cache now, because we installed something new,
 	// otherwise it will load old data
 	CachedProviders = nil
+	LastProviderInstall = time.Now().Unix()
 
 	return installed[0], nil
 }
