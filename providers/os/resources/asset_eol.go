@@ -67,7 +67,17 @@ func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 	// get new advisory report
 	// start scanner client
 
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	upstreamClient := mcc
+	if mcc.UpstreamConfig.ApiProxy != "" {
+		log.Debug().Str("api_proxy", mcc.UpstreamConfig.ApiProxy).Msg("use api proxy")
+		var err error
+		upstreamClient, err = mcc.UpstreamConfig.InitClient()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, upstreamClient.HttpClient)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -59,9 +59,19 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 		return nil, resources.MissingUpstreamError{}
 	}
 
+	upstreamClient := mcc
+	if mcc.UpstreamConfig.ApiProxy != "" {
+		log.Debug().Str("api_proxy", mcc.UpstreamConfig.ApiProxy).Msg("use api proxy")
+		var err error
+		upstreamClient, err = mcc.UpstreamConfig.InitClient()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, upstreamClient.HttpClient)
 	if err != nil {
 		return nil, err
 	}
