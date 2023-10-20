@@ -179,7 +179,7 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
-		provider, err := EnsureProvider("", conn.Type, true, r.coordinator.Providers)
+		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.Providers)
 		if err != nil {
 			errs.Add(err)
 			continue
