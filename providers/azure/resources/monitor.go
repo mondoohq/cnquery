@@ -267,7 +267,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.State&plugin.StateIsNull != 0 {
+	if a.StorageAccountId.IsNull() {
 		return nil, errors.New("diagnostic settings has no storage account")
 	}
 	if a.StorageAccountId.Error != nil {
@@ -281,7 +281,7 @@ func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzu
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	if a.StorageAccountId.State&plugin.StateIsNull != 0 {
+	if a.StorageAccountId.IsNull() {
 		return nil, errors.New("diagnostic settings has no storage account")
 	}
 	if a.StorageAccountId.Error != nil {

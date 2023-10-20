@@ -149,6 +149,19 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (interface{}, er
 	return convert.JsonToDict(vault.Properties)
 }
 
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) rbacAuthorizationEnabled() (bool, error) {
+	props := a.GetProperties()
+	if props.Error != nil {
+		return false, props.Error
+	}
+	propsDict := props.Data.(map[string]interface{})
+	rbacProp := propsDict["enableRbacAuthorization"]
+	if rbacProp == nil {
+		return false, errors.New("key vault does not have enableRbacAuthorization property")
+	}
+	return rbacProp.(bool), nil
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

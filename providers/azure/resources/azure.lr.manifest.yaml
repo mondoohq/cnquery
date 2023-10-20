@@ -10,6 +10,7 @@ resources:
       - azure
   azure.subscription:
     fields:
+      advisor: {}
       aks: {}
       authorization: {}
       authorizationSource: {}
@@ -35,6 +36,91 @@ resources:
       tags: {}
       tenantId: {}
       web: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisor:
+    fields:
+      recommendations: {}
+      subscriptionId: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisor.recommendation:
+    fields:
+      id: {}
+      properties: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisorService:
+    fields:
+      averageScore: {}
+      recommendations: {}
+      scores: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisorService.recommendation:
+    fields:
+      category: {}
+      description: {}
+      id: {}
+      impact: {}
+      impactedResource: {}
+      impactedResourceType: {}
+      name: {}
+      properties: {}
+      remediation: {}
+      risk: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisorService.score:
+    fields:
+      currentScore: {}
+      date: {}
+      id: {}
+      name: {}
+      score: {}
+      timeSeries: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisorService.securityScore:
+    fields:
+      categoryCount: {}
+      consumptionUnits: {}
+      date: {}
+      id: {}
+      impactedResourcesCount: {}
+      lastRefreshedDate: {}
+      potentialScoreIncrease: {}
+      score: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.advisorService.timeSeries:
+    fields:
+      aggregationLevel: {}
+      id: {}
+      score: {}
+      scores: {}
+    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -500,12 +586,28 @@ resources:
       keys: {}
       location: {}
       properties: {}
+      rbacAuthorizationEnabled: {}
       secrets: {}
       tags: {}
       type: {}
       vaultName: {}
       vaultUri: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.managedIdentityService:
+    fields:
+      managedIdentities: {}
+      subscriptionId: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.managedIdentityService.managedIdentity:
+    fields:
+      id: {}
     min_mondoo_version: latest
     platform:
       name:
@@ -952,8 +1054,11 @@ resources:
       - azure
   azure.subscription.networkService:
     fields:
+      applicationFirewallPolicies: {}
+      applicationGateways: {}
       applicationSecurityGroups:
         min_mondoo_version: 9.0.3
+      appplicationFirewallPolicies: {}
       bastionHosts: {}
       firewallPolicies:
         min_mondoo_version: 9.0.3
@@ -987,6 +1092,34 @@ resources:
       tags: {}
       type: {}
     min_mondoo_version: 9.0.3
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.applicationFirewallPolicy:
+    fields:
+      etag: {}
+      gateways: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.applicationGateway:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      policy: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
     platform:
       name:
       - azure

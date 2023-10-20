@@ -58,6 +58,8 @@ azure.subscription @defaults ("name") {
   cloudDefender() azure.subscription.cloudDefenderService
   // Get AKS resources inside the subscription
   aks() azure.subscription.aksService
+  // Gets advisor resources inside the subscription
+  advisor() azure.subscription.advisorService
 }
 
 // Azure Resource Group
@@ -194,6 +196,10 @@ private azure.subscription.networkService {
   firewallPolicies() []azure.subscription.networkService.firewallPolicy
   // List of application security groups
   applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
+  // List of application gateways
+  applicationGateways() []azure.subscription.networkService.applicationGateway
+  // List of application firewall policies
+  applicationFirewallPolicies() []azure.subscription.networkService.applicationFirewallPolicy
 }
 
 // Azure Virtual Network (VNet) Gateway
@@ -806,6 +812,46 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
   analytics dict 
 }
 
+// Azure Application Gateway
+azure.subscription.networkService.applicationGateway @defaults("id name location") {
+  // Application Gateway ID
+  id string
+  // Application Gateway name
+  name string
+  // Application Gateway location
+  location string
+  // Application Gateway tags
+  tags map[string]string
+  // Application Gateway resource type
+  type string
+  // Application Gateway etag
+  etag string
+  // Application Gateway properties
+  properties dict
+  // Gets the attached application firewall policy
+  policy() azure.subscription.networkService.applicationFirewallPolicy
+}
+
+// Azure Application Firewall Policy (WAF)
+azure.subscription.networkService.applicationFirewallPolicy @defaults("id name location") {
+  // Application Firewall Policy ID
+  id string
+  // Application Firewall Policy name
+  name string
+  // Application Firewall Policy location
+  location string
+  // Application Firewall Policy tags
+  tags map[string]string
+  // Application Firewall Policy resource type
+  type string
+  // Application Firewall Policy etag
+  etag string
+  // Application Firewall Policy properties
+  properties dict
+  // List of associated application gateways
+  gateways() []azure.subscription.networkService.applicationGateway
+}
+
 // Azure Storage
 private azure.subscription.storageService {
   // The subscription identifier
@@ -1416,6 +1462,8 @@ private azure.subscription.keyVaultService.vault  @defaults("id vaultName locati
   vaultUri() string
   // Key Vault properties 
   properties() dict
+  // Indicates whether RBAC access to the vault is enabled
+  rbacAuthorizationEnabled() bool
   // Key Vault keys 
   keys() []azure.subscription.keyVaultService.key
   // Key Vault certificates 
@@ -1724,4 +1772,84 @@ private azure.subscription.aksService.cluster @defaults("name location") {
   addonProfiles []dict
   // The agent pool profiles of the AKS cluster
   agentPoolProfiles []dict
+}
+
+// Azure Advisor
+private azure.subscription.advisorService {
+  // The subscription identifier
+  subscriptionId string
+  // List of all recommendations by the advisor
+  recommendations() []azure.subscription.advisorService.recommendation
+  // List of scores by categories 
+  scores() []azure.subscription.advisorService.score
+  // Computes the average advisory score
+  averageScore() float
+}
+
+// Azure Advisor Recommendation
+private azure.subscription.advisorService.recommendation {
+  // Recommendation id
+  id string
+  // Recommendation name
+  name string
+  // Recommendation resource type
+  type string
+  // Recommendation category
+  category string
+  // Recommendation risk
+  risk string
+  // Recommendation risk
+  impact string
+  // Recommendation description
+  description string
+  // Recommendation remediation
+  remediation string
+  // The impacted resource category type
+  impactedResourceType string
+  // The impacted resource
+  impactedResource string
+  // Recommendation properties
+  properties dict
+}
+
+// Azure Advisor Score
+private azure.subscription.advisorService.score {
+  // Score identifier
+  id string
+  // Score name
+  name string
+  // Score type
+  type string
+  // Current score for the advisor category
+  currentScore azure.subscription.advisorService.securityScore
+  // List of time series, containing previous scores for the category
+  timeSeries []azure.subscription.advisorService.timeSeries 
+}
+
+// Azure Advisor Time Series
+private azure.subscription.advisorService.timeSeries {
+  // Advisor Time Series identifier
+  id string
+  // The aggregation level for the time series
+  aggregationLevel string
+  // The scores in the time series
+  scores []azure.subscription.advisorService.securityScore
+}
+
+// Azure Advisor Security Score
+private azure.subscription.advisorService.securityScore {
+  // Security Score identifier
+  id string
+  // Security Score score
+  score float
+  // The date the score was calculated
+  date time
+  // The potential percentage increase in overall score at subscription level once all recommendations in this scope are implemented
+  potentialScoreIncrease float
+  // The number of impacted resources
+  impactedResourcesCount int
+  // The count of impacted categories
+  categoryCount int
+  // The consumption units for the score
+  consumptionUnits float
 }
