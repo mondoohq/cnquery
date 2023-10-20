@@ -279,11 +279,6 @@ func installVersion(name string, version string) (*Provider, error) {
 		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
 	}
 
-	// we need to clear out the cache now, because we installed something new,
-	// otherwise it will load old data
-	CachedProviders = nil
-	LastProviderInstall = time.Now().Unix()
-
 	return installed[0], nil
 }
 
@@ -473,6 +468,11 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 
 		res = append(res, provider)
 	}
+
+	// we need to clear out the cache now, because we installed something new,
+	// otherwise it will load old data
+	CachedProviders = nil
+	LastProviderInstall = time.Now().Unix()
 
 	return res, nil
 }
