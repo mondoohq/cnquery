@@ -34,6 +34,10 @@ var (
 	// CachedProviders contains all providers that have been loaded the last time
 	// ListActive or ListAll have been called
 	CachedProviders []*Provider
+	// LastProviderInstall keeps track of when the last provider installation
+	// took place relative to this runtime. It is initialized to a non-zero
+	// timestamp during this file's init() method. Timestamps are unix seconds.
+	LastProviderInstall int64
 )
 
 func init() {
@@ -43,6 +47,8 @@ func init() {
 		HomePath, _ = config.HomePath("providers")
 		DefaultPath = HomePath
 	}
+
+	LastProviderInstall = time.Now().Unix()
 }
 
 type Providers map[string]*Provider
@@ -274,10 +280,6 @@ func installVersion(name string, version string) (*Provider, error) {
 		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
 	}
 
-	// we need to clear out the cache now, because we installed something new,
-	// otherwise it will load old data
-	CachedProviders = nil
-
 	return installed[0], nil
 }
 
@@ -467,6 +469,11 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 
 		res = append(res, provider)
 	}
+
+	// we need to clear out the cache now, because we installed something new,
+	// otherwise it will load old data
+	CachedProviders = nil
+	LastProviderInstall = time.Now().Unix()
 
 	return res, nil
 }

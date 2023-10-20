@@ -5,6 +5,7 @@ package providers
 
 import (
 	"errors"
+	"math"
 	"sync"
 	"time"
 
@@ -96,7 +97,9 @@ func (r *Runtime) Close() {
 }
 
 func (r *Runtime) DeactivateProviderDiscovery() {
-	r.schema.allLoaded = true
+	// Setting this to the max int means this value will always be larger than
+	// any real timestamp for the last installation time of a provider.
+	r.schema.lastRefreshed = math.MaxInt64
 }
 
 func (r *Runtime) AssetMRN() string {
