@@ -78,7 +78,11 @@ type Providers map[string]*Provider
 // connector type first and name second.
 func (p Providers) Lookup(search ProviderLookup) *Provider {
 	if search.ID != "" {
-		return p[search.ID]
+		for _, provider := range p {
+			if provider.ID == search.ID {
+				return provider
+			}
+		}
 	}
 
 	if search.ConnType != "" {
