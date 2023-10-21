@@ -12,6 +12,7 @@ message UpstreamConfig {
   string api_endpoint = 3;
   bool incognito = 4;
   ServiceAccountCredentials creds = 5;
+  string api_proxy = 6;
 }
 
 message ServiceAccountCredentials {

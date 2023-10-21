@@ -104,6 +104,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		upstreamConfig = &upstream.UpstreamConfig{
 			SpaceMrn:    opts.GetParentMrn(),
 			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			ApiProxy:    opts.APIProxy,
 			Incognito:   conf.Incognito,
 			Creds:       serviceAccount,
 		}
