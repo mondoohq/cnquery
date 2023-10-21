@@ -239,13 +239,12 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 
 	x, err := compute()
 	if err != nil {
-		res := &TValue[T]{State: StateIsSet}
+		// why do we always set to IsNull here?
+		res := &TValue[T]{State: StateIsSet | StateIsNull}
 		// Note: if we're getting back a NotReady error, it means the computed
 		// resource is not present and we should return nil.
 		// To avoid panics down the stack, we only set the data and err if it's anything other than a NotReady error
-		if err == NotReady {
-			res.State |= StateIsNull
-		} else {
+		if err != NotReady {
 			res.Data = x
 			res.Error = err
 		}
