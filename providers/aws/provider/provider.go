@@ -253,7 +253,8 @@ func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 	if c, ok := conn.(*connection.AwsConnection); ok {
 		asset.Name = c.Conf.Host
 		asset.Platform = c.PlatformInfo()
-		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts" + c.AccountId()}
+		// TODO: do not do this here but in discovery
+		asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/aws/accounts/" + c.AccountId()}
 	}
 	if c, ok := conn.(*awsec2ebsconn.AwsEbsConnection); ok {
 		asset.Platform = c.PlatformInfo()
