@@ -113,10 +113,12 @@ func (a *mqlAzureSubscriptionAdvisorService) scores() ([]interface{}, error) {
 				}
 				id := fmt.Sprintf("%s/timeSeries/%d/scores/%d", s.ID, tsIdx, idx)
 				mqlTsScore, err := CreateResource(a.MqlRuntime, "azure.subscription.advisorService.securityScore", map[string]*llx.RawData{
-					"id":                     llx.StringData(id),
-					"date":                   llx.TimeData(dt),
-					"score":                  llx.FloatData(sh.Score),
-					"consumptionUnits":       llx.FloatData(sh.ConsumptionUnits),
+					"id":               llx.StringData(id),
+					"date":             llx.TimeData(dt),
+					"score":            llx.FloatData(sh.Score),
+					"consumptionUnits": llx.FloatData(sh.ConsumptionUnits),
+					// time series do not have a category count
+					"categoryCount":          llx.NilData,
 					"impactedResourcesCount": llx.IntData(int64(sh.ImpactedResourceCount)),
 					"potentialScoreIncrease": llx.FloatData(sh.PotentialScoreIncrease),
 				})
@@ -145,6 +147,7 @@ func (a *mqlAzureSubscriptionAdvisorService) scores() ([]interface{}, error) {
 			"date":                   llx.TimeData(dt),
 			"score":                  llx.FloatData(s.Properties.LastRefreshedScore.Score),
 			"consumptionUnits":       llx.FloatData(s.Properties.LastRefreshedScore.ConsumptionUnits),
+			"categoryCount":          llx.IntData(int64(s.Properties.LastRefreshedScore.CategoryCount)),
 			"impactedResourcesCount": llx.IntData(int64(s.Properties.LastRefreshedScore.ImpactedResourceCount)),
 			"potentialScoreIncrease": llx.FloatData(s.Properties.LastRefreshedScore.PotentialScoreIncrease),
 		})
