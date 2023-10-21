@@ -27,7 +27,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.2.0
+	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
 	go.mondoo.com/ranger-rpc v0.5.2
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.147.0
@@ -90,14 +90,12 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hnakamur/go-scp v1.0.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/asmfmt v1.3.2 // indirect
@@ -108,7 +106,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8 // indirect
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
@@ -128,7 +126,6 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sethvargo/go-password v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
 	github.com/vbatts/tar-split v0.11.5 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
