@@ -645,8 +645,7 @@ func init() {
 
 	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
 	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
-	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd)
-	rootCmd.AddCommand(updateCmd, checkCmd, defaultsCmd)
+	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd, defaultsCmd)
 }
 
 func main() {
