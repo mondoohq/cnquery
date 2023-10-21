@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -268,28 +267,28 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 
 func (a *mqlAzureSubscriptionMonitorServiceLogprofile) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
+		return nil, plugin.NotReady
 	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+		return nil, plugin.NotReady
 	}
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (*mqlAzureSubscriptionStorageServiceAccount, error) {
 	if a.StorageAccountId.IsNull() {
-		return nil, errors.New("diagnostic settings has no storage account")
+		return nil, plugin.NotReady
 	}
 	if a.StorageAccountId.Error != nil {
 		return nil, a.StorageAccountId.Error
 	}
 	storageAccId := a.StorageAccountId.Data
 	if storageAccId == "" {
-		return nil, errors.New("diagnostic settings has no storage account")
+		return nil, plugin.NotReady
 	}
 	return getStorageAccount(storageAccId, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
 }
