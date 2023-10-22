@@ -62,17 +62,30 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	manifest := []byte{}
 	var err error
 
+	clusterName := ""
 	if len(c.manifestContent) > 0 {
 		manifest = c.manifestContent
+		clusterName = "K8s Manifest"
 	} else if c.manifestFile != "" {
 		manifest, err = shared.LoadManifestFile(c.manifestFile)
 		if err != nil {
 			return nil, err
 		}
 		// manifest parent directory name
-		clusterName := shared.ProjectNameFromPath(c.manifestFile)
+		clusterName = shared.ProjectNameFromPath(c.manifestFile)
 		clusterName = "K8s Manifest " + clusterName
 	}
+	// discovered assets pass by here
+	// They already have a name, so do not override it here.
+	if asset.Name == "" {
+		asset.Name = clusterName
+	}
+
+	platformId, err := c.AssetId()
+	if err != nil {
+		return nil, err
+	}
+	asset.PlatformIds = []string{platformId}
 
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
@@ -123,11 +136,11 @@ func (c *Connection) AssetId() (string, error) {
 	// the same resource multiple times but it will result in different assets because of the random
 	// file name.
 
-	if len(c.Objects) == 1 {
+	if len(c.Objects) == 1 && c.asset.Platform.Runtime == "k8s-admission" {
 		o, err := meta.Accessor(c.Objects[0])
 		if err == nil {
 			if o.GetUID() != "" {
-				return string(o.GetUID()), nil
+				return shared.NewPlatformId(string(o.GetUID())), nil
 			}
 		}
 	}
