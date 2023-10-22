@@ -44,6 +44,9 @@ func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx
 	// recording and initialize them.
 	// TODO: we could use the provided information for a later request.
 	for k, v := range data.Fields {
+		if len(v.Data.Type) == 0 {
+			continue
+		}
 		if types.Type(v.Data.Type).ContainsResource() {
 			delete(data.Fields, k)
 		}
