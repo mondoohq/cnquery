@@ -56,16 +56,15 @@ func (r *AssetRecording) SetAsset(asset *inventory.Asset) error {
 		ai.Runtime = asset.Platform.Runtime
 		ai.Labels = asset.Platform.Labels
 	}
-	if r.Assets == nil {
-		r.Assets = []assetRecording{}
-	}
 	if len(r.Assets) == 0 {
-		r.Assets[0] = assetRecording{
-			Asset:       ai,
-			connections: map[string]*connectionRecording{},
-			resources:   map[string]*resourceRecording{},
-			Connections: []connectionRecording{},
-			Resources:   []resourceRecording{},
+		r.Assets = []assetRecording{
+			{
+				Asset:       ai,
+				connections: map[string]*connectionRecording{},
+				resources:   map[string]*resourceRecording{},
+				Connections: []connectionRecording{},
+				Resources:   []resourceRecording{},
+			},
 		}
 	} else {
 		// we want to only overwrite the asset info. some tests use mock policies/queries where there are filters
