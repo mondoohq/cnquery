@@ -75,11 +75,17 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		clusterName = shared.ProjectNameFromPath(c.manifestFile)
 		clusterName = "K8s Manifest " + clusterName
 	}
-	// discoverd assets pass by here
+	// discovered assets pass by here
 	// They already have a name, so do not override it here.
 	if asset.Name == "" {
 		asset.Name = clusterName
 	}
+
+	platformId, err := c.AssetId()
+	if err != nil {
+		return nil, err
+	}
+	asset.PlatformIds = []string{platformId}
 
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
