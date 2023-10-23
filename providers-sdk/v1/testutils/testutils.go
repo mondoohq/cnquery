@@ -275,13 +275,7 @@ func RecordingFromAsset(a *inventory.Asset) providers.Recording {
 }
 
 func MockFromAsset(a *inventory.Asset) llx.Runtime {
-	recording, err := providers.FromAsset(a)
-	if err != nil {
-		panic("failed to create recording from an asset: " + err.Error())
-	}
-	roRecording := recording.ReadOnly()
-
-	return MockFromRecording(roRecording)
+	return MockFromRecording(RecordingFromAsset(a))
 }
 
 func LinuxMock() llx.Runtime {
