@@ -14,9 +14,9 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
-	k8s.io/api v0.28.2
+	k8s.io/api v0.28.3
 	k8s.io/apiextensions-apiserver v0.28.2
-	k8s.io/apimachinery v0.28.2
+	k8s.io/apimachinery v0.28.3
 	k8s.io/client-go v0.28.2
 	k8s.io/klog/v2 v2.100.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
