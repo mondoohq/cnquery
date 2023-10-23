@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/v9/mql"
 	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/lr"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/lr/docs"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
@@ -233,9 +234,26 @@ func mockRuntime(testdata string) llx.Runtime {
 	return mockRuntimeAbs(filepath.Join(TestutilsDir, testdata))
 }
 
-func mockRuntimeAbs(testdata string) llx.Runtime {
+func MockFromRecording(recording providers.Recording) llx.Runtime {
 	runtime := Local().(*providers.Runtime)
 
+	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetMockRecording(recording, networkconf.Config.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetMockRecording(recording, mockprovider.Config.ID, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+
+	return runtime
+}
+
+func mockRuntimeAbs(testdata string) llx.Runtime {
 	abs, _ := filepath.Abs(testdata)
 	recording, err := providers.LoadRecordingFile(abs)
 	if err != nil {
@@ -243,20 +261,21 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 	}
 	roRecording := recording.ReadOnly()
 
-	err = runtime.SetMockRecording(roRecording, runtime.Provider.Instance.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
-	err = runtime.SetMockRecording(roRecording, networkconf.Config.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
-	err = runtime.SetMockRecording(roRecording, mockprovider.Config.ID, true)
-	if err != nil {
-		panic("failed to set recording: " + err.Error())
-	}
+	return MockFromRecording(roRecording)
+}
 
-	return runtime
+func RecordingFromAsset(a *inventory.Asset) providers.Recording {
+	recording, err := providers.FromAsset(a)
+	if err != nil {
+		panic("failed to create recording from an asset: " + err.Error())
+	}
+	roRecording := recording.ReadOnly()
+
+	return roRecording
+}
+
+func MockFromAsset(a *inventory.Asset) llx.Runtime {
+	return MockFromRecording(RecordingFromAsset(a))
 }
 
 func LinuxMock() llx.Runtime {
