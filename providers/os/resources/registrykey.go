@@ -10,6 +10,7 @@ import (
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -51,9 +52,12 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 	}
 	if exit.Data != 0 {
 		stderr := cmd.GetStderr()
+		_, isMock := k.MqlRuntime.Connection.(*mock.Connection)
 		// this would be an expected error and would ensure that we do not throw an error on windows systems
 		// TODO: revisit how this is handled for non-english systems
-		if err == nil && (strings.Contains(stderr.Data, "not exist") || strings.Contains(stderr.Data, "ObjectNotFound")) {
+		if strings.Contains(stderr.Data, "not exist") ||
+			strings.Contains(stderr.Data, "ObjectNotFound") ||
+			isMock {
 			return false, nil
 		}
 
@@ -83,6 +87,16 @@ func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 		return nil, exit.Error
 	}
 	if exit.Data != 0 {
+		stderr := cmd.GetStderr()
+		_, isMock := k.MqlRuntime.Connection.(*mock.Connection)
+		// this would be an expected error and would ensure that we do not throw an error on windows systems
+		// TODO: revisit how this is handled for non-english systems
+		if strings.Contains(stderr.Data, "not exist") ||
+			strings.Contains(stderr.Data, "ObjectNotFound") ||
+			isMock {
+			return nil, nil
+		}
+
 		return nil, errors.New("could not retrieve registry key")
 	}
 
@@ -97,13 +111,16 @@ func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 // Deprecated: properties returns the properties of a registry key
 // This function is deprecated and will be removed in a future release
 func (k *mqlRegistrykey) properties() (map[string]interface{}, error) {
-	res := map[string]interface{}{}
-
 	entries, err := k.getEntries()
 	if err != nil {
 		return nil, err
 	}
+	if entries == nil {
+		k.Properties.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
+	res := map[string]interface{}{}
 	for i := range entries {
 		rkey := entries[i]
 		res[rkey.Key] = rkey.String()
@@ -117,6 +134,10 @@ func (k *mqlRegistrykey) items() ([]interface{}, error) {
 	entries, err := k.getEntries()
 	if err != nil {
 		return nil, err
+	}
+	if entries == nil {
+		k.Items.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	// create MQL mount entry resources for each mount
@@ -191,6 +212,11 @@ func (p *mqlRegistrykeyProperty) id() (string, error) {
 }
 
 func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// we either get an init with path+name or it is all initialized
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
 	path := args["path"]
 	if path == nil {
 		return args, nil, nil
@@ -198,12 +224,6 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	name := args["name"]
 	if name == nil {
-		return args, nil, nil
-	}
-
-	// if the data is set, we do not need to fetch the data first
-	dataRaw := args["data"]
-	if dataRaw != nil {
 		return args, nil, nil
 	}
 
@@ -223,8 +243,9 @@ func initRegistrykeyProperty(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	// set default values
 	args["exists"] = llx.BoolFalse
-	// NOTE: we do not set a value here so that MQL throws an error when a user try to gather the data for a
-	// non-existing key
+	args["data"] = llx.DictData(nil)
+	args["value"] = llx.NilData
+	args["type"] = llx.NilData
 
 	// path exists
 	if exists.Data {
