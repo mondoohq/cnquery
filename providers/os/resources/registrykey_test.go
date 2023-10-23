@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func TestResource_Registrykey(t *testing.T) {
@@ -43,5 +45,19 @@ func TestResource_Registrykey(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Audit", res[0].Data.Value.([]interface{})[0])
+	})
+
+	t.Run("non-existent registry key - props", func(t *testing.T) {
+		res := testWindowsQuery(t, "registrykey('nope').properties")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, &llx.RawData{Type: types.Map(types.String, types.String)}, res[0].Data)
+	})
+
+	t.Run("non-existent registry key - items", func(t *testing.T) {
+		res := testWindowsQuery(t, "registrykey('nope').items")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Nil(t, res[0].Data.Value)
 	})
 }
