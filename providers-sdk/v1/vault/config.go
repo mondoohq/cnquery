@@ -9,19 +9,32 @@ import (
 	"strings"
 )
 
+// supports both the protobuf string and the custom defined string
+// representations of a vault type
 func NewVaultType(name string) (VaultType, error) {
 	entry := strings.TrimSpace(strings.ToLower(name))
 	var code VaultType
-	ok := false
+	marshalMapOk := false
 	for k := range vaultMarshalNameMap {
 		if vaultMarshalNameMap[k] == entry {
-			ok = true
+			marshalMapOk = true
 			code = k
 			break
 		}
 	}
-	if !ok {
-		return VaultType_None, errors.New("unknown type value: " + string(name))
+	if !marshalMapOk {
+		// also support the auto-generated protobuf string values for all the enum values
+		protoMapOk := false
+		for k, v := range VaultType_value {
+			if k == name {
+				protoMapOk = true
+				code = VaultType(v)
+				break
+			}
+		}
+		if !protoMapOk {
+			return VaultType_None, errors.New("unknown type value: " + string(name))
+		}
 	}
 
 	return code, nil
@@ -67,21 +80,14 @@ func (t *VaultType) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		var name string
 		err = json.Unmarshal(data, &name)
-		entry := strings.TrimSpace(strings.ToLower(name))
-
-		var code VaultType
-		ok := false
-		for k := range vaultMarshalNameMap {
-			if vaultMarshalNameMap[k] == entry {
-				ok = true
-				code = k
-				break
-			}
+		if err != nil {
+			return err
 		}
-		if !ok {
-			return errors.New("unknown type value: " + string(data))
+		c, err := NewVaultType(name)
+		if err != nil {
+			return err
 		}
-		*t = code
+		*t = c
 	}
 	return nil
 }

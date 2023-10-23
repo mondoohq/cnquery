@@ -22,12 +22,15 @@ func TestVaultTypeParser(t *testing.T) {
 - gcp-secret-manager
 - aws-secrets-manager
 - aws-parameter-store
+- GCPBerglas
+- AWSParameterStore
+- Memory
 `
 
 	v := []VaultType{}
 	yaml.Unmarshal([]byte(content), &v)
 
-	assert.Equal(t, 8, len(v))
+	assert.Equal(t, 11, len(v))
 	assert.Equal(t, VaultType_None, v[0])
 	assert.Equal(t, VaultType_KeyRing, v[1])
 	assert.Equal(t, VaultType_LinuxKernelKeyring, v[2])
@@ -36,6 +39,9 @@ func TestVaultTypeParser(t *testing.T) {
 	assert.Equal(t, VaultType_GCPSecretsManager, v[5])
 	assert.Equal(t, VaultType_AWSSecretsManager, v[6])
 	assert.Equal(t, VaultType_AWSParameterStore, v[7])
+	assert.Equal(t, VaultType_GCPBerglas, v[8])
+	assert.Equal(t, VaultType_AWSParameterStore, v[9])
+	assert.Equal(t, VaultType_Memory, v[10])
 }
 
 func TestVaultTypeMarshal(t *testing.T) {
