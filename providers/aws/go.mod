@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.111.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.111.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.22.2
