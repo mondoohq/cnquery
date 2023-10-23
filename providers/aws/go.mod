@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.45.26
+	github.com/aws/aws-sdk-go v1.46.1
 	github.com/aws/aws-sdk-go-v2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/config v1.19.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.43
@@ -25,32 +25,32 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.22.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.125.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.23.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.126.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.18.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/efs v1.21.9
 	github.com/aws/aws-sdk-go-v2/service/eks v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.20.8
-	github.com/aws/aws-sdk-go-v2/service/emr v1.28.8
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/emr v1.28.9
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.20.8
-	github.com/aws/aws-sdk-go-v2/service/rds v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.111.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.5
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.111.1
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.22.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.23.2
 	github.com/aws/smithy-go v1.15.0
 	github.com/cockroachdb/errors v1.11.1
@@ -58,7 +58,7 @@ require (
 	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
-	k8s.io/client-go v0.28.2
+	k8s.io/client-go v0.28.3
 )
 
 require (

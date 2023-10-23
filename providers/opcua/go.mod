@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/gopcua/opcua v0.5.1
+	github.com/gopcua/opcua v0.5.2
 	github.com/mozillazg/go-slugify v0.2.0
 	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
 )
