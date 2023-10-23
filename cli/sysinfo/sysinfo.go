@@ -79,14 +79,14 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 
 	exec := mql.New(cfg.runtime, nil)
 	// TODO: it is not returning it as a MQL SingleValue, therefore we need to force it with return
-	raw, err := exec.Exec("return asset { name arch title family build version kind runtime labels ids }", nil)
+	raw, err := exec.Exec("return asset { platform arch title family build version kind runtime labels ids }", nil)
 	if err != nil {
 		return sysInfo, err
 	}
 
 	if vals, ok := raw.Value.(map[string]interface{}); ok {
 		sysInfo.Platform = &inventory.Platform{
-			Name:    llx.TRaw2T[string](vals["name"]),
+			Name:    llx.TRaw2T[string](vals["platform"]),
 			Arch:    llx.TRaw2T[string](vals["arch"]),
 			Title:   llx.TRaw2T[string](vals["title"]),
 			Family:  llx.TRaw2TArr[string](vals["family"]),
