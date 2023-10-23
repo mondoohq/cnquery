@@ -32,6 +32,49 @@ type recording struct {
 	prettyPrintJSON bool                       `json:"-"`
 }
 
+// Creates a recording that holds only the specified asset
+func FromAsset(asset *inventory.Asset) (*recording, error) {
+	id := asset.Mrn
+	if id == "" {
+		id = asset.Id
+	}
+	if id == "" && asset.Platform != nil {
+		id = asset.Platform.Title
+	}
+	ai := assetInfo{
+		ID:          id,
+		Name:        asset.Name,
+		PlatformIDs: asset.PlatformIds,
+	}
+
+	if asset.Platform != nil {
+		ai.Arch = asset.Platform.Arch
+		ai.Title = asset.Platform.Title
+		ai.Family = asset.Platform.Family
+		ai.Build = asset.Platform.Build
+		ai.Version = asset.Platform.Version
+		ai.Kind = asset.Platform.Kind
+		ai.Runtime = asset.Platform.Runtime
+		ai.Labels = asset.Platform.Labels
+	}
+	r := &recording{
+		Assets: []assetRecording{
+			{
+				Asset:       ai,
+				connections: map[string]*connectionRecording{},
+				resources:   map[string]*resourceRecording{},
+			},
+		},
+	}
+
+	r.refreshCache()
+	if err := r.reconnectResources(); err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
 // ReadOnly converts the recording into a read-only recording
 func (r *recording) ReadOnly() *readOnlyRecording {
 	return &readOnlyRecording{r}
