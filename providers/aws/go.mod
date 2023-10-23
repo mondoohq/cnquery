@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.22.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.23.2
 	github.com/aws/smithy-go v1.15.0
 	github.com/cockroachdb/errors v1.11.1
