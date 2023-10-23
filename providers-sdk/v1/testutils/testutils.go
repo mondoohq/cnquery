@@ -267,7 +267,7 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 func RecordingFromAsset(a *inventory.Asset) providers.Recording {
 	recording, err := providers.FromAsset(a)
 	if err != nil {
-		panic("failed to load recording: " + err.Error())
+		panic("failed to create recording from an asset: " + err.Error())
 	}
 	roRecording := recording.ReadOnly()
 
