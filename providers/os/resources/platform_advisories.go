@@ -61,7 +61,20 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	upstreamClient := mcc
+	if mcc.UpstreamConfig.ApiProxy != "" {
+		// The proxy config is part of the http client, but only as pointer
+		// This get's not transfered into the plugin.
+		// Because of that, we have to re-create the http client here, when we use an API proxy
+		log.Info().Str("api_proxy", mcc.UpstreamConfig.ApiProxy).Msg("use api proxy")
+		var err error
+		upstreamClient, err = mcc.UpstreamConfig.InitClient()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, upstreamClient.HttpClient)
 	if err != nil {
 		return nil, err
 	}
