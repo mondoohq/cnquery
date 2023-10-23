@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.125.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.5
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.39.0
 	github.com/aws/smithy-go v1.15.0
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231003182221-725682229e60
 	github.com/c-bata/go-prompt v0.2.6
