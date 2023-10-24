@@ -242,6 +242,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return err
 	}
 	if postProvider.ID != r.Provider.Instance.ID {
+		req.Asset = r.Provider.Connection.Asset
 		r.UseProvider(postProvider.ID)
 		r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
 		if err != nil {
