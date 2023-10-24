@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/v9/logger"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault/config"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault/inmemory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault/multivault"
@@ -129,28 +128,9 @@ func (im *inventoryManager) loadInventory(inventory *inventory.Inventory, runtim
 	// in-memory vault is used as fall-back store embedded credentials
 	im.inmemoryVault = inmemory.New(inmemory.WithSecretMap(secrets))
 	if inventory.Spec.Vault != nil {
-		var v vault.Vault
-		// when the type is not provided but a name was given, then look up in our internal vault configuration
-		if inventory.Spec.Vault.Name != "" && inventory.Spec.Vault.Type == vault.VaultType_None {
-			v, err = config.GetConfiguredVault(inventory.Spec.Vault.Name)
-			if err != nil {
-				return err
-			}
-		} else {
-			t, err := vault.NewVaultType(inventory.Spec.Vault.Type.String())
-			if err != nil {
-				return err
-			}
-
-			// instantiate with full vault config
-			v, err = config.New(&vault.VaultConfiguration{
-				Name:    inventory.Spec.Vault.Name,
-				Type:    t,
-				Options: inventory.Spec.Vault.Options,
-			})
-			if err != nil {
-				return err
-			}
+		v, err := inventory.GetVault()
+		if err != nil {
+			return err
 		}
 		im.vault = v
 	}
