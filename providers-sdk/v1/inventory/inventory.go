@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault/config"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
 )
@@ -104,6 +105,15 @@ func (p *Inventory) ensureRequireMetadataStructs() {
 // ToYAML returns the inventory as yaml
 func (p *Inventory) ToYAML() ([]byte, error) {
 	return yaml.Marshal(p)
+}
+
+func (p *Inventory) GetVault() (vault.Vault, error) {
+	// instantiate with full vault config
+	v, err := config.New(p.Spec.Vault)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
 }
 
 // PreProcess extracts all the embedded credentials from the assets and migrates those to in the
