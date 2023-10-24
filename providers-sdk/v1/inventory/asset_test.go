@@ -33,7 +33,6 @@ func TestAddMondooLabels(t *testing.T) {
 			"k8s.mondoo.com/test": "val",
 			"mondoo.com/sample":   "example",
 		})
-
 }
 
 func TestAddAnnotations(t *testing.T) {
@@ -69,6 +68,20 @@ func TestAddAnnotations(t *testing.T) {
 		assert.Equal(t, map[string]string{
 			"foo":   "bar",
 			"fruit": "banana",
+		}, asset.Annotations)
+	})
+
+	t.Run("test overwrite", func(t *testing.T) {
+		asset := &Asset{
+			Annotations: map[string]string{
+				"foo": "bar",
+			},
+		}
+		asset.AddAnnotations(map[string]string{
+			"foo": "not-bar",
+		})
+		assert.Equal(t, map[string]string{
+			"foo": "not-bar",
 		}, asset.Annotations)
 	})
 }
