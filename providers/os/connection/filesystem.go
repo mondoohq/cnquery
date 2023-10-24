@@ -20,7 +20,7 @@ const (
 
 var _ shared.Connection = &FileSystemConnection{}
 
-func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, assert *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
+func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
 	path, ok := conf.Options["path"]
 	if !ok {
 		// fallback to host + path option
@@ -36,15 +36,15 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, assert 
 	return &FileSystemConnection{
 		id:         id,
 		Conf:       conf,
-		asset:      assert,
+		asset:      asset,
 		MountedDir: path,
 		closeFN:    closeFN,
 		fs:         fs.NewMountedFs(path),
 	}, nil
 }
 
-func NewFileSystemConnection(id uint32, conf *inventory.Config, assert *inventory.Asset) (*FileSystemConnection, error) {
-	return NewFileSystemConnectionWithClose(id, conf, assert, nil)
+func NewFileSystemConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*FileSystemConnection, error) {
+	return NewFileSystemConnectionWithClose(id, conf, asset, nil)
 }
 
 type FileSystemConnection struct {
