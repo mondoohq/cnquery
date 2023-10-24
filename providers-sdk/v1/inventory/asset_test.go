@@ -34,3 +34,54 @@ func TestAddMondooLabels(t *testing.T) {
 			"mondoo.com/sample":   "example",
 		})
 }
+
+func TestAddAnnotations(t *testing.T) {
+	t.Run("AddAnnotations", func(t *testing.T) {
+		asset := &Asset{
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+		}
+		asset.AddAnnotations(map[string]string{})
+		assert.Equal(t, map[string]string{}, asset.Annotations)
+	})
+
+	t.Run("test nil", func(t *testing.T) {
+		asset := &Asset{
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+		}
+		asset.AddAnnotations(nil)
+		assert.Equal(t, map[string]string{}, asset.Annotations)
+	})
+
+	t.Run("test merge", func(t *testing.T) {
+		asset := &Asset{
+			Annotations: map[string]string{
+				"foo": "bar",
+			},
+		}
+		asset.AddAnnotations(map[string]string{
+			"fruit": "banana",
+		})
+		assert.Equal(t, map[string]string{
+			"foo":   "bar",
+			"fruit": "banana",
+		}, asset.Annotations)
+	})
+
+	t.Run("test overwrite", func(t *testing.T) {
+		asset := &Asset{
+			Annotations: map[string]string{
+				"foo": "bar",
+			},
+		}
+		asset.AddAnnotations(map[string]string{
+			"foo": "not-bar",
+		})
+		assert.Equal(t, map[string]string{
+			"foo": "not-bar",
+		}, asset.Annotations)
+	})
+}
