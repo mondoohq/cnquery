@@ -162,11 +162,11 @@ atlassian.jira.project @defaults("name") {
   url string
   // Email 
   email string
-  // Private 
+  // Whether the group is private 
   private bool
-  // Deleted 
+  // Whether the group has been deleted 
   deleted bool
-  // Archived 
+  // Whether the group has been archived 
   archived bool
   // Properties
   properties() []atlassian.jira.project.property
