@@ -146,8 +146,6 @@ type scanConfig struct {
 	Props          map[string]string
 	Bundle         *explorer.Bundle
 	runtime        *providers.Runtime
-	// annotations that will be applied to all discovered assets
-	annotations map[string]string
 
 	IsIncognito bool
 }
@@ -165,11 +163,6 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		log.Fatal().Err(err).Msg("failed to parse props")
 	}
 
-	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"))
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse inventory")
-	}
-
 	annotations, err := cmd.Flags().GetStringToString("annotation")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse annotations")
@@ -183,6 +176,11 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 	for k, v := range annotations {
 		optAnnotations[k] = v
 	}
+	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse inventory")
+	}
+
 	conf := scanConfig{
 		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
@@ -191,7 +189,6 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
 		runtime:        runtime,
-		annotations:    optAnnotations,
 	}
 
 	// if users want to get more information on available output options,
@@ -310,7 +307,6 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 				Bundle:           config.Bundle,
 				QueryPackFilters: config.QueryPackNames,
 				Props:            config.Props,
-				Annotations:      config.annotations,
 			})
 	}
 	return scanner.Run(
@@ -320,7 +316,6 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 			Bundle:           config.Bundle,
 			QueryPackFilters: config.QueryPackNames,
 			Props:            config.Props,
-			Annotations:      config.annotations,
 		})
 }
 

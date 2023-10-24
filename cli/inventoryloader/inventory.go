@@ -136,10 +136,11 @@ func parseDomainListInventory(data []byte) (*inventory.Inventory, error) {
 
 // ParseOrUse tries to load the inventory and if nothing exists it
 // will instead use the provided asset.
-func ParseOrUse(cliAsset *inventory.Asset, insecure bool) (*inventory.Inventory, error) {
+func ParseOrUse(cliAsset *inventory.Asset, insecure bool, annotations map[string]string) (*inventory.Inventory, error) {
 	var v1inventory *inventory.Inventory
 	var err error
 
+	cliAsset.AddAnnotations(annotations)
 	// parses optional inventory file if inventory was not piped already
 	v1inventory, err = Parse()
 	if err != nil {
