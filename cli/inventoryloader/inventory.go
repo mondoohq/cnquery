@@ -140,7 +140,6 @@ func ParseOrUse(cliAsset *inventory.Asset, insecure bool, annotations map[string
 	var v1inventory *inventory.Inventory
 	var err error
 
-	cliAsset.AddAnnotations(annotations)
 	// parses optional inventory file if inventory was not piped already
 	v1inventory, err = Parse()
 	if err != nil {
@@ -149,6 +148,7 @@ func ParseOrUse(cliAsset *inventory.Asset, insecure bool, annotations map[string
 
 	// add asset from cli to inventory
 	if (len(v1inventory.Spec.GetAssets()) == 0) && cliAsset != nil {
+		cliAsset.AddAnnotations(annotations)
 		v1inventory.AddAssets(cliAsset)
 	}
 
