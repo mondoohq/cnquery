@@ -6,68 +6,28 @@ package resources
 import (
 	"context"
 	"errors"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
-
-// convertPlatform2VulnPlatform converts the motor platform.Platform to the
-// platform object we use for vulnerability data
-// TODO: we need to harmonize the platform objects
-func convertPlatform2VulnPlatform(pf *inventory.Platform) *mvd.Platform {
-	if pf == nil {
-		return nil
-	}
-	return &mvd.Platform{
-		Name:    pf.Name,
-		Release: pf.Version,
-		Build:   pf.Build,
-		Arch:    pf.Arch,
-		Title:   pf.Title,
-		Labels:  pf.Labels,
-	}
-}
-
-// FIXME: DEPRECATED, update in v10.0 vv
-func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	res, cache, err := initAssetEol(runtime, args)
-	if err != nil || res != nil || cache == nil {
-		return res, nil, err
-	}
-
-	acache := cache.(*mqlAssetEol)
-	cres := mqlPlatformEol{
-		MqlRuntime: acache.MqlRuntime,
-		DocsUrl:    acache.DocsUrl,
-		ProductUrl: acache.ProductUrl,
-		Date:       acache.Date,
-	}
-
-	return nil, &cres, nil
-}
-
-// ^^
 
 func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
-	eolPlatform := convertPlatform2VulnPlatform(platform)
+	eolPlatform := mvd.NewMvdPlatform(platform)
 
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, nil, resources.MissingUpstreamError{}
 	}
 
-	// get new advisory report
-	// start scanner client
-
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	// get new mvd client
+	scannerClient, err := mvd.NewAdvisoryScannerClient(mcc.ApiEndpoint, mcc.HttpClient, mcc.Plugins...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -102,3 +62,72 @@ func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 
 	return nil, &res, nil
 }
+
+// FIXME: DEPRECATED, update in v10.0 vv
+func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	res, cache, err := initAssetEol(runtime, args)
+	if err != nil || res != nil || cache == nil {
+		return res, nil, err
+	}
+
+	acache := cache.(*mqlAssetEol)
+	cres := mqlPlatformEol{
+		MqlRuntime: acache.MqlRuntime,
+		DocsUrl:    acache.DocsUrl,
+		ProductUrl: acache.ProductUrl,
+		Date:       acache.Date,
+	}
+
+	return nil, &cres, nil
+}
+
+// ^^
+
+// FIXME: DEPRECATED, update in v10.0 vv
+func (s *mqlMondooEol) id() (string, error) {
+	return "product:" + s.Product.Data + ":" + s.Version.Data, nil
+}
+
+func (s *mqlMondooEol) date() (*time.Time, error) {
+	name := s.Product.Data
+	version := s.Version.Data
+
+	mcc := s.MqlRuntime.Upstream
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, resources.MissingUpstreamError{}
+	}
+
+	// get new mvd client
+	scannerClient, err := mvd.NewAdvisoryScannerClient(mcc.ApiEndpoint, mcc.HttpClient, mcc.Plugins...)
+	if err != nil {
+		return nil, err
+	}
+
+	platformEolInfo, err := scannerClient.IsEol(context.Background(), &mvd.Platform{
+		Name:    name,
+		Release: version,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if platformEolInfo == nil {
+		return nil, errors.New("no platform eol information available")
+	}
+
+	var eolDate *time.Time
+
+	if platformEolInfo.EolDate != "" {
+		parsedEolDate, err := time.Parse(time.RFC3339, platformEolInfo.EolDate)
+		if err != nil {
+			return nil, errors.New("could not parse eol date: " + platformEolInfo.EolDate)
+		}
+		eolDate = &parsedEolDate
+	} else {
+		eolDate = &llx.NeverFutureTime
+	}
+
+	return eolDate, nil
+}
+
+// ^^

@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -18,7 +17,6 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd/cvss"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/ranger-rpc"
 )
 
 // TODO: generalize this kind of function
@@ -41,27 +39,14 @@ func getKernelVersion(kernel *mqlKernel) string {
 	return val.(string)
 }
 
-func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugin, httpClient *http.Client) (*mvd.AdvisoryScannerClient, error) {
-	sa, err := mvd.NewAdvisoryScannerClient(mondooapi, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range plugins {
-		sa.AddPlugin(plugins[i])
-	}
-	return sa, nil
-}
-
 func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
 	}
 
-	// get new advisory report
-	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	// get new mvd client
+	scannerClient, err := mvd.NewAdvisoryScannerClient(mcc.ApiEndpoint, mcc.HttpClient, mcc.Plugins...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +90,7 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	}
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform:      convertPlatform2VulnPlatform(conn.Asset().Platform),
+		Platform:      mvd.NewMvdPlatform(conn.Asset().Platform),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}
