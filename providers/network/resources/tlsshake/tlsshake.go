@@ -45,6 +45,8 @@ const DefaultTimeout = 2 * time.Second
 
 var ErrFailedToConnect = errors.New("failed to connect")
 
+var ErrFailedToTlsResponse = errors.New("failed to get a TLS response")
+
 func DefaultScanConfig() ScanConfig {
 	return ScanConfig{
 		SNIsupported:              true,
@@ -197,7 +199,19 @@ func (s *Tester) Test(conf ScanConfig) error {
 
 	workers.Wait()
 
-	return errs.Deduplicate()
+	resErr := errs.Deduplicate().(*multierr.Errors)
+
+	// After deduplicating all the errors, there is one special case:
+	// If we only received one unique error, and it indicates that we cannot
+	// get any TLS response, then we can declare this entire scan to be
+	// a non-TLS scan and just return that error. If errors are mixed, we have to
+	// return them one by one, because valid responses have been reached.
+	// But if all we get is this error, there is no TLS at this endpoint.
+	if len(resErr.Errors) == 1 && errors.Is(resErr.Errors[0], ErrFailedToTlsResponse) {
+		return ErrFailedToTlsResponse
+	}
+
+	return resErr
 }
 
 // Attempts to connect to an endpoint with a given version and records
@@ -475,6 +489,9 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 		msg := make([]byte, msgLen)
 		_, err = io.ReadFull(reader, msg)
 		if err != nil {
+			if errors.Is(err, io.ErrUnexpectedEOF) {
+				return false, ErrFailedToTlsResponse
+			}
 			return false, multierr.Wrap(err, "Failed to read full TLS/SSL response body (type: '"+typ+"')")
 		}
 

@@ -190,7 +190,7 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 
 	tester := tlsshake.New(proto, domainName, host, int(port))
 	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
-		if errors.Is(err, tlsshake.ErrFailedToConnect) {
+		if errors.Is(err, tlsshake.ErrFailedToConnect) || errors.Is(err, tlsshake.ErrFailedToTlsResponse) {
 			s.Params.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
