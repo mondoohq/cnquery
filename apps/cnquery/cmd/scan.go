@@ -87,6 +87,7 @@ To manually configure a query pack, use this:
 		viper.BindPFlag("inventory-domainlist", cmd.Flags().Lookup("inventory-domainlist"))
 		viper.BindPFlag("querypack-bundle", cmd.Flags().Lookup("querypack-bundle"))
 		viper.BindPFlag("detect-cicd", cmd.Flags().Lookup("detect-cicd"))
+		viper.BindPFlag("asset-name", cmd.Flags().Lookup("asset-name"))
 		viper.BindPFlag("category", cmd.Flags().Lookup("category"))
 
 		// for all assets
@@ -176,6 +177,15 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 	for k, v := range annotations {
 		optAnnotations[k] = v
 	}
+
+	assetName, err := cmd.Flags().GetString("asset-name")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse asset-name")
+	}
+	if assetName != "" && cliRes.Asset != nil {
+		cliRes.Asset.Name = assetName
+	}
+
 	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse inventory")
