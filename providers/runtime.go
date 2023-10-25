@@ -164,11 +164,19 @@ func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, 
 // but haven't initialized any provider. It will also try to install providers
 // if necessary (and enabled)
 func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
+	provider, err := r.providerForAsset(asset)
+	if err != nil {
+		return err
+	}
+	return r.UseProvider(provider.ID)
+}
+
+func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 	if asset == nil {
-		return errors.New("please provide an asset to detect the provider")
+		return nil, errors.New("please provide an asset to detect the provider")
 	}
 	if len(asset.Connections) == 0 {
-		return errors.New("asset has no connections, can't detect provider")
+		return nil, errors.New("asset has no connections, can't detect provider")
 	}
 
 	var errs multierr.Errors
@@ -185,10 +193,10 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 			continue
 		}
 
-		return r.UseProvider(provider.ID)
+		return provider, nil
 	}
 
-	return multierr.Wrap(errs.Deduplicate(), "cannot find provider for this asset")
+	return nil, multierr.Wrap(errs.Deduplicate(), "cannot find provider for this asset")
 }
 
 // Connect to an asset using the main provider
@@ -216,6 +224,32 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO: This is a stopgap that detects if the connect call returned an asset
+	// that is different from the provider we used for connecting. We will keep
+	// supporting this approach throughout v9 but plan to change it in the future,
+	// so that the connect call sticks to connecting only and instead introduce
+	// a separate discover call to handle this behavior.
+	//
+	// This stopgap makes sure that if the connection indicates a different provider,
+	// it is the intention of the provider author to switch the asset to said provider.
+	//
+	// Additionally, we do not loop this connect+recheck approach indefinitely.
+	// We only run it once and only accept one asset switch. This will be
+	// changed once we have an explicit discover call in plugins.
+	postProvider, err := r.providerForAsset(r.Provider.Connection.Asset)
+	if err != nil {
+		return err
+	}
+	if postProvider.ID != r.Provider.Instance.ID {
+		req.Asset = r.Provider.Connection.Asset
+		r.UseProvider(postProvider.ID)
+		r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
+		if err != nil {
+			return err
+		}
+	}
+
 	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	return nil
 }
