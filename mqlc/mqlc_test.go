@@ -212,6 +212,33 @@ func TestCompiler_Buggy(t *testing.T) {
 	}
 }
 
+func TestCompiler_StructuredErrors(t *testing.T) {
+	data := []struct {
+		code string
+		errT any
+	}{
+		{
+			code: `does_not_exist`,
+			errT: mqlc.ErrIdentifierNotFound{},
+		},
+		{
+			code: `mondoo.does_not_exist`,
+			errT: mqlc.ErrIdentifierNotFound{},
+		},
+		{
+			code: `props.does_not_exist`,
+			errT: mqlc.ErrIdentifierNotFound{},
+		},
+	}
+
+	for _, v := range data {
+		t.Run(v.code, func(t *testing.T) {
+			_, err := mqlc.Compile(v.code, nil, conf)
+			assert.ErrorAs(t, err, &v.errT)
+		})
+	}
+}
+
 func TestCompiler_Semicolon(t *testing.T) {
 	compileT(t, "mondoo.version;mondoo.build", func(res *llx.CodeBundle) {
 		require.Len(t, res.CodeV2.Blocks, 1)

@@ -18,6 +18,7 @@ type withMessage struct {
 
 func (w withMessage) Error() string { return w.msg + ": " + w.cause.Error() }
 func (w withMessage) Cause() error  { return w.cause }
+func (w withMessage) Unwrap() error { return w.cause }
 
 func Wrap(err error, message string) error {
 	if err == nil {

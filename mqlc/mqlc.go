@@ -22,6 +22,26 @@ import (
 	"go.mondoo.com/cnquery/v9/utils/sortx"
 )
 
+type ErrIdentifierNotFound struct {
+	Identifier string
+	Binding    string
+}
+
+func (e *ErrIdentifierNotFound) Error() string {
+	if e.Binding == "" {
+		return "cannot find resource for identifier '" + e.Identifier + "'"
+	}
+	return "cannot find field or resource '" + e.Identifier + "' in block for type '" + e.Binding + "'"
+}
+
+type ErrPropertyNotFound struct {
+	Name string
+}
+
+func (e *ErrPropertyNotFound) Error() string {
+	return "cannot find property '" + e.Name + "', please define it first"
+}
+
 type variable struct {
 	name string
 	ref  uint64
@@ -1298,10 +1318,10 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// suggestions
 	if callBinding == nil {
 		addResourceSuggestions(c.Schema, id, c.Result)
-		return nil, types.Nil, errors.New("cannot find resource for identifier '" + id + "'")
+		return nil, types.Nil, &ErrIdentifierNotFound{Identifier: id}
 	}
 	addFieldSuggestions(availableFields(c, callBinding.typ), id, c.Result)
-	return nil, types.Nil, errors.New("cannot find field or resource '" + id + "' in block for type '" + c.Binding.typ.Label() + "'")
+	return nil, types.Nil, &ErrIdentifierNotFound{Identifier: id, Binding: c.Binding.typ.Label()}
 }
 
 // compileProps handles built-in properties for this code
@@ -1334,8 +1354,7 @@ func (c *compiler) compileProps(call *parser.Call, calls []*parser.Call, res *ll
 		}
 
 		addFieldSuggestions(keys, name, res)
-
-		return nil, types.Nil, errors.New("cannot find property '" + name + "', please define it first")
+		return nil, types.Nil, &ErrPropertyNotFound{Name: name}
 	}
 
 	c.addChunk(&llx.Chunk{
