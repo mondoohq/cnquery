@@ -24,6 +24,25 @@ var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
 
+// Returns the connection's port adjusted for TLS.
+// If no port is set, we estimate what it might be from the scheme.
+// If that doesn't help, we set it to 443.
+func connTlsPort(conn *connection.HostConnection) int64 {
+	if conn.Conf.Port != 0 {
+		return int64(conn.Conf.Port)
+	}
+
+	if conn.Conf.Runtime == "" {
+		return 443
+	}
+
+	port := CommonPorts[conn.Conf.Runtime]
+	if port == 0 {
+		return 443
+	}
+	return int64(port)
+}
+
 func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// if the socket is set already, we have nothing else to do
 	if _, ok := args["socket"]; ok {
@@ -31,9 +50,7 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 	}
 
 	conn := runtime.Connection.(*connection.HostConnection)
-	if conn.Conf.Port == 0 {
-		conn.Conf.Port = 443
-	}
+	port := connTlsPort(conn)
 
 	if target, ok := args["target"]; ok {
 		m := reTarget.FindStringSubmatch(target.Value.(string))
@@ -42,8 +59,8 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 		}
 
 		proto := "tcp"
-
-		var port int64 = 443
+		// If the port is set as part of the target string, try to parse it
+		// from here.
 		if len(m[2]) != 0 {
 			rawPort, err := strconv.ParseUint(m[2][1:], 10, 64)
 			if err != nil {
@@ -74,7 +91,7 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 	} else {
 		socket, err := CreateResource(runtime, "socket", map[string]*llx.RawData{
 			"protocol": llx.StringData("tcp"),
-			"port":     llx.IntData(int64(conn.Conf.Port)),
+			"port":     llx.IntData(port),
 			"address":  llx.StringData(conn.Conf.Host),
 		})
 		if err != nil {
