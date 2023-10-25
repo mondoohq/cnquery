@@ -115,6 +115,7 @@
 
 # s.b. CircleCI
 \bCircleCi\b
+\bCircle CI\b
 
 # s.b. AppArmor
 \bApparmor\b
@@ -397,6 +398,9 @@
 #
 # Azure Products
 #
+
+# s.b. Azure Pipelines
+\bAzure DevOps Pipelines\b
 
 # s.b. Key Vault
 \bKey vault\b
