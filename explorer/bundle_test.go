@@ -4,11 +4,13 @@
 package explorer
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
 func TestBundleLoad(t *testing.T) {
@@ -20,6 +22,19 @@ func TestBundleLoad(t *testing.T) {
 
 		// ensure that the uid is generated
 		assert.True(t, len(bundle.Packs[0].Queries[0].Uid) > 0)
+	})
+
+	t.Run("compile complex bundle", func(t *testing.T) {
+		bundle, err := BundleFromPaths("../examples/complex.mql.yaml")
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(bundle.Packs))
+		assert.Equal(t, 4, len(bundle.Queries))
+
+		mock := testutils.LinuxMock()
+		m, err := bundle.Compile(context.Background(), mock.Schema())
+		require.NoError(t, err)
+		require.NotNil(t, m)
+		assert.Len(t, m.Queries, 6)
 	})
 
 	t.Run("load bundle from memory", func(t *testing.T) {
