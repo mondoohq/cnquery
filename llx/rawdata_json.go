@@ -343,9 +343,12 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 			return nil
 		}
 
-		// if *time == NeverPastTime || *time == NeverFutureTime {
-		// 	TODO: ... unclear
-		// }
+		if *time == NeverPastTime || *time == NeverFutureTime {
+			r := "\"" + "Never" + "\""
+
+			buf.WriteString(r)
+			return nil
+		}
 
 		b, err := time.MarshalJSON()
 		buf.Write(b)
