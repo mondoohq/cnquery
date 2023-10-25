@@ -8,11 +8,11 @@ option go_package = "go.mondoo.com/cnquery/v9/providers/core/resources"
 mondoo @defaults("version") {
   // Version of the client running on the asset
   version() string
-  // The build of the client (e.g. production, development)
+  // Build of the client (e.g. production, development)
   build() string
-  // The architecture of this client (e.g. linux-amd64)
+  // Architecture of this client (e.g. linux-amd64)
   arch() string
-  // Returns the agent execution environment
+  // Agent execution environment
   jobEnvironment() dict
   // Connection capabilities
   capabilities() []string
@@ -66,7 +66,7 @@ time {
   tomorrow() time
 }
 
-// Builtin regular expression functions
+// Built-in regular expression functions
 regex {
   // Matches IPv4 addresses
   ipv4() regex
@@ -90,7 +90,7 @@ regex {
 
 // Parse provides common parsers (json, ini, certs, etc)
 parse {
-  // Builtin functions:
+  // Built-in functions:
   // date(value, format) time
 }
 
@@ -101,8 +101,8 @@ uuid @defaults("value") {
   value string
   // URN returns the RFC 2141 URN form of uuid
   urn() string
-  // Version of uuid
+  // Version of UUID
   version() int
-  // Variant encoded in uuid
+  // Variant encoded in UUID
   variant() string
 }
