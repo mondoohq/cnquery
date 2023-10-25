@@ -72,7 +72,7 @@ resources:
   aws.account:
     docs:
       desc: |
-        The `aws.account` resource provides configuration for AWS accounts including the account number, and configured aliases.
+        The `aws.account` resource provides configuration for AWS accounts, including the account number and configured aliases.
     fields:
       aliases: {}
       id: {}
@@ -84,7 +84,7 @@ resources:
       - aws
     snippets:
     - query: "aws.account { \n  id \n  aliases \n}\n"
-      title: Return the account id (number) and any configured account aliases
+      title: Return the account ID (number) and any configured account aliases
   aws.acm:
     docs:
       desc: The `aws.acm` resource can be used to assess the configuration of the
@@ -113,7 +113,7 @@ resources:
         aws.acm.certificates.
           where( status != /PENDING_VALIDATION/ ).
           all (notAfter - notBefore <= 90 * time.day)
-      title: Checks whether ACM Certificates in your account are marked for expiration
+      title: Checks whether ACM certificates in your account are marked for expiration
         within 90 days
   aws.acm.certificate:
     docs:
