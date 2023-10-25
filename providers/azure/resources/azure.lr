@@ -48,7 +48,7 @@ azure.subscription @defaults ("name") {
   mariaDb() azure.subscription.mariaDbService
   // Cosmos DB resources in the subscription
   cosmosDb() azure.subscription.cosmosDbService
-  // Vault resources in the subscription
+  // Azure Key Vault resources in the subscription
   keyVault() azure.subscription.keyVaultService
   // Authorization resources in the subscription
   authorization() azure.subscription.authorizationService
