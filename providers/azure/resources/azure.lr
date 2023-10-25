@@ -48,7 +48,7 @@ azure.subscription @defaults ("name") {
   mariaDb() azure.subscription.mariaDbService
   // Cosmos DB resources in the subscription
   cosmosDb() azure.subscription.cosmosDbService
-  // Key vault resources in the subscription
+  // Vault resources in the subscription
   keyVault() azure.subscription.keyVaultService
   // Authorization resources in the subscription
   authorization() azure.subscription.authorizationService
@@ -1448,29 +1448,29 @@ private azure.subscription.keyVaultService {
 
 // Azure Key Vault Vault
 private azure.subscription.keyVaultService.vault  @defaults("id vaultName location") {
-  // Key vault ID
+  // Vault ID
   id string
-  // Key vault name
+  // Vault name
   vaultName string
-  // Key vault type
+  // Vault type
   type string
-  // Key vault location
+  // Vault location
   location string
-  // Key vault tags
+  // Vault tags
   tags map[string]string
-  // Key vault URL 
+  // Vault URL 
   vaultUri() string
-  // Key vault properties 
+  // Vault properties 
   properties() dict
   // Whether RBAC access to the vault is enabled
   rbacAuthorizationEnabled() bool
-  // Key vault keys 
+  // Vault keys 
   keys() []azure.subscription.keyVaultService.key
-  // Key vault certificates 
+  // Vault certificates 
   certificates() []azure.subscription.keyVaultService.certificate
-  // Key vault secrets 
+  // Vault secrets 
   secrets() []azure.subscription.keyVaultService.secret
-  // Key vault diagnostic settings 
+  // Vault diagnostic settings 
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
