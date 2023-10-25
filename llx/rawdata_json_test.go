@@ -4,9 +4,13 @@
 package llx
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func TestRawDataJson_removeUnderscoreKeys(t *testing.T) {
@@ -42,4 +46,12 @@ func TestRawDataJson_removeUnderscoreKeys(t *testing.T) {
 			assert.Equal(t, tc.want, got)
 		})
 	}
+}
+
+func TestRawDataJson_nevertime(t *testing.T) {
+	never := NeverPastTime
+	var res bytes.Buffer
+	rawDataJSON(types.Time, &never, "blfbjef", &CodeBundle{}, &res)
+	require.Equal(t, res.String(), "\"Never\"")
+	require.True(t, json.Valid(res.Bytes()))
 }
