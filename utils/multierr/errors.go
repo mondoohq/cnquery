@@ -30,13 +30,13 @@ func Wrap(err error, message string) error {
 }
 
 type Errors struct {
-	errors []error
+	Errors []error
 }
 
 func (m *Errors) Add(err ...error) {
 	for i := range err {
 		if err[i] != nil {
-			m.errors = append(m.errors, err[i])
+			m.Errors = append(m.Errors, err[i])
 		}
 	}
 }
@@ -44,29 +44,29 @@ func (m *Errors) Add(err ...error) {
 func (m *Errors) Error() string {
 	var res strings.Builder
 
-	n := strconv.Itoa(len(m.errors))
+	n := strconv.Itoa(len(m.Errors))
 	if n == "1" {
 		res.WriteString("1 error occurred:\n")
 	} else {
 		res.WriteString(n + " errors occurred:\n")
 	}
 
-	for i := range m.errors {
+	for i := range m.Errors {
 		res.WriteString("\t* ")
-		res.WriteString(m.errors[i].Error())
+		res.WriteString(m.Errors[i].Error())
 		res.WriteByte('\n')
 	}
 	return res.String()
 }
 
 func (m Errors) Deduplicate() error {
-	if len(m.errors) == 0 {
+	if len(m.Errors) == 0 {
 		return nil
 	}
 
 	track := map[string]error{}
-	for i := range m.errors {
-		e := m.errors[i]
+	for i := range m.Errors {
+		e := m.Errors[i]
 		track[e.Error()] = e
 	}
 
@@ -76,9 +76,9 @@ func (m Errors) Deduplicate() error {
 		res[i] = v
 		i++
 	}
-	return &Errors{errors: res}
+	return &Errors{Errors: res}
 }
 
 func (m Errors) IsEmpty() bool {
-	return len(m.errors) == 0
+	return len(m.Errors) == 0
 }
