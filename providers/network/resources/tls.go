@@ -173,6 +173,10 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 
 	tester := tlsshake.New(proto, domainName, host, int(port))
 	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
+		if errors.Is(err, tlsshake.ErrFailedToConnect) {
+			s.Params.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -223,8 +227,10 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 
 func (s *mqlTls) versions(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
+	// only happens in case of unexpected errors or null
 	if !ok {
-		return []interface{}{}, nil
+		s.Versions.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	raw, ok := paramsM["versions"]
@@ -245,7 +251,9 @@ func (s *mqlTls) versions(params interface{}) ([]interface{}, error) {
 
 func (s *mqlTls) ciphers(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
+	// only happens in case of unexpected errors or null
 	if !ok {
+		s.Ciphers.State = plugin.StateIsSet | plugin.StateIsNull
 		return []interface{}{}, nil
 	}
 
@@ -267,7 +275,9 @@ func (s *mqlTls) ciphers(params interface{}) ([]interface{}, error) {
 
 func (s *mqlTls) extensions(params interface{}) ([]interface{}, error) {
 	paramsM, ok := params.(map[string]interface{})
+	// only happens in case of unexpected errors or null
 	if !ok {
+		s.Extensions.State = plugin.StateIsSet | plugin.StateIsNull
 		return []interface{}{}, nil
 	}
 
@@ -291,6 +301,7 @@ func (s *mqlTls) certificates(params interface{}) ([]interface{}, error) {
 	// We leverage the fact that params has to be created first, and that params
 	// causes this field to be set. If it isn't, then we cannot determine it.
 	// (TODO: use the recording data to do this async)
+	s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
@@ -298,5 +309,6 @@ func (s *mqlTls) nonSniCertificates(params interface{}) ([]interface{}, error) {
 	// We leverage the fact that params has to be created first, and that params
 	// causes this field to be set. If it isn't, then we cannot determine it.
 	// (TODO: use the recording data to do this async)
+	s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
