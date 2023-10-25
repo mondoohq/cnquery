@@ -18,6 +18,10 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
+		"asset": {
+			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAsset,
+		},
 		"vsphere": {
 			// to override args, implement: initVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphere,
@@ -154,6 +158,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
+	},
 	"vsphere.about": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetAbout()).ToDataRes(types.Dict)
 	},
@@ -445,6 +452,14 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAsset).__id, ok = v.Value.(string)
+			return
+		},
+	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 	"vsphere.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlVsphere).__id, ok = v.Value.(string)
 			return
@@ -907,6 +922,52 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
+}
+
+// mqlAsset for the asset resource
+type mqlAsset struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAssetInternal it will be used here
+	VulnerabilityReport plugin.TValue[interface{}]
+}
+
+// createAsset creates a new instance of this resource
+func createAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAsset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("asset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAsset) MqlName() string {
+	return "asset"
+}
+
+func (c *mqlAsset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
+		return c.vulnerabilityReport()
+	})
 }
 
 // mqlVsphere for the vsphere resource

@@ -4,6 +4,10 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
 option go_package = "go.mondoo.com/cnquery/v9/providers/vsphere/resources"
 
+extend asset {
+  vulnerabilityReport() dict
+}
+
 // VMware vSphere resource
 vsphere {
   // System information including the name, type, version, and build number
