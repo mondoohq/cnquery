@@ -23,21 +23,6 @@ const (
 	HostConnectionType        = "host"
 )
 
-// This is a small selection of common ports that are supported.
-// Outside of this range, users will have to specify ports explicitly.
-// We could expand this to cover more of IANA.
-var commonPorts = map[string]int{
-	"https":  443,
-	"http":   80,
-	"ssh":    22,
-	"ftp":    21,
-	"telnet": 23,
-	"smtp":   25,
-	"dns":    53,
-	"pop3":   110,
-	"imap4":  143,
-}
-
 type Service struct {
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
@@ -51,7 +36,24 @@ func Init() *Service {
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	target := req.Args[0]
+
+	// Note on noSchema handling:
+	// A user may type in a target like: `google.com`. Technically, this is not
+	// avalid scheme. We need to make it into a valid url scheme for parsing
+	// and further processing, but we also want to be mindful of what users intend.
+	//
+	// If we set this to e.g. an HTTP scheme with port 80, then we break
+	// the assumptions that users have when they use other resources (like TLS).
+	// For example: `host google.com` and command `tls.versions` is a user
+	// indicating that they want the TLS config of https://google.com of course.
+	// However, we also want to use HTTP:80 when we do `http.get` requests,
+	// because that is the default way this is handled in the web (for now).
+	//
+	// Thus: the scheme becomes empty "" and the port is set to 0. Every resource
+	// needs to figure out what that means to it.
+	noScheme := false
 	if i := strings.Index(target, "://"); i == -1 {
+		noScheme = true
 		target = "http://" + target
 	}
 
@@ -61,8 +63,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	host, port := domain.SplitHostPort(url.Host)
-	if port == 0 {
-		port = commonPorts[url.Scheme]
+	if port == 0 && !noScheme {
+		port = resources.CommonPorts[url.Scheme]
+	}
+
+	scheme := url.Scheme
+	if noScheme {
+		scheme = ""
 	}
 
 	insecure := false
@@ -76,7 +83,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			Port:     int32(port),
 			Host:     host,
 			Path:     url.Path,
-			Runtime:  url.Scheme,
+			Runtime:  scheme,
 			Insecure: insecure,
 		}},
 	}
@@ -171,10 +178,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	if conn.Conf.Port == 0 {
-		return errors.New("a port for the network connection is required")
-	}
-
 	asset.Name = conn.Conf.Host
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
