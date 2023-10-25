@@ -938,7 +938,7 @@ private azure.subscription.storageService.account.service.properties.retentionPo
   id string
   // Number of days that metrics or logging data is retained
   retentionDays int
-  // Whether a retention policy is enabled for the Azure storage
+  // Whether a retention policy is enabled for the Azure Storage
   enabled bool 
 }
 
