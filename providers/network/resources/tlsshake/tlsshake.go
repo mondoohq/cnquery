@@ -32,17 +32,25 @@ type ScanConfig struct {
 	SNIsupported              bool
 	FakeSNI                   bool
 	SecureClientRenegotiation bool
+	// ConnectTimeout is used to check if a connection exists in the first place.
+	// It is only used for the initial verification OSI Layer 4
+	ConnectTimeout time.Duration
 
 	// internal scan fields that users don't configure
 	version       string
 	ciphersFilter func(string) bool
 }
 
+const DefaultTimeout = 2 * time.Second
+
+var ErrFailedToConnect = errors.New("failed to connect")
+
 func DefaultScanConfig() ScanConfig {
 	return ScanConfig{
 		SNIsupported:              true,
 		FakeSNI:                   true,
 		SecureClientRenegotiation: true,
+		ConnectTimeout:            DefaultTimeout,
 	}
 }
 
@@ -97,6 +105,21 @@ func New(proto string, domainName string, host string, port int) *Tester {
 //   - versions may contain any supported pre-defined TLS/SSL versions
 //     with a complete list found in TLS_VERSIONS. Leave empty to test all.
 func (s *Tester) Test(conf ScanConfig) error {
+	// Default minimum timeout if none is set
+	if conf.ConnectTimeout == 0 {
+		conf.ConnectTimeout = DefaultTimeout
+	}
+
+	// Check if we can connect to the endpoint at all.
+	conn, err := net.DialTimeout(s.proto, s.target, conf.ConnectTimeout)
+	if err != nil {
+		return ErrFailedToConnect
+	}
+	if conn != nil {
+		// we ignore the error here for now
+		_ = conn.Close()
+	}
+
 	if len(conf.Versions) == 0 {
 		conf.Versions = TLS_VERSIONS
 	}
