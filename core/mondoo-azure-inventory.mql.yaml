@@ -17,12 +17,6 @@ packs:
         The Azure Asset Inventory by Mondoo query pack retrieves information about Azure subscriptions and resources for asset inventory.
     filters: asset.platform == "azure"
     queries:
-      - uid: mondoo-asset-inventory-azure-subscription-id
-        title: Azure subscription ID
-        docs:
-          desc: |
-            This query retrieves the Azure subscription id
-        mql: azure.subscription.id
       - uid: mondoo-asset-inventory-azure-roleDefinitions
         title: Azure role definitions
         docs:
