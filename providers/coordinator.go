@@ -68,7 +68,7 @@ func (p *RunningProvider) heartbeat() {
 	interval := 2 * time.Second
 	gracePeriod := 3 * time.Second
 	go func() {
-		for !p.isClosed && !p.isShutdown {
+		for p.isCloseOrShutdown() {
 			_, err := p.Plugin.Heartbeat(&pp.HeartbeatReq{
 				Interval: uint64(interval + gracePeriod),
 			})
@@ -88,6 +88,12 @@ func (p *RunningProvider) heartbeat() {
 			time.Sleep(interval)
 		}
 	}()
+}
+
+func (p *RunningProvider) isCloseOrShutdown() bool {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.isClosed || p.isShutdown
 }
 
 func (p *RunningProvider) Shutdown() error {
