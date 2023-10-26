@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/config"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	"go.mondoo.com/cnquery/v9/cli/theme"
+	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/health"
@@ -40,6 +41,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		defer providers.Coordinator.Shutdown()
 		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Fatal().Err(optsErr).Msg("could not load configuration")
