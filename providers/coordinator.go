@@ -72,17 +72,23 @@ func (p *RunningProvider) heartbeat() {
 			_, err := p.Plugin.Heartbeat(&pp.HeartbeatReq{
 				Interval: uint64(interval + gracePeriod),
 			})
+
 			if status, ok := status.FromError(err); ok {
 				if status.Code() == 12 {
-					log.Fatal().
+					log.Error().
 						Str("plugin-ID", p.ID).
 						Msg("please update the provider plugin for " + p.Name)
+					p.Shutdown()
+					break
 				}
 			}
+
 			if err != nil {
-				log.Fatal().
+				log.Error().
 					Str("plugin-ID", p.ID).
 					Msg("cannot establish heartbeat with the provider plugin for " + p.Name)
+				p.Shutdown()
+				break
 			}
 
 			time.Sleep(interval)
