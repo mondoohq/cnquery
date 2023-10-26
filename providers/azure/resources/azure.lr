@@ -1421,7 +1421,7 @@ private azure.subscription.cosmosDbService {
 }
 
 // Azure Cosmos DB Account
-private azure.subscription.cosmosDbService.account @defaults("name location") {
+private azure.subscription.cosmosDbService.account @defaults("name kind location") {
   // Cosmos DB account ID
   id string
   // Cosmos DB account name
