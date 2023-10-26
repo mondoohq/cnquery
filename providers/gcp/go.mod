@@ -27,7 +27,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
+	go.mondoo.com/cnquery/v9 v9.3.6-0.20231026202818-6b54dba51756
 	go.mondoo.com/ranger-rpc v0.5.2
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.148.0
