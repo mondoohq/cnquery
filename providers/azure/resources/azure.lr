@@ -1447,7 +1447,7 @@ private azure.subscription.keyVaultService {
 }
 
 // Azure Key Vault Vault
-private azure.subscription.keyVaultService.vault  @defaults("id vaultName location") {
+private azure.subscription.keyVaultService.vault  @defaults("vaultName type vaultUri location") {
   // Vault ID
   id string
   // Vault name
