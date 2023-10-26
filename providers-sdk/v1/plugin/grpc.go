@@ -20,6 +20,10 @@ type GRPCClient struct {
 	client ProviderPluginClient
 }
 
+func (m *GRPCClient) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
+	return m.client.Heartbeat(context.Background(), req)
+}
+
 func (m *GRPCClient) ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error) {
 	return m.client.ParseCLI(context.Background(), req)
 }
@@ -73,6 +77,10 @@ type GRPCServer struct {
 	Impl   ProviderPlugin
 	broker *plugin.GRPCBroker
 	UnimplementedProviderPluginServer
+}
+
+func (m *GRPCServer) Heartbeat(ctx context.Context, req *HeartbeatReq) (*HeartbeatRes, error) {
+	return m.Impl.Heartbeat(req)
 }
 
 func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (*ParseCLIRes, error) {

@@ -28,6 +28,10 @@ type mockProviderService struct {
 	runtime     *Runtime
 }
 
+func (s *mockProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.HeartbeatRes, error) {
+	return nil, nil
+}
+
 func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	return &plugin.ParseCLIRes{
 		Asset: &inventory.Asset{

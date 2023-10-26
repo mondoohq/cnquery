@@ -24,6 +24,7 @@ const (
 )
 
 type Service struct {
+	plugin.Service
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
 }

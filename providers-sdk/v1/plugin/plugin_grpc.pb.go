@@ -22,6 +22,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	ProviderPlugin_Heartbeat_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/Heartbeat"
 	ProviderPlugin_ParseCLI_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/ParseCLI"
 	ProviderPlugin_Connect_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/Connect"
 	ProviderPlugin_MockConnect_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/MockConnect"
@@ -34,6 +35,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderPluginClient interface {
+	Heartbeat(ctx context.Context, in *HeartbeatReq, opts ...grpc.CallOption) (*HeartbeatRes, error)
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
 	MockConnect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
@@ -48,6 +50,15 @@ type providerPluginClient struct {
 
 func NewProviderPluginClient(cc grpc.ClientConnInterface) ProviderPluginClient {
 	return &providerPluginClient{cc}
+}
+
+func (c *providerPluginClient) Heartbeat(ctx context.Context, in *HeartbeatReq, opts ...grpc.CallOption) (*HeartbeatRes, error) {
+	out := new(HeartbeatRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_Heartbeat_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *providerPluginClient) ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error) {
@@ -108,6 +119,7 @@ func (c *providerPluginClient) StoreData(ctx context.Context, in *StoreReq, opts
 // All implementations must embed UnimplementedProviderPluginServer
 // for forward compatibility
 type ProviderPluginServer interface {
+	Heartbeat(context.Context, *HeartbeatReq) (*HeartbeatRes, error)
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*ConnectRes, error)
 	MockConnect(context.Context, *ConnectReq) (*ConnectRes, error)
@@ -121,6 +133,9 @@ type ProviderPluginServer interface {
 type UnimplementedProviderPluginServer struct {
 }
 
+func (UnimplementedProviderPluginServer) Heartbeat(context.Context, *HeartbeatReq) (*HeartbeatRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
+}
 func (UnimplementedProviderPluginServer) ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParseCLI not implemented")
 }
@@ -150,6 +165,24 @@ type UnsafeProviderPluginServer interface {
 
 func RegisterProviderPluginServer(s grpc.ServiceRegistrar, srv ProviderPluginServer) {
 	s.RegisterService(&ProviderPlugin_ServiceDesc, srv)
+}
+
+func _ProviderPlugin_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HeartbeatReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).Heartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_Heartbeat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).Heartbeat(ctx, req.(*HeartbeatReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ProviderPlugin_ParseCLI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -267,6 +300,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "cnquery.providers.v1.ProviderPlugin",
 	HandlerType: (*ProviderPluginServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Heartbeat",
+			Handler:    _ProviderPlugin_Heartbeat_Handler,
+		},
 		{
 			MethodName: "ParseCLI",
 			Handler:    _ProviderPlugin_ParseCLI_Handler,
