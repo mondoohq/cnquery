@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/ctreminiom/go-atlassian v1.5.1
 	github.com/pkg/errors v0.9.1
-	go.mondoo.com/cnquery/v9 v9.2.4-0.20231021071305-5e2cfe412554
+	go.mondoo.com/cnquery/v9 v9.3.6-0.20231026202818-6b54dba51756
 )
 
 require (
