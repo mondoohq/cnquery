@@ -7,10 +7,12 @@ import (
 	"context"
 	"os"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	cnquery_providers "go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
@@ -33,14 +35,14 @@ ensure the credentials cannot be used in the future.
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		defer cnquery_providers.Coordinator.Shutdown()
 		var err error
 
 		// its perfectly fine not to have a config here, therefore we ignore errors
 		opts, optsErr := config.Read()
 		if optsErr != nil {
-			log.Fatal().Msg("could not load configuration")
+			return errors.Wrap(optsErr, "could not load configuration")
 		}
 
 		// print the used config to the user
@@ -49,38 +51,36 @@ ensure the credentials cannot be used in the future.
 		// determine information about the client
 		sysInfo, err := sysinfo.GatherSystemInfo()
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not gather client information")
+			return errors.Wrap(err, "could not gather client information")
 		}
 
 		// check valid client authentication
 		serviceAccount := opts.GetServiceCredential()
 		if serviceAccount == nil {
-			log.Error().Err(err).Msg("could not initialize client authentication")
-			os.Exit(ConfigurationErrorCode)
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not initialize client authentication"), ConfigurationErrorCode)
 		}
 
 		plugins := defaultRangerPlugins(sysInfo, opts.GetFeatures())
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 		if err != nil {
 			log.Error().Err(err).Msg("could not initialize client authentication")
-			os.Exit(ConfigurationErrorCode)
+			return cli_errors.NewCommandError(nil, ConfigurationErrorCode)
 		}
 		plugins = append(plugins, certAuth)
 
 		httpClient, err := opts.GetHttpClient()
 		if err != nil {
-			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
+			return cli_errors.NewCommandError(errors.Wrap(err, "error while creating Mondoo API client"), 1)
 		}
 		client, err := upstream.NewAgentManagerClient(opts.UpstreamApiEndpoint(), httpClient, plugins...)
 		if err != nil {
 			log.Error().Err(err).Msg("could not initialize connection to Mondoo Platform")
-			os.Exit(ConfigurationErrorCode)
+			cli_errors.NewCommandError(nil, ConfigurationErrorCode)
 		}
 
 		if !viper.GetBool("force") {
 			log.Info().Msg("are you sure you want to revoke client access to Mondoo Platform? Use --force if you are sure")
-			os.Exit(1)
-			return
+			return cli_errors.ExitCode1WithoutError
 		}
 
 		// try to load config into credentials struct
@@ -125,5 +125,6 @@ ensure the credentials cannot be used in the future.
 		}
 
 		log.Info().Msgf("Bye bye, space cat. Client %s unregistered successfully", credentials.Mrn)
+		return nil
 	},
 }

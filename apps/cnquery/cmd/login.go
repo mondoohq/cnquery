@@ -5,15 +5,16 @@ package cmd
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	cnquery_providers "go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
@@ -47,22 +48,22 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		viper.BindPFlag("api_endpoint", cmd.Flags().Lookup("api-endpoint"))
 		viper.BindPFlag("name", cmd.Flags().Lookup("name"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		defer cnquery_providers.Coordinator.Shutdown()
 		token, _ := cmd.Flags().GetString("token")
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
-		register(token, annotations)
+		return register(token, annotations)
 	},
 }
 
-func register(token string, annotations map[string]string) {
+func register(token string, annotations map[string]string) error {
 	var err error
 	var credential *upstream.ServiceAccountCredentials
 
 	// determine information about the client
 	sysInfo, err := sysinfo.GatherSystemInfo()
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not gather client information")
+		return cli_errors.NewCommandError(errors.Wrap(err, "could not gather client information"), 1)
 	}
 	defaultPlugins := defaultRangerPlugins(sysInfo, cnquery.DefaultFeatures)
 
@@ -72,7 +73,7 @@ func register(token string, annotations map[string]string) {
 	// NOTE: login is special because we do not have a config yet
 	proxy, err := config.GetAPIProxy()
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not parse proxy URL")
+		return cli_errors.NewCommandError(errors.Wrap(err, "could not parse proxy URL"), 1)
 	}
 	httpClient := ranger.NewHttpClient(ranger.WithProxy(proxy))
 
@@ -107,7 +108,7 @@ func register(token string, annotations map[string]string) {
 
 		client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to mondoo platform")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not connect to mondoo platform"), 1)
 		}
 
 		name := viper.GetString("name")
@@ -132,7 +133,7 @@ func register(token string, annotations map[string]string) {
 			},
 		})
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to log in client")
+			return cli_errors.NewCommandError(errors.Wrap(err, "failed to log in client"), 1)
 		}
 
 		log.Debug().Msg("store configuration")
@@ -153,7 +154,7 @@ func register(token string, annotations map[string]string) {
 		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Warn().Msg("could not load configuration, please use --token or --config with the appropriate values")
-			os.Exit(1)
+			return cli_errors.ExitCode1WithoutError
 		}
 		// print the used config to the user
 		config.DisplayUsedConfig()
@@ -161,7 +162,7 @@ func register(token string, annotations map[string]string) {
 		httpClient, err = opts.GetHttpClient()
 		if err != nil {
 			log.Warn().Err(err).Msg("could not create http client")
-			os.Exit(1)
+			return cli_errors.ExitCode1WithoutError
 		}
 
 		if opts.AgentMrn != "" {
@@ -177,14 +178,14 @@ func register(token string, annotations map[string]string) {
 			certAuth, err := upstream.NewServiceAccountRangerPlugin(credential)
 			if err != nil {
 				log.Warn().Err(err).Msg("could not initialize certificate authentication")
-				os.Exit(1)
+				return cli_errors.ExitCode1WithoutError
 			}
 			plugins = append(plugins, certAuth)
 
 			client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 			if err != nil {
 				log.Warn().Err(err).Msg("could not connect to Mondoo Platform")
-				os.Exit(1)
+				return cli_errors.ExitCode1WithoutError
 			}
 
 			name := viper.GetString("name")
@@ -208,7 +209,7 @@ func register(token string, annotations map[string]string) {
 				},
 			})
 			if err != nil {
-				log.Fatal().Err(err).Msg("failed to log in client")
+				return cli_errors.NewCommandError(errors.Wrap(err, "failed to log in client"), 1)
 			}
 
 			// update configuration file, api-endpoint is set automatically
@@ -220,7 +221,7 @@ func register(token string, annotations map[string]string) {
 	err = config.StoreConfig()
 	if err != nil {
 		log.Warn().Err(err).Msg("could not write mondoo configuration")
-		os.Exit(1)
+		return cli_errors.ExitCode1WithoutError
 	}
 
 	// run ping pong to validate the service account
@@ -234,14 +235,15 @@ func register(token string, annotations map[string]string) {
 	client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 	if err != nil {
 		log.Warn().Err(err).Msg("could not connect to mondoo platform")
-		os.Exit(1)
+		return cli_errors.ExitCode1WithoutError
 	}
 
 	_, err = client.PingPong(context.Background(), &upstream.Ping{})
 	if err != nil {
 		log.Warn().Msg(err.Error())
-		os.Exit(1)
+		return cli_errors.ExitCode1WithoutError
 	}
 
 	log.Info().Msgf("client %s has logged in successfully", viper.Get("agent_mrn"))
+	return nil
 }
