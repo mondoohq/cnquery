@@ -130,6 +130,7 @@ func (r *Runtime) UseProvider(id string) error {
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.providers[c.Instance.ID] = c
 	r.schema.Add(c.Instance.Name, c.Instance.Schema)
+	r.schema.refresh()
 }
 
 func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, error) {
@@ -251,6 +252,8 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	}
 
 	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
+	r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
+	r.schema.refresh()
 	return nil
 }
 

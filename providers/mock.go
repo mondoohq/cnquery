@@ -114,5 +114,6 @@ func (s *mockProviderService) Init(running *RunningProvider) {
 
 	rt := s.coordinator.NewRuntime()
 	rt.schema.loadAllSchemas()
-	running.Schema = &rt.schema.Schema
+	rt.schema.refresh()
+	running.Schema = rt.schema.Schema()
 }

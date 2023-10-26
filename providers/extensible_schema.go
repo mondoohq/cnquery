@@ -8,16 +8,28 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"golang.org/x/exp/slices"
 )
 
 type extensibleSchema struct {
-	resources.Schema
+	aggregate      resources.Schema
+	prioritization []string
 
-	loaded        map[string]struct{}
+	loaded        map[string]*resources.Schema
 	runtime       *Runtime
 	lastRefreshed int64
 	lockAll       sync.Mutex // only used in getting all schemas
 	lockAdd       sync.Mutex // only used when adding a schema
+}
+
+func newExtensibleSchema() extensibleSchema {
+	return extensibleSchema{
+		aggregate: resources.Schema{
+			Resources: map[string]*resources.ResourceInfo{},
+		},
+		loaded:         map[string]*resources.Schema{},
+		prioritization: []string{BuiltinCoreID},
+	}
 }
 
 func (x *extensibleSchema) loadAllSchemas() {
@@ -40,9 +52,6 @@ func (x *extensibleSchema) loadAllSchemas() {
 	}
 
 	for name := range providers {
-		if name == BuiltinCoreID {
-			continue
-		}
 		schema, err := x.runtime.coordinator.LoadSchema(name)
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
@@ -50,26 +59,15 @@ func (x *extensibleSchema) loadAllSchemas() {
 			x.Add(name, schema)
 		}
 	}
-
-	// We are loading the core provider last, so it overrides all other schemas.
-	// It will ensure that core fields are preferred.
-	if _, ok := providers[BuiltinCoreID]; ok {
-		schema, err := x.runtime.coordinator.LoadSchema(BuiltinCoreID)
-		if err != nil {
-			log.Error().Err(err).Msg("load schema failed")
-		} else {
-			x.Add(BuiltinCoreID, schema)
-		}
-	}
 }
 
 func (x *extensibleSchema) Close() {
-	x.loaded = map[string]struct{}{}
-	x.Schema.Resources = nil
+	x.loaded = map[string]*resources.Schema{}
+	x.aggregate.Resources = map[string]*resources.ResourceInfo{}
 }
 
 func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
-	if found, ok := x.Resources[name]; ok {
+	if found, ok := x.aggregate.Resources[name]; ok {
 		return found
 	}
 	if x.lastRefreshed >= LastProviderInstall {
@@ -77,19 +75,22 @@ func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
 	}
 
 	x.loadAllSchemas()
-	return x.Resources[name]
+	x.refresh()
+
+	return x.aggregate.Resources[name]
 }
 
 func (x *extensibleSchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
-	found, ok := x.Resources[resource]
+	found, ok := x.aggregate.Resources[resource]
 	if !ok {
 		if x.lastRefreshed >= LastProviderInstall {
 			return nil, nil
 		}
 
 		x.loadAllSchemas()
+		x.refresh()
 
-		found, ok = x.Resources[resource]
+		found, ok = x.aggregate.Resources[resource]
 		if !ok {
 			return nil, nil
 		}
@@ -105,6 +106,8 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	}
 
 	x.loadAllSchemas()
+	x.refresh()
+
 	return found, found.Fields[field]
 }
 
@@ -118,20 +121,52 @@ func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
 	}
 
 	x.lockAdd.Lock()
-	defer x.lockAdd.Unlock()
+	x.loaded[name] = schema
+	x.lockAdd.Unlock()
+}
 
-	if _, ok := x.loaded[name]; ok {
-		return
+// Prioritize the provider IDs in the order that is provided. Any other
+// provider comes later and in any random order.
+func (x *extensibleSchema) prioritizeIDs(prioritization ...string) {
+	x.prioritization = prioritization
+}
+
+func (x *extensibleSchema) refresh() {
+	x.lockAll.Lock()
+	defer x.lockAll.Unlock()
+
+	res := resources.Schema{
+		Resources: map[string]*resources.ResourceInfo{},
+	}
+	for id, schema := range x.loaded {
+		if !slices.Contains(x.prioritization, id) {
+			res.Add(schema)
+		}
 	}
 
-	x.loaded[name] = struct{}{}
-	x.Schema.Add(schema)
+	for i := len(x.prioritization) - 1; i >= 0; i-- {
+		id := x.prioritization[i]
+		if s := x.loaded[id]; s != nil {
+			res.Add(s)
+		}
+	}
+	x.aggregate.Resources = res.Resources
+}
+
+func (x *extensibleSchema) Schema() *resources.Schema {
+	if x.aggregate.Resources == nil {
+		x.refresh()
+	}
+	return &x.aggregate
 }
 
 func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
 	if x.lastRefreshed < LastProviderInstall {
 		x.loadAllSchemas()
+		x.refresh()
+	} else if x.aggregate.Resources == nil {
+		x.refresh()
 	}
 
-	return x.Resources
+	return x.aggregate.Resources
 }

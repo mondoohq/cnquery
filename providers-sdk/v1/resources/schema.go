@@ -3,6 +3,11 @@
 
 package resources
 
+import "google.golang.org/protobuf/proto"
+
+// Add another schema and return yourself. other may be nil.
+// The other schema overrides specifications in this schema, unless
+// it is trying to extend a resource whose base is already defined.
 func (s *Schema) Add(other *Schema) *Schema {
 	if other == nil {
 		return s
@@ -12,8 +17,9 @@ func (s *Schema) Add(other *Schema) *Schema {
 		if existing, ok := s.Resources[k]; ok {
 			// We will merge resources into it until we find one that is not extending.
 			// Technically, this should only happen with one resource and one only,
-			// i.e. the root resource. This is more of a protection.
-			if existing.IsExtension {
+			// i.e. the root resource. In case they are incorrectly specified, the
+			// last added resource wins (as is the case with all other fields below).
+			if !v.IsExtension || existing.IsExtension {
 				existing.IsExtension = v.IsExtension
 				existing.Provider = v.Provider
 				existing.Init = v.Init
@@ -43,14 +49,13 @@ func (s *Schema) Add(other *Schema) *Schema {
 			}
 
 			if existing.Fields == nil {
-				existing.Fields = v.Fields
-			} else {
-				for fk, fv := range v.Fields {
-					existing.Fields[fk] = fv
-				}
+				existing.Fields = map[string]*Field{}
+			}
+			for fk, fv := range v.Fields {
+				existing.Fields[fk] = fv
 			}
 		} else {
-			s.Resources[k] = v
+			s.Resources[k] = proto.Clone(v).(*ResourceInfo)
 		}
 	}
 
