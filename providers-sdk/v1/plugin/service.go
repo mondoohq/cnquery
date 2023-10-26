@@ -6,11 +6,13 @@ package plugin
 import (
 	"errors"
 	"os"
+	sync "sync"
 	"time"
 )
 
 type Service struct {
 	lastHeartbeat int64
+	lock          sync.Mutex
 }
 
 var heartbeatRes HeartbeatRes
@@ -21,11 +23,18 @@ func (s *Service) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
 	}
 
 	now := time.Now().UnixNano()
+	s.lock.Lock()
 	s.lastHeartbeat = now
+	s.lock.Unlock()
 
 	go func() {
 		time.Sleep(time.Duration(req.Interval))
-		if s.lastHeartbeat == now {
+
+		s.lock.Lock()
+		isDead := s.lastHeartbeat == now
+		s.lock.Unlock()
+
+		if isDead {
 			os.Exit(1)
 		}
 	}()
