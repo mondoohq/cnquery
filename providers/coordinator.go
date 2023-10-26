@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/v9/providers/core/config"
 	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/semver"
+	"google.golang.org/grpc/status"
 )
 
 var BuiltinCoreID = coreconf.Config.ID
@@ -60,6 +61,33 @@ type RunningProvider struct {
 	// provider errors which are evaluated and printed during shutdown of the provider
 	err  error
 	lock sync.Mutex
+}
+
+// initialize the heartbeat with the provider
+func (p *RunningProvider) heartbeat() {
+	interval := 2 * time.Second
+	gracePeriod := 3 * time.Second
+	go func() {
+		for !p.isClosed && !p.isShutdown {
+			_, err := p.Plugin.Heartbeat(&pp.HeartbeatReq{
+				Interval: uint64(interval + gracePeriod),
+			})
+			if status, ok := status.FromError(err); ok {
+				if status.Code() == 12 {
+					log.Fatal().
+						Str("plugin-ID", p.ID).
+						Msg("please update the provider plugin for " + p.Name)
+				}
+			}
+			if err != nil {
+				log.Fatal().
+					Str("plugin-ID", p.ID).
+					Msg("cannot establish heartbeat with the provider plugin for " + p.Name)
+			}
+
+			time.Sleep(interval)
+		}
+	}()
 }
 
 func (p *RunningProvider) Shutdown() error {
@@ -189,6 +217,7 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		Client: client,
 		Schema: provider.Schema,
 	}
+	res.heartbeat()
 
 	c.mutex.Lock()
 	if isEphemeral {

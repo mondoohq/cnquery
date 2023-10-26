@@ -30,6 +30,7 @@ type ProviderCallback interface {
 
 // ProviderPlugin is the interface that we're exposing as a plugin.
 type ProviderPlugin interface {
+	Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error)
 	ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
 	MockConnect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)

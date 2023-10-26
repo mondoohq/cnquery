@@ -17,6 +17,7 @@ import (
 const defaultConnection uint32 = 1
 
 type Service struct {
+	plugin.Service
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
 }

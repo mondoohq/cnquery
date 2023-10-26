@@ -5,7 +5,6 @@ package provider
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/v9/providers/arista/resources/eos"
 	"net/url"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/arista/connection"
 	"go.mondoo.com/cnquery/v9/providers/arista/resources"
+	"go.mondoo.com/cnquery/v9/providers/arista/resources/eos"
 )
 
 const (
@@ -24,6 +24,7 @@ const (
 )
 
 type Service struct {
+	plugin.Service
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
 }

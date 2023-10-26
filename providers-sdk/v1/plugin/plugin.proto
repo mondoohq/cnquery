@@ -74,7 +74,14 @@ message ResourceData {
 
 message StoreRes {}
 
+message HeartbeatReq {
+  // interval in nanoseconds until the next heartbeat occurs
+  uint64 interval = 1;
+}
+message HeartbeatRes {}
+
 service ProviderPlugin {
+  rpc Heartbeat(HeartbeatReq) returns (HeartbeatRes);
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (ConnectRes);
   rpc MockConnect(ConnectReq) returns (ConnectRes);

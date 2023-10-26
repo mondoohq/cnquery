@@ -22,6 +22,7 @@ const (
 )
 
 type Service struct {
+	plugin.Service
 	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
 }
@@ -206,7 +207,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	}
 
 	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
-	//resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	// resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
 	if !ok {
 		// Note: Since resources are internally always created, there are only very
 		// few cases where we arrive here:
