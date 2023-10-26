@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
+	cnquery_providers "go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
@@ -47,6 +48,7 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		viper.BindPFlag("name", cmd.Flags().Lookup("name"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		defer cnquery_providers.Coordinator.Shutdown()
 		token, _ := cmd.Flags().GetString("token")
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
 		register(token, annotations)
