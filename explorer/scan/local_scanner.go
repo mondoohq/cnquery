@@ -176,6 +176,9 @@ func preprocessQueryPackFilters(filters []string) []string {
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
+	// Always shut down the coordinator, to make sure providers are killed
+	defer providers.Coordinator.Shutdown()
+
 	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.DefaultRuntime()))
 	if err != nil {
 		return nil, false, errors.New("failed to resolve inventory for connection")
@@ -414,7 +417,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}()
 
 	scanGroup.Wait()
-	providers.Coordinator.Shutdown()
 	return reporter.Reports(), finished, nil
 }
 
