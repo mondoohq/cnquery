@@ -26,5 +26,8 @@ func (e *CommandError) HasError() bool {
 }
 
 func (e *CommandError) Error() string {
+	if e.err == nil {
+		return ""
+	}
 	return e.err.Error()
 }
