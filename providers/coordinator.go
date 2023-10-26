@@ -276,14 +276,9 @@ func (c *coordinator) NewRuntime() *Runtime {
 
 func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 	res := &Runtime{
-		coordinator: c,
-		providers:   map[string]*ConnectedProvider{},
-		schema: extensibleSchema{
-			loaded: map[string]struct{}{},
-			Schema: resources.Schema{
-				Resources: map[string]*resources.ResourceInfo{},
-			},
-		},
+		coordinator:     c,
+		providers:       map[string]*ConnectedProvider{},
+		schema:          newExtensibleSchema(),
 		Recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 		isEphemeral:     isEphemeral,
@@ -292,6 +287,10 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 
 	// TODO: do this dynamically in the future
 	res.schema.loadAllSchemas()
+	// TODO: this step too shouild be optional only, even when loading all.
+	// It is executed when the we connect via a provider, so doing it here is
+	// overkill.
+	res.schema.refresh()
 
 	if !isEphemeral {
 		c.mutex.Lock()
@@ -431,6 +430,9 @@ func (c *coordinator) Shutdown() {
 	c.mutex.Unlock()
 }
 
+// LoadSchema for a given provider. Providers also cache their Schemas, so
+// calling this with the same provider multiple times will use the loaded
+// cached schema after the first call.
 func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
 	if x, ok := builtinProviders[name]; ok {
 		return x.Runtime.Schema, nil

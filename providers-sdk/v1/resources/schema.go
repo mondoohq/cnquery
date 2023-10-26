@@ -3,6 +3,9 @@
 
 package resources
 
+// Add another schema and return yourself. other may be nil.
+// The other schema overrides specifications in this schema, unless
+// a resource is flagged as an extension.
 func (s *Schema) Add(other *Schema) *Schema {
 	if other == nil {
 		return s
