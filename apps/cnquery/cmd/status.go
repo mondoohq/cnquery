@@ -10,11 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	"go.mondoo.com/cnquery/v9/cli/theme"
 	"go.mondoo.com/cnquery/v9/providers"
@@ -40,11 +42,11 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		defer providers.Coordinator.Shutdown()
 		opts, optsErr := config.Read()
 		if optsErr != nil {
-			log.Fatal().Err(optsErr).Msg("could not load configuration")
+			return cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)
 		}
 
 		config.DisplayUsedConfig()
@@ -59,7 +61,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 
 		httpClient, err := opts.GetHttpClient()
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to set up Mondoo API client")
+			return cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
 		}
 
 		sysInfo, err := sysinfo.GatherSystemInfo()
@@ -92,7 +94,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 
 			certAuth, err := upstream.NewServiceAccountRangerPlugin(credentials)
 			if err != nil {
-				log.Fatal().Err(err).Msg("invalid credentials")
+				return cli_errors.NewCommandError(errors.Wrap(err, "invalid credentials"), ConfigurationErrorCode)
 			}
 			plugins = append(plugins, certAuth)
 
@@ -118,8 +120,9 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {
-			os.Exit(1)
+			return cli_errors.ExitCode1WithoutError
 		}
+		return nil
 	},
 }
 

@@ -10,10 +10,12 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/explorer"
 	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
@@ -114,11 +116,11 @@ var queryPackLintCmd = &cobra.Command{
 	Aliases: []string{"validate"},
 	Short:   "Apply style formatting to a query pack.",
 	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info().Str("file", args[0]).Msg("validate query pack")
 		queryPackBundle, err := explorer.BundleFromPaths(args[0])
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load query pack")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not load query pack"), 1)
 		}
 
 		errors := validate(queryPackBundle)
@@ -127,10 +129,11 @@ var queryPackLintCmd = &cobra.Command{
 			for i := range errors {
 				fmt.Fprintf(os.Stderr, stringx.Indent(2, errors[i]))
 			}
-			os.Exit(1)
+			return cli_errors.ExitCode1WithoutError
 		}
 
 		log.Info().Msg("valid query pack")
+		return nil
 	},
 }
 
@@ -142,10 +145,10 @@ var queryPackPublishCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		opts, optsErr := config.Read()
 		if optsErr != nil {
-			log.Fatal().Err(optsErr).Msg("could not load configuration")
+			return cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), ConfigurationErrorCode)
 		}
 		config.DisplayUsedConfig()
 
@@ -153,23 +156,23 @@ var queryPackPublishCmd = &cobra.Command{
 		log.Info().Str("file", filename).Msg("load query pack bundle")
 		queryPackBundle, err := explorer.BundleFromPaths(filename)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load query pack bundle")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not load query pack bundle"), 1)
 		}
 
-		errors := validate(queryPackBundle)
-		if len(errors) > 0 {
+		bundleErrors := validate(queryPackBundle)
+		if len(bundleErrors) > 0 {
 			log.Error().Msg("could not validate query pack")
-			for i := range errors {
-				fmt.Fprintf(os.Stderr, stringx.Indent(2, errors[i]))
+			for i := range bundleErrors {
+				fmt.Fprintf(os.Stderr, stringx.Indent(2, bundleErrors[i]))
 			}
-			os.Exit(1)
+			return cli_errors.ExitCode1WithoutError
 		}
 		log.Info().Msg("valid query pack")
 
 		// compile manipulates the bundle, therefore we read it again
 		queryPackBundle, err = explorer.BundleFromPaths(filename)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load query pack bundle")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not load query pack bundle"), 1)
 		}
 
 		log.Info().Str("space", opts.SpaceMrn).Msg("add query pack bundle to space")
@@ -181,21 +184,21 @@ var queryPackPublishCmd = &cobra.Command{
 
 		serviceAccount := opts.GetServiceCredential()
 		if serviceAccount == nil {
-			log.Fatal().Msg("cnquery has no credentials. Log in with `cnquery login`")
+			return cli_errors.NewCommandError(errors.New("cnquery has no credentials. Log in with `cnquery login`"), 1)
 		}
 
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 		if err != nil {
 			log.Error().Err(err).Msg("could not initialize client authentication")
-			os.Exit(ConfigurationErrorCode)
+			return cli_errors.NewCommandError(nil, ConfigurationErrorCode)
 		}
 		httpClient, err := opts.GetHttpClient()
 		if err != nil {
-			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
+			return cli_errors.NewCommandError(errors.Wrap(err, "error while creating Mondoo API client"), 1)
 		}
 		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), httpClient, certAuth)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to the Mondoo Security Registry")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not connect to the Mondoo Security Registry"), 1)
 		}
 
 		// set the owner mrn for spaces
@@ -215,9 +218,10 @@ var queryPackPublishCmd = &cobra.Command{
 		// send data upstream
 		_, err = queryHubServices.SetBundle(ctx, queryPackBundle)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not add query packs")
+			return cli_errors.NewCommandError(errors.Wrap(err, "could not add query packs"), 1)
 		}
 
 		log.Info().Msg("successfully added query packs")
+		return nil
 	},
 }

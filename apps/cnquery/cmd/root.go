@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/cli/providers"
 	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	"go.mondoo.com/cnquery/v9/cli/theme"
@@ -74,6 +75,13 @@ func Execute() {
 	}
 
 	if err := rootCmd.Execute(); err != nil {
+		if cErr, ok := err.(*cli_errors.CommandError); ok {
+			if cErr.HasError() {
+				log.Error().Msg(err.Error())
+			}
+			os.Exit(cErr.ExitCode())
+		}
+
 		log.Error().Msg(err.Error())
 		os.Exit(1)
 	}
