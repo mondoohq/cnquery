@@ -191,11 +191,15 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		log.Fatal().Err(err).Msg("failed to parse inventory")
 	}
 
+	// TODO: We currently deduplicate this here because it leads to errors down the line,
+	// if the same querypack is added more than once. Fix this properly downstream.
+	querypackPaths := dedupe(viper.GetStringSlice("querypack-bundle"))
+
 	conf := scanConfig{
 		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
 		Inventory:      inv,
-		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
+		QueryPackPaths: querypackPaths,
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
 		runtime:        runtime,
@@ -341,4 +345,16 @@ func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobr
 	if err = r.Print(report, os.Stdout); err != nil {
 		log.Fatal().Err(err).Msg("failed to print")
 	}
+}
+
+func dedupe[T string | int](sliceList []T) []T {
+	allKeys := make(map[T]bool)
+	list := []T{}
+	for _, item := range sliceList {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
 }
