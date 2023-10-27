@@ -5,10 +5,13 @@ resources:
   okta:
     fields:
       applications: {}
+      customRoles: {}
       domains: {}
+      groupRules: {}
       groups: {}
       networks:
         min_mondoo_version: 8.4.0
+      roles: {}
       trustedOrigins: {}
       users: {}
     min_mondoo_version: latest
@@ -29,6 +32,14 @@ resources:
       visibility: {}
     is_private: true
     min_mondoo_version: latest
+  okta.customRole:
+    fields:
+      description: {}
+      id: {}
+      label: {}
+      permissions: {}
+    is_private: true
+    min_mondoo_version: latest
   okta.domain:
     fields:
       dnsRecords: {}
@@ -41,10 +52,22 @@ resources:
   okta.group:
     fields:
       created: {}
+      description: {}
       id: {}
       lastMembershipUpdated: {}
       lastUpdated: {}
+      members: {}
+      name: {}
       profile: {}
+      roles: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+  okta.groupRule:
+    fields:
+      id: {}
+      name: {}
+      status: {}
       type: {}
     is_private: true
     min_mondoo_version: latest

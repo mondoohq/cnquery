@@ -10,6 +10,8 @@ okta {
   users() []okta.user
   // Okta groups
   groups() []okta.group
+  // Okta group rules
+  groupRules() []okta.groupRule
   // Okta domains
   domains() []okta.domain
   // Okta applications
@@ -18,6 +20,8 @@ okta {
   trustedOrigins() []okta.trustedOrigin
   // Okta networks
   networks() []okta.network
+	// Okta custom roles
+  customRoles() []okta.customRole
 }
 
 // Okta Organization
@@ -87,7 +91,7 @@ okta.policies {
 }
 
 // Okta User
-private okta.user @defaults("id profile['email']" ){
+private okta.user @defaults("profile['email']" ){
   // Unique key for user
   id string
   // The user's type identifier
@@ -119,7 +123,7 @@ private okta.user @defaults("id profile['email']" ){
 }
 
 // Okta Role
-private okta.role @defaults("id status") {
+private okta.role @defaults("label status") {
   // The identifier of the role
   id string
   // The assignment type of the role
@@ -137,9 +141,13 @@ private okta.role @defaults("id status") {
 }
 
 // Okta Group
-private okta.group @defaults("id") {
+private okta.group @defaults("name") {
   // Unique key for Group
   id string
+	// Group name
+  name string
+	// Group description
+	description string
   // Determines how a Group's Profile and memberships are managed
   type dict
   // Timestamp when Group was created
@@ -150,6 +158,21 @@ private okta.group @defaults("id") {
   lastUpdated time
   // The Group's Profile properties
   profile dict
+  // Group members
+  members() []okta.user
+  // Group roles
+  roles() []okta.role
+}
+
+private okta.groupRule @defaults("name") {
+  // Unique key for Group Rule
+  id string
+	// Group Rule Name
+  name string
+	// Group Rule Status
+	status string
+	// Group Rule Type
+	type string
 }
 
 // Okta Application
@@ -310,4 +333,17 @@ private okta.threatsConfiguration @defaults("action") {
   created time
   // Timestamp when the Network Zone was last updated
   lastUpdated time
+
+}
+
+// Okta Custom Role
+private okta.customRole @defaults("label") {
+  // Identifier for the policy
+  id string
+  // Name of the Custom Role
+  label string
+  // Description of the Custom Role
+  description string
+  // Role Permissions
+  permissions []string
 }
