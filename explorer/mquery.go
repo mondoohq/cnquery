@@ -400,6 +400,47 @@ func (m *Mquery) AddBase(base *Mquery) {
 	}
 }
 
+// FilterQueryMRNs removes all queries from the given list, whose MRN matches
+// the given list of filters. Special handling for variants:
+// - remove all variants that match the MRNs
+// - if a composed query ends up empty, it is added to the list of filterMrns and removed
+func FilterQueryMRNs(filterMrns map[string]struct{}, queries []*Mquery) []*Mquery {
+	if len(filterMrns) == 0 {
+		return queries
+	}
+
+	var res []*Mquery
+	for i := range queries {
+		cur := queries[i]
+		if _, ok := filterMrns[cur.Mrn]; ok {
+			continue
+		}
+
+		if len(cur.Variants) != 0 {
+			var variants []*ObjectRef
+			for j := range cur.Variants {
+				cvar := cur.Variants[j]
+				if _, ok := filterMrns[cvar.Mrn]; ok {
+					continue
+				}
+				variants = append(variants, cvar)
+			}
+
+			// a composed query, which has no more child queries, can safely be removed
+			if len(variants) == 0 {
+				filterMrns[cur.Mrn] = struct{}{}
+				continue
+			}
+
+			cur.Variants = variants
+		}
+
+		res = append(res, cur)
+	}
+
+	return res
+}
+
 func (r *Remediation) UnmarshalJSON(data []byte) error {
 	var res string
 	if err := json.Unmarshal(data, &res); err == nil {
