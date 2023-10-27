@@ -199,7 +199,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 
 	workers.Wait()
 
-	resErr := errs.Deduplicate().(*multierr.Errors)
+	resErr := errs.Deduplicate()
 
 	// After deduplicating all the errors, there is one special case:
 	// If we only received one unique error, and it indicates that we cannot
@@ -207,7 +207,12 @@ func (s *Tester) Test(conf ScanConfig) error {
 	// a non-TLS scan and just return that error. If errors are mixed, we have to
 	// return them one by one, because valid responses have been reached.
 	// But if all we get is this error, there is no TLS at this endpoint.
-	if len(resErr.Errors) == 1 && errors.Is(resErr.Errors[0], ErrFailedToTlsResponse) {
+	mE, ok := resErr.(*multierr.Errors)
+	if !ok {
+		return resErr // or handle it as per your logic
+	}
+
+	if len(mE.Errors) == 1 && errors.Is(mE.Errors[0], ErrFailedToTlsResponse) {
 		return ErrFailedToTlsResponse
 	}
 

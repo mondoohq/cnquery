@@ -26,4 +26,10 @@ func TestMultiErr(t *testing.T) {
 		b.Add(errors.New("1"))
 		assert.Equal(t, b.Deduplicate(), e.Deduplicate())
 	})
+
+	t.Run("test nil error deduplicate", func(t *testing.T) {
+		var e multierr.Errors
+		err := e.Deduplicate()
+		assert.Nil(t, err)
+	})
 }

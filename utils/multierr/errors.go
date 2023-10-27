@@ -80,6 +80,9 @@ func (m Errors) Deduplicate() error {
 	return &Errors{Errors: res}
 }
 
-func (m Errors) IsEmpty() bool {
+func (m *Errors) IsEmpty() bool {
+	if m == nil {
+		return true
+	}
 	return len(m.Errors) == 0
 }
