@@ -144,7 +144,7 @@ private okta.role @defaults("label status") {
 private okta.group @defaults("name") {
   // Unique key for Group
   id string
-	// Group Name
+	// Group name
   name string
 	// Group description
 	description string
@@ -158,9 +158,9 @@ private okta.group @defaults("name") {
   lastUpdated time
   // The Group's Profile properties
   profile dict
-  // Group Members
+  // Group members
   members() []okta.user
-  // Group Roles
+  // Group roles
   roles() []okta.role
 }
 
@@ -338,7 +338,7 @@ private okta.threatsConfiguration @defaults("action") {
 
 // Okta Custom Role
 private okta.customRole @defaults("label") {
-  // Identifier of the Policy
+  // Identifier for the policy
   id string
   // Name of the Custom Role
   label string
