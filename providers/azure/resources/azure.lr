@@ -121,7 +121,7 @@ private azure.subscription.computeService {
 }
 
 // Azure Compute Virtual Machine
-azure.subscription.computeService.vm @defaults("id name location ") {
+azure.subscription.computeService.vm @defaults("name location properties.hardwareProfile.vmSize properties.storageProfile.osDisk.osType") {
   // VM ID
   id string
   // VM name
@@ -145,8 +145,7 @@ azure.subscription.computeService.vm @defaults("id name location ") {
 }
 
 // Azure Disk Resource
-azure.subscription.computeService.disk @defaults("id name location") {
-  // Disk resource ID
+azure.subscription.computeService.disk @defaults("name location properties.osType properties.diskSizeGB properties.diskState") {
   id string
   // Disk resource name
   name string
@@ -665,7 +664,7 @@ private azure.subscription.networkService.outboundRule @defaults("id name") {
 }
 
 // Azure Network Interface
-azure.subscription.networkService.interface @defaults("id name location") {
+azure.subscription.networkService.interface @defaults("name location properties.macAddress properties.nicType") {
   // Network interface ID
   id string
   // Network interface name
