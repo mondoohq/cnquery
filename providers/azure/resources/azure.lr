@@ -1670,7 +1670,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
 }
 
 // Azure Microsoft Cloud Defender Security Contact 
-private azure.subscription.cloudDefenderService.securityContact {
+private azure.subscription.cloudDefenderService.securityContact @defaults("name alertNotifications.state"){
   // ID of the security contact
   id string
   // Name of the security contact
@@ -1730,7 +1730,7 @@ private azure.subscription.aksService {
 }
 
 // Azure Kubernetes Service cluster
-private azure.subscription.aksService.cluster @defaults("name location") {
+private azure.subscription.aksService.cluster @defaults("name location kubernetesVersion") {
   // ID of the AKS cluster
   id string
   // Name of the AKS cluster
@@ -1774,7 +1774,7 @@ private azure.subscription.aksService.cluster @defaults("name location") {
 }
 
 // Azure Advisor
-private azure.subscription.advisorService {
+private azure.subscription.advisorService @defaults("averageScore recommendations.length scores.length") {
   // Subscription identifier
   subscriptionId string
   // List of all recommendations by the advisor
@@ -1786,7 +1786,7 @@ private azure.subscription.advisorService {
 }
 
 // Azure Advisor Recommendation
-private azure.subscription.advisorService.recommendation {
+private azure.subscription.advisorService.recommendation @defaults("name category impact description impactedResource") {
   // Recommendation ID
   id string
   // Recommendation name
@@ -1812,7 +1812,7 @@ private azure.subscription.advisorService.recommendation {
 }
 
 // Azure Advisor Score
-private azure.subscription.advisorService.score {
+private azure.subscription.advisorService.score @defaults("name") {
   // Score identifier
   id string
   // Score name
