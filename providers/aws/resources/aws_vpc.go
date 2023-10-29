@@ -262,10 +262,12 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 		for _, subnet := range subnets.Subnets {
 			subnetResource, err := CreateResource(a.MqlRuntime, "aws.vpc.subnet",
 				map[string]*llx.RawData{
-					"arn":                 llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
-					"id":                  llx.StringData(convert.ToString(subnet.SubnetId)),
-					"cidrs":               llx.StringData(*subnet.CidrBlock),
-					"mapPublicIpOnLaunch": llx.BoolData(*subnet.MapPublicIpOnLaunch),
+					"arn":                        llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
+					"id":                         llx.StringDataPtr(subnet.SubnetId),
+					"cidrs":                      llx.StringDataPtr(subnet.CidrBlock),
+					"mapPublicIpOnLaunch":        llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
+					"availabilityZone":           llx.StringDataPtr(subnet.AvailabilityZone),
+					"defaultForAvailabilityZone": llx.BoolDataPtr(subnet.DefaultForAz),
 				})
 			if err != nil {
 				return nil, err
