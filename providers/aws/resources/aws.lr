@@ -80,6 +80,10 @@ private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabili
   cidrs string
   // Indicates whether instances launched in this subnet receive a public IPv4 address
   mapPublicIpOnLaunch bool
+  // The availability zone where this subnet is located
+  availabilityZone string
+  // Indicates whether this is the default subnet for the availability zone
+  defaultForAvailabilityZone bool
 }
 
 // Amazon Virtual Private Cloud (VPC) Endpoint

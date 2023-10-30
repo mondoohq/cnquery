@@ -2289,7 +2289,11 @@ resources:
   aws.vpc.subnet:
     fields:
       arn: {}
+      availabilityZone:
+        min_mondoo_version: latest
       cidrs: {}
+      defaultForAvailabilityZone:
+        min_mondoo_version: latest
       id: {}
       mapPublicIpOnLaunch: {}
     is_private: true

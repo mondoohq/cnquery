@@ -647,6 +647,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetMapPublicIpOnLaunch()).ToDataRes(types.Bool)
 	},
+	"aws.vpc.subnet.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.vpc.subnet.defaultForAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetDefaultForAvailabilityZone()).ToDataRes(types.Bool)
+	},
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
 	},
@@ -2850,6 +2856,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.subnet.mapPublicIpOnLaunch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcSubnet).MapPublicIpOnLaunch, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.defaultForAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).DefaultForAvailabilityZone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6490,6 +6504,8 @@ type mqlAwsVpcSubnet struct {
 	Id plugin.TValue[string]
 	Cidrs plugin.TValue[string]
 	MapPublicIpOnLaunch plugin.TValue[bool]
+	AvailabilityZone plugin.TValue[string]
+	DefaultForAvailabilityZone plugin.TValue[bool]
 }
 
 // createAwsVpcSubnet creates a new instance of this resource
@@ -6543,6 +6559,14 @@ func (c *mqlAwsVpcSubnet) GetCidrs() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcSubnet) GetMapPublicIpOnLaunch() *plugin.TValue[bool] {
 	return &c.MapPublicIpOnLaunch
+}
+
+func (c *mqlAwsVpcSubnet) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsVpcSubnet) GetDefaultForAvailabilityZone() *plugin.TValue[bool] {
+	return &c.DefaultForAvailabilityZone
 }
 
 // mqlAwsVpcEndpoint for the aws.vpc.endpoint resource
