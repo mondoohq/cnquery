@@ -60,15 +60,15 @@ okta.organization @defaults("companyName") {
   lastUpdated time
   // Expiration of organization
   expiresAt time
-  // Indicates whether the org's users receive Okta Communication emails
+  // Indicates whether the org's users receive Okta communication email
   optOutCommunicationEmails() bool
   // Billing contact of organization
   billingContact() okta.user
   // Technical contact of organization
   technicalContact() okta.user
-  // Security notification emails
+  // Security notification email
   securityNotificationEmails() dict
-  // Threat Insight Settings
+  // Okta ThreatInsight settings
   threatInsightSettings() okta.threatsConfiguration
 }
 
@@ -78,7 +78,7 @@ okta.policies {
   password() []okta.policy
   // MFA policies
   mfaEnroll() []okta.policy
-  // Sign on policies
+  // Sign-on policies
   signOn() []okta.policy
   // OAuth authorization policies
   oauthAuthorizationPolicy() []okta.policy
@@ -148,15 +148,15 @@ private okta.group @defaults("name") {
   name string
 	// Group description
 	description string
-  // Determines how a Group's Profile and memberships are managed
+  // Determines how a group's profile and memberships are managed
   type dict
-  // Timestamp when Group was created
+  // Timestamp when group was created
   created time
-  // Timestamp when Group's memberships were last updated
+  // Timestamp when group's memberships were last updated
   lastMembershipUpdated time
-  // Timestamp when Group's profile was last updated
+  // Timestamp when group's profile was last updated
   lastUpdated time
-  // The Group's Profile properties
+  // The group's profile properties
   profile dict
   // Group members
   members() []okta.user
@@ -165,43 +165,43 @@ private okta.group @defaults("name") {
 }
 
 private okta.groupRule @defaults("name") {
-  // Unique key for Group Rule
+  // Unique key for group rule
   id string
-	// Group Rule Name
+	// Group rule name
   name string
-	// Group Rule Status
+	// Group rule status
 	status string
-	// Group Rule Type
+	// Group rule type
 	type string
 }
 
 // Okta Application
 private okta.application @defaults("name") {
-  // Unique key for app
+  // Unique key for the app
   id string
-  // Unique key for app definition
+  // Unique key that defines the app
   name string
-  // User-defined display name for app
+  // User-defined display name for the app
   label string
-  // Timestamp when app was created
+  // Timestamp when the app was created
   created time
-  // Timestamp when app was last updated
+  // Timestamp when the app was last updated
   lastUpdated time
-  // Credentials for the specified signOnMode
+  // Credentials for the specified sign-on mode
   credentials dict
   // Enabled app features
   features []string
-  // Okta Licensing Information
+  // Okta licensing information
   licensing dict
   // Valid JSON schema for specifying properties
   profile dict
-  // Settings for app
+  // Settings for the app
   settings dict
-  // Authentication mode of app
+  // Authentication mode of the app
   signOnMode string
-  // Status of app
+  // Status of the app
   status string
-  // Visibility settings for app
+  // Visibility settings for the app
   visibility dict
 }
 
@@ -211,37 +211,37 @@ private okta.domain @defaults("domain") {
   id string
   // Domain name
   domain string
-  // Status of the domain. Accepted values: NOT_STARTED, IN_PROGRESS, VERIFIED, COMPLETED
+  // Status of the domain: NOT_STARTED, IN_PROGRESS, VERIFIED, or COMPLETED
   validationStatus string
-  // TXT and CNAME records to be registered for the Domain
+  // TXT and CNAME records to be registered for the domain
   dnsRecords []dict
-  // Certificate metadata for the Domain
+  // Certificate metadata for the domain
   publicCertificate dict
 }
 
 // Okta Policy
 private okta.policy @defaults("name") {
-  // Identifier of the Policy
+  // Identifier of the policy
   id string
-  // Name of the Policy
+  // Name of the policy
   name string
-  // Description of the Policy
+  // Description of the policy
   description string
-  // Priority of the Policy
+  // Priority of the policy
   priority int
-  // Status of the Policy: ACTIVE or INACTIVE
+  // Status of the policy: ACTIVE or INACTIVE
   status string
-  // Indicates system policies
+  // Whether the policy is a system policy
   system bool
-  // Specifies the type of Policy
+  // Specifies the type of policy
   type string
-  // Conditions for Policy
+  // Conditions for policy
   conditions dict
-  // Settings for the Policy
+  // Settings for the policy
   settings dict
-  // Timestamp when the Policy was created
+  // Timestamp when the policy was created
   created time
-  // Timestamp when the Policy was last modified
+  // Timestamp when the policy was last modified
   lastUpdated time
   // Rules attached to the policy
   rules() []okta.policyRule
@@ -249,77 +249,77 @@ private okta.policy @defaults("name") {
 
 // Okta Policy Rule
 private okta.policyRule @defaults("name") {
-  // Identifier of the Rule
+  // Identifier of the rule
   id string
-  // Name of the Rule
+  // Name of the rule
   name string
-  // Priority of the Rule
+  // Priority of the rule
   priority int
-  // Status of the Rule: ACTIVE or INACTIVE
+  // Status of the rule: ACTIVE or INACTIVE
   status string
-  // Indicates system policies
+  // Whether the rule is a system policy rule
   system bool
   // Rule type
   type string
-  // Actions for Rule
+  // Actions for rule
   actions dict
-  // Conditions for a Rule
+  // Conditions for a rule
   conditions dict
-  // Timestamp when the Rule was created
+  // Timestamp when the rule was created
   created time
-  // Timestamp when the Rule was last modified
+  // Timestamp when the rule was last modified
   lastUpdated time
 }
 
 // Okta Trusted Origin
 private okta.trustedOrigin @defaults("name") {
-  // Unique identifier for the Trusted Origin
+  // Unique identifier for the trusted origin
   id string
-  // Name for the Trusted Origin
+  // Name for the trusted origin
   name string
-  // Unique origin URL for the Trusted Origin
+  // Unique origin URL for the trusted origin
   origin string
-  // Timestamp when the Trusted Origin was created
+  // Timestamp when the trusted origin was created
   created time
-  // ID of entity that created the Trusted Origin
+  // ID of the entity that created the trusted origin
   createdBy string
-  // Timestamp when the Trusted Origin was last updated
+  // Timestamp when the trusted origin was last updated
   lastUpdated time
-  // ID of entity that last updated the Trusted Origin
+  // ID of entity that last updated the trusted origin
   lastUpdatedBy string
-  // Array of Scope types that this Trusted Origin is used for
+  // Array of Scope types that this trusted origin is used for
   scopes []dict
-  // Status of the Trusted Origin
+  // Status of the trusted origin
   status string
 }
 
 // Okta Network Zone
 private okta.network @defaults("name type") {
-  // Unique identifier for the Network Zone
+  // Unique identifier for the network zone
   id string
-  // Name for the Network Zone
+  // Name for the network zone
   name string
-  // Type of the Network Zone
+  // Type of the network zone
   type string
-  // Timestamp when the Network Zone was created
+  // Timestamp when the network zone was created
   created time
-  // Timestamp when the Network Zone was last updated
+  // Timestamp when the network zone was last updated
   lastUpdated time
-  // Status of the Network Zone
+  // Status of the network zone
   status string
-  // Indicates whether the Network Zone is system-defined
+  // Whether the network zone is system-defined
   system bool
-  // ISP ASNs for the Network Zone
+  // ISP ASNs for the network zone
   asns []string
-  // Usage of Zone: POLICY or BLOCKLIST
+  // Usage of zone: POLICY or BLOCKLIST
   usage string
   // IP type
   proxyType string
   // IP addresses that are allowed to forward a request from gateway
   proxies []dict
-  // Locations for the Network Zone
+  // Locations for the network zone
   locations []dict
-  // IP addresses of this Zone
+  // IP addresses of this zone
   gateways []dict
 }
 
@@ -327,23 +327,23 @@ private okta.network @defaults("name type") {
 private okta.threatsConfiguration @defaults("action") {
   // Action
   action string
-  // Exempt Zones
+  // Exempt zones
   excludeZones []okta.network
-  // Timestamp when the Network Zone was created
+  // Timestamp when the network zone was created
   created time
-  // Timestamp when the Network Zone was last updated
+  // Timestamp when the network zone was last updated
   lastUpdated time
 
 }
 
 // Okta Custom Role
 private okta.customRole @defaults("label") {
-  // Identifier for the policy
+  // Identifier for the custom role
   id string
-  // Name of the Custom Role
+  // Name of the custom role
   label string
-  // Description of the Custom Role
+  // Description of the custom role
   description string
-  // Role Permissions
+  // Role permissions
   permissions []string
 }
