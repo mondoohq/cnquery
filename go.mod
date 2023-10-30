@@ -33,7 +33,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/docker/cli v24.0.6+incompatible
-	github.com/docker/docker v24.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/glebarez/go-sqlite v1.21.2
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/gobwas/glob v0.2.3
