@@ -31,7 +31,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		adminToken = os.Getenv("ATLASSIAN_ADMIN_TOKEN")
 	}
 	if adminToken == "" {
-		return nil, errors.New("you need to provide atlassian admin token via ATLASSIAN_ADMIN_TOKEN env or via the --admin-token flag")
+		return nil, errors.New("you must provide an Atlassian admin token via the ATLASSIAN_ADMIN_TOKEN env or via the --admin-token flag")
 	}
 
 	client, err := admin.New(nil)

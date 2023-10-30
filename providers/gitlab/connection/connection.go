@@ -52,7 +52,7 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 	}
 
 	if token == "" {
-		return nil, errors.New("you need to provide GitLab token e.g. via GITLAB_TOKEN env")
+		return nil, errors.New("you must provide GitLab token e.g. via GITLAB_TOKEN env")
 	}
 
 	var opts gitlab.ClientOptionFunc
