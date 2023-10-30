@@ -20,7 +20,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	cloud.google.com/go/recommender v1.11.1
 	cloud.google.com/go/run v1.3.1
-	cloud.google.com/go/serviceusage v1.8.1
+	cloud.google.com/go/serviceusage v1.8.2
 	github.com/aws/smithy-go v1.15.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.16.1
