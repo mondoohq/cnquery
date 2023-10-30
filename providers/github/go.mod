@@ -14,7 +14,7 @@ require (
 	go.mondoo.com/cnquery/v9 v9.3.6-0.20231026202818-6b54dba51756
 	go.mondoo.com/ranger-rpc v0.5.2
 	golang.org/x/oauth2 v0.13.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
