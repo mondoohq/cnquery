@@ -318,42 +318,21 @@ func (c *bundleCache) removeFailing(res *Bundle) {
 		return
 	}
 
-	filtered := []*Mquery{}
-	for i := range res.Queries {
-		cur := res.Queries[i]
-		if _, ok := c.removeQueries[cur.Mrn]; !ok {
-			filtered = append(filtered, cur)
-		}
-	}
-	res.Queries = filtered
+	res.Queries = FilterQueryMRNs(c.removeQueries, res.Queries)
 
 	for i := range res.Packs {
 		pack := res.Packs[i]
-
-		filtered := []*Mquery{}
-		for i := range pack.Queries {
-			cur := pack.Queries[i]
-			if _, ok := c.removeQueries[cur.Mrn]; !ok {
-				filtered = append(filtered, cur)
-			}
-		}
-		pack.Queries = filtered
+		pack.Queries = FilterQueryMRNs(c.removeQueries, pack.Queries)
 
 		groups := []*QueryGroup{}
 		for j := range pack.Groups {
 			group := pack.Groups[j]
-			filtered := []*Mquery{}
-			for k := range group.Queries {
-				cur := group.Queries[k]
-				if _, ok := c.removeQueries[cur.Mrn]; !ok {
-					filtered = append(filtered, cur)
-				}
-			}
-			group.Queries = filtered
+			group.Queries = FilterQueryMRNs(c.removeQueries, group.Queries)
 			if len(group.Queries) != 0 {
 				groups = append(groups, group)
 			}
 		}
+
 		pack.Groups = groups
 	}
 }

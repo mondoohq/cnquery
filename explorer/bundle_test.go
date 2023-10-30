@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
+var mock = testutils.LinuxMock()
+
 func TestBundleLoad(t *testing.T) {
 	t.Run("load bundle from file", func(t *testing.T) {
 		bundle, err := BundleFromPaths("../examples/os.mql.yaml")
@@ -49,3 +51,63 @@ func TestBundleLoad(t *testing.T) {
 		assert.True(t, len(bundle.Packs[0].Queries[0].Uid) > 0)
 	})
 }
+
+func TestFilterQueriesWontCompile(t *testing.T) {
+	b2, err := BundleFromYAML([]byte(failingVariant))
+	require.NoError(t, err)
+	_, err2 := b2.CompileExt(context.Background(), BundleCompileConf{
+		Schema:        mock.Schema(),
+		RemoveFailing: false,
+	})
+	require.Error(t, err2)
+}
+
+func TestFilterQueriesIgnoreError(t *testing.T) {
+	b, err := BundleFromYAML([]byte(failingVariant))
+	require.NoError(t, err)
+	bmap, err := b.CompileExt(context.Background(), BundleCompileConf{
+		Schema:        mock.Schema(),
+		RemoveFailing: true,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, bmap)
+	assert.Len(t, bmap.Queries, 4)
+}
+
+const failingVariant = `
+packs:
+- uid: mondoo-soc2-inventory
+  queries:
+  - uid: failing-pack_embed
+    mql: not_me_i_wont
+  - uid: pack-variant_embed
+    variants:
+    - uid: variant-ok
+    - uid: variant-nok
+  - uid: failing-pack-ref
+  groups:
+  - title: Main
+    filters: "true"
+    queries:
+    - uid: variant-root
+    - uid: failing-group-embed
+      mql: embed_wont_work_for_this
+    - uid: group-variant_embed
+      variants:
+      - uid: variant-ok
+      - uid: variant-nok
+    - uid: failing-group-ref
+queries:
+- uid: failing-pack-ref
+  mql: i_wont_compile
+- uid: failing-group-ref
+  mql: i_also_wont_compile
+- uid: variant-root
+  variants:
+  - uid: variant-ok
+  - uid: variant-nok
+- uid: variant-ok
+  mql: asset.name
+- uid: variant-nok
+  mql: definitely_not_in_here
+`
