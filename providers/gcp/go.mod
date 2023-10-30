@@ -18,7 +18,7 @@ require (
 	cloud.google.com/go/longrunning v0.5.2
 	cloud.google.com/go/monitoring v1.16.1
 	cloud.google.com/go/pubsub v1.33.0
-	cloud.google.com/go/recommender v1.11.1
+	cloud.google.com/go/recommender v1.11.2
 	cloud.google.com/go/run v1.3.1
 	cloud.google.com/go/serviceusage v1.8.1
 	github.com/aws/smithy-go v1.15.0
