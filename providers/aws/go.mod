@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.17.2
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.20.8
 	github.com/aws/aws-sdk-go-v2/service/emr v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.29.0
