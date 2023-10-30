@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	cloud.google.com/go/accessapproval v1.7.2
+	cloud.google.com/go/accessapproval v1.7.3
 	cloud.google.com/go/bigquery v1.56.0
 	cloud.google.com/go/compute v1.23.1
 	cloud.google.com/go/container v1.26.1

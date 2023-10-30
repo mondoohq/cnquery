@@ -19,8 +19,8 @@ cloud.google.com/go v0.74.0/go.mod h1:VV1xSbzvo+9QJOxLDaJfTjx5e+MePCpCWwvftOeQmW
 cloud.google.com/go v0.75.0/go.mod h1:VGuuCn7PG0dwsd5XPVm2Mm3wlh3EL55/79EKB6hlPTY=
 cloud.google.com/go v0.110.9 h1:e7ITSqGFFk4rbz/JFIqZh3G4VEHguhAL4BQcFlWtU68=
 cloud.google.com/go v0.110.9/go.mod h1:rpxevX/0Lqvlbc88b7Sc1SPNdyK1riNBTUU6JXhYNpM=
-cloud.google.com/go/accessapproval v1.7.2 h1:W55SFrY6EVlcmmRGUk0rGhuy3j4fn7UtEocib/zADVE=
-cloud.google.com/go/accessapproval v1.7.2/go.mod h1:/gShiq9/kK/h8T/eEn1BTzalDvk0mZxJlhfw0p+Xuc0=
+cloud.google.com/go/accessapproval v1.7.3 h1:MOfZ2ncDO+nctNmOYqN8kCb8kHkVJU1nqGNGDa7qGQk=
+cloud.google.com/go/accessapproval v1.7.3/go.mod h1:4l8+pwIxGTNqSf4T3ds8nLO94NQf0W/KnMNuQ9PbnP8=
 cloud.google.com/go/bigquery v1.0.1/go.mod h1:i/xbL2UlR5RvWAURpBYZTtm/cXjCha9lbfbpx4poX+o=
 cloud.google.com/go/bigquery v1.3.0/go.mod h1:PjpwJnslEMmckchkHFfq+HTD2DmtT67aNFKH1/VBDHE=
 cloud.google.com/go/bigquery v1.4.0/go.mod h1:S8dzgnTigyfTmLBfrtrhyYhwRxG72rYxvftPBK2Dvzc=
