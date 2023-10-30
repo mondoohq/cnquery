@@ -35,7 +35,7 @@ aws.organization @defaults("arn masterAccountEmail") {
 }
 
 // Amazon Virtual Private Cloud (VPC)
-private aws.vpc @defaults("arn isDefault cidrBlock") {
+private aws.vpc @defaults("id isDefault cidrBlock region") {
   // ARN of the VPC
   arn string
   // ID of the VPC
@@ -63,7 +63,7 @@ private aws.vpc @defaults("arn isDefault cidrBlock") {
 }
 
 // Amazon Virtual Private Cloud (VPC) Route Table
-private aws.vpc.routetable @defaults("id") {
+private aws.vpc.routetable @defaults("id routes.length") {
   // Unique ID of the route table
   id string
   // A list of route descriptions
@@ -71,7 +71,7 @@ private aws.vpc.routetable @defaults("id") {
 }
 
 // Amazon Virtual Private Cloud (VPC) Subnet
-private aws.vpc.subnet @defaults("arn") {
+private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabilityZone") {
   // ARN of the subnet
   arn string
   // Unique ID of the subnet
@@ -83,7 +83,7 @@ private aws.vpc.subnet @defaults("arn") {
 }
 
 // Amazon Virtual Private Cloud (VPC) Endpoint
-private aws.vpc.endpoint @defaults("id") {
+private aws.vpc.endpoint @defaults("id type region") {
   // Unique ID of the endpoint
   id string
   // Type of the endpoint
@@ -115,14 +115,13 @@ private aws.vpc.flowlog @defaults("id region status") {
 }
 
 // AWS IAM Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
-aws.accessAnalyzer {
+aws.accessAnalyzer @defaults("analyzers") {
   // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account 
   analyzers() []aws.accessanalyzer.analyzer
 }
 
-
 // AWS IAM Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
-private aws.accessanalyzer.analyzer @defaults("arn status") {
+private aws.accessanalyzer.analyzer @defaults("name type status") {
   // ARN for the analyzer
   arn string
   // Name for the analyzer
@@ -136,13 +135,13 @@ private aws.accessanalyzer.analyzer @defaults("arn status") {
 }
 
 // AWS Elastic File System (EFS) Service
-aws.efs {
+aws.efs @defaults("filesystems") {
   // A list of file systems managed by the service
   filesystems() []aws.efs.filesystem
 }
 
 // AWS Elastic File System (EFS) Filesystem
-private aws.efs.filesystem @defaults("name arn") {
+private aws.efs.filesystem @defaults("name id region") {
   // Name of the file system
   name string
   // ID of the file system
@@ -166,13 +165,13 @@ private aws.efs.filesystem @defaults("name arn") {
 }
 
 // AWS Key Management Service (KMS)
-aws.kms {
+aws.kms @defaults("keys") {
   // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
   keys() []aws.kms.key
 }
 
 // AWS Key Management Service (KMS) Key
-private aws.kms.key @defaults("arn") {
+private aws.kms.key @defaults("id region metadata.Description") {
   // Unique identifier for the key
   id string
   // ARN of the key
