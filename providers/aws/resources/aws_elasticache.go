@@ -181,7 +181,7 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 							"atRestEncryptionEnabled":   llx.BoolData(convert.ToBool(cluster.AtRestEncryptionEnabled)),
 							"authTokenEnabled":          llx.BoolData(convert.ToBool(cluster.AuthTokenEnabled)),
 							"authTokenLastModifiedDate": llx.TimeDataPtr(cluster.AuthTokenLastModifiedDate),
-							"autoMinorVersionUpgrade":   llx.BoolData(cluster.AutoMinorVersionUpgrade),
+							"autoMinorVersionUpgrade":   llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
 							"cacheClusterCreateTime":    llx.TimeDataPtr(cluster.CacheClusterCreateTime),
 							"cacheClusterId":            llx.StringData(convert.ToString(cluster.CacheClusterId)),
 							"cacheClusterStatus":        llx.StringData(convert.ToString(cluster.CacheClusterStatus)),
