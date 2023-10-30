@@ -22,6 +22,10 @@ func init() {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
 		},
+		"platform": {
+			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPlatform,
+		},
 		"vsphere": {
 			// to override args, implement: initVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphere,
@@ -160,6 +164,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
+	},
+	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
 	"vsphere.about": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetAbout()).ToDataRes(types.Dict)
@@ -458,6 +465,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"platform.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPlatform).__id, ok = v.Value.(string)
+			return
+		},
+	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"vsphere.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -965,6 +980,52 @@ func (c *mqlAsset) MqlID() string {
 }
 
 func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
+		return c.vulnerabilityReport()
+	})
+}
+
+// mqlPlatform for the platform resource
+type mqlPlatform struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPlatformInternal it will be used here
+	VulnerabilityReport plugin.TValue[interface{}]
+}
+
+// createPlatform creates a new instance of this resource
+func createPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPlatform{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("platform", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPlatform) MqlName() string {
+	return "platform"
+}
+
+func (c *mqlPlatform) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
 		return c.vulnerabilityReport()
 	})

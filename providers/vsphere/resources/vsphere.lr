@@ -8,6 +8,11 @@ extend asset {
   vulnerabilityReport() dict
 }
 
+platform {
+  // deprecated: use asset.vulnerabilityReport instead
+  vulnerabilityReport() dict
+}
+
 // VMware vSphere resource
 vsphere {
   // System information including the name, type, version, and build number

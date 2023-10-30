@@ -52,7 +52,7 @@ platform.eol @defaults("date") {
 }
 
 platform {
-  // Full advisory & vulnerability report
+  // deprecated: use asset.vulnerabilityReport instead
   vulnerabilityReport() dict
 }
 
