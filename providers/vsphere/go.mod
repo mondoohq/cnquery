@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	github.com/vmware/govmomi v0.32.0
+	github.com/vmware/govmomi v0.33.0
 	go.mondoo.com/cnquery/v9 v9.3.6-0.20231026202818-6b54dba51756
 )
 
