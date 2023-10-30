@@ -36,17 +36,17 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (s
 	case "jira":
 		conn, err = jira.NewConnection(id, asset, conf)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create jira connection")
+			return nil, errors.Wrap(err, "Failed to create Jira connection")
 		}
 	case "confluence":
 		conn, err = confluence.NewConnection(id, asset, conf)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create confluence connection")
+			return nil, errors.Wrap(err, "Failed to create Confluence connection")
 		}
 	case "scim":
 		conn, err = scim.NewConnection(id, asset, conf)
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create scim connection")
+			return nil, errors.Wrap(err, "Failed to create SCIM connection")
 		}
 	}
 	return conn, nil

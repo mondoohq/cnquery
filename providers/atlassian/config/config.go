@@ -41,7 +41,7 @@ Examples:
 If the ATLASSIAN_ADMIN_TOKEN environment variable is set, the admin-token flag is not required. If the ATLASSIAN_USER, 
 ATLASSIAN_HOST, and ATLASSIAN_USER_TOKEN environment variables are set, the user, host, and user-token flags are not required.
 
-For scim, you receive both the token and the directory-id from atlassian when you setup an identity provider.
+For SCIM, you receive both the token and the directory-id from Atlassian when you setup an identity provider.
 `,
 			MaxArgs:   2,
 			Discovery: []string{},
@@ -50,7 +50,7 @@ For scim, you receive both the token and the directory-id from atlassian when yo
 					Long:    "admin-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Provide Atlassian admin api token (used for Atlassian admin).",
+					Desc:    "Provide Atlassian admin API token (used for Atlassian admin).",
 				},
 				{
 					Long:    "host",
@@ -68,13 +68,13 @@ For scim, you receive both the token and the directory-id from atlassian when yo
 					Long:    "user-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Provide Atlassian user api token (used for Jira / Confluence).",
+					Desc:    "Provide Atlassian user API token (used for Jira / Confluence).",
 				},
 				{
 					Long:    "scim-token",
 					Type:    plugin.FlagType_String,
 					Default: "",
-					Desc:    "Provide Atlassian scim api token (used for scim).",
+					Desc:    "Provide Atlassian SCIM API token (used for SCIM).",
 				},
 			},
 		},
