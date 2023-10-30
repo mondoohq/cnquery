@@ -441,6 +441,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 
 		if record != "" && useRecording != "" {
+			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("please only use --record or --use-recording, but not both at the same time")
 		}
 		recordingPath := record
@@ -454,6 +455,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			PrettyPrintJSON: pretty,
 		})
 		if err != nil {
+			providers.Coordinator.Shutdown()
 			log.Fatal().Msg(err.Error())
 		}
 		runtime.SetRecording(recording)
