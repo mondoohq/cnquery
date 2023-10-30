@@ -109,6 +109,10 @@ resources:
       name:
       - vmware-esxi
       - vmware-vsphere
+  platform:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
   vsphere:
     fields:
       about: {}
