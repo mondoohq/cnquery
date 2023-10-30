@@ -5,6 +5,7 @@ option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
 option go_package = "go.mondoo.com/cnquery/v9/providers/vsphere/resources"
 
 extend asset {
+  // Full advisory & vulnerability report
   vulnerabilityReport() dict
 }
 

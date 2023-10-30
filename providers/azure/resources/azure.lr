@@ -146,6 +146,7 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
 
 // Azure Disk Resource
 azure.subscription.computeService.disk @defaults("name location properties.osType properties.diskSizeGB properties.diskState") {
+  // Disk resource ID
   id string
   // Disk resource name
   name string
