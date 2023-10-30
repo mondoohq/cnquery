@@ -12,7 +12,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/microsoft/kiota-abstractions-go v1.3.0
 	github.com/microsoft/kiota-authentication-azure-go v1.0.1
-	github.com/microsoftgraph/msgraph-sdk-go v1.22.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.23.0
 	github.com/pkg/errors v0.9.1
 	go.mondoo.com/cnquery/v9 v9.3.6-0.20231026202818-6b54dba51756
 
