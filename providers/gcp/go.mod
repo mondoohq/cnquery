@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go/container v1.26.1
 	cloud.google.com/go/functions v1.15.2
 	cloud.google.com/go/iam v1.1.3
-	cloud.google.com/go/kms v1.15.3
+	cloud.google.com/go/kms v1.15.4
 	cloud.google.com/go/logging v1.8.1
 	cloud.google.com/go/longrunning v0.5.2
 	cloud.google.com/go/monitoring v1.16.1

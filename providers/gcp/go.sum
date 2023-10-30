@@ -43,8 +43,8 @@ cloud.google.com/go/functions v1.15.2 h1:DpT51zU3UMTt64efB4a9hE9B98Kb0fZC3IfaVp7
 cloud.google.com/go/functions v1.15.2/go.mod h1:CHAjtcR6OU4XF2HuiVeriEdELNcnvRZSk1Q8RMqy4lE=
 cloud.google.com/go/iam v1.1.3 h1:18tKG7DzydKWUnLjonWcJO6wjSCAtzh4GcRKlH/Hrzc=
 cloud.google.com/go/iam v1.1.3/go.mod h1:3khUlaBXfPKKe7huYgEpDn6FtgRyMEqbkvBxrQyY5SE=
-cloud.google.com/go/kms v1.15.3 h1:RYsbxTRmk91ydKCzekI2YjryO4c5Y2M80Zwcs9/D/cI=
-cloud.google.com/go/kms v1.15.3/go.mod h1:AJdXqHxS2GlPyduM99s9iGqi2nwbviBbhV/hdmt4iOQ=
+cloud.google.com/go/kms v1.15.4 h1:gEZzC54ZBI+aeW8/jg9tgz9KR4Aa+WEDPbdGIV3iJ7A=
+cloud.google.com/go/kms v1.15.4/go.mod h1:L3Sdj6QTHK8dfwK5D1JLsAyELsNMnd3tAIwGS4ltKpc=
 cloud.google.com/go/logging v1.8.1 h1:26skQWPeYhvIasWKm48+Eq7oUqdcdbwsCVwz5Ys0FvU=
 cloud.google.com/go/logging v1.8.1/go.mod h1:TJjR+SimHwuC8MZ9cjByQulAMgni+RkXeI3wwctHJEI=
 cloud.google.com/go/longrunning v0.5.2 h1:u+oFqfEwwU7F9dIELigxbe0XVnBAo9wqMuQLA50CZ5k=
