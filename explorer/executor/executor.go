@@ -90,6 +90,14 @@ func ExecuteFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeo
 }
 
 func (e *instance) runCode(queries map[string]*explorer.ExecutionQuery, timeout time.Duration) error {
+	if len(queries) == 0 {
+		e.progressReporter.Completed()
+		go func() {
+			e.done <- struct{}{}
+		}()
+		return nil
+	}
+
 	e.execs = make(map[string]*llx.MQLExecutorV2, len(queries))
 
 	for i := range queries {
