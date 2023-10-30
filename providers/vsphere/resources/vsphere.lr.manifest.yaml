@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 resources:
+  asset:
+    fields:
+      vulnerabilityReport: {}
+    min_mondoo_version: latest
   esxi:
     docs:
       desc: |
