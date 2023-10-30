@@ -22,6 +22,7 @@ type AgentManager interface {
 	RegisterAgent(context.Context, *AgentRegistrationRequest) (*AgentRegistrationConfirmation, error)
 	UnRegisterAgent(context.Context, *Mrn) (*Confirmation, error)
 	PingPong(context.Context, *Ping) (*Pong, error)
+	HealthCheck(context.Context, *AgentInfo) (*AgentCheckinResponse, error)
 }
 
 // client implementation
@@ -65,6 +66,11 @@ func (c *AgentManagerClient) PingPong(ctx context.Context, in *Ping) (*Pong, err
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/PingPong"}, ""), in, out)
 	return out, err
 }
+func (c *AgentManagerClient) HealthCheck(ctx context.Context, in *AgentInfo) (*AgentCheckinResponse, error) {
+	out := new(AgentCheckinResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/HealthCheck"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -91,6 +97,7 @@ func NewAgentManagerServer(handler AgentManager, opts ...AgentManagerServerOptio
 			"RegisterAgent":   srv.RegisterAgent,
 			"UnRegisterAgent": srv.UnRegisterAgent,
 			"PingPong":        srv.PingPong,
+			"HealthCheck":     srv.HealthCheck,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -172,6 +179,30 @@ func (p *AgentManagerServer) PingPong(ctx context.Context, reqBytes *[]byte) (pb
 		return nil, err
 	}
 	return p.handler.PingPong(ctx, &req)
+}
+func (p *AgentManagerServer) HealthCheck(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req AgentInfo
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.HealthCheck(ctx, &req)
 }
 
 // service interface definition

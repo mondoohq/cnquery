@@ -31,10 +31,15 @@ service AgentManager {
 
   // Service Account Credential Test Endpoint
   rpc PingPong(Ping) returns (Pong);
+
+  // Health Check for Managed Agents
+  rpc HealthCheck(AgentInfo) returns (AgentCheckinResponse);
 }
 
 message Ping {}
 message Pong {}
+
+message AgentCheckinResponse {}
 
 message AgentRegistrationRequest {
   string token = 1;
