@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.29.2

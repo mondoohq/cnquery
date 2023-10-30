@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.2 h1:d1T1J5oR9zHMHbXMs22nx
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.2/go.mod h1:hfIgsvZ+nvnfBqu6T1H1YTeFkkPr0I/+UTyekLl054E=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.22.7 h1:JYjtMtd/tCxQcYzRUrrmkLHN7rH+u+bEGzl9+YMVORM=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.22.7/go.mod h1:47V/zdp5xFYAU/0F5X4j12ITfF9Yx6cj/DPKtnSW/D0=
-github.com/aws/aws-sdk-go-v2/service/autoscaling v1.31.0 h1:71Sptj0YBk/w3Q/7o0BRpTuggS8e8Y9k0zpArf2qW20=
-github.com/aws/aws-sdk-go-v2/service/autoscaling v1.31.0/go.mod h1:wJGfoc78LfCPzl0VQPdU3wOXgyikdwXZKaV8i3Ot0UM=
+github.com/aws/aws-sdk-go-v2/service/autoscaling v1.32.0 h1:96UNFH/G80b93LKyiB+l5PSSAtwpuX9+8jYjSOoU4c4=
+github.com/aws/aws-sdk-go-v2/service/autoscaling v1.32.0/go.mod h1:wJGfoc78LfCPzl0VQPdU3wOXgyikdwXZKaV8i3Ot0UM=
 github.com/aws/aws-sdk-go-v2/service/backup v1.25.2 h1:1J86kxek3EJJZXhELUeBSi5JE5w/R+zqL3MziRiMXA8=
 github.com/aws/aws-sdk-go-v2/service/backup v1.25.2/go.mod h1:Al1nE1HdHr7TZO1wZNegeXKOyGF9hvgLpbVnC3C/FfQ=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.28.7 h1:rbzZROs9b8Fpo0jtdPy2Qfxh8SRAAXx6sEMX4yxqF6g=
