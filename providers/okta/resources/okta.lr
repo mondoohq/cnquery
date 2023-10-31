@@ -164,6 +164,7 @@ private okta.group @defaults("name") {
   roles() []okta.role
 }
 
+// Okta Group Rule
 private okta.groupRule @defaults("name") {
   // Unique key for group rule
   id string
