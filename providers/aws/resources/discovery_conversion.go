@@ -381,6 +381,8 @@ func getProbableUsernameFromImageName(name string) string {
 func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
+	asset.Labels["mondoo.com/platform"] = instance.PlatformName.Data
+
 	name := instance.InstanceId.Data
 	if labelName := asset.Labels["Name"]; name != "" {
 		name = labelName
