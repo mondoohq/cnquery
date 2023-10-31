@@ -261,37 +261,14 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		}
 	case DiscoverySSMInstances:
-		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
-		if err != nil {
-			return nil, err
-		}
-
-		ec2 := res.(*mqlAwsEc2)
-
-		ins := ec2.GetInstances()
-		if ins == nil {
-			return assetList, nil
-		}
-
-		for i := range ins.Data {
-			instance := ins.Data[i].(*mqlAwsEc2Instance)
-			if !instanceMatchesFilters(instance, filters) {
-				continue
-			}
-			if instance.GetSsm() != nil {
-				if s := instance.GetSsm().Data.(map[string]interface{})["PingStatus"]; s != nil && s == "Online" {
-					assetList = append(assetList, addSSMConnectionInfoToEc2Asset(instance, accountId, conn))
-				}
-			}
-		}
-		res, err = NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
+		res, err := NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
 
 		ssm := res.(*mqlAwsSsm)
 
-		ins = ssm.GetInstances()
+		ins := ssm.GetInstances()
 		if ins == nil {
 			return assetList, nil
 		}
