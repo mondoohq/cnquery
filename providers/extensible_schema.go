@@ -12,19 +12,22 @@ import (
 )
 
 type extensibleSchema struct {
-	aggregate      resources.Schema
+	// Note: this object is re-created every time we refresh. It is treated
+	// as unsafe and may be returned to concurrent processes for reading.
+	// Thus, its contents are read-only and may only be replaced entirely.
+	roAggregate resources.Schema
+	// These are all individual schemas that have been added (not their aggregate)
+	loaded map[string]*resources.Schema
+	// Optional prioritization order of select schemas in aggregation.
 	prioritization []string
-
-	loaded        map[string]*resources.Schema
-	runtime       *Runtime
-	lastRefreshed int64
-	lockAll       sync.Mutex // only used in getting all schemas
-	lockAdd       sync.Mutex // only used when adding a schema
+	runtime        *Runtime
+	lastRefreshed  int64
+	sync           sync.Mutex
 }
 
 func newExtensibleSchema() extensibleSchema {
 	return extensibleSchema{
-		aggregate: resources.Schema{
+		roAggregate: resources.Schema{
 			Resources: map[string]*resources.ResourceInfo{},
 		},
 		loaded:         map[string]*resources.Schema{},
@@ -32,10 +35,101 @@ func newExtensibleSchema() extensibleSchema {
 	}
 }
 
-func (x *extensibleSchema) loadAllSchemas() {
-	x.lockAll.Lock()
-	defer x.lockAll.Unlock()
+func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
+	x.sync.Lock()
+	x.unsafeAdd(name, schema)
+	x.sync.Unlock()
+}
 
+func (x *extensibleSchema) Schema() *resources.Schema {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	if x.roAggregate.Resources == nil {
+		x.unsafeRefresh()
+	}
+
+	return &x.roAggregate
+}
+
+func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	if x.lastRefreshed < LastProviderInstall {
+		x.unsafeLoadAll()
+		x.unsafeRefresh()
+	} else if x.roAggregate.Resources == nil {
+		x.unsafeRefresh()
+	}
+
+	return x.roAggregate.Resources
+}
+
+func (x *extensibleSchema) Close() {
+	x.sync.Lock()
+	x.loaded = map[string]*resources.Schema{}
+	x.roAggregate = resources.Schema{
+		Resources: map[string]*resources.ResourceInfo{},
+	}
+	x.sync.Unlock()
+}
+
+func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	if found, ok := x.roAggregate.Resources[name]; ok {
+		return found
+	}
+	if x.lastRefreshed >= LastProviderInstall {
+		return nil
+	}
+
+	x.unsafeLoadAll()
+	x.unsafeRefresh()
+
+	return x.roAggregate.Resources[name]
+}
+
+func (x *extensibleSchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
+	x.sync.Lock()
+	defer x.sync.Unlock()
+
+	found, ok := x.roAggregate.Resources[resource]
+	if !ok {
+		if x.lastRefreshed >= LastProviderInstall {
+			return nil, nil
+		}
+
+		found, ok = x.roAggregate.Resources[resource]
+		if !ok {
+			return nil, nil
+		}
+		return found, found.Fields[field]
+	}
+
+	fieldObj, ok := found.Fields[field]
+	if ok {
+		return found, fieldObj
+	}
+	if x.lastRefreshed >= LastProviderInstall {
+		return found, nil
+	}
+
+	x.unsafeLoadAll()
+	x.unsafeRefresh()
+
+	return found, found.Fields[field]
+}
+
+// ---------------------------- unsafe methods ----------------------------
+// |  Only use these calls inside of a lock.                              |
+// |  Do NOT lock the object during these calls.                          |
+// V  Do NOT call to locking methods (~ everything above this line).      V
+// ------------------------------------------------------------------------
+
+func (x *extensibleSchema) unsafeLoadAll() {
 	// If another goroutine started to load this before us, it will be locked until
 	// we complete to load everything and then it will be dumped into this
 	// position. At this point, if it has been loaded we can return safely, since
@@ -56,62 +150,12 @@ func (x *extensibleSchema) loadAllSchemas() {
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
 		} else {
-			x.Add(name, schema)
+			x.unsafeAdd(name, schema)
 		}
 	}
 }
 
-func (x *extensibleSchema) Close() {
-	x.loaded = map[string]*resources.Schema{}
-	x.aggregate.Resources = map[string]*resources.ResourceInfo{}
-}
-
-func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
-	if found, ok := x.aggregate.Resources[name]; ok {
-		return found
-	}
-	if x.lastRefreshed >= LastProviderInstall {
-		return nil
-	}
-
-	x.loadAllSchemas()
-	x.refresh()
-
-	return x.aggregate.Resources[name]
-}
-
-func (x *extensibleSchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
-	found, ok := x.aggregate.Resources[resource]
-	if !ok {
-		if x.lastRefreshed >= LastProviderInstall {
-			return nil, nil
-		}
-
-		x.loadAllSchemas()
-		x.refresh()
-
-		found, ok = x.aggregate.Resources[resource]
-		if !ok {
-			return nil, nil
-		}
-		return found, found.Fields[field]
-	}
-
-	fieldObj, ok := found.Fields[field]
-	if ok {
-		return found, fieldObj
-	}
-	if x.lastRefreshed >= LastProviderInstall {
-		return found, nil
-	}
-
-	x.loadAllSchemas()
-	x.refresh()
-
-	return found, found.Fields[field]
-}
-
-func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
+func (x *extensibleSchema) unsafeAdd(name string, schema *resources.Schema) {
 	if schema == nil {
 		return
 	}
@@ -120,9 +164,7 @@ func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
 		return
 	}
 
-	x.lockAdd.Lock()
 	x.loaded[name] = schema
-	x.lockAdd.Unlock()
 }
 
 // Prioritize the provider IDs in the order that is provided. Any other
@@ -131,10 +173,7 @@ func (x *extensibleSchema) prioritizeIDs(prioritization ...string) {
 	x.prioritization = prioritization
 }
 
-func (x *extensibleSchema) refresh() {
-	x.lockAll.Lock()
-	defer x.lockAll.Unlock()
-
+func (x *extensibleSchema) unsafeRefresh() {
 	res := resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
@@ -150,23 +189,10 @@ func (x *extensibleSchema) refresh() {
 			res.Add(s)
 		}
 	}
-	x.aggregate.Resources = res.Resources
-}
 
-func (x *extensibleSchema) Schema() *resources.Schema {
-	if x.aggregate.Resources == nil {
-		x.refresh()
+	// Note: This object is read-only and thus must be re-created to
+	// prevent concurrency issues with access outside this struct
+	x.roAggregate = resources.Schema{
+		Resources: res.Resources,
 	}
-	return &x.aggregate
-}
-
-func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
-	if x.lastRefreshed < LastProviderInstall {
-		x.loadAllSchemas()
-		x.refresh()
-	} else if x.aggregate.Resources == nil {
-		x.refresh()
-	}
-
-	return x.aggregate.Resources
 }

@@ -37,7 +37,7 @@ func TestExtensibleSchema(t *testing.T) {
 	})
 
 	s.prioritizeIDs("second")
-	s.refresh()
+	s.unsafeRefresh()
 
 	info := s.Lookup("eternity")
 	require.NotNil(t, info)
@@ -52,7 +52,7 @@ func TestExtensibleSchema(t *testing.T) {
 	require.Equal(t, "first", finfo.Provider)
 
 	s.prioritizeIDs("first")
-	s.refresh()
+	s.unsafeRefresh()
 
 	_, finfo = s.LookupField("eternity", "iii")
 	require.NotNil(t, info)
