@@ -10,6 +10,7 @@ import (
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers/core/resources"
 	"go.mondoo.com/cnquery/v9/types"
 )
@@ -37,16 +38,26 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("no connection data provided")
 	}
 
+	var upstream *upstream.UpstreamClient
+	var err error
+	if req.Upstream != nil && !req.Upstream.Incognito {
+		upstream, err = req.Upstream.InitClient()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	s.lastConnectionID++
 	connID := s.lastConnectionID
 	runtime := &plugin.Runtime{
 		Callback:     callback,
+		Upstream:     upstream,
 		HasRecording: req.HasRecording,
 	}
 	s.runtimes[connID] = runtime
 
 	asset := req.Asset
-	_, err := resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
+	_, err = resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
 		"ids":      llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),
 		"platform": llx.StringData(asset.Platform.Name),
 		"name":     llx.StringData(asset.Name),

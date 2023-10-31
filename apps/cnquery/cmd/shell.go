@@ -107,7 +107,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	res, err := runtime.Provider.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
 		Asset:    resolvedAsset,
-		Upstream: nil,
+		Upstream: conf.UpstreamConfig,
 	}, nil)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
@@ -155,6 +155,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	shellOptions := []shell.ShellOption{}
 	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
+	shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
 
 	sh, err := shell.New(runtime, shellOptions...)
 	if err != nil {
