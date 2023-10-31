@@ -16,6 +16,8 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
+// FIXME: DEPRECATED, update in v10.0 vv
+// This code moved to the core provider and is replaced by the code there
 func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
@@ -62,6 +64,8 @@ func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 
 	return nil, &res, nil
 }
+
+// ^^
 
 // FIXME: DEPRECATED, update in v10.0 vv
 func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

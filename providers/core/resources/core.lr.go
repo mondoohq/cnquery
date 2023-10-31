@@ -26,6 +26,10 @@ func init() {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
 		},
+		"asset.eol": {
+			Init: initAssetEol,
+			Create: createAssetEol,
+		},
 		"time": {
 			// to override args, implement: initTime(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTime,
@@ -160,6 +164,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"asset.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetDocsUrl()).ToDataRes(types.String)
+	},
+	"asset.eol.productUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetProductUrl()).ToDataRes(types.String)
+	},
+	"asset.eol.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetDate()).ToDataRes(types.Time)
 	},
 	"time.now": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTime).GetNow()).ToDataRes(types.Time)
@@ -307,6 +320,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAssetEol).__id, ok = v.Value.(string)
+			return
+		},
+	"asset.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"asset.eol.productUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).ProductUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"asset.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"time.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -600,6 +629,60 @@ func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
 
 func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
+}
+
+// mqlAssetEol for the asset.eol resource
+type mqlAssetEol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAssetEolInternal it will be used here
+	DocsUrl plugin.TValue[string]
+	ProductUrl plugin.TValue[string]
+	Date plugin.TValue[*time.Time]
+}
+
+// createAssetEol creates a new instance of this resource
+func createAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAssetEol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("asset.eol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAssetEol) MqlName() string {
+	return "asset.eol"
+}
+
+func (c *mqlAssetEol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAssetEol) GetDocsUrl() *plugin.TValue[string] {
+	return &c.DocsUrl
+}
+
+func (c *mqlAssetEol) GetProductUrl() *plugin.TValue[string] {
+	return &c.ProductUrl
+}
+
+func (c *mqlAssetEol) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
 }
 
 // mqlTime for the time resource

@@ -540,6 +540,7 @@ func (r *Runtime) SetMockRecording(anyRecording Recording, providerID string, mo
 
 		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
 			Asset:        asset,
+			Upstream:     r.UpstreamConfig,
 			HasRecording: true,
 		}, &callbacks)
 		if err != nil {
@@ -589,6 +590,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
+		Upstream: r.UpstreamConfig,
 		Asset:    r.Provider.Connection.Asset,
 	}, nil)
 	if err != nil {
@@ -620,6 +622,7 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
+		Upstream: r.UpstreamConfig,
 		Asset:    r.Provider.Connection.Asset,
 	}, nil)
 	if err != nil {
