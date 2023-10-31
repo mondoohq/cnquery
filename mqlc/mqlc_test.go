@@ -134,6 +134,31 @@ func TestCompiler_Buggy(t *testing.T) {
 		res  []*llx.Chunk
 		err  error
 	}{
+		// https://github.com/mondoohq/cnquery/issues/2223#issuecomment-1780528051
+		{`user(name: "z").authorizedkeys.all()`, []*llx.Chunk{
+			{Id: "user", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Type: string(types.Resource("user")),
+				Args: []*llx.Primitive{
+					{Type: string(types.String), Value: []byte("name")},
+					{Type: string(types.String), Value: []byte("z")},
+				},
+			}},
+			{Id: "authorizedkeys", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Binding: (1<<32 | 1), Type: string(types.Resource("authorizedkeys")),
+			}},
+			{Id: "list", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Binding: (1<<32 | 2), Type: string(types.Array(types.Resource("authorizedkeys.entry"))),
+			}},
+			{Id: "$all", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Binding: (1<<32 | 3), Type: string(types.Bool),
+			}},
+			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
+				Binding: (1<<32 | 3), Type: string(types.Array(types.Block)),
+				Args: []*llx.Primitive{
+					llx.FunctionPrimitive(2 << 32),
+				},
+			}},
+		}, nil},
 		{`parse parse`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 			{Id: "parse", Call: llx.Chunk_FUNCTION},

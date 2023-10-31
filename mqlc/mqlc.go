@@ -1802,7 +1802,15 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			whereChunk = chunk
 			break
 		}
+
 		ref = chunk.Function.Binding
+
+		// If we have no binding left, we have moved as far back as we can.
+		// e.g. queries with .all() without a valid body
+		if ref == 0 {
+			log.Debug().Msg("failed to find where function for assessment in the entire chain, this can happen with empty assessments")
+			return
+		}
 	}
 
 	type fieldTreeNode struct {
