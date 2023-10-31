@@ -4,11 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
 option go_package = "go.mondoo.com/cnquery/v9/providers/vsphere/resources"
 
+// vSphere asset resource
 extend asset {
   // Full advisory & vulnerability report
   vulnerabilityReport() dict
 }
 
+// vSphere platform resource (deprecated)
 platform {
   // deprecated: use asset.vulnerabilityReport instead
   vulnerabilityReport() dict
