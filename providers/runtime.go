@@ -130,7 +130,6 @@ func (r *Runtime) UseProvider(id string) error {
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.providers[c.Instance.ID] = c
 	r.schema.Add(c.Instance.Name, c.Instance.Schema)
-	r.schema.refresh()
 }
 
 func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, error) {
@@ -253,7 +252,6 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 
 	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
-	r.schema.refresh()
 	return nil
 }
 
@@ -636,10 +634,6 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 func (r *Runtime) Schema() llx.Schema {
 	return &r.schema
-}
-
-func (r *Runtime) AddSchema(name string, schema *resources.Schema) {
-	r.schema.Add(name, schema)
 }
 
 func (r *Runtime) asset() *inventory.Asset {
