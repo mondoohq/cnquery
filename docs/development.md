@@ -29,7 +29,7 @@ on [the Go website](https://golang.org/doc/install).
    $ cd cnquery
    ```
 
-3. Build and install on Unix-like systems
+3. Build and install on Unix-like systems:
 
    ```sh
    # Build all providers
@@ -59,8 +59,8 @@ outlined above.
 
 ## Debug providers
 
-In v9 we introduced provider plugins, which split up the providers into individual go modules. This makes development 
-more lightweight and speedy.
+In v9 we introduced provider plugins, which split up the providers into individual go modules. This makes 
+development more lightweight and speedy.
 
 To debug a provider locally with cnquery:
 
@@ -68,7 +68,7 @@ To debug a provider locally with cnquery:
    ```yaml
    builtin: [aws]
    ```
-2. Build and update everything via:
+2. Build and update everything:
    ```bash
    make providers/config
    ```
@@ -83,39 +83,40 @@ The `launch.json` already includes a debug target for remote debugging.
 You only need to adjust the values to your setup.
 Additionally, you need to set up the debugger on the remote VM:
 
-- Install go
-- Install delve
-- Locally change the config to include the provider you want to debug as builtin as described above.
-- Copy the source to the remote VM (`rsync` makes multiple debug session easier)
-- Allow ingress traffic to the debugger in the firewall.
-- Run the debugger on the remove VM:
+1. Install Go.
+2. Install Delve.
+3. Change the local config to include the provider you want to debug as builtin (as described above).
+4. Copy the source to the remote VM. (`rsync` makes multiple debug session easier.)
+5. Allow ingress traffic to the debugger in the firewall.
+6. Run the debugger on the remove VM:
   ```
   dlv debug <path>/apps/cnquery/cnquery.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 suse15 -c "asset{ name ids }" --verbose
   ```
 
-Further information and possible other ways to remote debug: https://github.com/golang/vscode-go/blob/master/docs/debugging.md
+To learn more, including other possible ways to remote debug, read:
+https://github.com/golang/vscode-go/blob/master/docs/debugging.md
 
 ## Update provider versions
 
-Providers each have their own version, which is based on [Semver](https://semver.org/).
+Each provider has its own version, which is based on [Semver](https://semver.org/).
 
-It's often easy to forget to update them. We didn't want to auto-update versions and accidentally release them for now, so you'll have to update versions in order to get the new providers out.
+It's often easy to forget to update them. We didn't want to auto-update versions and accidentally release them for now, so you must update versions in order to get the new providers out.
 
-Here's how to make this process as easy as 🥧
+Here's how to make this process as easy as 🥧 :
 
-**Setup**
+**Set up the version utility**
 
 In the cnquery repo you can now find the version utility in `providers-sdk/v1/util/version`.
 
-To make working with it easier, let's alias it:
+To make working with this utility easier, let's alias it:
 
 ```bash
 alias version="go run providers-sdk/v1/util/version/version.go"
 ```
 
-**Version checking**
+**Check provider versions**
 
-This utility can check if providers need upgrades. If you use it in `--fast` mode, it won't crawl the entire git change history but only looks for the first change.
+The version utility can check if providers need upgrades. If you use it in `--fast` mode, it doesn't crawl the entire Git change history but only looks for the first change.
 
 ```bash
 version check providers/*/
@@ -130,26 +131,26 @@ crawling git history......
 ...
 ```
 
-It will automatically detect if providers have no changes since their last version bump and count changes that may have happened for those providers that have changed.
+The utility automatically detects if providers have no changes since their last version bump. It also counts changes to all providers that have changed.
 
-If you prefer not to wait, you can use the `--fast` option which will only look for the first change.
+If you prefer not to wait, you can use the `--fast` option, which only looks for the first change.
 
-**Version update**
+**Update provider versions**
 
 Once you are ready to release providers, you can use the `update` command.
 
-Here is an example showing how the version tool will increment and update all provider versions:
+Here is an example showing how the version tool increments and updates all provider versions:
 
 ```bash
 version update providers/*/
 ```
 
 Notable options include:
-- `--increment` will auto-increment either the patch or minor version for you (eg: `--increment=patch`). Without this option you get the interactive CLI.
-- `--fast` will do fast change detection (i.e. once a change is found it will create the update)
-- `--commit` will automatically generate the commit for you and push the branch to github
+- `--increment` auto-increments either the patch or minor version for you (e.g., `--increment=patch`). Without this option you get the interactive CLI.
+- `--fast` performs fast change detection (i.e., once a change is found it will create the update).
+- `--commit` automatically generates the commit for you and pushes the branch to GitHub.
 
-If you use the `--commit` option, it will create both the commit and push it back to `origin`:
+If you use the `--commit` option, the version utility creates the commit and pushes it back to `origin`:
 
 ```bash
 version update providers/*/ --increment=patch --commit
@@ -165,10 +166,10 @@ version update providers/*/ --increment=patch --commit
 
 The final line of this message is the blueprint for the pull request.
 
-## Using go workspaces
+## Use Go workspaces
 
-In case you want to develop cnquery, cnspec and providers at the same time, you can use go workspaces. This allows you
-to use the latest updates from each other without having to commit and push changes.
+In case you want to develop cnquery, cnspec, and providers at the same time, you can use Go workspaces. This allows you
+to use the latest updates from the different repos without having to commit and push changes.
 
 Here is a sample config for `go.work` in the root folder of `cnquery` and `cnspec`:
 
