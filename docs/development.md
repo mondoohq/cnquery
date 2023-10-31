@@ -59,7 +59,7 @@ outlined above.
 
 ## Debug providers
 
-In v9 we introduced providers, which split up the providers into individual go modules. This make it more development
+In v9 we introduced providers, which split up the providers into individual go modules. This makes it more development
 more lightweight and speedy.
 
 To debug a provider locally with cnquery:
@@ -85,7 +85,7 @@ Additionally, you need to set up the debugger on the remote VM:
 
 - Install go
 - Install delve
-- Locally change the config to include the provider you want to debug as builtin as describe above.
+- Locally change the config to include the provider you want to debug as builtin as described above.
 - Copy the source to the remote VM (`rsync` makes multiple debug session easier)
 - Allow ingress traffic to the debugger in the firewall.
 - Run the debugger on the remove VM:
