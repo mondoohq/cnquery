@@ -59,7 +59,7 @@ outlined above.
 
 ## Debug providers
 
-In v9 we introduced providers, which split up the providers into individual go modules. This makes it more development
+In v9 we introduced provider plugins, which split up the providers into individual go modules. This makes development 
 more lightweight and speedy.
 
 To debug a provider locally with cnquery:
