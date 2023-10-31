@@ -29,7 +29,7 @@ import (
 const (
 	// For all features, use this format:
 	// desc:   A description of this feature and what it does...
-	// start:  vX.x  (the version when it ix introduced)
+	// start:  vX.x  (the version when it is introduced)
 	// end:    vZ.0  (the version when this flag will be removed)
 
 	// Feature flags:
