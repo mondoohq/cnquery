@@ -1,10 +1,6 @@
 ---
 version: 2
 updates:
-  - package-ecosystem: gomod
-    directory: /
-    schedule:
-      interval: weekly
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -14,78 +10,222 @@ updates:
     schedule:
       interval: daily
   - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: gomod
     directory: /providers/opcua/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/arista/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/atlassian/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/okta/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/ms365/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/google-workspace/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/equinix/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/vsphere/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/gitlab/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/gcp/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/ipmi/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/github/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/vcd/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/azure/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/terraform/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/slack/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/oci/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/aws/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: gomod
     directory: /providers/k8s/
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      gomodupdates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
