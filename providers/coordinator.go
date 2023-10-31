@@ -336,6 +336,8 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 	res.schema.runtime = res
 
 	// TODO: do this dynamically in the future
+	// Once these calls are removed, please remember to update mock.go to explicitly
+	// load all schemas on startup.
 	res.schema.unsafeLoadAll()
 	// TODO: this step too shouild be optional only, even when loading all.
 	// It is executed when the we connect via a provider, so doing it here is
