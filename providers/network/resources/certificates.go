@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"strings"
 	"sync"
 	"time"
@@ -340,6 +341,52 @@ func (s *mqlCertificate) extensions() ([]interface{}, error) {
 	return res, nil
 }
 
+func (s *mqlCertificate) sanExtension() (*mqlPkixSanExtension, error) {
+	if err := s.getGoCert(); err != nil {
+		return nil, err
+	}
+
+	cert := s.cert.Data
+	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
+	extension := certificates.GetSanExtension(cert)
+	if extension == nil {
+		s.SanExtension.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	ext, err := pkixextensionToMql(s.MqlRuntime, *extension, fingerprint+":"+extension.Id.String())
+	if err != nil {
+		return nil, err
+	}
+
+	dnsNames, emailAddresses, ipAddresses, URIs, err := certificates.ParseSANExtension(extension.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	ipAddressesValues := []interface{}{}
+	for i := range ipAddresses {
+		ipAddressesValues = append(ipAddressesValues, ipAddresses[i].String())
+	}
+
+	uriValues := []interface{}{}
+	for i := range URIs {
+		uriValues = append(uriValues, URIs[i].String())
+	}
+
+	r, err := CreateResource(s.MqlRuntime, "pkix.sanExtension", map[string]*llx.RawData{
+		"extension":      llx.ResourceData(ext, "pkix.extension"),
+		"dnsNames":       llx.ArrayData(convert.SliceAnyToInterface(dnsNames), types.String),
+		"ipAddresses":    llx.ArrayData(convert.SliceAnyToInterface(emailAddresses), types.String),
+		"emailAddresses": llx.ArrayData(ipAddressesValues, types.String),
+		"uris":           llx.ArrayData(uriValues, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlPkixSanExtension), nil
+}
+
 func (s *mqlCertificate) policyIdentifier() ([]interface{}, error) {
 	if err := s.getGoCert(); err != nil {
 		return nil, err
@@ -392,4 +439,8 @@ func (r *mqlPkixName) id() (string, error) {
 
 func (r *mqlPkixExtension) id() (string, error) {
 	return r.Identifier.Data, nil
+}
+
+func (r *mqlPkixSanExtension) id() (string, error) {
+	return r.Extension.Data.Identifier.Data, nil
 }
