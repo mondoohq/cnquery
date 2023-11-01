@@ -74,6 +74,10 @@ func init() {
 			// to override args, implement: initPkixExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPkixExtension,
 		},
+		"pkix.sanExtension": {
+			// to override args, implement: initPkixSanExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPkixSanExtension,
+		},
 		"openpgp.entities": {
 			// to override args, implement: initOpenpgpEntities(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOpenpgpEntities,
@@ -398,6 +402,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"certificate.isVerified": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCertificate).GetIsVerified()).ToDataRes(types.Bool)
 	},
+	"certificate.sanExtension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCertificate).GetSanExtension()).ToDataRes(types.Resource("pkix.sanExtension"))
+	},
 	"pkix.name.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixName).GetId()).ToDataRes(types.String)
 	},
@@ -445,6 +452,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"pkix.extension.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixExtension).GetValue()).ToDataRes(types.String)
+	},
+	"pkix.sanExtension.extension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixSanExtension).GetExtension()).ToDataRes(types.Resource("pkix.extension"))
+	},
+	"pkix.sanExtension.dnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixSanExtension).GetDnsNames()).ToDataRes(types.Array(types.String))
+	},
+	"pkix.sanExtension.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixSanExtension).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"pkix.sanExtension.emailAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixSanExtension).GetEmailAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"pkix.sanExtension.uris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixSanExtension).GetUris()).ToDataRes(types.Array(types.String))
 	},
 	"openpgp.entities.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenpgpEntities).GetContent()).ToDataRes(types.String)
@@ -959,6 +981,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlCertificate).IsVerified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"certificate.sanExtension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCertificate).SanExtension, ok = plugin.RawToTValue[*mqlPkixSanExtension](v.Value, v.Error)
+		return
+	},
 	"pkix.name.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlPkixName).__id, ok = v.Value.(string)
 			return
@@ -1029,6 +1055,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"pkix.extension.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkixExtension).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pkix.sanExtension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPkixSanExtension).__id, ok = v.Value.(string)
+			return
+		},
+	"pkix.sanExtension.extension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixSanExtension).Extension, ok = plugin.RawToTValue[*mqlPkixExtension](v.Value, v.Error)
+		return
+	},
+	"pkix.sanExtension.dnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixSanExtension).DnsNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pkix.sanExtension.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixSanExtension).IpAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pkix.sanExtension.emailAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixSanExtension).EmailAddresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pkix.sanExtension.uris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixSanExtension).Uris, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"openpgp.entities.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2218,6 +2268,7 @@ type mqlCertificate struct {
 	IsRevoked plugin.TValue[bool]
 	RevokedAt plugin.TValue[*time.Time]
 	IsVerified plugin.TValue[bool]
+	SanExtension plugin.TValue[*mqlPkixSanExtension]
 }
 
 // createCertificate creates a new instance of this resource
@@ -2429,6 +2480,22 @@ func (c *mqlCertificate) GetIsVerified() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlCertificate) GetSanExtension() *plugin.TValue[*mqlPkixSanExtension] {
+	return plugin.GetOrCompute[*mqlPkixSanExtension](&c.SanExtension, func() (*mqlPkixSanExtension, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("certificate", c.__id, "sanExtension")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlPkixSanExtension), nil
+			}
+		}
+
+		return c.sanExtension()
+	})
+}
+
 // mqlPkixName for the pkix.name resource
 type mqlPkixName struct {
 	MqlRuntime *plugin.Runtime
@@ -2595,6 +2662,75 @@ func (c *mqlPkixExtension) GetCritical() *plugin.TValue[bool] {
 
 func (c *mqlPkixExtension) GetValue() *plugin.TValue[string] {
 	return &c.Value
+}
+
+// mqlPkixSanExtension for the pkix.sanExtension resource
+type mqlPkixSanExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPkixSanExtensionInternal it will be used here
+	Extension plugin.TValue[*mqlPkixExtension]
+	DnsNames plugin.TValue[[]interface{}]
+	IpAddresses plugin.TValue[[]interface{}]
+	EmailAddresses plugin.TValue[[]interface{}]
+	Uris plugin.TValue[[]interface{}]
+}
+
+// createPkixSanExtension creates a new instance of this resource
+func createPkixSanExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPkixSanExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("pkix.sanExtension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPkixSanExtension) MqlName() string {
+	return "pkix.sanExtension"
+}
+
+func (c *mqlPkixSanExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPkixSanExtension) GetExtension() *plugin.TValue[*mqlPkixExtension] {
+	return &c.Extension
+}
+
+func (c *mqlPkixSanExtension) GetDnsNames() *plugin.TValue[[]interface{}] {
+	return &c.DnsNames
+}
+
+func (c *mqlPkixSanExtension) GetIpAddresses() *plugin.TValue[[]interface{}] {
+	return &c.IpAddresses
+}
+
+func (c *mqlPkixSanExtension) GetEmailAddresses() *plugin.TValue[[]interface{}] {
+	return &c.EmailAddresses
+}
+
+func (c *mqlPkixSanExtension) GetUris() *plugin.TValue[[]interface{}] {
+	return &c.Uris
 }
 
 // mqlOpenpgpEntities for the openpgp.entities resource

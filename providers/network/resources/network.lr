@@ -197,6 +197,8 @@ certificate @defaults("serial subject.commonName subject.dn") {
   revokedAt() time
   // Indicates if the certificate is valid by checking its chain
   isVerified() bool
+  // SAN extension value params
+  sanExtension() pkix.sanExtension
 }
 
 // x509 certificate PKIX name
@@ -234,6 +236,20 @@ pkix.extension {
   critical bool
   // Extension value
   value string
+}
+
+// x509 certificate PKIX Subject Alternative Name extension
+private pkix.sanExtension @defaults("dnsNames") {
+	// x509 certificate PKIX extension
+	extension pkix.extension
+	// DNS names
+	dnsNames []string
+	// IP addresses
+	ipAddresses []string
+	// Email addresses
+	emailAddresses []string
+	// URIs
+	uris []string
 }
 
 private openpgp.entities {

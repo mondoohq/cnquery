@@ -23,6 +23,10 @@ resources:
       pem: {}
       policyIdentifier: {}
       revokedAt: {}
+      san:
+        min_mondoo_version: latest
+      sanExtension:
+        min_mondoo_version: latest
       serial: {}
       signature: {}
       signingAlgorithm: {}
@@ -208,6 +212,22 @@ resources:
       serialNumber: {}
       streetAddress: {}
     min_mondoo_version: 5.15.0
+  pkix.sanExtension:
+    fields:
+      dnsNames: {}
+      emailAddresses: {}
+      extension: {}
+      ipAddresses: {}
+      uris: {}
+    is_private: true
+    min_mondoo_version: latest
+  sanExtensionParams:
+    fields:
+      dnsNames: {}
+      emailAddresses: {}
+      extension: {}
+      ipAddresses: {}
+    min_mondoo_version: latest
   socket:
     fields:
       address: {}
