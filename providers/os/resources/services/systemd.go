@@ -43,13 +43,9 @@ func (s *SystemDServiceManager) Name() string {
 	return "systemd Service Manager"
 }
 
-// List returns a slice of Service structs representing the state of all services
-func (s *SystemDServiceManager) List() ([]*Service, error) {
+func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	var services []*Service
-
-	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
-	content, err := io.ReadAll(cmdList.Stdout)
-
+	content, err := io.ReadAll(input)
 	//err := cmdList.Run()
 	if err != nil {
 		return nil, fmt.Errorf("error executing systemctl list-unit-files: %v", err)
@@ -105,6 +101,15 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 	}
 
 	return services, nil
+}
+
+// List returns a slice of Service structs representing the state of all services
+func (s *SystemDServiceManager) List() ([]*Service, error) {
+	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
+	if err != nil {
+		return nil, err
+	}
+	return ParseServiceSystemDUnitFiles(cmdList.Stdout)
 }
 
 type SystemdFSServiceManager struct {
