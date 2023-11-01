@@ -4,11 +4,13 @@
 package services
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -32,34 +34,6 @@ func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
 	return &SystemDServiceManager{conn: conn}
 }
 
-// a line may be prefixed with nothing, whitespace or a dot
-func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
-	var services []*Service
-	content, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-
-	m := SYSTEMD_LIST_UNITS_REGEX.FindAllStringSubmatch(string(content), -1)
-	for i := range m {
-		name := m[i][1]
-		name = strings.Replace(name, ".service", "", 1)
-
-		s := &Service{
-			Name:      name,
-			Installed: m[i][2] == "loaded",
-			Running:   m[i][3] == "active",
-			// TODO: we may need to revist the enabled state
-			Enabled:     m[i][2] == "loaded",
-			Masked:      m[i][2] == "masked",
-			Description: m[i][5],
-			Type:        "systemd",
-		}
-		services = append(services, s)
-	}
-	return services, nil
-}
-
 // Newer linux systems use systemd as service manager
 type SystemDServiceManager struct {
 	conn shared.Connection
@@ -69,12 +43,68 @@ func (s *SystemDServiceManager) Name() string {
 	return "systemd Service Manager"
 }
 
+// List returns a slice of Service structs representing the state of all services
 func (s *SystemDServiceManager) List() ([]*Service, error) {
-	c, err := s.conn.RunCommand("systemctl --all list-units --type service")
+	var services []*Service
+
+	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
+	content, err := io.ReadAll(cmdList.Stdout)
+
+	//err := cmdList.Run()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing systemctl list-unit-files: %v", err)
 	}
-	return ParseServiceSystemDUnitFiles(c.Stdout)
+
+	lines := strings.Split(string(content), "\n")
+	if len(lines) < 2 {
+		return nil, fmt.Errorf("unexpected output from systemctl list-unit-files")
+	}
+
+	for _, line := range lines[1 : len(lines)-1] {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+
+		service := &Service{
+			Name:      fields[0],
+			Installed: fields[1] == "loaded",
+			Enabled:   fields[1] == "enabled",
+			Masked:    fields[1] == "masked",
+			Type:      "systemd",
+		}
+
+		// Now check if the service is running
+		cmdIsActive := exec.Command("systemctl", "is-active", service.Name)
+		var outActive bytes.Buffer
+		cmdIsActive.Stdout = &outActive
+
+		err := cmdIsActive.Run()
+		service.Running = err == nil && strings.TrimSpace(outActive.String()) == "active"
+
+		// Get service description
+		cmdDesc := exec.Command("systemctl", "status", service.Name)
+		var outDesc bytes.Buffer
+		cmdDesc.Stdout = &outDesc
+
+		err = cmdDesc.Run()
+		if err == nil {
+			lines := strings.Split(outDesc.String(), "\n")
+			for _, l := range lines {
+				if strings.Contains(l, "Description:") {
+					parts := strings.SplitN(l, "Description:", 2)
+					if len(parts) == 2 {
+						service.Description = strings.TrimSpace(parts[1])
+						break
+					}
+				}
+			}
+		}
+
+		services = append(services, service)
+	}
+
+	return services, nil
 }
 
 type SystemdFSServiceManager struct {
