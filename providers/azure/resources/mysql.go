@@ -69,7 +69,7 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySql.server",
+			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.server",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(dbServer.ID)),
 					"name":       llx.StringData(convert.ToString(dbServer.Name)),
@@ -110,7 +110,7 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, err
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySql.flexibleServer",
+			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":         llx.StringData(convert.ToString(dbServer.ID)),
 					"name":       llx.StringData(convert.ToString(dbServer.Name)),
@@ -155,7 +155,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, err
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySql.database",
+			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(entry.ID)),
 					"name":      llx.StringData(convert.ToString(entry.Name)),
@@ -293,7 +293,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interfac
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySql.database",
+			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.database",
 				map[string]*llx.RawData{
 					"id":        llx.StringData(convert.ToString(entry.ID)),
 					"name":      llx.StringData(convert.ToString(entry.Name)),
