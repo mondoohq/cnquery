@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New("./testdata/debian-new.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "debian",
 			Family: []string{"debian", "linux"},
