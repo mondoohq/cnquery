@@ -159,7 +159,7 @@ func (s Status) RenderCliStatus() {
 
 	latestVersion, err := cnquery.GetLatestVersion()
 	if err != nil {
-		log.Warn().Msg("failed to get latest version")
+		log.Warn().Err(err).Msg("failed to get latest version")
 	}
 
 	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
