@@ -160,11 +160,12 @@ func (s Status) RenderCliStatus() {
 	log.Info().Msg("Time:\t\t" + s.Client.Timestamp)
 	log.Info().Msg("Version:\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
 
-	providers, err := getProviders()
+	installed, outdated, err := getProviders()
 	if err != nil {
-		log.Warn().Msg("failed to get provider info")
+		log.Warn().Err(err).Msg("failed to get provider info")
 	}
-	log.Info().Msg("Providers:\t" + strings.Join(providers, " | "))
+	log.Info().Msg("Installed Providers:\t" + strings.Join(installed, " | "))
+	log.Info().Msg("Outdated Providers:\t" + strings.Join(outdated, " | "))
 
 	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)
 	log.Info().Msg("API Status:\t" + s.Upstream.API.Status)
@@ -220,16 +221,24 @@ func (s Status) RenderYaml() {
 	os.Stdout.Write(output)
 }
 
-func getProviders() ([]string, error) {
-	var res []string
+func getProviders() ([]string, []string, error) {
+	var installed []string
+	var outdated []string
 
 	allProviders, err := providers.ListActive()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	for _, provider := range allProviders {
-		res = append(res, provider.Name)
+		installed = append(installed, provider.Name)
+		latestVersion, err := providers.LatestVersion(provider.Name)
+		if err != nil {
+			continue
+		}
+		if latestVersion != provider.Version {
+			outdated = append(outdated, provider.Name)
+		}
 	}
 
-	return res, nil
+	return installed, outdated, nil
 }
