@@ -235,11 +235,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
-	name := instance.InstanceId.Data
-	if labelName := asset.Labels["Name"]; name != "" {
-		name = labelName
-	}
-	asset.Name = name
+	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	asset.Options = conn.ConnectionOptions()
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
@@ -277,7 +273,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
+				name: asset.Name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
@@ -378,16 +374,20 @@ func getProbableUsernameFromImageName(name string) string {
 	return "ec2-user"
 }
 
+func getInstanceName(id string, labels map[string]string) string {
+	name := id
+	if labelName := labels["Name"]; labelName != "" {
+		name = labelName
+	}
+	return name
+}
+
 func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Labels["mondoo.com/platform"] = instance.PlatformName.Data
 
-	name := instance.InstanceId.Data
-	if labelName := asset.Labels["Name"]; name != "" {
-		name = labelName
-	}
-	asset.Name = name
+	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	creds := []*vault.Credential{
 		{
 			User: getProbableUsernameFromSSMPlatformName(strings.ToLower(instance.PlatformName.Data)),
@@ -423,7 +423,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 		log.Warn().Str("asset", asset.Name).Str("id", instance.InstanceId.Data).Msg("cannot use ssm session credentials for connection")
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
+				name: asset.Name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ssm", objectType: "instance",
