@@ -558,6 +558,11 @@ func (s *Service) discoverRegistry(conn *connection.TarConnection) (*inventory.I
 	}
 
 	inventory := &inventory.Inventory{}
+	// we detect the platform for each asset we discover here
+	for _, a := range resolvedAssets {
+		// ignore the error. we will retry detection if we connect to the asset
+		_ = s.detect(a, conn)
+	}
 	inventory.AddAssets(resolvedAssets...)
 
 	return inventory, nil

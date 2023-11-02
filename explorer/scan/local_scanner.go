@@ -267,17 +267,21 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			}
 		}
 		runtime.SetRecording(candidate.runtime.Recording)
-
 		err = runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
 			Asset:    candidate.asset,
 			Upstream: upstream,
 		})
+
 		if err != nil {
 			log.Error().Err(err).Str("asset", candidate.asset.Name).Msg("unable to connect to asset")
 			continue
 		}
 
+		if candidate.asset.GetPlatform() == nil {
+			log.Error().Msgf("unable to detect platform for asset " + candidate.asset.Name)
+			continue
+		}
 		assets = append(assets, &assetWithRuntime{
 			asset:   candidate.asset,
 			runtime: runtime,
