@@ -1580,8 +1580,8 @@ private azure.subscription.monitorService.activityLog @defaults("alerts") {
   alerts() []azure.subscription.monitorService.activityLog.alert
 }
 
-// Azure Monitor Application Insight
-private azure.subscription.monitorService.applicationInsight @defaults("name")  {
+// Azure Monitor Application Insights
+private azure.subscription.monitorService.applicationInsight @defaults("name location type")  {
   // Application insight ID
   id string
   // Application insight name
