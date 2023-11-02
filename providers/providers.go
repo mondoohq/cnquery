@@ -234,6 +234,19 @@ func ListAll() ([]*Provider, error) {
 	return res, nil
 }
 
+// AddMissingDefaults to a list of existing providers. A system may have
+// a set of providers already installed. This command cycles through
+// the list of default providers and adds them to the list of existing
+// providers to create a full list of possible providers (existing + potential).
+// Useful when generating the CLI without having all providers installed.
+func AddMissingDefaults(existing Providers) {
+	for _, v := range DefaultProviders {
+		if _, ok := existing[v.ID]; !ok {
+			existing[v.ID] = v
+		}
+	}
+}
+
 // EnsureProvider makes sure that a given provider exists and returns it.
 // You can supply providers either via:
 //  1. providerID, which universally identifies it, e.g. "go.mondoo.com/cnquery/v9/providers/os"

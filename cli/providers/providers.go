@@ -41,6 +41,10 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 		}
 	}
 
+	// We want to offer as many commands as possible,
+	// useful for e.g. help commands
+	providers.AddMissingDefaults(existing)
+
 	// Now that we know we have all providers, it's time to load them to build
 	// the remaining CLI. Probably an opportunity to optimize in the future,
 	// but fine for now to do it all.
