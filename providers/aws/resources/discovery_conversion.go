@@ -237,6 +237,12 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	asset.Options = conn.ConnectionOptions()
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
+	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
+	if instance.GetImage().Data != nil {
+		asset.Labels["mondoo.com/image"] = instance.GetImage().Data.Id.Data
+	}
+
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
 		imageName := ""
@@ -305,10 +311,16 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 		name = lname
 	}
 	asset.Name = name
+	imageId := ""
 	imageName := ""
 	if instance.GetImage().Data != nil {
+		imageId = instance.GetImage().Data.Id.Data
 		imageName = instance.GetImage().Data.Name.Data
 	}
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
+	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
+	asset.Labels["mondoo.com/image"] = imageId
+
 	creds := []*vault.Credential{
 		{
 			User: getProbableUsernameFromImageName(imageName),
@@ -386,6 +398,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset := &inventory.Asset{}
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Labels["mondoo.com/platform"] = instance.PlatformName.Data
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
 
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	creds := []*vault.Credential{
@@ -405,7 +418,6 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 		Runtime: "ssm_managed",
 	}
 	asset.State = mapSmmManagedPingStateCode(instance.PingStatus.Data)
-
 	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
 		creds[0].Type = vault.CredentialType_aws_ec2_ssm_session // this will only work for ec2 instances
 		asset.Connections = []*inventory.Config{{
@@ -710,6 +722,7 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	asset.IdDetector = []string{ids.IdDetector_Hostname} // do not use cloud detect or host key here
 	asset.Connections = []*inventory.Config{{
 		Type:     string(awsec2ebsconn.EBSConnectionType),
+		Backend:  inventory.ProviderType_AWS_EC2_EBS,
 		Host:     target,
 		Insecure: true,
 		Runtime:  "aws-ebs",
