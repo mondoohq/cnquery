@@ -157,13 +157,14 @@ func (s Status) RenderCliStatus() {
 		log.Warn().Msg("could not determine client platform information")
 	}
 
+	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
+	log.Info().Msg("Version:\t\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
+
 	latestVersion, err := cnquery.GetLatestVersion()
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get latest version")
 	}
 
-	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
-	log.Info().Msg("Version:\t\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
 	if latestVersion != "" {
 		log.Info().Msg("Latest Version:\t" + latestVersion)
 
