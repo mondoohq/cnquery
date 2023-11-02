@@ -157,12 +157,19 @@ func (s Status) RenderCliStatus() {
 		log.Warn().Msg("could not determine client platform information")
 	}
 
+	latestVersion, err := cnquery.GetLatestVersion()
+	if err != nil {
+		log.Warn().Msg("failed to get latest version")
+	}
+
 	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
 	log.Info().Msg("Version:\t\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
-	log.Info().Msg("Latest Version:\t" + cnquery.GetLatestVersion())
+	if latestVersion != "" {
+		log.Info().Msg("Latest Version:\t" + latestVersion)
 
-	if cnquery.GetVersion() != cnquery.GetLatestVersion() {
-		log.Warn().Msg("A newer version is available")
+		if cnquery.GetVersion() != latestVersion && cnquery.GetVersion() != "unstable" {
+			log.Warn().Msg("A newer version is available")
+		}
 	}
 
 	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)

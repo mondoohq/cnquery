@@ -52,9 +52,10 @@ type Release struct {
 	Name string `json:"name"`
 }
 
+var cnqueryGithubReleaseUrl = "https://api.github.com/repos/mondoohq/cnquery/releases/latest"
+
 // GetLatestReleaseName fetches the name of the latest release from the specified GitHub repository
-func GetLatestReleaseName() (string, error) {
-	url := "https://api.github.com/repos/mondoohq/cnquery/releases/latest"
+func GetLatestReleaseName(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error fetching latest release: %v", err)
@@ -79,13 +80,13 @@ func GetLatestReleaseName() (string, error) {
 }
 
 // GetLatestVersion returns the latest version available on Github
-func GetLatestVersion() string {
-	releaseName, err := GetLatestReleaseName()
+func GetLatestVersion() (string, error) {
+	releaseName, err := GetLatestReleaseName(cnqueryGithubReleaseUrl)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	cleanVersion := strings.TrimPrefix(releaseName, "v")
-	return cleanVersion
+	return cleanVersion, nil
 }
 
 var coreSemverRegex = regexp.MustCompile(`^(\d+.\d+.\d+)`)
