@@ -231,7 +231,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.IdDetector = []string{"aws-ec2"}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "aws_ec2",
+		Runtime: "aws-ec2-instance",
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
@@ -295,7 +295,7 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 	asset.IdDetector = []string{"aws-ec2"}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "aws_ec2",
+		Runtime: "aws-ec2-instance",
 	}
 	ssm := ""
 	if s := instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"]; s != nil {
@@ -415,7 +415,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "ssm_managed",
+		Runtime: "aws-ssm-instance",
 	}
 	asset.State = mapSmmManagedPingStateCode(instance.PingStatus.Data)
 	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
@@ -477,7 +477,7 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 	a.PlatformIds = []string{containerid.MondooContainerImageID(image.Digest.Data)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container_image",
-		Runtime: "aws_ecr",
+		Runtime: "aws-ecr",
 	}
 	a.Options = conn.ConnectionOptions()
 	a.Name = ecrImageName(image.RepoName.Data, image.Digest.Data)
@@ -552,7 +552,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	a.PlatformIds = []string{containerid.MondooContainerID(runtimeId), MondooECSContainerID(containerArn)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container",
-		Runtime: "aws_ecs",
+		Runtime: "aws-ecs",
 	}
 	a.State = mapContainerState(state)
 	taskId := ""
@@ -722,7 +722,6 @@ func EbsConnectAsset(args []string, opts map[string]string) *inventory.Asset {
 	asset.IdDetector = []string{ids.IdDetector_Hostname} // do not use cloud detect or host key here
 	asset.Connections = []*inventory.Config{{
 		Type:     string(awsec2ebsconn.EBSConnectionType),
-		Backend:  inventory.ProviderType_AWS_EC2_EBS,
 		Host:     target,
 		Insecure: true,
 		Runtime:  "aws-ebs",
