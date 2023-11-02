@@ -318,14 +318,20 @@ func (s *mqlTls) certificates(params interface{}) ([]interface{}, error) {
 	// We leverage the fact that params has to be created first, and that params
 	// causes this field to be set. If it isn't, then we cannot determine it.
 	// (TODO: use the recording data to do this async)
-	s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	if len(s.Certificates.Data) == 0 {
+		s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return s.Certificates.Data, nil
 }
 
 func (s *mqlTls) nonSniCertificates(params interface{}) ([]interface{}, error) {
 	// We leverage the fact that params has to be created first, and that params
 	// causes this field to be set. If it isn't, then we cannot determine it.
 	// (TODO: use the recording data to do this async)
-	s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
-	return nil, nil
+	if len(s.NonSniCertificates.Data) == 0 {
+		s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return s.NonSniCertificates.Data, nil
 }
