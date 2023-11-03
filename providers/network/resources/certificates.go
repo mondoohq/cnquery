@@ -6,13 +6,16 @@ package resources
 import (
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/checksums"
@@ -56,17 +59,81 @@ func pkixnameToMql(runtime *plugin.Runtime, name pkix.Name, id string) (*mqlPkix
 	return r.(*mqlPkixName), nil
 }
 
+func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
+	readableValue := string(ext.Value)
+	switch {
+	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 14}): // Subject Key Identifier
+		var subjectKeyID []byte
+		if _, err := asn1.Unmarshal(ext.Value, &subjectKeyID); err != nil {
+			log.Error().Err(err).Msg("Error unmarshalling Subject Key ID")
+		} else {
+			log.Debug().Msg("Extension Identified as Subject Key ID")
+			hexString := strings.ToUpper(hex.EncodeToString(subjectKeyID))
+
+			var pairs []string
+			for i := 0; i < len(hexString); i += 2 {
+				pairs = append(pairs, hexString[i:i+2])
+			}
+
+			readableValue = strings.Join(pairs, ":")
+		}
+	default:
+		log.Debug().Msg("Unknown or unhandled extension")
+	}
+	return readableValue, nil
+}
+
 func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, fingerprint string, id string) (*mqlPkixExtension, error) {
+	value, err := ExtensionValueToReadableFormat(ext)
 	r, err := CreateResource(runtime, "pkix.extension", map[string]*llx.RawData{
 		"id":         llx.StringData(id),
 		"identifier": llx.StringData(fingerprint + ":" + id),
 		"critical":   llx.BoolData(ext.Critical),
-		"value":      llx.StringData(string(ext.Value)),
+		"value":      llx.StringData(value),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return r.(*mqlPkixExtension), nil
+}
+
+func decodeExtension(idStr string, value []byte) (interface{}, error) {
+	// Parse the OID from the string
+	oidParts := strings.Split(idStr, ".")
+	oid := make(asn1.ObjectIdentifier, len(oidParts))
+	for i, part := range oidParts {
+		num, err := strconv.Atoi(part)
+		if err != nil {
+			return nil, fmt.Errorf("invalid OID part: %s", part)
+		}
+		oid[i] = num
+	}
+
+	switch {
+	case oid.Equal(asn1.ObjectIdentifier{2, 5, 29, 15}): // Key Usage
+		var keyUsageBits asn1.BitString
+		_, err := asn1.Unmarshal(value, &keyUsageBits)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling key usage: %w", err)
+		}
+		keyUsage := x509.KeyUsage(0)
+		for i := 0; i < keyUsageBits.BitLength; i++ {
+			if keyUsageBits.At(i) != 0 {
+				keyUsage |= 1 << uint(i)
+			}
+		}
+		return keyUsage, nil
+	case oid.Equal(asn1.ObjectIdentifier{2, 5, 29, 14}): // Subject Key Identifier
+		var subjectKeyID []byte
+		_, err := asn1.Unmarshal(value, &subjectKeyID)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling subject key identifier: %w", err)
+		}
+		return subjectKeyID, nil
+	// Add cases for other extensions here
+	default:
+		return nil, fmt.Errorf("unknown or unsupported extension OID: %s", idStr)
+	}
 }
 
 func (r *mqlCertificates) id() (string, error) {
