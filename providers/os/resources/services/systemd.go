@@ -4,13 +4,11 @@
 package services
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -71,23 +69,51 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 			Type:    "systemd",
 		}
 
-		// Now check if the service is running
-		cmdIsActive := exec.Command("systemctl", "is-active", service.Name)
-		var outActive bytes.Buffer
-		cmdIsActive.Stdout = &outActive
+		services = append(services, service)
+	}
 
-		err := cmdIsActive.Run()
-		service.Running = err == nil && strings.TrimSpace(outActive.String()) == "active"
-		service.Installed = err == nil && strings.TrimSpace(outActive.String()) == "active"
+	return services, nil
+}
+
+// List returns a slice of Service structs representing the state of all services
+func (s *SystemDServiceManager) List() ([]*Service, error) {
+	var services []*Service
+	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
+	if err != nil {
+		return nil, err
+	}
+	services, err = ParseServiceSystemDUnitFiles(cmdList.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	for _, service := range services {
+		// Now check if the service is running
+		cmdIsActive, err := s.conn.RunCommand("systemctl is-active " + service.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		isActiveOut, err := io.ReadAll(cmdIsActive.Stdout)
+		if err != nil {
+			return nil, err
+		}
+
+		service.Running = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
+		service.Installed = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
 
 		// Get service description
-		cmdDesc := exec.Command("systemctl", "status", service.Name)
-		var outDesc bytes.Buffer
-		cmdDesc.Stdout = &outDesc
+		cmdDesc, err := s.conn.RunCommand("systemctl status " + service.Name)
+		if err != nil {
+			return nil, err
+		}
 
-		err = cmdDesc.Run()
+		descOut, err := io.ReadAll(cmdDesc.Stdout)
+		if err != nil {
+			return nil, err
+		}
+
 		if err == nil {
-			lines := strings.Split(outDesc.String(), "\n")
+			lines := strings.Split(string(descOut), "\n")
 			for _, l := range lines {
 				if strings.Contains(l, "Description:") {
 					parts := strings.SplitN(l, "Description:", 2)
@@ -98,20 +124,9 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 				}
 			}
 		}
-
-		services = append(services, service)
 	}
 
 	return services, nil
-}
-
-// List returns a slice of Service structs representing the state of all services
-func (s *SystemDServiceManager) List() ([]*Service, error) {
-	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
-	if err != nil {
-		return nil, err
-	}
-	return ParseServiceSystemDUnitFiles(cmdList.Stdout)
 }
 
 type SystemdFSServiceManager struct {
