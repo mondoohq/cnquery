@@ -14,7 +14,7 @@ import (
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New("./testdata/ubuntu.toml", &inventory.Asset{
+	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"ubuntu", "linux"},
