@@ -419,7 +419,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err != nil {
 			return nil, err
 		}
-		// This is a workaournd to set Google COS platfomr IDs when scanned from inside k8s
+		// This is a workaround to set Google COS platform IDs when scanned from inside k8s
 		pID, err := conn.(*connection.FileSystemConnection).Identifier()
 		if err != nil {
 			fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
