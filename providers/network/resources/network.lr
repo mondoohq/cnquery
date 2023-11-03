@@ -229,7 +229,9 @@ pkix.name @defaults("id dn commonName") {
 }
 
 // x509 certificate PKIX extension
-pkix.extension {
+pkix.extension @defaults("id") {
+  // ID
+  id string
   // Extension identifier
   identifier string
   // Flag for critical extension

@@ -56,9 +56,10 @@ func pkixnameToMql(runtime *plugin.Runtime, name pkix.Name, id string) (*mqlPkix
 	return r.(*mqlPkixName), nil
 }
 
-func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, id string) (*mqlPkixExtension, error) {
+func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, fingerprint string, id string) (*mqlPkixExtension, error) {
 	r, err := CreateResource(runtime, "pkix.extension", map[string]*llx.RawData{
-		"identifier": llx.StringData(id),
+		"id":         llx.StringData(id),
+		"identifier": llx.StringData(fingerprint + ":" + id),
 		"critical":   llx.BoolData(ext.Critical),
 		"value":      llx.StringData(string(ext.Value)),
 	})
@@ -332,7 +333,7 @@ func (s *mqlCertificate) extensions() ([]interface{}, error) {
 	fingerprint := hex.EncodeToString(certificates.Sha256Hash(cert))
 	for i := range cert.Extensions {
 		extension := cert.Extensions[i]
-		ext, err := pkixextensionToMql(s.MqlRuntime, extension, fingerprint+":"+extension.Id.String())
+		ext, err := pkixextensionToMql(s.MqlRuntime, extension, fingerprint, extension.Id.String())
 		if err != nil {
 			return nil, err
 		}
@@ -354,7 +355,7 @@ func (s *mqlCertificate) sanExtension() (*mqlPkixSanExtension, error) {
 		return nil, nil
 	}
 
-	ext, err := pkixextensionToMql(s.MqlRuntime, *extension, fingerprint+":"+extension.Id.String())
+	ext, err := pkixextensionToMql(s.MqlRuntime, *extension, fingerprint, extension.Id.String())
 	if err != nil {
 		return nil, err
 	}

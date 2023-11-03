@@ -193,6 +193,8 @@ resources:
   pkix.extension:
     fields:
       critical: {}
+      id:
+        min_mondoo_version: latest
       identifier: {}
       value: {}
     min_mondoo_version: 5.15.0
