@@ -34,12 +34,13 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 	log.Debug().Str("path", path).Msg("load filesystem")
 
 	return &FileSystemConnection{
-		id:         id,
-		Conf:       conf,
-		asset:      asset,
-		MountedDir: path,
-		closeFN:    closeFN,
-		fs:         fs.NewMountedFs(path),
+		id:           id,
+		Conf:         conf,
+		asset:        asset,
+		MountedDir:   path,
+		closeFN:      closeFN,
+		tcPlatformId: conf.PlatformId,
+		fs:           fs.NewMountedFs(path),
 	}, nil
 }
 
@@ -100,7 +101,7 @@ func (c *FileSystemConnection) Capabilities() shared.Capabilities {
 
 func (c *FileSystemConnection) Identifier() (string, error) {
 	if c.tcPlatformId == "" {
-		return "", errors.New("not platform id provided")
+		return "", errors.New("no platform id provided")
 	}
 	return c.tcPlatformId, nil
 }

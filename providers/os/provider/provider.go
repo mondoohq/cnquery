@@ -419,10 +419,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err != nil {
 			return nil, err
 		}
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
-		if err == nil {
-			asset.Name = fingerprint.Name
-			asset.PlatformIds = fingerprint.PlatformIDs
+		// This is a workaournd to set Google COS platfomr IDs when scanned from inside k8s
+		pID, err := conn.(*connection.FileSystemConnection).Identifier()
+		if err != nil {
+			fingerprint, err := IdentifyPlatform(conn, asset.Platform, []string{ids.IdDetector_Hostname})
+			if err == nil {
+				asset.Name = fingerprint.Name
+				asset.PlatformIds = fingerprint.PlatformIDs
+			}
+		} else {
+			// In this case asset.Name should already be set via the inventory
+			asset.PlatformIds = []string{pID}
 		}
 
 	// Do not expose mock connection as a supported type
