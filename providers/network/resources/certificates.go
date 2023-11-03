@@ -96,6 +96,9 @@ func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
 
 func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, fingerprint string, id string) (*mqlPkixExtension, error) {
 	value, err := ExtensionValueToReadableFormat(ext)
+	if err != nil {
+		value = string(ext.Value)
+	}
 	r, err := CreateResource(runtime, "pkix.extension", map[string]*llx.RawData{
 		"id":         llx.StringData(id),
 		"identifier": llx.StringData(fingerprint + ":" + id),
