@@ -75,6 +75,21 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	return services, nil
 }
 
+// SystemDExtractDescription gets the description of a service from the systemctl status command
+func SystemDExtractDescription(systemctlOutput string) string {
+	lines := strings.Split(systemctlOutput, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, ".service -") {
+			// Assuming the format is similar to: "● bluetooth.service - Bluetooth service"
+			parts := strings.SplitN(line, " - ", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1])
+			}
+		}
+	}
+	return ""
+}
+
 // List returns a slice of Service structs representing the state of all services
 func (s *SystemDServiceManager) List() ([]*Service, error) {
 	var services []*Service
@@ -111,19 +126,8 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		if err == nil {
-			lines := strings.Split(string(descOut), "\n")
-			for _, l := range lines {
-				if strings.Contains(l, "Description:") {
-					parts := strings.SplitN(l, "Description:", 2)
-					if len(parts) == 2 {
-						service.Description = strings.TrimSpace(parts[1])
-						break
-					}
-				}
-			}
-		}
+		description := SystemDExtractDescription(string(descOut))
+		service.Description = description
 	}
 
 	return services, nil
