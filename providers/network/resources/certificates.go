@@ -64,7 +64,7 @@ func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
 	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 14}): // Subject Key Identifier
 		var subjectKeyID []byte
 		if _, err := asn1.Unmarshal(ext.Value, &subjectKeyID); err != nil {
-			log.Error().Err(err).Msg("Error unmarshalling Subject Key ID")
+			log.Warn().Err(err).Msg("Error unmarshalling Subject Key ID")
 		} else {
 			log.Debug().Msg("Extension Identified as Subject Key ID")
 			hexString := strings.ToUpper(hex.EncodeToString(subjectKeyID))
@@ -79,7 +79,7 @@ func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
 	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 17}): // Subject Alternative Name
 		var rawValues []asn1.RawValue
 		if _, err := asn1.Unmarshal(ext.Value, &rawValues); err != nil {
-			log.Error().Err(err).Msg("Error unmarshalling Subject Alternative Name")
+			log.Warn().Err(err).Msg("Error unmarshalling Subject Alternative Name")
 		} else {
 			log.Debug().Msg("Extension Identified as Subject Alternative Name")
 			var sans []string
