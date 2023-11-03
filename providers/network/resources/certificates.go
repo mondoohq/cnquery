@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -76,6 +75,18 @@ func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
 			}
 
 			readableValue = strings.Join(pairs, ":")
+		}
+	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 17}): // Subject Alternative Name
+		var rawValues []asn1.RawValue
+		if _, err := asn1.Unmarshal(ext.Value, &rawValues); err != nil {
+			log.Error().Err(err).Msg("Error unmarshalling Subject Alternative Name")
+		} else {
+			log.Debug().Msg("Extension Identified as Subject Alternative Name")
+			var sans []string
+			for _, raw := range rawValues {
+				sans = append(sans, string(raw.Bytes))
+			}
+			readableValue = strings.Join(sans, " | ")
 		}
 	default:
 		log.Debug().Msg("Unknown or unhandled extension")
