@@ -208,7 +208,6 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 		}
 		in.Spec.Assets = append(in.Spec.Assets, list...)
 	}
-
 	return in, nil
 }
 
@@ -295,7 +294,12 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 			if !imageMatchesFilters(a, filters) {
 				continue
 			}
-			assetList = append(assetList, addConnectionInfoToEcrAsset(a, conn))
+			ecrAsset := addConnectionInfoToEcrAsset(a, conn)
+			if len(ecrAsset.Connections) > 0 {
+				assetList = append(assetList, ecrAsset)
+			} else {
+				log.Warn().Str("name", ecrAsset.Name).Msg("cannot scan ecr image with no tag")
+			}
 		}
 	case DiscoveryECS:
 		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
