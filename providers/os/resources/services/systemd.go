@@ -63,11 +63,10 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		}
 
 		service := &Service{
-			Name:      fields[0],
-			Installed: fields[1] == "loaded",
-			Enabled:   fields[1] == "enabled",
-			Masked:    fields[1] == "masked",
-			Type:      "systemd",
+			Name:    fields[0],
+			Enabled: fields[1] == "enabled",
+			Masked:  fields[1] == "masked",
+			Type:    "systemd",
 		}
 
 		// Now check if the service is running
@@ -77,6 +76,7 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 
 		err := cmdIsActive.Run()
 		service.Running = err == nil && strings.TrimSpace(outActive.String()) == "active"
+		service.Installed = err == nil && strings.TrimSpace(outActive.String()) == "active"
 
 		// Get service description
 		cmdDesc := exec.Command("systemctl", "status", service.Name)

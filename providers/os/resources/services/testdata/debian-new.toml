@@ -1,4 +1,4 @@
-[commands."systemctl list-unit-files --type service -all"]
+[commands."systemctl list-unit-files --type service --all"]
 stdout = """
 UNIT FILE                                  STATE           VENDOR PRESET
 accounts-daemon.service                    enabled         enabled

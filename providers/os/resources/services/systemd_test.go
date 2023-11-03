@@ -14,10 +14,10 @@ import (
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New("./testdata/debian-new.toml", &inventory.Asset{
+	mock, err := mock.New("./testdata/ubuntu.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "debian",
-			Family: []string{"debian", "linux"},
+			Name:   "ubuntu",
+			Family: []string{"ubuntu", "linux"},
 		},
 	})
 	if err != nil {
@@ -31,22 +31,22 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 
 	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 102, len(m), "detected the right amount of services")
+	assert.Equal(t, 264, len(m), "detected the right amount of services")
 
 	// check first element
-	assert.Equal(t, "auditd", m[0].Name, "service name detected")
+	assert.Equal(t, "accounts-daemon.service", m[0].Name, "service name detected")
 	assert.Equal(t, true, m[0].Running, "service is running")
 	assert.Equal(t, true, m[0].Installed, "service is installed")
 	assert.Equal(t, "systemd", m[0].Type, "service type is added")
 
 	// check last element
-	assert.Equal(t, "ypxfrd", m[101].Name, "service name detected")
-	assert.Equal(t, false, m[101].Running, "service is running")
-	assert.Equal(t, false, m[101].Installed, "service is installed")
-	assert.Equal(t, "systemd", m[101].Type, "service type is added")
+	assert.Equal(t, "x11-common.service", m[262].Name, "service name detected")
+	assert.Equal(t, false, m[262].Running, "service is running")
+	assert.Equal(t, false, m[262].Installed, "service is installed")
+	assert.Equal(t, "systemd", m[262].Type, "service type is added")
 
 	// check for masked element
-	assert.Equal(t, "nfs-server", m[30].Name, "service name detected")
+	assert.Equal(t, "cryptdisks.service", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
 }
 
