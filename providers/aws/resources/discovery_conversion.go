@@ -231,12 +231,18 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.IdDetector = []string{"aws-ec2"}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "aws_ec2",
+		Runtime: "aws-ec2-instance",
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	asset.Options = conn.ConnectionOptions()
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
+	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
+	if instance.GetImage().Data != nil {
+		asset.Labels["mondoo.com/image"] = instance.GetImage().Data.Id.Data
+	}
+
 	// if there is a public ip & it is running, we assume ssh is an option
 	if instance.PublicIp.Data != "" && instance.State.Data == string(types.InstanceStateNameRunning) {
 		imageName := ""
@@ -289,7 +295,7 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 	asset.IdDetector = []string{"aws-ec2"}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "aws_ec2",
+		Runtime: "aws-ec2-instance",
 	}
 	ssm := ""
 	if s := instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"]; s != nil {
@@ -305,10 +311,16 @@ func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId strin
 		name = lname
 	}
 	asset.Name = name
+	imageId := ""
 	imageName := ""
 	if instance.GetImage().Data != nil {
+		imageId = instance.GetImage().Data.Id.Data
 		imageName = instance.GetImage().Data.Name.Data
 	}
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
+	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
+	asset.Labels["mondoo.com/image"] = imageId
+
 	creds := []*vault.Credential{
 		{
 			User: getProbableUsernameFromImageName(imageName),
@@ -386,6 +398,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset := &inventory.Asset{}
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
 	asset.Labels["mondoo.com/platform"] = instance.PlatformName.Data
+	asset.Labels["mondoo.com/region"] = instance.Region.Data
 
 	asset.Name = getInstanceName(instance.InstanceId.Data, asset.Labels)
 	creds := []*vault.Credential{
@@ -402,10 +415,9 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
-		Runtime: "ssm_managed",
+		Runtime: "aws-ssm-instance",
 	}
 	asset.State = mapSmmManagedPingStateCode(instance.PingStatus.Data)
-
 	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
 		creds[0].Type = vault.CredentialType_aws_ec2_ssm_session // this will only work for ec2 instances
 		asset.Connections = []*inventory.Config{{
@@ -465,7 +477,7 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 	a.PlatformIds = []string{containerid.MondooContainerImageID(image.Digest.Data)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container_image",
-		Runtime: "aws_ecr",
+		Runtime: "aws-ecr",
 	}
 	a.Options = conn.ConnectionOptions()
 	a.Name = ecrImageName(image.RepoName.Data, image.Digest.Data)
@@ -540,7 +552,7 @@ func addConnectionInfoToECSContainerAsset(container *mqlAwsEcsContainer, account
 	a.PlatformIds = []string{containerid.MondooContainerID(runtimeId), MondooECSContainerID(containerArn)}
 	a.Platform = &inventory.Platform{
 		Kind:    "container",
-		Runtime: "aws_ecs",
+		Runtime: "aws-ecs",
 	}
 	a.State = mapContainerState(state)
 	taskId := ""

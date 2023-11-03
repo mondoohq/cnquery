@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -14,8 +15,10 @@ import (
 )
 
 func (a *mqlAwsAccount) id() (string, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	return "aws.account/" + conn.AccountId(), nil
+	if conn, ok := a.MqlRuntime.Connection.(*connection.AwsConnection); ok {
+		return "aws.account/" + conn.AccountId(), nil
+	}
+	return "", errors.New("wrong connection for aws account id call")
 }
 
 func (a *mqlAwsAccount) aliases() ([]interface{}, error) {

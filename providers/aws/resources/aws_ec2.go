@@ -802,7 +802,13 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	ctx := context.Background()
 	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{resource[1]}})
 	if err != nil {
-		return nil, nil, err
+		args["arn"] = llx.StringData(arnVal)
+		args["id"] = llx.StringData(resource[1])
+		args["name"] = llx.StringData("not found")
+		args["architecture"] = llx.NilData
+		args["ownerId"] = llx.NilData
+		args["ownerAlias"] = llx.NilData
+		return args, nil, nil
 	}
 
 	if len(images.Images) > 0 {
