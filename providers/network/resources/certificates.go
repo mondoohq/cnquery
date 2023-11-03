@@ -6,13 +6,15 @@ package resources
 import (
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"strings"
 	"sync"
 	"time"
+
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/checksums"
@@ -56,12 +58,52 @@ func pkixnameToMql(runtime *plugin.Runtime, name pkix.Name, id string) (*mqlPkix
 	return r.(*mqlPkixName), nil
 }
 
+func ExtensionValueToReadableFormat(ext pkix.Extension) (string, error) {
+	readableValue := string(ext.Value)
+	switch {
+	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 14}): // Subject Key Identifier
+		var subjectKeyID []byte
+		if _, err := asn1.Unmarshal(ext.Value, &subjectKeyID); err != nil {
+			log.Warn().Err(err).Msg("Error unmarshalling Subject Key ID")
+		} else {
+			log.Debug().Msg("Extension Identified as Subject Key ID")
+			hexString := strings.ToUpper(hex.EncodeToString(subjectKeyID))
+
+			var pairs []string
+			for i := 0; i < len(hexString); i += 2 {
+				pairs = append(pairs, hexString[i:i+2])
+			}
+
+			readableValue = strings.Join(pairs, ":")
+		}
+	case ext.Id.Equal(asn1.ObjectIdentifier{2, 5, 29, 17}): // Subject Alternative Name
+		var rawValues []asn1.RawValue
+		if _, err := asn1.Unmarshal(ext.Value, &rawValues); err != nil {
+			log.Warn().Err(err).Msg("Error unmarshalling Subject Alternative Name")
+		} else {
+			log.Debug().Msg("Extension Identified as Subject Alternative Name")
+			var sans []string
+			for _, raw := range rawValues {
+				sans = append(sans, string(raw.Bytes))
+			}
+			readableValue = strings.Join(sans, " | ")
+		}
+	default:
+		log.Debug().Msg("Unknown or unhandled extension")
+	}
+	return readableValue, nil
+}
+
 func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, fingerprint string, id string) (*mqlPkixExtension, error) {
+	value, err := ExtensionValueToReadableFormat(ext)
+	if err != nil {
+		value = string(ext.Value)
+	}
 	r, err := CreateResource(runtime, "pkix.extension", map[string]*llx.RawData{
 		"id":         llx.StringData(id),
 		"identifier": llx.StringData(fingerprint + ":" + id),
 		"critical":   llx.BoolData(ext.Critical),
-		"value":      llx.StringData(string(ext.Value)),
+		"value":      llx.StringData(value),
 	})
 	if err != nil {
 		return nil, err
