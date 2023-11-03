@@ -62,8 +62,10 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 			continue
 		}
 
+		name := strings.TrimSuffix(fields[0], ".service")
+
 		service := &Service{
-			Name:    fields[0],
+			Name:    name,
 			Enabled: fields[1] == "enabled",
 			Masked:  fields[1] == "masked",
 			Type:    "systemd",
