@@ -62,10 +62,11 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		name := strings.TrimSuffix(fields[0], ".service")
 
 		service := &Service{
-			Name:    name,
-			Enabled: fields[1] == "enabled",
-			Masked:  fields[1] == "masked",
-			Type:    "systemd",
+			Name:      name,
+			Enabled:   fields[1] == "enabled",
+			Installed: fields[1] == "enabled",
+			Masked:    fields[1] == "masked",
+			Type:      "systemd",
 		}
 
 		services = append(services, service)
@@ -113,7 +114,6 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 		}
 
 		service.Running = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
-		service.Installed = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
 
 		// Get service description
 		cmdDesc, err := s.conn.RunCommand("systemctl status " + service.Name)
