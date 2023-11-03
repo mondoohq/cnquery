@@ -173,6 +173,13 @@ func (s Status) RenderCliStatus() {
 		}
 	}
 
+	installed, outdated, err := getProviders()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get provider info")
+	}
+	log.Info().Msg("Installed Providers:\t" + strings.Join(installed, " | "))
+	log.Info().Msg("Outdated Providers:\t" + strings.Join(outdated, " | "))
+
 	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)
 	log.Info().Msg("API Status:\t\t" + s.Upstream.API.Status)
 	log.Info().Msg("API Time:\t\t" + s.Upstream.API.Timestamp)
@@ -225,4 +232,26 @@ func (s Status) RenderYaml() {
 		log.Error().Err(err).Msg("could not generate yaml")
 	}
 	os.Stdout.Write(output)
+}
+
+func getProviders() ([]string, []string, error) {
+	var installed []string
+	var outdated []string
+
+	allProviders, err := providers.ListActive()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, provider := range allProviders {
+		installed = append(installed, provider.Name)
+		latestVersion, err := providers.LatestVersion(provider.Name)
+		if err != nil {
+			continue
+		}
+		if latestVersion != provider.Version {
+			outdated = append(outdated, provider.Name)
+		}
+	}
+
+	return installed, outdated, nil
 }
