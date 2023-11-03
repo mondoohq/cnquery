@@ -444,6 +444,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"pkix.name.extraNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixName).GetExtraNames()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"pkix.extension.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkixExtension).GetId()).ToDataRes(types.String)
+	},
 	"pkix.extension.identifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixExtension).GetIdentifier()).ToDataRes(types.String)
 	},
@@ -1045,6 +1048,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlPkixExtension).__id, ok = v.Value.(string)
 			return
 		},
+	"pkix.extension.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkixExtension).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"pkix.extension.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPkixExtension).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2610,6 +2617,7 @@ type mqlPkixExtension struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlPkixExtensionInternal it will be used here
+	Id plugin.TValue[string]
 	Identifier plugin.TValue[string]
 	Critical plugin.TValue[bool]
 	Value plugin.TValue[string]
@@ -2650,6 +2658,10 @@ func (c *mqlPkixExtension) MqlName() string {
 
 func (c *mqlPkixExtension) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlPkixExtension) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 func (c *mqlPkixExtension) GetIdentifier() *plugin.TValue[string] {
