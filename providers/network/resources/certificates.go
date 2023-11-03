@@ -97,45 +97,6 @@ func pkixextensionToMql(runtime *plugin.Runtime, ext pkix.Extension, fingerprint
 	return r.(*mqlPkixExtension), nil
 }
 
-func decodeExtension(idStr string, value []byte) (interface{}, error) {
-	// Parse the OID from the string
-	oidParts := strings.Split(idStr, ".")
-	oid := make(asn1.ObjectIdentifier, len(oidParts))
-	for i, part := range oidParts {
-		num, err := strconv.Atoi(part)
-		if err != nil {
-			return nil, fmt.Errorf("invalid OID part: %s", part)
-		}
-		oid[i] = num
-	}
-
-	switch {
-	case oid.Equal(asn1.ObjectIdentifier{2, 5, 29, 15}): // Key Usage
-		var keyUsageBits asn1.BitString
-		_, err := asn1.Unmarshal(value, &keyUsageBits)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshalling key usage: %w", err)
-		}
-		keyUsage := x509.KeyUsage(0)
-		for i := 0; i < keyUsageBits.BitLength; i++ {
-			if keyUsageBits.At(i) != 0 {
-				keyUsage |= 1 << uint(i)
-			}
-		}
-		return keyUsage, nil
-	case oid.Equal(asn1.ObjectIdentifier{2, 5, 29, 14}): // Subject Key Identifier
-		var subjectKeyID []byte
-		_, err := asn1.Unmarshal(value, &subjectKeyID)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshalling subject key identifier: %w", err)
-		}
-		return subjectKeyID, nil
-	// Add cases for other extensions here
-	default:
-		return nil, fmt.Errorf("unknown or unsupported extension OID: %s", idStr)
-	}
-}
-
 func (r *mqlCertificates) id() (string, error) {
 	return checksums.New.Add(r.Pem.Data).String(), nil
 }
