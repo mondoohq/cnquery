@@ -44,7 +44,6 @@ func (s *SystemDServiceManager) Name() string {
 func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 	var services []*Service
 	content, err := io.ReadAll(input)
-	//err := cmdList.Run()
 	if err != nil {
 		return nil, fmt.Errorf("error executing systemctl list-unit-files: %v", err)
 	}

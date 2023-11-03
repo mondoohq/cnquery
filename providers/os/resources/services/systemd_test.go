@@ -13,6 +13,37 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/fs"
 )
 
+func TestSystemDExtractDescription(t *testing.T) {
+	statusout := `
+  ● avahi-daemon.service - Avahi mDNS/DNS-SD Stack
+     Loaded: loaded (/lib/systemd/system/avahi-daemon.service; enabled; vendor preset: enabled)
+     Active: active (running) since Fri 2023-11-03 06:26:15 CET; 2h 59min ago
+TriggeredBy: ● avahi-daemon.socket
+   Main PID: 1219 (avahi-daemon)
+     Status: "avahi-daemon 0.8 starting up."
+      Tasks: 2 (limit: 38013)
+     Memory: 1.4M
+        CPU: 1.173s
+     CGroup: /system.slice/avahi-daemon.service
+             ├─1219 "avahi-daemon: running [mondoopad.local]"
+             └─1297 "avahi-daemon: chroot helper"
+
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Interface wlp0s20f3.IPv6 no longer relevant for mDNS.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Withdrawing address record for 192.168.178.32 on wlp0s20f3.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Leaving mDNS multicast group on interface wlp0s20f3.IPv4 with address 192.168.178.32.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Interface wlp0s20f3.IPv4 no longer relevant for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Joining mDNS multicast group on interface wlp0s20f3.IPv6 with address fe80::80d3:b6d1:14e3:56e1.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: New relevant interface wlp0s20f3.IPv6 for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for fe80::80d3:b6d1:14e3:56e1 on wlp0s20f3.*.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Joining mDNS multicast group on interface wlp0s20f3.IPv4 with address 192.168.178.32.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: New relevant interface wlp0s20f3.IPv4 for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for 192.168.178.32 on wlp0s20f3.IPv4.
+  `
+	description := SystemDExtractDescription(statusout)
+
+	assert.Equal(t, description, "Avahi mDNS/DNS-SD Stack")
+}
+
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
