@@ -4,7 +4,12 @@
 package cnquery
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"regexp"
+	"strings"
 )
 
 // Version is set via ldflags
@@ -40,6 +45,48 @@ func GetVersion() string {
 		return "unstable"
 	}
 	return Version
+}
+
+// Release represents a GitHub release
+type Release struct {
+	Name string `json:"name"`
+}
+
+var cnqueryGithubReleaseUrl = "https://api.github.com/repos/mondoohq/cnquery/releases/latest"
+
+// GetLatestReleaseName fetches the name of the latest release from the specified GitHub repository
+func GetLatestReleaseName(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("error fetching latest release: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("received non-OK response status: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
+
+	var release Release
+	if err := json.Unmarshal(body, &release); err != nil {
+		return "", fmt.Errorf("error unmarshalling response: %v", err)
+	}
+
+	return release.Name, nil
+}
+
+// GetLatestVersion returns the latest version available on Github
+func GetLatestVersion() (string, error) {
+	releaseName, err := GetLatestReleaseName(cnqueryGithubReleaseUrl)
+	if err != nil {
+		return "", err
+	}
+	cleanVersion := strings.TrimPrefix(releaseName, "v")
+	return cleanVersion, nil
 }
 
 var coreSemverRegex = regexp.MustCompile(`^(\d+.\d+.\d+)`)

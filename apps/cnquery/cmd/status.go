@@ -149,37 +149,50 @@ type ClientStatus struct {
 func (s Status) RenderCliStatus() {
 	if s.Client.Platform != nil {
 		agent := s.Client
-		log.Info().Msg("Platform:\t" + agent.Platform.Name)
-		log.Info().Msg("Version:\t" + agent.Platform.Version)
-		log.Info().Msg("Hostname:\t" + agent.Hostname)
-		log.Info().Msg("IP:\t\t" + agent.IP)
+		log.Info().Msg("Platform:\t\t" + agent.Platform.Name)
+		log.Info().Msg("Version:\t\t" + agent.Platform.Version)
+		log.Info().Msg("Hostname:\t\t" + agent.Hostname)
+		log.Info().Msg("IP:\t\t\t" + agent.IP)
 	} else {
 		log.Warn().Msg("could not determine client platform information")
 	}
 
-	log.Info().Msg("Time:\t\t" + s.Client.Timestamp)
-	log.Info().Msg("Version:\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
+	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
+	log.Info().Msg("Version:\t\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
+
+	latestVersion, err := cnquery.GetLatestVersion()
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get latest version")
+	}
+
+	if latestVersion != "" {
+		log.Info().Msg("Latest Version:\t" + latestVersion)
+
+		if cnquery.GetVersion() != latestVersion && cnquery.GetVersion() != "unstable" {
+			log.Warn().Msg("A newer version is available")
+		}
+	}
 
 	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)
-	log.Info().Msg("API Status:\t" + s.Upstream.API.Status)
-	log.Info().Msg("API Time:\t" + s.Upstream.API.Timestamp)
-	log.Info().Msg("API Version:\t" + s.Upstream.API.Version)
+	log.Info().Msg("API Status:\t\t" + s.Upstream.API.Status)
+	log.Info().Msg("API Time:\t\t" + s.Upstream.API.Timestamp)
+	log.Info().Msg("API Version:\t\t" + s.Upstream.API.Version)
 
 	if s.Upstream.API.Version != cnquery.APIVersion() {
 		log.Warn().Msg("API versions do not match, please update the client")
 	}
 
 	if len(s.Upstream.Features) > 0 {
-		log.Info().Msg("Features:\t" + strings.Join(s.Upstream.Features, ","))
+		log.Info().Msg("Features:\t\t" + strings.Join(s.Upstream.Features, ","))
 	}
 
-	if s.Client.ParentMrn == "" {
-		log.Info().Msg("Owner:\t" + s.Client.ParentMrn)
+	if s.Client.ParentMrn != "" {
+		log.Info().Msg("Owner:\t\t" + s.Client.ParentMrn)
 	}
 
 	if s.Client.Registered {
-		log.Info().Msg("Client:\t" + s.Client.Mrn)
-		log.Info().Msg("Service Account:\t" + s.Client.ServiceAccount)
+		log.Info().Msg("Client:\t\t" + s.Client.Mrn)
+		log.Info().Msg("Service Account:\t\t" + s.Client.ServiceAccount)
 		log.Info().Msg(theme.DefaultTheme.Success("client is registered"))
 	} else {
 		log.Error().Msg("client is not registered")
