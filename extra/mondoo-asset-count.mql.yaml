@@ -104,22 +104,18 @@ packs:
           vsphere.datacenters { vms.length }
 
       - uid: mondoo-asset-count-on-azure
-        title: Retrieve all VMs from Azure
+        title: Azure virtual machine count
         query: |
           azure.subscription.compute.vms.length
 
       - uid: mondoo-count-users-in-azure
-        title: Retrieve all users from Azure
+        title: Azure user count
         query: |
           microsoft.users.length
 
       - uid: mondoo-asset-count-aws-account-id
         title: AWS account ID
         mql: aws.account.id
-
-      - uid: mondoo-asset-count-aws-acm-certificates
-        title: AWS ACM Certificates
-        mql: aws.acm.certificates.length
 
       - uid: mondoo-asset-count-aws-acm-certificates
         title: AWS ACM Certificates

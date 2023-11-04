@@ -28,7 +28,7 @@ packs:
         docs:
           desc: |
             This query retrieves data for Microsoft Defender for Cloud
-        mql: azure.subscription.cloudDefender
+        mql: azure.subscription.cloudDefender { defenderForServers defenderForContainers securityContacts { name alertNotifications }  }
       - uid: mondoo-asset-inventory-azure-storageAccounts
         title: Azure Storage accounts
         docs:
@@ -196,7 +196,7 @@ packs:
         docs:
           desc: |
             This query retrieves data for all network interfaces
-        mql: azure.subscription.network.interfaces
+        mql: azure.subscription.network.interfaces{ name location properties['nicType'] properties['nicType'] properties['macAddress'] properties['virtualMachine']['id'] }
       - uid: mondoo-asset-inventory-azure-resourcegroups
         title: Azure subscription resource groups
         docs:
