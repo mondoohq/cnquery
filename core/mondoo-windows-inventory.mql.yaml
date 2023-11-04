@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.2.0
+    version: 1.3.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -51,7 +51,7 @@ packs:
         mql: packages
       - uid: mondoo-windows-hotfixes
         title: Retrieve all installed Windows hotfixes
-        mql: windows.hotfixes { * }
+        mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-features
         title: Retrieve all installed Windows features
         mql: windows.features
@@ -64,6 +64,6 @@ packs:
       - uid: mondoo-windows-interface-configuration
         title: Retrieve interface configuration of the system
         mql: windows.computerInfo['CsNetworkAdapters']
-      - uid: mondoo-windows-interface-configuration
+      - uid: mondoo-windows-computer-info
         title: Retrieve all Windows Computer/ System information
         mql: windows.computerInfo

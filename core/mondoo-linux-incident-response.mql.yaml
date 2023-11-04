@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-linux-incident-response
     name: Linux Incident Response Pack
-    version: 1.1.0
+    version: 1.2.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -17,43 +17,33 @@ packs:
     queries:
       - uid: mondoo-linux-incident-response-installed-kernel
         title: Retrieve installed Linux kernels
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            kernel.installed
-          }
-      - uid: mondoo-linux-incident-response-kernel-info
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.installed
+      - uid: mondoo-linux-kernel-info
         title: Retrieve the running Linux kernel
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            kernel.info
-          }
-      - uid: mondoo-linux-incident-response-kernel-modules
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.info
+      - uid: mondoo-linux-kernel-modules
         title: Retrieve Linux kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-incident-response-processes
         title: Retrieve running processes
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            processes { pid  command }
-          }
-      - uid: mondoo-linux-incident-response-mounts
+        filters: mondoo.capabilities.contains("run-command")
+        mql: processes { pid  command }
+      - uid: mondoo-linux-mounts
         title: Retrieve mounted devices
-        mql: mount.list { * }
-      - uid: mondoo-linux-incident-response-listening-ports
+        mql: mount.list { path fstype device options }
+      - uid: mondoo-linux-listening-ports
         title: Retrieve all listening ports
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            ports.listening { * }
-          }
-      - uid: mondoo-linux-incident-response-uptime
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.listening
+      - uid: mondoo-linux-uptime
         title: Retrieve operating system uptime
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            os.uptime
-          }
-      - uid: mondoo-linux-incident-response-installed-packages
+        filters: mondoo.capabilities.contains("run-command")
+        mql: os.uptime
+      - uid: mondoo-linux-installed-packages
         title: Retrieve installed packages
-        mql: packages { * }
-      - uid: mondoo-linux-incident-response-running-services
+        mql: packages { name version arch installed }
+      - uid: mondoo-linux-running-services
         title: Retrieve running services
-        mql: services { * }
+        mql: services { name running enabled masked type }

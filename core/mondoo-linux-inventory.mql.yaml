@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack
-    version: 1.3.0
+    version: 1.4.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -54,40 +54,30 @@ packs:
         mql: groups.where( name == "wheel") { members }
       - uid: mondoo-linux-installed-kernel
         title: Retrieve installed Linux kernels
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            kernel.installed
-          }
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.installed
       - uid: mondoo-linux-kernel-info
         title: Retrieve the running Linux kernel
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            kernel.info
-          }
+        filters: mondoo.capabilities.contains("run-command")
+        mql: kernel.info
       - uid: mondoo-linux-kernel-modules
         title: Retrieve Linux kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
         title: Retrieve running processes
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            processes { pid  command }
-          }
+        filters: mondoo.capabilities.contains("run-command")
+        mql: processes { pid  command }
       - uid: mondoo-linux-mounts
-        title: Retrieve  mounted devices
+        title: Retrieve mounted devices
         mql: mount.list
       - uid: mondoo-linux-listening-ports
         title: Retrieve all listening ports
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            ports.listening
-          }
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.listening
       - uid: mondoo-linux-uptime
         title: Retrieve operating system uptime
-        mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            os.uptime
-          }
+        filters: mondoo.capabilities.contains("run-command")
+        mql: os.uptime
       - uid: mondoo-linux-installed-packages
         title: Retrieve installed packages
         mql: packages
@@ -96,24 +86,19 @@ packs:
         mql: services.where( running == true )
       - uid: mondoo-linux-interface-configuration
         title: Retrieve interface configuration of the system
+        filters: mondoo.capabilities.contains("run-command")
         mql: |
-          if ( mondoo.capabilities.contains('run-command') ) {
-            parse.json(content: command('ip -j a').stdout).params
-          }
+          parse.json(content: command('ip -j a').stdout).params
       - uid: mondoo-sshd-interface-configuration
         title: Retrieve sshd configuration of the system
-        mql: |
-          if ( package('openssh-server').installed || package('openssh').installed ) {
-            sshd.config.params
-          }
+        filters: package('openssh-server').installed || package('openssh').installed
+        mql: sshd.config.params
       - uid: mondoo-linux-system-manufacturer
         title: Retrieve the system manufacturer
-        mql: |
-          machine.baseboard.manufacturer
+        mql: machine.baseboard.manufacturer
       - uid: mondoo-linux-system-product-name
         title: Retrieve the system product name
-        mql: |
-          machine.baseboard.product
+        mql: machine.baseboard.product
       - uid: mondoo-linux-cpu-type
         title: Retrieve the type of CPU
         mql: |
