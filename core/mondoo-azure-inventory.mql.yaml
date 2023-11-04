@@ -168,10 +168,10 @@ packs:
             This query retrieves data for all Cosmos DB accounts
         mql: azure.subscription.cosmosDb.accounts
       - uid: mondoo-asset-inventory-azure-applicationInsight
-        title: Azure Application Insights
+        title: Azure Monitor Application Insights
         docs:
           desc: |
-            This query retrieves data for all ApplicationInsight
+            This query retrieves data for all Application Insights
         mql: azure.subscription.monitor.applicationInsights
       - uid: mondoo-asset-inventory-azure-networkWatcher
         title: Azure Network Watchers
