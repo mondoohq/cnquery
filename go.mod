@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.40.0
-	github.com/aws/smithy-go v1.15.0
+	github.com/aws/smithy-go v1.16.0
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231024185945-8841054dbdb8
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.16.1
