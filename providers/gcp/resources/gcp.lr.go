@@ -75,7 +75,7 @@ func init() {
 			Create: createGcpProjectComputeServiceMachineType,
 		},
 		"gcp.project.computeService.instance": {
-			// to override args, implement: initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGcpProjectComputeServiceInstance,
 			Create: createGcpProjectComputeServiceInstance,
 		},
 		"gcp.project.computeService.serviceaccount": {
