@@ -120,6 +120,8 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		}
 
 		if !s.Client.Registered || s.Client.PingPongError != nil {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			return cli_errors.ExitCode1WithoutError
 		}
 		return nil

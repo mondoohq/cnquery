@@ -129,6 +129,8 @@ var queryPackLintCmd = &cobra.Command{
 			for i := range errors {
 				fmt.Fprintf(os.Stderr, stringx.Indent(2, errors[i]))
 			}
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			return cli_errors.ExitCode1WithoutError
 		}
 
@@ -165,6 +167,8 @@ var queryPackPublishCmd = &cobra.Command{
 			for i := range bundleErrors {
 				fmt.Fprintf(os.Stderr, stringx.Indent(2, bundleErrors[i]))
 			}
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			return cli_errors.ExitCode1WithoutError
 		}
 		log.Info().Msg("valid query pack")
