@@ -7,21 +7,21 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	cloud.google.com/go/accessapproval v1.7.3
-	cloud.google.com/go/bigquery v1.56.0
-	cloud.google.com/go/compute v1.23.2
-	cloud.google.com/go/container v1.26.2
-	cloud.google.com/go/functions v1.15.3
-	cloud.google.com/go/iam v1.1.4
-	cloud.google.com/go/kms v1.15.4
+	cloud.google.com/go/accessapproval v1.7.4
+	cloud.google.com/go/bigquery v1.57.1
+	cloud.google.com/go/compute v1.23.3
+	cloud.google.com/go/container v1.27.1
+	cloud.google.com/go/functions v1.15.4
+	cloud.google.com/go/iam v1.1.5
+	cloud.google.com/go/kms v1.15.5
 	cloud.google.com/go/logging v1.8.1
-	cloud.google.com/go/longrunning v0.5.3
-	cloud.google.com/go/monitoring v1.16.2
+	cloud.google.com/go/longrunning v0.5.4
+	cloud.google.com/go/monitoring v1.16.3
 	cloud.google.com/go/pubsub v1.33.0
-	cloud.google.com/go/recommender v1.11.2
-	cloud.google.com/go/run v1.3.2
-	cloud.google.com/go/serviceusage v1.8.2
-	github.com/aws/smithy-go v1.15.0
+	cloud.google.com/go/recommender v1.11.3
+	cloud.google.com/go/run v1.3.3
+	cloud.google.com/go/serviceusage v1.8.3
+	github.com/aws/smithy-go v1.16.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.16.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v9 v9.4.0
 	go.mondoo.com/ranger-rpc v0.5.2
 	golang.org/x/oauth2 v0.13.0
-	google.golang.org/api v0.148.0
+	google.golang.org/api v0.149.0
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b
 	google.golang.org/protobuf v1.31.0
 )
