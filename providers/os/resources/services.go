@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"strings"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -39,7 +40,9 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		return nil, nil, err
 	}
 
-	if srv, ok := services.namedServices[name]; ok {
+	cleanServiceName := strings.TrimSuffix(name, ".service")
+
+	if srv, ok := services.namedServices[cleanServiceName]; ok {
 		return nil, srv, nil
 	}
 
@@ -48,7 +51,6 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Installed = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Running = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
-	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Type.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Enabled = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
 	res.Masked = plugin.TValue[bool]{Data: false, State: plugin.StateIsSet}
