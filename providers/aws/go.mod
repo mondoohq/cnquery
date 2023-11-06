@@ -8,10 +8,10 @@ toolchain go1.21.3
 
 require (
 	github.com/aws/aws-sdk-go v1.46.6
-	github.com/aws/aws-sdk-go-v2 v1.21.2
+	github.com/aws/aws-sdk-go-v2 v1.22.1
 	github.com/aws/aws-sdk-go-v2/config v1.19.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.43
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.18.2
@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.23.2
-	github.com/aws/smithy-go v1.15.0
+	github.com/aws/smithy-go v1.16.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.10.0
