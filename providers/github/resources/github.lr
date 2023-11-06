@@ -44,7 +44,7 @@ private git.gpgSignature @defaults("sha") {
   signature string
 }
 
-// GitHub Organization
+// GitHub organization
 github.organization @defaults("login name") {
   // Organization login
   login string
@@ -128,7 +128,7 @@ github.organization @defaults("login name") {
   packages() []github.package
 }
 
-// GitHub User
+// GitHub user
 private github.user @defaults("id name") {
   // User ID
   id int
@@ -166,7 +166,7 @@ private github.user @defaults("id name") {
   gists() []github.gist
 }
 
-// GitHub Team
+// GitHub team
 private github.team @defaults("id name") {
   // Team ID
   id int
@@ -188,7 +188,7 @@ private github.team @defaults("id name") {
   organization github.organization
 }
 
-// GitHub Collaborator
+// GitHub collaborator
 private github.collaborator @defaults("user") {
   // Collaborator ID
   id int
@@ -198,7 +198,7 @@ private github.collaborator @defaults("user") {
   permissions []string
 }
 
-// GitHub Package
+// GitHub package
 private github.package @defaults("id name") {
   // Package ID
   id int
@@ -220,7 +220,7 @@ private github.package @defaults("id name") {
   repository() github.repository
 }
 
-// GitHub Repository
+// GitHub repository
 private github.repository @defaults("fullName") {
   init(name string) // can only be used when logged in to github as a user
   // Repository ID
@@ -323,7 +323,7 @@ private github.repository @defaults("fullName") {
   license() github.license
 }
 
-// GitHub License
+// GitHub license
 private github.license @defaults("spdxId") {
   // License key
   key string
@@ -335,7 +335,7 @@ private github.license @defaults("spdxId") {
   spdxId string
 }
 
-// GitHub Repository File
+// GitHub repository file
 private github.file @defaults("name type") {
   // File path
   path string
@@ -357,7 +357,7 @@ private github.file @defaults("name type") {
   content() string
 }
 
-// GitHub Release
+// GitHub release
 private github.release @defaults("name tagName") {
   // Release url
   url string
@@ -369,7 +369,7 @@ private github.release @defaults("name tagName") {
   preRelease bool
 }
 
-// GitHub Webhook
+// GitHub webhook
 private github.webhook @defaults("id name") {
   // Webhook ID
   id int
@@ -385,7 +385,7 @@ private github.webhook @defaults("id name") {
   active bool
 }
 
-// GitHub Workflow
+// GitHub workflow
 private github.workflow @defaults("id name") {
   // Workflow ID
   id int
@@ -405,7 +405,7 @@ private github.workflow @defaults("id name") {
   configuration() dict
 }
 
-// GitHub Repository Branch
+// GitHub repository branch
 private github.branch @defaults("name") {
   // Repository branch name
   name string
@@ -425,7 +425,7 @@ private github.branch @defaults("name") {
   isDefault bool
 }
 
-// GitHub Repository Branch Protection
+// GitHub repository branch protection
 private github.branchprotection @defaults("id") {
   // Repository branch protection ID
   id string
@@ -449,7 +449,7 @@ private github.branchprotection @defaults("id") {
   allowDeletions dict
 }
 
-// GitHub Repository Commit
+// GitHub repository commit
 private github.commit @defaults("sha") {
   // Commit owner
   owner string
@@ -469,7 +469,7 @@ private github.commit @defaults("sha") {
   stats dict
 }
 
-// GitHub Repository Pull Request 
+// GitHub repository pull request 
 private github.mergeRequest @defaults("id state") {
   // Pull request ID
   id int
@@ -495,7 +495,7 @@ private github.mergeRequest @defaults("id state") {
   repoName string
 }
 
-// GitHub Repository Review
+// GitHub repository review
 private github.review @defaults("url state") {
   // Review url
   url string
@@ -507,7 +507,7 @@ private github.review @defaults("url state") {
   user github.user
 }
 
-// GitHub App Installation
+// GitHub application installation
 private github.installation @defaults("id appId") {
   // Application installation ID
   id int
@@ -521,7 +521,7 @@ private github.installation @defaults("id appId") {
   updatedAt time
 }
 
-// GitHub Gist
+// GitHub gist
 private github.gist @defaults("description") {
   // Gist ID
   id string
@@ -539,7 +539,7 @@ private github.gist @defaults("description") {
   files []github.gistfile
 }
 
-// GitHub Gist File
+// GitHub gist file
 private github.gistfile @defaults("filename") {
   // Gist ID
   gistId string
@@ -557,7 +557,7 @@ private github.gistfile @defaults("filename") {
   content() string
 }
 
-// GitHub Issue
+// GitHub issue
 private github.issue @defaults("title") {
   // Issue ID
   id int

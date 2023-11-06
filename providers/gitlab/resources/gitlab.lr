@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/gitlab"
 option go_package = "go.mondoo.com/cnquery/v9/providers/gitlab/resources"
 
-// GitLab Group
+// GitLab group
 gitlab.group @defaults("name visibility webURL") {
   // Group ID
   id int
@@ -32,7 +32,7 @@ gitlab.group @defaults("name visibility webURL") {
   projects() []gitlab.project
 }
 
-// GitLab Project
+// GitLab project
 gitlab.project @defaults("fullName visibility webURL") {
   // Project ID
   id int

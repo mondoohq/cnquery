@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/equinix"
 option go_package = "go.mondoo.com/cnquery/v9/providers/equinix/resources"
 
-// Equinix Metal Project
+// Equinix Metal project
 equinix.metal.project @defaults("name") {
   // Project ID
   id string
@@ -24,7 +24,7 @@ equinix.metal.project @defaults("name") {
   devices() []equinix.metal.device
 }
 
-// Equinix Metal Organization
+// Equinix Metal organization
 equinix.metal.organization @defaults("name") {
   // Organization ID
   id string
@@ -56,7 +56,7 @@ equinix.metal.organization @defaults("name") {
  	users() []equinix.metal.user
 }
 
-// Equinix Metal User
+// Equinix Metal user
 private equinix.metal.user @defaults("email") {
   // User ID
   id string
@@ -90,7 +90,7 @@ private equinix.metal.user @defaults("email") {
   url string
 }
 
-// Equinix Metal SSH Key
+// Equinix Metal SSH key
 equinix.metal.sshkey @defaults("label") {
   // ID of the SSH key
   id string
@@ -108,7 +108,7 @@ equinix.metal.sshkey @defaults("label") {
   url string
 }
 
-// Equinix Metal Device
+// Equinix Metal device
 equinix.metal.device {
   // Device ID
   id string

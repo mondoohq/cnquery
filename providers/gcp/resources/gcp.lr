@@ -20,7 +20,7 @@ alias gcp.dns = gcp.project.dnsService
 alias gcp.bigquery = gcp.project.bigqueryService
 alias gcp.storage = gcp.project.storageService
 
-// GCP Cloud Organization
+// GCP cloud organization
 gcp.organization @defaults("name") {
   // Organization ID
   id string
@@ -40,7 +40,7 @@ gcp.organization @defaults("name") {
   projects() gcp.projects
 }
 
-// GCP Folders
+// GCP folders
 private gcp.folders {
   []gcp.folder
   // Parent ID
@@ -49,7 +49,7 @@ private gcp.folders {
   children() []gcp.folder
 }
 
-// GCP Folder
+// GCP folder
 private gcp.folder @defaults("name") {
   // Folder ID
   id string
@@ -69,7 +69,7 @@ private gcp.folder @defaults("name") {
   projects() gcp.projects
 }
 
-// GCP Projects
+// GCP projects
 private gcp.projects {
   []gcp.project
   // Parent ID
@@ -78,7 +78,7 @@ private gcp.projects {
   children() []gcp.project
 }
 
-// Google Cloud Platform Project
+// Google Cloud Platform project
 gcp.project @defaults("name") {
   // Unique, user-assigned ID of the project
   id string
@@ -140,7 +140,7 @@ gcp.project @defaults("name") {
   monitoring() gcp.project.monitoringService
 }
 
-// GCP Service
+// GCP service
 gcp.service @defaults("name") {
   // Project ID
   projectId string
@@ -156,7 +156,7 @@ gcp.service @defaults("name") {
   enabled() bool
 }
 
-// GCP Recommendation and Suggested Action
+// GCP recommendation and suggested action
 gcp.recommendation {
   // ID of recommendation
   id string
@@ -184,7 +184,7 @@ gcp.recommendation {
   state dict
 }
 
-// GCP Resource Manager Binding
+// GCP Resource Manager binding
 private gcp.resourcemanager.binding {
   // Internal ID
   id string
@@ -228,7 +228,7 @@ private gcp.project.computeService {
   forwardingRules() []gcp.project.computeService.forwardingRule
 }
 
-// GCP Compute Address
+// GCP Compute address
 private gcp.project.computeService.address @defaults("name address addressType") {
   // Unique identifier
   id string
@@ -268,7 +268,7 @@ private gcp.project.computeService.address @defaults("name address addressType")
   resourceUrls []string
 }
 
-// GCP Compute Forwarding Rules
+// GCP Compute forwarding rules
 private gcp.project.computeService.forwardingRule {
   // Unique identifier
   id string
@@ -326,7 +326,7 @@ private gcp.project.computeService.forwardingRule {
   targetUrl string
 }
 
-// GCP Compute Region
+// GCP Compute region
 private gcp.project.computeService.region @defaults("name") {
   // Unique identifier
   id string
@@ -344,7 +344,7 @@ private gcp.project.computeService.region @defaults("name") {
   deprecated dict
 }
 
-// GCP Compute Zone
+// GCP Compute zone
 private gcp.project.computeService.zone @defaults("name") {
   // Unique identifier
   id string
@@ -358,7 +358,7 @@ private gcp.project.computeService.zone @defaults("name") {
   created time
 }
 
-// GCP Machine Type
+// GCP machine type
 private gcp.project.computeService.machineType @defaults("name") {
   // Unique identifier
   id string
@@ -384,7 +384,7 @@ private gcp.project.computeService.machineType @defaults("name") {
   zone gcp.project.computeService.zone
 }
 
-// GCP Compute Instances
+// GCP Compute instances
 private gcp.project.computeService.instance @defaults("name") {
   // Unique identifier for the instance
   id string
@@ -466,7 +466,7 @@ private gcp.project.computeService.instance @defaults("name") {
   zone gcp.project.computeService.zone
 }
 
-// GCP Compute Service Account
+// GCP Compute service account
 private gcp.project.computeService.serviceaccount @defaults("email") {
   // Service account email address
   email string
@@ -474,7 +474,7 @@ private gcp.project.computeService.serviceaccount @defaults("email") {
   scopes []string
 }
 
-// GCP Compute Persistent Disk
+// GCP Compute persistent disk
 private gcp.project.computeService.disk @defaults("name") {
   // Unique identifier for the resource
   id string
@@ -512,7 +512,7 @@ private gcp.project.computeService.disk @defaults("name") {
   diskEncryptionKey dict
 }
 
-// GCP Compute Attached Disk
+// GCP Compute attached disk
 private gcp.project.computeService.attachedDisk {
   // Attached Disk ID
   id string
@@ -546,7 +546,7 @@ private gcp.project.computeService.attachedDisk {
   type string
 }
 
-// GCP Compute Persistent Disk Snapshot
+// GCP Compute persistent disk snapshot
 private gcp.project.computeService.snapshot @defaults("name") {
   // Unique identifier
   id string
@@ -610,7 +610,7 @@ private gcp.project.computeService.image @defaults("id name") {
   status string
 }
 
-// GCP Compute Firewall
+// GCP Compute firewall
 private gcp.project.computeService.firewall @defaults("name") {
   // Unique identifier
   id string
@@ -644,7 +644,7 @@ private gcp.project.computeService.firewall @defaults("name") {
   denied []dict
 }
 
-// GCP Compute VPC Network resource
+// GCP Compute VPC network resource
 private gcp.project.computeService.network @defaults("name") {
   // Unique identifier
   id string
@@ -678,7 +678,7 @@ private gcp.project.computeService.network @defaults("name") {
   subnetworks() []gcp.project.computeService.subnetwork
 }
 
-// GCP Compute VPC Network Partitioning
+// GCP Compute VPC network partitioning
 private gcp.project.computeService.subnetwork @defaults("name") {
   // Unique identifier
   id string
@@ -726,7 +726,7 @@ private gcp.project.computeService.subnetwork @defaults("name") {
   created time
 }
 
-// GCP Compute VPC Network Partitioning Log Configuration
+// GCP Compute VPC network partitioning log configuration
 private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
   // Internal ID
   id string
@@ -744,7 +744,7 @@ private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
   metadataFields []string
 }
 
-// GCP Compute Cloud Router
+// GCP Compute cloud router
 private gcp.project.computeService.router @defaults("name")  {
   // Unique identifier
   id string
@@ -764,7 +764,7 @@ private gcp.project.computeService.router @defaults("name")  {
   created time
 }
 
-// GCP Compute Backend Service
+// GCP Compute backend service
 private gcp.project.computeService.backendService @defaults("name") {
   // Unique identifier
   id string
@@ -834,7 +834,7 @@ private gcp.project.computeService.backendService @defaults("name") {
   timeoutSec int
 }
 
-// GCP Compute Backend Service Backend
+// GCP Compute backend service backend
 private gcp.project.computeService.backendService.backend @defaults("description") {
   // Internal ID
   id string
@@ -864,7 +864,7 @@ private gcp.project.computeService.backendService.backend @defaults("description
   maxUtilization float
 }
 
-// GCP Compute Backend Service CDN Policy
+// GCP Compute backend service CDN policy
 private gcp.project.computeService.backendService.cdnPolicy {
   // Internal ID
   id string
@@ -902,7 +902,7 @@ private gcp.project.storageService {
   buckets() []gcp.project.storageService.bucket
 }
 
-// GCP Cloud Storage Bucket
+// GCP Cloud Storage bucket
 private gcp.project.storageService.bucket @defaults("id") {
   // Bucket ID
   id string
@@ -932,7 +932,7 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicy dict
 }
 
-// GCP Cloud SQL Resources
+// GCP Cloud SQL resources
 private gcp.project.sqlService {
   // Project ID
   projectId string
@@ -940,7 +940,7 @@ private gcp.project.sqlService {
   instances() []gcp.project.sqlService.instance
 }
 
-// GCP Cloud SQL Instance
+// GCP Cloud SQL instance
 private gcp.project.sqlService.instance @defaults("name") {
   // Project ID
   projectId string
@@ -994,7 +994,7 @@ private gcp.project.sqlService.instance @defaults("name") {
   databases() []gcp.project.sqlService.instance.database
 }
 
-// GCP Cloud SQL Instance Database
+// GCP Cloud SQL instance database
 private gcp.project.sqlService.instance.database @defaults("name") {
   // Project ID
   projectId string
@@ -1010,7 +1010,7 @@ private gcp.project.sqlService.instance.database @defaults("name") {
   sqlserverDatabaseDetails dict
 }
 
-// GCP Cloud SQL Instance IP Mapping
+// GCP Cloud SQL instance IP mapping
 private gcp.project.sqlService.instance.ipMapping @defaults("ipAddress") {
   // Internal ID
   id string
@@ -1022,7 +1022,7 @@ private gcp.project.sqlService.instance.ipMapping @defaults("ipAddress") {
   type string
 }
 
-// GCP Cloud SQL Instance Settings
+// GCP Cloud SQL instance settings
 private gcp.project.sqlService.instance.settings {
   // Project ID
   projectId string
@@ -1084,7 +1084,7 @@ private gcp.project.sqlService.instance.settings {
   userLabels map[string]string
 }
 
-// GCP Cloud SQL Instance Settings Backup Configuration
+// GCP Cloud SQL instance settings backup configuration
 private gcp.project.sqlService.instance.settings.backupconfiguration {
   // Internal ID
   id string
@@ -1104,7 +1104,7 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
   transactionLogRetentionDays int
 }
 
-// GCP Cloud SQL Instance Settings Deny Maintenance Period
+// GCP Cloud SQL instance settings deny maintenance period
 private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
   // Internal ID
   id string
@@ -1116,7 +1116,7 @@ private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults
   time string
 }
 
-// GCP Cloud SQL Instance Settings IP Configuration
+// GCP Cloud SQL instance settings IP configuration
 private gcp.project.sqlService.instance.settings.ipConfiguration {
   // Internal ID
   id string
@@ -1132,7 +1132,7 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   requireSsl bool
 }
 
-// GCP Cloud SQL Instance Settings Maintenance Window
+// GCP Cloud SQL instance settings maintenance window
 private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("day hour") {
   // Internal ID
   id string
@@ -1144,7 +1144,7 @@ private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("da
   updateTrack string
 }
 
-// GCP Cloud SQL Instance Settings Password Validation Policy
+// GCP Cloud SQL instance settings password validation policy
 private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defaults("enabledPasswordPolicy") {
   // Internal ID
   id string
@@ -1162,7 +1162,7 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
   reuseInterval int
 }
 
-// GCP BigQuery Resources
+// GCP BigQuery resources
 private gcp.project.bigqueryService @defaults("projectId") {
   // Project ID
   projectId string
@@ -1170,7 +1170,7 @@ private gcp.project.bigqueryService @defaults("projectId") {
   datasets() []gcp.project.bigqueryService.dataset
 }
 
-// GCP BigQuery Dataset
+// GCP BigQuery dataset
 private gcp.project.bigqueryService.dataset @defaults("id name") {
   // Dataset ID
   id string
@@ -1202,7 +1202,7 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   routines() []gcp.project.bigqueryService.routine
 }
 
-// GCP BigQuery Dataset Access Entry
+// GCP BigQuery dataset access entry
 private gcp.project.bigqueryService.dataset.accessEntry @defaults("role entity entityType") {
   // Internal ID
   id string
@@ -1222,7 +1222,7 @@ private gcp.project.bigqueryService.dataset.accessEntry @defaults("role entity e
   datasetRef dict
 }
 
-// GCP BigQuery Table
+// GCP BigQuery table
 private gcp.project.bigqueryService.table @defaults("id") {
   // Table ID
   id string
@@ -1304,7 +1304,7 @@ private gcp.project.bigqueryService.model @defaults("id") {
   kmsName string
 }
 
-// GCP BigQuery Routine
+// GCP BigQuery routine
 private gcp.project.bigqueryService.routine @defaults("id") {
   // Routine ID
   id string
@@ -1334,7 +1334,7 @@ private gcp.project.dnsService {
   policies() []gcp.project.dnsService.policy
 }
 
-// Cloud DNS Managed Zone (a resource that represents a DNS zone hosted by the Cloud DNS service)
+// Cloud DNS managed zone (a resource that represents a DNS zone hosted by the Cloud DNS service)
 private gcp.project.dnsService.managedzone @defaults("name") {
   // Managed zone ID
   id string
@@ -1360,7 +1360,7 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   recordSets() []gcp.project.dnsService.recordset
 }
 
-// Cloud DNS Record Set
+// Cloud DNS record set
 private gcp.project.dnsService.recordset @defaults("name") {
   // Project ID
   projectId string
@@ -1404,7 +1404,7 @@ private gcp.project.gkeService {
   clusters() []gcp.project.gkeService.cluster
 }
 
-// GCP GKE Cluster
+// GCP GKE cluster
 private gcp.project.gkeService.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -1472,7 +1472,7 @@ private gcp.project.gkeService.cluster @defaults("name") {
   databaseEncryption dict
 }
 
-// GKE Cluster Addons Config
+// GKE cluster addons config
 private gcp.project.gkeService.cluster.addonsConfig {
   // Internal ID
   id string
@@ -1498,7 +1498,7 @@ private gcp.project.gkeService.cluster.addonsConfig {
   gkeBackupAgentConfig dict
 }
 
-// GKE Cluster IP Allocation Policy
+// GKE cluster IP allocation policy
 private gcp.project.gkeService.cluster.ipAllocationPolicy {
   // Internal ID
   id string
@@ -1528,7 +1528,7 @@ private gcp.project.gkeService.cluster.ipAllocationPolicy {
   ipv6AccessType string
 }
 
-// GKE Cluster Network Config
+// GKE cluster network config
 private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
   // Internal ID
   id string
@@ -1556,7 +1556,7 @@ private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
   serviceExternalIpsConfig dict
 }
 
-// GKE Cluster Node Pool
+// GKE cluster node pool
 private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   // Internal ID
   id string
@@ -1580,7 +1580,7 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   management dict
 }
 
-// GCP GKE Node Pool-Level Network Configuration
+// GCP GKE node pool-Level network configuration
 private gcp.project.gkeService.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
   // Internal ID
   id string
@@ -1592,7 +1592,7 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig @defaults("podRang
   performanceConfig gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig
 }
 
-// GCP GKE Node Pool Network Performance Configuration
+// GCP GKE node pool network performance configuration
 private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
   // Internal ID
   id string
@@ -1600,7 +1600,7 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig 
   totalEgressBandwidthTier string
 }
 
-// GCP GKE Node Pool Configuration
+// GCP GKE node pool configuration
 private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID
   id string
@@ -1660,7 +1660,7 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   confidentialNodes gcp.project.gkeService.cluster.nodepool.config.confidentialNodes
 }
 
-// GCP GKE Node Pool Hardware Accelerators Configuration
+// GCP GKE node pool hardware accelerators configuration
 private gcp.project.gkeService.cluster.nodepool.config.accelerator @defaults("type count") {
   // Internal ID
   id string
@@ -1684,7 +1684,7 @@ private gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingCon
   strategy string
 }
 
-// GCP GKE Kubernetes Node Taint
+// GCP GKE Kubernetes node taint
 private gcp.project.gkeService.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
   // Internal ID
   id string
@@ -1696,7 +1696,7 @@ private gcp.project.gkeService.cluster.nodepool.config.nodeTaint @defaults("key 
   effect string
 }
 
-// GCP GKE Node Pool Sandbox Configuration
+// GCP GKE node pool sandbox configuration
 private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("type") {
   // Internal ID
   id string
@@ -1704,7 +1704,7 @@ private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("
   type string
 }
 
-// GCP GKE Node Pool Shielded Instance Configuration
+// GCP GKE node pool shielded instance configuration
 private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
   // Internal ID
   id string
@@ -1714,7 +1714,7 @@ private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @d
   enableIntegrityMonitoring bool
 }
 
-// GCP GKE Node Pool Parameters That Can Be Configured on Linux Nodes
+// GCP GKE node pool parameters that can be configured on Linux nodes
 private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
   // Internal ID
   id string
@@ -1722,7 +1722,7 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
   sysctls map[string]string
 }
 
-// GCP GKE Node Pool Kubelet Configuration
+// GCP GKE Node Pool kubelet configuration
 private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
   // Internal ID
   id string
@@ -1734,7 +1734,7 @@ private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("
   podPidsLimit int
 }
 
-// GCP GKE Node Pool GCFS Configuration
+// GCP GKE node pool GCFS configuration
 private gcp.project.gkeService.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1742,7 +1742,7 @@ private gcp.project.gkeService.cluster.nodepool.config.gcfsConfig @defaults("ena
   enabled bool
 }
 
-// GCP GKE Node Pool Advanced Machine Features Configuration
+// GCP GKE node pool advanced machine features configuration
 private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
   // Internal ID
   id string
@@ -1750,7 +1750,7 @@ private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @
   threadsPerCore int
 }
 
-// GCP GKE Node Pool GVNIC Configuration
+// GCP GKE node pool GVNIC configuration
 private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1758,7 +1758,7 @@ private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("en
   enabled bool
 }
 
-// GCP GKE Node Pool Confidential Nodes Configuration
+// GCP GKE node pool confidential nodes configuration
 private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
   // Internal ID
   id string
@@ -1766,7 +1766,7 @@ private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaul
   enabled bool
 }
 
-// GCP Pub/Sub Resources
+// GCP Pub/Sub resources
 private gcp.project.pubsubService {
   // Project ID
   projectId string
@@ -1778,7 +1778,7 @@ private gcp.project.pubsubService {
   snapshots() []gcp.project.pubsubService.snapshot
 }
 
-// GCP Pub/Sub Topic
+// GCP Pub/Sub topic
 private gcp.project.pubsubService.topic @defaults("name") {
   // Project ID
   projectId string
@@ -1788,7 +1788,7 @@ private gcp.project.pubsubService.topic @defaults("name") {
   config() gcp.project.pubsubService.topic.config
 }
 
-// GCP Pub/Sub Topic Configuration
+// GCP Pub/Sub topic configuration
 private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStoragePolicy") {
   // Project ID
   projectId string
@@ -1802,7 +1802,7 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
 }
 
-// GCP Pub/Sub Topic Message Storage Policy
+// GCP Pub/Sub topic message storage policy
 private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
   // Parent configuration ID
   configId string
@@ -1810,7 +1810,7 @@ private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("a
   allowedPersistenceRegions []string
 }
 
-// GCP Pub/Sub Subscription
+// GCP Pub/Sub subscription
 private gcp.project.pubsubService.subscription @defaults("name") {
   // Project ID
   projectId string
@@ -1820,7 +1820,7 @@ private gcp.project.pubsubService.subscription @defaults("name") {
   config() gcp.project.pubsubService.subscription.config
 }
 
-// GCP Pub/Sub Subscription Configuration
+// GCP Pub/Sub subscription configuration
 private gcp.project.pubsubService.subscription.config @defaults("topic.name ackDeadline expirationPolicy") {
   // Project ID
   projectId string
@@ -1842,7 +1842,7 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   labels map[string]string
 }
 
-// GCP Pub/Sub Configuration for Subscriptions That Operate in Push Mode
+// GCP Pub/Sub configuration for subscriptions that operate in push mode
 private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attributes") {
   // Parent configuration ID
   configId string
@@ -1852,7 +1852,7 @@ private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attr
   attributes map[string]string
 }
 
-// GCP Pub/Sub Snapshot
+// GCP Pub/Sub snapshot
 private gcp.project.pubsubService.snapshot @defaults("name") {
   // Project ID
   projectId string
@@ -1863,7 +1863,7 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   // When the snapshot expires
   expiration time
 }
-// GCP KMS Resources
+// GCP KMS resources
 private gcp.project.kmsService {
   // Project ID
   projectId string
@@ -1873,7 +1873,7 @@ private gcp.project.kmsService {
   keyrings() []gcp.project.kmsService.keyring
 }
 
-// GCP KMS Keyring
+// GCP KMS keyring
 private gcp.project.kmsService.keyring @defaults("name") {
   // Project ID
   projectId string
@@ -1889,7 +1889,7 @@ private gcp.project.kmsService.keyring @defaults("name") {
   cryptokeys() []gcp.project.kmsService.keyring.cryptokey
 }
 
-// GCP KMS Crypto Key
+// GCP KMS crypto key
 private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   // Full resource path
   resourcePath string
@@ -1921,7 +1921,7 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   iamPolicy() []gcp.resourcemanager.binding
 }
 
-// GCP KMS Crypto Key Version
+// GCP KMS crypto key version
 private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state") {
   // Full resource path
   resourcePath string
@@ -1955,7 +1955,7 @@ private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state")
   reimportEligible bool
 }
 
-// GCP KMS Crypto Key Version Attestation
+// GCP KMS crypto key version attestation
 private gcp.project.kmsService.keyring.cryptokey.version.attestation {
   // Crypto key version name
   cryptoKeyVersionName string
@@ -1965,7 +1965,7 @@ private gcp.project.kmsService.keyring.cryptokey.version.attestation {
   certificateChains gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains
 }
 
-// GCP KMS Crypto Key Version Attestation Certificate Chains
+// GCP KMS crypto key version attestation certificate chains
 private gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains {
   // Crypto key version name
   cryptoKeyVersionName string
@@ -1987,7 +1987,7 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
   ekmConnectionKeyPath string
 }
 
-// GCP Contact
+// GCP contact
 private gcp.essentialContact @defaults("email notificationCategories") {
   // Full resource path
   resourcePath string
@@ -2003,7 +2003,7 @@ private gcp.essentialContact @defaults("email notificationCategories") {
   validationState string
 }
 
-// GCP Project API Key
+// GCP project API key
 private gcp.project.apiKey @defaults("name") {
   // The ID of the key
   id string
@@ -2027,7 +2027,7 @@ private gcp.project.apiKey @defaults("name") {
   updated time
 }
 
-// GCP Project API key restrictions
+// GCP project API key restrictions
 private gcp.project.apiKey.restrictions {
   // Parent resource path
   parentResourcePath string
@@ -2043,7 +2043,7 @@ private gcp.project.apiKey.restrictions {
   serverKeyRestrictions dict
 }
 
-// GCP Logging Resources
+// GCP Logging resources
 private gcp.project.loggingservice {
   // Project ID
   projectId string
@@ -2055,7 +2055,7 @@ private gcp.project.loggingservice {
   sinks() []gcp.project.loggingservice.sink
 }
 
-// GCP Logging Bucket
+// GCP Logging bucket
 private gcp.project.loggingservice.bucket @defaults("name") {
   // Project ID
   projectId string
@@ -2081,7 +2081,7 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   updated time
 }
 
-// GCP Logging Bucket Index Config
+// GCP Logging bucket index config
 private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
   // Internal ID
   id string
@@ -2093,7 +2093,7 @@ private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
   type string
 }
 
-// GCP Logging Metric
+// GCP Logging metric
 private gcp.project.loggingservice.metric @defaults("description filter") {
   // Metric ID
   id string
@@ -2107,7 +2107,7 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
-// GCP Logging Sink
+// GCP Logging sink
 private gcp.project.loggingservice.sink @defaults("destination") {
   // Sink ID
   id string
@@ -2125,7 +2125,7 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   includeChildren bool
 }
 
-// GCP IAM Resources
+// GCP IAM resources
 private gcp.project.iamService {
   // Project ID
   projectId string
@@ -2133,7 +2133,7 @@ private gcp.project.iamService {
   serviceAccounts() []gcp.project.iamService.serviceAccount
 }
 
-// GCP Service Account
+// GCP service account
 private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // Project ID
   projectId string
@@ -2155,7 +2155,7 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   keys() []gcp.project.iamService.serviceAccount.key
 }
 
-// GCP Service Account Keys
+// GCP service sccount keys
 private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Service account key name
   name string
@@ -2172,7 +2172,7 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Whether the key is disabled
   disabled bool
 }
-// GCP Cloud Function
+// GCP cloud function
 private gcp.project.cloudFunction @defaults("name") {
   // Project ID
   projectId string
@@ -2241,7 +2241,7 @@ private gcp.project.cloudFunction @defaults("name") {
   // Docker registry to use for this deployment
   dockerRegistry string
 }
-// GCP Dataproc Resources
+// GCP Dataproc resources
 private gcp.project.dataprocService {
   // Project ID
   projectId string
@@ -2253,7 +2253,7 @@ private gcp.project.dataprocService {
   clusters() []gcp.project.dataprocService.cluster
 }
 
-// GCP Dataproc Cluster
+// GCP Dataproc cluster
 private gcp.project.dataprocService.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -2275,7 +2275,7 @@ private gcp.project.dataprocService.cluster @defaults("name") {
   virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
 }
 
-// GCP Dataproc Cluster Config
+// GCP Dataproc cluster config
 private gcp.project.dataprocService.cluster.config {
   // Parent resource path
   parentResourcePath string
@@ -2313,7 +2313,7 @@ private gcp.project.dataprocService.cluster.config {
   worker gcp.project.dataprocService.cluster.config.instance
 }
 
-// GCP Dataproc Cluster Endpoint Config
+// GCP Dataproc cluster endpoint config
 private gcp.project.dataprocService.cluster.config.gceCluster {
   // Internal ID
   id string
@@ -2349,7 +2349,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   zoneUri string
 }
 
-// GCP Dataproc Cluster GCE Cluster Reservation Affinity Config
+// GCP Dataproc cluster GCE cluster reservation affinity config
 private gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity {
   // Internal ID
   id string
@@ -2361,7 +2361,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinit
   values []string
 }
 
-// GCP Dataproc Cluster GCE Cluster Shielded Instance Config
+// GCP Dataproc cluster GCE cluster shielded instance config
 private gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig {
   // Internal ID
   id string
@@ -2373,7 +2373,7 @@ private gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceCo
   enableVtpm bool
 }
 
-// GCP Dataproc cluster GKE Cluster config
+// GCP Dataproc cluster GKE cluster config
 private gcp.project.dataprocService.cluster.config.gkeCluster {
   // Internal ID
   id string
@@ -2383,7 +2383,7 @@ private gcp.project.dataprocService.cluster.config.gkeCluster {
   nodePoolTarget []dict
 }
 
-// GCP Dataproc Cluster Lifecycle Config
+// GCP Dataproc cluster lifecycle config
 private gcp.project.dataprocService.cluster.config.lifecycle {
   // Internal ID
   id string
@@ -2425,7 +2425,7 @@ private gcp.project.dataprocService.cluster.config.instance {
   preemptibility string
 }
 
-// GCP Dataproc Cluster Instance Disk Config
+// GCP Dataproc cluster instance disk config
 private gcp.project.dataprocService.cluster.config.instance.diskConfig {
   // Internal ID
   id string
@@ -2439,7 +2439,7 @@ private gcp.project.dataprocService.cluster.config.instance.diskConfig {
   numLocalSsds int
 }
 
-// GCP Dataproc Cluster Status
+// GCP Dataproc cluster status
 private gcp.project.dataprocService.cluster.status @defaults("state") {
   // Internal ID
   id string
@@ -2453,7 +2453,7 @@ private gcp.project.dataprocService.cluster.status @defaults("state") {
   substate string
 }
 
-// GCP Dataproc Cluster Virtual Cluster Config
+// GCP Dataproc cluster virtual cluster config
 private gcp.project.dataprocService.cluster.virtualClusterConfig {
   // Parent resource path
   parentResourcePath string
@@ -2464,7 +2464,7 @@ private gcp.project.dataprocService.cluster.virtualClusterConfig {
   // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
   stagingBucket string
 }
-// GCP Cloud Run Resources
+// GCP Cloud Run resources
 private gcp.project.cloudRunService {
   // Project ID
   projectId string
@@ -2478,7 +2478,7 @@ private gcp.project.cloudRunService {
   jobs() []gcp.project.cloudRunService.job
 }
 
-// GCP Cloud Run Operation
+// GCP Cloud Run operation
 private gcp.project.cloudRunService.operation @defaults("name") {
   // Project ID
   projectId string
@@ -2488,7 +2488,7 @@ private gcp.project.cloudRunService.operation @defaults("name") {
   done bool
 }
 
-// GCP Cloud Run Service
+// GCP Cloud Run service
 private gcp.project.cloudRunService.service @defaults("name") {
   // Service identifier
   id string
@@ -2544,7 +2544,7 @@ private gcp.project.cloudRunService.service @defaults("name") {
   reconciling bool
 }
 
-// GCP Cloud Run Service Revision Template
+// GCP Cloud Run service revision template
 private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   // Internal ID
   id string
@@ -2578,7 +2578,7 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   maxInstanceRequestConcurrency int
 }
 
-// GCP Cloud Run Service Revision Template Container
+// GCP Cloud Run service revision template container
 private gcp.project.cloudRunService.container @defaults("name image") {
   // Internal ID
   id string
@@ -2606,7 +2606,7 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   startupProbe gcp.project.cloudRunService.container.probe
 }
 
-// GCP Cloud Run Service Revision Template Container Probe
+// GCP Cloud Run service revision template container probe
 private gcp.project.cloudRunService.container.probe {
   // Internal ID
   id string
@@ -2624,7 +2624,7 @@ private gcp.project.cloudRunService.container.probe {
   tcpSocket dict
 }
 
-// GCP Cloud Run Condition
+// GCP Cloud Run condition
 private gcp.project.cloudRunService.condition @defaults("type state message") {
   // Internal ID
   id string
@@ -2640,7 +2640,7 @@ private gcp.project.cloudRunService.condition @defaults("type state message") {
   severity string
 }
 
-// GCP Cloud Run Job
+// GCP Cloud Run job
 private gcp.project.cloudRunService.job {
   // Job identifier
   id string
@@ -2688,7 +2688,7 @@ private gcp.project.cloudRunService.job {
   reconciling bool
 }
 
-// GCP Cloud Run Job Execution Template
+// GCP Cloud Run job execution template
 private gcp.project.cloudRunService.job.executionTemplate {
   // Internal ID
   id string
@@ -2704,7 +2704,7 @@ private gcp.project.cloudRunService.job.executionTemplate {
   template gcp.project.cloudRunService.job.executionTemplate.taskTemplate
 }
 
-// GCP Cloud Run Job Execution Template Task Template
+// GCP Cloud Run job execution template task template
 private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   // Internal ID
   id string
@@ -2730,7 +2730,7 @@ private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   maxRetries int
 }
 
-// GCP Access Approval Settings
+// GCP access approval settings
 private gcp.accessApprovalSettings {
   // Resource path
   resourcePath string
@@ -2748,7 +2748,7 @@ private gcp.accessApprovalSettings {
   invalidKeyVersion bool
 }
 
-// GCP Monitoring Resources
+// GCP monitoring resources
 private gcp.project.monitoringService {
   // Project ID
   projectId string
@@ -2756,7 +2756,7 @@ private gcp.project.monitoringService {
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
-// GCP Monitoring Alert Policy
+// GCP monitoring alert policy
 private gcp.project.monitoringService.alertPolicy {
   // Project ID
   projectId string
