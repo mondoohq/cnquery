@@ -280,6 +280,56 @@ func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
 	return res, nil
 }
 
+func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 3 {
+		return args, nil, nil
+	}
+
+	// If no args are set, try reading them from the platform ID
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["region"] = llx.StringData(ids.region)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	instances := computeSvc.GetInstances()
+	if instances.Error != nil {
+		return nil, nil, instances.Error
+	}
+
+	for _, inst := range instances.Data {
+		instance := inst.(*mqlGcpProjectComputeServiceInstance)
+		name := instance.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		projectId := instance.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+		instanceZone := instance.GetZone()
+		if instanceZone.Error != nil {
+			return nil, nil, instanceZone.Error
+		}
+
+		if instanceZone.Data.Name.Data == args["region"].Value && name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, nil
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
