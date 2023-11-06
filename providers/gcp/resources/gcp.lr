@@ -2155,7 +2155,7 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   keys() []gcp.project.iamService.serviceAccount.key
 }
 
-// GCP service sccount keys
+// GCP service account keys
 private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Service account key name
   name string
