@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	DiscoveryAll              = "all"
 	DiscoveryAuto             = "auto"
 	DiscoveryClusters         = "clusters"
 	DiscoveryPods             = "pods"
@@ -130,7 +131,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			Platform:    conn.Platform(),
 			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
 		}
-		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryClusters) && resFilters.IsEmpty() {
+		if stringx.ContainsAnyOf(invConfig.Discover.Targets, DiscoveryAuto, DiscoveryAll, DiscoveryClusters) && resFilters.IsEmpty() {
 			in.Spec.Assets = append(in.Spec.Assets, root)
 		}
 
@@ -186,56 +187,56 @@ func discoverAssets(
 	var err error
 	for _, target := range invConfig.Discover.Targets {
 		var list []*inventory.Asset
-		if target == DiscoveryPods || target == DiscoveryAuto {
+		if target == DiscoveryPods || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverPods(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryJobs || target == DiscoveryAuto {
+		if target == DiscoveryJobs || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryCronJobs || target == DiscoveryAuto {
+		if target == DiscoveryCronJobs || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverCronJobs(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryStatefulSets || target == DiscoveryAuto {
+		if target == DiscoveryStatefulSets || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverStatefulSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryDeployments || target == DiscoveryAuto {
+		if target == DiscoveryDeployments || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverDeployments(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryReplicaSets || target == DiscoveryAuto {
+		if target == DiscoveryReplicaSets || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverReplicaSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryDaemonSets || target == DiscoveryAuto {
+		if target == DiscoveryDaemonSets || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverDaemonSets(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryIngresses || target == DiscoveryAuto {
+		if target == DiscoveryIngresses || target == DiscoveryAuto || target == DiscoveryAll {
 			list, err = discoverIngresses(conn, invConfig, clusterId, k8s, od, nsFilter, resFilters)
 			if err != nil {
 				return nil, err
@@ -256,7 +257,7 @@ func discoverAssets(
 			}
 			assets = append(assets, list...)
 		}
-		if target == DiscoveryContainerImages {
+		if target == DiscoveryContainerImages || target == DiscoveryAll {
 			list, err = discoverContainerImages(conn, runtime, invConfig, clusterId, k8s, nsFilter)
 			if err != nil {
 				return nil, err
