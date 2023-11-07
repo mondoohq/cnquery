@@ -88,7 +88,7 @@ packs:
         docs:
           desc: |
             This query retrieves data for all Azure MySQL servers
-        mql: azure.subscription.mySql.servers
+        mql: azure.subscription.mySql{ servers flexibleServers }
       - uid: mondoo-asset-inventory-azure-mariaDb
         title: Azure MariaDB servers
         docs:
