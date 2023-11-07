@@ -50,7 +50,7 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 
 	lines := strings.Split(string(content), "\n")
 	if len(lines) < 2 {
-		return nil, fmt.Errorf("unexpected output from systemctl list-unit-files")
+		return nil, fmt.Errorf("unexpected output from systemctl list-unit-files %v", content)
 	}
 
 	for _, line := range lines[1 : len(lines)-1] {
@@ -95,7 +95,7 @@ func SystemDExtractDescription(systemctlOutput string) string {
 // List returns a slice of Service structs representing the state of all services
 func (s *SystemDServiceManager) List() ([]*Service, error) {
 	var services []*Service
-	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type=service --all")
+	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type service --all")
 	if err != nil {
 		return nil, err
 	}

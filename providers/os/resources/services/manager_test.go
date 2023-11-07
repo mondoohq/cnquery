@@ -97,81 +97,40 @@ func TestManagerWindows(t *testing.T) {
 	assert.Equal(t, 1, len(serviceList))
 }
 
-// TODO: these tests need to be reworked(new testdata is needed)
-// we changed from using `systemctl list-units` to `systemctl list-unit-files`
-//
-//	func TestManagerDebian(t *testing.T) {
-//		mock, err := mock.New("./testdata/ubuntu.toml", &inventory.Asset{
-//			Platform: &inventory.Platform{
-//				Name:    "ubuntu",
-//				Version: "22.04",
-//				Family:  []string{"ubuntu", "linux"},
-//			},
-//		})
-//		require.NoError(t, err)
-//
-//		mm, err := services.ResolveManager(mock)
-//		require.NoError(t, err)
-//		mounts, err := mm.List()
-//		require.NoError(t, err)
-//
-//		assert.Equal(t, 264, len(mounts))
-//	}
-//
-//	func TestManagerAmzn1(t *testing.T) {
-//		// tests fallback to upstart service
-//		mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
-//			Platform: &inventory.Platform{
-//				Name:    "amazonlinux",
-//				Version: "2018.03",
-//				Family:  []string{"linux"},
-//			},
-//		})
-//		require.NoError(t, err)
-//
-//		mm, err := services.ResolveManager(mock)
-//		require.NoError(t, err)
-//		mounts, err := mm.List()
-//		require.NoError(t, err)
-//
-//		assert.Equal(t, 16, len(mounts))
-//	}
-//
-//
-//	func TestManagerUbuntu1404(t *testing.T) {
-//		// tests fallback to upstart service
-//		mock, err := mock.New("./testdata/ubuntu1404.toml", &inventory.Asset{
-//			Platform: &inventory.Platform{
-//				Name:    "ubuntu",
-//				Version: "14.04",
-//				Family:  []string{"linux", "ubuntu"},
-//			},
-//		})
-//		require.NoError(t, err)
-//
-//		mm, err := services.ResolveManager(mock)
-//		require.NoError(t, err)
-//		serviceList, err := mm.List()
-//		require.NoError(t, err)
-//
-//		assert.Equal(t, 9, len(serviceList))
-//	}
-//
-//	func TestManagerOpensuse13(t *testing.T) {
-//		// tests fallback to upstart service
-//		mock, err := mock.New("./testdata/opensuse13.toml", &inventory.Asset{
-//			Platform: &inventory.Platform{
-//				Name:    "suse",
-//				Version: "13",
-//				Family:  []string{"suse", "linux"},
-//			},
-//		})
-//		require.NoError(t, err)
-//
-//		mm, err := services.ResolveManager(mock)
-//		require.NoError(t, err)
-//		serviceList, err := mm.List()
-//		require.NoError(t, err)
-//
-//		assert.Equal(t, 31, len(serviceList))
-//	}
+func TestManagerUbuntu2204(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "ubuntu",
+			Version: "22.04",
+			Family:  []string{"ubuntu", "linux"},
+		},
+	})
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+	serviceList, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 264, len(serviceList))
+}
+
+func TestManagerPhoton(t *testing.T) {
+	// tests fallback to upstart service
+	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "photon",
+			Version: "8.1.10",
+			Family:  []string{"photon", "linux"},
+		},
+	})
+	require.NoError(t, err)
+
+	mm, err := services.ResolveManager(mock)
+	require.NoError(t, err)
+	serviceList, err := mm.List()
+	require.NoError(t, err)
+
+	assert.Equal(t, 138, len(serviceList))
+}
