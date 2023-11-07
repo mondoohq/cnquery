@@ -11,6 +11,24 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func (v *Impact) HumanReadable() string {
+	if v.Value == nil {
+		return "unknown"
+	}
+	switch {
+	case v.Value.Value >= 90:
+		return "critical"
+	case v.Value.Value >= 70:
+		return "high"
+	case v.Value.Value >= 40:
+		return "medium"
+	case v.Value.Value > 0:
+		return "low"
+	default:
+		return "info"
+	}
+}
+
 func (v *Impact) AddBase(base *Impact) {
 	if base == nil {
 		return

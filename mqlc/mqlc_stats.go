@@ -5,17 +5,24 @@ package mqlc
 
 import (
 	"sort"
+	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v9/types"
 )
 
 type CompilerStats interface {
 	WalkSorted(f func(resource string, field string, info FieldStat))
+	WalkCode(f func(code string, stats CompilerStats))
+
+	// calls used by mqlc compiler internally:
 	SetAutoExpand(on bool)
 	CallResource(name string)
 	CallField(resource string, field *resources.Field)
+	// returns an object to track the compilation of a specific query
+	CompileQuery(query string) CompilerStats
 }
 
 type FieldStat struct {
@@ -26,10 +33,15 @@ type FieldStat struct {
 
 type compilerStatsNull struct{}
 
+// interface validation
+var _ CompilerStats = compilerStatsNull{}
+
 func (c compilerStatsNull) WalkSorted(f func(resource string, field string, info FieldStat)) {}
+func (c compilerStatsNull) WalkCode(f func(code string, stats CompilerStats))                {}
 func (c compilerStatsNull) SetAutoExpand(on bool)                                            {}
 func (c compilerStatsNull) CallResource(name string)                                         {}
 func (c compilerStatsNull) CallField(resource string, field *resources.Field)                {}
+func (c compilerStatsNull) CompileQuery(query string) CompilerStats                          { return c }
 
 type compilerStats struct {
 	ResourceFields map[string]map[string]FieldStat
@@ -37,6 +49,15 @@ type compilerStats struct {
 	// indicates that the following resource fields are done during
 	// field expansion code (e.g. expand user => name + uid + home)
 	isAutoExpand bool
+}
+
+// interface validation
+var _ CompilerStats = &compilerStats{}
+
+func newCompilerStats() *compilerStats {
+	return &compilerStats{
+		ResourceFields: map[string]map[string]FieldStat{},
+	}
 }
 
 func (c *compilerStats) SetAutoExpand(on bool) {
@@ -68,6 +89,8 @@ func (c *compilerStats) CallField(resource string, field *resources.Field) {
 	}
 }
 
+func (c *compilerStats) CompileQuery(query string) CompilerStats { return c }
+
 func (c *compilerStats) WalkSorted(f func(resource string, field string, info FieldStat)) {
 	sortedResources := make([]string, len(c.ResourceFields))
 	i := 0
@@ -97,4 +120,65 @@ func (c *compilerStats) WalkSorted(f func(resource string, field string, info Fi
 			f(resource, field, m[field])
 		}
 	}
+}
+
+func (c *compilerStats) WalkCode(f func(code string, stats CompilerStats)) {}
+
+// interface validation
+var _ CompilerStats = &compilerMultiStats{}
+
+type compilerMultiStats struct {
+	stats map[string]*compilerStats
+	lock  sync.Mutex
+
+	AutoExpand bool
+}
+
+func newCompilerMultiStats() *compilerMultiStats {
+	return &compilerMultiStats{
+		stats: map[string]*compilerStats{},
+	}
+}
+
+func (c *compilerMultiStats) WalkSorted(f func(resource string, field string, info FieldStat)) {
+	panic("walking code on multi-stats not yet supported")
+}
+
+func (c *compilerMultiStats) WalkCode(f func(code string, stats CompilerStats)) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	for k, v := range c.stats {
+		f(k, v)
+	}
+}
+
+// The errors currently are soft only. I'm not sure if we shouldn't switch
+// them to be much stricter, because this is something that should never
+// happen and points to bad coding errors.
+
+func (c *compilerMultiStats) SetAutoExpand(on bool) {
+	log.Error().Msg("using uninitialized compiler multi-stats, internal error")
+}
+
+func (c *compilerMultiStats) CallResource(name string) {
+	log.Error().Msg("using uninitialized compiler multi-stats, internal error")
+}
+
+func (c *compilerMultiStats) CallField(resource string, field *resources.Field) {
+	log.Error().Msg("using uninitialized compiler multi-stats, internal error")
+}
+
+func (c *compilerMultiStats) CompileQuery(query string) CompilerStats {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	existing, ok := c.stats[query]
+	if ok {
+		return existing
+	}
+
+	res := newCompilerStats()
+	c.stats[query] = res
+	return res
 }

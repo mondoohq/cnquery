@@ -10,6 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
@@ -20,13 +22,14 @@ func TestMquery_RefreshAsAssetFilterStableChecksum(t *testing.T) {
 	}
 
 	x := testutils.LinuxMock()
+	conf := mqlc.NewConfig(x.Schema(), cnquery.DefaultFeatures)
 
-	_, err := m.RefreshAsFilter("//owner/me", x.Schema())
+	_, err := m.RefreshAsFilter("//owner/me", conf)
 	require.NoError(t, err)
 	assert.Equal(t, "//owner/me/filter/"+m.CodeId, m.Mrn)
 
 	cs := m.Checksum
-	_, err = m.RefreshAsFilter("//owner/me", x.Schema())
+	_, err = m.RefreshAsFilter("//owner/me", conf)
 	require.NoError(t, err)
 	assert.Equal(t, cs, m.Checksum)
 }
@@ -46,9 +49,10 @@ func TestMquery_Refresh(t *testing.T) {
 	assert.Empty(t, a.Props[0].Uid)
 
 	x := testutils.LinuxMock()
+	conf := mqlc.NewConfig(x.Schema(), cnquery.DefaultFeatures)
 	err = a.RefreshChecksum(
 		context.Background(),
-		x.Schema(),
+		conf,
 		func(ctx context.Context, mrn string) (*Mquery, error) {
 			return nil, nil
 		},

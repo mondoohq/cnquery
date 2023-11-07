@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/theme"
 	"go.mondoo.com/cnquery/v9/explorer"
 	"go.mondoo.com/cnquery/v9/explorer/scan"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -282,8 +283,9 @@ func (c *scanConfig) loadBundles() error {
 			return err
 		}
 
+		conf := mqlc.NewConfig(c.runtime.Schema(), cnquery.DefaultFeatures)
 		_, err = bundle.CompileExt(context.Background(), explorer.BundleCompileConf{
-			Schema: c.runtime.Schema(),
+			CompilerConfig: conf,
 			// We don't care about failing queries for local runs. We may only
 			// process a subset of all the queries in the bundle. When we receive
 			// things from the server, upstream can filter things for us. But running

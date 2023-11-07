@@ -7,7 +7,6 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/checksums"
 	llx "go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/mqlc"
@@ -43,17 +42,17 @@ func (p *Property) RefreshMRN(ownerMRN string) error {
 }
 
 // Compile a given property and return the bundle.
-func (p *Property) Compile(props map[string]*llx.Primitive, schema llx.Schema) (*llx.CodeBundle, error) {
-	return mqlc.Compile(p.Mql, props, mqlc.NewConfig(schema, cnquery.DefaultFeatures))
+func (p *Property) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	return mqlc.Compile(p.Mql, props, conf)
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (p *Property) RefreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, error) {
-	return p.refreshChecksumAndType(schema)
+func (p *Property) RefreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	return p.refreshChecksumAndType(conf)
 }
 
-func (p *Property) refreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, error) {
-	bundle, err := p.Compile(nil, schema)
+func (p *Property) refreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	bundle, err := p.Compile(nil, conf)
 	if err != nil {
 		return bundle, multierr.Wrap(err, "failed to compile property '"+p.Mql+"'")
 	}
