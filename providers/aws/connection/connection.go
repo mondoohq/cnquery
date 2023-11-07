@@ -106,8 +106,10 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.accountId = *identity.Account
 	c.profile = asset.Options["profile"]
 	c.connectionOptions = asset.Options
-	c.Filters = parseOptsToFilters(conf.Discover.Filter)
-	c.RegionLimits = c.Filters.GeneralDiscoveryFilters.Regions
+	if conf.Discover != nil {
+		c.Filters = parseOptsToFilters(conf.Discover.Filter)
+		c.RegionLimits = c.Filters.GeneralDiscoveryFilters.Regions
+	}
 	return c, nil
 }
 
