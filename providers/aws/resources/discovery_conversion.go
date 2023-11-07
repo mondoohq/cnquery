@@ -225,13 +225,24 @@ func AssembleIntegrationName(alias string, id string) string {
 	return fmt.Sprintf("AWS Account %s (%s)", alias, accountId)
 }
 
+func getPlatformFamily(pf string) []string {
+	if strings.Contains(strings.ToLower(pf), "linux") {
+		return []string{"unix"}
+	}
+	if strings.Contains(strings.ToLower(pf), "windows") {
+		return []string{"windows"}
+	}
+	return []string{}
+}
+
 func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
 	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
-	asset.IdDetector = []string{"aws-ec2"}
+	asset.IdDetector = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
 		Runtime: "aws-ec2-instance",
+		Family:  getPlatformFamily(instance.PlatformDetails.Data),
 	}
 	asset.State = mapEc2InstanceStateCode(instance.State.Data)
 	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
@@ -280,73 +291,6 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
 				name: asset.Name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
-				awsObject: awsObject{
-					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
-					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
-				},
-			}, conn)
-	}
-	return asset
-}
-
-func addSSMConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
-	asset := &inventory.Asset{}
-	asset.PlatformIds = []string{awsec2.MondooInstanceID(accountId, instance.Region.Data, instance.InstanceId.Data)}
-	asset.IdDetector = []string{"aws-ec2"}
-	asset.Platform = &inventory.Platform{
-		Kind:    "virtual_machine",
-		Runtime: "aws-ec2-instance",
-	}
-	ssm := ""
-	if s := instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"]; s != nil {
-		if len(s.([]interface{})) > 0 {
-			ssm = s.([]interface{})[0].(map[string]interface{})["PingStatus"].(string)
-		}
-	}
-	asset.State = mapSmmManagedPingStateCode(ssm)
-	asset.Options = conn.ConnectionOptions()
-	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
-	name := instance.InstanceId.Data
-	if lname := asset.Labels["Name"]; name != "" {
-		name = lname
-	}
-	asset.Name = name
-	imageId := ""
-	imageName := ""
-	if instance.GetImage().Data != nil {
-		imageId = instance.GetImage().Data.Id.Data
-		imageName = instance.GetImage().Data.Name.Data
-	}
-	asset.Labels["mondoo.com/region"] = instance.Region.Data
-	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
-	asset.Labels["mondoo.com/image"] = imageId
-
-	creds := []*vault.Credential{
-		{
-			User: getProbableUsernameFromImageName(imageName),
-			Type: vault.CredentialType_aws_ec2_ssm_session,
-		},
-	}
-	host := instance.InstanceId.Data
-	if instance.PublicIp.Data != "" {
-		host = instance.PublicIp.Data
-	}
-	if ssm == string(ssmtypes.PingStatusOnline) {
-		asset.Connections = []*inventory.Config{{
-			Host:        host,
-			Insecure:    true,
-			Runtime:     "aws_ec2",
-			Credentials: creds,
-			Options: map[string]string{
-				"region":   instance.Region.Data,
-				"profile":  conn.Profile(),
-				"instance": instance.InstanceId.Data,
-			},
-		}}
-	} else {
-		asset = MqlObjectToAsset(accountId,
-			mqlObject{
-				name: name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
@@ -416,6 +360,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 	asset.Platform = &inventory.Platform{
 		Kind:    "virtual_machine",
 		Runtime: "aws-ssm-instance",
+		Family:  getPlatformFamily(instance.PlatformName.Data),
 	}
 	asset.State = mapSmmManagedPingStateCode(instance.PingStatus.Data)
 	if strings.HasPrefix(instance.InstanceId.Data, "i-") && instance.PingStatus.Data == string(ssmtypes.PingStatusOnline) {
