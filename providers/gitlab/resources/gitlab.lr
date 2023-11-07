@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/gitlab"
 option go_package = "go.mondoo.com/cnquery/v9/providers/gitlab/resources"
 
-// GitLab Group
+// GitLab group
 gitlab.group @defaults("name visibility webURL") {
   // Group ID
   id int
@@ -18,21 +18,21 @@ gitlab.group @defaults("name visibility webURL") {
   description string
   // URL of the group
   webURL string
-  // The group's visibility level. Can be private, internal, or public.
+  // The group's visibility level: private, internal, or public
   visibility string
-  // Require all users in this group to setup Two-factor authentication.
+  // Whether all users in this group are required to set up two-factor authentication
   requireTwoFactorAuthentication bool
-  // Don't allow forking projects outside this group
+  // Whether forking projects outside this group is forbidden
   preventForkingOutsideGroup bool
-  // Disable group email notifications
+  // Whether group email notifications are disabled
   emailsDisabled bool
-  // Disable group mentions within issues and merge requests
+  // Whether group mentions within issues and merge requests are disabled
   mentionsDisabled bool
-  // List all projects that belong to the group
+  // List of all projects that belong to the group
   projects() []gitlab.project
 }
 
-// GitLab Project
+// GitLab project
 gitlab.project @defaults("fullName visibility webURL") {
   // Project ID
   id int
@@ -46,40 +46,40 @@ gitlab.project @defaults("fullName visibility webURL") {
   createdAt time  
   // Project description
   description string
-  // Default git branch
+  // Default Git branch
   defaultBranch string
-  // The project's visibility level. Can be private, internal, or public.
+  // The project's visibility level: private, internal, or public
   visibility string
-  // Is the project archived?
+  // Whether the project is archived
   archived bool
-  // Is the project a mirror?
+  // Whether the project is a mirror
   mirror bool
   // URL of the project
   webURL string
-  // Disable project email notifications
+  // Whether project email notifications are disabled
   emailsDisabled bool
-  // Allow merging merge requests when a pipeline is skipped
+  // Whether merging merge requests is allowed when a pipeline is skipped
   allowMergeOnSkippedPipeline bool
-  // Only allow merging merge requests if the pipelines succeed
+  // Whether merging merge requests is allowed only if the pipelines succeed
   onlyAllowMergeIfPipelineSucceeds bool
-  // Allow merging merge requests if all discussions are resolved
+  // Whether merging merge requests is allowed only if all discussions are resolved
   onlyAllowMergeIfAllDiscussionsAreResolved bool
-  // Is the issues feature enabled?
+  // Whether the issues feature is enabled
   issuesEnabled bool
-	// Is the merge request feature enabled?
+	// Whether the merge request feature is enabled
   mergeRequestsEnabled bool
-	// Is the wiki feature enabled?
+	// Whether the wiki feature is enabled
   wikiEnabled bool
-	// Is the snippets feature enabled?
+	// Whether the snippets feature is enabled
   snippetsEnabled bool
-	// Is the container registry feature enabled?
+	// Whether the container registry feature is enabled
   containerRegistryEnabled bool
-	// Is the Service Desk feature enabled?
+	// Whether the Service Desk feature is enabled
   serviceDeskEnabled bool
-	// Is the packages feature enabled?
+	// Whether the packages feature is enabled
   packagesEnabled bool
-	// Is the Auto DevOps feature enabled?
+	// Whether the Auto DevOps feature is enabled
   autoDevopsEnabled bool
-	// Is the requirements feature enabled?
+	// Whether the requirements feature is enabled
   requirementsEnabled bool
 }

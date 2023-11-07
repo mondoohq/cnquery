@@ -42,7 +42,7 @@ private googleworkspace.domain @defaults("domainName") {
   creationTime time
 }
 
-// Google Workspace User Accounts
+// Google Workspace user accounts
 private googleworkspace.user @defaults("primaryEmail") {
   // The unique ID for the user
   id string
@@ -86,7 +86,7 @@ private googleworkspace.user @defaults("primaryEmail") {
   tokens() []googleworkspace.token
 }
 
-// Google Workspace Token
+// Google Workspace token
 private googleworkspace.token @defaults("displayText") {
   // Indicates if the application is registered with Google
   anonymous bool
@@ -102,7 +102,7 @@ private googleworkspace.token @defaults("displayText") {
   userKey string
 }
 
-// Google Workspace Third-party Connected Apps
+// Google Workspace third-party connected apps
 private googleworkspace.connectedApp @defaults("name clientId") {
   // The unique ID of the application
   clientId string
@@ -116,7 +116,7 @@ private googleworkspace.connectedApp @defaults("name clientId") {
   tokens []googleworkspace.token
 }
 
-// Google Workspace Group
+// Google Workspace group
 private googleworkspace.group @defaults("email") {
   // The unique ID of a group
   id string
@@ -140,7 +140,7 @@ private googleworkspace.group @defaults("email") {
   securitySettings() dict
 }
 
-// Google Workspace Group Member
+// Google Workspace group member
 private googleworkspace.member @defaults("email") {
   // The unique ID of the group member
   id string
@@ -154,7 +154,7 @@ private googleworkspace.member @defaults("email") {
   user() googleworkspace.user
 }
 
-// Google Workspace Role
+// Google Workspace role
 private googleworkspace.role @defaults("name") {
   // ID of the role
   id int
@@ -170,12 +170,12 @@ private googleworkspace.role @defaults("name") {
   privileges []dict
 }
 
-// Google Workspace Apps Reports
+// Google Workspace apps reports
 private googleworkspace.report.apps {
   drive() []googleworkspace.report.activity
 }
 
-// Google Workspace App Reports Activity
+// Google Workspace app reports activity
 private googleworkspace.report.activity {
   id int
   ipAddress string
@@ -184,12 +184,12 @@ private googleworkspace.report.activity {
   events []dict
 }
 
-// Google Workspace User Usage Reports
+// Google Workspace user usage reports
 private googleworkspace.report.users {
   []googleworkspace.report.usage
 }
 
-// Google Workspace Usage Report
+// Google workspace usage report
 private googleworkspace.report.usage {
   // The unique identifier of the customer's account
   customerId string

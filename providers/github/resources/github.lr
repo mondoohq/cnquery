@@ -44,7 +44,7 @@ private git.gpgSignature @defaults("sha") {
   signature string
 }
 
-// GitHub Organization
+// GitHub organization
 github.organization @defaults("login name") {
   // Organization login
   login string
@@ -62,13 +62,13 @@ github.organization @defaults("login name") {
   location string
   // Organization email
   email string
-  // Organization twitter name
+  // Organization Twitter handle
   twitterUsername string
-  // Profile picture URL
+  // Organization profile picture URL
   avatarUrl string
-  // Organization followers
+  // Organization's number of followers
   followers int
-  // Organization following
+  // Number of organizations the organization is following
   following int
   // Organization description
   description string
@@ -76,7 +76,7 @@ github.organization @defaults("login name") {
   createdAt time
   // Update time for the organization
   updatedAt time
-  // Number of private repos
+  // Number of private repositories
   totalPrivateRepos int
   // Number of owned private repositories for the organization
   ownedPrivateRepos int
@@ -90,9 +90,9 @@ github.organization @defaults("login name") {
   billingEmail string
   // GitHub plan the organization is subscribed to
   plan dict
-  // Two-factor authentication required for all members
+  // Whether two-factor authentication is required for all members
   twoFactorRequirementEnabled bool
-  // Verified organization by GitHub
+  // Whether the organization is verified by GitHub
   isVerified bool
   // The default repository permission
   defaultRepositoryPermission string
@@ -128,7 +128,7 @@ github.organization @defaults("login name") {
   packages() []github.package
 }
 
-// GitHub User
+// GitHub user
 private github.user @defaults("id name") {
   // User ID
   id int
@@ -150,23 +150,23 @@ private github.user @defaults("id name") {
   followers int
   // User following
   following int
-  // User twitter name
+  // User Twitter handle
   twitterUsername string
   // User create time in UTC
   createdAt time
   // Last user update time in UTC
   updatedAt time
-  // User suspended time
+  // When the user was suspended
   suspendedAt time
-  // User company
+  // User's company
   company string
-  // User repositories
+  // User's repositories
   repositories() []github.repository
   // User gists
   gists() []github.gist
 }
 
-// GitHub Team
+// GitHub team
 private github.team @defaults("id name") {
   // Team ID
   id int
@@ -188,17 +188,17 @@ private github.team @defaults("id name") {
   organization github.organization
 }
 
-// GitHub Collaborator
+// GitHub collaborator
 private github.collaborator @defaults("user") {
   // Collaborator ID
   id int
-  // Collaborator user information
+  // Collaborator's user information
   user github.user
-  // Collaborator permissions
+  // Collaborator's permissions
   permissions []string
 }
 
-// GitHub Package
+// GitHub package
 private github.package @defaults("id name") {
   // Package ID
   id int
@@ -220,7 +220,7 @@ private github.package @defaults("id name") {
   repository() github.repository
 }
 
-// GitHub Repository
+// GitHub repository
 private github.repository @defaults("fullName") {
   init(name string) // can only be used when logged in to github as a user
   // Repository ID
@@ -241,13 +241,13 @@ private github.repository @defaults("fullName") {
   topics []string
   // Repository language
   language string
-  // Count of repository watchers
+  // Number of users watching the repository
   watchersCount int
-  // Count of repository forks
+  // Number of repository forks
   forksCount int
-  // Count of repository stargazers
+  // Number of repository stargazers
   stargazersCount int
-  // Count of open issues in repository
+  // Number of open issues in repository
   openIssuesCount int
   // Repository create time
   createdAt time
@@ -279,7 +279,7 @@ private github.repository @defaults("fullName") {
   hasIssues bool
   // Whether the repository has projects
   hasProjects bool
-  // Whether the repository has wiki
+  // Whether the repository has a wiki
   hasWiki bool
   // Whether the repository has pages
   hasPages bool
@@ -323,7 +323,7 @@ private github.repository @defaults("fullName") {
   license() github.license
 }
 
-// GitHub License
+// GitHub license
 private github.license @defaults("spdxId") {
   // License key
   key string
@@ -335,7 +335,7 @@ private github.license @defaults("spdxId") {
   spdxId string
 }
 
-// GitHub Repository File
+// GitHub repository file
 private github.file @defaults("name type") {
   // File path
   path string
@@ -345,9 +345,9 @@ private github.file @defaults("name type") {
   type string
   // File shasum
   sha string
-  // Whether file is a binary
+  // Whether the file is a binary
   isBinary bool
-  // List of files in directory
+  // List of files in the directory
   files() []github.file
   // File owner
   ownerName string
@@ -357,7 +357,7 @@ private github.file @defaults("name type") {
   content() string
 }
 
-// GitHub Release
+// GitHub release
 private github.release @defaults("name tagName") {
   // Release url
   url string
@@ -369,15 +369,15 @@ private github.release @defaults("name tagName") {
   preRelease bool
 }
 
-// GitHub Webhook
+// GitHub webhook
 private github.webhook @defaults("id name") {
   // Webhook ID
   id int
   // Webhook name
   name string
-  // Webhook url
+  // Webhook URL
   url string
-  // List of events for webhook
+  // List of events for the webhook
   events []string
   // Webhook config
   config dict
@@ -385,7 +385,7 @@ private github.webhook @defaults("id name") {
   active bool
 }
 
-// GitHub Workflow
+// GitHub workflow
 private github.workflow @defaults("id name") {
   // Workflow ID
   id int
@@ -405,11 +405,11 @@ private github.workflow @defaults("id name") {
   configuration() dict
 }
 
-// GitHub Repository Branch
+// GitHub repository branch
 private github.branch @defaults("name") {
   // Repository branch name
   name string
-  // Deprecated. Use isProtected instead
+  // Deprecated; use isProtected instead
   protected bool
   // Whether branch protection is enabled
   isProtected bool
@@ -421,11 +421,11 @@ private github.branch @defaults("name") {
   repoName string
   // Repository branch owner
   owner github.user
-  // Whether branch is the default branch
+  // Whether the branch is the default branch
   isDefault bool
 }
 
-// GitHub Repository Branch Protection
+// GitHub repository branch protection
 private github.branchprotection @defaults("id") {
   // Repository branch protection ID
   id string
@@ -449,7 +449,7 @@ private github.branchprotection @defaults("id") {
   allowDeletions dict
 }
 
-// GitHub Repository Commit
+// GitHub repository commit
 private github.commit @defaults("sha") {
   // Commit owner
   owner string
@@ -469,7 +469,7 @@ private github.commit @defaults("sha") {
   stats dict
 }
 
-// GitHub Repository Pull Request 
+// GitHub repository pull request 
 private github.mergeRequest @defaults("id state") {
   // Pull request ID
   id int
@@ -477,7 +477,7 @@ private github.mergeRequest @defaults("id state") {
   number int
   // Pull request state
   state string
-  // Pull request created at time (in UTC)
+  // Pull request creation time (in UTC)
   createdAt time
   // Pull request labels
   labels []dict
@@ -495,9 +495,9 @@ private github.mergeRequest @defaults("id state") {
   repoName string
 }
 
-// GitHub Repository Review
+// GitHub repository review
 private github.review @defaults("url state") {
-  // Review url
+  // Review URL
   url string
   // Review state
   state string
@@ -507,11 +507,11 @@ private github.review @defaults("url state") {
   user github.user
 }
 
-// GitHub App Installation
+// GitHub application installation
 private github.installation @defaults("id appId") {
   // Application installation ID
   id int
-  // Application configured id
+  // Application configured ID
   appId int
   // Application configured slug
   appSlug string
@@ -521,7 +521,7 @@ private github.installation @defaults("id appId") {
   updatedAt time
 }
 
-// GitHub Gist
+// GitHub gist
 private github.gist @defaults("description") {
   // Gist ID
   id string
@@ -533,13 +533,13 @@ private github.gist @defaults("description") {
   updatedAt time
   // Gist owner
   owner github.user
-  // Indicates whether the gist is public
+  // Whether the gist is public
   public bool
   // Gist files
   files []github.gistfile
 }
 
-// GitHub Gist File
+// GitHub gist file
 private github.gistfile @defaults("filename") {
   // Gist ID
   gistId string
@@ -549,7 +549,7 @@ private github.gistfile @defaults("filename") {
   type string
   // Gist file language
   language string
-  // Gist file raw url
+  // Gist file raw URL
   rawUrl string
   // Gist file size
   size int
@@ -557,7 +557,7 @@ private github.gistfile @defaults("filename") {
   content() string
 }
 
-// GitHub Issue
+// GitHub issue
 private github.issue @defaults("title") {
   // Issue ID
   id int
@@ -569,7 +569,7 @@ private github.issue @defaults("title") {
   state string
   // Issue body
   body string
-  // Issue url
+  // Issue URL
   url string
   // Issue create time
   createdAt time
@@ -577,8 +577,8 @@ private github.issue @defaults("title") {
   updatedAt time
   // Issue closed time
   closedAt time
-  // Issue assignees
+  // Users to whom the issue is assigned
   assignees []github.user
-  // Issue closed by
+  // User who closed the issue
   closedBy github.user
 }
