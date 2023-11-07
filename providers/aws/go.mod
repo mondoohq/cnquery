@@ -7,9 +7,9 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.47.3
+	github.com/aws/aws-sdk-go v1.47.4
 	github.com/aws/aws-sdk-go-v2 v1.22.1
-	github.com/aws/aws-sdk-go-v2/config v1.22.0
+	github.com/aws/aws-sdk-go-v2/config v1.22.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.15.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.23.0
@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.0
@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/iam v1.26.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.22.0
