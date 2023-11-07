@@ -76,6 +76,38 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	assert.Equal(t, "cryptdisks", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
 }
+func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
+	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "photon",
+			Family: []string{"redhat", "linux"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := mock.RunCommand("systemctl list-unit-files --type service --all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Nil(t, err)
+
+	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
+	assert.Nil(t, err)
+	assert.Equal(t, 138, len(m), "detected the right amount of services")
+
+	// check first element
+	assert.Equal(t, "autovt@", m[0].Name, "service name detected")
+	assert.Equal(t, "systemd", m[0].Type, "service type is added")
+
+	// check last element
+	assert.Equal(t, "vmtoolsd", m[136].Name, "service name detected")
+	assert.Equal(t, "systemd", m[136].Type, "service type is added")
+
+	// check for masked element
+	assert.Equal(t, "dracut-pre-udev", m[30].Name, "service name detected")
+	assert.Equal(t, false, m[30].Masked, "service is not masked")
+}
 
 func TestSystemdFS(t *testing.T) {
 	s := SystemdFSServiceManager{
