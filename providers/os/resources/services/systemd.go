@@ -62,12 +62,14 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 		name := strings.TrimSuffix(fields[0], ".service")
 
 		service := &Service{
-			Name:      name,
-			Enabled:   fields[1] == "enabled",
-			Installed: fields[1] == "enabled",
-			Masked:    fields[1] == "masked",
-			Type:      "systemd",
+			Name:    name,
+			Enabled: fields[1] == "enabled",
+			Masked:  fields[1] == "masked",
+			Type:    "systemd",
 		}
+
+		// The installed field simply tells you that we found the service, thus it is always true
+		service.Installed = true
 
 		services = append(services, service)
 	}
