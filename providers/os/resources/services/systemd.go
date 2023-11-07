@@ -32,34 +32,6 @@ func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
 	return &SystemDServiceManager{conn: conn}
 }
 
-// a line may be prefixed with nothing, whitespace or a dot
-func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
-	var services []*Service
-	content, err := io.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-
-	m := SYSTEMD_LIST_UNITS_REGEX.FindAllStringSubmatch(string(content), -1)
-	for i := range m {
-		name := m[i][1]
-		name = strings.Replace(name, ".service", "", 1)
-
-		s := &Service{
-			Name:      name,
-			Installed: m[i][2] == "loaded",
-			Running:   m[i][3] == "active",
-			// TODO: we may need to revist the enabled state
-			Enabled:     m[i][2] == "loaded",
-			Masked:      m[i][2] == "masked",
-			Description: m[i][5],
-			Type:        "systemd",
-		}
-		services = append(services, s)
-	}
-	return services, nil
-}
-
 // Newer linux systems use systemd as service manager
 type SystemDServiceManager struct {
 	conn shared.Connection
@@ -69,12 +41,97 @@ func (s *SystemDServiceManager) Name() string {
 	return "systemd Service Manager"
 }
 
+func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
+	var services []*Service
+	content, err := io.ReadAll(input)
+	if err != nil {
+		return nil, fmt.Errorf("error executing systemctl list-unit-files: %v", err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+	if len(lines) < 2 {
+		return nil, fmt.Errorf("unexpected output from systemctl list-unit-files %v", content)
+	}
+
+	for _, line := range lines[1 : len(lines)-1] {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+
+		name := strings.TrimSuffix(fields[0], ".service")
+
+		service := &Service{
+			Name:    name,
+			Enabled: fields[1] == "enabled",
+			Masked:  fields[1] == "masked",
+			Type:    "systemd",
+		}
+
+		// The installed field simply tells you that we found the service, thus it is always true
+		service.Installed = true
+
+		services = append(services, service)
+	}
+
+	return services, nil
+}
+
+// SystemDExtractDescription gets the description of a service from the systemctl status command
+func SystemDExtractDescription(systemctlOutput string) string {
+	lines := strings.Split(systemctlOutput, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, ".service -") {
+			// Assuming the format is similar to: "● bluetooth.service - Bluetooth service"
+			parts := strings.SplitN(line, " - ", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1])
+			}
+		}
+	}
+	return ""
+}
+
+// List returns a slice of Service structs representing the state of all services
 func (s *SystemDServiceManager) List() ([]*Service, error) {
-	c, err := s.conn.RunCommand("systemctl --all list-units --type service")
+	var services []*Service
+	cmdList, err := s.conn.RunCommand("systemctl list-unit-files --type service --all")
 	if err != nil {
 		return nil, err
 	}
-	return ParseServiceSystemDUnitFiles(c.Stdout)
+	services, err = ParseServiceSystemDUnitFiles(cmdList.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	for _, service := range services {
+		// Now check if the service is running
+		cmdIsActive, err := s.conn.RunCommand("systemctl is-active " + service.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		isActiveOut, err := io.ReadAll(cmdIsActive.Stdout)
+		if err != nil {
+			return nil, err
+		}
+
+		service.Running = err == nil && strings.TrimSpace(string(isActiveOut)) == "active"
+
+		// Get service description
+		cmdDesc, err := s.conn.RunCommand("systemctl status " + service.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		descOut, err := io.ReadAll(cmdDesc.Stdout)
+		if err != nil {
+			return nil, err
+		}
+		description := SystemDExtractDescription(string(descOut))
+		service.Description = description
+	}
+
+	return services, nil
 }
 
 type SystemdFSServiceManager struct {

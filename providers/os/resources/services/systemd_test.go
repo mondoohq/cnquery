@@ -13,17 +13,48 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/fs"
 )
 
+func TestSystemDExtractDescription(t *testing.T) {
+	statusout := `
+  ● avahi-daemon.service - Avahi mDNS/DNS-SD Stack
+     Loaded: loaded (/lib/systemd/system/avahi-daemon.service; enabled; vendor preset: enabled)
+     Active: active (running) since Fri 2023-11-03 06:26:15 CET; 2h 59min ago
+TriggeredBy: ● avahi-daemon.socket
+   Main PID: 1219 (avahi-daemon)
+     Status: "avahi-daemon 0.8 starting up."
+      Tasks: 2 (limit: 38013)
+     Memory: 1.4M
+        CPU: 1.173s
+     CGroup: /system.slice/avahi-daemon.service
+             ├─1219 "avahi-daemon: running [mondoopad.local]"
+             └─1297 "avahi-daemon: chroot helper"
+
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Interface wlp0s20f3.IPv6 no longer relevant for mDNS.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Withdrawing address record for 192.168.178.32 on wlp0s20f3.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Leaving mDNS multicast group on interface wlp0s20f3.IPv4 with address 192.168.178.32.
+Nov 03 06:46:32 mondoopad avahi-daemon[1219]: Interface wlp0s20f3.IPv4 no longer relevant for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Joining mDNS multicast group on interface wlp0s20f3.IPv6 with address fe80::80d3:b6d1:14e3:56e1.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: New relevant interface wlp0s20f3.IPv6 for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for fe80::80d3:b6d1:14e3:56e1 on wlp0s20f3.*.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Joining mDNS multicast group on interface wlp0s20f3.IPv4 with address 192.168.178.32.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: New relevant interface wlp0s20f3.IPv4 for mDNS.
+Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for 192.168.178.32 on wlp0s20f3.IPv4.
+  `
+	description := SystemDExtractDescription(statusout)
+
+	assert.Equal(t, description, "Avahi mDNS/DNS-SD Stack")
+}
+
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "debian",
-			Family: []string{"debian", "linux"},
+			Name:   "ubuntu",
+			Family: []string{"ubuntu", "linux"},
 		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("systemctl --all list-units --type service")
+	c, err := mock.RunCommand("systemctl list-unit-files --type service --all")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,23 +62,51 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 
 	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 102, len(m), "detected the right amount of services")
+	assert.Equal(t, 264, len(m), "detected the right amount of services")
 
 	// check first element
-	assert.Equal(t, "auditd", m[0].Name, "service name detected")
-	assert.Equal(t, true, m[0].Running, "service is running")
-	assert.Equal(t, true, m[0].Installed, "service is installed")
+	assert.Equal(t, "accounts-daemon", m[0].Name, "service name detected")
 	assert.Equal(t, "systemd", m[0].Type, "service type is added")
 
 	// check last element
-	assert.Equal(t, "ypxfrd", m[101].Name, "service name detected")
-	assert.Equal(t, false, m[101].Running, "service is running")
-	assert.Equal(t, false, m[101].Installed, "service is installed")
-	assert.Equal(t, "systemd", m[101].Type, "service type is added")
+	assert.Equal(t, "x11-common", m[262].Name, "service name detected")
+	assert.Equal(t, "systemd", m[262].Type, "service type is added")
 
 	// check for masked element
-	assert.Equal(t, "nfs-server", m[30].Name, "service name detected")
+	assert.Equal(t, "cryptdisks", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
+}
+func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
+	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "photon",
+			Family: []string{"redhat", "linux"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := mock.RunCommand("systemctl list-unit-files --type service --all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Nil(t, err)
+
+	m, err := ParseServiceSystemDUnitFiles(c.Stdout)
+	assert.Nil(t, err)
+	assert.Equal(t, 138, len(m), "detected the right amount of services")
+
+	// check first element
+	assert.Equal(t, "autovt@", m[0].Name, "service name detected")
+	assert.Equal(t, "systemd", m[0].Type, "service type is added")
+
+	// check last element
+	assert.Equal(t, "vmtoolsd", m[136].Name, "service name detected")
+	assert.Equal(t, "systemd", m[136].Type, "service type is added")
+
+	// check for masked element
+	assert.Equal(t, "dracut-pre-udev", m[30].Name, "service name detected")
+	assert.Equal(t, false, m[30].Masked, "service is not masked")
 }
 
 func TestSystemdFS(t *testing.T) {
