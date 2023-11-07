@@ -98,7 +98,6 @@ func TestManagerWindows(t *testing.T) {
 }
 
 func TestManagerUbuntu2204(t *testing.T) {
-	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "ubuntu",
@@ -117,7 +116,6 @@ func TestManagerUbuntu2204(t *testing.T) {
 }
 
 func TestManagerPhoton(t *testing.T) {
-	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "photon",
