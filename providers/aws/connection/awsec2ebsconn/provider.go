@@ -125,7 +125,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		switch c.targetType {
 		case awsec2ebstypes.EBSTargetInstance:
 			ok, volLocation, volId, err = c.SetupForTargetInstance(ctx, instanceinfo)
-			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, conf.Options["region"], convert.ToString(instanceinfo.InstanceId))
+			conf.PlatformId = awsec2.MondooInstanceID(i.AccountID, targetRegion, convert.ToString(instanceinfo.InstanceId))
 		case awsec2ebstypes.EBSTargetVolume:
 			ok, volLocation, volId, err = c.SetupForTargetVolume(ctx, *volumeid)
 			conf.PlatformId = awsec2.MondooVolumeID(volumeid.Account, volumeid.Region, volumeid.Id)
