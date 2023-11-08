@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.36.0
