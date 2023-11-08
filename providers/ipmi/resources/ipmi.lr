@@ -18,6 +18,6 @@ ipmi {
 ipmi.chassis {
   // High-level status of the system chassis and main power subsystem
   status() dict
-  // The system boot options
+  // System boot options
   systemBootOptions() dict
 }
