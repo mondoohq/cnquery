@@ -14,4 +14,5 @@ func testGetLatestVersion(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, version)
+	assert.NotContains(t, cnqueryReleaseUrl, "github.com")
 }

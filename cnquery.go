@@ -52,7 +52,7 @@ type Release struct {
 	Version string `json:"version"`
 }
 
-var cnqueryGithubReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
+var cnqueryReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
 
 // GetLatestReleaseName fetches the name of the specified release from releases.mondoo.com
 func GetLatestReleaseName(url string) (string, error) {
@@ -81,7 +81,7 @@ func GetLatestReleaseName(url string) (string, error) {
 
 // GetLatestVersion returns the latest version available on releases.mondoo.com
 func GetLatestVersion() (string, error) {
-	releaseName, err := GetLatestReleaseName(cnqueryGithubReleaseUrl)
+	releaseName, err := GetLatestReleaseName(cnqueryReleaseUrl)
 	if err != nil {
 		return "", err
 	}
