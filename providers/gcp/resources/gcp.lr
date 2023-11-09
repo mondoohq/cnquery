@@ -2596,7 +2596,7 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   resources dict
   // List of ports to expose from the container
   ports []dict
-  // Volumes to mount into the container's filesystem
+  // Volumes to mount into the container's file system
   volumeMounts []dict
   // Container's working directory
   workingDir string

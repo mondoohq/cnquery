@@ -14,7 +14,7 @@ opcua {
   nodes() []opcua.node
 }
 
-// Server Object
+// Server object
 opcua.server {
   // Reference to node
   node opcua.node
@@ -28,17 +28,17 @@ opcua.server {
   state string
 }
 
-// OPC UA Namespace
+// OPC UA namespace
 private opcua.namespace {
   // Namespace ID
   id int
-  // Namespace Name
+  // Namespace name
   name string
 }
 
-// OPC UA Node
+// OPC UA node
 private opcua.node @defaults("id name") {
-  // Node id
+  // Node ID
   id string
   // Node browser name
   name string
@@ -50,15 +50,15 @@ private opcua.node @defaults("id name") {
   description string
   // Indicates if value is writable
   writeable bool
-  // Data Type
+  // Data type
   dataType string
-  // Min value
+  // Minimum value
   min string
-  // Max value
+  // Maximum value
   max string
   // Node unit
   unit string
-  // Access Level
+  // Access level
   accessLevel string
   // Properties
   properties() []opcua.node

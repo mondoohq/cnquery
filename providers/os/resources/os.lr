@@ -30,33 +30,33 @@ asset.eol @defaults("date") {
   date time
 }
 
-// Returns platform EOL date information.
+// Platform end-of-life information
 private mondoo.eol {
-  // Product Name
+  // Product name
   product string
-  // Product Version
+  // Product version
   version string
-  // End-of-Life date for the product
+  // End-of-life date for the product
   date() time
 }
 
-// Information about the platform end-of-life. Deprecated in favor of `asset.eol`. This resource will be removed in version 10.0.
-// Please use asset.eol instead.
+// Deprecated; will be removed in version 10.0
+// Use asset.eol instead.
 platform.eol @defaults("date") {
   // Documentation URL
   docsUrl string
   // Product URL
   productUrl string
-  // End-of-Life date
+  // End-of-life date
   date time
 }
 
 platform {
-  // deprecated: use asset.vulnerabilityReport instead
+  // deprecated; use asset.vulnerabilityReport instead
   vulnerabilityReport() dict
 }
 
-// Returns all platform/package advisories
+// All platform/package advisories
 platform.advisories {
   []audit.advisory
   // Worst CVSS score for all advisories
@@ -65,20 +65,20 @@ platform.advisories {
   stats() dict
 }
 
-// Returns all platform/package cves
+// All platform/package CVEs
 platform.cves {
   []audit.cve
-  // Worst CVSS score for all cves
+  // Worst CVSS score for all CVEs
   cvss() audit.cvss
   // Statistical information: total, critical, high, medium, low, none, unknown
   stats() dict
 }
 
-// Common Vulnerability Scoring System (CVSS) Score
+// Common Vulnerability Scoring System (CVSS) score
 private audit.cvss {
-  // CVSS Score ranging from 0.0 to 10.0
+  // CVSS score ranging from 0.0 to 10.0
   score   float
-  // CVSS score is also represented as a vector string
+  // CVSS score represented as a vector string
   vector  string
 }
 
@@ -86,37 +86,37 @@ private audit.cvss {
 private audit.advisory {
   // Advisory ID
   id          string
-  // Mondoo Advisory Identifier
+  // Mondoo advisory identifier
   mrn         string
-  // Advisory Title
+  // Advisory title
   title       string
-  // Advisory Description
+  // Advisory description
   description string
   // Advisory publication date
   published   time
   // Last modification date
   modified    time
-  // Worst CVSS Score of all assigned CVEs
+  // Worst CVSS score of all assigned CVEs
   worstScore    audit.cvss
 }
 
-// Common Vulnerabilities and Exposures (CVE)
+// Common Vulnerabilities and Exposures (CVEs)
 private audit.cve {
   // CVE ID
   id        string
-  // Mondoo CVE Identifier
+  // Mondoo CVE identifier
   mrn       string
   // CVE state
   state     string
-  // Summary Description
+  // Summary description
   summary   string
-  // Indicates if the CVE has a CVSS score
+  // Whether the CVE has a CVSS score
   unscored  bool
-  // publication date
+  // Publication date
   published   time
   // Last modification date
   modified    time
-  // Worst CVSS Score of all assigned CVEs
+  // Worst CVSS score of all assigned CVEs
   worstScore    audit.cvss
 }
 
@@ -136,15 +136,15 @@ machine.bios {
 machine.system {
   // Manufacturer
   manufacturer string
-  // Product Name
+  // Product name
   product string
   // Version
   version string
-  // Serial Number
+  // Serial number
   serial string
   // UUID
   uuid string
-  // SKU Number
+  // SKU number
   sku string
   // Family
   family string
@@ -158,9 +158,9 @@ machine.baseboard {
   product string
   // Version
   version string
-  // Serial Number
+  // Serial number
   serial string
-  // Asset Tag
+  // Asset tag
   assetTag string
 }
 
@@ -170,9 +170,9 @@ machine.chassis {
   manufacturer string
   // Version
   version string
-  // Serial Number
+  // Serial number
   serial string
-  // Asset Tag Number
+  // Asset tag number
   assetTag string
 }
 
@@ -188,7 +188,7 @@ os {
   uptime() time
   // List of available OS updates
   updates() []os.update
-  // Indicates if a reboot is pending
+  // Whether a reboot is pending
   rebootpending() bool
   // Hostname for this OS
   hostname() string
@@ -204,7 +204,7 @@ os.update @defaults("name")  {
   category string
   // Severity of the update
   severity string
-  // Indicates if a restart is required
+  // Whether a restart is required
   restart bool
   // Package format for this update
   format string
@@ -223,7 +223,7 @@ os.base {
   uptime() time
   // List of available OS updates
   updates() []os.update
-  // Indicates if a reboot is pending
+  // Whether a reboot is pending
   rebootpending() bool
   // Hostname for this OS
   hostname() string
@@ -309,23 +309,23 @@ file @defaults("path size permissions.string") {
 private file.permissions @defaults("string") {
   // Raw POSIX mode for the permissions
   mode int
-  // Indicator if this file is readable by its owner
+  // Whether the file is readable by its owner
   user_readable bool
-  // Indicator if this file is writeable by its owner
+  // Whether the file is writeable by its owner
   user_writeable bool
-  // Indicator if this file is executable by its owner
+  // Whether the file is executable by its owner
   user_executable bool
-  // Indicator if this file is readable by members of the group
+  // Whether the file is readable by members of the group
   group_readable bool
-  // Indicator if this file is writeable by members of the group
+  // Whether the file is writeable by members of the group
   group_writeable bool
-  // Indicator if this file is executable by members of the group
+  // Whether the file is executable by members of the group
   group_executable bool
-  // Indicator if this file is readable by others
+  // Whether the file is readable by others
   other_readable bool
-  // Indicator if this file is writeable by others
+  // Whether the file is writeable by others
   other_writeable bool
-  // Indicator if this file is executable by others
+  // Whether the file is executable by others
   other_executable bool
   // SUID bit indicator
   suid bool
@@ -348,50 +348,50 @@ files {}
 // Find files on the system
 files.find {
   []file
-  // From sets the starting point for the search operation
+  // Sets the starting point for the search operation
   from string
-  // xdev indicates if other devices will be searched
+  // Whether other devices to search
   xdev bool
-  // What types of files will be listed (directories, files, devices, etc)
+  // What types of files to list (directories, files, devices, etc)
   type string
   // A regular expression for the file search
   regex string
   // What permissions the file matches
   permissions int
-  // Search name of the name
+  // Search name
   name string
 }
 
 // Parse INI files
 parse.ini {
   init(path string, delimiter string)
-  // Symbol that is separating keys and values
+  // Symbol that separates keys and values
   delimiter string
-  // File that is being parsed
+  // File that is parsed
   file file
   // Raw content of the file that is parsed
   content(file) string
-  // A map of sections and key-value pairs
+  // Map of sections and key-value pairs
   sections(content, delimiter) map[string]map[string]string
-  // A map of parameters that don't belong to sections
+  // Map of parameters that don't belong to sections
   params(sections) map[string]string
 }
 
 // Parse JSON files
 parse.json {
   init(path string)
-  // File that is being parsed
+  // File that is parsed
   file file
   // Raw content of the file that is parsed
   content(file) string
-  // The parsed parameters that are defined in this file
+  // The parsed parameters defined in this file
   params(content) dict
 }
 
 // Parse plist files
 parse.plist {
   init(path string)
-  // File that is being parsed
+  // File that is parsed
   file file
   // Raw content of the file that is parsed
   content(file) string
@@ -402,7 +402,7 @@ parse.plist {
 // Parse YAML files
 parse.yaml {
   init(path string)
-  // File that is being parsed
+  // File that is parsed
   file file
   // Raw content of the file that is parsed
   content(file) string
@@ -410,7 +410,7 @@ parse.yaml {
   params(content) dict
 }
 
-// Parse Certificates from files
+// Parse certificates from files
 parse.certificates {
   []network.certificate(content, path)
   init(path string)
@@ -426,7 +426,7 @@ parse.certificates {
 parse.openpgp {
   []network.openpgp.entity(content)
   init(path string)
-  // Path of the OpenPGP file. Deprecated: Please use file.path instead
+  // Deprecated; use file.path instead
   path string
   // OpenPGP file
   file file
@@ -438,9 +438,9 @@ parse.openpgp {
 user @defaults("name uid gid") {
   // User ID
   uid int
-  // User's Group ID
+  // User's group ID
   gid int
-  // User's Security Identifier (Windows)
+  // User's security identifier (Windows)
   sid string
   // Name of the user
   name string
@@ -448,24 +448,25 @@ user @defaults("name uid gid") {
   home string
   // Default shell configured
   shell string
-  // Indicates if the user is enabled
+  // Whether the user is enabled
   enabled bool
   // List of authorized keys
   authorizedkeys(home) authorizedkeys
   // List of SSH keys
   sshkeys() []privatekey
-  // Group that user is a member of
+  // Group of which user is a member
   group(gid) group
 }
 
-// Private Key Resource
+// Private key resource
 privatekey {
   // PEM data
   pem string
-  // Key path on disk (deprecated, use file instead)
+  // Deprecated; use file instead
   path string
   // File on disk for this private key
   file file
+  // Whether the file is encrypted
   encrypted bool
 }
 
@@ -474,22 +475,31 @@ users {
   []user
 }
 
-// List of SSH Authorized Keys
+// List of SSH authorized keys
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
+  // Path to the key file
   path string
+  // Key file
   file file
+  // Key file content
   content(file) string
 }
 
-// SSH authorized keys entry
+// SSH authorized key
 authorizedkeys.entry @defaults("key") {
+  // Line of the key
   line int
+  // Type of key
   type string
+  // Key
   key string
+  // Key label
   label string
+  // Key options
   options []string
+  // Key file
   file file
 }
 
@@ -498,7 +508,7 @@ group @defaults("name gid") {
   init(id string)
   // Group ID
   gid int
-  // Group's Security Identifier (Windows)
+  // Group's security identifier (Windows)
   sid string
   // Name of this group
   name string
@@ -526,9 +536,9 @@ package @defaults("name version") {
   // Epoch of this package
   epoch string
 
-  // Format of this package (e.g. rpm, deb)
+  // Format of this package (e.g., rpm, deb)
   format string
-  // Status of this package (e.g. if it is needed)
+  // Status of this package (e.g., if it is needed)
   status() string
   // Package description
   description string
@@ -538,9 +548,9 @@ package @defaults("name version") {
 
   // Available version
   available string
-  // Indicates if this package is installed
+  // Whether the package is installed
   installed bool
-  // Indicates if this package is outdated
+  // Whether the package is outdated
   outdated() bool
 }
 
@@ -549,27 +559,27 @@ packages {
   []package
 }
 
-// PAM configuration (Pluggable Authentication Module)
+// PAM configuration (pluggable authentication module)
 pam.conf {
   init(path string)
   // List of files that make up the PAM configuration
   files() []file
   // The raw PAM configuration (across all files)
   content(files) string
-  // Deprecated: A list of services that are configured via PAM
+  // Deprecated; list of services that are configured via PAM
   services(files) map[string][]string
   // List of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
 }
 
 private pam.conf.serviceEntry @defaults("service module") {
-  // Service file that entry is from
+  // Service file that the entry is from
   service string
-  // Line number in service file - used for ID
+  // Line number in service file (used for ID)
   lineNumber int
-  // Type for pam entry, ie auth, password etc
+  // Type for PAM entry, (i.e., auth, password, etc)
   pamType string
-  // Level of control, ie required, requisite, sufficient
+  // Level of control, (i.e., required, requisite, sufficient)
   control string
   // PAM module used
   module string
@@ -595,28 +605,28 @@ sshd.config {
   ciphers(params) []string
   // MACs configured for this SSH server
   macs(params) []string
-  // Key Exchange Algorithms configured for this SSH server
+  // Key exchange algorithms configured for this SSH server
   kexs(params) []string
-  // Host Keys configured for this SSH server
+  // Host keys configured for this SSH server
   hostkeys(params) []string
 }
 
 // Service on this system
 service @defaults("name running enabled type") {
   init(name string)
-  // Name of this service
+  // Name of the service
   name string
   // Service description
   description string
-  // Is it installed?
+  // Whether the service is installed
   installed bool
-  // Is it running?
+  // Whether the service is running
   running bool
-  // Is it enabled? (start at boot)
+  // Whether the service is enabled (start at boot)
   enabled bool
   // Type information
   type string
-  // Is it masked?
+  // Whether the service is masked
   masked bool
 }
 
@@ -633,7 +643,7 @@ kernel @defaults("info") {
   parameters() map[string]string
   // List of kernel modules
   modules() []kernel.module
-  // Installed Versions
+  // Installed versions
   installed() []dict
 }
 
@@ -645,7 +655,7 @@ kernel.module @defaults("name loaded") {
   name string
   // Size of the kernel module
   size string
-  // Indicates if this module is loaded
+  // Whether the module is loaded
   loaded bool
 }
 
@@ -710,30 +720,29 @@ ip6tables {
 }
 
 iptables.entry {
-  //Line number of statistic - used to create id
+  // Line number of statistic, which is used to create the ID
   lineNumber int
-  //packets from iptable
+  // Packets from iptable
   packets int
-  //This field tells us how large the packet is in octets, including headers and everything.
+  // How large the packet is in octets, including headers and everything.
   bytes int
-  //If a packet matches the rule, the target specifies what should be done with it.
+  // What to do with the packet if it matches a rule
   target string
-  //protocol of the next level layer. For example, this may be TCP, UDP or ICMP among others.
+  // Protocol of the next level layer (e.g., TCP, UDP, ICMP, etc)
   protocol string
-  //indicates IP options
+  // IP options
   opt string
-  //input
+  // Input
   in string
-  //output
+  // Output
   out string
-  //source address field that lets the receiver know where the packet came from.
+  // Source address field that tells the receiver where the packet came from
   source string
-  //The destination IP address or subnet of the traffic, or anywhere
+  //The destination IP address of the traffic, subnet of the traffic, or anywhere
   destination string
-  //The options field contains different optional settings within the header,
-  //such as Internet timestamps, SACK or record route options.
+  // Optional settings within the header such as internet timestamps, SACK, or record route options
   options string
-  //input or output - used to create id
+  // Input or output, which is used to create the ID
   chain string
 }
 
@@ -742,7 +751,7 @@ process @defaults("executable pid state") {
   init(pid int)
   // PID (process ID)
   pid int
-  // State of the process (sleeping, running, etc)
+  // State of the process (i.e., sleeping, running, etc)
   state() string
   // Executable that is running this process
   executable() string
@@ -795,7 +804,7 @@ auditpol {
 auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
   // Machine name
   machinename string
-  // Policy Target
+  // Policy target
   policytarget string
   // Subcategory
   subcategory string
@@ -809,43 +818,43 @@ auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
 
 // Windows local security policy
 secpol {
-  // System Access
+  // System access
   systemaccess() map[string]string
-  // Event Audit
+  // Event audit
   eventaudit() map[string]string
-  // Registry Values
+  // Registry values
   registryvalues() map[string]string
-  // Privilege Rights
+  // Privilege rights
   privilegerights() map[string][]string
 }
 
 // NTP service configuration
 ntp.conf {
   init(path string)
-  // File of this NTP service configuration
+  // File of the NTP service configuration
   file() file
-  // Raw contents of this NTP service configuration
+  // Raw contents of the NTP service configuration
   content(file) string
-  // List of settings for this NTP service
+  // List of settings for the NTP service
   settings(content) []string
-  // List of servers for this NTP service
+  // List of servers for the NTP service
   servers(settings) []string
-  // List of access control restrictions for this NTP service
+  // List of access control restrictions for the NTP service
   restrict(settings) []string
   // Additional information for clock drivers
   fudge(settings) []string
 }
 
-// Rsyslog service configuration
+// rsylog service configuration
 rsyslog.conf {
   init(path string)
   // Path for the main rsyslog file and search
   path() string
-  // Files that make up this Rsyslog service configuration
+  // Files that make up this rsyslog service configuration
   files(path) []file
-  // Raw contents of this Rsyslog service configuration
+  // Raw contents of this rsyslog service configuration
   content(files) string
-  // List of settings for this Rsyslog service
+  // List of settings for this rsyslog service
   settings(content) []string
 }
 
@@ -869,17 +878,17 @@ lsblk {
 lsblk.entry {
   // Device name
   name string
-  // Filesystem Type
+  // File system type
   fstype string
-  // label for the fs
+  // Label for the file system
   label string
-  // uuid for the fs
+  // UUID for the file system
   uuid string
-  // mountpoints for the device
-  mountpoints []string
+  // Mount points for the device
+  mountpoints  []string
 }
 
-// Unix Mounted Filesystem
+// Unix mounted file system
 mount {
   []mount.point
 }
@@ -891,15 +900,15 @@ mount.point @defaults("device path fstype") {
   device string
   // Path
   path string
-  // Filesystem Type
+  // File system type
   fstype string
-  // Mount Options
+  // Mount options
   options map[string]string
-  // Flag whether the mount point is mounted
+  // Whether the mount point is mounted
   mounted bool
 }
 
-// Shadowed Password File
+// Shadowed password file
 shadow {
   []shadow.entry
 }
@@ -912,13 +921,13 @@ shadow.entry {
   password string
   // Date of last password change
   lastchanged time
-  // Minimum password age
+  // Minimum password age in days
   mindays int
-  // Maximum password age
+  // Maximum password age in days
   maxdays int
-  // Password warning period
+  // Password warning period in days
   warndays int
-  // Password inactivity period
+  // Password inactivity period in days
   inactivedays int
   // Account expiration date
   expirydates string
@@ -928,9 +937,9 @@ shadow.entry {
 
 // Yum package manager resource
 yum {
-  // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
+  // Variables defined in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
   vars() map[string]string
-  // List of all configured yum repositories
+  // List of all configured Yum repositories
   repos() []yum.repo
 }
 
@@ -947,7 +956,7 @@ yum.repo {
   baseurl []string
   // Indicator when the repository will expire
   expire string
-  // Deprecated: location of the repo configuration file, use file.path
+  // Deprecated; use file.path
   filename string
   // Repository configuration file path
   file file
@@ -959,7 +968,7 @@ yum.repo {
   size string
   // Mirrors for this repository
   mirrors string
-  // Indicates if this repository is used as package source
+  // Whether the repository is used as package source
   enabled() bool
 }
 
@@ -968,9 +977,9 @@ registrykey @defaults("path") {
   init(path string)
   // Registry key path
   path string
-  // Indicates if the property exists
+  // Whether the property exists
   exists() bool
-  // deprecated: Registry key properties, use `items` instead
+  // Deprecated; use `items` instead
   properties() map[string]string
   // Registry key items
   items() []registrykey.property
@@ -985,9 +994,9 @@ registrykey.property @defaults("path name") {
   path string
   // Registry key name
   name string
-  // Indicates if the property exists
+  // Whether the property exists
   exists() bool
-  // deprecated: Registry key property value converted to string, use `data` instead
+  // Deprecated; use `data` instead
   value() string
   // Registry key type
   type() string
@@ -995,7 +1004,7 @@ registrykey.property @defaults("path name") {
   data() dict
 }
 
-// Container Image
+// Container image
 container.image @defaults("name") {
   // Image reference
   reference string
@@ -1003,44 +1012,44 @@ container.image @defaults("name") {
   name string
   // Identifier of type-specific portion of the image reference
   identifier string
-  // Identifier Type `tag` or `digest`
+  // Identifier type: tag or digest
   identifierType string
-  // Repository used for Container Image
+  // Repository used for the container image
   repository() container.repository
 }
 
 // Container registry repository
 container.repository {
-  // Container Registry Repository Name
+  // Container registry repository name
   name string
-  // URL Scheme
+  // URL scheme
   scheme string
-  // Container Registry Repository URL
+  // Container registry repository URL
   fullName string
-  // Container Registry URL
+  // Container registry URL
   registry string
 }
 
-// Kubernetes Kubelet configuration
+// Kubernetes kubelet configuration
 kubelet {
   // Kubelet config file
   configFile file
   // Kubelet process
   process process
-  // Combination of config file parameters and cli parameters
+  // Combination of config file parameters and CLI parameters
   configuration dict
 }
 
-// Python package details found on operating system image
+// Python package details found on the operating system image
 python {
   init(path? string)
-  // Path to a specific site-packages location to exclusively scan through (empty means search through default locations)
+  // Path to a specific site-packages location to exclusively scan (empty means scan default locations)
   path string
 
-  // Packages returns a list of all discovered packages
+  // List of all discovered packages
   packages() []python.package
 
-  // Toplevel returns a list of all packages which were specifically installed (ie. not auto-installed as a dependency)
+  // List of all packages that were specifically installed (i.e., not auto-installed as a dependency)
   toplevel() []python.package
 }
 
@@ -1085,19 +1094,19 @@ macos {
 
 // macOS application layer firewall (ALF) service
 macos.alf {
-  // Allow downloaded software to receive incoming connections
+  // Whether the firewall service allows downloaded software to receive incoming connections
   allowDownloadSignedEnabled int
-  // Allow built-in software to receive incoming connections for signed software
+  // Whether the firewall service allows built-in software to receive incoming connections for signed software
   allowSignedEnabled int
-  // Flag if firewall is unloaded
+  // Whether the firewall is unloaded
   firewallUnload int
-  // Indicates if the firewall is enabled
+  // Whether the firewall is enabled
   globalState int
-  // Specifies if alf.log is used
+  // Whether alf.log is used
   loggingEnabled int
-  // Specifies logging flags
+  // Logging flags
   loggingOption int
-  // Stealth mode
+  // Whether the firewall service is in stealth mode
   stealthEnabled int
   // ALF version
   version string
@@ -1116,7 +1125,7 @@ macos.timemachine {
 }
 
 // macOS machine settings
-// The resource requires at least "admin" privileges to run
+// Note: The resource requires at least admin privileges to run.
 macos.systemsetup {
   // Current date
   date() string
@@ -1128,11 +1137,11 @@ macos.systemsetup {
   usingNetworkTime() string
   // Configured network time server
   networkTimeServer() string
-  // Amount of idle time until machine sleeps
+  // Amount of idle time until the machine sleeps
   sleep() []string
-  // Amount of idle time until display sleeps
+  // Amount of idle time until the display sleeps
   displaySleep() string
-  // Amount of idle time until hard disk sleeps
+  // Amount of idle time until the hard disk sleeps
   harddiskSleep() string
   // Whether wake on modem is on or off
   wakeOnModem() string
@@ -1146,7 +1155,7 @@ macos.systemsetup {
   allowPowerButtonToSleepComputer() string
   // Whether remote login (SSH) is on or off
   remoteLogin() string
-  // Whether remote apple events are on or off
+  // Whether remote Apple events are on or off
   remoteAppleEvents() string
   // Computer name
   computerName() string
@@ -1156,7 +1165,7 @@ macos.systemsetup {
   startupDisk() string
   // Number of seconds after which the computer will start up after a power failure
   waitForStartupAfterPowerFailure() string
-  // Whether or not the keyboard should be disabled when the X Serve enclosure lock is engaged
+  // Whether the keyboard is disabled when the X Serve enclosure lock is engaged
   disableKeyboardWhenEnclosureLockIsEngaged() string
 }
 
@@ -1179,11 +1188,11 @@ windows.hotfix {
   init(hotfixId string)
   // Hotfix ID
   hotfixId string
-  // Type of hotfix eg. `Update` or `Security Update`
+  // Type of hotfix (e.g., Update or Security Update)
   description string
   // Reference to knowledge base
   caption string
-  // Date the hotfix was installed on
+  // Date when the hotfix was installed
   installedOn time
   // User that installed the hotfix
   installedBy string
@@ -1200,7 +1209,7 @@ windows.feature {
   displayName string
   // Feature description
   description string
-  // Flag indicates whether the feature is installed
+  // Whether the feature is installed
   installed bool
   // Feature installation state
   installState int
@@ -1228,11 +1237,11 @@ windows.firewall.profile {
   defaultInboundAction int
   // Default action for outbound traffic
   defaultOutboundAction int
-  // If this is true, administrators will be able to create firewall rules which allow unsolicited inbound traffic to be accepted if this is false, such rules will be ignored
+  // Whether administrators can create firewall rules that allow unsolicited inbound traffic (if 0, such rules are ignored)
   allowInboundRules int
-  // Determines whether local firewall rules should be merged into the effective policy along with group policy settings
+  // Whether local firewall rules should merge into the effective policy along with group policy settings
   allowLocalFirewallRules int
-  // Determines whether local IPsec rules should be merged into the effective policy along with rules from group policy
+  // Whether local IPsec rules should merge into the effective policy along with rules from group policy
   allowLocalIPsecRules int
   // Whether to respect user allowed applications created in the legacy firewall
   allowUserApps int
@@ -1240,7 +1249,7 @@ windows.firewall.profile {
   allowUserPorts int
   // Whether to allow unicast responses to multicast traffic
   allowUnicastResponseToMulticast int
-  // If true, users will be notified when an application listens on a port that is close
+  // Whether to notify users when an application listens on a port that is closed
   notifyOnListen int
   // Whether to use stealth mode for IPsec-protected traffic
   enableStealthModeForIPsec int
@@ -1259,7 +1268,7 @@ windows.firewall.profile {
 // Windows Firewall rule entry
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
 windows.firewall.rule {
-  // A string that uniquely identifies this instance within the PolicyStore
+  // A string that uniquely identifies this instance within the policy store
   instanceID string
   // Name of the rule
   name string
@@ -1270,26 +1279,26 @@ windows.firewall.rule {
   // The group that this rule belongs to
   displayGroup string
   // Indicates whether this rule is administratively enabled or disabled
-  // values: enabled (1), disabled (2)
+  // Values: enabled (1), disabled (2)
   enabled int
   // Specifies which direction of traffic to match with this rule
-  // values: inbound (1), outbound (2)
+  // Values: inbound (1), outbound (2)
   direction int
   // Specifies the action to take on traffic that matches this rule
   action int
   // Specifies how this firewall rule will handle edge traversal cases
-  // values: block (0), allow (1), defer to user (2), defer to app (3)
+  // Values: block (0), allow (1), defer to user (2), defer to app (3)
   edgeTraversalPolicy int
-  // Whether to group UDP packets into conversations based upon the local address, local port, and remote port
+  // Whether to group UDP packets into conversations based on the local address, local port, and remote port
   looseSourceMapping bool
-  // Whether to group UDP packets into conversations based only upon the local address and port
+  // Whether to group UDP packets into conversations based only on the local address and port
   localOnlyMapping bool
   // PrimaryStatus provides a high level status value
-  // values: unknown (0), ok (1), degraded (2), error (3)
+  // Values: unknown (0), OK (1), degraded (2), error (3)
   primaryStatus int
   // Detailed status of the rule
   status string
-  // If this object is retrieved from the ActiveStore
+  // Whether this object is retrieved from the ActiveStore
   enforcementStatus string
   // Contains the path to the policy store where this rule originally came from
   policyStoreSource string
@@ -1308,20 +1317,20 @@ windows.bitlocker.volume {
   deviceID string
   // Drive letter of the volume
   driveLetter string
-  // Indicates the status of the encryption or decryption on the volume
+  // Status of the encryption or decryption on the volume
   conversionStatus dict
   // Encryption algorithm and key size used on the volume
   encryptionMethod dict
-  // Indicates whether the contents of the volume are accessible from Windows
-  // 0 = full contents of the volume are accessible
-  // 1 = all or a portion of the contents of the volume are not accessible
+  // Whether the contents of the volume are accessible from Windows
+  // 0 = Full contents of the volume are accessible
+  // 1 = All or a portion of the contents of the volume are not accessible
   lockStatus int
   // Persistent identifier for the volume on this system
   persistentVolumeID string
   // Status of the volume, whether or not BitLocker is protecting the volume
-  // 0 = Protection Off
-  // 1 = Protection On
-  // 2 = Protection Unknown
+  // 0 = Protection off
+  // 1 = Protection on
+  // 2 = Protection unknown
   protectionStatus dict
   // BitLocker Full Volume Encryption metadata version of the volume
   version dict
@@ -1331,23 +1340,38 @@ windows.security {
   products() []windows.security.product
 }
 
+// Private Windows security product
 private windows.security.product {
+  // Type of product
   type string
+  // Product GUID
   guid string
+  // Product name
   name string
+  // Product state
   state int
+  // Product state
   productState string
+  // Signature state
   signatureState string
+  // Time stamp
   timestamp time
 }
 
-// Returns the health for Windows security provider
+// Health of the Windows security provider
 windows.security.health {
+  // Firewall information
   firewall dict
+  // Automatic update information
   autoUpdate dict
+  // Antivirus information
   antiVirus dict
+  // Spyware information
   antiSpyware dict
+  // Internet settings information
   internetSettings dict
+  // User account control information
   uac dict
+  // Security Center service information
   securityCenterService dict
 }

@@ -349,7 +349,7 @@ private k8s.container @defaults("name") {
   args []string
   // Compute resources required by this container
   resources dict
-  // Pod volumes to mount into the container's filesystem
+  // Pod volumes to mount into the container's file system
   volumeMounts []dict
   // List of block devices to be used by the container
   volumeDevices []dict
@@ -389,7 +389,7 @@ private k8s.initContainer @defaults("name") {
   args []string
   // Compute resources required by this container
   resources dict
-  // Pod volumes to mount into the container's filesystem
+  // Pod volumes to mount into the container's file system
   volumeMounts []dict
   // List of block devices to be used by the container
   volumeDevices []dict
@@ -423,7 +423,7 @@ private k8s.ephemeralContainer @defaults("name") {
   command []string
   // Arguments to the entry point
   args []string
-  // Pod volumes to mount into the container's filesystem
+  // Pod volumes to mount into the container's file system
   volumeMounts []dict
   // List of block devices to be used by the container
   volumeDevices []dict

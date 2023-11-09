@@ -144,7 +144,7 @@ aws.efs @defaults("filesystems") {
   filesystems() []aws.efs.filesystem
 }
 
-// AWS Elastic File System (EFS) filesystem
+// AWS Elastic File System (EFS) file system
 private aws.efs.filesystem @defaults("name id region") {
   // Name of the file system
   name string
@@ -1136,7 +1136,7 @@ private aws.backup.vault @defaults("arn") {
 private aws.backup.vaultRecoveryPoint @defaults("arn") {
   // ARN of the recovery point
   arn string
-  // Resource type for the recovery point, e.g. "EFS" or "DynamoDB"
+  // Resource type for the recovery point, (e.g., EFS or DynamoDB)
   resourceType string
   // Information about who created the recovery point
   createdBy dict
@@ -1571,7 +1571,7 @@ aws.ssm {
 private aws.ssm.instance {
   // Instance ID for the SSM Instance
   instanceId string
-  // Ping status (e.g. online) for the SSM Instance
+  // Ping status (e.g., online) for the SSM Instance
   pingStatus string
   // IP Address for the SSM instance
   ipAddress string
@@ -1737,7 +1737,7 @@ private aws.ec2.instance @defaults("arn state") {
   patchState() dict
   // State of the instance (pending, running, stopping, stopped, rebooting, or terminated)
   state string
-  // List of devices attached to the instance (e.g. EBS volume)
+  // List of devices attached to the instance (e.g., EBS volume)
   deviceMappings []aws.ec2.instance.device
   // List of security groups (IDs) associated with the instance
   securityGroups []aws.ec2.securitygroup
@@ -1753,7 +1753,7 @@ private aws.ec2.instance @defaults("arn state") {
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
   ebsOptimized bool
-  // Instance type, e.g. t2.micro
+  // Instance type (e.g., t2.micro)
   instanceType string
   // Tags on the instance
   tags map[string]string
@@ -1781,7 +1781,7 @@ private aws.ec2.keypair @defaults("arn name") {
   fingerprint string
   // Name of the key pair
   name string
-  // Type of key (e.g. RSA)
+  // Type of key (e.g., RSA)
   type string
   // Tags for the key pair
   tags map[string]string

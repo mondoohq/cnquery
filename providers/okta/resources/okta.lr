@@ -24,7 +24,7 @@ okta {
   customRoles() []okta.customRole
 }
 
-// Okta Organization
+// Okta organization
 okta.organization @defaults("companyName") {
   // ID of organization
   id string
@@ -60,7 +60,7 @@ okta.organization @defaults("companyName") {
   lastUpdated time
   // Expiration of organization
   expiresAt time
-  // Indicates whether the org's users receive Okta communication email
+  // Indicates whether the organization's users receive Okta communication email
   optOutCommunicationEmails() bool
   // Billing contact of organization
   billingContact() okta.user
@@ -72,7 +72,7 @@ okta.organization @defaults("companyName") {
   threatInsightSettings() okta.threatsConfiguration
 }
 
-// Okta Policy
+// Okta policy
 okta.policies {
   // Password policies
   password() []okta.policy
@@ -90,15 +90,15 @@ okta.policies {
   profileEnrollment() []okta.policy
 }
 
-// Okta User
+// Okta user
 private okta.user @defaults("profile['email']" ){
   // Unique key for user
   id string
-  // The user's type identifier
+  // User's type identifier
   typeId string
-  // The user's type object
+  // User's type object
   type dict
-  // The user credentials
+  // User credentials
   credentials dict
   // Timestamp when the user was activated
   activated time
@@ -122,7 +122,7 @@ private okta.user @defaults("profile['email']" ){
   roles() []okta.role
 }
 
-// Okta Role
+// Okta role
 private okta.role @defaults("label status") {
   // The identifier of the role
   id string
@@ -140,9 +140,9 @@ private okta.role @defaults("label status") {
   type string
 }
 
-// Okta Group
+// Okta group
 private okta.group @defaults("name") {
-  // Unique key for Group
+  // Unique key for the group
   id string
 	// Group name
   name string
@@ -164,9 +164,9 @@ private okta.group @defaults("name") {
   roles() []okta.role
 }
 
-// Okta Group Rule
+// Okta group rule
 private okta.groupRule @defaults("name") {
-  // Unique key for group rule
+  // Unique key for the group rule
   id string
 	// Group rule name
   name string
@@ -176,17 +176,17 @@ private okta.groupRule @defaults("name") {
 	type string
 }
 
-// Okta Application
+// Okta application
 private okta.application @defaults("name") {
-  // Unique key for the app
+  // Unique key for the application
   id string
-  // Unique key that defines the app
+  // Unique key that defines the application
   name string
-  // User-defined display name for the app
+  // User-defined display name for the apapplicationp
   label string
-  // Timestamp when the app was created
+  // Timestamp when the application was created
   created time
-  // Timestamp when the app was last updated
+  // Timestamp when the application was last updated
   lastUpdated time
   // Credentials for the specified sign-on mode
   credentials dict
@@ -196,17 +196,17 @@ private okta.application @defaults("name") {
   licensing dict
   // Valid JSON schema for specifying properties
   profile dict
-  // Settings for the app
+  // Settings for the application
   settings dict
-  // Authentication mode of the app
+  // Authentication mode of the application
   signOnMode string
-  // Status of the app
+  // Status of the application
   status string
-  // Visibility settings for the app
+  // Visibility settings for the application
   visibility dict
 }
 
-// Okta Domain
+// Okta domain
 private okta.domain @defaults("domain") {
   // Domain ID
   id string
@@ -220,7 +220,7 @@ private okta.domain @defaults("domain") {
   publicCertificate dict
 }
 
-// Okta Policy
+// Okta policy
 private okta.policy @defaults("name") {
   // Identifier of the policy
   id string
@@ -248,7 +248,7 @@ private okta.policy @defaults("name") {
   rules() []okta.policyRule
 }
 
-// Okta Policy Rule
+// Okta policy rule
 private okta.policyRule @defaults("name") {
   // Identifier of the rule
   id string
@@ -272,7 +272,7 @@ private okta.policyRule @defaults("name") {
   lastUpdated time
 }
 
-// Okta Trusted Origin
+// Okta trusted origin
 private okta.trustedOrigin @defaults("name") {
   // Unique identifier for the trusted origin
   id string
@@ -288,13 +288,13 @@ private okta.trustedOrigin @defaults("name") {
   lastUpdated time
   // ID of entity that last updated the trusted origin
   lastUpdatedBy string
-  // Array of Scope types that this trusted origin is used for
+  // Array of scope types for which this trusted origin is used
   scopes []dict
   // Status of the trusted origin
   status string
 }
 
-// Okta Network Zone
+// Okta network zone
 private okta.network @defaults("name type") {
   // Unique identifier for the network zone
   id string
@@ -316,7 +316,7 @@ private okta.network @defaults("name type") {
   usage string
   // IP type
   proxyType string
-  // IP addresses that are allowed to forward a request from gateway
+  // IP addresses that are allowed to forward a request from the gateway
   proxies []dict
   // Locations for the network zone
   locations []dict
@@ -324,7 +324,7 @@ private okta.network @defaults("name type") {
   gateways []dict
 }
 
-// Okta ThreatInsight Settings
+// Okta ThreatInsight settings
 private okta.threatsConfiguration @defaults("action") {
   // Action
   action string
@@ -337,7 +337,7 @@ private okta.threatsConfiguration @defaults("action") {
 
 }
 
-// Okta Custom Role
+// Okta custom role
 private okta.customRole @defaults("label") {
   // Identifier for the custom role
   id string
