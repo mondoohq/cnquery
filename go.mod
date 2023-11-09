@@ -16,15 +16,15 @@ require (
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.0
 	github.com/aws/aws-sdk-go v1.46.6
-	github.com/aws/aws-sdk-go-v2 v1.21.2
+	github.com/aws/aws-sdk-go-v2 v1.22.2
 	github.com/aws/aws-sdk-go-v2/config v1.19.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.43
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.13
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.128.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.40.0
-	github.com/aws/smithy-go v1.15.0
+	github.com/aws/smithy-go v1.16.0
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231024185945-8841054dbdb8
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.16.1
