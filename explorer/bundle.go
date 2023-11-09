@@ -145,7 +145,7 @@ func bundleFromSingleFile(path string) (*Bundle, error) {
 func BundleFromYAML(data []byte) (*Bundle, error) {
 	var res Bundle
 	err := yaml.Unmarshal(data, &res)
-	res.EnsureUIDs()
+	res.DeprecatedV9_EnsureUIDs()
 	return &res, err
 }
 
@@ -543,20 +543,33 @@ func (p *Bundle) FilterQueryPacks(IDs []string) bool {
 	return len(res) == 0
 }
 
-// Makes sure every query in the bundle and every query pack has a UID set,
+// DeprecatedV9_EnsureUIDs makes sure every query in the bundle and every query pack has a UID set,
 // IF the MRN is empty. Otherwise MRNs suffice.
-func (p *Bundle) EnsureUIDs() {
+// FIXME: DEPRECATED, remove in v10.0. Users must either set UIDs or MRNs
+func (p *Bundle) DeprecatedV9_EnsureUIDs() {
 	for i := range p.Packs {
-		pack := p.Packs[i]
-		if pack.Mrn == "" && pack.Uid == "" {
-			pack.Uid = ksuid.New().String()
-		}
+		p.Packs[i].DeprecatedV9_ensureUIDs()
+	}
+}
 
-		for j := range pack.Queries {
-			query := pack.Queries[j]
-			if query.Mrn == "" && query.Uid == "" {
-				query.Uid = ksuid.New().String()
-			}
+// DeprecatedV9_ensureUIDs makes sure every query in this query pack has a UID set,
+// IF the MRN is empty. Otherwise MRNs suffice.
+// FIXME: DEPRECATED, remove in v10.0. Users must either set UIDs or MRNs
+func (p *QueryPack) DeprecatedV9_ensureUIDs() {
+	if p.Mrn == "" && p.Uid == "" {
+		log.Warn().
+			Str("name", p.Name).
+			Msg("QueryPack is missing a UID in bundle. Please set one, by v10+ it will be mandatory to have it")
+		p.Uid = ksuid.New().String()
+	}
+
+	for j := range p.Queries {
+		query := p.Queries[j]
+		if query.Mrn == "" && query.Uid == "" {
+			log.Warn().
+				Str("title", query.Title).
+				Msg("Query is missing a UID in bundle. Please set one, by v10+ it will be mandatory to have it")
+			query.Uid = ksuid.New().String()
 		}
 	}
 }
