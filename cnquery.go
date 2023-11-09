@@ -54,7 +54,7 @@ type Release struct {
 
 var cnqueryReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
 
-// GetLatestReleaseName fetches the name of the specified release from releases.mondoo.com
+// GetLatestReleaseName fetches the name of the latest release from releases.mondoo.com
 func GetLatestReleaseName(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
