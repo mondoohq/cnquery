@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
 // Version is set via ldflags
@@ -49,10 +48,11 @@ func GetVersion() string {
 
 // Release represents a GitHub release
 type Release struct {
-	Name string `json:"name"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
-var cnqueryGithubReleaseUrl = "https://api.github.com/repos/mondoohq/cnquery/releases/latest"
+var cnqueryGithubReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
 
 // GetLatestReleaseName fetches the name of the latest release from the specified GitHub repository
 func GetLatestReleaseName(url string) (string, error) {
@@ -76,7 +76,7 @@ func GetLatestReleaseName(url string) (string, error) {
 		return "", fmt.Errorf("error unmarshalling response: %v", err)
 	}
 
-	return release.Name, nil
+	return release.Version, nil
 }
 
 // GetLatestVersion returns the latest version available on Github
@@ -85,8 +85,7 @@ func GetLatestVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cleanVersion := strings.TrimPrefix(releaseName, "v")
-	return cleanVersion, nil
+	return releaseName, nil
 }
 
 var coreSemverRegex = regexp.MustCompile(`^(\d+.\d+.\d+)`)
