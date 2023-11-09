@@ -182,7 +182,7 @@ private okta.application @defaults("name") {
   id string
   // Unique key that defines the application
   name string
-  // User-defined display name for the apapplicationp
+  // User-defined display name for the application
   label string
   // Timestamp when the application was created
   created time

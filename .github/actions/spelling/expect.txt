@@ -25,6 +25,7 @@ gistfile
 gpu
 gvnic
 hostkeys
+HSTS
 iap
 ilb
 ingresstls

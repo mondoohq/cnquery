@@ -845,7 +845,7 @@ ntp.conf {
   fudge(settings) []string
 }
 
-// rsylog service configuration
+// rsyslog service configuration
 rsyslog.conf {
   init(path string)
   // Path for the main rsyslog file and search

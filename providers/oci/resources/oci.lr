@@ -82,7 +82,7 @@ private oci.identity.user @defaults("name") {
   emailVerified bool
   // Properties indicating how the user is allowed to authenticate
   capabilities map[string]bool
-  // Most recentl login
+  // Most recent login
   lastLogin time
   // Previous login
   previousLogin time
