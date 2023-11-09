@@ -385,6 +385,4 @@ ms365.sharepointonline {
 ms365.teams {
   // CS Teams client configuration
   csTeamsClientConfiguration dict
-  // List of OAuth configurations
-  csOAuthConfiguration []dict
 }

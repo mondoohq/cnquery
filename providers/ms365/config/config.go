@@ -37,6 +37,14 @@ var Config = plugin.Provider{
 					Option:  plugin.FlagOption_Hidden,
 				},
 				{
+					Long:    "organization",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "The organization to be scanned.",
+					Option:  plugin.FlagOption_Hidden,
+				},
+
+				{
 					Long:    "client-secret",
 					Type:    plugin.FlagType_String,
 					Default: "",

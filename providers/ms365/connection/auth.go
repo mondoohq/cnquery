@@ -8,7 +8,9 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+
 	"github.com/pkg/errors"
+
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 )
 

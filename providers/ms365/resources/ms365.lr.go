@@ -623,9 +623,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
 	},
-	"ms365.teams.csOAuthConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Teams).GetCsOAuthConfiguration()).ToDataRes(types.Array(types.Dict))
-	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1324,10 +1321,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
-		return
-	},
-	"ms365.teams.csOAuthConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365Teams).CsOAuthConfiguration, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -3147,7 +3140,6 @@ type mqlMs365Teams struct {
 	__id string
 	// optional: if you define mqlMs365TeamsInternal it will be used here
 	CsTeamsClientConfiguration plugin.TValue[interface{}]
-	CsOAuthConfiguration plugin.TValue[[]interface{}]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -3184,8 +3176,4 @@ func (c *mqlMs365Teams) MqlID() string {
 
 func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[interface{}] {
 	return &c.CsTeamsClientConfiguration
-}
-
-func (c *mqlMs365Teams) GetCsOAuthConfiguration() *plugin.TValue[[]interface{}] {
-	return &c.CsOAuthConfiguration
 }
