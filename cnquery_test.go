@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testGetLatestVersion(t *testing.T) {
+func TestGetLatestVersion(t *testing.T) {
 	version, err := GetLatestVersion()
 
 	assert.NoError(t, err)
