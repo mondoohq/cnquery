@@ -54,7 +54,7 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("systemctl list-unit-files --type service --all")
+	c, err := mock.RunCommand("systemctl list-unit-files --all")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("systemctl list-unit-files --type service --all")
+	c, err := mock.RunCommand("systemctl list-unit-files --all")
 	if err != nil {
 		t.Fatal(err)
 	}
