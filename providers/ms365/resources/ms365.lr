@@ -21,7 +21,7 @@ microsoft {
   settings() dict
 }
 
-// Microsoft Organization
+// Microsoft organization
 private microsoft.organization @defaults("displayName") {
   // Organization ID
   id string
@@ -35,7 +35,7 @@ private microsoft.organization @defaults("displayName") {
   verifiedDomains []dict
 }
 
-// Microsoft User
+// Microsoft user
 private microsoft.user @defaults("id displayName mail") {
   // User ID
   id string
@@ -83,7 +83,7 @@ private microsoft.user @defaults("id displayName mail") {
   settings() dict
 }
 
-// Microsoft Group
+// Microsoft group
 private microsoft.group @defaults("id displayName") {
   // Group ID
   id string
@@ -101,7 +101,7 @@ private microsoft.group @defaults("id displayName") {
   members() []microsoft.user
 }
 
-// Microsoft Domain
+// Microsoft domain
 private microsoft.domain @defaults("id") {
   // Domain ID
   id string
@@ -109,15 +109,15 @@ private microsoft.domain @defaults("id") {
   authenticationType string
   // Domain availability status
   availabilityStatus string
-  // Whether domain is admin managed
+  // Whether the domain is admin managed
   isAdminManaged bool
-  // Whether domain is default
+  // Whether the domain is the default domain
   isDefault bool
-  // Whether domain is initial
+  // Whether the domain is the initial domain
   isInitial bool
-  // Whether domain is a root domain
+  // Whether the domain is a root domain
   isRoot bool
-  // Whether domain is verified
+  // Whether the domain is verified
   isVerified bool
   // Domain password notification window (days)
   passwordNotificationWindowInDays int
@@ -129,11 +129,11 @@ private microsoft.domain @defaults("id") {
   serviceConfigurationRecords() []microsoft.domaindnsrecord
 }
 
-// Microsoft Domain DNS Record
+// Microsoft domain DNS record
 private microsoft.domaindnsrecord @defaults("id label") {
   // Domain record ID
   id string
-  // Whether domain record is optional
+  // Whether the domain record is optional
   isOptional bool
   // Domain record label
   label string
@@ -143,11 +143,11 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
-  // deprecated, kept for backwards compatibility.
+  // Deprecated; kept for backwards compatibility
   properties dict
 }
 
-// Microsoft Application
+// Microsoft application
 private microsoft.application @defaults("id displayName") {
   // Application ID
   id string
@@ -161,11 +161,11 @@ private microsoft.application @defaults("id displayName") {
   displayName string
   // Application publisher domain
   publisherDomain string
-  // Application sign in audience
+  // Application sign-in audience
   signInAudience string
 }
 
-// Microsoft Service Principal
+// Microsoft service principal
 private microsoft.serviceprincipal @defaults("name") {
   // Service principal ID
   id string
@@ -189,7 +189,7 @@ private microsoft.serviceprincipal @defaults("name") {
   visibleToUsers bool
   // Service principal notes
   notes string
-  // The list of assignments (users and groups) this service principal has
+  // List of assignments (users and groups) this service principal has
   assignments []microsoft.serviceprincipal.assignment
 }
 
@@ -211,33 +211,33 @@ microsoft.security {
   latestSecureScores() microsoft.security.securityscore
 }
 
-// Microsoft Security Score
+// Microsoft Secure Score
 private microsoft.security.securityscore @defaults("id azureTenantId") {
-  // Security score ID
+  // Secure Score ID
   id string
-  // Security score active user count
+  // Secure Score active user count
   activeUserCount int
-  // Security score average comparative score
+  // Secure Score average comparative score
   averageComparativeScores []dict
-  // Security score tenant ID
+  // Secure Score tenant ID
   azureTenantId string
-  // Security score control scores
+  // Secure Score control scores
   controlScores []dict
-  // Security score creation time
+  // Secure Score creation time
   createdDateTime time
-  // Security score current score
+  // Secure Score current score
   currentScore float
-  // Security score enabled services
+  // Secure Score enabled services
   enabledServices []string
-  // Security score licensed user count
+  // Secure Score licensed user count
   licensedUserCount int
-  // Security score max score
+  // Secure Score max score
   maxScore float
-  // Security score vendor information
+  // Secure Score vendor information
   vendorInformation dict
 }
 
-// Microsoft Policies
+// Microsoft policies
 microsoft.policies {
   // Authorization policy
   authorizationPolicy() dict
@@ -249,13 +249,13 @@ microsoft.policies {
   permissionGrantPolicies() []dict
 }
 
-// Microsoft Role Management
+// Microsoft role management
 microsoft.rolemanagement {
   // List of role definitions
   roleDefinitions() []microsoft.rolemanagement.roledefinition
 }
 
-// Microsoft Role Definition
+// Microsoft role definition
 private microsoft.rolemanagement.roledefinition @defaults("id displayName") {
   // Role definition ID
   id string
@@ -277,7 +277,7 @@ private microsoft.rolemanagement.roledefinition @defaults("id displayName") {
   assignments() []microsoft.rolemanagement.roleassignment
 }
 
-// Microsoft Role Assignment
+// Microsoft role assignment
 private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   // Role assignment ID
   id string
@@ -289,7 +289,7 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   principal dict
 }
 
-// Microsoft Device Management
+// Microsoft device management
 microsoft.devicemanagement {
   // List of device configurations
   deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
@@ -297,7 +297,7 @@ microsoft.devicemanagement {
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
 }
 
-// Microsoft Device Configuration
+// Microsoft device configuration
 private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName") {
   // Device configuration ID
   id string
@@ -311,11 +311,11 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
-  // deprecated, kept for backwards compatability.
+  // Deprecated; kept for backwards compatibility
   properties dict
 }
 
-// Microsoft Device Compliance Policy
+// Microsoft device compliance policy
 private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayName") {
   // Device compliance policy ID
   id string
@@ -331,7 +331,7 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
-  // deprecated, kept for backwards compatibility.
+  // Deprecated; kept for backwards compatibility
   properties dict
 }
 
@@ -385,6 +385,6 @@ ms365.sharepointonline {
 ms365.teams {
   // CS Teams client configuration
   csTeamsClientConfiguration dict
-  // List of oauth configurations
+  // List of OAuth configurations
   csOAuthConfiguration []dict
 }

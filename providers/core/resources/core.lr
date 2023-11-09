@@ -8,9 +8,9 @@ option go_package = "go.mondoo.com/cnquery/v9/providers/core/resources"
 mondoo @defaults("version") {
   // Version of the client running on the asset
   version() string
-  // Build of the client (e.g. production, development)
+  // Build of the client (e.g., production, development)
   build() string
-  // Architecture of this client (e.g. linux-amd64)
+  // Architecture of this client (e.g., linux-amd64)
   arch() string
   // Agent execution environment
   jobEnvironment() dict
@@ -36,7 +36,7 @@ asset @defaults("name platform version") {
   version string
   // Architecture this OS is running on
   arch string
-  // Human-readable title of the platform (e.g. "Red Hat 8, Container")
+  // Human-readable title of the platform (e.g., "Red Hat 8, Container")
   title string
   // List of platform families that this platform belongs to
   family []string

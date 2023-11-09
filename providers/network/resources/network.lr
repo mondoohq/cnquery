@@ -26,7 +26,7 @@ http.get @defaults("url statusCode") {
   header() http.header
   // Status returned from this request
   statusCode() int
-  // Version of the HTTP request, e.g. 1.1
+  // Version of the HTTP request, (e.g., 1.1)
   version() string
   // Body returned from this request
   body() string
@@ -36,7 +36,7 @@ http.get @defaults("url statusCode") {
 private http.header @defaults("length=params.length") {
   // Raw list of parameters for this header
   params map[string][]string
-  // Strict-Transport-Security header
+  // HTTP Strict-Transport-Security (HSTS) header
   sts() http.header.sts
   // X-Frame-Options header: DENY, SAMEORIGIN, or ALLOW-FROM origin (obsolete)
   xFrameOptions() string
@@ -67,15 +67,15 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
 // HTTP header for X-XSS-Protection, which is now outdated (replaced by CSP)
 // and may even cause security vulnerabilities
 private http.header.xssProtection @defaults("enabled mode report") {
-  // Enabled when the header value is set to 1. Disabled if set to 0
+  // Enabled when the header value is set to 1; disabled if set to 0
   enabled bool
-  // Mode for XSS filtering.
+  // Mode for XSS filtering
   mode string
-  // Report endpoint for violations (Chromium only).
+  // Report endpoint for violations (Chromium only)
   report string
 }
 
-// Content-type header
+// Content-Type header
 private http.header.contentType @defaults("type") {
   // MIME type for the content
   type string
@@ -83,7 +83,7 @@ private http.header.contentType @defaults("type") {
   params map[string]string
 }
 
-// Set-cookie header
+// Set-Cookie header
 private http.header.setCookie @defaults("name value") {
   // Name of the cookie to set
   name string
@@ -99,15 +99,15 @@ url @defaults("string") {
   init(raw string)
   // The full URL as a string
   string() string
-  // Scheme, e.g. http, https, ssh
+  // Scheme (e.g., http, https, ssh)
   scheme string
-  // User component, may contain username or token (no password)
+  // User component (can contain username or token but no password)
   user string
   // Password, an additional optional component of the user info
   password string
-  // Host, either registered name or IP; e.g. mondoo.com
+  // Host, either registered name or IP (e.g., mondoo.com)
   host string
-  // Port, optional decimal number; e.g. 80
+  // Port, optional decimal number (e.g., 80)
   port int
   // Path, consisting of segments separated by '/'
   path string
@@ -191,11 +191,11 @@ certificate @defaults("serial subject.commonName subject.dn") {
   ocspServer() []string
   // Issuing certificate URL
   issuingCertificateUrl() []string
-  // Identifies if this certificate has been revoked
+  // Whether this certificate has been revoked
   isRevoked() bool
   // The time at which this certificate was revoked
   revokedAt() time
-  // Indicates if the certificate is valid by checking its chain
+  // Whether the certificate is valid (based on its chain)
   isVerified() bool
   // SAN extension value params
   sanExtension() pkix.sanExtension
@@ -240,7 +240,7 @@ pkix.extension @defaults("id") {
   value string
 }
 
-// x509 certificate PKIX Subject Alternative Name extension
+// x509 certificate PKIX Subject Alternative Name (SAN) extension
 private pkix.sanExtension @defaults("dnsNames") {
 	// x509 certificate PKIX extension
 	extension pkix.extension
@@ -261,7 +261,7 @@ private openpgp.entities {
 
 // OpenPGP entity
 private openpgp.entity {
-  // primary public key, which must be a signing key
+  // Primary public key, which must be a signing key
   primaryPublicKey openpgp.publicKey
   // Entity's identities
   identities() []openpgp.identity
@@ -295,7 +295,7 @@ private openpgp.identity {
   email string
   // Comment
   comment string
-  // Identity Signatures
+  // Identity signatures
   signatures() []openpgp.signature
 }
 
@@ -359,28 +359,31 @@ dns @defaults("fqdn") {
 dns.record @defaults("name type") {
   // DNS name
   name string
-  // Time-To-Live (TTL) in seconds
+  // Time-to-live (TTL) in seconds
   ttl int
   // DNS class
   class string
   // DNS type
   type string
-  // Resource Data
+  // Resource data
   rdata []string
 }
 
 // DNS MX record
 dns.mxRecord @defaults("domainName") {
+  // Record name
   name string
+  // Which mail server used if multiple MX records exist
   preference int
+  // Domain name
   domainName string
 }
 
 // DKIM public key representation as defined in RFC 6376
 dns.dkimRecord @defaults("dnsTxt") {
-  // DNS Text representation
+  // DNS text representation
   dnsTxt string
-  // DKIM Selector domain
+  // DKIM selector domain
   domain string
   // Version
   version string
@@ -396,6 +399,6 @@ dns.dkimRecord @defaults("dnsTxt") {
   serviceTypes []string
   // Flags
   flags []string
-  // Verifies if the DKIM entry and public key is valid
+  // Whether the DKIM entry and public key is valid
   valid() bool
 }
