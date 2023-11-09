@@ -46,7 +46,7 @@ func GetVersion() string {
 	return Version
 }
 
-// Release represents a GitHub release
+// Release represents a release
 type Release struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -54,7 +54,7 @@ type Release struct {
 
 var cnqueryGithubReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
 
-// GetLatestReleaseName fetches the name of the latest release from the specified GitHub repository
+// GetLatestReleaseName fetches the name of the specified release from releases.mondoo.com
 func GetLatestReleaseName(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -79,7 +79,7 @@ func GetLatestReleaseName(url string) (string, error) {
 	return release.Version, nil
 }
 
-// GetLatestVersion returns the latest version available on Github
+// GetLatestVersion returns the latest version available on releases.mondoo.com
 func GetLatestVersion() (string, error) {
 	releaseName, err := GetLatestReleaseName(cnqueryGithubReleaseUrl)
 	if err != nil {
