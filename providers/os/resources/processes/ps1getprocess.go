@@ -179,5 +179,7 @@ func (wpm *WindowsProcessManager) Process(pid int64) (*OSProcess, error) {
 }
 
 func (wpm *WindowsProcessManager) ListSocketInodesByProcess() (map[int64]plugin.TValue[[]int64], error) {
-	return nil, errors.New("not implemented")
+	// This function is always invoked when listing processes (for unix and windows). If we return an error
+	// here, we break process listing. Instead we return an empty map
+	return map[int64]plugin.TValue[[]int64]{}, nil
 }
