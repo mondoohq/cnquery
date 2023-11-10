@@ -124,9 +124,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			case "tar":
 				conf.Type = "docker-snapshot"
 				conf.Path = req.Args[1]
+			case "container":
+				conf.Type = "docker-container"
+				conf.Host = req.Args[1]
 			}
 		} else {
-			conf.Type = "docker-container"
+			connType, err := connection.FetchConnectionType(req.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			conf.Type = connType
 			containerID = req.Args[0]
 		}
 	case "filesystem", "fs":
