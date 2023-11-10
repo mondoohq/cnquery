@@ -15,7 +15,6 @@ require (
 	github.com/microsoftgraph/msgraph-sdk-go v1.25.0
 	github.com/pkg/errors v0.9.1
 	go.mondoo.com/cnquery/v9 v9.6.1
-
 )
 
 require (
