@@ -60,7 +60,7 @@ func (c *Ms365Connection) GetTeamsReport(ctx context.Context) (*MsTeamsReport, e
 
 func (c *Ms365Connection) getTeamsReport(accessToken, teamsToken string) (*MsTeamsReport, error) {
 	fmtScript := fmt.Sprintf(teamsReport, accessToken, teamsToken)
-	res, err := c.runPowershellScript(fmtScript)
+	res, err := c.checkAndRunPowershellScript(fmtScript)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func (c *Ms365Connection) getTeamsReport(accessToken, teamsToken string) (*MsTea
 		if err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("failed to generate ms365 report: %s", string(data))
 
+		return nil, fmt.Errorf("failed to generate ms teams report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 	return report, nil
 }

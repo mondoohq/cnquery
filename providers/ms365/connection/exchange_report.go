@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
 )
 
+// TODO: some modules here are commented out. need to figure out how they can be used
 var exchangeReport = `
 $appId = '%s'
 $organization = '%s'
@@ -47,7 +47,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFi
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name HostedOutboundSpamFilterPolicy -Value @($HostedOutboundSpamFilterPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportRule -Value @($TransportRule)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RemoteDomain -Value  @($RemoteDomain)
-Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SafeLinksPolicy -Value @($SafeLinksPolicy)
+#Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SafeLinksPolicy -Value @($SafeLinksPolicy)
 #Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SafeAttachmentPolicy -Value @($SafeAttachmentPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name OrganizationConfig -Value $OrganizationConfig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AuthenticationPolicy -Value @($AuthenticationPolicy)
@@ -94,7 +94,7 @@ func (c *Ms365Connection) GetExchangeReport(ctx context.Context) (*ExchangeOnlin
 
 func (c *Ms365Connection) getReport(outlookToken string) (*ExchangeOnlineReport, error) {
 	fmtScript := fmt.Sprintf(exchangeReport, c.organization, c.clientId, c.tenantId, outlookToken)
-	res, err := c.runPowershellScript(fmtScript)
+	res, err := c.checkAndRunPowershellScript(fmtScript)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,6 @@ func (c *Ms365Connection) getReport(outlookToken string) (*ExchangeOnlineReport,
 		if err != nil {
 			return nil, err
 		}
-		os.WriteFile("report.json", data, 0o644)
 		err = json.Unmarshal(data, report)
 		if err != nil {
 			return nil, err
@@ -114,8 +113,8 @@ func (c *Ms365Connection) getReport(outlookToken string) (*ExchangeOnlineReport,
 		if err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("failed to generate ms365 report: %s", string(data))
 
+		return nil, fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 	return report, nil
 }

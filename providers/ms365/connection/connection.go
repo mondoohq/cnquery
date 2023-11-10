@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"fmt"
+	"io"
 	"runtime"
 	"sync"
 
@@ -90,14 +92,54 @@ func (p *Ms365Connection) PlatformId() string {
 
 // TODO: use LocalConnection here for running cmds?
 func (p *Ms365Connection) runPowershellScript(script string) (*shared.Command, error) {
-	cmd := connection.CommandRunner{}
 	var encodedCmd string
 	if runtime.GOOS == "windows" {
-		cmd.Shell = []string{"powershell", "-c"}
 		encodedCmd = powershell.Encode(script)
 	} else {
-		cmd.Shell = []string{"sh", "-c"}
 		encodedCmd = powershell.EncodeUnix(script)
 	}
-	return cmd.Exec(encodedCmd, []string{})
+	return p.runCmd(encodedCmd)
+}
+
+func (p *Ms365Connection) runCmd(cmd string) (*shared.Command, error) {
+	cmdR := connection.CommandRunner{}
+	if runtime.GOOS == "windows" {
+		cmdR.Shell = []string{"powershell", "-c"}
+	} else {
+		cmdR.Shell = []string{"sh", "-c"}
+	}
+	return cmdR.Exec(cmd, []string{})
+}
+
+func (p *Ms365Connection) checkPowershellAvailable() (bool, error) {
+	if runtime.GOOS == "windows" {
+		// assume powershell is always present on windows
+		return true, nil
+	}
+	// for unix, we need to check if pwsh is available
+	cmd := "which pwsh"
+	res, err := p.runCmd(cmd)
+	if err != nil {
+		return false, err
+	}
+	if res.ExitStatus != 0 {
+		data, err := io.ReadAll(res.Stderr)
+		if err != nil {
+			return false, err
+		}
+		return false, fmt.Errorf("failed to determine if powershell is available: %s", string(data))
+	}
+
+	return res.ExitStatus == 0, nil
+}
+
+func (p *Ms365Connection) checkAndRunPowershellScript(script string) (*shared.Command, error) {
+	pwshAvailable, err := p.checkPowershellAvailable()
+	if err != nil {
+		return nil, err
+	}
+	if !pwshAvailable {
+		return nil, fmt.Errorf("powershell is not available")
+	}
+	return p.runPowershellScript(script)
 }
