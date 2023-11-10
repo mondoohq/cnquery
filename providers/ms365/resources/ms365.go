@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -61,7 +62,7 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 }
 
 func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, nil
+	return args, nil, errors.New("not implemented")
 }
 
 func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
