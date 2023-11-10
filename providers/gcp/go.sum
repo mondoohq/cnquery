@@ -33,8 +33,8 @@ cloud.google.com/go/compute v1.23.3 h1:6sVlXXBmbd7jNX0Ipq0trII3e4n1/MsADLK6a+aiV
 cloud.google.com/go/compute v1.23.3/go.mod h1:VCgBUoMnIVIR0CscqQiPJLAG25E3ZRZMzcFZeQ+h8CI=
 cloud.google.com/go/compute/metadata v0.2.3 h1:mg4jlk7mCAj6xXp9UJ4fjI9VUI5rubuGBW5aJ7UnBMY=
 cloud.google.com/go/compute/metadata v0.2.3/go.mod h1:VAV5nSsACxMJvgaAuX6Pk2AawlZn8kiOGuCv6gTkwuA=
-cloud.google.com/go/container v1.27.1 h1:ZfLRiFM9ddFE92SlA28rknI6YJMz5Z5huAQK+FKWxIQ=
-cloud.google.com/go/container v1.27.1/go.mod h1:b1A1gJeTBXVLQ6GGw9/9M4FG94BEGsqJ5+t4d/3N7O4=
+cloud.google.com/go/container v1.28.0 h1:/o82CFWXIYnT9p/07SnRgybqL3Pmmu86jYIlzlJVUBY=
+cloud.google.com/go/container v1.28.0/go.mod h1:b1A1gJeTBXVLQ6GGw9/9M4FG94BEGsqJ5+t4d/3N7O4=
 cloud.google.com/go/datacatalog v1.18.1 h1:xJp9mZrc2HPaoxIz3sP9pCmf/impifweQ/yGG9VBfio=
 cloud.google.com/go/datacatalog v1.18.1/go.mod h1:TzAWaz+ON1tkNr4MOcak8EBHX7wIRX/gZKM+yTVsv+A=
 cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7TKLgZqpHYE=

@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/accessapproval v1.7.4
 	cloud.google.com/go/bigquery v1.57.1
 	cloud.google.com/go/compute v1.23.3
-	cloud.google.com/go/container v1.27.1
+	cloud.google.com/go/container v1.28.0
 	cloud.google.com/go/functions v1.15.4
 	cloud.google.com/go/iam v1.1.5
 	cloud.google.com/go/kms v1.15.5
