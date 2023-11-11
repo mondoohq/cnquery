@@ -1393,13 +1393,13 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
 }
 
 // Amazon Redshift
-aws.redshift {
+aws.redshift @defaults("clusters") {
   // List of clusters
   clusters() []aws.redshift.cluster
 }
 
 // Amazon Redshift cluster
-private aws.redshift.cluster @defaults("arn") {
+private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus region") {
   // Whether major upgrades are applied automatically
   allowVersionUpgrade bool
   // ARN for the cluster
@@ -1463,7 +1463,7 @@ aws.ecr {
 }
 
 // AWS Elastic Container Registry repository
-private aws.ecr.repository {
+private aws.ecr.repository @defaults("uri region") {
   // ARN of the repository
   arn string
   // Name of the repository
@@ -1483,7 +1483,7 @@ private aws.ecr.repository {
 }
 
 // AWS Elastic Container Registry image
-private aws.ecr.image {
+private aws.ecr.image @defaults("uri region") {
   // SHA256 of the image manifest
   digest string
   // Type of image manifest
@@ -1503,7 +1503,7 @@ private aws.ecr.image {
 }
 
 // AWS Database Migration Service (DMS)
-aws.dms {
+aws.dms @defaults("replicationInstances") {
   // List of DMS replication instances
   replicationInstances() []dict
 }
