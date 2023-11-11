@@ -336,7 +336,11 @@ resources:
       cacheBehaviors: {}
       defaultCacheBehavior: {}
       domainName: {}
+      enabled: {}
+      httpVersion: {}
+      isIPV6Enabled: {}
       origins: {}
+      priceClass: {}
       status: {}
     is_private: true
     min_mondoo_version: latest

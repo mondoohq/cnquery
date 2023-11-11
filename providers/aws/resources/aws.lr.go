@@ -1565,6 +1565,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetCacheBehaviors()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.cloudfront.distribution.httpVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetHttpVersion()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.isIPV6Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetIsIPV6Enabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetPriceClass()).ToDataRes(types.String)
+	},
 	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
 	},
@@ -4328,6 +4340,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.httpVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).HttpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.isIPV6Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).IsIPV6Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).PriceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11233,6 +11261,10 @@ type mqlAwsCloudfrontDistribution struct {
 	Origins plugin.TValue[[]interface{}]
 	DefaultCacheBehavior plugin.TValue[interface{}]
 	CacheBehaviors plugin.TValue[[]interface{}]
+	HttpVersion plugin.TValue[string]
+	IsIPV6Enabled plugin.TValue[bool]
+	Enabled plugin.TValue[bool]
+	PriceClass plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -11294,6 +11326,22 @@ func (c *mqlAwsCloudfrontDistribution) GetDefaultCacheBehavior() *plugin.TValue[
 
 func (c *mqlAwsCloudfrontDistribution) GetCacheBehaviors() *plugin.TValue[[]interface{}] {
 	return &c.CacheBehaviors
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetHttpVersion() *plugin.TValue[string] {
+	return &c.HttpVersion
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetIsIPV6Enabled() *plugin.TValue[bool] {
+	return &c.IsIPV6Enabled
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetPriceClass() *plugin.TValue[string] {
+	return &c.PriceClass
 }
 
 // mqlAwsCloudfrontDistributionOrigin for the aws.cloudfront.distribution.origin resource

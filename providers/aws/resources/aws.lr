@@ -907,7 +907,7 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
 }
 
 // Amazon CloudFront
-aws.cloudfront {
+aws.cloudfront @defaults("distributions functions") {
   // List of CloudFront distributions
   distributions() []aws.cloudfront.distribution
   // List of CloudFront functions
@@ -915,7 +915,7 @@ aws.cloudfront {
 }
 
 // Amazon CloudFront distribution
-private aws.cloudfront.distribution {
+private aws.cloudfront.distribution @defaults("domainName status") {
   // ARN of the CloudFront distribution
   arn string
   // Status of the distribution
@@ -928,10 +928,18 @@ private aws.cloudfront.distribution {
   defaultCacheBehavior dict
   // All cache behaviors for the distribution
   cacheBehaviors []dict
+  // HTTP version of the distribution
+  httpVersion string
+  // Is the distribution IPV6 enabled
+  isIPV6Enabled bool
+  // Is the distribution enabled
+  enabled bool
+  // The price class of the distribution
+  priceClass string
 }
 
 // Amazon CloudFront distribution origin
-private aws.cloudfront.distribution.origin {
+private aws.cloudfront.distribution.origin @defaults("id originPath") {
   // Domain name for the origin
   domainName string
   // Unique id for the origin
@@ -947,7 +955,7 @@ private aws.cloudfront.distribution.origin {
 }
 
 // Amazon CloudFront function
-private aws.cloudfront.function {
+private aws.cloudfront.function @defaults("name status") {
   // Name of the CloudFront function
   name string
   // Status of the CloudFront function

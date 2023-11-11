@@ -302,11 +302,11 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		grant := acl.Grants[i]
 
 		grantee := map[string]interface{}{
-			"id":           llx.StringDataPtr(grant.Grantee.ID)),
-			"name":         llx.StringDataPtr(grant.Grantee.DisplayName)),
-			"emailAddress": llx.StringDataPtr(grant.Grantee.EmailAddress)),
+			"id":           llx.StringDataPtr(grant.Grantee.ID),
+			"name":         llx.StringDataPtr(grant.Grantee.DisplayName),
+			"emailAddress": llx.StringDataPtr(grant.Grantee.EmailAddress),
 			"type":         llx.StringData(string(grant.Grantee.Type)),
-			"uri":          llx.StringDataPtr(grant.Grantee.URI)),
+			"uri":          llx.StringDataPtr(grant.Grantee.URI),
 		}
 		if err != nil {
 			return nil, err
