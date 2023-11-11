@@ -967,13 +967,13 @@ private aws.cloudfront.function {
 }
 
 // AWS CloudTrail
-aws.cloudtrail {
+aws.cloudtrail @defaults("trails") {
   // List of CloudTrail trails associated with the account
   trails() []aws.cloudtrail.trail
 }
 
 // AWS CloudTrail trail
-private aws.cloudtrail.trail @defaults("arn") {
+private aws.cloudtrail.trail @defaults("name region") {
   // ARN of the trail
   arn string
   // Name of the trail

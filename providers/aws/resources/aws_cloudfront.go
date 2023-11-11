@@ -52,11 +52,11 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 					o := d.Origins.Items[i]
 					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
-							"domainName":         llx.StringData(convert.ToString(o.DomainName)),
-							"id":                 llx.StringData(convert.ToString(o.Id)),
+							"domainName":         llx.StringDataPtr(o.DomainName),
+							"id":                 llx.StringDataPtr(o.Id),
 							"connectionAttempts": llx.IntData(convert.ToInt64From32(o.ConnectionAttempts)),
 							"connectionTimeout":  llx.IntData(convert.ToInt64From32(o.ConnectionTimeout)),
-							"originPath":         llx.StringData(convert.ToString(o.OriginPath)),
+							"originPath":         llx.StringDataPtr(o.OriginPath),
 							"account":            llx.StringData(conn.AccountId()),
 						})
 					if err != nil {
