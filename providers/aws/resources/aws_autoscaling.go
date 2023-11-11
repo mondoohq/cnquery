@@ -76,10 +76,10 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					}
 					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
-							"arn":               llx.StringData(convert.ToString(group.AutoScalingGroupARN)),
-							"name":              llx.StringData(convert.ToString(group.AutoScalingGroupName)),
+							"arn":               llx.StringDataPtr(group.AutoScalingGroupARN),
+							"name":              llx.StringDataPtr(group.AutoScalingGroupName),
 							"loadBalancerNames": llx.ArrayData(lbNames, types.String),
-							"healthCheckType":   llx.StringData(convert.ToString(group.HealthCheckType)),
+							"healthCheckType":   llx.StringDataPtr(group.HealthCheckType),
 							"tags":              llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
 							"region":            llx.StringData(regionVal),
 						})
