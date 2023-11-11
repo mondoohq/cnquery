@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
 )
 
@@ -46,10 +45,10 @@ func (a *mqlAwsAccount) organization() (*mqlAwsOrganization, error) {
 	}
 	res, err := CreateResource(a.MqlRuntime, "aws.organization",
 		map[string]*llx.RawData{
-			"arn":                llx.StringData(convert.ToString(org.Organization.Arn)),
+			"arn":                llx.StringDataPtr(org.Organization.Arn),
 			"featureSet":         llx.StringData(string(org.Organization.FeatureSet)),
-			"masterAccountId":    llx.StringData(convert.ToString(org.Organization.MasterAccountId)),
-			"masterAccountEmail": llx.StringData(convert.ToString(org.Organization.MasterAccountEmail)),
+			"masterAccountId":    llx.StringDataPtr(org.Organization.MasterAccountId),
+			"masterAccountEmail": llx.StringDataPtr(org.Organization.MasterAccountEmail),
 		})
 	return res.(*mqlAwsOrganization), err
 }
