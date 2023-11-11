@@ -5,7 +5,6 @@ package connection
 
 import (
 	"fmt"
-	"io"
 	"runtime"
 	"sync"
 
@@ -121,13 +120,6 @@ func (p *Ms365Connection) checkPowershellAvailable() (bool, error) {
 	res, err := p.runCmd(cmd)
 	if err != nil {
 		return false, err
-	}
-	if res.ExitStatus != 0 {
-		data, err := io.ReadAll(res.Stderr)
-		if err != nil {
-			return false, err
-		}
-		return false, fmt.Errorf("failed to determine if powershell is available: %s", string(data))
 	}
 
 	return res.ExitStatus == 0, nil
