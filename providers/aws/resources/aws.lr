@@ -1149,7 +1149,7 @@ private aws.backup.vault @defaults("name region") {
 }
 
 // AWS Backup vault recovery point
-private aws.backup.vaultRecoveryPoint @defaults("arn") {
+private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate status") {
   // ARN of the recovery point
   arn string
   // Resource type for the recovery point, (e.g., EFS or DynamoDB)
