@@ -521,13 +521,13 @@ private aws.acm.certificate @defaults("arn domainName") {
 }
 
 // AWS Auto Scaling
-aws.autoscaling {
+aws.autoscaling @defaults("groups") {
   // List of autoscaling groups across the account
   groups() []aws.autoscaling.group
 }
 
 // AWS Auto Scaling group
-private aws.autoscaling.group @defaults("arn name") {
+private aws.autoscaling.group @defaults("name region") {
   // ARN for the autoscaling group
   arn string
   // Name of the group
@@ -538,6 +538,8 @@ private aws.autoscaling.group @defaults("arn name") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
+  // The region of the Auto Scaling group
+  region string
 }
 
 // AWS Elastic Load Balancing

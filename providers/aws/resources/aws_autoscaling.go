@@ -81,6 +81,7 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"loadBalancerNames": llx.ArrayData(lbNames, types.String),
 							"healthCheckType":   llx.StringData(convert.ToString(group.HealthCheckType)),
 							"tags":              llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
+							"region":            llx.StringData(regionVal),
 						})
 					if err != nil {
 						return nil, err

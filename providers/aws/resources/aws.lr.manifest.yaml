@@ -276,6 +276,8 @@ resources:
       healthCheckType: {}
       loadBalancerNames: {}
       name: {}
+      region:
+        min_mondoo_version: latest
       tags:
         min_mondoo_version: 5.16.0
     is_private: true

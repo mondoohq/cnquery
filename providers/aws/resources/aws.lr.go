@@ -1145,6 +1145,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.autoscaling.group.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -3645,6 +3648,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.autoscaling.group.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9030,6 +9037,7 @@ type mqlAwsAutoscalingGroup struct {
 	LoadBalancerNames plugin.TValue[[]interface{}]
 	HealthCheckType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	Region plugin.TValue[string]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -9087,6 +9095,10 @@ func (c *mqlAwsAutoscalingGroup) GetHealthCheckType() *plugin.TValue[string] {
 
 func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsAutoscalingGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsElb for the aws.elb resource
