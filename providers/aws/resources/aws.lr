@@ -136,7 +136,7 @@ private aws.accessanalyzer.analyzer @defaults("name type status") {
   type string
   // Tags for the analyzer
   tags map[string]string
-  // The name of the last resourcethat was analyzed
+  // The name of the last resource that was analyzed
   lastResourceAnalyzed string
   // Last scan timestamp
   lastResourceAnalyzedAt time
