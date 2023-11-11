@@ -1499,13 +1499,13 @@ aws.dms {
 }
 
 // Amazon API Gateway
-aws.apigateway {
+aws.apigateway @defaults("restApis") {
   // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
 }
 
 // Amazon API Gateway REST API
-private aws.apigateway.restapi @defaults("arn") {
+private aws.apigateway.restapi @defaults("name id") {
   // ARN for the REST API
   arn string
   // Unique ID for the REST API
