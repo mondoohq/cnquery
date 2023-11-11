@@ -74,10 +74,12 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 			for _, v := range vaults.BackupVaultList {
 				mqlGroup, err := CreateResource(a.MqlRuntime, "aws.backup.vault",
 					map[string]*llx.RawData{
-						"arn":       llx.StringDataPtr(v.BackupVaultArn),
-						"name":      llx.StringDataPtr(v.BackupVaultName),
-						"createdAt": llx.TimeDataPtr(v.CreationDate),
-						"region":    llx.StringData(regionVal),
+						"arn":              llx.StringDataPtr(v.BackupVaultArn),
+						"name":             llx.StringDataPtr(v.BackupVaultName),
+						"createdAt":        llx.TimeDataPtr(v.CreationDate),
+						"region":           llx.StringData(regionVal),
+						"locked":           llx.BoolDataPtr(v.Locked),
+						"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
 					})
 				if err != nil {
 					return nil, err

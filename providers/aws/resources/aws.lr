@@ -1142,6 +1142,10 @@ private aws.backup.vault @defaults("name region") {
   region string
   // Date the backup vault was created
   createdAt time
+  // Is the backup locked
+  locked bool
+  // The ARN of the encryption key
+  encryptionKeyArn string
 }
 
 // AWS Backup vault recovery point

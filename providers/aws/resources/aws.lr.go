@@ -1799,6 +1799,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vault.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.backup.vault.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetLocked()).ToDataRes(types.Bool)
+	},
+	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetEncryptionKeyArn()).ToDataRes(types.String)
+	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
 	},
@@ -4690,6 +4696,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.backup.vault.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12381,6 +12395,8 @@ type mqlAwsBackupVault struct {
 	RecoveryPoints plugin.TValue[[]interface{}]
 	Region plugin.TValue[string]
 	CreatedAt plugin.TValue[*time.Time]
+	Locked plugin.TValue[bool]
+	EncryptionKeyArn plugin.TValue[string]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -12450,6 +12466,14 @@ func (c *mqlAwsBackupVault) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsBackupVault) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsBackupVault) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlAwsBackupVault) GetEncryptionKeyArn() *plugin.TValue[string] {
+	return &c.EncryptionKeyArn
 }
 
 // mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource

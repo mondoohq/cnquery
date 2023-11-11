@@ -296,6 +296,8 @@ resources:
     fields:
       arn: {}
       createdAt: {}
+      encryptionKeyArn: {}
+      locked: {}
       name: {}
       recoveryPoints: {}
       region: {}
