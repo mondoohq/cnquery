@@ -130,12 +130,18 @@ private aws.accessanalyzer.analyzer @defaults("name type status") {
   arn string
   // Name for the analyzer
   name string
-  // Status of the analyzer
+  // Status of the analyzer (ACTIVE, CREATING, DISABLED, or FAILED)
   status string
   // Type of analyzer (ACCOUNT or ORGANIZATION)
   type string
   // Tags for the analyzer
   tags map[string]string
+  // The name of the last resourcethat was analyzed
+  lastResourceAnalyzed string
+  // Last scan timestamp
+  lastResourceAnalyzedAt time
+  // Creation timestamp
+  createdAt time
 }
 
 // AWS Elastic File System (EFS) service

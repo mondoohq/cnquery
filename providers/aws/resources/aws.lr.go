@@ -707,6 +707,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.accessanalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetLastResourceAnalyzed()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetLastResourceAnalyzedAt()).ToDataRes(types.Time)
+	},
+	"aws.accessanalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
 	},
@@ -2952,6 +2961,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.accessanalyzer.analyzer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).LastResourceAnalyzed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).LastResourceAnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6778,6 +6799,9 @@ type mqlAwsAccessanalyzerAnalyzer struct {
 	Status plugin.TValue[string]
 	Type plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	LastResourceAnalyzed plugin.TValue[string]
+	LastResourceAnalyzedAt plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsAccessanalyzerAnalyzer creates a new instance of this resource
@@ -6835,6 +6859,18 @@ func (c *mqlAwsAccessanalyzerAnalyzer) GetType() *plugin.TValue[string] {
 
 func (c *mqlAwsAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetLastResourceAnalyzed() *plugin.TValue[string] {
+	return &c.LastResourceAnalyzed
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TValue[*time.Time] {
+	return &c.LastResourceAnalyzedAt
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsEfs for the aws.efs resource

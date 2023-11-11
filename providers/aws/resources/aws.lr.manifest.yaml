@@ -59,6 +59,12 @@ resources:
   aws.accessanalyzer.analyzer:
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: latest
+      lastResourceAnalyzed:
+        min_mondoo_version: latest
+      lastResourceAnalyzedAt:
+        min_mondoo_version: latest
       name: {}
       status: {}
       tags:
