@@ -1793,6 +1793,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.backup.vault.recoveryPoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetRecoveryPoints()).ToDataRes(types.Array(types.Resource("aws.backup.vaultRecoveryPoint")))
 	},
+	"aws.backup.vault.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
 	},
@@ -4676,6 +4682,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.backup.vault.recoveryPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).RecoveryPoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12365,6 +12379,8 @@ type mqlAwsBackupVault struct {
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	RecoveryPoints plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -12426,6 +12442,14 @@ func (c *mqlAwsBackupVault) GetRecoveryPoints() *plugin.TValue[[]interface{}] {
 
 		return c.recoveryPoints()
 	})
+}
+
+func (c *mqlAwsBackupVault) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBackupVault) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource

@@ -1125,19 +1125,23 @@ private aws.applicationautoscaling.target @defaults("arn") {
 }
 
 // AWS Backup
-aws.backup {
+aws.backup @defaults("vaults") {
   // List of vaults for the service
   vaults() []aws.backup.vault
 }
 
 // AWS Backup vault
-private aws.backup.vault @defaults("arn") {
+private aws.backup.vault @defaults("name region") {
   // ARN of the vault
   arn string
   // Name of the vault
   name string
   // List of recovery points stored in the backup vault
   recoveryPoints() []aws.backup.vaultRecoveryPoint
+  // The region of the vault
+  region string
+  // Date the backup vault was created
+  createdAt time
 }
 
 // AWS Backup vault recovery point
