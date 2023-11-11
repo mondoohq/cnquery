@@ -201,7 +201,7 @@ func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 		mqlS3BucketPolicy, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.policy",
 			map[string]*llx.RawData{
 				"name":     llx.StringData(bucketname),
-				"document": llx.StringData(convert.ToString(policy.Policy)),
+				"document": llx.StringDataPtr(policy.Policy),
 			})
 		if err != nil {
 			return nil, err
@@ -302,11 +302,11 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 		grant := acl.Grants[i]
 
 		grantee := map[string]interface{}{
-			"id":           llx.StringData(convert.ToString(grant.Grantee.ID)),
-			"name":         llx.StringData(convert.ToString(grant.Grantee.DisplayName)),
-			"emailAddress": llx.StringData(convert.ToString(grant.Grantee.EmailAddress)),
+			"id":           llx.StringDataPtr(grant.Grantee.ID)),
+			"name":         llx.StringDataPtr(grant.Grantee.DisplayName)),
+			"emailAddress": llx.StringDataPtr(grant.Grantee.EmailAddress)),
 			"type":         llx.StringData(string(grant.Grantee.Type)),
-			"uri":          llx.StringData(convert.ToString(grant.Grantee.URI)),
+			"uri":          llx.StringDataPtr(grant.Grantee.URI)),
 		}
 		if err != nil {
 			return nil, err
