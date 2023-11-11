@@ -493,7 +493,7 @@ private aws.es.domain @defaults("arn name") {
 }
 
 // AWS Certificate Manager resource (for assessing the configuration of AWS Certificate Manager)
-aws.acm {
+aws.acm @defaults("certificates") {
   // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
   certificates() []aws.acm.certificate
 }
