@@ -59,6 +59,12 @@ resources:
   aws.accessanalyzer.analyzer:
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: latest
+      lastResourceAnalyzed:
+        min_mondoo_version: latest
+      lastResourceAnalyzedAt:
+        min_mondoo_version: latest
       name: {}
       status: {}
       tags:
@@ -270,6 +276,8 @@ resources:
       healthCheckType: {}
       loadBalancerNames: {}
       name: {}
+      region:
+        min_mondoo_version: latest
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
@@ -287,8 +295,12 @@ resources:
   aws.backup.vault:
     fields:
       arn: {}
+      createdAt: {}
+      encryptionKeyArn: {}
+      locked: {}
       name: {}
       recoveryPoints: {}
+      region: {}
     is_private: true
     min_mondoo_version: latest
     platform:

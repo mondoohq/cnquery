@@ -707,6 +707,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.accessanalyzer.analyzer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetLastResourceAnalyzed()).ToDataRes(types.String)
+	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetLastResourceAnalyzedAt()).ToDataRes(types.Time)
+	},
+	"aws.accessanalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccessanalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
 	},
@@ -1135,6 +1144,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.autoscaling.group.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.autoscaling.group.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
@@ -1780,6 +1792,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.backup.vault.recoveryPoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVault).GetRecoveryPoints()).ToDataRes(types.Array(types.Resource("aws.backup.vaultRecoveryPoint")))
+	},
+	"aws.backup.vault.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.backup.vault.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.backup.vault.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetLocked()).ToDataRes(types.Bool)
+	},
+	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBackupVault).GetEncryptionKeyArn()).ToDataRes(types.String)
 	},
 	"aws.backup.vaultRecoveryPoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBackupVaultRecoveryPoint).GetArn()).ToDataRes(types.String)
@@ -2954,6 +2978,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsAccessanalyzerAnalyzer).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).LastResourceAnalyzed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.lastResourceAnalyzedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).LastResourceAnalyzedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.accessanalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccessanalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsEfs).__id, ok = v.Value.(string)
 			return
@@ -3624,6 +3660,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.autoscaling.group.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4648,6 +4688,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.backup.vault.recoveryPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBackupVault).RecoveryPoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.backup.vault.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBackupVault).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.backup.vaultRecoveryPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6778,6 +6834,9 @@ type mqlAwsAccessanalyzerAnalyzer struct {
 	Status plugin.TValue[string]
 	Type plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	LastResourceAnalyzed plugin.TValue[string]
+	LastResourceAnalyzedAt plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsAccessanalyzerAnalyzer creates a new instance of this resource
@@ -6835,6 +6894,18 @@ func (c *mqlAwsAccessanalyzerAnalyzer) GetType() *plugin.TValue[string] {
 
 func (c *mqlAwsAccessanalyzerAnalyzer) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetLastResourceAnalyzed() *plugin.TValue[string] {
+	return &c.LastResourceAnalyzed
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TValue[*time.Time] {
+	return &c.LastResourceAnalyzedAt
+}
+
+func (c *mqlAwsAccessanalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsEfs for the aws.efs resource
@@ -8994,6 +9065,7 @@ type mqlAwsAutoscalingGroup struct {
 	LoadBalancerNames plugin.TValue[[]interface{}]
 	HealthCheckType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	Region plugin.TValue[string]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -9051,6 +9123,10 @@ func (c *mqlAwsAutoscalingGroup) GetHealthCheckType() *plugin.TValue[string] {
 
 func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsAutoscalingGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsElb for the aws.elb resource
@@ -12317,6 +12393,10 @@ type mqlAwsBackupVault struct {
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	RecoveryPoints plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	Locked plugin.TValue[bool]
+	EncryptionKeyArn plugin.TValue[string]
 }
 
 // createAwsBackupVault creates a new instance of this resource
@@ -12378,6 +12458,22 @@ func (c *mqlAwsBackupVault) GetRecoveryPoints() *plugin.TValue[[]interface{}] {
 
 		return c.recoveryPoints()
 	})
+}
+
+func (c *mqlAwsBackupVault) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBackupVault) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBackupVault) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlAwsBackupVault) GetEncryptionKeyArn() *plugin.TValue[string] {
+	return &c.EncryptionKeyArn
 }
 
 // mqlAwsBackupVaultRecoveryPoint for the aws.backup.vaultRecoveryPoint resource

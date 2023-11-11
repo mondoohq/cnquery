@@ -118,21 +118,21 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					continue
 				}
 				args := map[string]*llx.RawData{
-					"arn":                        llx.StringData(convert.ToString(trail.TrailARN)),
-					"name":                       llx.StringData(convert.ToString(trail.Name)),
-					"isMultiRegionTrail":         llx.BoolData(convert.ToBool(trail.IsMultiRegionTrail)),
-					"isOrganizationTrail":        llx.BoolData(convert.ToBool(trail.IsOrganizationTrail)),
-					"logFileValidationEnabled":   llx.BoolData(convert.ToBool(trail.LogFileValidationEnabled)),
-					"includeGlobalServiceEvents": llx.BoolData(convert.ToBool(trail.IncludeGlobalServiceEvents)),
-					"snsTopicARN":                llx.StringData(convert.ToString(trail.SnsTopicARN)),
-					"cloudWatchLogsRoleArn":      llx.StringData(convert.ToString(trail.CloudWatchLogsRoleArn)),
-					"region":                     llx.StringData(convert.ToString(trail.HomeRegion)),
+					"arn":                        llx.StringDataPtr(trail.TrailARN),
+					"name":                       llx.StringDataPtr(trail.Name),
+					"isMultiRegionTrail":         llx.BoolDataPtr(trail.IsMultiRegionTrail),
+					"isOrganizationTrail":        llx.BoolDataPtr(trail.IsOrganizationTrail),
+					"logFileValidationEnabled":   llx.BoolDataPtr(trail.LogFileValidationEnabled),
+					"includeGlobalServiceEvents": llx.BoolDataPtr(trail.IncludeGlobalServiceEvents),
+					"snsTopicARN":                llx.StringDataPtr(trail.SnsTopicARN),
+					"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
+					"region":                     llx.StringDataPtr(trail.HomeRegion),
 				}
 
 				// trail.S3BucketName
 				if trail.S3BucketName != nil {
 					mqlAwsS3Bucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
-						map[string]*llx.RawData{"name": llx.StringData(convert.ToString(trail.S3BucketName))},
+						map[string]*llx.RawData{"name": llx.StringDataPtr(trail.S3BucketName)},
 					)
 					if err != nil {
 						args["s3bucket"] = llx.NilData
@@ -146,7 +146,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 				// add kms key if there is one
 				if trail.KmsKeyId != nil {
 					mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-						map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(trail.KmsKeyId))},
+						map[string]*llx.RawData{"arn": llx.StringDataPtr(trail.KmsKeyId)},
 					)
 					// means the key does not exist or we have no access to it
 					// dont err out, just assign nil

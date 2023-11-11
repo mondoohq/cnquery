@@ -130,12 +130,18 @@ private aws.accessanalyzer.analyzer @defaults("name type status") {
   arn string
   // Name for the analyzer
   name string
-  // Status of the analyzer
+  // Status of the analyzer (ACTIVE, CREATING, DISABLED, or FAILED)
   status string
   // Type of analyzer (ACCOUNT or ORGANIZATION)
   type string
   // Tags for the analyzer
   tags map[string]string
+  // The name of the last resource that was analyzed
+  lastResourceAnalyzed string
+  // Last scan timestamp
+  lastResourceAnalyzedAt time
+  // Creation timestamp
+  createdAt time
 }
 
 // AWS Elastic File System (EFS) service
@@ -487,7 +493,7 @@ private aws.es.domain @defaults("arn name") {
 }
 
 // AWS Certificate Manager resource (for assessing the configuration of AWS Certificate Manager)
-aws.acm {
+aws.acm @defaults("certificates") {
   // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
   certificates() []aws.acm.certificate
 }
@@ -515,13 +521,13 @@ private aws.acm.certificate @defaults("arn domainName") {
 }
 
 // AWS Auto Scaling
-aws.autoscaling {
+aws.autoscaling @defaults("groups") {
   // List of autoscaling groups across the account
   groups() []aws.autoscaling.group
 }
 
 // AWS Auto Scaling group
-private aws.autoscaling.group @defaults("arn name") {
+private aws.autoscaling.group @defaults("name region") {
   // ARN for the autoscaling group
   arn string
   // Name of the group
@@ -532,6 +538,8 @@ private aws.autoscaling.group @defaults("arn name") {
   healthCheckType string
   // Tags for the asg
   tags map[string]string
+  // The region of the Auto Scaling group
+  region string
 }
 
 // AWS Elastic Load Balancing
@@ -959,13 +967,13 @@ private aws.cloudfront.function {
 }
 
 // AWS CloudTrail
-aws.cloudtrail {
+aws.cloudtrail @defaults("trails") {
   // List of CloudTrail trails associated with the account
   trails() []aws.cloudtrail.trail
 }
 
 // AWS CloudTrail trail
-private aws.cloudtrail.trail @defaults("arn") {
+private aws.cloudtrail.trail @defaults("name region") {
   // ARN of the trail
   arn string
   // Name of the trail
@@ -1117,23 +1125,31 @@ private aws.applicationautoscaling.target @defaults("arn") {
 }
 
 // AWS Backup
-aws.backup {
+aws.backup @defaults("vaults") {
   // List of vaults for the service
   vaults() []aws.backup.vault
 }
 
 // AWS Backup vault
-private aws.backup.vault @defaults("arn") {
+private aws.backup.vault @defaults("name region") {
   // ARN of the vault
   arn string
   // Name of the vault
   name string
   // List of recovery points stored in the backup vault
   recoveryPoints() []aws.backup.vaultRecoveryPoint
+  // The region of the vault
+  region string
+  // Date the backup vault was created
+  createdAt time
+  // Is the backup locked
+  locked bool
+  // The ARN of the encryption key
+  encryptionKeyArn string
 }
 
 // AWS Backup vault recovery point
-private aws.backup.vaultRecoveryPoint @defaults("arn") {
+private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate status") {
   // ARN of the recovery point
   arn string
   // Resource type for the recovery point, (e.g., EFS or DynamoDB)
@@ -1493,13 +1509,13 @@ aws.dms {
 }
 
 // Amazon API Gateway
-aws.apigateway {
+aws.apigateway @defaults("restApis") {
   // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
 }
 
 // Amazon API Gateway REST API
-private aws.apigateway.restapi @defaults("arn") {
+private aws.apigateway.restapi @defaults("name id") {
   // ARN for the REST API
   arn string
   // Unique ID for the REST API
