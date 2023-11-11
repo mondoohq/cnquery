@@ -1005,19 +1005,19 @@ private aws.cloudtrail.trail @defaults("name region") {
 }
 
 // Amazon S3 bucket control
-aws.s3control {
+aws.s3control @defaults("accountPublicAccessBlock") {
   // Account level public access configuration for S3
   accountPublicAccessBlock() dict
 }
 
 // Amazon S3 cloud object storage
-aws.s3 {
+aws.s3 @defaults("buckets") {
   // List of S3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
 // Amazon S3 bucket
-private aws.s3.bucket @defaults("arn") {
+private aws.s3.bucket @defaults("name location public") {
   // ARN of the bucket
   arn string
   // Name of the bucket
@@ -1199,7 +1199,7 @@ private aws.dynamodb.limit @defaults("arn") {
 }
 
 // Amazon DynamoDB global table
-private aws.dynamodb.globaltable @defaults("arn") {
+private aws.dynamodb.globaltable @defaults("name") {
   // ARN for the global table
   arn string
   // Table name
@@ -1209,7 +1209,7 @@ private aws.dynamodb.globaltable @defaults("arn") {
 }
 
 // Amazon DynamoDB table
-private aws.dynamodb.table @defaults("arn") {
+private aws.dynamodb.table @defaults("name region") {
   // ARN for the table
   arn string
   // Table name
@@ -1237,7 +1237,7 @@ aws.rds {
 }
 
 // Amazon RDS database cluster
-private aws.rds.dbcluster @defaults("arn") {
+private aws.rds.dbcluster @defaults("id region") {
   // ARN for the database cluster
   arn string
   // Region where the database cluster exists
@@ -1253,7 +1253,7 @@ private aws.rds.dbcluster @defaults("arn") {
 }
 
 // Amazon RDS snapshot
-private aws.rds.snapshot @defaults("arn") {
+private aws.rds.snapshot @defaults("id region type encrypted") {
   // ARN of the snapshot
   arn string
   // ID of the snapshot
@@ -1327,7 +1327,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
 }
 
 // Amazon ElastiCache
-aws.elasticache {
+aws.elasticache @defaults("cacheClusters") {
     // Deprecated. Use `cacheClusters` instead.
   clusters() []dict
   // List of clusters
@@ -1335,7 +1335,7 @@ aws.elasticache {
 }
 
 // Amazon ElastiCache cluster
-private aws.elasticache.cluster @defaults("arn") {
+private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine") {
   // ARN for the cluster
   arn string
   // Whether the cluster has at rest encryption enabled
