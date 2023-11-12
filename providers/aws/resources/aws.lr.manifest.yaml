@@ -336,7 +336,11 @@ resources:
       cacheBehaviors: {}
       defaultCacheBehavior: {}
       domainName: {}
+      enabled: {}
+      httpVersion: {}
+      isIPV6Enabled: {}
       origins: {}
+      priceClass: {}
       status: {}
     is_private: true
     min_mondoo_version: latest
@@ -765,6 +769,14 @@ resources:
       arn: {}
       backups: {}
       continuousBackups: {}
+      createdTime:
+        min_mondoo_version: latest
+      deletionProtectionEnabled:
+        min_mondoo_version: latest
+      globalTableVersion:
+        min_mondoo_version: latest
+      id:
+        min_mondoo_version: latest
       name: {}
       provisionedThroughput: {}
       region: {}

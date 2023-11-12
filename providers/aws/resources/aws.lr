@@ -907,7 +907,7 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
 }
 
 // Amazon CloudFront
-aws.cloudfront {
+aws.cloudfront @defaults("distributions functions") {
   // List of CloudFront distributions
   distributions() []aws.cloudfront.distribution
   // List of CloudFront functions
@@ -915,7 +915,7 @@ aws.cloudfront {
 }
 
 // Amazon CloudFront distribution
-private aws.cloudfront.distribution {
+private aws.cloudfront.distribution @defaults("domainName status") {
   // ARN of the CloudFront distribution
   arn string
   // Status of the distribution
@@ -928,10 +928,18 @@ private aws.cloudfront.distribution {
   defaultCacheBehavior dict
   // All cache behaviors for the distribution
   cacheBehaviors []dict
+  // HTTP version of the distribution
+  httpVersion string
+  // Is the distribution IPV6 enabled
+  isIPV6Enabled bool
+  // Is the distribution enabled
+  enabled bool
+  // The price class of the distribution
+  priceClass string
 }
 
 // Amazon CloudFront distribution origin
-private aws.cloudfront.distribution.origin {
+private aws.cloudfront.distribution.origin @defaults("id originPath") {
   // Domain name for the origin
   domainName string
   // Unique id for the origin
@@ -947,7 +955,7 @@ private aws.cloudfront.distribution.origin {
 }
 
 // Amazon CloudFront function
-private aws.cloudfront.function {
+private aws.cloudfront.function @defaults("name status") {
   // Name of the CloudFront function
   name string
   // Status of the CloudFront function
@@ -1005,19 +1013,19 @@ private aws.cloudtrail.trail @defaults("name region") {
 }
 
 // Amazon S3 bucket control
-aws.s3control {
+aws.s3control @defaults("accountPublicAccessBlock") {
   // Account level public access configuration for S3
   accountPublicAccessBlock() dict
 }
 
 // Amazon S3 cloud object storage
-aws.s3 {
+aws.s3 @defaults("buckets") {
   // List of S3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
 // Amazon S3 bucket
-private aws.s3.bucket @defaults("arn") {
+private aws.s3.bucket @defaults("name location public") {
   // ARN of the bucket
   arn string
   // Name of the bucket
@@ -1199,7 +1207,7 @@ private aws.dynamodb.limit @defaults("arn") {
 }
 
 // Amazon DynamoDB global table
-private aws.dynamodb.globaltable @defaults("arn") {
+private aws.dynamodb.globaltable @defaults("name") {
   // ARN for the global table
   arn string
   // Table name
@@ -1209,7 +1217,7 @@ private aws.dynamodb.globaltable @defaults("arn") {
 }
 
 // Amazon DynamoDB table
-private aws.dynamodb.table @defaults("arn") {
+private aws.dynamodb.table @defaults("name region") {
   // ARN for the table
   arn string
   // Table name
@@ -1226,6 +1234,15 @@ private aws.dynamodb.table @defaults("arn") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
+  // The creation time of the table
+  createdTime time
+  // Is deletion protection enabled
+  deletionProtectionEnabled bool
+  // The global table version
+  globalTableVersion string
+  // The table ID
+  id string
+
 }
 
 // Amazon Relational Database Service (RDS)
@@ -1237,7 +1254,7 @@ aws.rds {
 }
 
 // Amazon RDS database cluster
-private aws.rds.dbcluster @defaults("arn") {
+private aws.rds.dbcluster @defaults("id region") {
   // ARN for the database cluster
   arn string
   // Region where the database cluster exists
@@ -1253,7 +1270,7 @@ private aws.rds.dbcluster @defaults("arn") {
 }
 
 // Amazon RDS snapshot
-private aws.rds.snapshot @defaults("arn") {
+private aws.rds.snapshot @defaults("id region type encrypted") {
   // ARN of the snapshot
   arn string
   // ID of the snapshot
@@ -1327,7 +1344,7 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
 }
 
 // Amazon ElastiCache
-aws.elasticache {
+aws.elasticache @defaults("cacheClusters") {
     // Deprecated. Use `cacheClusters` instead.
   clusters() []dict
   // List of clusters
@@ -1335,7 +1352,7 @@ aws.elasticache {
 }
 
 // Amazon ElastiCache cluster
-private aws.elasticache.cluster @defaults("arn") {
+private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine") {
   // ARN for the cluster
   arn string
   // Whether the cluster has at rest encryption enabled
@@ -1393,13 +1410,13 @@ private aws.elasticache.cluster @defaults("arn") {
 }
 
 // Amazon Redshift
-aws.redshift {
+aws.redshift @defaults("clusters") {
   // List of clusters
   clusters() []aws.redshift.cluster
 }
 
 // Amazon Redshift cluster
-private aws.redshift.cluster @defaults("arn") {
+private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus region") {
   // Whether major upgrades are applied automatically
   allowVersionUpgrade bool
   // ARN for the cluster
@@ -1463,7 +1480,7 @@ aws.ecr {
 }
 
 // AWS Elastic Container Registry repository
-private aws.ecr.repository {
+private aws.ecr.repository @defaults("uri region") {
   // ARN of the repository
   arn string
   // Name of the repository
@@ -1483,7 +1500,7 @@ private aws.ecr.repository {
 }
 
 // AWS Elastic Container Registry image
-private aws.ecr.image {
+private aws.ecr.image @defaults("uri region") {
   // SHA256 of the image manifest
   digest string
   // Type of image manifest
@@ -1503,7 +1520,7 @@ private aws.ecr.image {
 }
 
 // AWS Database Migration Service (DMS)
-aws.dms {
+aws.dms @defaults("replicationInstances") {
   // List of DMS replication instances
   replicationInstances() []dict
 }

@@ -1565,6 +1565,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.distribution.cacheBehaviors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetCacheBehaviors()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.cloudfront.distribution.httpVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetHttpVersion()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.isIPV6Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetIsIPV6Enabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetPriceClass()).ToDataRes(types.String)
+	},
 	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
 	},
@@ -1894,6 +1906,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dynamodb.table.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.dynamodb.table.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.dynamodb.table.globalTableVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetGlobalTableVersion()).ToDataRes(types.String)
+	},
+	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
 	},
 	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
@@ -4330,6 +4354,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsCloudfrontDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.distribution.httpVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).HttpVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.isIPV6Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).IsIPV6Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).PriceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsCloudfrontDistributionOrigin).__id, ok = v.Value.(string)
 			return
@@ -4844,6 +4884,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.dynamodb.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDynamodbTable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.globalTableVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).GlobalTableVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11233,6 +11289,10 @@ type mqlAwsCloudfrontDistribution struct {
 	Origins plugin.TValue[[]interface{}]
 	DefaultCacheBehavior plugin.TValue[interface{}]
 	CacheBehaviors plugin.TValue[[]interface{}]
+	HttpVersion plugin.TValue[string]
+	IsIPV6Enabled plugin.TValue[bool]
+	Enabled plugin.TValue[bool]
+	PriceClass plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -11294,6 +11354,22 @@ func (c *mqlAwsCloudfrontDistribution) GetDefaultCacheBehavior() *plugin.TValue[
 
 func (c *mqlAwsCloudfrontDistribution) GetCacheBehaviors() *plugin.TValue[[]interface{}] {
 	return &c.CacheBehaviors
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetHttpVersion() *plugin.TValue[string] {
+	return &c.HttpVersion
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetIsIPV6Enabled() *plugin.TValue[bool] {
+	return &c.IsIPV6Enabled
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetPriceClass() *plugin.TValue[string] {
+	return &c.PriceClass
 }
 
 // mqlAwsCloudfrontDistributionOrigin for the aws.cloudfront.distribution.origin resource
@@ -12815,6 +12891,10 @@ type mqlAwsDynamodbTable struct {
 	ProvisionedThroughput plugin.TValue[interface{}]
 	ContinuousBackups plugin.TValue[interface{}]
 	Tags plugin.TValue[map[string]interface{}]
+	CreatedTime plugin.TValue[*time.Time]
+	DeletionProtectionEnabled plugin.TValue[bool]
+	GlobalTableVersion plugin.TValue[string]
+	Id plugin.TValue[string]
 }
 
 // createAwsDynamodbTable creates a new instance of this resource
@@ -12890,6 +12970,22 @@ func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Tags, func() (map[string]interface{}, error) {
 		return c.tags()
 	})
+}
+
+func (c *mqlAwsDynamodbTable) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAwsDynamodbTable) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
+	return &c.DeletionProtectionEnabled
+}
+
+func (c *mqlAwsDynamodbTable) GetGlobalTableVersion() *plugin.TValue[string] {
+	return &c.GlobalTableVersion
+}
+
+func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAwsRds for the aws.rds resource

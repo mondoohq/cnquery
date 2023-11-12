@@ -77,12 +77,16 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 				return nil, err
 			}
 			args := map[string]*llx.RawData{
-				"arn":                  llx.StringData(convert.ToString(d.ARN)),
-				"status":               llx.StringData(convert.ToString(d.Status)),
-				"domainName":           llx.StringData(convert.ToString(d.DomainName)),
+				"arn":                  llx.StringDataPtr(d.ARN),
+				"status":               llx.StringDataPtr(d.Status),
+				"domainName":           llx.StringDataPtr(d.DomainName),
 				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
 				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
+				"httpVersion":          llx.StringData(string(d.HttpVersion)),
+				"isIPV6Enabled":        llx.BoolDataPtr(d.IsIPV6Enabled),
+				"enabled":              llx.BoolDataPtr(d.Enabled),
+				"priceClass":           llx.StringData(string(d.PriceClass)),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
