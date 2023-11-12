@@ -293,11 +293,15 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 
 				mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.table",
 					map[string]*llx.RawData{
-						"arn":                   llx.StringData(fmt.Sprintf(dynamoTableArnPattern, regionVal, conn.AccountId(), tableName)),
-						"name":                  llx.StringData(tableName),
-						"region":                llx.StringData(regionVal),
-						"sseDescription":        llx.MapData(sseDict, types.String),
-						"provisionedThroughput": llx.MapData(throughputDict, types.String),
+						"arn":                       llx.StringData(fmt.Sprintf(dynamoTableArnPattern, regionVal, conn.AccountId(), tableName)),
+						"name":                      llx.StringData(tableName),
+						"region":                    llx.StringData(regionVal),
+						"sseDescription":            llx.MapData(sseDict, types.String),
+						"provisionedThroughput":     llx.MapData(throughputDict, types.String),
+						"createdTime":               llx.TimeDataPtr(table.Table.CreationDateTime),
+						"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
+						"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
+						"id":                        llx.StringDataPtr(table.Table.TableId),
 					})
 				if err != nil {
 					return nil, err

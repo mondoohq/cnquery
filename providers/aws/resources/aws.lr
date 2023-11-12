@@ -1234,6 +1234,15 @@ private aws.dynamodb.table @defaults("name region") {
   continuousBackups() dict
   // Tags for the table
   tags() map[string]string
+  // The creation time of the table
+  createdTime time
+  // Is deletion protection enabled
+  deletionProtectionEnabled bool
+  // The global table version
+  globalTableVersion string
+  // The table ID
+  id string
+
 }
 
 // Amazon Relational Database Service (RDS)
