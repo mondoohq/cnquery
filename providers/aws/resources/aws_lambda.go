@@ -88,8 +88,8 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					mqlFunc, err := CreateResource(a.MqlRuntime, "aws.lambda.function",
 						map[string]*llx.RawData{
-							"arn":          llx.StringData(convert.ToString(function.FunctionArn)),
-							"name":         llx.StringData(convert.ToString(function.FunctionName)),
+							"arn":          llx.StringDataPtr(function.FunctionArn),
+							"name":         llx.StringDataPtr(function.FunctionName),
 							"runtime":      llx.StringData(string(function.Runtime)),
 							"dlqTargetArn": llx.StringData(dlqTarget),
 							"vpcConfig":    llx.MapData(vpcConfigJson, types.Any),

@@ -67,8 +67,8 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 				for _, key := range keyList.Keys {
 					mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.kms.key",
 						map[string]*llx.RawData{
-							"id":     llx.StringData(convert.ToString(key.KeyId)),
-							"arn":    llx.StringData(convert.ToString(key.KeyArn)),
+							"id":     llx.StringDataPtr(key.KeyId),
+							"arn":    llx.StringDataPtr(key.KeyArn),
 							"region": llx.StringData(regionVal),
 						})
 					if err != nil {

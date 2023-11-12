@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
 )
@@ -67,8 +66,8 @@ func (a *mqlAwsSecurityhub) getHubs(conn *connection.AwsConnection) []*jobpool.J
 			}
 			mqlHub, err := CreateResource(a.MqlRuntime, "aws.securityhub.hub",
 				map[string]*llx.RawData{
-					"arn":          llx.StringData(convert.ToString(secHub.HubArn)),
-					"subscribedAt": llx.StringData(convert.ToString(secHub.SubscribedAt)),
+					"arn":          llx.StringDataPtr(secHub.HubArn),
+					"subscribedAt": llx.StringDataPtr(secHub.SubscribedAt),
 				})
 			if err != nil {
 				return nil, err

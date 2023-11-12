@@ -76,8 +76,8 @@ func (a *mqlAwsSagemaker) getEndpoints(conn *connection.AwsConnection) []*jobpoo
 					}
 					mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.sagemaker.endpoint",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(convert.ToString(endpoint.EndpointArn)),
-							"name":   llx.StringData(convert.ToString(endpoint.EndpointName)),
+							"arn":    llx.StringDataPtr(endpoint.EndpointArn),
+							"name":   llx.StringDataPtr(endpoint.EndpointName),
 							"region": llx.StringData(regionVal),
 							"tags":   llx.MapData(tags, types.String),
 						})

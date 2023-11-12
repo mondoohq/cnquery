@@ -91,16 +91,16 @@ func (a *mqlAwsEks) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 				vpcConfig, _ := convert.JsonToDict(cluster.ResourcesVpcConfig)
 
 				args := map[string]*llx.RawData{
-					"arn":                llx.StringData(convert.ToString(cluster.Arn)),
-					"name":               llx.StringData(convert.ToString(cluster.Name)),
+					"arn":                llx.StringDataPtr(cluster.Arn),
+					"name":               llx.StringDataPtr(cluster.Name),
 					"region":             llx.StringData(regionVal),
-					"version":            llx.StringData(convert.ToString(cluster.Version)),
-					"platformVersion":    llx.StringData(convert.ToString(cluster.PlatformVersion)),
+					"version":            llx.StringDataPtr(cluster.Version),
+					"platformVersion":    llx.StringDataPtr(cluster.PlatformVersion),
 					"tags":               llx.MapData(strMapToInterface(cluster.Tags), types.String),
 					"status":             llx.StringData(string(cluster.Status)),
 					"encryptionConfig":   llx.ArrayData(encryptionConfig, types.Any),
 					"createdAt":          llx.TimeDataPtr(cluster.CreatedAt),
-					"endpoint":           llx.StringData(convert.ToString(cluster.Endpoint)),
+					"endpoint":           llx.StringDataPtr(cluster.Endpoint),
 					"logging":            llx.MapData(logging, types.Any),
 					"networkConfig":      llx.MapData(kubernetesNetworkConfig, types.Any),
 					"resourcesVpcConfig": llx.MapData(vpcConfig, types.Any),
