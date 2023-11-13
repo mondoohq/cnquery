@@ -6,6 +6,9 @@ package packages
 import (
 	"bufio"
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"regexp"
 
@@ -19,17 +22,20 @@ const (
 
 var PACMAN_REGEX = regexp.MustCompile(`^([\w-]*)\s([\w\d-+.:]+)$`)
 
-func ParsePacmanPackages(input io.Reader) []Package {
+func ParsePacmanPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := PACMAN_REGEX.FindStringSubmatch(line)
 		if m != nil {
+			name := m[1]
+			version := m[2]
 			pkgs = append(pkgs, Package{
-				Name:    m[1],
-				Version: m[2],
+				Name:    name,
+				Version: version,
 				Format:  PacmanPkgFormat,
+				PUrl:    purl.NewPackageUrl(pf, name, version, "", "", packageurl.TypeAlpm),
 			})
 		}
 	}
@@ -38,7 +44,8 @@ func ParsePacmanPackages(input io.Reader) []Package {
 
 // Arch, Manjaro
 type PacmanPkgManager struct {
-	conn shared.Connection
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (ppm *PacmanPkgManager) Name() string {
@@ -55,7 +62,7 @@ func (ppm *PacmanPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read package list")
 	}
 
-	return ParsePacmanPackages(cmd.Stdout), nil
+	return ParsePacmanPackages(ppm.platform, cmd.Stdout), nil
 }
 
 func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {

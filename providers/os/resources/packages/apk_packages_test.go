@@ -4,6 +4,7 @@
 package packages_test
 
 import (
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,6 +13,16 @@ import (
 )
 
 func TestAlpineApkdbParser(t *testing.T) {
+	pf := &inventory.Platform{
+		Name:    "alpine",
+		Version: "3.7.0",
+		Arch:    "x86_64",
+		Family:  []string{"linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "alpine",
+		},
+	}
+
 	mock, err := mock.New("./testdata/packages_apk.toml", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -22,16 +33,18 @@ func TestAlpineApkdbParser(t *testing.T) {
 	}
 	defer f.Close()
 
-	m := packages.ParseApkDbPackages(f)
+	m := packages.ParseApkDbPackages(pf, f)
 	assert.Equal(t, 7, len(m), "detected the right amount of packages")
 
 	var p packages.Package
 	p = packages.Package{
 		Name:        "musl",
 		Version:     "1510953106:1.1.18-r2",
+		Epoch:       "1510953106",
 		Arch:        "x86_64",
 		Description: "the musl c library (libc) implementation",
 		Origin:      "musl",
+		PUrl:        "pkg:apk/alpine/musl@1510953106%3A1.1.18-r2?arch=x86_64&distro=alpine-3.7.0&epoch=1510953106",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "musl detected")
@@ -39,9 +52,11 @@ func TestAlpineApkdbParser(t *testing.T) {
 	p = packages.Package{
 		Name:        "libressl2.6-libcrypto",
 		Version:     "1510257703:2.6.3-r0",
+		Epoch:       "1510257703",
 		Arch:        "x86_64",
 		Description: "libressl libcrypto library",
 		Origin:      "libressl",
+		PUrl:        "pkg:apk/alpine/libressl2.6-libcrypto@1510257703%3A2.6.3-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1510257703",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "libcrypto detected")
@@ -49,9 +64,11 @@ func TestAlpineApkdbParser(t *testing.T) {
 	p = packages.Package{
 		Name:        "libressl2.6-libssl",
 		Version:     "1510257703:2.6.3-r0",
+		Epoch:       "1510257703",
 		Arch:        "x86_64",
 		Description: "libressl libssl library",
 		Origin:      "libressl",
+		PUrl:        "pkg:apk/alpine/libressl2.6-libssl@1510257703%3A2.6.3-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1510257703",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "libssl detected")
@@ -59,9 +76,11 @@ func TestAlpineApkdbParser(t *testing.T) {
 	p = packages.Package{
 		Name:        "apk-tools",
 		Version:     "1515485577:2.8.2-r0",
+		Epoch:       "1515485577",
 		Arch:        "x86_64",
 		Description: "Alpine Package Keeper - package manager for alpine",
 		Origin:      "apk-tools",
+		PUrl:        "pkg:apk/alpine/apk-tools@1515485577%3A2.8.2-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1515485577",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")
@@ -69,9 +88,11 @@ func TestAlpineApkdbParser(t *testing.T) {
 	p = packages.Package{
 		Name:        "busybox",
 		Version:     "1513075346:1.27.2-r7",
+		Epoch:       "1513075346",
 		Arch:        "x86_64",
 		Description: "Size optimized toolbox of many common UNIX utilities",
 		Origin:      "busybox",
+		PUrl:        "pkg:apk/alpine/busybox@1513075346%3A1.27.2-r7?arch=x86_64&distro=alpine-3.7.0&epoch=1513075346",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")
@@ -79,9 +100,11 @@ func TestAlpineApkdbParser(t *testing.T) {
 	p = packages.Package{
 		Name:        "alpine-baselayout",
 		Version:     "1510075862:3.0.5-r2",
+		Epoch:       "1510075862",
 		Arch:        "x86_64",
 		Description: "Alpine base dir structure and init scripts",
 		Origin:      "alpine-baselayout",
+		PUrl:        "pkg:apk/alpine/alpine-baselayout@1510075862%3A3.0.5-r2?arch=x86_64&distro=alpine-3.7.0&epoch=1510075862",
 		Format:      packages.AlpinePkgFormat,
 	}
 	assert.Contains(t, m, p, "apk-tools detected")

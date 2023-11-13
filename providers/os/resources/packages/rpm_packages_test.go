@@ -6,6 +6,7 @@ package packages_test
 import (
 	"bytes"
 	"fmt"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"io"
 	"os"
 	"path/filepath"
@@ -24,12 +25,22 @@ func TestRedhat7Parser(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	pf := &inventory.Platform{
+		Name:    "redhat",
+		Version: "7.4",
+		Arch:    "x86_64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "rhel",
+		},
+	}
+
 	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	m := packages.ParseRpmPackages(c.Stdout)
+	m := packages.ParseRpmPackages(pf, c.Stdout)
 	assert.Equal(t, 144, len(m), "detected the right amount of packages")
 
 	var p packages.Package
@@ -38,6 +49,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Version:     "5.9-14.20130511.el7_4",
 		Arch:        "noarch",
 		Description: "Descriptions of common terminals",
+		PUrl:        "pkg:rpm/rhel/ncurses-base@5.9-14.20130511.el7_4?arch=noarch&distro=rhel-7.4",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ncurses-base")
@@ -47,6 +59,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Version:     "4.8.5-28.el7_5.1",
 		Arch:        "x86_64",
 		Description: "GNU Standard C++ Library",
+		PUrl:        "pkg:rpm/rhel/libstdc%2B%2B@4.8.5-28.el7_5.1?arch=x86_64&distro=rhel-7.4",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "libstdc detected")
@@ -56,6 +69,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Version:     "20160308-10.el7",
 		Arch:        "x86_64",
 		Description: "Network monitoring tools including ping",
+		PUrl:        "pkg:rpm/rhel/iputils@20160308-10.el7?arch=x86_64&distro=rhel-7.4",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -63,8 +77,10 @@ func TestRedhat7Parser(t *testing.T) {
 	p = packages.Package{
 		Name:        "openssl-libs",
 		Version:     "1:1.0.2k-12.el7",
+		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "A general purpose cryptography library with TLS implementation",
+		PUrl:        "pkg:rpm/rhel/openssl-libs@1%3A1.0.2k-12.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -72,8 +88,10 @@ func TestRedhat7Parser(t *testing.T) {
 	p = packages.Package{
 		Name:        "dbus-libs",
 		Version:     "1:1.10.24-7.el7",
+		Epoch:       "1",
 		Arch:        "x86_64",
 		Description: "Libraries for accessing D-BUS",
+		PUrl:        "pkg:rpm/rhel/dbus-libs@1%3A1.10.24-7.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -85,12 +103,22 @@ func TestRedhat6Parser(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	pf := &inventory.Platform{
+		Name:    "redhat",
+		Version: "6.2",
+		Arch:    "x86_64",
+		Family:  []string{"redhat", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "rhel",
+		},
+	}
+
 	c, err := mock.RunCommand("rpm -qa --queryformat '%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	m := packages.ParseRpmPackages(c.Stdout)
+	m := packages.ParseRpmPackages(pf, c.Stdout)
 	assert.Equal(t, 8, len(m), "detected the right amount of packages")
 
 	var p packages.Package
@@ -99,6 +127,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Version:     "2.1-3",
 		Arch:        "i386",
 		Description: "A debugger which detects memory allocation violations.",
+		PUrl:        "pkg:rpm/rhel/ElectricFence@2.1-3?arch=i386&distro=rhel-6.2",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ElectricFence")
@@ -106,8 +135,10 @@ func TestRedhat6Parser(t *testing.T) {
 	p = packages.Package{
 		Name:        "shadow-utils",
 		Version:     "1:19990827-10",
+		Epoch:       "1",
 		Arch:        "i386",
 		Description: "Utilities for managing shadow password files and user/group accounts.",
+		PUrl:        "pkg:rpm/rhel/shadow-utils@1%3A19990827-10?arch=i386&distro=rhel-6.2&epoch=1",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "shadow-utils")
@@ -115,8 +146,10 @@ func TestRedhat6Parser(t *testing.T) {
 	p = packages.Package{
 		Name:        "arpwatch",
 		Version:     "1:2.1a4-19",
+		Epoch:       "1",
 		Arch:        "i386",
 		Description: "Network monitoring tools for tracking IP addresses on a network.",
+		PUrl:        "pkg:rpm/rhel/arpwatch@1%3A2.1a4-19?arch=i386&distro=rhel-6.2&epoch=1",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "arpwatch")
@@ -126,6 +159,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Version:     "1.14.7-22",
 		Arch:        "i386",
 		Description: "The GNU Bourne Again shell (bash) version 1.14.",
+		PUrl:        "pkg:rpm/rhel/bash@1.14.7-22?arch=i386&distro=rhel-6.2",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "bash")
@@ -165,7 +199,17 @@ func TestPhoton4ImageParser(t *testing.T) {
 		packageList.WriteString(fmt.Sprintf("%s %d:%s-%s %s %s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Summary))
 	}
 
-	m := packages.ParseRpmPackages(&packageList)
+	pf := &inventory.Platform{
+		Name:    "photon",
+		Version: "3.0",
+		Arch:    "x86_64",
+		Family:  []string{"linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "photon",
+		},
+	}
+
+	m := packages.ParseRpmPackages(pf, &packageList)
 	assert.Equal(t, 36, len(m), "detected the right amount of packages")
 
 	var p packages.Package
@@ -174,6 +218,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Version:     "6.2-6.ph4",
 		Arch:        "x86_64",
 		Description: "Ncurses Libraries",
+		PUrl:        "pkg:rpm/photon/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-3.0",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ncurses-libs")
@@ -183,6 +228,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Version:     "5.0-2.ph4",
 		Arch:        "x86_64",
 		Description: "Bourne-Again SHell",
+		PUrl:        "pkg:rpm/photon/bash@5.0-2.ph4?arch=x86_64&distro=photon-3.0",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "bash")
@@ -192,6 +238,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Version:     "3.38.5-1.ph4",
 		Arch:        "x86_64",
 		Description: "sqlite3 library",
+		PUrl:        "pkg:rpm/photon/sqlite-libs@3.38.5-1.ph4?arch=x86_64&distro=photon-3.0",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "sqlite-libs")

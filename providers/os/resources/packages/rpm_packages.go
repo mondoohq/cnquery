@@ -7,6 +7,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"os"
 	"path/filepath"
@@ -31,19 +33,23 @@ var RPM_REGEX = regexp.MustCompile(`^([\w-+]*)\s(\d*|\(none\)):([\w\d-+.:]+)\s([
 
 // ParseRpmPackages parses output from:
 // rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\n'
-func ParseRpmPackages(input io.Reader) []Package {
+func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := RPM_REGEX.FindStringSubmatch(line)
 		if m != nil {
-			var version string
-			// only append the epoch if we have a non-zero value
-			if m[2] == "0" || strings.TrimSpace(m[2]) == "(none)" {
-				version = m[3]
+			name := m[1]
+			epoch := m[2]
+			version := m[3]
+
+			// trim epoch if it is 0 or "(none)"
+			if epoch == "0" || strings.TrimSpace(epoch) == "(none)" {
+				epoch = ""
 			} else {
-				version = m[2] + ":" + m[3]
+				// only append the epoch if we have a non-zero value
+				version = epoch + ":" + version
 			}
 
 			arch := m[4]
@@ -53,11 +59,13 @@ func ParseRpmPackages(input io.Reader) []Package {
 			}
 
 			pkgs = append(pkgs, Package{
-				Name:        m[1],
+				Name:        name,
 				Version:     version,
+				Epoch:       epoch,
 				Arch:        arch,
 				Description: m[5],
 				Format:      RpmPkgFormat,
+				PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
 			})
 		}
 	}
@@ -153,7 +161,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read package list")
 	}
-	return ParseRpmPackages(cmd.Stdout), nil
+	return ParseRpmPackages(rpm.platform, cmd.Stdout), nil
 }
 
 // fetch all available packages, is that working with centos 6?
@@ -240,7 +248,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 		packages.WriteString(fmt.Sprintf("%s %d:%s-%s %s %s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Summary))
 	}
 
-	return ParseRpmPackages(&packages), nil
+	return ParseRpmPackages(rpm.platform, &packages), nil
 }
 
 // TODO: Available() not implemented for RpmFileSystemManager

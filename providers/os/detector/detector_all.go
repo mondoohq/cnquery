@@ -17,6 +17,10 @@ import (
 	win "go.mondoo.com/cnquery/v9/providers/os/detector/windows"
 )
 
+const (
+	LabelDistroID = "distro-id"
+)
+
 // Operating Systems
 var macOS = &PlatformResolver{
 	Name:     "macos",
@@ -905,6 +909,9 @@ var linuxFamily = &PlatformResolver{
 
 		pf.Name = ""
 		pf.Title = ""
+		if pf.Labels == nil {
+			pf.Labels = map[string]string{}
+		}
 
 		lsb, err := osrd.lsbconfig()
 		// ignore lsb config if we got an error
@@ -933,6 +940,7 @@ var linuxFamily = &PlatformResolver{
 		} else {
 			if len(osr["ID"]) > 0 {
 				pf.Name = osr["ID"]
+				pf.Labels[LabelDistroID] = osr["ID"]
 			}
 			if len(osr["PRETTY_NAME"]) > 0 {
 				pf.Title = osr["PRETTY_NAME"]

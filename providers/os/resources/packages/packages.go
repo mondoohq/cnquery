@@ -11,6 +11,7 @@ import (
 type Package struct {
 	Name        string `json:"name"`
 	Version     string `json:"version"`
+	Epoch       string `json:"epoch,omitempty"`
 	Arch        string `json:"arch"`
 	Status      string `json:"status,omitempty"`
 	Description string `json:"description"`
@@ -20,6 +21,9 @@ type Package struct {
 	// o 	Package Origin - https://wiki.alpinelinux.org/wiki/Apk_spec
 	Origin string `json:"origin"`
 	Format string `json:"format"`
+
+	// Package Url follows https://github.com/package-url/purl-spec
+	PUrl string `json:"purl,omitempty"`
 }
 
 // extends Package to store available version
@@ -48,9 +52,9 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 
 	switch {
 	case asset.Platform.IsFamily("arch"): // arch family
-		pm = &PacmanPkgManager{conn: conn}
+		pm = &PacmanPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.IsFamily("debian"): // debian family
-		pm = &DebPkgManager{conn: conn}
+		pm = &DebPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux":
 		fallthrough
 	case asset.Platform.IsFamily("redhat"): // rhel family
@@ -58,7 +62,7 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 	case asset.Platform.IsFamily("suse"): // suse handling
 		pm = &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}}
 	case asset.Platform.Name == "alpine": // alpine
-		pm = &AlpinePkgManager{conn: conn}
+		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "macos": // mac os family
 		pm = &MacOSPkgManager{conn: conn}
 	case asset.Platform.Name == "windows":

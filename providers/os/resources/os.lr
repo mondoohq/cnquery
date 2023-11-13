@@ -529,6 +529,8 @@ package @defaults("name version") {
 
   // Name of the package
   name string
+  // Package description
+  description string
   // Current version of the package
   version string
   // Architecture of this package
@@ -540,8 +542,9 @@ package @defaults("name version") {
   format string
   // Status of this package (e.g., if it is needed)
   status() string
-  // Package description
-  description string
+
+  // Package URL
+  purl string
 
   // Package origin (optional)
   origin() string
@@ -552,6 +555,8 @@ package @defaults("name version") {
   installed bool
   // Whether the package is outdated
   outdated() bool
+
+
 }
 
 // List of packages on this system
