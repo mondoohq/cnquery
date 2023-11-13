@@ -602,6 +602,9 @@ test/lint/golangci-lint/run: prep/tools
 	golangci-lint --version
 	golangci-lint run
 
+test/lint/extended: prep/tools
+	golangci-lint run --config=.github/.golangci.yml --timeout=30m
+
 license: license/headers/check
 
 license/headers/check:
