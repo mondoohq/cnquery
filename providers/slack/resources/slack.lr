@@ -28,8 +28,9 @@ slack.team @defaults("id domain") {
 
  // Slack users
 slack.users {
+  // Users in the workspace
   []slack.user
-  // Bot users
+  // Bot users in the workspace
   bots() []slack.user
   // Members of the workspace
   members()  []slack.user
@@ -189,7 +190,7 @@ slack.conversation @defaults("id name") {
   isIM bool
   // Whether the conversation is private between multiple users
   isMpim bool
-  // WHether the conversation is a private channel created before March 2021
+  // Whether the conversation is a private channel created before March 2021
   isGroup bool
   // Whether a conversation is a channel
   isChannel bool
