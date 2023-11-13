@@ -1907,8 +1907,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.dynamodb.table.createdTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDynamodbTable).GetCreatedTime()).ToDataRes(types.Time)
+	"aws.dynamodb.table.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
@@ -4886,8 +4886,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.dynamodb.table.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDynamodbTable).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.dynamodb.table.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.dynamodb.table.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12891,7 +12891,7 @@ type mqlAwsDynamodbTable struct {
 	ProvisionedThroughput plugin.TValue[interface{}]
 	ContinuousBackups plugin.TValue[interface{}]
 	Tags plugin.TValue[map[string]interface{}]
-	CreatedTime plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 	DeletionProtectionEnabled plugin.TValue[bool]
 	GlobalTableVersion plugin.TValue[string]
 	Id plugin.TValue[string]
@@ -12972,8 +12972,8 @@ func (c *mqlAwsDynamodbTable) GetTags() *plugin.TValue[map[string]interface{}] {
 	})
 }
 
-func (c *mqlAwsDynamodbTable) GetCreatedTime() *plugin.TValue[*time.Time] {
-	return &c.CreatedTime
+func (c *mqlAwsDynamodbTable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 func (c *mqlAwsDynamodbTable) GetDeletionProtectionEnabled() *plugin.TValue[bool] {

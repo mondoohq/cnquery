@@ -1235,7 +1235,7 @@ private aws.dynamodb.table @defaults("name region") {
   // Tags for the table
   tags() map[string]string
   // The creation time of the table
-  createdTime time
+  createdAt time
   // Is deletion protection enabled
   deletionProtectionEnabled bool
   // The global table version

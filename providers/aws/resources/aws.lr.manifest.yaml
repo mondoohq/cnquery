@@ -769,7 +769,7 @@ resources:
       arn: {}
       backups: {}
       continuousBackups: {}
-      createdTime:
+      createdAt:
         min_mondoo_version: latest
       deletionProtectionEnabled:
         min_mondoo_version: latest
