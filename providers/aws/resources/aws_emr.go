@@ -75,12 +75,12 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlCluster, err := CreateResource(a.MqlRuntime, "aws.emr.cluster",
 						map[string]*llx.RawData{
-							"arn":                     llx.StringData(convert.ToString(cluster.ClusterArn)),
-							"name":                    llx.StringData(convert.ToString(cluster.Name)),
+							"arn":                     llx.StringDataPtr(cluster.ClusterArn),
+							"name":                    llx.StringDataPtr(cluster.Name),
 							"normalizedInstanceHours": llx.IntData(convert.ToInt64From32(cluster.NormalizedInstanceHours)),
-							"outpostArn":              llx.StringData(convert.ToString(cluster.OutpostArn)),
+							"outpostArn":              llx.StringDataPtr(cluster.OutpostArn),
 							"status":                  llx.MapData(jsonStatus, types.String),
-							"id":                      llx.StringData(convert.ToString(cluster.Id)),
+							"id":                      llx.StringDataPtr(cluster.Id),
 						})
 					if err != nil {
 						return nil, err

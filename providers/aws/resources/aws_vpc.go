@@ -174,10 +174,10 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 		for _, flowLog := range flowLogsRes.FlowLogs {
 			mqlFlowLog, err := CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
 				map[string]*llx.RawData{
-					"id":     llx.StringData(convert.ToString(flowLog.FlowLogId)),
+					"id":     llx.StringDataPtr(flowLog.FlowLogId),
 					"vpc":    llx.StringData(vpc),
 					"region": llx.StringData(a.Region.Data),
-					"status": llx.StringData(convert.ToString(flowLog.FlowLogStatus)),
+					"status": llx.StringDataPtr(flowLog.FlowLogStatus),
 					"tags":   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
 				},
 			)
@@ -222,7 +222,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 			}
 			mqlRouteTable, err := CreateResource(a.MqlRuntime, "aws.vpc.routetable",
 				map[string]*llx.RawData{
-					"id":     llx.StringData(convert.ToString(routeTable.RouteTableId)),
+					"id":     llx.StringDataPtr(routeTable.RouteTableId),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
 				})
 			if err != nil {
