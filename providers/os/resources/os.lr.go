@@ -1565,6 +1565,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"python.package.summary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetSummary()).ToDataRes(types.String)
 	},
+	"python.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetPurl()).ToDataRes(types.String)
+	},
 	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
 	},
@@ -3692,6 +3695,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"python.package.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"python.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10572,6 +10579,7 @@ type mqlPythonPackage struct {
 	License plugin.TValue[string]
 	Author plugin.TValue[string]
 	Summary plugin.TValue[string]
+	Purl plugin.TValue[string]
 	Dependencies plugin.TValue[[]interface{}]
 }
 
@@ -10647,6 +10655,12 @@ func (c *mqlPythonPackage) GetAuthor() *plugin.TValue[string] {
 func (c *mqlPythonPackage) GetSummary() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Summary, func() (string, error) {
 		return c.summary()
+	})
+}
+
+func (c *mqlPythonPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 

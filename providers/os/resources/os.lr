@@ -555,8 +555,6 @@ package @defaults("name version") {
   installed bool
   // Whether the package is outdated
   outdated() bool
-
-
 }
 
 // List of packages on this system
@@ -1061,28 +1059,22 @@ python {
 // Python package information
 python.package @defaults("name version") {
   init(path? string)
-
   // ID is the python.package unique identifier
   id string
-
   // Name of the package
   name() string
-
   // File containing the package metadata
   file file
-
   // Version of the package
   version() string
-
   // License of the package
   license() string
-
   // Author of the package
   author() string
-
   // Short package description
   summary() string
-
+  // Package URL
+  purl() string
   // List of packages depended on
   dependencies() []python.package
 }

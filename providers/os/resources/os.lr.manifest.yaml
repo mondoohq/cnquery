@@ -738,6 +738,7 @@ resources:
       licenses: {}
       name: {}
       path: {}
+      purl: {}
       summary: {}
       version: {}
     min_mondoo_version: latest

@@ -72,6 +72,11 @@ func (k *mqlPythonPackage) summary() (string, error) {
 	return k.Summary.Data, nil
 }
 
+func (k *mqlPythonPackage) purl() (string, error) {
+	k.populateData()
+	return k.Purl.Data, nil
+}
+
 func (k *mqlPythonPackage) dependencies() ([]interface{}, error) {
 	k.populateData()
 	return k.Dependencies.Data, nil
@@ -102,6 +107,7 @@ func (k *mqlPythonPackage) populateData() error {
 	k.Summary = plugin.TValue[string]{Data: ppd.summary, State: plugin.StateIsSet}
 	k.License = plugin.TValue[string]{Data: ppd.license, State: plugin.StateIsSet}
 	k.Dependencies = plugin.TValue[[]interface{}]{Data: deps, State: plugin.StateIsSet}
+	k.Purl = plugin.TValue[string]{Data: ppd.purl, State: plugin.StateIsSet}
 
 	return nil
 }
