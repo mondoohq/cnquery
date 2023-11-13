@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TODO: some modules here are commented out. need to figure out how they can be used
 var exchangeReport = `
 $appId = '%s'
 $organization = '%s'
