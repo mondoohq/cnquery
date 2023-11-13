@@ -28,7 +28,6 @@ slack.team @defaults("id domain") {
 
  // Slack users
 slack.users {
-  // Users in the workspace
   []slack.user
   // Bot users in the workspace
   bots() []slack.user
