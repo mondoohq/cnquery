@@ -319,6 +319,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if len(idDetectors) == 0 {
 			// fallback to default id detectors
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+			asset.IdDetector = idDetectors
 		}
 
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, idDetectors)
@@ -337,6 +338,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if len(idDetectors) == 0 {
 			// fallback to default id detectors
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+			asset.IdDetector = idDetectors
 		}
 
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, idDetectors)
@@ -358,6 +360,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if len(idDetectors) == 0 {
 			// fallback to default id detectors
 			idDetectors = []string{ids.IdDetector_Hostname}
+			asset.IdDetector = idDetectors
 		}
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, idDetectors)
 		if err == nil {
@@ -376,6 +379,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if len(idDetectors) == 0 {
 			// fallback to default id detectors
 			idDetectors = []string{ids.IdDetector_Hostname}
+			asset.IdDetector = idDetectors
 		}
 
 		fingerprint, err := IdentifyPlatform(conn, asset.Platform, idDetectors)
