@@ -48,37 +48,58 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 func (k *mqlPythonPackage) name() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.Name.Data, nil
 }
 
 func (k *mqlPythonPackage) version() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.Version.Data, nil
 }
 
 func (k *mqlPythonPackage) license() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.License.Data, nil
 }
 
 func (k *mqlPythonPackage) author() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.Author.Data, nil
 }
 
 func (k *mqlPythonPackage) summary() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.Summary.Data, nil
 }
 
 func (k *mqlPythonPackage) purl() (string, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
 	return k.Purl.Data, nil
 }
 
 func (k *mqlPythonPackage) dependencies() ([]interface{}, error) {
-	k.populateData()
+	err := k.populateData()
+	if err != nil {
+		return nil, err
+	}
 	return k.Dependencies.Data, nil
 }
 
