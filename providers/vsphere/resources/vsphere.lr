@@ -38,9 +38,9 @@ private vsphere.license @defaults("name") {
 
 // VMware ESXi resource
 esxi {
-  // Current Targeted ESXi Host
+  // Current targeted ESXi host
   host() vsphere.host
-  // Current Targeted Virtual Machine
+  // Current targeted virtual machine
   vm() vsphere.vm
 }
 
@@ -52,11 +52,11 @@ private vsphere.datacenter @defaults("moid name") {
   name string
   // vSphere inventory path
   inventoryPath string
-  // Hosts in datacenter
+  // Hosts in the datacenter
   hosts() []vsphere.host
-  // VMs in datacenter
+  // VMs in the datacenter
   vms() []vsphere.vm
-  // Clusters in datacenter
+  // Clusters in the datacenter
   clusters() []vsphere.cluster
 }
 
@@ -70,7 +70,7 @@ private vsphere.cluster @defaults("moid name") {
   inventoryPath string
   // Cluster properties
   properties dict
-  // ESXi hosts running in cluster
+  // ESXi hosts running in the cluster
   hosts() []vsphere.host
 }
 
@@ -78,21 +78,21 @@ private vsphere.cluster @defaults("moid name") {
 private vsphere.host @defaults("moid name") {
   // vSphere managed object ID
   moid string
-  // vSphere Resource Name
+  // vSphere resource name
   name string
   // vSphere inventory path
   inventoryPath string
   // ESXi properties
   properties dict
-  // Lists of standard virtual switches
+  // Standard virtual switches
   standardSwitch() []vsphere.vswitch.standard
-  // Lists of distributed virtual switches
+  // Distributed virtual switches
   distributedSwitch() []vsphere.vswitch.dvs
-  // Lists physical NICs currently installed and loaded on the system
+  // Physical NICs currently installed and loaded on the system
   adapters() []vsphere.vmnic
-  // Lists of virtual network interface that is used by the VMKernel
+  // Virtual network interface that is used by the VMKernel
   vmknics() []vsphere.vmknic
-  // Lists all VIBs installed on your ESXi host
+  // All VIBs installed on your ESXi host
   packages() []esxi.vib
   // Host-level VIB acceptance level
   acceptanceLevel() string
@@ -183,7 +183,7 @@ esxi.command {
   inventoryPath string
   // Raw command
   command string
-  // Command Result
+  // Command result
   result() []dict
 }
 
@@ -239,11 +239,11 @@ private esxi.service @defaults("key label") {
   label string
   // Flag indicating whether the service is required and cannot be disabled
   required bool
-  // Deprecated: This flag is unimplemented and will always be set to false
+  // Deprecated; always set to false
   uninstallable bool
   // Flag indicating whether the service is currently running
   running bool
-  // List of firewall rulesets used by this service
+  // Firewall rulesets used by this service
   ruleset []string
   // Service activation policy
   policy string
@@ -253,7 +253,7 @@ private esxi.service @defaults("key label") {
 private esxi.timezone @defaults("key name") {
   // Identifier for the time zone
   key string
-  // Time zone name.
+  // Time zone name
   name string
   // Description of the time zone
   description string

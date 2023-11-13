@@ -4,13 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/terraform"
 option go_package = "go.mondoo.com/cnquery/v9/providers/terraform/resources"
 
-// Terraform Configuration Files
+// Terraform configuration files
 terraform {
   // Access to individual files including .tf and .tf.json files
   files() []terraform.file
   // The attributes defined in .tfvars and .tfvars.json
   tfvars() dict
-  // List all referenced terraform modules
+  // All referenced Terraform modules
   modules() []terraform.module
   // Raw HCL blocks
   blocks() []terraform.block
@@ -18,7 +18,7 @@ terraform {
   providers() []terraform.block
   // Data sources blocks
   datasources() []terraform.block
-  // All blocks with type resource
+  // All blocks with the type resource
   resources() []terraform.block
   // Variable blocks
   variables() []terraform.block
@@ -26,75 +26,76 @@ terraform {
   outputs() []terraform.block
 }
 
-// Terraform Configuration File represents a .tf or .tf.json file
+// Terraform configuration file (.tf or .tf.json file)
 terraform.file {
-  // tf or tf.json file
+  // Terraform (.tf or tf.json file)
   path string
   // All blocks within the file
   blocks() []terraform.block
 }
 
-// Position of the Terraform configuration block in file
+// Position of the Terraform configuration block in the file
 terraform.fileposition {
-  // File path to Terraform configuration file
+  // File path to the Terraform configuration file
   path string
   // Line of the block
   line int
-  // Column of the Block
+  // Column of the block
   column int
+  // Size of the file
   byte int
 }
 
-// Terraform Resource Block
+// Terraform resource block
 terraform.block @defaults("type labels") {
   // Block type
   type string
   // Block Labels
   labels []string
-  // Block Name Label
+  // Block name label
   nameLabel() string
-  // Block Start Position
+  // Block start position
   start terraform.fileposition
-  // Block End Position
+  // Block end position
   end terraform.fileposition
-  // Block Arguments
+  // Block arguments
   arguments() dict
-  // Raw Block Attributes
+  // Raw block attributes
   attributes() dict
-  // Child Blocks
+  // Child blocks
   blocks() []terraform.block
   // Related blocks
   related() []terraform.block
-  // Block Snippet
+  // Block snippet
   snippet string
 }
 
-// Terraform Module Block
+// Terraform module block
 terraform.module @defaults("key") {
-  // Unique identifier for this particular module
+  // Unique identifier for the module
   key string
-  // Source indicates where the modules was loaded from
+  // Source from which the module was loaded
   source string
-  // Module Version
+  // Module version
   version string
   //  Path to the directory where the module is stored
   dir string
 
-  // returns the block including the configuration
+  // Block (including the configuration)
   block() terraform.block
 }
 
-// Terraform Settings
+// Terraform settings
 terraform.settings {
-  // Settings Block
+  // Settings block
   block terraform.block
-  // Provider Requirements
+  // Provider requirements
   requiredProviders dict
   // Backend configuration
   backend dict
 }
 
-// Terraform State
+// Terraform state
 terraform.state {
   // Terraform state format version
   formatVersion string
@@ -110,12 +111,12 @@ terraform.state {
   resources() []terraform.state.resource
 }
 
-// Terraform State Output Values
+// Terraform state output values
 terraform.state.output {
   init(identifier string)
   // Output identifier
   identifier string
-  // Flag that indicates if the output is sensitive
+  // Whether the output is sensitive
   sensitive bool
   // Output value
   value() dict
@@ -123,22 +124,22 @@ terraform.state.output {
   type() dict
 }
 
-// Terraform State Module
+// Terraform state module
 terraform.state.module @defaults("address") {
   init(identifier string)
   // Module identifier address
   address string
   // Resources that describe infrastructure objects
   resources() []terraform.state.resource
-  // Child Modules that are being called from this module
+  // Child modules called from this module
   childModules() []terraform.state.module
 }
 
-// Terraform State Resource
+// Terraform state resource
 terraform.state.resource @defaults("name") {
   // Address is the absolute resource address
   address string
-  // Mode can be "managed" or "data"
+  // Mode: managed or data
   mode string
   // Resource type
   type string
@@ -146,19 +147,19 @@ terraform.state.resource @defaults("name") {
   name string
   // Terraform provider
   providerName string
-  // SchemaVersion indicates which version of the resource type schema the "values" property conforms to.
+  // Which version of the resource type schema the `values` property conforms to
   schemaVersion int
   // Attribute values
   values dict
-  // DependsOn contains a list of the resource's dependencies.
+  // List of the resource's dependencies
   dependsOn []string
-  // Tainted is true if the resource is tainted in terraform state.
+  // Whether the resource is tainted in the Terraform state
   tainted bool
-  // Deposed is set if the resource is deposed in terraform state.
+  // Whether the resource is deposed in the Terraform state
   deposedKey string
 }
 
-// Terraform Plan
+// Terraform plan
 terraform.plan {
   // Terraform plan format version
   formatVersion string
@@ -176,7 +177,7 @@ terraform.plan.configuration {
   resources() []dict
 }
 
-// Terraform Plan Resource Change
+// Terraform plan resource change
 terraform.plan.resourceChange @defaults("type name") {
   // Resource address
   address string
@@ -192,15 +193,15 @@ terraform.plan.resourceChange @defaults("type name") {
   name string
   // Provider name
   providerName string
-  // Indicates that this action applies to a "deposed" object
+  // Whether the action applies to a deposed object
   deposed string
-  // Change that will be made to this object
+  // Change to make to this object
   change terraform.plan.proposedChange
   // Resource action reason
   actionReason string
 }
 
-// Terraform Plan Proposed Change
+// Terraform plan proposed change
 terraform.plan.proposedChange @defaults("actions after") {
   // Resource address
   address string

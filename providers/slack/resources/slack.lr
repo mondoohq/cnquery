@@ -6,7 +6,7 @@ option go_package = "go.mondoo.com/cnquery/v9/providers/slack/resources"
 
 // Slack
 slack {
-  // Slack Access Logs
+  // Slack access logs
   accessLogs() []slack.login
   // List of Slack user groups
   userGroups() []slack.userGroup
@@ -14,7 +14,7 @@ slack {
   conversations() []slack.conversation
 }
 
-// Slack Team
+// Slack team
 slack.team @defaults("id domain") {
   // ID of the team
   id string
@@ -26,30 +26,30 @@ slack.team @defaults("id domain") {
   emailDomain string
 }
 
- // Slack Users
+ // Slack users
 slack.users {
   []slack.user
-  // Filter bot users
+  // Bot users
   bots() []slack.user
-  // Filter members of workspace
+  // Members of the workspace
   members()  []slack.user
-  // Filter admins of workspace
+  // Admins of the workspace
   admins() []slack.user
-  // Filter owner of workspace
+  // Owner of the workspace
   owners() []slack.user
 }
 
-// Slack User
+// Slack user
 slack.user @defaults("id name") {
-  // Identifier for workspace user
+  // ID of the workspace user
   id string
   // User name
   name string
   // Slack workspace ID
   teamId string
-  // Indicates if the user has been deactivated
+  // Whether the user has been deactivated
   deleted bool
-  // Special username color.
+  // Special user color
   color string
   // User's first and last name
   realName string
@@ -59,28 +59,29 @@ slack.user @defaults("id name") {
   timeZoneLabel string
   // Number of seconds to offset UTC time
   timeZoneOffset int
-  // Indicates whether the user is actually a bot user
+  // Whether the user is a bot
   isBot bool
-  // Indicates whether the user is an Admin of the current workspace
+  // Whether the user is an admin of the current workspace
   isAdmin bool
-  // Indicates whether the user is an Owner of the current workspace
+  // Whether the user is an owner of the current workspace
   isOwner bool
-  // Indicates whether the user is the Primary Owner of the current workspace
+  // Whether the user is the primary owner of the current workspace
   isPrimaryOwner bool
-  // Indicates whether or not the user is a guest user
+  // Whether the user is a guest user
   isRestricted bool
-  // Indicates whether or not the user is a single-channel guest
+  // Whether the user is a single-channel guest
   isUltraRestricted bool
-  // Indicates if the user belongs to a different workspace
+  // Whether the user belongs to a different workspace
   isStranger bool
+  // Whether the user is an app bot
   isAppUser bool
-  // Indicates whether a user has been invited but has not yet signed in
+  // Whether a user has been invited but has not yet signed in
   isInvitedUser bool
-  // Indicates whether two-factor authentication is enabled for this user
+  // Whether two-factor authentication is enabled for the user
   has2FA bool
-  // Indicates the type of two-factor authentication in use
+  // Type of two-factor authentication the user is using
   twoFactorType string
-  // Indicates whether the user own files
+  // Whether the user owns files
   hasFiles bool
   // Presence of the user
   presence string
@@ -88,11 +89,11 @@ slack.user @defaults("id name") {
   locale string
   // User profile
   profile dict
-  // related Slack Enterprise Grid user
+  // Related Slack Enterprise Grid user
   enterpriseUser slack.enterpriseUser
 }
 
-// Slack Enterprise Grid User
+// Slack Enterprise Grid user
 slack.enterpriseUser {
   // Enterprise user ID
    id string
@@ -100,13 +101,13 @@ slack.enterpriseUser {
    enterpriseId string
    // Name for the Enterprise Grid organization.
    enterpriseName string
-   // Indicates whether the user is an Admin of the Enterprise Grid organization
+   // Whether the user is an admin of the Enterprise Grid organization
    isAdmin bool
-   // Indicates whether the user is an Owner of the Enterprise Grid organization
+   // Whether the user is an owner of the Enterprise Grid organization
    isOwner bool
 }
 
-// Slack User Groups
+// Slack user groups
 slack.userGroup @defaults("handle") {
   // Group ID
   id string
@@ -118,7 +119,7 @@ slack.userGroup @defaults("handle") {
   description string
   // Value used to notify group members
   handle string
-  // Indicates whether the group is external
+  // Whether the group is external
   isExternal bool
   // Timestamp when the group was created
   created time
@@ -152,9 +153,9 @@ slack.login @defaults("userID") {
   userAgent string
   // Best guess at the internet service provider
   isp string
-  // Best guesses on where the access originated, based on the IP address
+  // Best guesses at where the access originated, based on the IP address
   country string
-  // Best guesses on where the access originated, based on the IP address
+  // Best guesses at where the access originated, based on the IP address
   region string
   // First access log entry for user, IP address, and user agent combination
   dateFirst time
@@ -162,15 +163,15 @@ slack.login @defaults("userID") {
   dateLast time
 }
 
-// Slack Conversation
+// Slack conversation
 slack.conversation @defaults("id name") {
   // Conversation ID
   id string
-  // Name of the channel-like thing
+  // Name of the conversation
   name string
-  // User the member that created this conversation
+  // User that created this conversation
   creator slack.user
-  // Timestamp of when the conversation was
+  // Timestamp of when the conversation was created
   created time
   // IETF language code that represents chosen language
   locale string
@@ -182,23 +183,23 @@ slack.conversation @defaults("id name") {
   isArchived bool
   // Indicates that the conversation is open
   isOpen bool
-  // Conversation is privileged between two or more members
+  // Whether the conversation is privileged between two or more members
   isPrivate bool
-  // Indicates whether this is a direct message
+  // Whether the conversation is a direct message
   isIM bool
-  // Indicates whether this private conversation between multiple users
+  // Whether the conversation is private between multiple users
   isMpim bool
-  // Indicates a private channel created before March 2021
+  // WHether the conversation is a private channel created before March 2021
   isGroup bool
-  // Indicates whether a conversation is a channel
+  // Whether a conversation is a channel
   isChannel bool
-  // Indicates whether conversation is in some way shared between multiple workspaces
+  // Whether the conversation is in some way shared between multiple workspaces
   isShared bool
-  // Indicates whether a conversation is part of a Shared Channel with a remote organization
+  // Whether the conversation is part of a shared channel with a remote organization
   isExtShared bool
-  // Indicates whether a conversation is going to be shared with a remote organization
+  // Whether the conversation is to be shared with a remote organization
   isPendingExtShared bool
-  // Indicates whether this shared channel is shared between Enterprise Grid workspaces
+  // Whether the channel is shared between Enterprise Grid workspaces
   isOrgShared bool
   // Priority of the conversation
   priority float
