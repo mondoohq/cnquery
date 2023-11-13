@@ -26,7 +26,7 @@ vcd.organization @defaults("name") {
   name string
   // Organization full name
   fullName string
-  // Indicates if this organization is enabled
+  // Whether this organization is enabled
   isEnabled bool
   // Organization description
   description string
@@ -34,7 +34,7 @@ vcd.organization @defaults("name") {
   vms() []vcd.vm
   // Rights
   rights() []vcd.right
-  // Virtual Data Centers (VDCs)
+  // Virtual data centers (VDCs)
   vdcs() []vcd.vdc
   // VDC groups
   vdcGroups() []vcd.vdcGroup
@@ -46,13 +46,13 @@ vcd.organization @defaults("name") {
   ldapConfiguration() vcd.organization.ldapSettings
 }
 
-// VMware Cloud Director LDAP Setting resource
+// VMware Cloud Director LDAP setting 
 vcd.organization.ldapSettings {
   // URI of the entity
   id string
-  // LDAP attribute=value pair to use for OU (organizational unit)
+  // LDAP attribute-value pair to use for the OU (organizational unit)
   customUsersOu string
-  // Indicates if this organization is connected to an LDAP service
+  // Whether the organization is connected to an LDAP service
   orgLdapMode string
   // Hostname of the LDAP server
   hostname string
@@ -62,17 +62,17 @@ vcd.organization.ldapSettings {
   realm string
 }
 
-// VMware Cloud Director Provider VDC
+// VMware Cloud Director provider VDC
 private vcd.vdcProvider @defaults("name") {
   // Name of the provider VDC
   name string
   // Status of the provider VDC
   status string
-  // Indicates if this provider VDC is busy
+  // Whether the provider VDC is busy
   isBusy bool
-  // Indicates if this provider VDC is deleted
+  // Whether the provider VDC is deleted
   isDeleted bool
-  // Indicates if this provider VDC is enabled
+  // Whether the provider VDC is enabled
   isEnabled bool
   // CPU allocation in MHz
   cpuAllocationMhz int
@@ -104,23 +104,23 @@ private vcd.vdcProvider @defaults("name") {
   storageOverheadMB int
   // Memory overhead in MB
   memoryOverheadMB int
-  // Key and value pairs for provider VDC metadata
+  // Key-value pairs for provider VDC metadata
   metadata() map[string]string
 }
 
-// VMware Cloud Director Network Pools
+// VMware Cloud Director network pools
 vcd.networkPool {
   // Network pool name
   name string
-  // Indicates if this network pool is busy
+  // Whether the network pool is busy
   isBusy bool
   // Type of network pool (0=Vlan backed network pool; 1=vNI backed network pool;2=Portgroup backed network pool)
   networkPoolType int
 }
 
-// VMware Cloud Director External Network
+// VMware Cloud Director external network
 private vcd.externalNetwork @defaults("name") {
-  // URN of the network. Deprecated: Please use the urn field instead.
+  // Deprecated; use urn instead
   id string
   // Unique name for the network
   name string
@@ -146,7 +146,7 @@ private vcd.vm @defaults("name") {
   ownerId string
   // Owner name of the VM
   ownerName string
-  // Indicates if this entity is deleted
+  // Whether the entity is deleted
   isDeleted bool
   // Guest operating system
   guestOs string
@@ -160,11 +160,11 @@ private vcd.vm @defaults("name") {
   networkName string
   // IP Address of the VM on the primary network
   ipAddress string
-  // Indicates if this VM is busty
+  // Whether the VM is busy
   isBusy bool
-  // Indicates if this VM is deployed
+  // Whether the VM is deployed
   isDeployed bool
-  // Indicates if this VM is in a published catalog
+  // Whether the VM is in a published catalog
   isPublished bool
   // Catalog name
   catalogName string
@@ -172,21 +172,21 @@ private vcd.vm @defaults("name") {
   hardwareVersion int
   // VM tools status
   vmToolsStatus string
-  // Indicates if this VM is in maintenance mode
+  // Whether the VM is in maintenance mode
   isInMaintenanceMode bool
-  // Indicates if the parent vApp is a managed vApp
+  // Whether the parent vApp is a managed vApp
   isAutoNature bool
   // Storage profile name
   storageProfileName string
   // GC status of this VM
   gcStatus string
-  // Indicates if VM is compliant with the Compute Policy
+  // Whether the VM is compliant with the compute policy
   isComputePolicyCompliant bool
-  // Indicates if VM is encrypted
+  // Whether the VM is encrypted
   encrypted bool
   // Total storage allocation in MB
   totalStorageAllocatedMb int
-  // Indicates if VMs storage lease has expired
+  // Whether the VM's storage lease has expired
   isExpired bool
   // ESXi host for this VM
   hostName string
@@ -208,7 +208,7 @@ vcd.serverInstance {
   status string
   // User name to connect to the server
   userName string
-  // Version of the vCenter server.
+  // Version of the vCenter server
   vcVersion string
   // Instance UUID of the vCenter server
   uuid string
@@ -216,7 +216,7 @@ vcd.serverInstance {
   vsmIP string
 }
 
-// VMware Cloud Director Available Rights
+// VMware Cloud Director available rights
 vcd.right {
   // Right ID
   id string
@@ -234,21 +234,21 @@ vcd.right {
   rightType string
 }
 
-// VMware Cloud Director Role
+// VMware Cloud Director role
 vcd.role @defaults("name") {
-  // ID of role
+  // ID of the role
   id string
-  // Name of role
+  // Name of the role
   name string
   // Optional description
   description string
 }
 
-// VMware Cloud Director Organization VDC resource
+// VMware Cloud Director organization VDC resource
 vcd.vdc {
-  // ID of VDC
+  // ID of the VDC
   id string
-  // Name of VDC
+  // Name of the VDC
   name string
   // Creation status of the VDC (0=creating, 1=ready, -1=error)
   status int
@@ -260,9 +260,9 @@ vcd.vdc {
   nicQuota int
   // Maximum number of network objects allowed (0=unlimited)
   networkQuota int
-  // Number of networks in use for/by this VDC.
+  // Number of networks in use for/by this VDC
   usedNetworkCount int
-  // The quota of VMs that can be created in this VDC
+  // Quota of VMs that can be created in this VDC
   vmQuota int
   // Indicates if VDC is enabled for use
   isEnabled bool
@@ -274,14 +274,14 @@ vcd.vdcGroup {
   name string
   // Description of the VDC group
   description string
-  // Indicates if local egress is enabled for a universal router belonging to a universal VDC group
+  // Whether local egress is enabled for a universal router belonging to a universal VDC group
   localEgress bool
   // Status of the VDC group
   status string
   // VDC group type (LOCAL or UNIVERSAL)
   type string
-  // Indicates if a VDC group router has been created
+  // Whether a VDC group router has been created
   universalNetworkingEnabled bool
-  // Indicates if distributed firewall is enabled for this VDC group
+  // Whether distributed firewall is enabled for the VDC group
   dfwEnabled bool
 }
