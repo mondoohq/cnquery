@@ -22,12 +22,12 @@ import (
 )
 
 type PlatformFingerprint struct {
-	PlatformIDs   []string
-	Name          string
-	Runtime       string
-	Kind          string
-	RelatedAssets []PlatformFingerprint
-	idDetectors   []string
+	PlatformIDs       []string
+	Name              string
+	Runtime           string
+	Kind              string
+	RelatedAssets     []PlatformFingerprint
+	activeIdDetectors []string
 }
 
 type PlatformInfo struct {
@@ -60,7 +60,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 			idDetectors = []string{ids.IdDetector_Hostname}
 		}
 	}
-	fingerprint.idDetectors = idDetectors
+	fingerprint.activeIdDetectors = idDetectors
 
 	for i := range idDetectors {
 		idDetector := idDetectors[i]

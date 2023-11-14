@@ -36,6 +36,7 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	// here we have the hostname twice, as platformid and stand alone
 	// This get's cleaned up later in the code
+	// FIXME: this should only be 1
 	require.Len(t, connectResp.Asset.PlatformIds, 2)
 
 	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})

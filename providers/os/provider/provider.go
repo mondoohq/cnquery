@@ -319,7 +319,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.idDetectors
+			asset.IdDetector = fingerprint.activeIdDetectors
 		}
 
 	case SshConnectionType:
@@ -335,7 +335,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				asset.Name = fingerprint.Name
 			}
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.idDetectors
+			asset.IdDetector = fingerprint.activeIdDetectors
 		}
 
 	case TarConnectionType:
@@ -349,7 +349,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.idDetectors
+			asset.IdDetector = fingerprint.activeIdDetectors
 		}
 
 	case DockerSnapshotConnectionType:
@@ -363,7 +363,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.idDetectors
+			asset.IdDetector = fingerprint.activeIdDetectors
 		}
 
 	case VagrantConnectionType:
@@ -408,7 +408,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
-				asset.IdDetector = fingerprint.idDetectors
+				asset.IdDetector = fingerprint.activeIdDetectors
 			}
 		} else {
 			// In this case asset.Name should already be set via the inventory
