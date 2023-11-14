@@ -194,6 +194,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetSettings()).ToDataRes(types.Dict)
 	},
+	"microsoft.tenantDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetTenantDomainName()).ToDataRes(types.String)
+	},
 	"microsoft.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftOrganization).GetId()).ToDataRes(types.String)
 	},
@@ -669,6 +672,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).Settings, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.tenantDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).TenantDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1360,6 +1367,7 @@ type mqlMicrosoft struct {
 	Serviceprincipals plugin.TValue[[]interface{}]
 	EnterpriseApplications plugin.TValue[[]interface{}]
 	Settings plugin.TValue[interface{}]
+	TenantDomainName plugin.TValue[string]
 }
 
 // createMicrosoft creates a new instance of this resource
@@ -1509,6 +1517,12 @@ func (c *mqlMicrosoft) GetEnterpriseApplications() *plugin.TValue[[]interface{}]
 func (c *mqlMicrosoft) GetSettings() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.Settings, func() (interface{}, error) {
 		return c.settings()
+	})
+}
+
+func (c *mqlMicrosoft) GetTenantDomainName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TenantDomainName, func() (string, error) {
+		return c.tenantDomainName()
 	})
 }
 

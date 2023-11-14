@@ -65,9 +65,8 @@ Disconnect-ExchangeOnline -Confirm:$false
 ConvertTo-Json -Depth 4 $exchangeOnline
 `
 
-func (c *Ms365Connection) GetExchangeReport(ctx context.Context) (*ExchangeOnlineReport, error) {
-	// if no organization is provided, we cannot fetch the exchange online report
-	if c.organization == "" {
+func (c *Ms365Connection) GetExchangeReport(ctx context.Context, organization string) (*ExchangeOnlineReport, error) {
+	if organization == "" {
 		return nil, errors.New("no organization provided, unable to fetch exchange online report")
 	}
 	c.exchangeReportLock.Lock()
@@ -83,7 +82,7 @@ func (c *Ms365Connection) GetExchangeReport(ctx context.Context) (*ExchangeOnlin
 	if err != nil {
 		return nil, err
 	}
-	report, err := c.getReport(outlookToken.Token)
+	report, err := c.getReport(outlookToken.Token, organization)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +90,8 @@ func (c *Ms365Connection) GetExchangeReport(ctx context.Context) (*ExchangeOnlin
 	return report, nil
 }
 
-func (c *Ms365Connection) getReport(outlookToken string) (*ExchangeOnlineReport, error) {
-	fmtScript := fmt.Sprintf(exchangeReport, c.organization, c.clientId, c.tenantId, outlookToken)
+func (c *Ms365Connection) getReport(outlookToken, organization string) (*ExchangeOnlineReport, error) {
+	fmtScript := fmt.Sprintf(exchangeReport, organization, c.clientId, c.tenantId, outlookToken)
 	res, err := c.checkAndRunPowershellScript(fmtScript)
 	if err != nil {
 		return nil, err

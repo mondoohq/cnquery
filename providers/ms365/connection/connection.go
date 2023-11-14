@@ -18,30 +18,29 @@ import (
 )
 
 const (
-	OptionTenantID     = "tenant-id"
-	OptionClientID     = "client-id"
-	OptionOrganization = "organization"
+	OptionTenantID = "tenant-id"
+	OptionClientID = "client-id"
 )
 
 type Ms365Connection struct {
-	id           uint32
-	Conf         *inventory.Config
-	asset        *inventory.Asset
-	token        azcore.TokenCredential
-	tenantId     string
-	clientId     string
-	organization string
+	id       uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	token    azcore.TokenCredential
+	tenantId string
+	clientId string
 	// TODO: move those to MQL resources caching once it makes sense to do so
 	exchangeReport     *ExchangeOnlineReport
 	exchangeReportLock sync.Mutex
 	teamsReport        *MsTeamsReport
 	teamsReportLock    sync.Mutex
+	sharepointReport   *SharepointOnlineReport
+	sharepointLock     sync.Mutex
 }
 
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
-	organization := conf.Options[OptionOrganization]
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
 		cred = conf.Credentials[0]
@@ -55,13 +54,12 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
 	return &Ms365Connection{
-		Conf:         conf,
-		id:           id,
-		asset:        asset,
-		token:        token,
-		tenantId:     tenantId,
-		clientId:     clientId,
-		organization: organization,
+		Conf:     conf,
+		id:       id,
+		asset:    asset,
+		token:    token,
+		tenantId: tenantId,
+		clientId: clientId,
 	}, nil
 }
 

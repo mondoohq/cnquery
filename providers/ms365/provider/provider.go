@@ -42,14 +42,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	clientSecret := flags["client-secret"]
 	certificatePath := flags["certificate-path"]
 	certificateSecret := flags["certificate-secret"]
-	organization := flags["organization"]
 
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
 	opts[connection.OptionTenantID] = string(tenantId.Value)
 	opts[connection.OptionClientID] = string(clientId.Value)
-	opts[connection.OptionOrganization] = string(organization.Value)
 
 	if len(clientSecret.Value) > 0 {
 		creds = append(creds, &vault.Credential{

@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -17,7 +16,16 @@ import (
 func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	ctx := context.Background()
-	report, err := conn.GetExchangeReport(ctx)
+	microsoft, err := runtime.CreateResource(runtime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return args, nil, err
+	}
+	mqlMicrosoft := microsoft.(*mqlMicrosoft)
+	tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+	if tenantDomainName.Error != nil {
+		return args, nil, tenantDomainName.Error
+	}
+	report, err := conn.GetExchangeReport(ctx, tenantDomainName.Data)
 	if err != nil {
 		return args, nil, err
 	}
@@ -62,7 +70,29 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 }
 
 func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, errors.New("not implemented")
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	ctx := context.Background()
+
+	microsoft, err := runtime.CreateResource(runtime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return args, nil, err
+	}
+	mqlMicrosoft := microsoft.(*mqlMicrosoft)
+	tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+	if tenantDomainName.Error != nil {
+		return args, nil, tenantDomainName.Error
+	}
+
+	report, err := conn.GetSharepointOnlineReport(ctx, tenantDomainName.Data)
+	if err != nil {
+		return args, nil, err
+	}
+	spoTenant, _ := convert.JsonToDict(report.SpoTenant)
+	spoTenantSyncClientRestriction, _ := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
+
+	args["spoTenant"] = llx.DictData(spoTenant)
+	args["spoTenantSyncClientRestriction"] = llx.DictData(spoTenantSyncClientRestriction)
+	return args, nil, nil
 }
 
 func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -73,7 +103,6 @@ func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, err
 	}
 	csTeamsClientConfiguration, _ := convert.JsonToDict(report.CsTeamsClientConfiguration)
-
 	args["csTeamsClientConfiguration"] = llx.DictData(csTeamsClientConfiguration)
 
 	return args, nil, nil

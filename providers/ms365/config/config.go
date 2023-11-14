@@ -35,12 +35,6 @@ var Config = plugin.Provider{
 					Desc:    "Application (client) ID of the service principal.",
 				},
 				{
-					Long:    "organization",
-					Type:    plugin.FlagType_String,
-					Default: "",
-					Desc:    "The organization to be scanned.",
-				},
-				{
 					Long:    "client-secret",
 					Type:    plugin.FlagType_String,
 					Default: "",

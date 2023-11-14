@@ -12,6 +12,8 @@ resources:
       organizations: {}
       serviceprincipals: {}
       settings: {}
+      tenantDomainName:
+        min_mondoo_version: latest
       users: {}
     min_mondoo_version: 5.15.0
   microsoft.application:
