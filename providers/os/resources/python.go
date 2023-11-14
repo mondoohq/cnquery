@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
 	"io"
 	"net/textproto"
 	"os"
@@ -201,6 +203,7 @@ func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDe
 		"file":         llx.ResourceData(f, f.MqlName()),
 		"dependencies": llx.ArrayData(dependencies, types.Any),
 		"purl":         llx.StringData(ppd.purl),
+		"cpes":         llx.ArrayData(convert.SliceAnyToInterface(ppd.cpes), types.String),
 	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
@@ -248,6 +251,7 @@ type pythonPackageDetails struct {
 	dependencies []string
 	isLeaf       bool
 	purl         string
+	cpes         []string
 }
 
 func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []pythonPackageDetails) {
@@ -406,6 +410,12 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 
 	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
 
+	cpes := []string{}
+	cpeEntry, err := cpe.NewPackage2Cpe(mimeData.Get("Name")+"_project", mimeData.Get("Name"), mimeData.Get("Version"), "", "")
+	if err == nil && cpeEntry != "" {
+		cpes = append(cpes, cpeEntry)
+	}
+
 	return &pythonPackageDetails{
 		name:         mimeData.Get("Name"),
 		summary:      mimeData.Get("Summary"),
@@ -415,6 +425,7 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 		dependencies: deps,
 		file:         pythonMIMEFilepath,
 		purl:         newPythonPackageUrl(mimeData.Get("Name"), mimeData.Get("Version"), mimeData.Get("Home-page")),
+		cpes:         cpes,
 	}, nil
 }
 

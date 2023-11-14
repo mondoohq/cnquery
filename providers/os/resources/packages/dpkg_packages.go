@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"os"
@@ -38,6 +39,8 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
 			pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeDebian)
+			cpe, _ := cpe.NewPackage2Cpe(pkg.Name, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch)
+			pkg.CPE = cpe
 			pkgs = append(pkgs, pkg)
 		} else {
 			log.Debug().Msg("ignored deb packages since information is missing")

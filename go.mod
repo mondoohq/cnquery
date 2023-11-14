@@ -34,6 +34,7 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/docker/cli v24.0.7+incompatible
 	github.com/docker/docker v24.0.7+incompatible
+	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/glebarez/go-sqlite v1.21.2
 	github.com/go-git/go-git/v5 v5.10.0
 	github.com/gobwas/glob v0.2.3

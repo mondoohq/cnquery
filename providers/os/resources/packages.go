@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/v9/types"
 	"regexp"
 	"sync"
 
@@ -59,6 +60,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Available.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Purl.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Cpes.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Arch.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
@@ -138,8 +140,9 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"format":      llx.StringData(osPkg.Format),
 			"installed":   llx.BoolData(true),
 			"origin":      llx.StringData(osPkg.Origin),
-			"epoch":       llx.NilData, // TODO: support Epoch
+			"epoch":       llx.StringData(osPkg.Epoch),
 			"purl":        llx.StringData(osPkg.PUrl),
+			"cpes":        llx.ArrayData([]interface{}{osPkg.CPE}, types.String),
 		})
 		if err != nil {
 			return nil, err
