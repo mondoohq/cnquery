@@ -88,7 +88,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		port = 5985
 	case "vagrant":
 		conf.Type = "vagrant"
-	case "docker", "container":
+	case "docker":
 		if len(req.Args) > 1 {
 			switch req.Args[0] {
 			case "image":
@@ -109,6 +109,27 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			if err != nil {
 				return nil, err
 			}
+			conf.Type = connType
+			containerID = req.Args[0]
+		}
+	case "container":
+		if len(req.Args) > 1 {
+			switch req.Args[0] {
+			case "image":
+				conf.Type = "docker-image"
+				conf.Host = req.Args[1]
+			case "registry":
+				conf.Type = "docker-registry"
+				conf.Host = req.Args[1]
+			case "tar":
+				conf.Type = "docker-snapshot"
+				conf.Path = req.Args[1]
+			case "container":
+				conf.Type = "docker-container"
+				conf.Host = req.Args[1]
+			}
+		} else {
+			connType := identifyContainerType(req.Args[0])
 			conf.Type = connType
 			containerID = req.Args[0]
 		}
@@ -559,4 +580,12 @@ func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.In
 	inventory.AddAssets(resolvedAssets...)
 
 	return inventory, nil
+}
+
+func identifyContainerType(s string) string {
+	if strings.Contains(s, ":") || strings.Contains(s, "/") {
+		return "docker-image"
+	} else {
+		return "docker-container"
+	}
 }
