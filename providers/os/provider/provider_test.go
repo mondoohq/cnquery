@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package provider
 
 import (
@@ -10,14 +13,12 @@ import (
 )
 
 func TestLocalConnectionIdDetectors(t *testing.T) {
-	// check that we get the data via the resources
-
 	srv := &Service{
 		runtimes:         map[uint32]*plugin.Runtime{},
 		lastConnectionID: 0,
 	}
 
-	resp, err := srv.Connect(&plugin.ConnectReq{
+	connectResp, err := srv.Connect(&plugin.ConnectReq{
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
@@ -27,38 +28,38 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 		},
 	}, nil)
 	require.NoError(t, err)
-	require.NotNil(t, resp)
+	require.NotNil(t, connectResp)
 
-	require.Len(t, resp.Asset.IdDetector, 2)
-	require.Contains(t, resp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, resp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, resp.Asset.IdDetector, ids.IdDetector_SshHostkey)
+	require.Len(t, connectResp.Asset.IdDetector, 2)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
+	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	// here we have the hostname twice, as platformid and stand alone
 	// This get's cleaned up later in the code
-	require.Len(t, resp.Asset.PlatformIds, 2)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
 
-	shutdownResp, err := srv.Shutdown(&plugin.ShutdownReq{})
+	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
-	require.NotNil(t, shutdownResp)
+	require.NotNil(t, shutdownconnectResp)
 
 	srv = &Service{
 		runtimes:         map[uint32]*plugin.Runtime{},
 		lastConnectionID: 0,
 	}
-	resp, err = srv.Connect(&plugin.ConnectReq{
-		Asset: resp.Asset,
+	connectResp, err = srv.Connect(&plugin.ConnectReq{
+		Asset: connectResp.Asset,
 	}, nil)
 	require.NoError(t, err)
-	require.NotNil(t, resp)
+	require.NotNil(t, connectResp)
 
-	require.Len(t, resp.Asset.IdDetector, 2)
-	require.Contains(t, resp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, resp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, resp.Asset.IdDetector, ids.IdDetector_SshHostkey)
+	require.Len(t, connectResp.Asset.IdDetector, 2)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
+	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	// Now the platformIDs are cleaned up
-	require.Len(t, resp.Asset.PlatformIds, 1)
+	require.Len(t, connectResp.Asset.PlatformIds, 1)
 
-	shutdownResp, err = srv.Shutdown(&plugin.ShutdownReq{})
+	shutdownconnectResp, err = srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
-	require.NotNil(t, shutdownResp)
+	require.NotNil(t, shutdownconnectResp)
 }
