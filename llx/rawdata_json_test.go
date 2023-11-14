@@ -51,7 +51,14 @@ func TestRawDataJson_removeUnderscoreKeys(t *testing.T) {
 func TestRawDataJson_nevertime(t *testing.T) {
 	never := NeverPastTime
 	var res bytes.Buffer
-	rawDataJSON(types.Time, &never, "blfbjef", &CodeBundle{}, &res)
+	require.NoError(t, rawDataJSON(types.Time, &never, "blfbjef", &CodeBundle{}, &res))
 	require.Equal(t, res.String(), "\"Never\"")
+	require.True(t, json.Valid(res.Bytes()))
+}
+
+func TestRawDataJson_Umlauts(t *testing.T) {
+	var res bytes.Buffer
+	require.NoError(t, rawDataJSON(types.String, "Systemintegrit\x84t", "blfbjef", &CodeBundle{}, &res))
+	require.Equal(t, res.String(), "\"Systemintegrit\\ufffdt\"")
 	require.True(t, json.Valid(res.Bytes()))
 }

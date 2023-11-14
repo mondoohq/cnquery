@@ -52,8 +52,12 @@ func float2json(f float64) string {
 }
 
 // Takes care of escaping the given string
-func string2json(s string) string {
-	return fmt.Sprintf("%#v", s)
+func string2json(s string) (string, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 func label(ref string, bundle *CodeBundle, isResource bool) string {
@@ -96,7 +100,11 @@ func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bund
 	for i, k := range keys {
 		v := data[k]
 		label := label(k, bundle, true)
-		buf.WriteString(string2json(label))
+		str, err := string2json(label)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str)
 		buf.WriteString(":")
 
 		val := v.(*RawData)
@@ -134,7 +142,11 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		return nil
 
 	case string:
-		buf.WriteString(string2json(data))
+		str, err := string2json(data)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str)
 		return nil
 
 	case time.Time:
@@ -167,7 +179,11 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		last := len(keys) - 1
 		for i, k := range keys {
 			v := data[k]
-			buf.WriteString(string2json(k) + ":")
+			str, err := string2json(k)
+			if err != nil {
+				return err
+			}
+			buf.WriteString(str + ":")
 
 			if v == nil {
 				buf.WriteString("null")
@@ -222,9 +238,12 @@ func rawStringMapJSON(typ types.Type, data map[string]interface{}, codeID string
 	childType := typ.Child()
 	keys := sortx.Keys(data)
 
-	var err error
 	for i, key := range keys {
-		buf.WriteString(string2json(key) + ":")
+		str, err := string2json(key)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str + ":")
 
 		err = rawDataJSON(childType, data[key], codeID, bundle, buf)
 		if err != nil {
@@ -250,9 +269,12 @@ func rawIntMapJSON(typ types.Type, data map[int]interface{}, codeID string, bund
 	keys := intKeys(data)
 	sort.Ints(keys)
 
-	var err error
 	for i, key := range keys {
-		buf.WriteString(string2json(strconv.Itoa(key)) + ":")
+		str, err := string2json(strconv.Itoa(key))
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str + ":")
 
 		err = rawDataJSON(childType, data[key], codeID, bundle, buf)
 		if err != nil {
@@ -324,11 +346,18 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 		return nil
 
 	case types.String:
-		buf.WriteString(string2json(data.(string)))
+		str, err := string2json(data.(string))
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str)
 		return nil
 
 	case types.Regex:
-		raw := string2json(data.(string))
+		raw, err := string2json(data.(string))
+		if err != nil {
+			return err
+		}
 		buf.WriteByte(raw[0])
 		buf.WriteByte('/')
 		buf.WriteString(raw[1 : len(raw)-1])
@@ -383,7 +412,11 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 			idline += " id = " + id
 		}
 
-		buf.WriteString(string2json(idline))
+		str, err := string2json(idline)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(str)
 		return nil
 
 	default:
@@ -394,7 +427,11 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 }
 
 func JSONerror(err error) []byte {
-	return []byte("{\"error\":" + string2json(err.Error()) + "}")
+	str, err := string2json(err.Error())
+	if err != nil {
+		return []byte("{\"error\":\"" + err.Error() + "\"}")
+	}
+	return []byte("{\"error\":" + str + "}")
 }
 
 func (r *RawData) JSON(codeID string, bundle *CodeBundle) []byte {
@@ -412,5 +449,9 @@ func (r *RawData) JSON(codeID string, bundle *CodeBundle) []byte {
 func (r *RawData) JSONfield(codeID string, bundle *CodeBundle) []byte {
 	label := label(codeID, bundle, true)
 	value := r.JSON(codeID, bundle)
-	return []byte(string2json(label) + ":" + string(value))
+	str, err := string2json(label)
+	if err != nil {
+		return JSONerror(err)
+	}
+	return []byte(str + ":" + string(value))
 }
