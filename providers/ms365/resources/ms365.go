@@ -5,7 +5,11 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
@@ -21,11 +25,20 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, err
 	}
 	mqlMicrosoft := microsoft.(*mqlMicrosoft)
-	tenantDomainName := mqlMicrosoft.GetTenantDomainName()
-	if tenantDomainName.Error != nil {
-		return args, nil, tenantDomainName.Error
+	// we prefer the explicitly passed in org, if there is one
+	org := conn.Organization()
+	if org == "" {
+		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+		if tenantDomainName.Error != nil {
+			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// in that case we try and get the report by using the explicitly passed in exchange organization
+			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
+		} else {
+			org = tenantDomainName.Data
+		}
 	}
-	report, err := conn.GetExchangeReport(ctx, tenantDomainName.Data)
+
+	report, err := conn.GetExchangeReport(ctx, org)
 	if err != nil {
 		return args, nil, err
 	}
@@ -78,12 +91,33 @@ func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return args, nil, err
 	}
 	mqlMicrosoft := microsoft.(*mqlMicrosoft)
-	tenantDomainName := mqlMicrosoft.GetTenantDomainName()
-	if tenantDomainName.Error != nil {
-		return args, nil, tenantDomainName.Error
+
+	// we prefer the explicitly passed in sharepoint url, if there is one
+	spUrl := conn.SharepointUrl()
+	if spUrl == "" {
+		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+		if tenantDomainName.Error != nil {
+			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// in that case we try and get the report by using the explicitly passed in sharepoint url
+			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
+		} else {
+			spUrl = tenantDomainName.Data
+		}
 	}
 
-	report, err := conn.GetSharepointOnlineReport(ctx, tenantDomainName.Data)
+	if spUrl == "" {
+		return args, nil, errors.New("no sharepoint url provided, unable to fetch sharepoint online report")
+	}
+
+	domainParts := strings.Split(spUrl, ".")
+	if len(domainParts) < 2 {
+		return args, nil, fmt.Errorf("invalid sharepoint url: %s", spUrl)
+	}
+
+	// we only care about the tenant name, so we take the first part in the split domain
+	tenant := domainParts[0]
+
+	report, err := conn.GetSharepointOnlineReport(ctx, tenant)
 	if err != nil {
 		return args, nil, err
 	}

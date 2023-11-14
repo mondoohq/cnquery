@@ -18,17 +18,21 @@ import (
 )
 
 const (
-	OptionTenantID = "tenant-id"
-	OptionClientID = "client-id"
+	OptionTenantID      = "tenant-id"
+	OptionClientID      = "client-id"
+	OptionOrganization  = "organization"
+	OptionSharepointUrl = "sharepoint-url"
 )
 
 type Ms365Connection struct {
-	id       uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
-	token    azcore.TokenCredential
-	tenantId string
-	clientId string
+	id            uint32
+	Conf          *inventory.Config
+	asset         *inventory.Asset
+	token         azcore.TokenCredential
+	tenantId      string
+	clientId      string
+	organization  string
+	sharepointUrl string
 	// TODO: move those to MQL resources caching once it makes sense to do so
 	exchangeReport     *ExchangeOnlineReport
 	exchangeReportLock sync.Mutex
@@ -41,6 +45,8 @@ type Ms365Connection struct {
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
+	organization := conf.Options[OptionOrganization]
+	sharepointUrl := conf.Options[OptionSharepointUrl]
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
 		cred = conf.Credentials[0]
@@ -54,12 +60,14 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
 	return &Ms365Connection{
-		Conf:     conf,
-		id:       id,
-		asset:    asset,
-		token:    token,
-		tenantId: tenantId,
-		clientId: clientId,
+		Conf:          conf,
+		id:            id,
+		asset:         asset,
+		token:         token,
+		tenantId:      tenantId,
+		clientId:      clientId,
+		organization:  organization,
+		sharepointUrl: sharepointUrl,
 	}, nil
 }
 
@@ -85,6 +93,14 @@ func (p *Ms365Connection) TenantId() string {
 
 func (p *Ms365Connection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/ms365/tenant/" + p.tenantId
+}
+
+func (p *Ms365Connection) SharepointUrl() string {
+	return p.sharepointUrl
+}
+
+func (p *Ms365Connection) Organization() string {
+	return p.organization
 }
 
 // TODO: use LocalConnection here for running cmds?

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 )
@@ -31,9 +30,9 @@ Disconnect-PnPOnline
 ConvertTo-Json -Depth 4 $sharepoint
 `
 
-func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenantDomain string) (*SharepointOnlineReport, error) {
-	if tenantDomain == "" {
-		return nil, fmt.Errorf("tenant domain cannot be empty, cannot fetch sharepoint online report")
+func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenant string) (*SharepointOnlineReport, error) {
+	if tenant == "" {
+		return nil, fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report")
 	}
 	c.sharepointLock.Lock()
 	defer c.sharepointLock.Unlock()
@@ -42,14 +41,8 @@ func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenantD
 	}
 
 	token := c.Token()
-	domainParts := strings.Split(tenantDomain, ".")
-	if len(domainParts) < 2 {
-		return nil, fmt.Errorf("invalid tenant domain url: %s", tenantDomain)
-	}
-	// we only care about the tenant name, so we take the first part in the split domain
-	tenantName := domainParts[0]
-	tokenScope := fmt.Sprintf("https://%s-admin.sharepoint.com/.default", tenantName)
-	sharepointUrl := fmt.Sprintf("https://%s.sharepoint.com", tenantName)
+	tokenScope := fmt.Sprintf("https://%s-admin.sharepoint.com/.default", tenant)
+	sharepointUrl := fmt.Sprintf("https://%s.sharepoint.com", tenant)
 	spToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{tokenScope},
 	})
