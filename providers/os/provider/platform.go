@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 	"go.mondoo.com/cnquery/v9/providers/os/id/awsec2"
@@ -21,11 +22,12 @@ import (
 )
 
 type PlatformFingerprint struct {
-	PlatformIDs   []string
-	Name          string
-	Runtime       string
-	Kind          string
-	RelatedAssets []PlatformFingerprint
+	PlatformIDs       []string
+	Name              string
+	Runtime           string
+	Kind              string
+	RelatedAssets     []PlatformFingerprint
+	activeIdDetectors []string
 }
 
 type PlatformInfo struct {
@@ -44,8 +46,21 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 	}
 
 	var fingerprint PlatformFingerprint
-	var ids []string
+	var platformIds []string
 	var relatedIds []string
+
+	if len(idDetectors) == 0 {
+		// fallback to default id detectors
+		switch conn.Type() {
+		case connection.Local:
+			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
+		case connection.SSH:
+			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
+		case connection.Tar, connection.FileSystem, connection.DockerSnapshot:
+			idDetectors = []string{ids.IdDetector_Hostname}
+		}
+	}
+	fingerprint.activeIdDetectors = idDetectors
 
 	for i := range idDetectors {
 		idDetector := idDetectors[i]
@@ -56,7 +71,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 			continue
 		}
 		if len(platformInfo.IDs) > 0 {
-			ids = append(ids, platformInfo.IDs...)
+			platformIds = append(platformIds, platformInfo.IDs...)
 		}
 		if len(platformInfo.RelatedPlatformIDs) > 0 {
 			relatedIds = append(relatedIds, platformInfo.RelatedPlatformIDs...)
@@ -84,11 +99,11 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 	}
 
 	// if we found zero platform ids something went wrong
-	if len(ids) == 0 {
+	if len(platformIds) == 0 {
 		return nil, errors.New("could not determine a platform identifier")
 	}
 
-	fingerprint.PlatformIDs = ids
+	fingerprint.PlatformIDs = platformIds
 	for _, v := range relatedIds {
 		fingerprint.RelatedAssets = append(fingerprint.RelatedAssets, PlatformFingerprint{
 			PlatformIDs: []string{v},
@@ -96,7 +111,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 		})
 	}
 
-	log.Debug().Interface("id-detector", idDetectors).Strs("platform-ids", ids).Msg("detected platform ids")
+	log.Debug().Interface("id-detector", idDetectors).Strs("platform-ids", platformIds).Msg("detected platform ids")
 	return &fingerprint, nil
 }
 
