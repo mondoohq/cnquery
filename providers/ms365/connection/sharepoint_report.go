@@ -15,7 +15,8 @@ import (
 var sharepointReport = `
 $token = '%s'
 $url = "%s"
-Install-Module PnP.PowerShell -Force
+Install-Module PnP.PowerShell -Force -Scope CurrentUser -RequiredVersion 1.12.0
+Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
@@ -33,6 +34,11 @@ ConvertTo-Json -Depth 4 $sharepoint
 func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenant string) (*SharepointOnlineReport, error) {
 	if tenant == "" {
 		return nil, fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report")
+	}
+	// for some reasons, tokens issued by a client secret do not work. only certificates do
+	// TODO: ^ we should try and investigate why, its unclear to me why it happens.
+	if !c.IsCertProvided() {
+		return nil, fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report")
 	}
 	c.sharepointLock.Lock()
 	defer c.sharepointLock.Unlock()
@@ -69,7 +75,6 @@ func (c *Ms365Connection) getSharepointReport(spToken, url string) (*SharepointO
 		if err != nil {
 			return nil, err
 		}
-
 		err = json.Unmarshal(data, report)
 		if err != nil {
 			return nil, err

@@ -103,6 +103,11 @@ func (p *Ms365Connection) Organization() string {
 	return p.organization
 }
 
+// indicates if a certificate credential is provided
+func (p *Ms365Connection) IsCertProvided() bool {
+	return len(p.Conf.Credentials) > 0 && p.Conf.Credentials[0].Type == vault.CredentialType_pkcs12
+}
+
 // TODO: use LocalConnection here for running cmds?
 func (p *Ms365Connection) runPowershellScript(script string) (*shared.Command, error) {
 	var encodedCmd string
