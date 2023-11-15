@@ -15,10 +15,10 @@ require (
 	github.com/StackExchange/wmi v1.2.1
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.0
-	github.com/aws/aws-sdk-go v1.47.10
+	github.com/aws/aws-sdk-go v1.47.11
 	github.com/aws/aws-sdk-go-v2 v1.22.2
-	github.com/aws/aws-sdk-go-v2/config v1.24.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.15.2
+	github.com/aws/aws-sdk-go-v2/config v1.25.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.133.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.1
@@ -57,7 +57,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-isatty v0.0.20
-	github.com/miekg/dns v1.1.56
+	github.com/miekg/dns v1.1.57
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
