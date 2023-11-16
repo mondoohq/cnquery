@@ -280,6 +280,10 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 
 // RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
 func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle, error) {
+	if m.Title == "" {
+		m.Title = m.Query
+	}
+
 	bundle, err := m.refreshChecksumAndType(nil, nil, schema)
 	if err != nil {
 		return bundle, err
@@ -288,12 +292,16 @@ func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle
 		return nil, errors.New("filters require MQL snippets (no compiled code generated)")
 	}
 
+	checksumInvalidated := false
 	if mrn != "" {
 		m.Mrn = mrn + "/filter/" + m.CodeId
+		checksumInvalidated = true
 	}
 
-	if m.Title == "" {
-		m.Title = m.Query
+	if checksumInvalidated {
+		if err := m.RefreshChecksum(context.Background(), schema, nil); err != nil {
+			return nil, err
+		}
 	}
 
 	return bundle, nil
