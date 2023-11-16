@@ -4,6 +4,12 @@
 package resources
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
@@ -13,28 +19,47 @@ import (
 
 func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
-	report, err := conn.GetMs365DataReport()
+	ctx := context.Background()
+	microsoft, err := runtime.CreateResource(runtime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return args, nil, err
+	}
+	mqlMicrosoft := microsoft.(*mqlMicrosoft)
+	// we prefer the explicitly passed in org, if there is one
+	org := conn.Organization()
+	if org == "" {
+		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+		if tenantDomainName.Error != nil {
+			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// in that case we try and get the report by using the explicitly passed in exchange organization
+			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
+		} else {
+			org = tenantDomainName.Data
+		}
+	}
+
+	report, err := conn.GetExchangeReport(ctx, org)
 	if err != nil {
 		return args, nil, err
 	}
 
-	malwareFilterPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.MalwareFilterPolicy)
-	hostedOutboundSpamFilterPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.HostedOutboundSpamFilterPolicy)
-	transportRule, _ := convert.JsonToDictSlice(report.ExchangeOnline.TransportRule)
-	remoteDomain, _ := convert.JsonToDictSlice(report.ExchangeOnline.RemoteDomain)
-	safeLinksPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.SafeLinksPolicy)
-	safeAttachmentPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.SafeAttachmentPolicy)
-	organizationConfig, _ := convert.JsonToDict(report.ExchangeOnline.OrganizationConfig)
-	authenticationPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.AuthenticationPolicy)
-	antiPhishPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.AntiPhishPolicy)
-	dkimSigningConfig, _ := convert.JsonToDictSlice(report.ExchangeOnline.DkimSigningConfig)
-	owaMailboxPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.OwaMailboxPolicy)
-	adminAuditLogConfig, _ := convert.JsonToDict(report.ExchangeOnline.AdminAuditLogConfig)
-	phishFilterPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.PhishFilterPolicy)
-	mailbox, _ := convert.JsonToDictSlice(report.ExchangeOnline.Mailbox)
-	atpPolicyForO365, _ := convert.JsonToDictSlice(report.ExchangeOnline.AtpPolicyForO365)
-	sharingPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.SharingPolicy)
-	roleAssignmentPolicy, _ := convert.JsonToDictSlice(report.ExchangeOnline.RoleAssignmentPolicy)
+	malwareFilterPolicy, _ := convert.JsonToDictSlice(report.MalwareFilterPolicy)
+	hostedOutboundSpamFilterPolicy, _ := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
+	transportRule, _ := convert.JsonToDictSlice(report.TransportRule)
+	remoteDomain, _ := convert.JsonToDictSlice(report.RemoteDomain)
+	safeLinksPolicy, _ := convert.JsonToDictSlice(report.SafeLinksPolicy)
+	safeAttachmentPolicy, _ := convert.JsonToDictSlice(report.SafeAttachmentPolicy)
+	organizationConfig, _ := convert.JsonToDict(report.OrganizationConfig)
+	authenticationPolicy, _ := convert.JsonToDictSlice(report.AuthenticationPolicy)
+	antiPhishPolicy, _ := convert.JsonToDictSlice(report.AntiPhishPolicy)
+	dkimSigningConfig, _ := convert.JsonToDictSlice(report.DkimSigningConfig)
+	owaMailboxPolicy, _ := convert.JsonToDictSlice(report.OwaMailboxPolicy)
+	adminAuditLogConfig, _ := convert.JsonToDict(report.AdminAuditLogConfig)
+	phishFilterPolicy, _ := convert.JsonToDictSlice(report.PhishFilterPolicy)
+	mailbox, _ := convert.JsonToDictSlice(report.Mailbox)
+	atpPolicyForO365, _ := convert.JsonToDictSlice(report.AtpPolicyForO365)
+	sharingPolicy, _ := convert.JsonToDictSlice(report.SharingPolicy)
+	roleAssignmentPolicy, _ := convert.JsonToDictSlice(report.RoleAssignmentPolicy)
 
 	args["malwareFilterPolicy"] = llx.ArrayData(malwareFilterPolicy, types.Any)
 	args["hostedOutboundSpamFilterPolicy"] = llx.ArrayData(hostedOutboundSpamFilterPolicy, types.Any)
@@ -59,30 +84,60 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
-	report, err := conn.GetMs365DataReport()
+	ctx := context.Background()
+
+	microsoft, err := runtime.CreateResource(runtime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return args, nil, err
 	}
-	spoTenant, _ := convert.JsonToDict(report.SharepointOnline.SPOTenant)
-	spoTenantSyncClientRestriction, _ := convert.JsonToDict(report.SharepointOnline.SPOTenantSyncClientRestriction)
+	mqlMicrosoft := microsoft.(*mqlMicrosoft)
+
+	// we prefer the explicitly passed in sharepoint url, if there is one
+	spUrl := conn.SharepointUrl()
+	if spUrl == "" {
+		tenantDomainName := mqlMicrosoft.GetTenantDomainName()
+		if tenantDomainName.Error != nil {
+			// note: we dont want to err here. maybe the app registration has no perms to get the organization
+			// in that case we try and get the report by using the explicitly passed in sharepoint url
+			log.Debug().Err(tenantDomainName.Error).Msg("unable to get tenant domain name")
+		} else {
+			spUrl = tenantDomainName.Data
+		}
+	}
+
+	if spUrl == "" {
+		return args, nil, errors.New("no sharepoint url provided, unable to fetch sharepoint online report")
+	}
+
+	domainParts := strings.Split(spUrl, ".")
+	if len(domainParts) < 2 {
+		return args, nil, fmt.Errorf("invalid sharepoint url: %s", spUrl)
+	}
+
+	// we only care about the tenant name, so we take the first part in the split domain
+	tenant := domainParts[0]
+
+	report, err := conn.GetSharepointOnlineReport(ctx, tenant)
+	if err != nil {
+		return args, nil, err
+	}
+	spoTenant, _ := convert.JsonToDict(report.SpoTenant)
+	spoTenantSyncClientRestriction, _ := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
 
 	args["spoTenant"] = llx.DictData(spoTenant)
 	args["spoTenantSyncClientRestriction"] = llx.DictData(spoTenantSyncClientRestriction)
-
 	return args, nil, nil
 }
 
 func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
-	report, err := conn.GetMs365DataReport()
+	ctx := context.Background()
+	report, err := conn.GetTeamsReport(ctx)
 	if err != nil {
 		return args, nil, err
 	}
-	csTeamsClientConfiguration, _ := convert.JsonToDict(report.MsTeams.CsTeamsClientConfiguration)
-	csOAuthConfiguration, _ := convert.JsonToDictSlice(report.MsTeams.CsOAuthConfiguration)
-
+	csTeamsClientConfiguration, _ := convert.JsonToDict(report.CsTeamsClientConfiguration)
 	args["csTeamsClientConfiguration"] = llx.DictData(csTeamsClientConfiguration)
-	args["csOAuthConfiguration"] = llx.ArrayData(csOAuthConfiguration, types.Any)
 
 	return args, nil, nil
 }

@@ -28,8 +28,21 @@ func Encode(cmd string) string {
 		// lets see if this becomes an issue
 		log.Error().Err(err).Msg("could not encode powershell command")
 	}
-
 	return fmt.Sprintf("powershell.exe -NoProfile -EncodedCommand %s", encodedScript)
+}
+
+// The Encode equivalent for running powershell script in unix systems
+func EncodeUnix(cmd string) string {
+	// avoid messages to stderr that are not required in our execution
+	script := "$ProgressPreference='SilentlyContinue';" + cmd
+
+	encodedScript, err := ToBase64String(script)
+	if err != nil {
+		// Ignore this for now to keep the method interface identical
+		// lets see if this becomes an issue
+		log.Error().Err(err).Msg("could not encode powershell command")
+	}
+	return fmt.Sprintf("pwsh -NoProfile -EncodedCommand %s", encodedScript)
 }
 
 // ToBase64String encodes a powershell script to a UTF16-LE, base64 encoded string

@@ -4,41 +4,49 @@
 package connection
 
 import (
-	"encoding/json"
-	"os"
+	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 )
 
 const (
-	OptionTenantID   = "tenant-id"
-	OptionClientID   = "client-id"
-	OptionDataReport = "mondoo-ms365-datareport"
+	OptionTenantID      = "tenant-id"
+	OptionClientID      = "client-id"
+	OptionOrganization  = "organization"
+	OptionSharepointUrl = "sharepoint-url"
 )
 
 type Ms365Connection struct {
-	id                          uint32
-	Conf                        *inventory.Config
-	asset                       *inventory.Asset
-	token                       azcore.TokenCredential
-	tenantId                    string
-	powershellDataReportFile    string
-	ms365PowershellReport       *Microsoft365Report
-	ms365PowershellReportLoader sync.Mutex
+	id            uint32
+	Conf          *inventory.Config
+	asset         *inventory.Asset
+	token         azcore.TokenCredential
+	tenantId      string
+	clientId      string
+	organization  string
+	sharepointUrl string
+	// TODO: move those to MQL resources caching once it makes sense to do so
+	exchangeReport     *ExchangeOnlineReport
+	exchangeReportLock sync.Mutex
+	teamsReport        *MsTeamsReport
+	teamsReportLock    sync.Mutex
+	sharepointReport   *SharepointOnlineReport
+	sharepointLock     sync.Mutex
 }
 
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
 	tenantId := conf.Options[OptionTenantID]
 	clientId := conf.Options[OptionClientID]
-	// we need credentials for ms365. for azure these are optional, we fallback to the AZ cli (if installed)
-	if len(conf.Credentials) == 0 || conf.Credentials[0] == nil {
-		return nil, errors.New("ms365 provider requires a credentials file, pass path via --certificate-path option")
-	}
-
+	organization := conf.Options[OptionOrganization]
+	sharepointUrl := conf.Options[OptionSharepointUrl]
 	var cred *vault.Credential
 	if len(conf.Credentials) != 0 {
 		cred = conf.Credentials[0]
@@ -52,12 +60,14 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
 	return &Ms365Connection{
-		Conf:                     conf,
-		id:                       id,
-		asset:                    asset,
-		token:                    token,
-		tenantId:                 tenantId,
-		powershellDataReportFile: conf.Options[OptionDataReport],
+		Conf:          conf,
+		id:            id,
+		asset:         asset,
+		token:         token,
+		tenantId:      tenantId,
+		clientId:      clientId,
+		organization:  organization,
+		sharepointUrl: sharepointUrl,
 	}, nil
 }
 
@@ -85,34 +95,62 @@ func (p *Ms365Connection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/ms365/tenant/" + p.tenantId
 }
 
-// NOTE: this is a temporary solution and will be replaced with logic that calls powershell directly and
-// hopefully provides more flexibility in the future
-func (p *Ms365Connection) GetMs365DataReport() (*Microsoft365Report, error) {
-	p.ms365PowershellReportLoader.Lock()
-	defer p.ms365PowershellReportLoader.Unlock()
+func (p *Ms365Connection) SharepointUrl() string {
+	return p.sharepointUrl
+}
 
-	if p.ms365PowershellReport != nil {
-		return p.ms365PowershellReport, nil
+func (p *Ms365Connection) Organization() string {
+	return p.organization
+}
+
+// indicates if a certificate credential is provided
+func (p *Ms365Connection) IsCertProvided() bool {
+	return len(p.Conf.Credentials) > 0 && p.Conf.Credentials[0].Type == vault.CredentialType_pkcs12
+}
+
+// TODO: use LocalConnection here for running cmds?
+func (p *Ms365Connection) runPowershellScript(script string) (*shared.Command, error) {
+	var encodedCmd string
+	if runtime.GOOS == "windows" {
+		encodedCmd = powershell.Encode(script)
+	} else {
+		encodedCmd = powershell.EncodeUnix(script)
+	}
+	return p.runCmd(encodedCmd)
+}
+
+func (p *Ms365Connection) runCmd(cmd string) (*shared.Command, error) {
+	cmdR := connection.CommandRunner{}
+	if runtime.GOOS == "windows" {
+		cmdR.Shell = []string{"powershell", "-c"}
+	} else {
+		cmdR.Shell = []string{"sh", "-c"}
+	}
+	return cmdR.Exec(cmd, []string{})
+}
+
+func (p *Ms365Connection) checkPowershellAvailable() (bool, error) {
+	if runtime.GOOS == "windows" {
+		// assume powershell is always present on windows
+		return true, nil
+	}
+	// for unix, we need to check if pwsh is available
+	cmd := "which pwsh"
+	res, err := p.runCmd(cmd)
+	if err != nil {
+		return false, err
 	}
 
-	if p.powershellDataReportFile == "" {
-		return nil, errors.New("powershell data report file not not provided")
-	}
+	return res.ExitStatus == 0, nil
+}
 
-	if _, err := os.Stat(p.powershellDataReportFile); os.IsNotExist(err) {
-		return nil, errors.New("could not load powershell data report from: " + p.powershellDataReportFile)
-	}
-
-	// get path from transport option
-	data, err := os.ReadFile(p.powershellDataReportFile)
+func (p *Ms365Connection) checkAndRunPowershellScript(script string) (*shared.Command, error) {
+	pwshAvailable, err := p.checkPowershellAvailable()
 	if err != nil {
 		return nil, err
 	}
-
-	p.ms365PowershellReport = &Microsoft365Report{}
-	err = json.Unmarshal(data, p.ms365PowershellReport)
-	if err != nil {
-		return nil, err
+	if !pwshAvailable {
+		return nil, fmt.Errorf("powershell is not available")
 	}
-	return p.ms365PowershellReport, nil
+	return p.runPowershellScript(script)
 }

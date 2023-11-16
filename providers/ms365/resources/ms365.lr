@@ -19,6 +19,8 @@ microsoft {
   enterpriseApplications() []microsoft.serviceprincipal
   // Microsoft 365 settings
   settings() dict
+  // Gets the connected tenant's default domain name
+  tenantDomainName() string
 }
 
 // Microsoft organization
@@ -385,6 +387,4 @@ ms365.sharepointonline {
 ms365.teams {
   // CS Teams client configuration
   csTeamsClientConfiguration dict
-  // List of OAuth configurations
-  csOAuthConfiguration []dict
 }
