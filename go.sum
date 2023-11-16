@@ -132,8 +132,8 @@ github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aws/aws-sdk-go v1.47.10 h1:cvufN7WkD1nlOgpRopsmxKQlFp5X1MfyAw4r7BBORQc=
 github.com/aws/aws-sdk-go v1.47.10/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
-github.com/aws/aws-sdk-go-v2 v1.22.2 h1:lV0U8fnhAnPz8YcdmZVV60+tr6CakHzqA6P8T46ExJI=
-github.com/aws/aws-sdk-go-v2 v1.22.2/go.mod h1:Kd0OJtkW3Q0M0lUWGszapWjEvrXDzRW+D21JNsroB+c=
+github.com/aws/aws-sdk-go-v2 v1.23.0 h1:PiHAzmiQQr6JULBUdvR8fKlA+UPKLT/8KbiqpFBWiAo=
+github.com/aws/aws-sdk-go-v2 v1.23.0/go.mod h1:i1XDttT4rnf6vxc9AuskLc6s7XBee8rlLilKlc03uAA=
 github.com/aws/aws-sdk-go-v2/config v1.24.0 h1:4LEk29JO3w+y9dEo/5Tq5QTP7uIEw+KQrKiHOs4xlu4=
 github.com/aws/aws-sdk-go-v2/config v1.24.0/go.mod h1:11nNDAuK86kOUHeuEQo8f3CkcV5xuUxvPwFjTZE/PnQ=
 github.com/aws/aws-sdk-go-v2/credentials v1.15.2 h1:rKH7khRMxPdD0u3dHecd0Q7NOVw3EUe7AqdkUOkiOGI=
@@ -166,8 +166,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.1 h1:iRFNqZH4a67IqPvK8xxtyQYn
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.1/go.mod h1:pTy5WM+6sNv2tB24JNKFtn6EvciQ5k40ZJ0pq/Iaxj0=
 github.com/aws/aws-sdk-go-v2/service/sts v1.25.1 h1:txgVXIXWPXyqdiVn92BV6a/rgtpX31HYdsOYj0sVQQQ=
 github.com/aws/aws-sdk-go-v2/service/sts v1.25.1/go.mod h1:VAiJiNaoP1L89STFlEMgmHX1bKixY+FaP+TpRFrmyZ4=
-github.com/aws/smithy-go v1.16.0 h1:gJZEH/Fqh+RsvlJ1Zt4tVAtV6bKkp3cC+R6FCZMNzik=
-github.com/aws/smithy-go v1.16.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
+github.com/aws/smithy-go v1.17.0 h1:wWJD7LX6PBV6etBUwO0zElG0nWN9rUhp0WdYeHSHAaI=
+github.com/aws/smithy-go v1.17.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231111033029-eb10ac4f1f27 h1:ETsh0i/F544UnSrxOj5eBGO5GVKeOQrz3AYzC4EAdqo=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231111033029-eb10ac4f1f27/go.mod h1:Nnq1Fpz3mjhJTPhSYdHo8x/RypwyAq8fZBTwrvt+Dio=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
