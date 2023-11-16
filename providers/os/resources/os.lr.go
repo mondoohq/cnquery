@@ -1004,6 +1004,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"package.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetName()).ToDataRes(types.String)
 	},
+	"package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetDescription()).ToDataRes(types.String)
+	},
 	"package.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetVersion()).ToDataRes(types.String)
 	},
@@ -1019,8 +1022,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"package.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetStatus()).ToDataRes(types.String)
 	},
-	"package.description": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPackage).GetDescription()).ToDataRes(types.String)
+	"package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetPurl()).ToDataRes(types.String)
 	},
 	"package.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetOrigin()).ToDataRes(types.String)
@@ -1561,6 +1564,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"python.package.summary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetSummary()).ToDataRes(types.String)
+	},
+	"python.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPythonPackage).GetPurl()).ToDataRes(types.String)
 	},
 	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
@@ -2783,6 +2789,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -2803,8 +2813,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlPackage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"package.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3685,6 +3695,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"python.package.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"python.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPythonPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"python.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7385,12 +7399,13 @@ type mqlPackage struct {
 	__id string
 	// optional: if you define mqlPackageInternal it will be used here
 	Name plugin.TValue[string]
+	Description plugin.TValue[string]
 	Version plugin.TValue[string]
 	Arch plugin.TValue[string]
 	Epoch plugin.TValue[string]
 	Format plugin.TValue[string]
 	Status plugin.TValue[string]
-	Description plugin.TValue[string]
+	Purl plugin.TValue[string]
 	Origin plugin.TValue[string]
 	Available plugin.TValue[string]
 	Installed plugin.TValue[bool]
@@ -7438,6 +7453,10 @@ func (c *mqlPackage) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
 func (c *mqlPackage) GetVersion() *plugin.TValue[string] {
 	return &c.Version
 }
@@ -7460,8 +7479,8 @@ func (c *mqlPackage) GetStatus() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlPackage) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+func (c *mqlPackage) GetPurl() *plugin.TValue[string] {
+	return &c.Purl
 }
 
 func (c *mqlPackage) GetOrigin() *plugin.TValue[string] {
@@ -10560,6 +10579,7 @@ type mqlPythonPackage struct {
 	License plugin.TValue[string]
 	Author plugin.TValue[string]
 	Summary plugin.TValue[string]
+	Purl plugin.TValue[string]
 	Dependencies plugin.TValue[[]interface{}]
 }
 
@@ -10635,6 +10655,12 @@ func (c *mqlPythonPackage) GetAuthor() *plugin.TValue[string] {
 func (c *mqlPythonPackage) GetSummary() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Summary, func() (string, error) {
 		return c.summary()
+	})
+}
+
+func (c *mqlPythonPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 

@@ -6,6 +6,9 @@ package packages
 import (
 	"bufio"
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"os"
 	"regexp"
@@ -26,7 +29,7 @@ var (
 )
 
 // ParseDpkgPackages parses the dpkg database content located in /var/lib/dpkg/status
-func ParseDpkgPackages(input io.Reader) ([]Package, error) {
+func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, error) {
 	const STATE_RESET = 0
 	const STATE_DESC = 1
 	pkgs := []Package{}
@@ -34,6 +37,7 @@ func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 	add := func(pkg Package) {
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
+			pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeDebian)
 			pkgs = append(pkgs, pkg)
 		} else {
 			log.Debug().Msg("ignored deb packages since information is missing")
@@ -112,7 +116,8 @@ func ParseDpkgUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Debian, Ubuntu
 type DebPkgManager struct {
-	conn shared.Connection
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (dpm *DebPkgManager) Name() string {
@@ -146,7 +151,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 		}
 		defer fi.Close()
 
-		list, err := ParseDpkgPackages(fi)
+		list, err := ParseDpkgPackages(dpm.platform, fi)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse dpkg package list")
 		}
@@ -168,7 +173,7 @@ func (dpm *DebPkgManager) List() ([]Package, error) {
 				return fmt.Errorf("could not read dpkg package list")
 			}
 
-			list, err := ParseDpkgPackages(fi)
+			list, err := ParseDpkgPackages(dpm.platform, fi)
 			fi.Close()
 			if err != nil {
 				log.Debug().Err(err).Str("path", path).Msg("could not parse")

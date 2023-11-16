@@ -560,6 +560,8 @@ resources:
       name: {}
       origin: {}
       outdated: {}
+      purl:
+        min_mondoo_version: latest
       status: {}
       version: {}
     min_mondoo_version: 5.15.0
@@ -736,6 +738,7 @@ resources:
       licenses: {}
       name: {}
       path: {}
+      purl: {}
       summary: {}
       version: {}
     min_mondoo_version: latest

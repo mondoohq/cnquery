@@ -4,6 +4,7 @@
 package reboot
 
 import (
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"io"
 	"strings"
 
@@ -33,7 +34,12 @@ func (s *RpmNewestKernel) RebootPending() (bool, error) {
 		return false, err
 	}
 
-	pkgs := packages.ParseRpmPackages(installedKernelCmd.Stdout)
+	var pf *inventory.Platform
+	if s.conn.Asset() != nil {
+		pf = s.conn.Asset().Platform
+	}
+
+	pkgs := packages.ParseRpmPackages(pf, installedKernelCmd.Stdout)
 	// this case is valid in container
 	if len(pkgs) == 0 {
 		return false, nil

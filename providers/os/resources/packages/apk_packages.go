@@ -6,6 +6,9 @@ package packages
 import (
 	"bufio"
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"regexp"
 
@@ -22,7 +25,7 @@ var APK_REGEX = regexp.MustCompile(`^([A-Za-z]):(.*)$`)
 // ParseApkDbPackages parses the database of the apk package manager located in
 // `/lib/apk/db/installed`
 // Apk spec: https://wiki.alpinelinux.org/wiki/Apk_spec
-func ParseApkDbPackages(input io.Reader) []Package {
+func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 	pkgs := []Package{}
 
 	var pkgVersion string
@@ -34,9 +37,11 @@ func ParseApkDbPackages(input io.Reader) []Package {
 			pkg.Version = pkgVersion
 		} else {
 			pkg.Version = pkgEpoch + ":" + pkgVersion
+			pkg.Epoch = pkgEpoch
 		}
 
 		pkg.Format = AlpinePkgFormat
+		pkg.PUrl = purl.NewPackageUrl(pf, pkg.Name, pkg.Version, pkg.Arch, pkg.Epoch, packageurl.TypeApk)
 
 		// do sanitization checks to ensure we have minimal information
 		if pkg.Name != "" && pkg.Version != "" {
@@ -115,7 +120,8 @@ func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Arch, Manjaro
 type AlpinePkgManager struct {
-	conn shared.Connection
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (apm *AlpinePkgManager) Name() string {
@@ -133,7 +139,7 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 	}
 	defer fr.Close()
 
-	return ParseApkDbPackages(fr), nil
+	return ParseApkDbPackages(apm.platform, fr), nil
 }
 
 func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {

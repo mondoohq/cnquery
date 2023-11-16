@@ -58,6 +58,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Epoch.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Available.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Purl.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Arch.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
@@ -138,6 +139,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"installed":   llx.BoolData(true),
 			"origin":      llx.StringData(osPkg.Origin),
 			"epoch":       llx.NilData, // TODO: support Epoch
+			"purl":        llx.StringData(osPkg.PUrl),
 		})
 		if err != nil {
 			return nil, err

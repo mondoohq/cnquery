@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/package-url/packageurl-go"
 	"io"
 	"net/textproto"
 	"os"
@@ -199,6 +200,7 @@ func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDe
 		"license":      llx.StringData(ppd.license),
 		"file":         llx.ResourceData(f, f.MqlName()),
 		"dependencies": llx.ArrayData(dependencies, types.Any),
+		"purl":         llx.StringData(ppd.purl),
 	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
@@ -245,6 +247,7 @@ type pythonPackageDetails struct {
 	version      string
 	dependencies []string
 	isLeaf       bool
+	purl         string
 }
 
 func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []pythonPackageDetails) {
@@ -411,7 +414,22 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 		version:      mimeData.Get("Version"),
 		dependencies: deps,
 		file:         pythonMIMEFilepath,
+		purl:         newPythonPackageUrl(mimeData.Get("Name"), mimeData.Get("Version"), mimeData.Get("Home-page")),
 	}, nil
+}
+
+func newPythonPackageUrl(name string, version string, homepage string) string {
+	// ensure the name is accoring to the PURL spec
+	// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#pypi
+	name = strings.ReplaceAll(name, "_", "-")
+
+	return packageurl.NewPackageURL(
+		packageurl.TypePyPi,
+		"",
+		name,
+		version,
+		nil,
+		"").String()
 }
 
 // extractMimeDeps will go through each of the listed dependencies

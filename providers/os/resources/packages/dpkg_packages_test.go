@@ -4,6 +4,7 @@
 package packages_test
 
 import (
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,13 +14,23 @@ import (
 )
 
 func TestDpkgParser(t *testing.T) {
+	pf := &inventory.Platform{
+		Name:    "ubuntu",
+		Version: "18.04",
+		Arch:    "x86_64",
+		Family:  []string{"debian", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "ubuntu",
+		},
+	}
+
 	mock, err := mock.New("./testdata/packages_dpkg.toml", nil)
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/var/lib/dpkg/status")
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, err := packages.ParseDpkgPackages(f)
+	m, err := packages.ParseDpkgPackages(pf, f)
 	require.NoError(t, err)
 	assert.Equal(t, 10, len(m), "detected the right amount of packages")
 
@@ -41,6 +52,7 @@ partition tables (eg. GPT, MBR, etc).
 The fdisk utility is the classical text-mode utility.
 The cfdisk utilitity gives a more userfriendly curses based interface.
 The sfdisk utility is mostly for automation and scripting uses.`,
+		PUrl:   "pkg:deb/ubuntu/fdisk@2.31.1-0.4ubuntu3.1?arch=amd64&distro=ubuntu-18.04",
 		Format: "deb",
 	}
 	assert.Contains(t, m, p, "fdisk detected")
@@ -55,19 +67,30 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 The audit-libs package contains the dynamic libraries needed for
 applications to use the audit framework. It is used to monitor systems for
 security related events.`,
+		PUrl:   "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
 		Format: "deb",
 	}
 	assert.Contains(t, m, p, "libaudit1 detected")
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
+	pf := &inventory.Platform{
+		Name:    "ubuntu",
+		Version: "18.04",
+		Arch:    "x86_64",
+		Family:  []string{"debian", "linux", "unix", "os"},
+		Labels: map[string]string{
+			"distro-id": "ubuntu",
+		},
+	}
+
 	mock, err := mock.New("./testdata/packages_dpkg_statusd.toml", nil)
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/var/lib/dpkg/status.d/base")
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, err := packages.ParseDpkgPackages(f)
+	m, err := packages.ParseDpkgPackages(pf, f)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(m), "detected the right amount of packages")
 
@@ -81,6 +104,7 @@ This package contains the basic filesystem hierarchy of a Debian system, and
 several important miscellaneous files, such as /etc/debian_version,
 /etc/host.conf, /etc/issue, /etc/motd, /etc/profile, and others,
 and the text of several common licenses in use on Debian systems.`,
+		PUrl:   "pkg:deb/ubuntu/base-files@9.9%2Bdeb9u11?arch=amd64&distro=ubuntu-18.04",
 		Format: "deb",
 	}
 	assert.Contains(t, m, p, "fdisk detected")
