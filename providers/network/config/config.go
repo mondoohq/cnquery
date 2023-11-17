@@ -22,7 +22,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "host",
 			Use:       "host HOST",
-			Short:     "a remote host",
+			Short:     "a host endpoint (domain name or IP)",
 			MinArgs:   1,
 			MaxArgs:   1,
 			Discovery: []string{},

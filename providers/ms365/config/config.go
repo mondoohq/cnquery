@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 		{
 			Name:      "ms365",
 			Use:       "ms365",
-			Short:     "a Microsoft 365 account",
+			Short:     "a Microsoft 365 tenant",
 			MinArgs:   0,
 			MaxArgs:   5,
 			Discovery: []string{},

@@ -17,12 +17,12 @@ var Config = plugin.Provider{
 		{
 			Name:  "google-workspace",
 			Use:   "google-workspace [--credentials-path <credentials-path>] [--customer-id <customer-id>] [--impersonated-user-email <impersonated-user-email>]",
-			Short: "a Google Workspace account",
+			Short: "a Google Workspace organization",
 			Long: `google-workspace is designed for querying resources within for a Google Workspace domain.
 
 The provider requires three flags to be set:
 '--customer-id <customer-id>': This flag is used to specify the unique ID of the Google Workspace customer. 
-The customer ID is an immutable, unique identifier for a Google Workspace account.
+The customer ID is an immutable, unique identifier for a Google Workspace organization.
 
 '--impersonated-user-email <user-email>': This flag is used to specify the email address of the user to 
 impersonate in this session. This is useful when the user executing the command does not have the necessary 
