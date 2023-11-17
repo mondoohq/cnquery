@@ -280,10 +280,6 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 
 // RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
 func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle, error) {
-	if m.Title == "" {
-		m.Title = m.Query
-	}
-
 	bundle, err := m.refreshChecksumAndType(nil, nil, schema)
 	if err != nil {
 		return bundle, err
