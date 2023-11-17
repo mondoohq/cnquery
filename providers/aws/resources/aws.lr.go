@@ -1148,6 +1148,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.autoscaling.group.minSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetMinSize()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.maxSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetMaxSize()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.defaultCooldown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetDefaultCooldown()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.launchConfigurationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetLaunchConfigurationName()).ToDataRes(types.String)
+	},
+	"aws.autoscaling.group.healthCheckGracePeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetHealthCheckGracePeriod()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -2160,7 +2178,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsRedshiftCluster).GetClusterVersion()).ToDataRes(types.String)
 	},
 	"aws.redshift.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRedshiftCluster).GetCreatedAt()).ToDataRes(types.String)
+		return (r.(*mqlAwsRedshiftCluster).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.redshift.cluster.dbName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetDbName()).ToDataRes(types.String)
@@ -3688,6 +3706,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.autoscaling.group.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.minSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).MinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.maxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).MaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.defaultCooldown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).DefaultCooldown, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.launchConfigurationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).LaunchConfigurationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.healthCheckGracePeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).HealthCheckGracePeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5255,7 +5297,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.redshift.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRedshiftCluster).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsRedshiftCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.dbName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9122,6 +9164,12 @@ type mqlAwsAutoscalingGroup struct {
 	HealthCheckType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	Region plugin.TValue[string]
+	MinSize plugin.TValue[int64]
+	MaxSize plugin.TValue[int64]
+	DefaultCooldown plugin.TValue[int64]
+	LaunchConfigurationName plugin.TValue[string]
+	HealthCheckGracePeriod plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -9183,6 +9231,30 @@ func (c *mqlAwsAutoscalingGroup) GetTags() *plugin.TValue[map[string]interface{}
 
 func (c *mqlAwsAutoscalingGroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsAutoscalingGroup) GetMinSize() *plugin.TValue[int64] {
+	return &c.MinSize
+}
+
+func (c *mqlAwsAutoscalingGroup) GetMaxSize() *plugin.TValue[int64] {
+	return &c.MaxSize
+}
+
+func (c *mqlAwsAutoscalingGroup) GetDefaultCooldown() *plugin.TValue[int64] {
+	return &c.DefaultCooldown
+}
+
+func (c *mqlAwsAutoscalingGroup) GetLaunchConfigurationName() *plugin.TValue[string] {
+	return &c.LaunchConfigurationName
+}
+
+func (c *mqlAwsAutoscalingGroup) GetHealthCheckGracePeriod() *plugin.TValue[int64] {
+	return &c.HealthCheckGracePeriod
+}
+
+func (c *mqlAwsAutoscalingGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsElb for the aws.elb resource
@@ -13741,7 +13813,7 @@ type mqlAwsRedshiftCluster struct {
 	ClusterStatus plugin.TValue[string]
 	ClusterSubnetGroupName plugin.TValue[string]
 	ClusterVersion plugin.TValue[string]
-	CreatedAt plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 	DbName plugin.TValue[string]
 	Encrypted plugin.TValue[bool]
 	EnhancedVpcRouting plugin.TValue[bool]
@@ -13832,7 +13904,7 @@ func (c *mqlAwsRedshiftCluster) GetClusterVersion() *plugin.TValue[string] {
 	return &c.ClusterVersion
 }
 
-func (c *mqlAwsRedshiftCluster) GetCreatedAt() *plugin.TValue[string] {
+func (c *mqlAwsRedshiftCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 

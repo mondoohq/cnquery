@@ -540,6 +540,18 @@ private aws.autoscaling.group @defaults("name region") {
   tags map[string]string
   // The region of the Auto Scaling group
   region string
+  // The minimum number of instances to scale down to
+  minSize int
+  // The maximum number of instances to scale up to
+  maxSize int
+  // The time to wait after scaling up / down before the next scaling event is started
+  defaultCooldown int
+  // The name of the launch configuration
+  launchConfigurationName string
+  // The grace period in seconds before an instance with a failing health check will be replaced
+  healthCheckGracePeriod int
+  // Time when the autoscaling group was created
+  createdAt time
 }
 
 // AWS Elastic Load Balancing
@@ -1436,7 +1448,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // Version of the Redshift engine running on the cluster
   clusterVersion string
   // Cluster creation timestamp
-  createdAt string
+  createdAt time
   // Name of the initial database that was created when the cluster was created
   dbName string
   // Whether the cluster is encrypted at rest
