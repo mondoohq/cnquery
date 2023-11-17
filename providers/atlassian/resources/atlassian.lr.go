@@ -7,6 +7,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -210,8 +211,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.admin.organization.managedUser.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetEmail()).ToDataRes(types.String)
 	},
+	"atlassian.admin.organization.managedUser.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetStatus()).ToDataRes(types.String)
+	},
 	"atlassian.admin.organization.managedUser.lastActive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetLastActive()).ToDataRes(types.String)
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetLastActive()).ToDataRes(types.Time)
+	},
+	"atlassian.admin.organization.managedUser.productAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetProductAccess()).ToDataRes(types.Array(types.Dict))
 	},
 	"atlassian.admin.organization.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationPolicy).GetId()).ToDataRes(types.String)
@@ -459,8 +466,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAtlassianAdminOrganizationManagedUser).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.admin.organization.managedUser.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.admin.organization.managedUser.lastActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAtlassianAdminOrganizationManagedUser).LastActive, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAtlassianAdminOrganizationManagedUser).LastActive, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.managedUser.productAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationManagedUser).ProductAccess, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1039,7 +1054,9 @@ type mqlAtlassianAdminOrganizationManagedUser struct {
 	Name plugin.TValue[string]
 	Type plugin.TValue[string]
 	Email plugin.TValue[string]
-	LastActive plugin.TValue[string]
+	Status plugin.TValue[string]
+	LastActive plugin.TValue[*time.Time]
+	ProductAccess plugin.TValue[[]interface{}]
 }
 
 // createAtlassianAdminOrganizationManagedUser creates a new instance of this resource
@@ -1095,8 +1112,16 @@ func (c *mqlAtlassianAdminOrganizationManagedUser) GetEmail() *plugin.TValue[str
 	return &c.Email
 }
 
-func (c *mqlAtlassianAdminOrganizationManagedUser) GetLastActive() *plugin.TValue[string] {
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetLastActive() *plugin.TValue[*time.Time] {
 	return &c.LastActive
+}
+
+func (c *mqlAtlassianAdminOrganizationManagedUser) GetProductAccess() *plugin.TValue[[]interface{}] {
+	return &c.ProductAccess
 }
 
 // mqlAtlassianAdminOrganizationPolicy for the atlassian.admin.organization.policy resource

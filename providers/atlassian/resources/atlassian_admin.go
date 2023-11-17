@@ -6,6 +6,9 @@ package resources
 import (
 	"context"
 	"errors"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/types"
+	"time"
 
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -51,13 +54,46 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, user := range managedUsers.Data {
+
+		type ProductAccess struct {
+			Name       string
+			LastActive *time.Time
+		}
+		var products []ProductAccess
+
+		for i := range user.ProductAccess {
+
+			var lastProductUse *time.Time
+			if user.LastActive != "" {
+				t, err := time.Parse(time.RFC3339, user.LastActive)
+				if err != nil {
+					lastProductUse = &t
+				}
+			}
+
+			products = append(products, ProductAccess{
+				Name:       user.ProductAccess[i].Name,
+				LastActive: lastProductUse,
+			})
+		}
+
+		var lastActive *time.Time
+		if user.LastActive != "" {
+			t, err := time.Parse(time.RFC3339, user.LastActive)
+			if err != nil {
+				lastActive = &t
+			}
+		}
+
 		mqlAtlassianAdminManagedUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(user.AccountID),
-				"name":       llx.StringData(user.Name),
-				"type":       llx.StringData(user.AccountType),
-				"email":      llx.StringData(user.Email),
-				"lastActive": llx.StringData(user.LastActive),
+				"id":            llx.StringData(user.AccountID),
+				"name":          llx.StringData(user.Name),
+				"type":          llx.StringData(user.AccountType),
+				"status":        llx.StringData(user.AccountStatus),
+				"email":         llx.StringData(user.Email),
+				"lastActive":    llx.TimeDataPtr(lastActive),
+				"productAccess": llx.ArrayData(convert.SliceAnyToInterface(products), types.Dict),
 			})
 		if err != nil {
 			return nil, err

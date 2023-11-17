@@ -57,8 +57,12 @@ atlassian.admin.organization.managedUser @defaults("name") {
   type string
   // Email
   email string
+  // Status
+  status string
   // Last active
-  lastActive string
+  lastActive time
+	// Product access
+  productAccess []dict
 }
 
 // Policies (except authentication policies)
