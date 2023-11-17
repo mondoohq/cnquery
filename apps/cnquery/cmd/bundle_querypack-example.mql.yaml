@@ -9,7 +9,7 @@ packs:
     queries:
       - uid: mondoo-openssh-platform
         title: Retrieve information about the Platform
-        query: |
+        mql: |
           asset {
             platform
             version
@@ -17,7 +17,7 @@ packs:
           }
       - uid: mondoo-openssh-installed-version
         title: Retrieve list about installed ssh packages
-        query: packages.where(name == /ssh/)
+        mql: packages.where(name == /ssh/)
       - uid: mondoo-openssh-config
         title: Retrieve parsed sshd configuration
-        query: sshd.config.params
+        mql: sshd.config.params
