@@ -2375,6 +2375,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.instance.platformName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetPlatformName()).ToDataRes(types.String)
 	},
+	"aws.ssm.instance.platformType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetPlatformType()).ToDataRes(types.String)
+	},
+	"aws.ssm.instance.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmInstance).GetPlatformVersion()).ToDataRes(types.String)
+	},
 	"aws.ssm.instance.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetRegion()).ToDataRes(types.String)
 	},
@@ -5602,6 +5608,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ssm.instance.platformName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmInstance).PlatformName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.platformType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).PlatformType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.instance.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmInstance).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14753,6 +14767,8 @@ type mqlAwsSsmInstance struct {
 	PingStatus plugin.TValue[string]
 	IpAddress plugin.TValue[string]
 	PlatformName plugin.TValue[string]
+	PlatformType plugin.TValue[string]
+	PlatformVersion plugin.TValue[string]
 	Region plugin.TValue[string]
 	Arn plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
@@ -14809,6 +14825,14 @@ func (c *mqlAwsSsmInstance) GetIpAddress() *plugin.TValue[string] {
 
 func (c *mqlAwsSsmInstance) GetPlatformName() *plugin.TValue[string] {
 	return &c.PlatformName
+}
+
+func (c *mqlAwsSsmInstance) GetPlatformType() *plugin.TValue[string] {
+	return &c.PlatformType
+}
+
+func (c *mqlAwsSsmInstance) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
 }
 
 func (c *mqlAwsSsmInstance) GetRegion() *plugin.TValue[string] {

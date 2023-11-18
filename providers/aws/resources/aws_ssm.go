@@ -85,12 +85,14 @@ func (a *mqlAwsSsm) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 			for _, instance := range ssminstances {
 				mqlInstance, err := CreateResource(a.MqlRuntime, "aws.ssm.instance",
 					map[string]*llx.RawData{
-						"instanceId":   llx.StringDataPtr(instance.InstanceId),
-						"pingStatus":   llx.StringData(string(instance.PingStatus)),
-						"ipAddress":    llx.StringDataPtr(instance.IPAddress),
-						"platformName": llx.StringDataPtr(instance.PlatformName),
-						"region":       llx.StringData(region),
-						"arn":          llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToString(instance.InstanceId))),
+						"instanceId":      llx.StringDataPtr(instance.InstanceId),
+						"pingStatus":      llx.StringData(string(instance.PingStatus)),
+						"ipAddress":       llx.StringDataPtr(instance.IPAddress),
+						"platformName":    llx.StringDataPtr(instance.PlatformName),
+						"platformType":    llx.StringData(string(instance.PlatformType)),
+						"platformVersion": llx.StringDataPtr(instance.PlatformVersion),
+						"region":          llx.StringData(region),
+						"arn":             llx.StringData(ssmInstanceArn(conn.AccountId(), region, convert.ToString(instance.InstanceId))),
 					})
 				if err != nil {
 					return nil, err

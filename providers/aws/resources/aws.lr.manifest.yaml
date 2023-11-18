@@ -2257,6 +2257,8 @@ resources:
       ipAddress: {}
       pingStatus: {}
       platformName: {}
+      platformType: {}
+      platformVersion: {}
       region: {}
       tags: {}
     is_private: true

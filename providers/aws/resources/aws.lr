@@ -1608,12 +1608,12 @@ private aws.lambda.function @defaults("arn") {
 }
 
 // Amazon Systems Manager
-aws.ssm {
+aws.ssm @defaults("instances") {
   instances() []aws.ssm.instance
 }
 
 // Amazon SSM instance
-private aws.ssm.instance {
+private aws.ssm.instance @defaults("instanceId region platformName platformVersion ipAddress") {
   // Instance ID for the SSM Instance
   instanceId string
   // Ping status (e.g., online) for the SSM Instance
@@ -1622,6 +1622,10 @@ private aws.ssm.instance {
   ipAddress string
   // Platform name for the SSM Instance, as described by AWS
   platformName string
+  // The type of for the SSM Instance, as described by AWS (Windows, Linux, etc)
+  platformType string
+  // Platform version for the SSM Instance, as described by AWS
+  platformVersion string
   // Region where the SSM instance is located
   region string
   // ARN for the SSM instance
