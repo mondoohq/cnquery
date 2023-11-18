@@ -968,10 +968,14 @@ resources:
       desc: |
         The `aws.ec2.networkacl.entry` resource provides fields for assessing the configuration of network ACL entries within an AWS account. For usage see `aws.ec2` resource.
     fields:
+      cidrBlock:
+        min_mondoo_version: latest
       egress: {}
       id: {}
       portRange: {}
       ruleAction: {}
+      ruleNumber:
+        min_mondoo_version: latest
     is_private: true
     min_mondoo_version: 5.15.0
     platform:

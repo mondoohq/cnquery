@@ -104,7 +104,7 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
 						map[string]*llx.RawData{
 							"arn":    llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToString(acl.NetworkAclId))),
-							"id":     llx.StringData(convert.ToString(acl.NetworkAclId)),
+							"id":     llx.StringDataPtr(acl.NetworkAclId),
 							"region": llx.StringData(regionVal),
 						})
 					if err != nil {
@@ -156,6 +156,8 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 		args := map[string]*llx.RawData{
 			"egress":     llx.BoolData(egress),
 			"ruleAction": llx.StringData(string(entry.RuleAction)),
+			"ruleNumber": llx.IntData(convert.ToInt64From32(entry.RuleNumber)),
+			"cidrBlock":  llx.StringDataPtr(entry.CidrBlock),
 			"id":         llx.StringData(entryId),
 		}
 		if entry.PortRange != nil {

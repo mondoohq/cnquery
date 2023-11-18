@@ -2435,8 +2435,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkacl.entry.ruleAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetRuleAction()).ToDataRes(types.String)
 	},
+	"aws.ec2.networkacl.entry.ruleNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetRuleNumber()).ToDataRes(types.Int)
+	},
 	"aws.ec2.networkacl.entry.portRange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetPortRange()).ToDataRes(types.Resource("aws.ec2.networkacl.entry.portrange"))
+	},
+	"aws.ec2.networkacl.entry.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetCidrBlock()).ToDataRes(types.String)
 	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetId()).ToDataRes(types.String)
@@ -5702,8 +5708,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEc2NetworkaclEntry).RuleAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.networkacl.entry.ruleNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).RuleNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkacl.entry.portRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2NetworkaclEntry).PortRange, ok = plugin.RawToTValue[*mqlAwsEc2NetworkaclEntryPortrange](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.entry.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15119,7 +15133,9 @@ type mqlAwsEc2NetworkaclEntry struct {
 	// optional: if you define mqlAwsEc2NetworkaclEntryInternal it will be used here
 	Egress plugin.TValue[bool]
 	RuleAction plugin.TValue[string]
+	RuleNumber plugin.TValue[int64]
 	PortRange plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange]
+	CidrBlock plugin.TValue[string]
 	Id plugin.TValue[string]
 }
 
@@ -15168,6 +15184,10 @@ func (c *mqlAwsEc2NetworkaclEntry) GetRuleAction() *plugin.TValue[string] {
 	return &c.RuleAction
 }
 
+func (c *mqlAwsEc2NetworkaclEntry) GetRuleNumber() *plugin.TValue[int64] {
+	return &c.RuleNumber
+}
+
 func (c *mqlAwsEc2NetworkaclEntry) GetPortRange() *plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange] {
 	return plugin.GetOrCompute[*mqlAwsEc2NetworkaclEntryPortrange](&c.PortRange, func() (*mqlAwsEc2NetworkaclEntryPortrange, error) {
 		if c.MqlRuntime.HasRecording {
@@ -15182,6 +15202,10 @@ func (c *mqlAwsEc2NetworkaclEntry) GetPortRange() *plugin.TValue[*mqlAwsEc2Netwo
 
 		return c.portRange()
 	})
+}
+
+func (c *mqlAwsEc2NetworkaclEntry) GetCidrBlock() *plugin.TValue[string] {
+	return &c.CidrBlock
 }
 
 func (c *mqlAwsEc2NetworkaclEntry) GetId() *plugin.TValue[string] {

@@ -1657,7 +1657,7 @@ aws.ec2 {
 }
 
 // Amazon EC2 network ACL
-private aws.ec2.networkacl @defaults("arn") {
+private aws.ec2.networkacl @defaults("id region") {
   // ARN for the network ACL
   arn string
   // ID for the network ACL 
@@ -1669,19 +1669,23 @@ private aws.ec2.networkacl @defaults("arn") {
 }
 
 // Amazon EC2 network ACL entry
-private aws.ec2.networkacl.entry {
+private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portRange") {
   // Whether this is an entry for egress rules
   egress bool
   // Allow or deny
   ruleAction string
+  // The rule number
+  ruleNumber int
   // Port range for the ACL entry
   portRange() aws.ec2.networkacl.entry.portrange
+  // CIDR block for the ACL entry
+  cidrBlock string
   // ID for the ACL entry rule
   id string
 }
 
 // Amazon EC2 network ACL entry port range
-private aws.ec2.networkacl.entry.portrange {
+private aws.ec2.networkacl.entry.portrange @defaults("from to") {
   // Starting port for port range
   from int
   // Ending port for port range
