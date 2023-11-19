@@ -22,6 +22,7 @@ import (
 var (
 	LINUX_PS_REGEX = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)?$`)
 	UNIX_PS_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+	AIX_PS_REGEX   = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
 
 	// "lrwx------ 1 0 0 64 Dec  6 13:56 /proc/1/fd/12 -> socket:[37364]"
 	reFindSockets = regexp.MustCompile(
@@ -157,6 +158,53 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 	return processes, nil
 }
 
+func ParseAixPsResult(input io.Reader) ([]*ProcessEntry, error) {
+	processes := []*ProcessEntry{}
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// skip defunct processes
+		if strings.Contains(line, "defunct") {
+			continue
+		}
+
+		m := AIX_PS_REGEX.FindStringSubmatch(line)
+		if len(m) != 9 {
+			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+		}
+		if m[1] == "PID" {
+			// header
+			continue
+		}
+
+		pid, err := strconv.ParseInt(m[1], 10, 64)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
+			continue
+		}
+		uid, err := strconv.ParseInt(m[7], 10, 64)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse unix uid " + m[9])
+			continue
+		}
+
+		// PID  %CPU  %MEM   VSZ     TT        TIME UID COMMAND
+		p := &ProcessEntry{
+			Pid:     pid,
+			CPU:     m[2],
+			Mem:     m[3],
+			Vsz:     m[4],
+			Tty:     m[5],
+			Time:    m[6],
+			Uid:     uid,
+			Command: m[8],
+		}
+		processes = append(processes, p)
+	}
+
+	return processes, nil
+}
+
 type UnixProcessManager struct {
 	conn     shared.Connection
 	platform *inventory.Platform
@@ -188,6 +236,17 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 		}
 
 		entries, err = ParseLinuxPsResult(c.Stdout)
+		if err != nil {
+			return nil, err
+		}
+	} else if upm.platform.Name == "aix" {
+		// special case for aix since it does not understand x
+		c, err := upm.conn.RunCommand("ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args")
+		if err != nil {
+			return nil, fmt.Errorf("processes> could not run command")
+		}
+
+		entries, err = ParseAixPsResult(c.Stdout)
 		if err != nil {
 			return nil, err
 		}
