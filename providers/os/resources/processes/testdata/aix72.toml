@@ -1,0 +1,40 @@
+[commands."ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args"]
+stdout = """     PID  %CPU  %MEM   VSZ     TT        TIME UID COMMAND
+       0   0.0   0.0   384      -    00:00:03   0 swapper
+       1   0.0   0.0   792      -    00:00:00   0 /etc/init
+     260   0.0   0.0   448      -    00:01:03   0 wait
+   65798   0.0   0.0   448      -    00:00:00   0 sched
+  131336   0.0   0.0   512      -    00:00:00   0 lrud
+  590182   0.0   0.0   392      -    00:00:00   0 /usr/ccs/bin/shlap64
+ 1638768   0.0   0.0   448      -    00:00:00   0 lbp_kproc
+ 1704266   0.0   0.0   448      -    00:00:00   0 lvmbb
+ 1769796                             00:00:00     <defunct>
+ 1835362   0.0   0.0  1216      -    00:00:00   0 kpkcs11
+ 2687322   0.0   0.0   448      -    00:00:00   0 pofCmdProc
+ 3473870   0.0   0.0   488      -    00:00:00   0 /opt/rsct/bin/trspoolmgr
+ 3670308   0.0   0.0   808      -    00:00:00   0 sshd: cecuser [priv]
+ 3735948   0.0   0.0   512      -    00:00:00   0 rtcmd
+ 3932550   0.0   0.0   172      -    00:00:00   0 /usr/sbin/biod 6
+ 4063626   0.0   0.0   448      -    00:00:00   0 rgsr
+ 4129174   0.0   0.0  1456      -    00:00:00   0 sendmail: accepting connections
+ 4194606   0.0   0.0   872      -    00:00:00   0 /usr/sbin/srcmstr
+ 4260306   0.0   0.0   596      -    00:00:00   0 /usr/sbin/inetd
+ 4391314   0.0   0.0  1356      -    00:00:00   0 /usr/sbin/aso
+ 4456846   0.0   0.0  1012      -    00:00:00   0 /usr/sbin/portmap
+ 4719002   0.0   0.0   448      -    00:00:00   0 j2gt
+ 4784546   0.0   0.0   756      -    00:00:00   0 /usr/sbin/syslogd
+ 5112264   0.0   0.0   448      -    00:00:00   0 random
+ 5243306   0.0   0.0   300      -    00:00:00   0 /usr/sbin/writesrv
+ 5898504   0.0   0.0  6152      -    00:00:00   0 /opt/rsct/bin/IBM.MgmtDomainRMd
+ 6291938   0.0   0.0  1824      -    00:00:00   0 /opt/rsct/bin/IBM.ServiceRMd
+ 6750682   0.0   0.0  1908      -    00:00:00   0 /usr/sbin/cron
+"""
+
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."uname -m"]
+stdout = "00F9C4904C00"
+
+[commands."uname -r"]
+stdout = "2"

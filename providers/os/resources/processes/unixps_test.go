@@ -6,6 +6,7 @@ package processes_test
 import (
 	"bufio"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -101,6 +102,39 @@ func TestUnixPSProcessParser(t *testing.T) {
 	assert.Equal(t, "[Timer]", m[20].Command, "process command detected")
 	assert.Equal(t, int64(88), m[20].Pid, "process pid detected")
 	assert.Equal(t, int64(0), m[20].Uid, "process uid detected")
+}
+
+func TestAixPSProcessParser(t *testing.T) {
+	mock, err := mock.New("./testdata/aix72.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "aix",
+			Family: []string{"unix"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := mock.RunCommand("ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Nil(t, err)
+
+	m, err := processes.ParseAixPsResult(c.Stdout)
+	assert.Nil(t, err)
+	assert.Equal(t, 27, len(m), "detected the right amount of processes")
+
+	// search ssh
+	var found *processes.ProcessEntry
+	for i := range m {
+		if strings.HasPrefix(m[i].Command, "sshd") {
+			found = m[i]
+		}
+	}
+
+	assert.Equal(t, "sshd: cecuser [priv]", found.Command, "process command detected")
+	assert.Equal(t, int64(3670308), found.Pid, "process pid detected")
+	assert.Equal(t, int64(0), found.Uid, "process uid detected")
 }
 
 func TestParseLinuxFind(t *testing.T) {
