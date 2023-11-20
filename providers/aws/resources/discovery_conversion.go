@@ -278,7 +278,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 				"instance": instance.InstanceId.Data,
 			},
 		}}
-		if len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
+		if instance.GetSsm() != nil && instance.GetSsm().Data != nil && len(instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})) > 0 {
 			if instance.GetSsm().Data.(map[string]interface{})["InstanceInformationList"].([]interface{})[0].(map[string]interface{})["PingStatus"] == "Online" {
 				asset.Connections[0].Credentials = append(asset.Connections[0].Credentials, &vault.Credential{
 					User: probableUsername,
