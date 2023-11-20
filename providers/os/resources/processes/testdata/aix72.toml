@@ -1,6 +1,5 @@
 [commands."ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args"]
 stdout = """     PID  %CPU  %MEM   VSZ     TT        TIME UID COMMAND
-     PID  %CPU  %MEM   VSZ     TT        TIME UID COMMAND
        0   0.0   0.0   384      -    00:00:03   0 swapper
        1   0.0   0.0   792      -    00:00:00   0 /etc/init
      260   0.0   0.0   448      -    00:01:03   0 wait
