@@ -789,7 +789,21 @@ func (e *blockExecutor) runFunction(chunk *Chunk, ref uint64) (*RawData, uint64,
 	}
 
 	if res.Error != nil {
-		e.cache.Store(ref, &stepCache{Result: res})
+		// The data type that this chunk requests needs to be matched. If the
+		// chunk was supposed to transform e.g. a []T into a T, then we need to
+		// make sure that the result type - even if it's an error - is set to T.
+		typ := f.Type
+		if typ == "" {
+			typ = string(res.Type)
+		}
+
+		e.cache.Store(ref, &stepCache{
+			Result: &RawData{
+				Type:  types.Type(typ),
+				Value: res.Value,
+				Error: res.Error,
+			},
+		})
 		return nil, 0, res.Error
 	}
 

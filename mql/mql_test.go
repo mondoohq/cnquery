@@ -190,6 +190,11 @@ func TestNullResources(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        "muser.groups.where(name == '').map(name) + ['one']",
+			ResultIndex: 0,
+			Expectation: []interface{}{"one"},
+		},
+		{
 			Code:        "muser.groups.where(name == '') == empty",
 			ResultIndex: 2,
 			Expectation: true,

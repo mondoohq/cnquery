@@ -362,12 +362,16 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	}
 
 	if items.Value == nil {
-		return &RawData{Type: items.Type}, 0, nil
+		return &RawData{Type: types.Type(chunk.Function.Type)}, 0, nil
 	}
 
 	list := items.Value.([]interface{})
 	if len(list) == 0 {
-		return items, 0, nil
+		// Note: We have to set the type to be the child taype here. The array is
+		// now technically an any-typed, i.e. it cannot just be cast into a
+		// []T if that is requested down the line. Without carrying types around,
+		// we won't be able to do that easily.
+		return &RawData{Type: types.Type(chunk.Function.Type), Value: []interface{}{}}, 0, nil
 	}
 
 	arg1 := chunk.Function.Args[1]
