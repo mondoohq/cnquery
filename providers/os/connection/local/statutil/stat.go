@@ -274,12 +274,12 @@ func (s *statHelper) aix(name string) (os.FileInfo, error) {
 
 	cmd, err := s.commandRunner.RunCommand(sb.String())
 	if err != nil {
-		log.Debug().Err(err).Send()
+		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
 	statsData := strings.Split(string(data), ":")
