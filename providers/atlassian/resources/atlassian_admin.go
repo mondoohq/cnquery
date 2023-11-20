@@ -85,6 +85,11 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 			}
 		}
 
+		productArray, err := convert.JsonToDictSlice(products)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlAtlassianAdminManagedUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser",
 			map[string]*llx.RawData{
 				"id":            llx.StringData(user.AccountID),
@@ -93,7 +98,7 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]interface{}, error) {
 				"status":        llx.StringData(user.AccountStatus),
 				"email":         llx.StringData(user.Email),
 				"lastActive":    llx.TimeDataPtr(lastActive),
-				"productAccess": llx.ArrayData(convert.SliceAnyToInterface(products), types.Dict),
+				"productAccess": llx.ArrayData(productArray, types.Dict),
 			})
 		if err != nil {
 			return nil, err
