@@ -40,6 +40,8 @@ resources:
       id: {}
       lastActive: {}
       name: {}
+      productAccess: {}
+      status: {}
       type: {}
     min_mondoo_version: latest
   atlassian.admin.organization.managedUsers:
