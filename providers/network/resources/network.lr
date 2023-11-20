@@ -287,7 +287,7 @@ private openpgp.publicKey {
 private openpgp.identity {
   // Primary key fingerprint
   fingerprint string
-  // Full name in form of "Full Name (comment) <email@example.com>"
+  // Full name in form of `Full Name (comment) <email@example.com>`
   id string
   // Name
   name string
