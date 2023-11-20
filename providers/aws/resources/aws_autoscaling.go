@@ -76,12 +76,18 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					}
 					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
-							"arn":               llx.StringDataPtr(group.AutoScalingGroupARN),
-							"name":              llx.StringDataPtr(group.AutoScalingGroupName),
-							"loadBalancerNames": llx.ArrayData(lbNames, types.String),
-							"healthCheckType":   llx.StringDataPtr(group.HealthCheckType),
-							"tags":              llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
-							"region":            llx.StringData(regionVal),
+							"arn":                     llx.StringDataPtr(group.AutoScalingGroupARN),
+							"name":                    llx.StringDataPtr(group.AutoScalingGroupName),
+							"loadBalancerNames":       llx.ArrayData(lbNames, types.String),
+							"healthCheckType":         llx.StringDataPtr(group.HealthCheckType),
+							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
+							"region":                  llx.StringData(regionVal),
+							"minSize":                 llx.IntData(convert.ToInt64From32(group.MinSize)),
+							"maxSize":                 llx.IntData(convert.ToInt64From32(group.MaxSize)),
+							"defaultCooldown":         llx.IntData(convert.ToInt64From32(group.DefaultCooldown)),
+							"launchConfigurationName": llx.StringDataPtr(group.LaunchConfigurationName),
+							"healthCheckGracePeriod":  llx.IntData(convert.ToInt64From32(group.HealthCheckGracePeriod)),
+							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
 						})
 					if err != nil {
 						return nil, err

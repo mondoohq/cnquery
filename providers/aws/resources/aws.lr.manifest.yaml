@@ -273,8 +273,20 @@ resources:
         The `aws.autoscaling.group` resource provides fields representing an individual AWS auto scaling group within the account. For usage see the `aws.autoscaling` resource documentation.
     fields:
       arn: {}
+      createdAt:
+        min_mondoo_version: latest
+      defaultCooldown:
+        min_mondoo_version: latest
+      healthCheckGracePeriod:
+        min_mondoo_version: latest
       healthCheckType: {}
+      launchConfigurationName:
+        min_mondoo_version: latest
       loadBalancerNames: {}
+      maxSize:
+        min_mondoo_version: latest
+      minSize:
+        min_mondoo_version: latest
       name: {}
       region:
         min_mondoo_version: latest
@@ -956,10 +968,14 @@ resources:
       desc: |
         The `aws.ec2.networkacl.entry` resource provides fields for assessing the configuration of network ACL entries within an AWS account. For usage see `aws.ec2` resource.
     fields:
+      cidrBlock:
+        min_mondoo_version: latest
       egress: {}
       id: {}
       portRange: {}
       ruleAction: {}
+      ruleNumber:
+        min_mondoo_version: latest
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -2245,6 +2261,8 @@ resources:
       ipAddress: {}
       pingStatus: {}
       platformName: {}
+      platformType: {}
+      platformVersion: {}
       region: {}
       tags: {}
     is_private: true

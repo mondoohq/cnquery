@@ -540,6 +540,18 @@ private aws.autoscaling.group @defaults("name region") {
   tags map[string]string
   // The region of the Auto Scaling group
   region string
+  // The minimum number of instances to scale down to
+  minSize int
+  // The maximum number of instances to scale up to
+  maxSize int
+  // The time to wait after scaling up / down before the next scaling event is started
+  defaultCooldown int
+  // The name of the launch configuration
+  launchConfigurationName string
+  // The grace period in seconds before an instance with a failing health check will be replaced
+  healthCheckGracePeriod int
+  // Time when the autoscaling group was created
+  createdAt time
 }
 
 // AWS Elastic Load Balancing
@@ -1436,7 +1448,7 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   // Version of the Redshift engine running on the cluster
   clusterVersion string
   // Cluster creation timestamp
-  createdAt string
+  createdAt time
   // Name of the initial database that was created when the cluster was created
   dbName string
   // Whether the cluster is encrypted at rest
@@ -1596,12 +1608,12 @@ private aws.lambda.function @defaults("arn") {
 }
 
 // Amazon Systems Manager
-aws.ssm {
+aws.ssm @defaults("instances") {
   instances() []aws.ssm.instance
 }
 
 // Amazon SSM instance
-private aws.ssm.instance {
+private aws.ssm.instance @defaults("instanceId region platformName platformVersion ipAddress") {
   // Instance ID for the SSM Instance
   instanceId string
   // Ping status (e.g., online) for the SSM Instance
@@ -1610,6 +1622,10 @@ private aws.ssm.instance {
   ipAddress string
   // Platform name for the SSM Instance, as described by AWS
   platformName string
+  // The type of for the SSM Instance, as described by AWS (Windows, Linux, etc)
+  platformType string
+  // Platform version for the SSM Instance, as described by AWS
+  platformVersion string
   // Region where the SSM instance is located
   region string
   // ARN for the SSM instance
@@ -1641,7 +1657,7 @@ aws.ec2 {
 }
 
 // Amazon EC2 network ACL
-private aws.ec2.networkacl @defaults("arn") {
+private aws.ec2.networkacl @defaults("id region") {
   // ARN for the network ACL
   arn string
   // ID for the network ACL 
@@ -1653,19 +1669,23 @@ private aws.ec2.networkacl @defaults("arn") {
 }
 
 // Amazon EC2 network ACL entry
-private aws.ec2.networkacl.entry {
+private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portRange") {
   // Whether this is an entry for egress rules
   egress bool
   // Allow or deny
   ruleAction string
+  // The rule number
+  ruleNumber int
   // Port range for the ACL entry
   portRange() aws.ec2.networkacl.entry.portrange
+  // CIDR block for the ACL entry
+  cidrBlock string
   // ID for the ACL entry rule
   id string
 }
 
 // Amazon EC2 network ACL entry port range
-private aws.ec2.networkacl.entry.portrange {
+private aws.ec2.networkacl.entry.portrange @defaults("from to") {
   // Starting port for port range
   from int
   // Ending port for port range
