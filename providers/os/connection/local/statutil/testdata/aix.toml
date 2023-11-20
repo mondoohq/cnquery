@@ -1,0 +1,9 @@
+[commands."uname -m"]
+stdout = "00F9C4904C00"
+
+[commands."uname -s"]
+stdout = "AIX"
+
+[commands."perl -e '@a = stat(shift) or exit 2; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf(\"0%o:%s:%d:%s:%d:%d:%d\", $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])' /etc/ssh/sshd_config"]
+stdout = "0100644:root:0:system:0:3392:1700329321"
+

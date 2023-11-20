@@ -23,6 +23,8 @@ type CommandRunner interface {
 	RunCommand(command string) (*shared.Command, error)
 }
 
+type statParser func(name string) (os.FileInfo, error)
+
 var ESCAPEREGEX = regexp.MustCompile(`[^\w@%+=:,./-]`)
 
 func ShellEscape(s string) string {
@@ -49,7 +51,7 @@ func New(cmdRunner CommandRunner) *statHelper {
 type statHelper struct {
 	commandRunner CommandRunner
 	detected      bool
-	isUnix        bool
+	statParser    statParser
 }
 
 var bsdunix = map[string]bool{
@@ -79,15 +81,16 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 
 		isUnix, ok := bsdunix[val]
 		if ok && isUnix {
-			s.isUnix = true
+			s.statParser = s.unix
+		} else if val == "aix" {
+			s.statParser = s.aix
+		} else {
+			s.statParser = s.linux
 		}
 		s.detected = true
 	}
 
-	if s.isUnix {
-		return s.unix(name)
-	}
-	return s.linux(name)
+	return s.statParser(name)
 }
 
 func (s *statHelper) linux(name string) (os.FileInfo, error) {
@@ -202,7 +205,6 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 
 	statsData := strings.Split(string(data), ":")
 	if len(statsData) != 6 {
-		log.Error().Str("name", name).Msg("could not parse file stat information")
 		// TODO: there are likely cases where the file exist but we could still not parse it
 		return nil, os.ErrNotExist
 	}
@@ -231,6 +233,84 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 	mode := toFileMode(mask)
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	return &shared.FileInfo{
+		FName:    filepath.Base(path),
+		FSize:    int64(size),
+		FMode:    mode,
+		FIsDir:   mode.IsDir(),
+		FModTime: time.Unix(mtime, 0),
+		Uid:      uid,
+		Gid:      gid,
+	}, nil
+}
+
+func (s *statHelper) aix(name string) (os.FileInfo, error) {
+	path := ShellEscape(name)
+	var sb strings.Builder
+
+	// AIX does not ship with stat, therefore we use perl stat function to retrieve the same information as on linux
+	// Codes are taken from https://perldoc.perl.org/functions/stat
+	//0 dev      device number of filesystem
+	//1 ino      inode number
+	//2 mode     file mode  (type and permissions)
+	//3 nlink    number of (hard) links to the file
+	//4 uid      numeric user ID of file's owner
+	//5 gid      numeric group ID of file's owner
+	//6 rdev     the device identifier (special files only)
+	//7 size     total size of file, in bytes
+	//8 atime    last access time since the epoch
+	//9 mtime    last modify time since the epoch
+	//10 ctime    inode change time (NOT creation time!) since the epoch
+	//11 blksize  preferred block size for file system I/O
+	//12 blocks   actual number of blocks allocated
+	script := `perl -e '@a = stat(shift) or exit 2; $u = getpwuid($a[4]); $g = getgrgid($a[5]); printf("0%o:%s:%d:%s:%d:%d:%d", $a[2], $u, $a[4], $g, $a[5], $a[7], $a[9])'`
+	sb.WriteString(script)
+	sb.WriteString(" ")
+	sb.WriteString(path)
+
+	cmd, err := s.commandRunner.RunCommand(sb.String())
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	statsData := strings.Split(string(data), ":")
+	if len(statsData) != 7 {
+		return nil, os.ErrNotExist
+	}
+
+	size, err := strconv.Atoi(statsData[5])
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	uid, err := strconv.ParseInt(statsData[2], 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	gid, err := strconv.ParseInt(statsData[4], 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	// NOTE: the base is 8 instead of 16 on linux systems
+	mask, err := strconv.ParseUint(statsData[0], 8, 32)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not stat "+name)
+	}
+
+	mode := toFileMode(mask)
+
+	mtime, err := strconv.ParseInt(statsData[6], 10, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}

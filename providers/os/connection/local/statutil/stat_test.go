@@ -63,6 +63,26 @@ func TestOpenbsdStatCmd(t *testing.T) {
 	assert.Equal(t, "sshd_config", fi.Name())
 }
 
+func TestAixStatCmd(t *testing.T) {
+	filepath, _ := filepath.Abs("./testdata/aix.toml")
+	p, err := mock.New(filepath, nil)
+	require.NoError(t, err)
+
+	statHelper := New(p)
+
+	// get file stats
+	fi, err := statHelper.Stat("/etc/ssh/sshd_config")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(3392), fi.Size())
+	assert.Equal(t, false, fi.IsDir())
+	assert.Equal(t, "-rw-r--r--", fi.Mode().String())
+	assert.Equal(t, time.Unix(1700329321, 0), fi.ModTime())
+	assert.Equal(t, int64(0), fi.Sys().(*shared.FileInfo).Uid)
+	assert.Equal(t, int64(0), fi.Sys().(*shared.FileInfo).Gid)
+	assert.Equal(t, "sshd_config", fi.Name())
+}
+
 func TestToFileMode(t *testing.T) {
 	t.Run("directory and setgid", func(t *testing.T) {
 		m := toFileMode(0o040000 | 0o002000 | 0o755)
