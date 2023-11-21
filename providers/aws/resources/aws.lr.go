@@ -2444,6 +2444,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkacl.entry.cidrBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetCidrBlock()).ToDataRes(types.String)
 	},
+	"aws.ec2.networkacl.entry.ipv6CidrBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclEntry).GetIpv6CidrBlock()).ToDataRes(types.String)
+	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetId()).ToDataRes(types.String)
 	},
@@ -5718,6 +5721,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.networkacl.entry.cidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2NetworkaclEntry).CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.entry.ipv6CidrBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclEntry).Ipv6CidrBlock, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15136,6 +15143,7 @@ type mqlAwsEc2NetworkaclEntry struct {
 	RuleNumber plugin.TValue[int64]
 	PortRange plugin.TValue[*mqlAwsEc2NetworkaclEntryPortrange]
 	CidrBlock plugin.TValue[string]
+	Ipv6CidrBlock plugin.TValue[string]
 	Id plugin.TValue[string]
 }
 
@@ -15206,6 +15214,10 @@ func (c *mqlAwsEc2NetworkaclEntry) GetPortRange() *plugin.TValue[*mqlAwsEc2Netwo
 
 func (c *mqlAwsEc2NetworkaclEntry) GetCidrBlock() *plugin.TValue[string] {
 	return &c.CidrBlock
+}
+
+func (c *mqlAwsEc2NetworkaclEntry) GetIpv6CidrBlock() *plugin.TValue[string] {
+	return &c.Ipv6CidrBlock
 }
 
 func (c *mqlAwsEc2NetworkaclEntry) GetId() *plugin.TValue[string] {

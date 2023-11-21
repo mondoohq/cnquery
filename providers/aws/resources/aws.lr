@@ -1680,6 +1680,8 @@ private aws.ec2.networkacl.entry @defaults("id egress ruleAction cidrBlock portR
   portRange() aws.ec2.networkacl.entry.portrange
   // CIDR block for the ACL entry
   cidrBlock string
+  // IPv6 CIDR block for the ACL entry
+  ipv6CidrBlock string
   // ID for the ACL entry rule
   id string
 }

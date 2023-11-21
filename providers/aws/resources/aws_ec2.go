@@ -154,11 +154,12 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 			entryId += "-ingress"
 		}
 		args := map[string]*llx.RawData{
-			"egress":     llx.BoolData(egress),
-			"ruleAction": llx.StringData(string(entry.RuleAction)),
-			"ruleNumber": llx.IntData(convert.ToInt64From32(entry.RuleNumber)),
-			"cidrBlock":  llx.StringDataPtr(entry.CidrBlock),
-			"id":         llx.StringData(entryId),
+			"egress":        llx.BoolData(egress),
+			"ruleAction":    llx.StringData(string(entry.RuleAction)),
+			"ruleNumber":    llx.IntData(convert.ToInt64From32(entry.RuleNumber)),
+			"cidrBlock":     llx.StringDataPtr(entry.CidrBlock),
+			"ipv6CidrBlock": llx.StringDataPtr(entry.Ipv6CidrBlock),
+			"id":            llx.StringData(entryId),
 		}
 		if entry.PortRange != nil {
 			mqlPortRange, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry.portrange",
