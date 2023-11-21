@@ -288,12 +288,16 @@ func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle
 		return nil, errors.New("filters require MQL snippets (no compiled code generated)")
 	}
 
+	checksumInvalidated := false
 	if mrn != "" {
 		m.Mrn = mrn + "/filter/" + m.CodeId
+		checksumInvalidated = true
 	}
 
-	if m.Title == "" {
-		m.Title = m.Query
+	if checksumInvalidated {
+		if err := m.RefreshChecksum(context.Background(), schema, nil); err != nil {
+			return nil, err
+		}
 	}
 
 	return bundle, nil

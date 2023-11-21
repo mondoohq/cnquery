@@ -13,6 +13,24 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
+func TestMquery_RefreshAsAssetFilterStableChecksum(t *testing.T) {
+	m := &Mquery{
+		Mql: "true",
+		Uid: "my-id0",
+	}
+
+	x := testutils.LinuxMock()
+
+	_, err := m.RefreshAsFilter("//owner/me", x.Schema())
+	require.NoError(t, err)
+	assert.Equal(t, "//owner/me/filter/"+m.CodeId, m.Mrn)
+
+	cs := m.Checksum
+	_, err = m.RefreshAsFilter("//owner/me", x.Schema())
+	require.NoError(t, err)
+	assert.Equal(t, cs, m.Checksum)
+}
+
 func TestMquery_Refresh(t *testing.T) {
 	a := &Mquery{
 		Mql:   "mondoo.version != props.world",
