@@ -972,6 +972,8 @@ resources:
         min_mondoo_version: latest
       egress: {}
       id: {}
+      ipv6CidrBlock:
+        min_mondoo_version: latest
       portRange: {}
       ruleAction: {}
       ruleNumber:
