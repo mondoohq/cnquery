@@ -16,10 +16,10 @@ require (
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.0
 	github.com/aws/aws-sdk-go v1.48.0
-	github.com/aws/aws-sdk-go-v2 v1.23.0
+	github.com/aws/aws-sdk-go-v2 v1.23.1
 	github.com/aws/aws-sdk-go-v2/config v1.25.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.2
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.4
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.136.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.2
