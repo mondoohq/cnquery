@@ -6,23 +6,18 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"strings"
 
-	"github.com/spf13/afero"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/python"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (k *mqlPythonPackage) id() (string, error) {
-	file := k.GetFile()
-	if file.Error != nil {
-		return "", file.Error
-	}
-
-	mqlFile := file.Data
-	metadataPath := mqlFile.Path.Data
-	return metadataPath, nil
+	return k.Id.Data, nil
 }
 
 func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -41,6 +36,7 @@ func initPythonPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		if err != nil {
 			return nil, nil, err
 		}
+		args["id"] = llx.StringData(path)
 		args["file"] = llx.ResourceData(file, "file")
 
 		delete(args, "path")
@@ -117,26 +113,27 @@ func (k *mqlPythonPackage) populateData() error {
 	if file.Error != nil {
 		return file.Error
 	}
-	mqlFile := file.Data
-	conn := k.MqlRuntime.Connection.(shared.Connection)
-	afs := &afero.Afero{Fs: conn.FileSystem()}
-	metadataPath := mqlFile.Path.Data
-	ppd, err := parseMIME(afs, metadataPath)
+
+	if file.Data == nil || file.Data.Path.Data == "" {
+		return fmt.Errorf("file path is empty")
+	}
+
+	ppd, err := python.ParseMIME(strings.NewReader(file.Data.Content.Data), file.Data.Path.Data)
 	if err != nil {
 		return fmt.Errorf("error parsing python package data: %s", err)
 	}
 
-	k.Name = plugin.TValue[string]{Data: ppd.name, State: plugin.StateIsSet}
-	k.Version = plugin.TValue[string]{Data: ppd.version, State: plugin.StateIsSet}
-	k.Author = plugin.TValue[string]{Data: ppd.author, State: plugin.StateIsSet}
-	k.Summary = plugin.TValue[string]{Data: ppd.summary, State: plugin.StateIsSet}
-	k.License = plugin.TValue[string]{Data: ppd.license, State: plugin.StateIsSet}
-	k.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.dependencies), State: plugin.StateIsSet}
+	k.Name = plugin.TValue[string]{Data: ppd.Name, State: plugin.StateIsSet}
+	k.Version = plugin.TValue[string]{Data: ppd.Version, State: plugin.StateIsSet}
+	k.Author = plugin.TValue[string]{Data: ppd.Author, State: plugin.StateIsSet}
+	k.Summary = plugin.TValue[string]{Data: ppd.Summary, State: plugin.StateIsSet}
+	k.License = plugin.TValue[string]{Data: ppd.License, State: plugin.StateIsSet}
+	k.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.Dependencies), State: plugin.StateIsSet}
 
 	cpes := []interface{}{}
-	for i := range ppd.cpes {
+	for i := range ppd.Cpes {
 		cpe, err := k.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
-			"uri": llx.StringData(k.Cpes.Data[i].(string)),
+			"uri": llx.StringData(ppd.Cpes[i]),
 		})
 		if err != nil {
 			return err
@@ -145,7 +142,45 @@ func (k *mqlPythonPackage) populateData() error {
 	}
 
 	k.Cpes = plugin.TValue[[]interface{}]{Data: cpes, State: plugin.StateIsSet}
-	k.Purl = plugin.TValue[string]{Data: ppd.purl, State: plugin.StateIsSet}
-
+	k.Purl = plugin.TValue[string]{Data: ppd.Purl, State: plugin.StateIsSet}
 	return nil
+}
+
+func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dependencies []interface{}) (plugin.Resource, error) {
+	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(ppd.File),
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("error while creating file resource for python package resource")
+		return nil, err
+	}
+
+	cpes := []interface{}{}
+	for i := range ppd.Cpes {
+		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
+			"uri": llx.StringData(ppd.Cpes[i]),
+		})
+		if err != nil {
+			return nil, err
+		}
+		cpes = append(cpes, cpe)
+	}
+
+	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
+		"id":           llx.StringData(ppd.File),
+		"name":         llx.StringData(ppd.Name),
+		"version":      llx.StringData(ppd.Version),
+		"author":       llx.StringData(ppd.Author),
+		"summary":      llx.StringData(ppd.Summary),
+		"license":      llx.StringData(ppd.License),
+		"file":         llx.ResourceData(f, f.MqlName()),
+		"dependencies": llx.ArrayData(dependencies, types.Any),
+		"purl":         llx.StringData(ppd.Purl),
+		"cpes":         llx.ArrayData(cpes, types.Resource("cpe")),
+	})
+	if err != nil {
+		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
+		return nil, err
+	}
+	return r, nil
 }

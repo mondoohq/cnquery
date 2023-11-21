@@ -1,0 +1,64 @@
+{
+  "assets": [
+    {
+      "asset": {
+        "id": "Red Hat Enterprise Linux 8.8 (Ootpa)",
+        "platformIDs": [
+          "//platformid.api.mondoo.app/runtime/docker/images/53c56977ccd20c0d87df0ad52036c55b27201e1a63874c2644383d0c532f5aee"
+        ],
+        "name": "redhat",
+        "title": "Red Hat Enterprise Linux 8.8 (Ootpa)",
+        "family": [
+          "redhat",
+          "linux",
+          "unix",
+          "os"
+        ],
+        "version": "8.8",
+        "kind": "container-image",
+        "runtime": "docker-image",
+        "labels": {
+          "distro-id": "rhel"
+        }
+      },
+      "connections": [
+        {
+          "url": "docker-image://registry.access.redhat.com/ubi8/ubi",
+          "provider": "go.mondoo.com/cnquery/v9/providers/os",
+          "connector": "docker-image",
+          "version": ""
+        }
+      ],
+      "resources": [
+        {
+          "Resource": "file",
+          "ID": "/usr/lib/python3.6/site-packages/python_dateutil-2.6.1-py3.6.egg-info/PKG-INFO",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "Metadata-Version: 1.1\nName: python-dateutil\nVersion: 2.6.1\nSummary: Extensions to the standard Python datetime module\nHome-page: https://dateutil.readthedocs.io\nAuthor: Paul Ganssle\nAuthor-email: dateutil@python.org\nLicense: Simplified BSD\nDescription: \n        The dateutil module provides powerful extensions to the\n        datetime module available in the Python standard library.\n        \nPlatform: UNKNOWN\nClassifier: Development Status :: 5 - Production/Stable\nClassifier: Intended Audience :: Developers\nClassifier: License :: OSI Approved :: BSD License\nClassifier: Programming Language :: Python\nClassifier: Programming Language :: Python :: 2\nClassifier: Programming Language :: Python :: 2.6\nClassifier: Programming Language :: Python :: 2.7\nClassifier: Programming Language :: Python :: 3\nClassifier: Programming Language :: Python :: 3.2\nClassifier: Programming Language :: Python :: 3.3\nClassifier: Programming Language :: Python :: 3.4\nClassifier: Programming Language :: Python :: 3.5\nClassifier: Programming Language :: Python :: 3.6\nClassifier: Topic :: Software Development :: Libraries\nRequires: six\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/usr/lib/python3.6/site-packages/python_dateutil-2.6.1-py3.6.egg-info/PKG-INFO"
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/usr/lib/python3.6/site-packages/six-1.11.0.dist-info/METADATA",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "Metadata-Version: 2.0\nName: six\nVersion: 1.11.0\nSummary: Python 2 and 3 compatibility utilities\nHome-page: http://pypi.python.org/pypi/six/\nAuthor: Benjamin Peterson\nAuthor-email: benjamin@python.org\nLicense: MIT\nPlatform: UNKNOWN\nClassifier: Programming Language :: Python :: 2\nClassifier: Programming Language :: Python :: 3\nClassifier: Intended Audience :: Developers\nClassifier: License :: OSI Approved :: MIT License\nClassifier: Topic :: Software Development :: Libraries\nClassifier: Topic :: Utilities\n\n.. image:: http://img.shields.io/pypi/v/six.svg\n   :target: https://pypi.python.org/pypi/six\n\n.. image:: https://travis-ci.org/benjaminp/six.svg?branch=master\n    :target: https://travis-ci.org/benjaminp/six\n\n.. image:: http://img.shields.io/badge/license-MIT-green.svg\n   :target: https://github.com/benjaminp/six/blob/master/LICENSE\n\nSix is a Python 2 and 3 compatibility library.  It provides utility functions\nfor smoothing over the differences between the Python versions with the goal of\nwriting Python code that is compatible on both Python versions.  See the\ndocumentation for more information on what is provided.\n\nSix supports every Python version since 2.6.  It is contained in only one Python\nfile, so it can be easily copied into your project. (The copyright and license\nnotice must be retained.)\n\nOnline documentation is at http://six.rtfd.org.\n\nBugs can be reported to https://github.com/benjaminp/six.  The code can also\nbe found there.\n\nFor questions about six or porting in general, email the python-porting mailing\nlist: https://mail.python.org/mailman/listinfo/python-porting\n\n\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/usr/lib/python3.6/site-packages/six-1.11.0.dist-info/METADATA"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

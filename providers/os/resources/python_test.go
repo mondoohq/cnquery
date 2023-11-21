@@ -34,12 +34,26 @@ func TestResource_Python(t *testing.T) {
 }
 
 func TestResource_PythonPackage(t *testing.T) {
-	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/python-package.json"))
+	x := testutils.InitTester(testutils.RecordingMock("./python/testdata/rhel.json"))
 
-	t.Run("parse single package", func(t *testing.T) {
-		res := x.TestQuery(t, "python.package(\"/usr/lib/python3/dist-packages/python_ftp_server-1.3.17.dist-info/METADATA\").name")
+	t.Run("parse python pkg info", func(t *testing.T) {
+		res := x.TestQuery(t, "python.package(\"/usr/lib/python3.6/site-packages/python_dateutil-2.6.1-py3.6.egg-info/PKG-INFO\").name")
 		assert.NotEmpty(t, res)
 		require.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "python-ftp-server", res[0].Data.Value, "expected name of parsed package")
+		assert.Equal(t, "python-dateutil", res[0].Data.Value, "expected name of parsed package")
+	})
+
+	t.Run("parse python metadata", func(t *testing.T) {
+		res := x.TestQuery(t, "python.package(\"/usr/lib/python3.6/site-packages/six-1.11.0.dist-info/METADATA\").name")
+		assert.NotEmpty(t, res)
+		require.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "six", res[0].Data.Value, "expected name of parsed package")
+	})
+
+	t.Run("test python package cpes", func(t *testing.T) {
+		res := x.TestQuery(t, "python.package(\"/usr/lib/python3.6/site-packages/six-1.11.0.dist-info/METADATA\").cpes.map(uri)[0]")
+		assert.NotEmpty(t, res)
+		require.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "cpe:2.3:a:six_project:six:1.11.0:*:*:*:*:*:*:*", res[0].Data.Value, "expected name of parsed package")
 	})
 }
