@@ -19,7 +19,7 @@ microsoft {
   enterpriseApplications() []microsoft.serviceprincipal
   // Microsoft 365 settings
   settings() dict
-  // Gets the connected tenant's default domain name
+  // The connected tenant's default domain name
   tenantDomainName() string
 }
 
