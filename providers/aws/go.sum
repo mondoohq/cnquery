@@ -68,8 +68,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/aws/aws-sdk-go v1.48.2 h1:Lf7+Y4WmHB0AQLRQZA46diSwDa+LWbwY6IGaYoCVtTc=
-github.com/aws/aws-sdk-go v1.48.2/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.48.3 h1:btYjT+opVFxUbRz+qSCjJe07cdX82BHmMX/FXYmoL7g=
+github.com/aws/aws-sdk-go v1.48.3/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.23.1 h1:qXaFsOOMA+HsZtX8WoCa+gJnbyW7qyFFBlPqvTSzbaI=
 github.com/aws/aws-sdk-go-v2 v1.23.1/go.mod h1:i1XDttT4rnf6vxc9AuskLc6s7XBee8rlLilKlc03uAA=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.1 h1:ZY3108YtBNq96jNZTICHxN1gSBSbnvIdYwwqnvCV4Mc=
@@ -166,10 +166,10 @@ github.com/aws/aws-sdk-go-v2/service/redshift v1.37.1 h1:2AOOqSlPzJ0heV7XGuSbGoM
 github.com/aws/aws-sdk-go-v2/service/redshift v1.37.1/go.mod h1:epg318wXanl5zhgT/X2e1t3ZPzUAwFN3xVV+/CSNlUQ=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.44.0 h1:FJTWR2nP1ddLIbk4n7Glw8wGbeWGHaViUwADPzE/EBo=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.44.0/go.mod h1:dqJ5JBL0clzgHriH35Amx3LRFY6wNIPUX7QO/BerSBo=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.37.1 h1:/xPHgvArPO+N96lju2XSpxtKFn9MPiO9I5k7nlEEg/4=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.37.1/go.mod h1:A2vCti/i+W0KkUwDAY3jio5QpuS/tk4jhmBaTDoZ1aY=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.117.1 h1:PwZZF2P+94dmM4uEaSwKJ9Pez64o0qVHPVnt91UK3D8=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.117.1/go.mod h1:2ziD8m+8zKDSLy6hmNTRL2og45huLYqT7OEaT1UibW0=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.38.0 h1:Aq6Awfh9OcA5XSyouZW5ouv6g2D6IsPgmals2GdpfyI=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.38.0/go.mod h1:A2vCti/i+W0KkUwDAY3jio5QpuS/tk4jhmBaTDoZ1aY=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.118.0 h1:ERbH0BdHpIuc9lqyrh2pIBKs5c/F3R80KvtMzixqdwg=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.118.0/go.mod h1:2ziD8m+8zKDSLy6hmNTRL2og45huLYqT7OEaT1UibW0=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.3 h1:NurfTBFmaehSiWMv5drydRWs3On0kwoBe1gWYFt+5ws=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.3/go.mod h1:LDD9wCQ1tvjMIWEIFPvZ8JgJsEOjded+X5jav9tD/zg=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.40.3 h1:JRHNEqAm+yQ710WC71YasAEwfrzllTWp3gYsIm4Qp/A=
