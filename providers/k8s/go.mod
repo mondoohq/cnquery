@@ -56,7 +56,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.48.2 // indirect
+	github.com/aws/aws-sdk-go v1.48.3 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.4 // indirect
