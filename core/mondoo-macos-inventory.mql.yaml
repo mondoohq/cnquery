@@ -38,47 +38,47 @@ packs:
       - asset.platform.contains("macos")
     queries:
       - uid: mondoo-macos-machine-model-identifier
-        title: Retrieve the machine model identifier
+        title: Machine model identifier
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_model']
       - uid: mondoo-macos-machine-model-name
-        title: Retrieve the machine model name
+        title: Machine model name
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_name']
       - uid: mondoo-macos-model-part-number
-        title: Retrieve the model part number
+        title: Model part number
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['model_number']
       - uid: mondoo-macos-serial-number
-        title: Retrieve the system serial number
+        title: System serial number
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['serial_number']
       - uid: mondoo-macos-cpu-type
-        title: Retrieve the type of CPU
+        title: CPU type
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['chip_type']
       - uid: mondoo-macos-physical-memory
-        title: Retrieve the amount of physical memory
+        title: Physical memory size
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['physical_memory']
       - uid: mondoo-asset-info
-        title: Retrieve asset information
+        title: Asset information
         mql: asset { kind title platform name arch runtime version }
       - uid: mondoo-hostname
-        title: Retrieve the hostname
+        title: Hostname
         mql: os.hostname
       - uid: mondoo-macos-users
-        title: Retrieve regular users
+        title: Regular users
         mql: users.where( name != /^_/ && shell != "/usr/bin/false" && name != "root")
       - uid: mondoo-macos-packages
-        title: Retrieve macOS packages
+        title: Installed packages
         mql: packages
       - uid: mondoo-macos-running-services
-        title: Retrieve data on running services
+        title: Running services
         mql: services.where( running == true )
       - uid: mondoo-macos-ports-listening
-        title: Retrieve data on listening ports
+        title: Listening ports
         mql: ports.listening
       - uid: mondoo-macos-interface-configuration
-        title: Retrieve interface configuration of the system
+        title: Network interface configuration
         mql: command("ifconfig").stdout

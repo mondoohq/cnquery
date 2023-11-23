@@ -38,76 +38,76 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-linux-asset-info
-        title: Retrieve asset information
+        title: Asset information
         mql: asset { kind title platform name arch runtime }
       - uid: mondoo-linux-hostname
-        title: Retrieve the hostname
+        title: Hostname
         mql: os.hostname
       - uid: mondoo-linux-platform
-        title: Retrieve the platform
+        title: Platform
         mql: asset.platform
       - uid: mondoo-linux-users
-        title: Retrieve regular users with shell access
+        title: Regular users with shell access
         mql: users.where( shell != "/sbin/nologin" && uid >= 1000 && name != "root")
       - uid: mondoo-linux-groups-wheel
-        title: Retrieve members of the wheel group
+        title: Members of the wheel group
         mql: groups.where( name == "wheel") { members }
       - uid: mondoo-linux-installed-kernel
-        title: Retrieve installed Linux kernels
+        title: Installed Linux kernels
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.installed
       - uid: mondoo-linux-kernel-info
-        title: Retrieve the running Linux kernel
+        title: Running Linux kernel
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.info
       - uid: mondoo-linux-kernel-modules
-        title: Retrieve Linux kernel modules
+        title: Linux kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
-        title: Retrieve running processes
+        title: Running processes
         filters: mondoo.capabilities.contains("run-command")
         mql: processes { pid  command }
       - uid: mondoo-linux-mounts
-        title: Retrieve mounted devices
+        title: Mounted devices
         mql: mount.list
       - uid: mondoo-linux-listening-ports
-        title: Retrieve all listening ports
+        title: Listening ports
         filters: mondoo.capabilities.contains("run-command")
         mql: ports.listening
       - uid: mondoo-linux-uptime
-        title: Retrieve operating system uptime
+        title: Operating system uptime
         filters: mondoo.capabilities.contains("run-command")
         mql: os.uptime
       - uid: mondoo-linux-installed-packages
-        title: Retrieve installed packages
+        title: Installed packages
         mql: packages
       - uid: mondoo-linux-running-services
-        title: Retrieve running services
+        title: Running services
         mql: services.where( running == true )
       - uid: mondoo-linux-interface-configuration
-        title: Retrieve interface configuration of the system
+        title: Network interface configuration
         filters: mondoo.capabilities.contains("run-command")
         mql: |
           parse.json(content: command('ip -j a').stdout).params
       - uid: mondoo-sshd-interface-configuration
-        title: Retrieve sshd configuration of the system
+        title: sshd configuration of the system
         filters: package('openssh-server').installed || package('openssh').installed
         mql: sshd.config.params
       - uid: mondoo-linux-system-manufacturer
-        title: Retrieve the system manufacturer
+        title: System manufacturer
         mql: machine.baseboard.manufacturer
       - uid: mondoo-linux-system-product-name
-        title: Retrieve the system product name
+        title: System product name
         mql: machine.baseboard.product
       - uid: mondoo-linux-cpu-type
-        title: Retrieve the type of CPU
+        title: CPU type
         mql: |
           command('cat /proc/cpuinfo | grep "model name" | sort -u | cut -d : -f 2-').stdout.trim
       - uid: mondoo-linux-root-volume
-        title: Retrieve the size and filesystem type of the root volume
+        title: Root volume size and filesystem type
         mql: |
           command("df -TH / | grep '/dev' | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
       - uid: mondoo-linux-physical-memory
-        title: Retrieve the amount of physical memory
+        title: Physical memory size
         mql: |
           command("free --mega | grep Mem | awk '{ print $2}'").stdout.trim + "M"

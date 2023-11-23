@@ -74,7 +74,7 @@ packs:
         mql: |
           slack.users { id name profile["email"] isBot teamId has2FA }
       - uid: mondoo-slack-inventory-owners
-        title: Retrieve Slack Team Owners
+        title: Slack Team Owners
         docs:
           desc: |
             This query retrieves the list of all users with the Owner privilege.

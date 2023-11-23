@@ -34,26 +34,26 @@ packs:
       - asset.platform == "github-org"
     queries:
       - uid: mondoo-incident-response-github-org-name
-        title: Retrieve GitHub Organization Name
+        title: GitHub Organization Name
         mql: |
           github.organization.name
       - uid: mondoo-incident-response-github-org-login
-        title: Retrieve GitHub Organization Login
+        title: GitHub Organization Login
         mql: |
           github.organization.login
       - uid: mondoo-incident-response-github-org-description
-        title: Retrieve GitHub Organization description
+        title: GitHub Organization description
         mql: |
           github.organization.description
       - uid: mondoo-incident-response-github-org-mfa-status
-        title: Retrieve GitHub Organization MFA status
+        title: GitHub Organization MFA status
         docs:
           desc: |
             This query retrieves whether MFA is required for users of the organization.
         mql: |
           github.organization.twoFactorRequirementEnabled
       - uid: mondoo-incident-response-github-org-owners
-        title: Retrieve GitHub Organization Owners
+        title: GitHub Organization Owners
         docs:
           desc: |
             This query retrieves all GitHub organization owners.
@@ -61,7 +61,7 @@ packs:
           github.organization.owners.length
           github.organization { owners { name email login } }
       - uid: mondoo-incident-response-github-org-members
-        title: Retrieve GitHub Organization Members
+        title: GitHub Organization Members
         docs:
           desc: |
             This query retrieves all of the members of the GitHub organization.
@@ -77,7 +77,7 @@ packs:
             }
           }
       - uid: mondoo-incident-response-github-org-teams
-        title: Retrieve GitHub Organization Teams
+        title: GitHub Organization Teams
         docs:
           desc: |
             This query retrieves all GitHub organization teams.
@@ -96,7 +96,7 @@ packs:
             }
           }
       - uid: mondoo-incident-response-github-private-repos
-        title: Retrieve GitHub Organization private repositories
+        title: GitHub Organization private repositories
         docs:
           desc: |
             This query retrieves all of the public repositories within the GitHub organization. The query returns the repo's name and whether the default branch is [protected](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches) using protection rules.
@@ -110,7 +110,7 @@ packs:
                 }
             }
       - uid: mondoo-incident-response-github-packages
-        title: Retrieve GitHub Organization private repositories
+        title: GitHub Organization private repositories
         docs:
           desc: |
             This query retrieves the packages published to GHCR.io.

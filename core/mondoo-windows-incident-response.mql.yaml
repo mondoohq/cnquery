@@ -16,17 +16,17 @@ packs:
       - asset.platform == "windows"
     queries:
       - uid: mondoo-windows-incident-response-installed-hotfixes
-        title: Retrieve installed hotfixes
+        title: Installed hotfixes
         mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-incident-response-uptime
-        title: Retrieve operating system uptime
+        title: Operating system uptime
         mql: os.uptime
       - uid: mondoo-windows-incident-response-installed-packages
-        title: Retrieve list of installed packages
+        title: Installed packages
         mql: packages
       - uid: mondoo-windows-incident-response-interface-configuration
-        title: Retrieve all Windows Computer/System information
+        title: Windows Computer/System information
         mql: windows.computerInfo
       - uid: mondoo-windows-incident-response-running-services
-        title: Retrieve running services
+        title: Running services
         mql: services

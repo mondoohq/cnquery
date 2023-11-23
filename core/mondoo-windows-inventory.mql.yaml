@@ -38,32 +38,32 @@ packs:
       - asset.platform.contains("windows")
     queries:
       - uid: mondoo-windows-asset-info
-        title: Retrieve asset information
+        title: Asset information
         mql: asset { kind title platform name arch runtime }
       - uid: mondoo-windows-hostname
-        title: Retrieve the hostname
+        title: Hostname
         mql: os.hostname
       - uid: mondoo-windows-users
-        title: Retrieve regular users
+        title: Regular users
         mql: users
       - uid: mondoo-windows-packages
-        title: Retrieve installed packages
+        title: Installed packages
         mql: packages
       - uid: mondoo-windows-hotfixes
-        title: Retrieve all installed Windows hotfixes
+        title: All installed Windows hotfixes
         mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-features
-        title: Retrieve all installed Windows features
+        title: Installed Windows features
         mql: windows.features
       - uid: mondoo-windows-running-services
-        title: Retrieve data on running services
+        title: Running services
         mql: services.where( running == true )
       - uid: mondoo-windows-ports-listening
-        title: Retrieve data on listening ports
+        title: Listening ports
         mql: ports.listening
       - uid: mondoo-windows-interface-configuration
-        title: Retrieve interface configuration of the system
+        title: Network interfaces
         mql: windows.computerInfo['CsNetworkAdapters']
       - uid: mondoo-windows-computer-info
-        title: Retrieve all Windows Computer/ System information
+        title: Windows Computer/ System information
         mql: windows.computerInfo

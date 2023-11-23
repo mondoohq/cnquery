@@ -32,31 +32,31 @@ packs:
           - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
         queries:
           - uid: k8s-cluster-version
-            title: Retrieve Kubernetes cluster version
+            title: Kubernetes cluster version
             mql: |
               k8s.serverVersion
           - uid: k8s-cluster-namespaces
-            title: Retrieve Kubernetes cluster namespaces
+            title: Kubernetes cluster namespaces
             mql: |
               k8s.namespaces
           - uid: k8s-cluster-nodes
-            title: Retrieve cluster modes
+            title: Cluster modes
             mql: |
               k8s.nodes
           - uid: k8s-cluster-clusterroles
-            title: Retrieve cluster RBAC ClusterRoles
+            title: Cluster RBAC ClusterRoles
             mql: |
               k8s.clusterroles
           - uid: k8s-cluster-roles
-            title: Retrieve RBAC Roles
+            title: RBAC Roles
             mql: |
               k8s.roles
           - uid: k8s-cluster-clusterrolebindings
-            title: Retrieve RBAC cluster-rolebindings
+            title: RBAC cluster-rolebindings
             mql: |
               k8s.clusterrolebindings
           - uid: k8s-cluster-rolebindings
-            title: Retrieve RBAC rolebindings
+            title: RBAC rolebindings
             mql: |
               k8s.rolebindings
       - title: Pods inventory
@@ -64,11 +64,11 @@ packs:
           - asset.platform == "k8s-pod"
         queries:
           - uid: k8s-pod
-            title: Retrieve Pod information
+            title: Pod information
             mql: |
               k8s.pod
           - uid: k8s-pod-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.pod.containers
       - title: Deployments inventory
@@ -76,11 +76,11 @@ packs:
           - asset.platform == "k8s-deployment"
         queries:
           - uid: k8s-deployment
-            title: Retrieve deployment information
+            title: Deployment information
             mql: |
               k8s.deployments
           - uid: k8s-deployment-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.deployment.containers { * }
       - title: CronJobs inventory
@@ -88,11 +88,11 @@ packs:
           - asset.platform == "k8s-cronjob"
         queries:
           - uid: k8s-cronjob
-            title: Retrieve CronJob information
+            title: CronJob information
             mql: |
               k8s.cronjob { * }
           - uid: k8s-cronjob-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.cronjob.containers { * }
       - title: Jobs inventory
@@ -100,11 +100,11 @@ packs:
           - asset.platform == "k8s-job"
         queries:
           - uid: k8s-job
-            title: Retrieve Job information
+            title: Job information
             mql: |
               k8s.job { * }
           - uid: k8s-job-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.job.containers { * }
       - title: DaemonSets inventory
@@ -112,11 +112,11 @@ packs:
           - asset.platform == "k8s-daemonset"
         queries:
           - uid: k8s-daemonset
-            title: Retrieve DaemonSet information
+            title: DaemonSet information
             mql: |
               k8s.daemonset { * }
           - uid: k8s-daemonset-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.daemonset.containers { * }
       - title: StatefulSets inventory
@@ -124,11 +124,11 @@ packs:
           - asset.platform == "k8s-statefulset"
         queries:
           - uid: k8s-statefulset
-            title: Retrieve StatefulSet information
+            title: StatefulSet information
             mql: |
               k8s.statefulset { * }
           - uid: k8s-statefulset-container
-            title: Retrieve Container information
+            title: Container information
             mql: |
               k8s.statefulset.containers { * }
       - title: ReplicaSets inventory
@@ -136,11 +136,11 @@ packs:
           - asset.platform == "k8s-replicaset"
         queries:
           - uid: k8s-replicaset
-            title: Retrieve ReplicaSet information
+            title: ReplicaSet information
             mql: |
               k8s.replicaset { * }
           - uid: k8s-replicaset-container
-            title: Retrieve container information
+            title: Container information
             mql: |
               k8s.replicaset.containers { * }
       - title: Ingresses inventory
@@ -148,6 +148,6 @@ packs:
           - asset.platform == "k8s-ingress"
         queries:
           - uid: k8s-ingress
-            title: Retrieve Ingress information
+            title: Ingress information
             mql: |
               k8s.ingress { * }

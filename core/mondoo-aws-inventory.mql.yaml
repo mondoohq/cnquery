@@ -19,81 +19,81 @@ packs:
       - asset.platform == "aws"
     queries:
       - uid: mondoo-asset-inventory-aws-account-id
-        title: Retrieve AWS account ID
+        title: AWS account ID
         mql: |
           aws.account.id
       - uid: mondoo-asset-inventory-aws-enabled-regions
-        title: Retrieve all regions enabled in the AWS account
+        title: Regions enabled in the AWS account
         docs:
           desc: |
             This query retrieves all AWS regions enabled in the account
         mql: aws { regions }
       - uid: mondoo-asset-inventory-aws-vpcs
-        title: Retrieve data on all VPCs
+        title: VPCs
         docs:
           desc: |
             This query retrieves all of the configuration data for AWS VPCs
         mql: aws.vpcs
       - uid: mondoo-asset-inventory-aws-iam-users
-        title: Retrieve data for all IAM users
+        title: IAM users
         docs:
           desc: |
             This query retrieves data for all IAM users
         mql: aws.iam.users
       - uid: mondoo-asset-inventory-aws-iam-groups
-        title: Retrieve data for IAM groups
+        title: IAM groups
         docs:
           desc: |
             This query retrieves all of the IAM groups.
         mql: aws.iam.groups
       - uid: mondoo-asset-inventory-aws-iam-roles
-        title: Retrieve data on all IAM Roles
+        title: IAM roles
         docs:
           desc: |
             This query retrieves all IAM Roles
         mql: aws.iam.roles
       - uid: mondoo-asset-inventory-aws-iam-policies
-        title: Retrieve data on all attached IAM Policies
+        title: Attached IAM policies
         docs:
           desc: |
             This query retrieves all IAM policies attached to a user, group, or role.
         mql: aws.iam.policies.where( attachmentCount > 0 )
       - uid: mondoo-asset-inventory-aws-ec2-security-groups
-        title: Retrieve data on all AWS EC2 Security Groups
+        title: EC2 Security Groups
         docs:
           desc: |
             This query retrieves all AWS EC2 Security Groups
         mql: aws.ec2.securityGroups
       - uid: mondoo-asset-inventory-aws-ec2-volumes
-        title: Retrieve data on all AWS EC2 volumes
+        title: EBS volumes
         docs:
           desc: |
-            This query retrieves all AWS EC2 volumes
+            This query retrieves all AWS EBS volumes
         mql: aws.ec2.volumes
       - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data
-        title: Retrieves all running EC2 instances
+        title: Running EC2 instances
         mql: aws.ec2.instances.where( state == "running" )
       - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data
-        title: Retrieve the configuration for all RDS Database Clusters
+        title: RDS database clusters configuration
         mql: aws.rds.dbClusters
       - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data
-        title: Retrieve the configuration for all RDS Database Instances
+        title: RDS database instances
         mql: aws.rds.dbInstances
       - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data
-        title: Retrieve the configuration for all S3 buckets
+        title: S3 buckets
         mql: aws.s3.buckets
       - uid: mondoo-asset-inventory-aws-eks-clusters
-        title: Retrieve the configuration for all AWS EKS clusters
+        title: EKS clusters
         mql: aws.eks.clusters
       - uid: mondoo-asset-inventory-aws-lambda
-        title: Retrieve the configuration for all AWS lambda functions
+        title: Lambda functions
         mql: aws.lambda.functions
       - uid: mondoo-asset-inventory-aws-access-analyzer
-        title: Retrieve the configuration for all AWS Access Analyzers
+        title: Access Analyzers
         mql: aws.accessAnalyzer.analyzers
       - uid: mondoo-asset-inventory-aws-acm-certificates
-        title: Retrieve the configuration for all AWS Certificate Manager certificates
+        title: Certificate Manager certificates
         mql: aws.acm.certificates
       - uid: mondoo-asset-inventory-aws-cloudtrail-trails
-        title: Retrieve the configuration for all AWS CloudTrail trails
+        title: CloudTrail trails
         mql: aws.cloudtrail.trails
