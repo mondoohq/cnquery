@@ -1,0 +1,51 @@
+{
+  "assets": {
+    "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q": {
+      "mrn": "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q",
+      "name": "alpine:3.18"
+    }
+  },
+  "data": {
+    "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q": {
+      "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-asset": {
+        "asset": {
+          "version": "3.18.4",
+          "arch": "amd64",
+          "labels": {
+            "distro-id": "alpine"
+          },
+          "cpes.map":  [],
+          "platform": "alpine",
+          "ids": [
+            "//platformid.api.mondoo.app/runtime/docker/images/e6b39dab7a69cfea9941378c0dbcc21b314c34eb22f5b9032c2023f6398e97b1"
+          ],
+          "name": "alpine:3.18"
+        }
+      },
+      "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-packages": {
+        "packages.list": [
+          {
+            "purl": "pkg:apk/alpine/alpine-baselayout@1683642107%3A3.4.3-r1?arch=x86_64\u0026distro=alpine-3.18.4\u0026epoch=1683642107",
+            "version": "1683642107:3.4.3-r1",
+            "name": "alpine-baselayout",
+            "cpes.map": [
+              "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1683642107:x86_64:*:*:*:*:amd64:*"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/zlib@1681228881%3A1.2.13-r1?arch=x86_64\u0026distro=alpine-3.18.4\u0026epoch=1681228881",
+            "version": "1681228881:1.2.13-r1",
+            "name": "zlib",
+            "cpes.map": [
+              "cpe:2.3:a:zlib:zlib:1681228881:x86_64:*:*:*:*:amd64:*"
+            ]
+          }
+        ]
+      },
+      "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-python-packages": {
+        "python.packages": []
+      }
+    }
+  },
+  "errors": {}
+}

@@ -72,7 +72,7 @@ prep/tools: prep/tools/protolint
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate
+cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate sbom/generate
 
 define buildProvider
 	$(eval $@_HOME = $(1))
@@ -545,6 +545,9 @@ mqlc/test:
 explorer/generate:
 	go generate ./explorer
 	go generate ./explorer/scan
+
+sbom/generate:
+	go generate ./sbom
 
 #   🏗 Binary / Build   #
 

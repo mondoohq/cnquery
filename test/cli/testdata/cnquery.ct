@@ -18,6 +18,7 @@ Available Commands:
   logout        Log out from Mondoo Platform.
   providers     Providers add connectivity to all assets.
   run           Run a query with your local system
+  sbom          Collect a software bill of materials (SBOM) for your local system
   scan          Scan your local system
   shell         Interactive shell with your local system
   status        Verify access to Mondoo Platform.

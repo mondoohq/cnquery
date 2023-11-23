@@ -1,0 +1,18 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-sbom
+    name: Mondoo SBOM
+    filters:
+      - asset.family.contains("unix")
+    queries:
+      - uid: mondoo-sbom-asset
+        title: Retrieve information about the Platform
+        mql: asset { name platform version arch ids labels cpes.map(uri) }
+      - uid: mondoo-sbom-packages
+        title: Retrieve list of installed packages
+        mql: packages { name version purl cpes.map(uri) format }
+      - uid: mondoo-sbom-python-packages
+        title: Retrieve list of installed Python packages
+        mql: python.packages { name version purl cpes.map(uri) file.path }
