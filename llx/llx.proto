@@ -4,6 +4,7 @@
 syntax = "proto3";
 
 package cnquery.llx;
+
 option go_package = "go.mondoo.com/cnquery/v9/llx";
 
 message Primitive {
@@ -15,6 +16,7 @@ message Primitive {
   bytes value = 2;
 
   // In case of an array primitive, holds the data of the array
+  // protolint:disable REPEATED_FIELD_NAMES_PLURALIZED
   repeated Primitive array = 3;
 
   // In case of a map primitive, holds the data of the map
@@ -30,7 +32,9 @@ message Function {
 }
 
 message Chunk {
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   enum Call {
+    // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
     PRIMITIVE = 0;
     FUNCTION = 1;
     PROPERTY = 2;
@@ -57,7 +61,8 @@ message CodeV1 {
   repeated int32 datapoints = 5;
   map<int32,string> checksums = 6;
   repeated CodeV1 functions = 7;
-  bool singleValue = 8;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
+  bool singleValue = 8; 
   map<int32,AssertionMessage> assertions = 20;
 }
 
@@ -66,7 +71,8 @@ message Block {
   // Identifies if we return multiple or just a single value.
   // The difference is that blocks usually return the block type (a kind of map)
   // where this flag instructs it to just return the value instead.
-  bool singleValue = 2;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
+  bool singleValue = 2; 
   // Number of parameters that are directly provided to this block
   int32 parameters = 3;
   repeated uint64 entrypoints = 4;
@@ -100,8 +106,10 @@ message CodeBundle {
   string version = 20;
   string min_mondoo_version = 22;
   map<string,AssertionMessage> assertions = 23;
-  map<string,uint64> auto_expand = 24; // name + ref to the block of data
-  // ref + variable name; only used during label creation and discarded afterwards
+  // name + ref to the block of data
+  map<string,uint64> auto_expand = 24;
+  // ref + variable name; only used during label creation and discarded 
+  // afterwards
   map<uint64,string> vars = 25;
 }
 

@@ -3,12 +3,14 @@
 
 syntax = "proto3";
 package cnquery.providers.v1;
+
+import "providers-sdk/v1/upstream/upstream.proto";
+import "providers-sdk/v1/vault/vault.proto";
+
 option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory";
 
-import "providers-sdk/v1/vault/vault.proto";
-import "providers-sdk/v1/upstream/upstream.proto";
-
 enum State {
+  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
   STATE_UNKNOWN = 0;
   // eg. permission or io error
   STATE_ERROR = 1;
@@ -31,7 +33,10 @@ enum State {
 }
 
 enum AssetCategory {
+  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   CATEGORY_INVENTORY = 0;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   CATEGORY_CICD = 1;
 }
 
@@ -62,6 +67,7 @@ message Asset {
   map<string, string> options = 20;
 
   // platform id detection mechanisms
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated string id_detector = 31;
 
   // indicator is this is an inventory object or a CI/CD run
@@ -80,41 +86,77 @@ message Asset {
 
 // FIXME: DEPRECATED, remove in v10.0 (or later) vv
 enum ProviderType {
+  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   LOCAL_OS = 0;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   DOCKER_ENGINE_IMAGE = 1;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   DOCKER_ENGINE_CONTAINER = 2;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   SSH = 3;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   WINRM = 4;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   AWS_SSM_RUN_COMMAND = 5;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   CONTAINER_REGISTRY = 6;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   TAR = 7;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   MOCK = 8;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   VSPHERE = 9;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   ARISTAEOS = 10;
   reserved 11;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   AWS = 12;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   GCP = 13;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   AZURE = 14;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   MS365 = 15;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   IPMI = 16;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   VSPHERE_VM = 17;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   FS = 18;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   K8S = 19;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   EQUINIX_METAL = 20;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   DOCKER = 21; // unspecified if this is a container or image
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   GITHUB = 22;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   VAGRANT = 23;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   AWS_EC2_EBS = 24;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   GITLAB = 25;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   TERRAFORM = 26;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   HOST = 27;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   UNKNOWN = 28;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   OKTA = 29;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   GOOGLE_WORKSPACE = 30;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   SLACK = 31;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   VCD = 32;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   OCI = 33;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   OPCUA = 34;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   GCP_COMPUTE_INSTANCE_SNAPSHOT =35;
 }
 
@@ -122,14 +164,16 @@ message Config {
   reserved 6, 7, 9, 10, 20;
   // FIXME: DEPRECATED, remove in v10.0 (or later) vv
   // This is replaced by type. We use a different number here so it doesn't
-  // conflict with the old "backend" while allowing us to load the field from yaml.
+  // conflict with the old "backend" while allowing us to load the field from 
+  // yaml.
   ProviderType backend = 28;
   DeprecatedV8_Kind kind = 24;
   // ^^
 
   string host = 2;
-  // Ports are not int by default, eg. docker://centos:latest parses a string as port
-  // Therefore it is up to the provider to convert the port to what they need
+  // Ports are not int by default, eg. docker://centos:latest parses a string 
+  // as port. Therefore it is up to the provider to convert the port to what 
+  // they need
   int32 port = 3;
   string path = 4;
   uint32 id = 5;
@@ -148,7 +192,8 @@ message Config {
   Discovery discover = 27;
   // additional platform information, passed-through
   string runtime = 25;
-  // configuration to uniquely identify an specific asset for multi-asset api connection
+  // configuration to uniquely identify an specific asset for multi-asset 
+  // connection
   string platform_id = 26;
   repeated string capabilities = 29;
 }
@@ -165,25 +210,43 @@ message Discovery {
   map<string,string> filter = 2;
 }
 
+// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
+// protolint:disable:next ENUM_NAMES_UPPER_CAMEL_CASE
 enum DeprecatedV8_Kind {
+  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_UNKNOWN = 0;
 
   // at rest
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_VIRTUAL_MACHINE_IMAGE = 1;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_CONTAINER_IMAGE = 2;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_CODE = 3;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_PACKAGE = 4;
 
   // in motion
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_VIRTUAL_MACHINE = 5;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_CONTAINER = 6;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_PROCESS = 7;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_API = 8;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_BARE_METAL = 9;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_NETWORK = 10;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_K8S_OBJECT = 11;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_AWS_OBJECT = 12;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_GCP_OBJECT = 13;
+  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
   KIND_AZURE_OBJECT= 14;
 }
 
@@ -191,6 +254,7 @@ message Platform {
   string name = 1;
   string arch = 3;
   string title = 4;
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated string family = 5;
   string build = 6;
   string version = 7;
@@ -205,45 +269,47 @@ message Platform {
 }
 
 // NOTE: the k8s types are apache 2 licenced and copied from
-// https://github.com/kubernetes/apimachinery/blob/master/pkg/apis/meta/v1/generated.proto
+// https://github.com/kubernetes/apimachinery
 
 // TypeMeta describes an individual object in an API response or request
 // with strings representing the type of the object and its API schema version.
 // Structures that are versioned or persisted should inline TypeMeta.
 message TypeMeta {
-  // Kind is a string value representing the REST resource this object represents.
-  // Servers may infer this from the endpoint the client submits requests to.
-  // Cannot be updated.
-  // In CamelCase.
-  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+  // Kind is a string value representing the REST resource this object 
+  // represents. Servers may infer this from the endpoint the client submits 
+  // requests to. Cannot be updated. In CamelCase.
+  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture
+  // /api-conventions.md#types-kinds
   // +optional
   string kind = 1;
 
-  // APIVersion defines the versioned schema of this representation of an object.
-  // Servers should convert recognized schemas to the latest internal value, and
-  // may reject unrecognized values.
-  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+  // APIVersion defines the versioned schema of this representation of an 
+  // object. Servers should convert recognized schemas to the latest internal 
+  // value, and may reject unrecognized values.
+  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture
+  // /api-conventions.md#resources
   // +optional
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string apiVersion = 2;
 }
 
 
-// ObjectMeta is metadata that all persisted resources must have, which includes all objects
-// users must create.
+// ObjectMeta is metadata that all persisted resources must have, which includes
+//  all objects users must create.
 message ObjectMeta {
-  // Name must be unique within a namespace. Is required when creating resources, although
-  // some resources may allow a client to request the generation of an appropriate name
-  // automatically. Name is primarily intended for creation idempotence and configuration
-  // definition.
+  // Name must be unique within a namespace. Is required when creating 
+  // resources, although some resources may allow a client to request the 
+  // generation of an appropriate name automatically. Name is primarily intended
+  // for creation idempotence and configuration definition.
   // Cannot be updated.
   // More info: http://kubernetes.io/docs/user-guide/identifiers#names
   // +optional
   string name = 1;
 
-  // Namespace defines the space within which each name must be unique. An empty namespace is
-  // equivalent to the "default" namespace, but "default" is the canonical representation.
-  // Not all objects are required to be scoped to a namespace - the value of this field for
-  // those objects will be empty.
+  // Namespace defines the space within which each name must be unique. An empty
+  // namespace is equivalent to the "default" namespace, but "default" is the 
+  // canonical representation. Not all objects are required to be scoped to a 
+  // namespace - the value of this field for those objects will be empty.
   //
   // Must be a DNS_LABEL.
   // Cannot be updated.
@@ -258,20 +324,22 @@ message ObjectMeta {
   // +optional
   map<string, string> labels = 11;
 
-  // Annotations is an unstructured key value map stored with a resource that may be
-  // set by external tools to store and retrieve arbitrary metadata. They are not
-  // queryable and should be preserved when modifying objects.
+  // Annotations is an unstructured key value map stored with a resource that \
+  // may be set by external tools to store and retrieve arbitrary metadata. They
+  // are not queryable and should be preserved when modifying objects.
   // More info: http://kubernetes.io/docs/user-guide/annotations
   // +optional
   map<string, string> annotations = 12;
 
   // List of objects depended by this object. If ALL objects in the list have
-  // been deleted, this object will be garbage collected. If this object is managed by a controller,
-  // then an entry in this list will point to this controller, with the controller field set to true.
-  // There cannot be more than one managing controller.
+  // been deleted, this object will be garbage collected. If this object is 
+  // managed by a controller, then an entry in this list will point to this
+  // controller, with the controller field set to true. There cannot be more 
+  // than one managing controller.
   // +optional
   // +patchMergeKey=uid
   // +patchStrategy=merge
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   repeated OwnerReference ownerReferences = 13;
 }
 
@@ -301,10 +369,12 @@ message Time {
 // +structType=atomic
 message OwnerReference {
   // API version of the referent.
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string apiVersion = 5;
 
   // Kind of the referent.
-  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture
+  // /api-conventions.md#types-kinds
   string kind = 1;
 
   // Name of the referent.
@@ -319,7 +389,8 @@ message OwnerReference {
 // Inventory declares the all assets and their credentials
 message Inventory {
   // Standard object's metadata.
-  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
+  // More info: https://git.k8s.io/community/contributors/devel/sig-architecture
+  // /api-conventions.md#metadata
   ObjectMeta metadata = 1;
 
   // Specification of the desired behavior of the Inventory.
@@ -336,7 +407,10 @@ message InventorySpec {
   string credential_query = 4;
 
   // optional: the upstream credentials to use for the inventory
-  mondoo.cnquery.upstream.v1.ServiceAccountCredentials upstream_credentials = 16;
+  mondoo.cnquery.upstream.v1.ServiceAccountCredentials 
+    upstream_credentials = 16;
 }
 
-message InventoryStatus {}
+message InventoryStatus {
+
+}

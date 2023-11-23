@@ -21,15 +21,24 @@ package mondoo.cnquery.health.v1;
 
 option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/health";
 
-service Health { rpc Check(HealthCheckRequest) returns (HealthCheckResponse); }
+service Health { 
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+}
 
-message HealthCheckRequest { string service = 1; }
+message HealthCheckRequest {
+  string service = 1;
+}
 
 message HealthCheckResponse {
   enum ServingStatus {
+    // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+    // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
     UNKNOWN = 0;
+    // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
     SERVING = 1;
+    // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
     NOT_SERVING = 2;
+    // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
     SERVICE_UNKNOWN = 3; // Used only by the Watch method.
   }
   ServingStatus status = 1;
@@ -38,6 +47,7 @@ message HealthCheckResponse {
   string time = 2;
 
   // returns the major api version
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string apiVersion = 3;
 
   // returns the git commit checksum

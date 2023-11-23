@@ -3,11 +3,12 @@
 
 syntax = "proto3";
 package cnquery.providers.v1;
-option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin";
 
+import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
 import "providers-sdk/v1/upstream/upstream.proto";
-import "llx/llx.proto";
+
+option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin";
 
 message ParseCLIReq {
   string connector = 1;
@@ -59,7 +60,9 @@ message DataRes {
   string id = 3;
 }
 
-message CollectRes {}
+message CollectRes {
+
+}
 
 message StoreReq {
   uint32 connection = 1;
@@ -72,13 +75,17 @@ message ResourceData {
   map<string, cnquery.llx.Result> fields = 5;
 }
 
-message StoreRes {}
+message StoreRes {
+
+}
 
 message HeartbeatReq {
   // interval in nanoseconds until the next heartbeat occurs
   uint64 interval = 1;
 }
-message HeartbeatRes {}
+message HeartbeatRes {
+  
+}
 
 service ProviderPlugin {
   rpc Heartbeat(HeartbeatReq) returns (HeartbeatRes);
