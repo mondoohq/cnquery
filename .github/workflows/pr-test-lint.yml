@@ -109,6 +109,9 @@ jobs:
           git push
         shell: bash
 
+      - name: 'Set up gcloud CLI'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
       - name: Test cnquery
         run: make test/go/plain-ci
         
