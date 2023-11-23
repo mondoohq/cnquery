@@ -54,7 +54,12 @@ prep/tools/windows:
 	go get -u google.golang.org/protobuf
 	go get -u gotest.tools/gotestsum
 
-prep/tools:
+
+prep/tools/protolint:
+	# protobuf lintingng
+	go install github.com/yoheimuta/protolint/cmd/protolint@latest
+
+prep/tools: prep/tools/protolint
 	# protobuf tooling
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
@@ -604,6 +609,9 @@ test/lint/golangci-lint/run: prep/tools
 
 test/lint/extended: prep/tools
 	golangci-lint run --config=.github/.golangci.yml --timeout=30m
+
+test/lint/proto: prep/tools/protolint
+	protolint lint .
 
 license: license/headers/check
 

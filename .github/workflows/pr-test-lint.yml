@@ -47,6 +47,9 @@ jobs:
 
       - run: make providers/build/core
 
+      - name: Run protolint
+        run: test/lint/proto
+
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3.7.0
         with:

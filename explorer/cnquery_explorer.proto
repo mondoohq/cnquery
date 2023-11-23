@@ -4,11 +4,12 @@
 syntax = "proto3";
 
 package cnquery.explorer;
-option go_package = "go.mondoo.com/cnquery/v9/explorer";
 
+import "google/protobuf/any.proto";
 import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
-import "google/protobuf/any.proto";
+
+option go_package = "go.mondoo.com/cnquery/v9/explorer";
 
 message Bundle {
   string owner_mrn = 1; 
@@ -121,11 +122,14 @@ message Property {
   string uid = 5;
   string type = 6;
   string context = 7;
+  // protolint:disable REPEATED_FIELD_NAMES_PLURALIZED
   repeated ObjectRef for = 8;
   string title = 20;
   string desc = 35;
 }
 
+// protolint:disable ENUM_FIELD_NAMES_PREFIX
+// protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 enum Action {
   UNSPECIFIED = 0;
   MODIFY = 1;
@@ -165,6 +169,8 @@ message Mquery {
   Action action = 41;
 }
 
+// protolint:disable ENUM_FIELD_NAMES_PREFIX
+// protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
 enum ScoringSystem {
   SCORING_UNSPECIFIED = 0;
   WEIGHTED = 1;
@@ -184,7 +190,8 @@ message Impact {
   ScoringSystem scoring = 2;
   // The weight of this query. Has to be > 0, otherwise counts as unset.
   int32 weight = 3;
-  // Action is copied into the impact to correctly reconstruct the v7 ScoringSpec
+  // Action is copied into the impact to correctly reconstruct the v7
+  // ScoringSpec
   Action action = 4;
 }
 
@@ -266,7 +273,9 @@ service QueryHub {
   rpc DefaultPacks(DefaultPacksReq) returns (URLs) {}
 }
 
-message Empty {}
+message Empty {
+
+}
 
 // MRNs are used to uniquely identify resources. They are globally unique.
 message Mrn {
@@ -327,8 +336,8 @@ message ResolveReq {
   repeated Mquery asset_filters = 2;
 }
 
-// ResolvedPack is returned from a resolve request. It includes the execution job
-// with all things that need to be run.
+// ResolvedPack is returned from a resolve request. It includes the execution
+// job with all things that need to be run.
 message ResolvedPack {
   ExecutionJob execution_job = 2;
   repeated Mquery filters = 4;
@@ -354,8 +363,9 @@ message EntityDataRequest {
   string data_mrn = 2;
 }
 
-// The report of all the things collected for an entity (typically asset).
-// The provided pack is used as the root to decide what data fields will be returned.
+// The report of all the things collected for an entity (typically asset). The
+// provided pack is used as the root to decide what data fields will be
+// returned.
 message Report {
   string pack_mrn = 1;
   string entity_mrn = 2;
@@ -392,7 +402,9 @@ message ErrorStatus {
 
 message AssignmentDelta {
   string mrn = 1;
-  enum Action {
+  // protolint:disable ENUM_FIELD_NAMES_PREFIX
+  // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
+  enum Action { 
     UNKNOWN = 0;
     ADD = 1;
     DELETE = 2;

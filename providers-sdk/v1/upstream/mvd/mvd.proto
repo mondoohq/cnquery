@@ -3,10 +3,12 @@
 
 syntax = "proto3";
 
+package mondoo.mvd.v1;
+
 import "cvss/cvss.proto";
 
-package mondoo.mvd.v1;
-option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvde/mvd";
+option go_package = 
+  "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvde/mvd";
 
 message Platform {
   string name = 1;
@@ -18,6 +20,7 @@ message Platform {
 }
 
 message Package {
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ID = 6;
   string name = 1;
   string version = 2;
@@ -41,7 +44,8 @@ service AdvisoryScanner {
 message AnalyseAssetRequest {
   Platform platform = 1;
   repeated Package packages = 2;
-  string kernelVersion = 3;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
+  string kernelVersion = 3; 
 }
 
 message VulnReport {
@@ -54,19 +58,24 @@ message VulnReport {
 
 message Advisory {
   reserved 21;
-
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ID = 1;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string Mrn = 2;
   string title = 3;
   string description = 4;
 
-  repeated Package fixed = 5;
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
+  repeated Package fixed = 5; 
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated Package affected = 6;
   repeated Reference refs = 7;
   repeated CVE cves = 20;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   repeated FixedPlatform fixedPlatforms = 30;
 
   int32 score = 25;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   mondoo.mvd.cvss.v1.Cvss worstScore = 31;
   float vendorscore = 26;
 
@@ -75,31 +84,35 @@ message Advisory {
   string published = 23;
   string modified = 24;
 
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated string supersedence = 28;
   bool unscored = 29;
 }
 
-enum AdvisoryState {
-  RELEASED = 0;
+enum AdvisoryState { // protolint:disable ENUM_FIELD_NAMES_PREFIX
+  RELEASED = 0; // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
   PENDING = 1;
   IGNORED = 2;
   NOT_AFFECTED = 3;
 }
 
 message Reference {
-  string ID = 1;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
+  string ID = 1; 
   string url = 2;
   string source = 3;
   string title = 4;
 }
 
 message FixedPlatform {
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ID = 6;
   string name = 1;
   string release = 2;
   string arch = 3;
   string namespace = 4;
   string build = 5;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string patchName = 7;
 }
 
@@ -149,16 +162,20 @@ message ReportStatsExploits {
 }
 
 message CVE {
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ID = 1;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string Mrn = 2;
   string summary = 3;
 
   float score = 4;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   mondoo.mvd.cvss.v1.Cvss worstScore = 7;
 
   bool unscored = 6;
   CveState state = 5;
 
+  // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated mondoo.mvd.cvss.v1.Cvss cvss = 20;
 
   string cwe = 21;
@@ -167,7 +184,9 @@ message CVE {
   string url = 24;
 }
 
+// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
 enum CveState {
+  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
   PUBLIC = 0;
   INVALID = 1;
   RESERVED = 2;
@@ -179,8 +198,12 @@ enum CveState {
 
 message PlatformEolInfo {
   Platform platform = 1;
-  string DocsUrl = 2;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
+  string DocsUrl = 2; 
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ProductUrl = 3;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ReleaseDate = 4;
+  // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string EolDate = 5;
 }

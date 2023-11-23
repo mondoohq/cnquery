@@ -3,9 +3,10 @@
 
 syntax = "proto3";
 package proto;
-option go_package = "go.mondoo.com/cnquery/v9/shared/proto";
 
 import "providers-sdk/v1/inventory/inventory.proto";
+
+option go_package = "go.mondoo.com/cnquery/v9/shared/proto";
 
 message RunQueryConfig {
   string command = 1;
@@ -25,7 +26,9 @@ message RunQueryConfig {
   string input = 12;
 }
 
-message Empty {}
+message Empty {
+  
+}
 
 message String {
   string data = 1;
