@@ -411,6 +411,60 @@ resources:
       variant: {}
       version: {}
     min_mondoo_version: 5.15.0
+  vuln.advisory:
+    fields:
+      description: {}
+      id: {}
+      modified: {}
+      published: {}
+      title: {}
+      worstScore: {}
+    min_mondoo_version: latest
+  vuln.cve:
+    fields:
+      id: {}
+      modified: {}
+      published: {}
+      state: {}
+      summary: {}
+      unscored: {}
+      worstScore: {}
+    min_mondoo_version: latest
+  vuln.package:
+    fields:
+      arch: {}
+      available: {}
+      name: {}
+      version: {}
+    min_mondoo_version: latest
+  vulnadvisory:
+    fields:
+      cve: {}
+      cvss: {}
+      cvssVector: {}
+      description: {}
+      id: {}
+      severity: {}
+      title: {}
+    min_mondoo_version: latest
+  vulncve:
+    fields:
+      cvss: {}
+      cvssVector: {}
+      id: {}
+    min_mondoo_version: latest
+  vulnmgmt:
+    fields:
+      advisories: {}
+      cves: {}
+      lastAssessment: {}
+      packages: {}
+    min_mondoo_version: latest
+  vulnpackage:
+    fields:
+      name: {}
+      version: {}
+    min_mondoo_version: latest
   yaml.path:
     fields:
       filepath: {}

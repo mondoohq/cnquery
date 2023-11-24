@@ -58,6 +58,9 @@ asset.eol @defaults("date") {
   date time
 }
 
+// Vulnerability Information
+vulnmgmt {}
+
 // Date and time functions
 time {
   // The current time on the local system

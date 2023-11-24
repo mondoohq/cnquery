@@ -30,6 +30,10 @@ func init() {
 			Init: initAssetEol,
 			Create: createAssetEol,
 		},
+		"vulnmgmt": {
+			// to override args, implement: initVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnmgmt,
+		},
 		"time": {
 			// to override args, implement: initTime(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTime,
@@ -378,6 +382,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAssetEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
+			return
+		},
 	"time.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlTime).__id, ok = v.Value.(string)
 			return
@@ -775,6 +783,45 @@ func (c *mqlAssetEol) GetProductUrl() *plugin.TValue[string] {
 
 func (c *mqlAssetEol) GetDate() *plugin.TValue[*time.Time] {
 	return &c.Date
+}
+
+// mqlVulnmgmt for the vulnmgmt resource
+type mqlVulnmgmt struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnmgmtInternal it will be used here
+}
+
+// createVulnmgmt creates a new instance of this resource
+func createVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnmgmt{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vulnmgmt", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnmgmt) MqlName() string {
+	return "vulnmgmt"
+}
+
+func (c *mqlVulnmgmt) MqlID() string {
+	return c.__id
 }
 
 // mqlTime for the time resource

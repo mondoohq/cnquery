@@ -44,9 +44,10 @@
       "cwd": "${workspaceRoot}/",
       "args": [
         "run",
-        // "local",
         "-c",
-        "asset.eol"
+        "vulnmgmt.advisories",
+        "--config",
+        "/home/christian/demo.agent.credentials.json"
       ],
     },
     {

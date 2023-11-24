@@ -9,6 +9,7 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
+  // Will be deprecated; Full advisory & vulnerability report  
   vulnerabilityReport() dict
 }
 
