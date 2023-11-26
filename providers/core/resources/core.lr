@@ -116,3 +116,32 @@ uuid @defaults("value") {
   // Variant encoded in UUID
   variant() string
 }
+
+// Common Platform Enumeration (CPE) identifiers
+cpe @defaults("uri") {
+  init(uri string)
+  // URI binding of the CPE
+  uri string
+  // Part of the CPE
+  part() string
+  // Vendor of the CPE
+  vendor() string
+  // Product of the CPE
+  product() string
+  // Version of the CPE
+  version() string
+  // Update of the CPE
+  update() string
+  // Edition of the CPE
+  edition() string
+  // Language of the CPE
+  language() string
+  // Software edition of the CPE
+  swEdition() string
+  // Target software of the CPE
+  targetSw() string
+  // Target hardware of the CPE
+  targetHw() string
+  // Other of the CPE
+  other() string
+}
