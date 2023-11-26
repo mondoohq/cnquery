@@ -10,6 +10,8 @@ The following formats are supported:
 - spdx-json
 - spdx-tag-value
 
+Note this command is experimental and may change in the future.
+
 Usage:
   cnquery sbom [flags]
   cnquery sbom [command]

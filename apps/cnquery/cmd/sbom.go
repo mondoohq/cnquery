@@ -31,7 +31,7 @@ func init() {
 
 var sbomCmd = &cobra.Command{
 	Use:   "sbom",
-	Short: "Generate a software bill of materials (SBOM) for a given asset.",
+	Short: "Experimental: Generate a software bill of materials (SBOM) for a given asset.",
 	Long: `Generate a software bill of materials (SBOM) for a given asset. The SBOM
 is a representation of the asset's software components and their dependencies.
 
@@ -42,6 +42,8 @@ The following formats are supported:
 - cyclonedx-xml
 - spdx-json
 - spdx-tag-value
+
+Note this command is experimental and may change in the future.
 `,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		err := viper.BindPFlag("output", cmd.Flags().Lookup("output"))
@@ -54,6 +56,7 @@ The following formats are supported:
 }
 
 var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
+	log.Info().Msg("This command is experimental. Please report any issues to https://github.com/mondoohq/cnquery.")
 	pb, err := sbom.QueryPack()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load query pack")
