@@ -4,6 +4,7 @@
 resources:
   asset:
     fields:
+      cpes: {}
       vulnerabilityReport: {}
     min_mondoo_version: latest
   esxi:

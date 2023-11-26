@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/v9/types"
 	"regexp"
 	"sync"
 
@@ -59,6 +60,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Available.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Description.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Purl.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Cpes.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Arch.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
@@ -128,6 +130,17 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("mql[packages]> found newer version")
 		}
 
+		cpes := []interface{}{}
+		if osPkg.CPE != "" {
+			cpe, err := x.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(osPkg.CPE),
+			})
+			if err != nil {
+				return nil, err
+			}
+			cpes = append(cpes, cpe)
+		}
+
 		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]*llx.RawData{
 			"name":        llx.StringData(osPkg.Name),
 			"version":     llx.StringData(osPkg.Version),
@@ -138,8 +151,9 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"format":      llx.StringData(osPkg.Format),
 			"installed":   llx.BoolData(true),
 			"origin":      llx.StringData(osPkg.Origin),
-			"epoch":       llx.NilData, // TODO: support Epoch
+			"epoch":       llx.StringData(osPkg.Epoch),
 			"purl":        llx.StringData(osPkg.PUrl),
+			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
 		})
 		if err != nil {
 			return nil, err

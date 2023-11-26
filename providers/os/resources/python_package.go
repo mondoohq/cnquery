@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -95,6 +96,14 @@ func (k *mqlPythonPackage) purl() (string, error) {
 	return k.Purl.Data, nil
 }
 
+func (k *mqlPythonPackage) cpes() ([]interface{}, error) {
+	err := k.populateData()
+	if err != nil {
+		return nil, err
+	}
+	return k.Cpes.Data, nil
+}
+
 func (k *mqlPythonPackage) dependencies() ([]interface{}, error) {
 	err := k.populateData()
 	if err != nil {
@@ -117,17 +126,25 @@ func (k *mqlPythonPackage) populateData() error {
 		return fmt.Errorf("error parsing python package data: %s", err)
 	}
 
-	deps := make([]interface{}, len(ppd.dependencies))
-	for i, dep := range ppd.dependencies {
-		deps[i] = dep
-	}
-
 	k.Name = plugin.TValue[string]{Data: ppd.name, State: plugin.StateIsSet}
 	k.Version = plugin.TValue[string]{Data: ppd.version, State: plugin.StateIsSet}
 	k.Author = plugin.TValue[string]{Data: ppd.author, State: plugin.StateIsSet}
 	k.Summary = plugin.TValue[string]{Data: ppd.summary, State: plugin.StateIsSet}
 	k.License = plugin.TValue[string]{Data: ppd.license, State: plugin.StateIsSet}
-	k.Dependencies = plugin.TValue[[]interface{}]{Data: deps, State: plugin.StateIsSet}
+	k.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.dependencies), State: plugin.StateIsSet}
+
+	cpes := []interface{}{}
+	for i := range ppd.cpes {
+		cpe, err := k.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+			"uri": llx.StringData(k.Cpes.Data[i].(string)),
+		})
+		if err != nil {
+			return err
+		}
+		cpes = append(cpes, cpe)
+	}
+
+	k.Cpes = plugin.TValue[[]interface{}]{Data: cpes, State: plugin.StateIsSet}
 	k.Purl = plugin.TValue[string]{Data: ppd.purl, State: plugin.StateIsSet}
 
 	return nil

@@ -162,6 +162,9 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"asset.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("core.cpe")))
+	},
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
 	},
@@ -463,6 +466,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAsset).__id, ok = v.Value.(string)
 			return
 		},
+	"asset.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Cpes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
@@ -944,6 +951,7 @@ type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAssetInternal it will be used here
+	Cpes plugin.TValue[[]interface{}]
 	VulnerabilityReport plugin.TValue[interface{}]
 }
 
@@ -977,6 +985,22 @@ func (c *mqlAsset) MqlName() string {
 
 func (c *mqlAsset) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("asset", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cpes()
+	})
 }
 
 func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {

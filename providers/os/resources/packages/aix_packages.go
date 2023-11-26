@@ -6,6 +6,10 @@ package packages
 import (
 	"bufio"
 	"fmt"
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	cpe2 "go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"strings"
 
@@ -16,7 +20,7 @@ const (
 	AixPkgFormat = "bff"
 )
 
-func parseAixPackages(r io.Reader) ([]Package, error) {
+func parseAixPackages(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 	pkgs := []Package{}
 
 	scanner := bufio.NewScanner(r)
@@ -31,12 +35,15 @@ func parseAixPackages(r io.Reader) ([]Package, error) {
 
 		record := strings.Split(line, ":")
 
+		cpe, _ := cpe2.NewPackage2Cpe(record[1], record[1], record[2], "", pf.Arch)
 		// Fileset, Level, PtfID, State, Type, Description, EFIXLocked
 		pkgs = append(pkgs, Package{
 			Name:        record[1],
 			Version:     record[2],
 			Description: strings.TrimSpace(record[6]),
 			Format:      AixPkgFormat,
+			PUrl:        purl.NewPackageUrl(pf, record[1], record[2], "", "", packageurl.TypeGeneric),
+			CPE:         cpe,
 		})
 
 	}
@@ -44,7 +51,8 @@ func parseAixPackages(r io.Reader) ([]Package, error) {
 }
 
 type AixPkgManager struct {
-	conn shared.Connection
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (f *AixPkgManager) Name() string {
@@ -61,7 +69,7 @@ func (f *AixPkgManager) List() ([]Package, error) {
 		return nil, fmt.Errorf("could not read freebsd package list")
 	}
 
-	return parseAixPackages(cmd.Stdout)
+	return parseAixPackages(f.platform, cmd.Stdout)
 }
 
 func (f *AixPkgManager) Available() (map[string]PackageUpdate, error) {

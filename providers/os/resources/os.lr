@@ -18,6 +18,9 @@ alias os.unix.sshd = sshd
 alias k8s.kubelet = kubelet
 
 extend asset {
+  // Common Platform Enumeration (CPE) for the asset
+  cpes() []core.cpe
+  // Advisory & vulnerability report
   vulnerabilityReport() dict
 }
 
@@ -545,6 +548,9 @@ package @defaults("name version") {
 
   // Package URL
   purl string
+
+  // Common Platform Enumeration (CPE) for the package
+  cpes []core.cpe
 
   // Package origin (optional)
   origin() string
@@ -1075,6 +1081,8 @@ python.package @defaults("name version") {
   summary() string
   // Package URL
   purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
   // List of packages depended on
   dependencies() []python.package
 }

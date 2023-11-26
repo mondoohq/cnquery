@@ -50,6 +50,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:        "noarch",
 		Description: "Descriptions of common terminals",
 		PUrl:        "pkg:rpm/rhel/ncurses-base@5.9-14.20130511.el7_4?arch=noarch&distro=rhel-7.4",
+		CPE:         "cpe:2.3:a:ncurses-base:ncurses-base:5.9-14.20130511.el7_4:noarch:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ncurses-base")
@@ -60,6 +61,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "GNU Standard C++ Library",
 		PUrl:        "pkg:rpm/rhel/libstdc%2B%2B@4.8.5-28.el7_5.1?arch=x86_64&distro=rhel-7.4",
+		CPE:         "cpe:2.3:a:libstdc++:libstdc\\+\\+:4.8.5-28.el7_5.1:x86_64:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "libstdc detected")
@@ -70,6 +72,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Network monitoring tools including ping",
 		PUrl:        "pkg:rpm/rhel/iputils@20160308-10.el7?arch=x86_64&distro=rhel-7.4",
+		CPE:         "cpe:2.3:a:iputils:iputils:20160308-10.el7:x86_64:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -81,6 +84,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "A general purpose cryptography library with TLS implementation",
 		PUrl:        "pkg:rpm/rhel/openssl-libs@1%3A1.0.2k-12.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
+		CPE:         "cpe:2.3:a:openssl-libs:openssl-libs:1:x86_64:*:*:*:*:1:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -92,6 +96,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Libraries for accessing D-BUS",
 		PUrl:        "pkg:rpm/rhel/dbus-libs@1%3A1.10.24-7.el7?arch=x86_64&distro=rhel-7.4&epoch=1",
+		CPE:         "cpe:2.3:a:dbus-libs:dbus-libs:1:x86_64:*:*:*:*:1:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "gpg-pubkey detected")
@@ -128,6 +133,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Arch:        "i386",
 		Description: "A debugger which detects memory allocation violations.",
 		PUrl:        "pkg:rpm/rhel/ElectricFence@2.1-3?arch=i386&distro=rhel-6.2",
+		CPE:         "cpe:2.3:a:electricfence:electricfence:2.1-3:i386:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ElectricFence")
@@ -139,6 +145,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Arch:        "i386",
 		Description: "Utilities for managing shadow password files and user/group accounts.",
 		PUrl:        "pkg:rpm/rhel/shadow-utils@1%3A19990827-10?arch=i386&distro=rhel-6.2&epoch=1",
+		CPE:         "cpe:2.3:a:shadow-utils:shadow-utils:1:i386:*:*:*:*:1:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "shadow-utils")
@@ -150,6 +157,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Arch:        "i386",
 		Description: "Network monitoring tools for tracking IP addresses on a network.",
 		PUrl:        "pkg:rpm/rhel/arpwatch@1%3A2.1a4-19?arch=i386&distro=rhel-6.2&epoch=1",
+		CPE:         "cpe:2.3:a:arpwatch:arpwatch:1:i386:*:*:*:*:1:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "arpwatch")
@@ -160,6 +168,7 @@ func TestRedhat6Parser(t *testing.T) {
 		Arch:        "i386",
 		Description: "The GNU Bourne Again shell (bash) version 1.14.",
 		PUrl:        "pkg:rpm/rhel/bash@1.14.7-22?arch=i386&distro=rhel-6.2",
+		CPE:         "cpe:2.3:a:bash:bash:1.14.7-22:i386:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "bash")
@@ -219,6 +228,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Ncurses Libraries",
 		PUrl:        "pkg:rpm/photon/ncurses-libs@6.2-6.ph4?arch=x86_64&distro=photon-3.0",
+		CPE:         "cpe:2.3:a:ncurses-libs:ncurses-libs:6.2-6.ph4:x86_64:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "ncurses-libs")
@@ -229,6 +239,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "Bourne-Again SHell",
 		PUrl:        "pkg:rpm/photon/bash@5.0-2.ph4?arch=x86_64&distro=photon-3.0",
+		CPE:         "cpe:2.3:a:bash:bash:5.0-2.ph4:x86_64:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "bash")
@@ -239,6 +250,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 		Arch:        "x86_64",
 		Description: "sqlite3 library",
 		PUrl:        "pkg:rpm/photon/sqlite-libs@3.38.5-1.ph4?arch=x86_64&distro=photon-3.0",
+		CPE:         "cpe:2.3:a:sqlite-libs:sqlite-libs:3.38.5-1.ph4:x86_64:*:*:*:*:*:*",
 		Format:      packages.RpmPkgFormat,
 	}
 	assert.Contains(t, m, p, "sqlite-libs")

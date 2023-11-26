@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/purl"
 	"io"
 	"os"
@@ -58,6 +59,10 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 				arch = ""
 			}
 
+			// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
+			// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
+			// increase the binary.
+			cpe, _ := cpe.NewPackage2Cpe(name, name, version, arch, epoch)
 			pkgs = append(pkgs, Package{
 				Name:        name,
 				Version:     version,
@@ -66,6 +71,7 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 				Description: m[5],
 				Format:      RpmPkgFormat,
 				PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
+				CPE:         cpe,
 			})
 		}
 	}

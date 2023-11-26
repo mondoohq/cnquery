@@ -4,6 +4,8 @@
 resources:
   asset:
     fields:
+      cpe: {}
+      cpes: {}
       vulnerabilityReport: {}
     min_mondoo_version: latest
   asset.eol:
@@ -553,6 +555,10 @@ resources:
     fields:
       arch: {}
       available: {}
+      cpe:
+        min_mondoo_version: latest
+      cpes:
+        min_mondoo_version: latest
       description: {}
       epoch: {}
       format: {}
@@ -730,6 +736,8 @@ resources:
   python.package:
     fields:
       author: {}
+      cpe: {}
+      cpes: {}
       dependencies: {}
       file: {}
       id: {}

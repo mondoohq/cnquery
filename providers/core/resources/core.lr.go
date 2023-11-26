@@ -46,6 +46,10 @@ func init() {
 			Init: initUuid,
 			Create: createUuid,
 		},
+		"cpe": {
+			Init: initCpe,
+			Create: createCpe,
+		},
 	}
 }
 
@@ -233,6 +237,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"uuid.variant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUuid).GetVariant()).ToDataRes(types.String)
+	},
+	"cpe.uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetUri()).ToDataRes(types.String)
+	},
+	"cpe.part": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetPart()).ToDataRes(types.String)
+	},
+	"cpe.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetVendor()).ToDataRes(types.String)
+	},
+	"cpe.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetProduct()).ToDataRes(types.String)
+	},
+	"cpe.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetVersion()).ToDataRes(types.String)
+	},
+	"cpe.update": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetUpdate()).ToDataRes(types.String)
+	},
+	"cpe.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetEdition()).ToDataRes(types.String)
+	},
+	"cpe.language": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetLanguage()).ToDataRes(types.String)
+	},
+	"cpe.swEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetSwEdition()).ToDataRes(types.String)
+	},
+	"cpe.targetSw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetTargetSw()).ToDataRes(types.String)
+	},
+	"cpe.targetHw": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetTargetHw()).ToDataRes(types.String)
+	},
+	"cpe.other": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCpe).GetOther()).ToDataRes(types.String)
 	},
 }
 
@@ -432,6 +472,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"uuid.variant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUuid).Variant, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCpe).__id, ok = v.Value.(string)
+			return
+		},
+	"cpe.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.part": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Part, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.update": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Update, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.language": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Language, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.swEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).SwEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.targetSw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).TargetSw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.targetHw": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).TargetHw, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cpe.other": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCpe).Other, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -986,5 +1078,131 @@ func (c *mqlUuid) GetVersion() *plugin.TValue[int64] {
 func (c *mqlUuid) GetVariant() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Variant, func() (string, error) {
 		return c.variant()
+	})
+}
+
+// mqlCpe for the cpe resource
+type mqlCpe struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlCpeInternal it will be used here
+	Uri plugin.TValue[string]
+	Part plugin.TValue[string]
+	Vendor plugin.TValue[string]
+	Product plugin.TValue[string]
+	Version plugin.TValue[string]
+	Update plugin.TValue[string]
+	Edition plugin.TValue[string]
+	Language plugin.TValue[string]
+	SwEdition plugin.TValue[string]
+	TargetSw plugin.TValue[string]
+	TargetHw plugin.TValue[string]
+	Other plugin.TValue[string]
+}
+
+// createCpe creates a new instance of this resource
+func createCpe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCpe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cpe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCpe) MqlName() string {
+	return "cpe"
+}
+
+func (c *mqlCpe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCpe) GetUri() *plugin.TValue[string] {
+	return &c.Uri
+}
+
+func (c *mqlCpe) GetPart() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Part, func() (string, error) {
+		return c.part()
+	})
+}
+
+func (c *mqlCpe) GetVendor() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Vendor, func() (string, error) {
+		return c.vendor()
+	})
+}
+
+func (c *mqlCpe) GetProduct() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Product, func() (string, error) {
+		return c.product()
+	})
+}
+
+func (c *mqlCpe) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlCpe) GetUpdate() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Update, func() (string, error) {
+		return c.update()
+	})
+}
+
+func (c *mqlCpe) GetEdition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Edition, func() (string, error) {
+		return c.edition()
+	})
+}
+
+func (c *mqlCpe) GetLanguage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Language, func() (string, error) {
+		return c.language()
+	})
+}
+
+func (c *mqlCpe) GetSwEdition() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SwEdition, func() (string, error) {
+		return c.swEdition()
+	})
+}
+
+func (c *mqlCpe) GetTargetSw() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetSw, func() (string, error) {
+		return c.targetSw()
+	})
+}
+
+func (c *mqlCpe) GetTargetHw() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TargetHw, func() (string, error) {
+		return c.targetHw()
+	})
+}
+
+func (c *mqlCpe) GetOther() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Other, func() (string, error) {
+		return c.other()
 	})
 }

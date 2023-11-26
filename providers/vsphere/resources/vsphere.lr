@@ -6,7 +6,9 @@ option go_package = "go.mondoo.com/cnquery/v9/providers/vsphere/resources"
 
 // vSphere asset resource
 extend asset {
-  // Full advisory & vulnerability report
+  // Common Platform Enumeration (CPE) for the asset
+  cpes() []core.cpe
+  // Advisory & vulnerability report
   vulnerabilityReport() dict
 }
 

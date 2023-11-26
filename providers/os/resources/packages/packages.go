@@ -24,6 +24,9 @@ type Package struct {
 
 	// Package Url follows https://github.com/package-url/purl-spec
 	PUrl string `json:"purl,omitempty"`
+
+	// Package CPE
+	CPE string `json:"cpe,omitempty"`
 }
 
 // extends Package to store available version
@@ -78,7 +81,7 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 	case asset.Platform.Name == "freebsd":
 		pm = &FreeBSDPkgManager{conn: conn}
 	case asset.Platform.Name == "aix":
-		pm = &AixPkgManager{conn: conn}
+		pm = &AixPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.IsFamily("linux"):
 		// no clear package manager for linux platform found
 		// most likely we land here if we have a yocto-based system
