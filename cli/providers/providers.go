@@ -21,9 +21,10 @@ import (
 )
 
 type Command struct {
-	Command *cobra.Command
-	Run     func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes)
-	Action  string
+	Command             *cobra.Command
+	Run                 func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes)
+	Action              string
+	SupportedConnectors []string
 }
 
 // AttachCLIs will attempt to parse the current commandline and look for providers.
@@ -135,10 +136,24 @@ func attachProviders(existing providers.Providers, commands []*Command) {
 }
 
 func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
-	for _, provider := range existing {
+	for i := range existing {
+		provider := existing[i]
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
-			attachConnectorCmd(provider.Provider, &conn, cmd)
+
+			attach := true
+			if len(cmd.SupportedConnectors) > 0 {
+				attach = false // only attach if the connector is in the list
+				for k := range cmd.SupportedConnectors {
+					if cmd.SupportedConnectors[k] == conn.Name {
+						attach = true
+						break
+					}
+				}
+			}
+			if attach {
+				attachConnectorCmd(provider.Provider, &conn, cmd)
+			}
 		}
 	}
 

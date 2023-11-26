@@ -9,6 +9,7 @@ require (
 	cloud.google.com/go/secretmanager v1.11.4
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.3.2
+	github.com/CycloneDX/cyclonedx-go v0.7.2
 	github.com/GoogleCloudPlatform/berglas v1.0.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
@@ -60,6 +61,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/miekg/dns v1.1.57
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
 	github.com/muesli/reflow v0.3.0
@@ -74,6 +76,7 @@ require (
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.2.0
+	github.com/spdx/tools-golang v0.5.3
 	github.com/spf13/afero v1.10.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
@@ -112,6 +115,7 @@ require (
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.1.0 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/go-check-sumtype v0.1.3 // indirect
+	github.com/anchore/go-struct-converter v0.0.0-20221118182256-c68fdcfa2092 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.1 // indirect
 	github.com/catenacyber/perfsprint v0.2.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
