@@ -736,6 +736,7 @@ resources:
   python.package:
     fields:
       author: {}
+      authorEmail: {}
       cpe: {}
       cpes: {}
       dependencies: {}

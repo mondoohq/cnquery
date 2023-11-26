@@ -1077,6 +1077,8 @@ python.package @defaults("name version") {
   license() string
   // Author of the package
   author() string
+  // Author email of the package
+  authorEmail() string
   // Short package description
   summary() string
   // Package URL

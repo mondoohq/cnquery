@@ -41,7 +41,8 @@ License-File: LICENSE
 	pkg, err := ParseMIME(strings.NewReader(content), "/usr/lib/python3.11/site-packages/pyftpdlib-1.5.7-py3.11.egg-info/PKG-INFO")
 	require.NoError(t, err)
 
-	assert.Equal(t, "Giampaolo Rodola' <g.rodola@gmail.com>", pkg.Author)
+	assert.Equal(t, "Giampaolo Rodola'", pkg.Author)
+	assert.Equal(t, "g.rodola@gmail.com", pkg.AuthorEmail)
 	assert.Equal(t, "pyftpdlib", pkg.Name)
 	assert.Equal(t, "1.5.7", pkg.Version)
 	assert.Equal(t, "MIT", pkg.License)

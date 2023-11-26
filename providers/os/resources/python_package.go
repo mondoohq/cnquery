@@ -76,6 +76,14 @@ func (k *mqlPythonPackage) author() (string, error) {
 	return k.Author.Data, nil
 }
 
+func (k *mqlPythonPackage) authorEmail() (string, error) {
+	err := k.populateData()
+	if err != nil {
+		return "", err
+	}
+	return k.AuthorEmail.Data, nil
+}
+
 func (k *mqlPythonPackage) summary() (string, error) {
 	err := k.populateData()
 	if err != nil {
@@ -126,6 +134,7 @@ func (k *mqlPythonPackage) populateData() error {
 	k.Name = plugin.TValue[string]{Data: ppd.Name, State: plugin.StateIsSet}
 	k.Version = plugin.TValue[string]{Data: ppd.Version, State: plugin.StateIsSet}
 	k.Author = plugin.TValue[string]{Data: ppd.Author, State: plugin.StateIsSet}
+	k.AuthorEmail = plugin.TValue[string]{Data: ppd.AuthorEmail, State: plugin.StateIsSet}
 	k.Summary = plugin.TValue[string]{Data: ppd.Summary, State: plugin.StateIsSet}
 	k.License = plugin.TValue[string]{Data: ppd.License, State: plugin.StateIsSet}
 	k.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.Dependencies), State: plugin.StateIsSet}
@@ -171,6 +180,7 @@ func newMqlPythonPackage(runtime *plugin.Runtime, ppd python.PackageDetails, dep
 		"name":         llx.StringData(ppd.Name),
 		"version":      llx.StringData(ppd.Version),
 		"author":       llx.StringData(ppd.Author),
+		"authorEmail":  llx.StringData(ppd.AuthorEmail),
 		"summary":      llx.StringData(ppd.Summary),
 		"license":      llx.StringData(ppd.License),
 		"file":         llx.ResourceData(f, f.MqlName()),
