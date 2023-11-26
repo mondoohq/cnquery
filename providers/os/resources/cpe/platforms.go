@@ -4,275 +4,252 @@
 package cpe
 
 import (
+	"bytes"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 	"regexp"
 	"strconv"
+	"text/template"
 )
+
+type platformCPEEntry struct {
+	Platform    string
+	CPEBuilder  func(platform, version string, workstation bool) (string, error)
+	Workstation bool
+}
 
 var platformCPES = []platformCPEEntry{
 	// apple macos
 	{
 		Platform: "macos",
-		Version:  "10.14",
-		CPE:      "cpe:2.3:o:apple:mac_os_x:10.14.0:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "macos",
-		Version:  "10.15",
-		CPE:      "cpe:2.3:o:apple:mac_os_x:10.15.0:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "macos",
-		VersionRegex: regexp.MustCompile(`^11\.`),
-		CPE:          "cpe:2.3:o:apple:mac_os_x:11.0.0:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "macos",
-		VersionRegex: regexp.MustCompile(`^12\.`),
-		CPE:          "cpe:2.3:o:apple:mac_os_x:12.0.0:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "macos",
-		VersionRegex: regexp.MustCompile(`^13\.`),
-		CPE:          "cpe:2.3:o:apple:mac_os_x:13.0.0:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "macos",
-		VersionRegex: regexp.MustCompile(`^14\.`),
-		CPE:          "cpe:2.3:o:apple:mac_os_x:14.0.0:*:*:*:*:*:*:*",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			// cnquery uses 10.14 instead of 10.14.0, so we need to add the .0
+			v := version + ".0"
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:apple:mac_os_x:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: v,
+				})
+		},
 	},
 	// amazon linux
 	{
 		Platform: "amazonlinux",
-		Version:  "2",
-		CPE:      "cpe:2.3:o:amazon:linux_2:-:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "amazonlinux",
-		VersionRegex: regexp.MustCompile(`^(2017|2018)\.`),
-		CPE:          "cpe:2.3:o:amazon:linux:-:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "amazonlinux",
-		Version:  "2023",
-		CPE:      "cpe:2.3:o:amazon:linux_2023:-:*:*:*:*:*:*:*",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			amzn1 := regexp.MustCompile(`^(2017|2018)\.`)
+			product := ""
+
+			if amzn1.MatchString(version) {
+				product = "linux"
+			} else if version == "2" {
+				product = "linux_2"
+			} else if version == "2023" {
+				product = "linux_2023"
+			}
+
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:amazon:{{.Product}}:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Product: product,
+					Version: "-",
+				})
+		},
 	},
 	// centos
 	{
-		Platform:     "centos",
-		VersionRegex: regexp.MustCompile(`^6\.`),
-		CPE:          "cpe:2.3:o:centos:centos:6:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "centos",
-		VersionRegex: regexp.MustCompile(`^7\.`),
-		CPE:          "cpe:2.3:o:centos:centos:7:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "centos",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:centos:centos:8:*:*:*:*:*:*:*",
+		Platform: "centos",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:centos:centos:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// debian
 	{
-		Platform:     "debian",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:debian:debian_linux:8.*:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "debian",
-		VersionRegex: regexp.MustCompile(`^9\.`),
-		CPE:          "cpe:2.3:o:debian:debian_linux:9.*:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "debian",
-		VersionRegex: regexp.MustCompile(`^10\.`),
-		CPE:          "cpe:2.3:o:debian:debian_linux:10:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "debian",
-		VersionRegex: regexp.MustCompile(`^11\.`),
-		CPE:          "cpe:2.3:o:debian:debian_linux:11:*:*:*:*:*:*:*",
+		Platform: "debian",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:debian:debian_linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// fedora
 	{
 		Platform: "fedora",
-		Version:  "28",
-		CPE:      "cpe:2.3:o:fedora:linux:28:*:*:*:*:*:*:*",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:fedora:linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// oracle linux
 	{
-		Platform:     "oraclelinux",
-		VersionRegex: regexp.MustCompile(`^6\.`),
-		CPE:          "cpe:2.3:o:oracle:linux:6:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "oraclelinux",
-		VersionRegex: regexp.MustCompile(`^7\.`),
-		CPE:          "cpe:2.3:o:oracle:linux:7:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "oraclelinux",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:oracle:linux:8:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "oraclelinux",
-		VersionRegex: regexp.MustCompile(`^9\.`),
-		CPE:          "cpe:2.3:o:oracle:linux:9:*:*:*:*:*:*:*",
+		Platform: "oraclelinux",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:oracle:linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// redhat linux
 	{
-		Platform:     "redhat",
-		VersionRegex: regexp.MustCompile(`^6\.`),
-		CPE:          "cpe:2.3:o:redhat:redhat_enterprise_linux:6.*:*:*:en:*:*:*:*",
-	},
-	{
-		Platform:     "redhat",
-		VersionRegex: regexp.MustCompile(`^7\.`),
-		CPE:          "cpe:2.3:o:redhat:redhat_enterprise_linux:7.*:*:*:en:*:*:*:*",
-	},
-	{
-		Platform:     "redhat",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:redhat:redhat_enterprise_linux:8.*:*:*:en:*:*:*:*",
-	},
-	{
-		Platform:     "redhat",
-		VersionRegex: regexp.MustCompile(`^9\.`),
-		CPE:          "cpe:2.3:o:redhat:redhat_enterprise_linux:9.*:*:*:en:*:*:*:*",
+		Platform: "redhat",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:redhat:redhat_enterprise_linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// rockylinux
 	{
-		Platform:     "rockylinux",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:rocky:rocky_linux:8.*:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "rockylinux",
-		VersionRegex: regexp.MustCompile(`^9\.`),
-		CPE:          "cpe:2.3:o:rocky:rocky_linux:9.*:*:*:*:*:*:*:*",
+		Platform: "rockylinux",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:rocky:rocky_linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// alma linux
 	{
-		Platform:     "almalinux",
-		VersionRegex: regexp.MustCompile(`^8\.`),
-		CPE:          "cpe:2.3:o:almalinux:almalinux:8:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "almalinux",
-		VersionRegex: regexp.MustCompile(`^9\.`),
-		CPE:          "cpe:2.3:o:almalinux:almalinux:9:*:*:*:*:*:*:*",
+		Platform: "almalinux",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:almalinux:almalinux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// suse
 	{
-		Platform:     "sles",
-		VersionRegex: regexp.MustCompile(`^12\.`),
-		CPE:          "cpe:2.3:o:suse:suse_linux_enterprise_server:12*:*:*:*:*:*:*:*",
-	},
-	{
-		Platform:     "sles",
-		VersionRegex: regexp.MustCompile(`^15\.`),
-		CPE:          "cpe:2.3:o:suse:suse_linux_enterprise_server:15*:*:*:*:*:*:*:*",
+		Platform: "sles",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:suse:suse_linux_enterprise_server:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 	// ubuntu
 	{
 		Platform: "ubuntu",
-		Version:  "16.04",
-		CPE:      "cpe:2.3:o:canonical:ubuntu_linux:16.04:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "ubuntu",
-		Version:  "18.04",
-		CPE:      "cpe:2.3:o:canonical:ubuntu_linux:18.04:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "ubuntu",
-		Version:  "20.04",
-		CPE:      "cpe:2.3:o:canonical:ubuntu_linux:20.04:*:*:*:lts:*:*:*",
-	},
-	{
-		Platform: "ubuntu",
-		Version:  "22.04",
-		CPE:      "cpe:2.3:o:canonical:ubuntu_linux:22.04:*:*:*:lts:*:*:*",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			lts := []string{"14.04", "16.04", "18.04", "20.04", "22.04"}
+			swEdition := "*"
+			isLts := stringx.Contains(lts, version)
+			if isLts {
+				swEdition = "lts"
+			}
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:canonical:ubuntu_linux:{{.Version}}:*:*:*:{{.SwEdition}}:*:*:*",
+				cpePatternArgs{
+					Version:   version,
+					SwEdition: swEdition,
+				})
+		},
 	},
 	// windows
 	{
 		Platform: "windows",
-		VersionFunc: func(v string, workstation bool) bool {
-			version, err := strconv.Atoi(v)
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			product := "windows"
+			productVersion := ""
+
+			v, err := strconv.Atoi(version)
 			if err != nil {
-				return false
+				return "", err
 			}
-			return version >= 10000 && version < 20000 && workstation
-		},
-		CPE:         "cpe:2.3:o:microsoft:windows:10:*:*:*:*:*:*:*",
-		Workstation: true,
-	},
-	{
-		Platform: "windows",
-		VersionFunc: func(v string, workstation bool) bool {
-			version, err := strconv.Atoi(v)
-			if err != nil {
-				return false
+
+			if v >= 10000 && v < 20000 && workstation {
+				productVersion = "10"
+			} else if v >= 20000 && v < 30000 && workstation {
+				productVersion = "11"
+			} else if v == 14393 {
+				product = "windows_server_2016"
+				productVersion = "-"
+			} else if v == 17763 {
+				// see https://nvd.nist.gov/products/cpe/detail/0A406A68-C024-45BC-88F7-2EDC1A54F7C7
+				product = "windows_server_2019"
+				productVersion = "-"
+			} else if v == 20348 {
+				product = "windows_server_2022"
+				productVersion = "-"
+			} else {
+				return "", nil
 			}
-			return version >= 20000 && version < 30000 && workstation
+
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:microsoft:{{.Product}}:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Product: product,
+					Version: productVersion,
+				})
 		},
-		CPE:         "cpe:2.3:o:microsoft:windows_11:-:*:*:*:*:*:x64:*",
-		Workstation: true,
-	},
-	{
-		Platform: "windows",
-		Version:  "14393",
-		CPE:      "cpe:2.3:o:microsoft:windows_server_2016:-:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "windows",
-		Version:  "17763",
-		CPE:      "cpe:2.3:o:microsoft:windows_server_2019:-:*:*:*:*:*:*:*",
-	},
-	{
-		Platform: "windows",
-		Version:  "20348",
-		CPE:      "cpe:2.3:o:microsoft:windows_server:2022:*:*:*:*:*:*:*",
 	},
 	// aix
 	{
-		Platform:     "aix",
-		VersionRegex: regexp.MustCompile(`^7\.`),
-		CPE:          "cpe:2.3:o:ibm:aix:7:*:*:*:*:*:*:*",
+		Platform: "aix",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:ibm:aix:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
+	},
+	// alpine
+	{
+		// see https://nvd.nist.gov/products/cpe/detail/B7A89734-EC97-4D04-9CF0-1E93C09F79D4
+		Platform: "alpine",
+		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
+			return cpeVersionPatternFunc(
+				"cpe:2.3:o:alpinelinux:alpine_linux:{{.Version}}:*:*:*:*:*:*:*",
+				cpePatternArgs{
+					Version: version,
+				})
+		},
 	},
 }
 
-func PlatformCPE(platform string, version string, workstation bool) (string, bool) {
+type cpePatternArgs struct {
+	Product   string
+	Version   string
+	SwEdition string
+}
 
+func cpeVersionPatternFunc(pattern string, args cpePatternArgs) (string, error) {
+	t := template.Must(template.New("cpe-template").Parse(pattern))
+	buf := bytes.Buffer{}
+	err := t.Execute(&buf, args)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func PlatformCPE(platform string, version string, workstation bool) (string, bool) {
 	for i := range platformCPES {
 		entry := platformCPES[i]
-		if entry.Platform == platform {
-			if entry.VersionFunc != nil {
-				if entry.VersionFunc(version, workstation) {
-					return entry.CPE, true
-				}
+		if entry.Platform == platform && entry.CPEBuilder != nil {
+			cpe, err := entry.CPEBuilder(platform, version, workstation)
+			if err != nil {
+				return "", false
 			}
-			if entry.VersionRegex != nil {
-				if entry.VersionRegex.MatchString(version) {
-					return entry.CPE, true
-				}
-			} else {
-				if entry.Version == version {
-					return entry.CPE, true
-				}
-			}
+			return cpe, true
 		}
 	}
 
 	return "", false
-}
-
-type platformCPEEntry struct {
-	Platform     string
-	VersionFunc  func(version string, workstation bool) bool
-	VersionRegex *regexp.Regexp
-	Version      string
-	CPE          string
-	Workstation  bool
 }
