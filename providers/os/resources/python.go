@@ -4,16 +4,10 @@
 package resources
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
-	"io"
-	"net/textproto"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -22,7 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v9/providers/os/resources/python"
 )
 
 type pythonDirectory struct {
@@ -78,42 +72,6 @@ func (k *mqlPython) id() (string, error) {
 	return "python", nil
 }
 
-func (k *mqlPython) getAllPackages() ([]pythonPackageDetails, error) {
-	allResults := []pythonPackageDetails{}
-
-	conn, ok := k.MqlRuntime.Connection.(shared.Connection)
-	if !ok {
-		return nil, fmt.Errorf("provider is not an operating system provider")
-	}
-	afs := &afero.Afero{Fs: conn.FileSystem()}
-
-	if k.Path.Error != nil {
-		return nil, k.Path.Error
-	}
-	pyPath := k.Path.Data
-	if pyPath != "" {
-		// only search the specific path provided (if it was provided)
-		allResults = gatherPackages(afs, pyPath)
-	} else {
-		// search through default locations
-		searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
-			genericSearch,
-			darwinSearch,
-		}
-
-		for _, sFunc := range searchFunctions {
-			results, err := sFunc(afs)
-			if err != nil {
-				log.Error().Err(err).Msg("error while searching for python packages")
-				return nil, err
-			}
-			allResults = append(allResults, results...)
-		}
-	}
-
-	return allResults, nil
-}
-
 func (k *mqlPython) packages() ([]interface{}, error) {
 	allPyPkgDetails, err := k.getAllPackages()
 	if err != nil {
@@ -139,21 +97,89 @@ func (k *mqlPython) packages() ([]interface{}, error) {
 	return resp, nil
 }
 
-func pythonPackageDetailsWithDependenciesToResource(runtime *plugin.Runtime, newPyPkgDetails pythonPackageDetails,
-	pythonPgkDetailsList []pythonPackageDetails, pythonPackageResourceMap map[string]plugin.Resource,
+func (k *mqlPython) toplevel() ([]interface{}, error) {
+	allPyPkgDetails, err := k.getAllPackages()
+	if err != nil {
+		return nil, err
+	}
+
+	// this is the "global" map so that the recursive function calls can keep track of
+	// resources already created
+	pythonPackageResourceMap := map[string]plugin.Resource{}
+
+	resp := []interface{}{}
+
+	for _, pyPkgDetails := range allPyPkgDetails {
+		if !pyPkgDetails.IsLeaf {
+			continue
+		}
+
+		res, err := pythonPackageDetailsWithDependenciesToResource(k.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
+		if err != nil {
+			log.Error().Err(err).Msg("error while creating resource(s) for python package")
+			// we will keep trying to make resources even if a single one failed
+			continue
+		}
+		resp = append(resp, res)
+	}
+
+	return resp, nil
+}
+
+func (k *mqlPython) getAllPackages() ([]python.PackageDetails, error) {
+	allResults := []python.PackageDetails{}
+
+	conn, ok := k.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return nil, fmt.Errorf("provider is not an operating system provider")
+	}
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+
+	if k.Path.Error != nil {
+		return nil, k.Path.Error
+	}
+	pyPath := k.Path.Data
+	if pyPath != "" {
+		// only search the specific path provided (if it was provided)
+		allResults = gatherPackages(afs, pyPath)
+	} else {
+		// search through default locations
+		searchFunctions := []func(*afero.Afero) ([]python.PackageDetails, error){
+			genericSearch,
+			darwinSearch,
+		}
+
+		for _, sFunc := range searchFunctions {
+			results, err := sFunc(afs)
+			if err != nil {
+				log.Error().Err(err).Msg("error while searching for python packages")
+				return nil, err
+			}
+			allResults = append(allResults, results...)
+		}
+	}
+
+	return allResults, nil
+}
+
+func pythonPackageDetailsWithDependenciesToResource(
+	runtime *plugin.Runtime,
+	newPyPkgDetails python.PackageDetails,
+	pythonPgkDetailsList []python.PackageDetails,
+	pythonPackageResourceMap map[string]plugin.Resource,
 ) (interface{}, error) {
-	res := pythonPackageResourceMap[newPyPkgDetails.name]
+	res := pythonPackageResourceMap[newPyPkgDetails.Name]
 	if res != nil {
 		// already created the pythonPackage resource
 		return res, nil
 	}
 
 	dependencies := []interface{}{}
-	for _, dep := range newPyPkgDetails.dependencies {
+	for _, dep := range newPyPkgDetails.Dependencies {
 		found := false
-		var depPyPkgDetails pythonPackageDetails
+		var depPyPkgDetails python.PackageDetails
 		for i, pyPkgDetails := range pythonPgkDetailsList {
-			if pyPkgDetails.name == dep {
+			if pyPkgDetails.Name == dep {
 				depPyPkgDetails = pythonPgkDetailsList[i]
 				found = true
 				break
@@ -172,99 +198,19 @@ func pythonPackageDetailsWithDependenciesToResource(runtime *plugin.Runtime, new
 	}
 
 	// finally create the resource
-	r, err := pythonPackageDetailsToResource(runtime, newPyPkgDetails, dependencies)
+	r, err := newMqlPythonPackage(runtime, newPyPkgDetails, dependencies)
 	if err != nil {
-		log.Error().Err(err).Str("resource", newPyPkgDetails.file).Msg("error while creating MQL resource")
+		log.Error().Err(err).Str("resource", newPyPkgDetails.File).Msg("error while creating MQL resource")
 		return nil, err
 	}
 
-	pythonPackageResourceMap[newPyPkgDetails.name] = r
+	// name is not guaranteed to be unique, so we use the file path as the key
+	pythonPackageResourceMap[newPyPkgDetails.File] = r
 
 	return r, nil
 }
 
-func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDetails, dependencies []interface{}) (plugin.Resource, error) {
-	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-		"path": llx.StringData(ppd.file),
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("error while creating file resource for python package resource")
-		return nil, err
-	}
-
-	cpes := []interface{}{}
-	for i := range ppd.cpes {
-		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
-			"uri": llx.StringData(ppd.cpes[i]),
-		})
-		if err != nil {
-			return nil, err
-		}
-		cpes = append(cpes, cpe)
-	}
-
-	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
-		"id":           llx.StringData(ppd.file),
-		"name":         llx.StringData(ppd.name),
-		"version":      llx.StringData(ppd.version),
-		"author":       llx.StringData(ppd.author),
-		"summary":      llx.StringData(ppd.summary),
-		"license":      llx.StringData(ppd.license),
-		"file":         llx.ResourceData(f, f.MqlName()),
-		"dependencies": llx.ArrayData(dependencies, types.Any),
-		"purl":         llx.StringData(ppd.purl),
-		"cpes":         llx.ArrayData(cpes, types.Resource("cpe")),
-	})
-	if err != nil {
-		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
-		return nil, err
-	}
-	return r, nil
-}
-
-func (k *mqlPython) toplevel() ([]interface{}, error) {
-	allPyPkgDetails, err := k.getAllPackages()
-	if err != nil {
-		return nil, err
-	}
-
-	// this is the "global" map so that the recursive function calls can keep track of
-	// resources already created
-	pythonPackageResourceMap := map[string]plugin.Resource{}
-
-	resp := []interface{}{}
-
-	for _, pyPkgDetails := range allPyPkgDetails {
-		if !pyPkgDetails.isLeaf {
-			continue
-		}
-
-		res, err := pythonPackageDetailsWithDependenciesToResource(k.MqlRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
-		if err != nil {
-			log.Error().Err(err).Msg("error while creating resource(s) for python package")
-			// we will keep trying to make resources even if a single one failed
-			continue
-		}
-		resp = append(resp, res)
-	}
-
-	return resp, nil
-}
-
-type pythonPackageDetails struct {
-	name         string
-	file         string
-	license      string
-	author       string
-	summary      string
-	version      string
-	dependencies []string
-	isLeaf       bool
-	purl         string
-	cpes         []string
-}
-
-func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []pythonPackageDetails) {
+func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []python.PackageDetails) {
 	fileList, err := afs.ReadDir(pythonPackagePath)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -328,16 +274,16 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		if err != nil {
 			continue
 		}
-		ppd.isLeaf = requestedPackage
+		ppd.IsLeaf = requestedPackage
 
 		// if the MIME data didn't include dependency information, but there was a requires.txt file available,
 		// then use that for dependency info (as pip appears to do)
-		if len(ppd.dependencies) == 0 && requiresTxtPath != "" {
+		if len(ppd.Dependencies) == 0 && requiresTxtPath != "" {
 			requiresTxtDeps, err := parseRequiresTxtDependencies(afs, filepath.Join(pythonPackagePath, requiresTxtPath))
 			if err != nil {
 				log.Warn().Err(err).Str("dir", pythonPackageFilepath).Msg("failed to parse requires.txt")
 			} else {
-				ppd.dependencies = requiresTxtDeps
+				ppd.Dependencies = requiresTxtDeps
 			}
 		}
 
@@ -347,8 +293,8 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 	return
 }
 
-func searchForPythonPackages(afs *afero.Afero, path string) []pythonPackageDetails {
-	allResults := []pythonPackageDetails{}
+func searchForPythonPackages(afs *afero.Afero, path string) []python.PackageDetails {
+	allResults := []python.PackageDetails{}
 
 	packageDirs := []string{"site-packages", "dist-packages"}
 	for _, packageDir := range packageDirs {
@@ -359,23 +305,6 @@ func searchForPythonPackages(afs *afero.Afero, path string) []pythonPackageDetai
 	return allResults
 }
 
-// firstWordRegexp is just trying to catch everything leading up the >, >=, = in a requires.txt
-// Example:
-//
-// nose>=1.2
-// Mock>=1.0
-// pycryptodome
-//
-// [crypto]
-// pycryptopp>=0.5.12
-//
-// [cryptography]
-// cryptography
-//
-// would match nose / Mock / pycrptodome / etc
-
-var firstWordRegexp = regexp.MustCompile(`^[a-zA-Z0-9\._-]*`)
-
 func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]string, error) {
 	f, err := afs.Open(requiresTxtPath)
 	if err != nil {
@@ -383,28 +312,10 @@ func parseRequiresTxtDependencies(afs *afero.Afero, requiresTxtPath string) ([]s
 	}
 	defer f.Close()
 
-	fileScanner := bufio.NewScanner(f)
-	fileScanner.Split(bufio.ScanLines)
-
-	depdendencies := []string{}
-	for fileScanner.Scan() {
-		line := fileScanner.Text()
-		if strings.HasPrefix(line, "[") {
-			// this means a new optional section of dependencies
-			// so stop processing
-			break
-		}
-		matched := firstWordRegexp.FindString(line)
-		if matched == "" {
-			continue
-		}
-		depdendencies = append(depdendencies, matched)
-	}
-
-	return depdendencies, nil
+	return python.ParseRequiresTxtDependencies(f)
 }
 
-func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetails, error) {
+func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*python.PackageDetails, error) {
 	f, err := afs.Open(pythonMIMEFilepath)
 	if err != nil {
 		log.Warn().Err(err).Msg("error opening python metadata file")
@@ -412,67 +323,11 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 	}
 	defer f.Close()
 
-	textReader := textproto.NewReader(bufio.NewReader(f))
-	mimeData, err := textReader.ReadMIMEHeader()
-	if err != nil && err != io.EOF {
-		return nil, fmt.Errorf("error reading MIME data: %s", err)
-	}
-
-	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
-
-	cpes := []string{}
-	cpeEntry, err := cpe.NewPackage2Cpe(mimeData.Get("Name")+"_project", mimeData.Get("Name"), mimeData.Get("Version"), "", "")
-	if err == nil && cpeEntry != "" {
-		cpes = append(cpes, cpeEntry)
-	}
-
-	return &pythonPackageDetails{
-		name:         mimeData.Get("Name"),
-		summary:      mimeData.Get("Summary"),
-		author:       mimeData.Get("Author"),
-		license:      mimeData.Get("License"),
-		version:      mimeData.Get("Version"),
-		dependencies: deps,
-		file:         pythonMIMEFilepath,
-		purl:         newPythonPackageUrl(mimeData.Get("Name"), mimeData.Get("Version"), mimeData.Get("Home-page")),
-		cpes:         cpes,
-	}, nil
+	return python.ParseMIME(f, pythonMIMEFilepath)
 }
 
-func newPythonPackageUrl(name string, version string, homepage string) string {
-	// ensure the name is accoring to the PURL spec
-	// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#pypi
-	name = strings.ReplaceAll(name, "_", "-")
-
-	return packageurl.NewPackageURL(
-		packageurl.TypePyPi,
-		"",
-		name,
-		version,
-		nil,
-		"").String()
-}
-
-// extractMimeDeps will go through each of the listed dependencies
-// from the "Requires-Dist" values, and strip off everything but
-// the name of the package/dependency itself
-func extractMimeDeps(deps []string) []string {
-	parsedDeps := []string{}
-	for _, dep := range deps {
-		// the semicolon indicates an optional dependency
-		if strings.Contains(dep, ";") {
-			continue
-		}
-		parsedDep := strings.Split(dep, " ")
-		if len(parsedDep) > 0 {
-			parsedDeps = append(parsedDeps, parsedDep[0])
-		}
-	}
-	return parsedDeps
-}
-
-func genericSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
-	allResults := []pythonPackageDetails{}
+func genericSearch(afs *afero.Afero) ([]python.PackageDetails, error) {
+	allResults := []python.PackageDetails{}
 
 	// Look through each potential location for the existence of a matching python* directory
 	for _, pyDir := range pythonDirectories {
@@ -510,8 +365,8 @@ func genericSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 
 // darwinSearch has custom handling for the specific way that darwin
 // can structure the paths holding python packages
-func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
-	allResults := []pythonPackageDetails{}
+func darwinSearch(afs *afero.Afero) ([]python.PackageDetails, error) {
+	allResults := []python.PackageDetails{}
 
 	if runtime.GOOS != "darwin" {
 		return allResults, nil
