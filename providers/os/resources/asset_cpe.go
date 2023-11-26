@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-func (p *mqlAsset) cpes() ([]interface{}, error) {
+func (a *mqlAsset) cpes() ([]interface{}, error) {
 	// 1 - try to read the cpe from the file
-	lf, err := CreateResource(p.MqlRuntime, "file", map[string]*llx.RawData{
+	lf, err := CreateResource(a.MqlRuntime, "file", map[string]*llx.RawData{
 		"path": llx.StringData("/etc/system-release-cpe"),
 	})
 	if err != nil {
@@ -25,12 +25,18 @@ func (p *mqlAsset) cpes() ([]interface{}, error) {
 		// cpe:2.3:o:amazon:amazon_linux:2023 is not complete
 		attr, err := wfn.Parse(strings.TrimSpace(data.Data))
 		if err == nil {
-			return []interface{}{attr.BindToFmtString()}, nil
+			cpe, err := a.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(attr.BindToFmtString()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return []interface{}{cpe}, nil
 		}
 	}
 
 	// 2 - use platform and version to generate the cpe
-	conn, ok := p.MqlRuntime.Connection.(shared.Connection)
+	conn, ok := a.MqlRuntime.Connection.(shared.Connection)
 	if ok && conn.Asset() != nil && conn.Asset().Platform != nil {
 		// on windows, we need to determine if we are on a workstation
 		workstation := false
@@ -40,6 +46,12 @@ func (p *mqlAsset) cpes() ([]interface{}, error) {
 
 		cpe, ok := cpe.PlatformCPE(conn.Asset().Platform.Name, conn.Asset().Platform.Version, workstation)
 		if ok {
+			cpe, err := a.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(cpe),
+			})
+			if err != nil {
+				return nil, err
+			}
 			return []interface{}{cpe}, nil
 		}
 	}

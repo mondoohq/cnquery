@@ -132,7 +132,19 @@ func (k *mqlPythonPackage) populateData() error {
 	k.Summary = plugin.TValue[string]{Data: ppd.summary, State: plugin.StateIsSet}
 	k.License = plugin.TValue[string]{Data: ppd.license, State: plugin.StateIsSet}
 	k.Dependencies = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.dependencies), State: plugin.StateIsSet}
-	k.Cpes = plugin.TValue[[]interface{}]{Data: convert.SliceAnyToInterface(ppd.cpes), State: plugin.StateIsSet}
+
+	cpes := []interface{}{}
+	for i := range ppd.cpes {
+		cpe, err := k.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+			"uri": llx.StringData(k.Cpes.Data[i].(string)),
+		})
+		if err != nil {
+			return err
+		}
+		cpes = append(cpes, cpe)
+	}
+
+	k.Cpes = plugin.TValue[[]interface{}]{Data: cpes, State: plugin.StateIsSet}
 	k.Purl = plugin.TValue[string]{Data: ppd.purl, State: plugin.StateIsSet}
 
 	return nil

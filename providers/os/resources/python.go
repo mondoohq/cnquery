@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
 	"io"
 	"net/textproto"
@@ -193,6 +192,17 @@ func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDe
 		return nil, err
 	}
 
+	cpes := []interface{}{}
+	for i := range ppd.cpes {
+		cpe, err := runtime.CreateSharedResource("cpe", map[string]*llx.RawData{
+			"uri": llx.StringData(ppd.cpes[i]),
+		})
+		if err != nil {
+			return nil, err
+		}
+		cpes = append(cpes, cpe)
+	}
+
 	r, err := CreateResource(runtime, "python.package", map[string]*llx.RawData{
 		"id":           llx.StringData(ppd.file),
 		"name":         llx.StringData(ppd.name),
@@ -203,7 +213,7 @@ func pythonPackageDetailsToResource(runtime *plugin.Runtime, ppd pythonPackageDe
 		"file":         llx.ResourceData(f, f.MqlName()),
 		"dependencies": llx.ArrayData(dependencies, types.Any),
 		"purl":         llx.StringData(ppd.purl),
-		"cpes":         llx.ArrayData(convert.SliceAnyToInterface(ppd.cpes), types.String),
+		"cpes":         llx.ArrayData(cpes, types.Resource("cpe")),
 	})
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")

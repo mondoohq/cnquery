@@ -163,7 +163,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("core.cpe")))
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
@@ -989,6 +989,16 @@ func (c *mqlAsset) MqlID() string {
 
 func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("asset", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.cpes()
 	})
 }

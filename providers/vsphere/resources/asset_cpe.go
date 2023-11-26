@@ -5,6 +5,7 @@ package resources
 
 import (
 	"github.com/facebookincubator/nvdtools/wfn"
+	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
 )
 
@@ -21,7 +22,13 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 				Version: conn.Asset().Platform.Version,
 				Update:  conn.Asset().Platform.Build,
 			}
-			return []interface{}{attr.BindToFmtString()}, nil
+			cpe, err := a.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(attr.BindToFmtString()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return []interface{}{cpe}, nil
 
 		case connection.EsxiPlatform:
 			// follow the following format // cpe:2.3:o:vmware:esxi:7.0:update_3c:*:*:*:*:*:*
@@ -32,7 +39,13 @@ func (a *mqlAsset) cpes() ([]interface{}, error) {
 				Version: conn.Asset().Platform.Version,
 				Update:  conn.Asset().Platform.Build,
 			}
-			return []interface{}{attr.BindToFmtString()}, nil
+			cpe, err := a.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(attr.BindToFmtString()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			return []interface{}{cpe}, nil
 		}
 	}
 	return nil, nil

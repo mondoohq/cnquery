@@ -130,6 +130,17 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("mql[packages]> found newer version")
 		}
 
+		cpes := []interface{}{}
+		if osPkg.CPE != "" {
+			cpe, err := x.MqlRuntime.CreateSharedResource("cpe", map[string]*llx.RawData{
+				"uri": llx.StringData(osPkg.CPE),
+			})
+			if err != nil {
+				return nil, err
+			}
+			cpes = append(cpes, cpe)
+		}
+
 		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]*llx.RawData{
 			"name":        llx.StringData(osPkg.Name),
 			"version":     llx.StringData(osPkg.Version),
@@ -142,7 +153,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			"origin":      llx.StringData(osPkg.Origin),
 			"epoch":       llx.StringData(osPkg.Epoch),
 			"purl":        llx.StringData(osPkg.PUrl),
-			"cpes":        llx.ArrayData([]interface{}{osPkg.CPE}, types.String),
+			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
 		})
 		if err != nil {
 			return nil, err

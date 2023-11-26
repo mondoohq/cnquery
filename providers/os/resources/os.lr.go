@@ -471,7 +471,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
@@ -1029,7 +1029,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlPackage).GetPurl()).ToDataRes(types.String)
 	},
 	"package.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPackage).GetCpes()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
 	"package.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetOrigin()).ToDataRes(types.String)
@@ -1575,7 +1575,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlPythonPackage).GetPurl()).ToDataRes(types.String)
 	},
 	"python.package.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlPythonPackage).GetCpes()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlPythonPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
 	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
@@ -4293,6 +4293,16 @@ func (c *mqlAsset) MqlID() string {
 
 func (c *mqlAsset) GetCpes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("asset", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.cpes()
 	})
 }
@@ -10700,6 +10710,16 @@ func (c *mqlPythonPackage) GetPurl() *plugin.TValue[string] {
 
 func (c *mqlPythonPackage) GetCpes() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("python.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.cpes()
 	})
 }

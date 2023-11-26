@@ -19,7 +19,7 @@ alias k8s.kubelet = kubelet
 
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
-  cpes() []string
+  cpes() []core.cpe
   // Advisory & vulnerability report
   vulnerabilityReport() dict
 }
@@ -550,7 +550,7 @@ package @defaults("name version") {
   purl string
 
   // Common Platform Enumeration (CPE) for the package
-  cpes []string
+  cpes []core.cpe
 
   // Package origin (optional)
   origin() string
@@ -1082,7 +1082,7 @@ python.package @defaults("name version") {
   // Package URL
   purl() string
   // Common Platform Enumeration (CPE) for the package
-  cpes() []string
+  cpes() []core.cpe
   // List of packages depended on
   dependencies() []python.package
 }
