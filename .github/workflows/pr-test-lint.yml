@@ -91,7 +91,7 @@ jobs:
         id: cnquerygomod
         if: ((github.event_name == 'push' && github.ref_name != 'main') || github.event_name == 'pull_request') && github.actor == 'dependabot[bot]'
         run: |
-          echo "COUNT_GOMOD=$(git diff-tree --name-only -r HEAD~1..HEAD | grep -c -E "^go.mod$")" >> $GITHUB_OUTPUT
+          echo "COUNT_GOMOD=$(git diff-tree --name-only -r origin/${{github.ref_name}} origin/main | grep -c -E "^go.mod$")" >> $GITHUB_OUTPUT
 
       - name: Fix providers go.mod for dependabot PRs
         if: github.actor == 'dependabot[bot]' && steps.cnquerygomod.outputs.COUNT_GOMOD == '1'
@@ -106,7 +106,8 @@ jobs:
           git config --global user.name "Mondoo Tools"
           git add providers/
           git commit -m "🧹 Update providers go.mod for dependabot PR ${{ github.event.number }}"
-          git push          
+          git push
+        shell: bash
 
       - name: Test cnquery
         run: make test/go/plain-ci
