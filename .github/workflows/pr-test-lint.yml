@@ -81,6 +81,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Updates to cnquery core go.mod?
+        id: cnquerygomod
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+        run: |
+          echo "COUNT_GOMOD=$(git diff-tree --name-only -r HEAD~1..HEAD | grep -c -E "^go.mod$")" >> $GITHUB_OUTPUT
+
+      - name: Fix providers go.mod for dependabot PRs
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' && steps.cnquerygomod.outputs.COUNT_GOMOD == '1'
+        run: |
+          go run providers-sdk/v1/util/version/version.go mod-tidy providers/*/
+          COUNT=$(git status --short | wc -l)
+          if [ "$COUNT" -eq "0" ]; then
+            echo "No changes to providers go.mod"
+            exit 0
+          fi
+          git config --global user.email "tools@mondoo.com"
+          git config --global user.name "Mondoo Tools"
+          git add providers/
+          git commit -m "🧹 Update providers go.mod for dependabot PR ${{ github.event.number }}"
+          git push          
+
       - name: Test cnquery
         run: make test/go/plain-ci
         
