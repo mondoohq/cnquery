@@ -18,6 +18,7 @@ type PackageDetails struct {
 	File         string
 	License      string
 	Author       string
+	AuthorEmail  string
 	Summary      string
 	Version      string
 	Dependencies []string
@@ -66,6 +67,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 		Name:         mimeData.Get("Name"),
 		Summary:      mimeData.Get("Summary"),
 		Author:       mimeData.Get("Author"),
+		AuthorEmail:  mimeData.Get("Author-email"),
 		License:      mimeData.Get("License"),
 		Version:      mimeData.Get("Version"),
 		Dependencies: deps,
