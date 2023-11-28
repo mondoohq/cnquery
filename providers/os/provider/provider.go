@@ -124,9 +124,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			case "tar":
 				conf.Type = "docker-snapshot"
 				conf.Path = req.Args[1]
+			case "container":
+				conf.Type = "docker-container"
+				conf.Host = req.Args[1]
 			}
 		} else {
-			conf.Type = "docker-container"
+			connType := identifyContainerType(req.Args[0])
+			conf.Type = connType
 			containerID = req.Args[0]
 		}
 	case "filesystem", "fs":
@@ -576,4 +580,12 @@ func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.In
 	inventory.AddAssets(resolvedAssets...)
 
 	return inventory, nil
+}
+
+func identifyContainerType(s string) string {
+	if strings.Contains(s, ":") || strings.Contains(s, "/") {
+		return "docker-image"
+	} else {
+		return "docker-container"
+	}
 }
