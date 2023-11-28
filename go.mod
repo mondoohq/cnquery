@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.1
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.3
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.43.1
 	github.com/aws/smithy-go v1.17.0
