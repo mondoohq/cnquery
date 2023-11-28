@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.25.4
+	github.com/aws/aws-sdk-go-v2/service/sts v1.25.5
 	github.com/aws/smithy-go v1.17.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/rs/zerolog v1.31.0
