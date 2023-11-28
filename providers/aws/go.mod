@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.4 // indirect
@@ -180,7 +180,7 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.15.0 // indirect
+	golang.org/x/tools v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.152.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
