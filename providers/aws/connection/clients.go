@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/rs/zerolog/log"
 )
 
@@ -116,6 +117,30 @@ func (t *AwsConnection) Ec2(region string) *ec2.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := ec2.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Wafv2(region string) *wafv2.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_wafv2_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached wafv2 client")
+		return c.Data.(*wafv2.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := wafv2.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

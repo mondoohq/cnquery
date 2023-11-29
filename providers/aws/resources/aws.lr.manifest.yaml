@@ -2377,3 +2377,60 @@ resources:
     platform:
       name:
       - aws
+  aws.waf:
+    fields:
+      acls: {}
+      arn: {}
+      id: {}
+      region: {}
+      ruleGroups: {}
+      rules: {}
+      subnets: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.acl:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.ipset:
+    fields:
+      arn: {}
+      id: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rulegroup:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws

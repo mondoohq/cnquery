@@ -121,6 +121,62 @@ private aws.vpc.flowlog @defaults("id region status") {
   tags map[string]string
 }
 
+// Amazon WAF v2
+private aws.waf @defaults("id") {
+  // ID of the WAF
+  id string
+  // List of waf acls
+  acls() []aws.waf.acl
+  // List of waf rules
+  rules() []aws.waf.rule
+  // List of waf rulegroups
+  ruleGroups() []aws.waf.rulegroup
+}
+
+// Amazon WAF v2 ACL
+private aws.waf.acl @defaults("id") {
+  // ARN of the ACL
+  arn string
+  // ID of the ACL
+  id string
+  // Name of the ACL
+  name string
+  // Description of the ACL
+  description string
+}
+
+// Amazon WAF rule
+private aws.waf.rule @defaults("id") {
+  // ARN of the rule
+  arn string
+  // ID of the rule
+  id string
+  // Name of the rule
+  name string
+  // Description of the rule
+  description string
+}
+
+// Amazon WAF v2 ACL
+private aws.waf.rulegroup @defaults("id") {
+  // ARN of the rulegroup
+  arn string
+  // ID of the rulegroup
+  id string
+  // Name of the rulegroup
+  name string
+  // Description of the rulegroup
+  description string
+}
+
+// Amazon WAF v2 ACL
+private aws.waf.ipset @defaults("id") {
+  // ARN of the VPC
+  arn string
+  // ID of the VPC
+  id string
+}
+
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
 aws.accessAnalyzer @defaults("analyzers") {
   // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account

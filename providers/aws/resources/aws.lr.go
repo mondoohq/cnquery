@@ -50,6 +50,26 @@ func init() {
 			// to override args, implement: initAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcFlowlog,
 		},
+		"aws.waf": {
+			// to override args, implement: initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWaf,
+		},
+		"aws.waf.acl": {
+			// to override args, implement: initAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafAcl,
+		},
+		"aws.waf.rule": {
+			// to override args, implement: initAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRule,
+		},
+		"aws.waf.rulegroup": {
+			// to override args, implement: initAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRulegroup,
+		},
+		"aws.waf.ipset": {
+			// to override args, implement: initAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafIpset,
+		},
 		"aws.accessAnalyzer": {
 			// to override args, implement: initAwsAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAccessAnalyzer,
@@ -688,6 +708,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.waf.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetAcls()).ToDataRes(types.Array(types.Resource("aws.waf.acl")))
+	},
+	"aws.waf.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
+	},
+	"aws.waf.ruleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetRuleGroups()).ToDataRes(types.Array(types.Resource("aws.waf.rulegroup")))
+	},
+	"aws.waf.acl.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetId()).ToDataRes(types.String)
 	},
 	"aws.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.accessanalyzer.analyzer")))
@@ -3049,6 +3123,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWaf).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Acls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ruleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).RuleGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafAcl).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.acl.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRule).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRulegroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rulegroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafIpset).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.ipset.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7011,6 +7177,332 @@ func (c *mqlAwsVpcFlowlog) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+// mqlAwsWaf for the aws.waf resource
+type mqlAwsWaf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafInternal it will be used here
+	Id plugin.TValue[string]
+	Acls plugin.TValue[[]interface{}]
+	Rules plugin.TValue[[]interface{}]
+	RuleGroups plugin.TValue[[]interface{}]
+}
+
+// createAwsWaf creates a new instance of this resource
+func createAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWaf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWaf) MqlName() string {
+	return "aws.waf"
+}
+
+func (c *mqlAwsWaf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWaf) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Acls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "acls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.acls()
+	})
+}
+
+func (c *mqlAwsWaf) GetRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RuleGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ruleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ruleGroups()
+	})
+}
+
+// mqlAwsWafAcl for the aws.waf.acl resource
+type mqlAwsWafAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafAclInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createAwsWafAcl creates a new instance of this resource
+func createAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafAcl) MqlName() string {
+	return "aws.waf.acl"
+}
+
+func (c *mqlAwsWafAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafAcl) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafAcl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafAcl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafAcl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlAwsWafRule for the aws.waf.rule resource
+type mqlAwsWafRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createAwsWafRule creates a new instance of this resource
+func createAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRule) MqlName() string {
+	return "aws.waf.rule"
+}
+
+func (c *mqlAwsWafRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlAwsWafRulegroup for the aws.waf.rulegroup resource
+type mqlAwsWafRulegroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRulegroupInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+}
+
+// createAwsWafRulegroup creates a new instance of this resource
+func createAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRulegroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rulegroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRulegroup) MqlName() string {
+	return "aws.waf.rulegroup"
+}
+
+func (c *mqlAwsWafRulegroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRulegroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRulegroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRulegroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRulegroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+// mqlAwsWafIpset for the aws.waf.ipset resource
+type mqlAwsWafIpset struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafIpsetInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+}
+
+// createAwsWafIpset creates a new instance of this resource
+func createAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafIpset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.ipset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafIpset) MqlName() string {
+	return "aws.waf.ipset"
+}
+
+func (c *mqlAwsWafIpset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafIpset) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafIpset) GetId() *plugin.TValue[string] {
+	return &c.Id
 }
 
 // mqlAwsAccessAnalyzer for the aws.accessAnalyzer resource
