@@ -772,6 +772,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipset.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetDescription()).ToDataRes(types.String)
 	},
+	"aws.waf.ipset.addressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetAddressType()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetAddresses()).ToDataRes(types.Dict)
+	},
 	"aws.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.accessanalyzer.analyzer")))
 	},
@@ -3236,6 +3242,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.ipset.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.addressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).AddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7503,6 +7517,8 @@ type mqlAwsWafIpset struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
+	AddressType plugin.TValue[string]
+	Addresses plugin.TValue[interface{}]
 }
 
 // createAwsWafIpset creates a new instance of this resource
@@ -7551,6 +7567,14 @@ func (c *mqlAwsWafIpset) GetName() *plugin.TValue[string] {
 
 func (c *mqlAwsWafIpset) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
+	return &c.AddressType
+}
+
+func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[interface{}] {
+	return &c.Addresses
 }
 
 // mqlAwsAccessAnalyzer for the aws.accessAnalyzer resource

@@ -181,6 +181,10 @@ private aws.waf.ipset @defaults("id") {
   name string
   // Description of the ipset
   description string
+  // AddressType either ipv4 or ipv6
+  addressType string
+  // list of IP addresses
+  addresses dict
 }
 
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)

@@ -9,7 +9,9 @@ import (
 
 	//"github.com/aws/aws-sdk-go/aws"
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
+	"go.mondoo.com/cnquery/v9/types"
 )
 
 func (a *mqlAwsWaf) id() (string, error) {
@@ -163,12 +165,27 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 		}
 
 		for _, ipset := range aclsRes.IPSets {
+			params := &wafv2.GetIPSetInput{
+				Id:    ipset.Id,
+				Name:  ipset.Name,
+				Scope: scope,
+			}
+			ipsetDetails, err := svc.GetIPSet(ctx, params)
+			if err != nil {
+				return nil, err
+			}
+			ipsetAddresses := convert.SliceAnyToInterface(ipsetDetails.IPSet.Addresses)
+			if err != nil {
+				return nil, err
+			}
 			mqlIPSet, err := CreateResource(a.MqlRuntime, "aws.waf.ipset",
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr(ipset.Id),
 					"arn":         llx.StringDataPtr(ipset.ARN),
 					"name":        llx.StringDataPtr(ipset.Name),
 					"description": llx.StringDataPtr(ipset.Description),
+					"addressType": llx.StringDataPtr((*string)(&ipsetDetails.IPSet.IPAddressVersion)),
+					"addresses":   llx.ArrayData(ipsetAddresses, types.String),
 				},
 			)
 			if err != nil {

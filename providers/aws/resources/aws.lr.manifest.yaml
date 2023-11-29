@@ -2406,6 +2406,8 @@ resources:
       - aws
   aws.waf.ipset:
     fields:
+      addressType: {}
+      addresses: {}
       arn: {}
       description: {}
       id: {}
