@@ -49,6 +49,7 @@ postgre
 pushconfig
 querypack
 resourcegroup
+rulegroup
 Sas
 scim
 serviceprincipals
