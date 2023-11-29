@@ -11,7 +11,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v9 v9.8.0
-	go.mondoo.com/ranger-rpc v0.5.2
+	go.mondoo.com/ranger-rpc v0.5.3
 )
 
 require (
@@ -54,7 +54,7 @@ require (
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/getsentry/sentry-go v0.25.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
