@@ -42,12 +42,22 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 		}
 
 		for _, acl := range aclsRes.WebACLs {
+			params := &wafv2.GetWebACLInput{
+				Id:    acl.Id,
+				Name:  acl.Name,
+				Scope: scope,
+			}
+			aclDetails, err := svc.GetWebACL(ctx, params)
+			if err != nil {
+				return nil, err
+			}
 			mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl",
 				map[string]*llx.RawData{
-					"id":          llx.StringDataPtr(acl.Id),
-					"arn":         llx.StringDataPtr(acl.ARN),
-					"name":        llx.StringDataPtr(acl.Name),
-					"description": llx.StringDataPtr(acl.Description),
+					"id":                       llx.StringDataPtr(acl.Id),
+					"arn":                      llx.StringDataPtr(acl.ARN),
+					"name":                     llx.StringDataPtr(acl.Name),
+					"description":              llx.StringDataPtr(acl.Description),
+					"managedByFirewallManager": llx.BoolData(aclDetails.WebACL.ManagedByFirewallManager),
 				},
 			)
 			if err != nil {
@@ -59,45 +69,72 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	return acls, nil
 }
 
-func (a *mqlAwsWaf) rules() ([]interface{}, error) {
+func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	//waf := a.Id.Data
 
-	region := ""
-	svc := conn.Wafv2(region)
-	ctx := context.Background()
-	acls := []interface{}{}
-	//scope := "REGIONAL"
-	nextMarker := aws.String("No-Marker-to-begin-with")
 	var scope waftypes.Scope
 	scope = "REGIONAL"
-	params := &wafv2.ListManagedRuleSetsInput{Scope: scope}
-	for nextMarker != nil {
-		aclsRes, err := svc.ListManagedRuleSets(ctx, params)
+	ctx := context.Background()
+	region := ""
+	svc := conn.Wafv2(region)
+	rules := []interface{}{}
+	params := &wafv2.GetWebACLInput{
+		Id:    &a.Id.Data,
+		Name:  &a.Name.Data,
+		Scope: scope,
+	}
+	aclDetails, err := svc.GetWebACL(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	for _, rule := range aclDetails.WebACL.Rules {
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
+			map[string]*llx.RawData{
+				"name":     llx.StringDataPtr(rule.Name),
+				"priority": llx.IntData(int64(rule.Priority)),
+			},
+		)
 		if err != nil {
 			return nil, err
 		}
-		nextMarker = aclsRes.NextMarker
-		if aclsRes.NextMarker != nil {
-			params.NextMarker = nextMarker
-		}
-
-		for _, rule := range aclsRes.ManagedRuleSets {
-			mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
-				map[string]*llx.RawData{
-					"id":          llx.StringDataPtr(rule.Id),
-					"arn":         llx.StringDataPtr(rule.ARN),
-					"name":        llx.StringDataPtr(rule.Name),
-					"description": llx.StringDataPtr(rule.Description),
-				},
-			)
-			if err != nil {
-				return nil, err
-			}
-			acls = append(acls, mqlAcl)
-		}
+		rules = append(rules, mqlRule)
 	}
-	return acls, nil
+	return rules, nil
+}
+
+func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	//waf := a.Id.Data
+
+	var scope waftypes.Scope
+	scope = "REGIONAL"
+	ctx := context.Background()
+	region := ""
+	svc := conn.Wafv2(region)
+	rules := []interface{}{}
+	params := &wafv2.GetWebACLInput{
+		Id:    &a.Id.Data,
+		Name:  &a.Name.Data,
+		Scope: scope,
+	}
+	aclDetails, err := svc.GetWebACL(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	for _, rule := range aclDetails.WebACL.Rules {
+		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
+			map[string]*llx.RawData{
+				"name":     llx.StringDataPtr(rule.Name),
+				"priority": llx.IntData(int64(rule.Priority)),
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, mqlRule)
+	}
+	return rules, nil
 }
 
 func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {

@@ -128,15 +128,13 @@ private aws.waf @defaults("id") {
   // List of waf acls
   acls() []aws.waf.acl
   // List of waf rules
-  rules() []aws.waf.rule
-  // List of waf rulegroups
   ruleGroups() []aws.waf.rulegroup
   // List of waf ip sets
   ipSets() []aws.waf.ipset
 }
 
 // Amazon WAF v2 ACL
-private aws.waf.acl @defaults("id") {
+private aws.waf.acl @defaults("name") {
   // ARN of the ACL
   arn string
   // ID of the ACL
@@ -145,22 +143,22 @@ private aws.waf.acl @defaults("id") {
   name string
   // Description of the ACL
   description string
+  // If the ACL is managed by FirewallManager
+  managedByFirewallManager bool
+  // List of waf rules
+  rules() []aws.waf.rule
 }
 
 // Amazon WAF rule
-private aws.waf.rule @defaults("id") {
-  // ARN of the rule
-  arn string
-  // ID of the rule
-  id string
+private aws.waf.rule @defaults("name") {
   // Name of the rule
   name string
-  // Description of the rule
-  description string
+  // Priority
+  priority int
 }
 
 // Amazon WAF v2 ACL
-private aws.waf.rulegroup @defaults("id") {
+private aws.waf.rulegroup @defaults("name") {
   // ARN of the rulegroup
   arn string
   // ID of the rulegroup
@@ -169,6 +167,8 @@ private aws.waf.rulegroup @defaults("id") {
   name string
   // Description of the rulegroup
   description string
+  // List of waf rules
+  rules() []aws.waf.rule
 }
 
 // Amazon WAF v2 ACL

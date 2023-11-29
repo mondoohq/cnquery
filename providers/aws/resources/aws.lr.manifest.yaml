@@ -2398,7 +2398,9 @@ resources:
       arn: {}
       description: {}
       id: {}
+      managedByFirewallManager: {}
       name: {}
+      rules: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2423,6 +2425,7 @@ resources:
       description: {}
       id: {}
       name: {}
+      priority: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2434,6 +2437,7 @@ resources:
       description: {}
       id: {}
       name: {}
+      rules: {}
     is_private: true
     min_mondoo_version: latest
     platform:
