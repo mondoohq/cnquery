@@ -131,6 +131,8 @@ private aws.waf @defaults("id") {
   rules() []aws.waf.rule
   // List of waf rulegroups
   ruleGroups() []aws.waf.rulegroup
+  // List of waf ip sets
+  ipSets() []aws.waf.ipset
 }
 
 // Amazon WAF v2 ACL
@@ -171,10 +173,14 @@ private aws.waf.rulegroup @defaults("id") {
 
 // Amazon WAF v2 ACL
 private aws.waf.ipset @defaults("id") {
-  // ARN of the VPC
+  // ARN of the ipset
   arn string
-  // ID of the VPC
+  // ID of the ipset
   id string
+  // Name of the ipset
+  name string
+  // Description of the ipset
+  description string
 }
 
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)

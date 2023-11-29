@@ -138,3 +138,44 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	}
 	return acls, nil
 }
+
+func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	//waf := a.Id.Data
+
+	region := ""
+	svc := conn.Wafv2(region)
+	ctx := context.Background()
+	acls := []interface{}{}
+	//scope := "REGIONAL"
+	nextMarker := aws.String("No-Marker-to-begin-with")
+	var scope waftypes.Scope
+	scope = "REGIONAL"
+	params := &wafv2.ListIPSetsInput{Scope: scope}
+	for nextMarker != nil {
+		aclsRes, err := svc.ListIPSets(ctx, params)
+		if err != nil {
+			return nil, err
+		}
+		nextMarker = aclsRes.NextMarker
+		if aclsRes.NextMarker != nil {
+			params.NextMarker = nextMarker
+		}
+
+		for _, ipset := range aclsRes.IPSets {
+			mqlIPSet, err := CreateResource(a.MqlRuntime, "aws.waf.ipset",
+				map[string]*llx.RawData{
+					"id":          llx.StringDataPtr(ipset.Id),
+					"arn":         llx.StringDataPtr(ipset.ARN),
+					"name":        llx.StringDataPtr(ipset.Name),
+					"description": llx.StringDataPtr(ipset.Description),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			acls = append(acls, mqlIPSet)
+		}
+	}
+	return acls, nil
+}

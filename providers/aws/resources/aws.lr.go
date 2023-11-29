@@ -721,6 +721,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ruleGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetRuleGroups()).ToDataRes(types.Array(types.Resource("aws.waf.rulegroup")))
 	},
+	"aws.waf.ipSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetIpSets()).ToDataRes(types.Array(types.Resource("aws.waf.ipset")))
+	},
 	"aws.waf.acl.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetArn()).ToDataRes(types.String)
 	},
@@ -762,6 +765,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.ipset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetDescription()).ToDataRes(types.String)
 	},
 	"aws.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.accessanalyzer.analyzer")))
@@ -3145,6 +3154,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWaf).RuleGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.waf.ipSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.waf.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafAcl).__id, ok = v.Value.(string)
 			return
@@ -3215,6 +3228,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.ipset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7188,6 +7209,7 @@ type mqlAwsWaf struct {
 	Acls plugin.TValue[[]interface{}]
 	Rules plugin.TValue[[]interface{}]
 	RuleGroups plugin.TValue[[]interface{}]
+	IpSets plugin.TValue[[]interface{}]
 }
 
 // createAwsWaf creates a new instance of this resource
@@ -7276,6 +7298,22 @@ func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.ruleGroups()
+	})
+}
+
+func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IpSets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ipSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ipSets()
 	})
 }
 
@@ -7463,6 +7501,8 @@ type mqlAwsWafIpset struct {
 	// optional: if you define mqlAwsWafIpsetInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
 }
 
 // createAwsWafIpset creates a new instance of this resource
@@ -7503,6 +7543,14 @@ func (c *mqlAwsWafIpset) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsWafIpset) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsWafIpset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafIpset) GetDescription() *plugin.TValue[string] {
+	return &c.Description
 }
 
 // mqlAwsAccessAnalyzer for the aws.accessAnalyzer resource

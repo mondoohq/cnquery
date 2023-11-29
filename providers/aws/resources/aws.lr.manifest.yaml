@@ -2382,6 +2382,7 @@ resources:
       acls: {}
       arn: {}
       id: {}
+      ipSets: {}
       region: {}
       ruleGroups: {}
       rules: {}
@@ -2406,7 +2407,9 @@ resources:
   aws.waf.ipset:
     fields:
       arn: {}
+      description: {}
       id: {}
+      name: {}
     is_private: true
     min_mondoo_version: latest
     platform:
