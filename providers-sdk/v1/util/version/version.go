@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.mondoo.com/cnquery/v9/utils/stringx"
 	"go/format"
 	"os"
 	"os/exec"
@@ -101,8 +102,10 @@ var modUpdateCmd = &cobra.Command{
 			updateStrategy = UpdateStrategyLatest
 		}
 
+		ignorePkgs, _ := cmd.Flags().GetStringSlice("ignore-packages")
+
 		for i := range args {
-			checkGoModUpdate(args[i], updateStrategy)
+			checkGoModUpdate(args[i], updateStrategy, ignorePkgs)
 		}
 	},
 }
@@ -118,7 +121,7 @@ const (
 	UpdateStrategyPatch
 )
 
-func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy) {
+func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy, ignorePkgs []string) {
 	log.Info().Msgf("Updating dependencies for %s...", providerPath)
 
 	// Define the path to your project's go.mod file
@@ -163,6 +166,11 @@ func checkGoModUpdate(providerPath string, updateStrategy UpdateStrategy) {
 
 		// Set the working directory for the command
 		cmd.Dir = providerPath
+
+		if stringx.Contains(ignorePkgs, require.Mod.Path) {
+			log.Info().Msgf("Ignoring %s", require.Mod.Path)
+			continue
+		}
 
 		log.Info().Msgf("Updating %s to the latest version...", require.Mod.Path)
 
@@ -645,6 +653,7 @@ func init() {
 
 	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
 	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
+	modUpdateCmd.PersistentFlags().StringSlice("ignore-packages", []string{}, "ignore go package(s) from update")
 	rootCmd.AddCommand(updateCmd, checkCmd, modUpdateCmd, modTidyCmd, defaultsCmd)
 }
 
