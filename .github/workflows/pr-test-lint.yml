@@ -58,6 +58,8 @@ jobs:
   go-test:
     runs-on: self-hosted
     timeout-minutes: 120
+    permissions:
+      contents: write
     steps:         
       - name: Checkout code
         uses: actions/checkout@v4
