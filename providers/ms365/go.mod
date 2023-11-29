@@ -12,7 +12,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/microsoft/kiota-abstractions-go v1.5.3
 	github.com/microsoft/kiota-authentication-azure-go v1.0.1
-	github.com/microsoftgraph/msgraph-sdk-go v1.25.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.26.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
 	go.mondoo.com/cnquery/v9 v9.8.0
@@ -121,7 +121,7 @@ require (
 	github.com/microsoft/kiota-serialization-json-go v1.0.4 // indirect
 	github.com/microsoft/kiota-serialization-multipart-go v1.0.0 // indirect
 	github.com/microsoft/kiota-serialization-text-go v1.0.0 // indirect
-	github.com/microsoftgraph/msgraph-sdk-go-core v1.0.0 // indirect
+	github.com/microsoftgraph/msgraph-sdk-go-core v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
