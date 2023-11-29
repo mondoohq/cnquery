@@ -1069,7 +1069,7 @@ func (a *mqlAwsIamPolicy) attachedGroups() ([]interface{}, error) {
 	for i := range entities.PolicyGroups {
 		group := entities.PolicyGroups[i]
 
-		mqlUser, err := CreateResource(a.MqlRuntime, "aws.iam.group",
+		mqlUser, err := NewResource(a.MqlRuntime, "aws.iam.group",
 			map[string]*llx.RawData{
 				"name": llx.StringDataPtr(group.GroupName),
 			})
