@@ -14,6 +14,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/StackExchange/wmi v1.2.1
+	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.0
 	github.com/aws/aws-sdk-go v1.48.7
@@ -67,6 +68,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
 	github.com/olekukonko/tablewriter v0.0.5
+	// pin v1.1.0-rc5
 	github.com/opencontainers/image-spec v1.1.0-rc5
 	github.com/package-url/packageurl-go v0.1.2
 	github.com/pierrec/lz4/v4 v4.1.18
