@@ -83,13 +83,20 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
+		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"score":  llx.FloatData(float64(a.CvssScore.Value) / 10),
+			"vector": llx.StringData(a.CvssScore.Vector),
+		})
+		if err != nil {
+			return err
+		}
 		mqlVulnAdvisory, err := CreateResource(v.MqlRuntime, "vuln.advisory", map[string]*llx.RawData{
 			"id":          llx.StringData(a.Id),
 			"title":       llx.StringData(a.Title),
 			"description": llx.StringData(a.Description),
 			"published":   llx.TimeData(parsedPublished),
 			"modified":    llx.TimeData(parsedModifed),
-			"worstScore":  llx.IntData(int64(a.CvssScore.Value)),
+			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {
 			return err
@@ -107,9 +114,16 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
+		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"score":  llx.FloatData(float64(c.CvssScore.Value) / 10),
+			"vector": llx.StringData(c.CvssScore.Vector),
+		})
+		if err != nil {
+			return err
+		}
 		mqlVulnCve, err := CreateResource(v.MqlRuntime, "vuln.cve", map[string]*llx.RawData{
 			"id":         llx.StringData(c.Id),
-			"worstScore": llx.IntData(int64(c.CvssScore.Value)),
+			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
 			"published":  llx.TimeData(parsedPublished),
 			"modified":   llx.TimeData(parsedModifed),
 		})
