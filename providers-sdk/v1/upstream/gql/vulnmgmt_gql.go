@@ -1,4 +1,3 @@
-// FIXME: ??? should this file move to the resources inside the provider ???
 package gql
 
 import (
@@ -6,8 +5,6 @@ import (
 
 	mondoogql "go.mondoo.com/mondoo-go"
 )
-
-// FIXME: move these to the provider
 
 // LastAssessment fetches the las update time of the packages query
 // This is also the lst time the vuln report was updated

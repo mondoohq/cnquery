@@ -63,7 +63,6 @@ platform {
 }
 
 extend vulnmgmt {
-  // TODO: fill all the fields at once, see os stdout, stderr example
   // List of all CVEs affecting the asset
   cves() []vuln.cve
   // List of all Advisories affecting the asset
