@@ -745,6 +745,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Dict)
 	},
+	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Dict)
+	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
 	},
@@ -3198,6 +3201,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rule.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).Statement, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7403,6 +7410,7 @@ type mqlAwsWafRule struct {
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
 	Statement plugin.TValue[interface{}]
+	Action plugin.TValue[interface{}]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -7452,6 +7460,10 @@ func (c *mqlAwsWafRule) GetPriority() *plugin.TValue[int64] {
 
 func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[interface{}] {
 	return &c.Statement
+}
+
+func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
+	return &c.Action
 }
 
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource

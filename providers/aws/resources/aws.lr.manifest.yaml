@@ -2421,6 +2421,7 @@ resources:
       - aws
   aws.waf.rule:
     fields:
+      action: {}
       arn: {}
       description: {}
       id: {}

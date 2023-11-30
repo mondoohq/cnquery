@@ -153,8 +153,10 @@ private aws.waf.rule @defaults("name") {
   name string
   // Priority
   priority int
-  // Statements
+  // Statement
   statement dict
+  // Action
+  action dict
 }
 
 // Amazon WAF v2 ACL

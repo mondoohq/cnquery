@@ -112,11 +112,13 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		ruleAction, err := convert.JsonToDict(rule.Action)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"name":      llx.StringDataPtr(rule.Name),
 				"priority":  llx.IntData(int64(rule.Priority)),
 				"statement": llx.DictData(ruleStatement),
+				"action":    llx.DictData(ruleAction),
 			},
 		)
 		if err != nil {
