@@ -10,9 +10,11 @@ import (
 	"io"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"go.mondoo.com/cnquery/v9/logger"
 )
 
 var sharepointReport = `
+$ErrorActionPreference = "Stop"
 $token = '%s'
 $url = "%s"
 Install-Module PnP.PowerShell -Force -Scope CurrentUser -RequiredVersion 1.12.0
@@ -75,6 +77,9 @@ func (c *Ms365Connection) getSharepointReport(spToken, url string) (*SharepointO
 		if err != nil {
 			return nil, err
 		}
+
+		logger.DebugDumpJSON("sharepoint-online-report", string(data))
+
 		err = json.Unmarshal(data, report)
 		if err != nil {
 			return nil, err
@@ -85,6 +90,7 @@ func (c *Ms365Connection) getSharepointReport(spToken, url string) (*SharepointO
 			return nil, err
 		}
 
+		logger.DebugDumpJSON("sharepoint-online-report", string(data))
 		return nil, fmt.Errorf("failed to generate sharepoint online report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 	return report, nil

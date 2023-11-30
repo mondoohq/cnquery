@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
+	"go.mondoo.com/cnquery/v9/logger"
 )
 
 var exchangeReport = `
@@ -102,6 +103,9 @@ func (c *Ms365Connection) getReport(outlookToken, organization string) (*Exchang
 		if err != nil {
 			return nil, err
 		}
+
+		logger.DebugDumpJSON("exchange-online-report", data)
+
 		err = json.Unmarshal(data, report)
 		if err != nil {
 			return nil, err
@@ -112,6 +116,7 @@ func (c *Ms365Connection) getReport(outlookToken, organization string) (*Exchang
 			return nil, err
 		}
 
+		logger.DebugDumpJSON("exchange-online-report", data)
 		return nil, fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 	return report, nil
