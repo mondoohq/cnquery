@@ -28,7 +28,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.1
 	github.com/aws/smithy-go v1.18.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231121224113-b6714ac5eb13
-	github.com/c-bata/go-prompt v0.2.5
+	// pin v0.2.6
+	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.9.1
