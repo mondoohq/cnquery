@@ -6,8 +6,8 @@ package upstream
 import (
 	"time"
 
-	unverified_jwt "github.com/golang-jwt/jwt"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"github.com/go-jose/go-jose/v3/jwt"
+	unverified_jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type CustomTokenClaims struct {
@@ -32,9 +32,7 @@ func (a *VerifyClaim) IsExpired() bool {
 }
 
 type extractTokenClaims struct {
-	// TODO: workaround for https://github.com/dgrijalva/jwt-go/pull/308
-	Aud []string `json:"aud"`
-	unverified_jwt.StandardClaims
+	unverified_jwt.RegisteredClaims
 	CustomTokenClaims
 }
 
@@ -51,29 +49,29 @@ func ExtractTokenClaims(token string) (*VerifyClaim, error) {
 
 	// convert to AmsVerifyClaim
 	var expiry *jwt.NumericDate
-	if unverifiedClaims.ExpiresAt > 0 {
-		nd := jwt.NumericDate(unverifiedClaims.ExpiresAt)
+	if unverifiedClaims.ExpiresAt != nil {
+		nd := jwt.NumericDate(unverifiedClaims.ExpiresAt.Unix())
 		expiry = &nd
 	}
 
 	var notBefore *jwt.NumericDate
-	if unverifiedClaims.NotBefore > 0 {
-		nd := jwt.NumericDate(unverifiedClaims.NotBefore)
+	if unverifiedClaims.NotBefore != nil {
+		nd := jwt.NumericDate(unverifiedClaims.NotBefore.Unix())
 		notBefore = &nd
 	}
 
 	var issuedAt *jwt.NumericDate
-	if unverifiedClaims.IssuedAt > 0 {
-		nd := jwt.NumericDate(unverifiedClaims.IssuedAt)
+	if unverifiedClaims.IssuedAt != nil {
+		nd := jwt.NumericDate(unverifiedClaims.IssuedAt.Unix())
 		notBefore = &nd
 	}
 
 	out := VerifyClaim{
 		Claims: jwt.Claims{
-			ID:        unverifiedClaims.Id,
+			ID:        unverifiedClaims.ID,
 			Issuer:    unverifiedClaims.Issuer,
 			Subject:   unverifiedClaims.Subject,
-			Audience:  jwt.Audience([]string{unverifiedClaims.Audience}),
+			Audience:  jwt.Audience(unverifiedClaims.Audience),
 			Expiry:    expiry,
 			NotBefore: notBefore,
 			IssuedAt:  issuedAt,

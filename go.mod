@@ -38,9 +38,10 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/glebarez/go-sqlite v1.21.2
 	github.com/go-git/go-git/v5 v5.10.1
+	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/golang/mock v1.6.0
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/google/go-cmdtest v0.4.0
@@ -98,7 +99,6 @@ require (
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/ini.v1 v1.67.0
-	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
 	k8s.io/apimachinery v0.28.4
@@ -223,7 +223,6 @@ require (
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/getsentry/sentry-go v0.25.0 // indirect
 	github.com/go-critic/go-critic v0.9.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
