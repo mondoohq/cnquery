@@ -1,0 +1,54 @@
+name: Update cnuery and provider dependencies
+
+on:
+  schedule:
+    - cron: "11 8 * * 1" # every monday
+  workflow_dispatch:
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Update deps
+        id: update-deps
+        run: |
+          alias version="go run providers-sdk/v1/util/version/version.go"
+          version mod-update . --latest
+          version mod-update providers/*/ --latest
+          version mod-tidy providers/*/
+          version mod-tidy .
+          echo "COUNT_GOMOD=$(git status --short --untracked-files=no | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit changes upstream
+        id: branch
+        if: ${{ steps.update-deps.outputs.COUNT_GOMOD != '0' }}
+        run: |
+          git config --global user.email "tools@mondoo.com"
+          git config --global user.name "Mondoo Tools"
+          BRANCH_NAME="version/deps_update_$(date +%Y%m%d)"
+          git checkout -b ${BRANCH_NAME}
+          git add go.mod go.sum || true
+          git add providers/ || true
+          git commit -m "🧹 Update deps for cnquery and providers $(date +%Y%m%d)"
+          git push --set-upstream origin ${BRANCH_NAME}
+        shell: bash
+
+      - name: Create pull request
+        run: gh pr create -B main --fill --body 'Created by Mondoo Tools via Github actions'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

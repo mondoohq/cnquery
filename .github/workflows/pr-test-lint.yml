@@ -81,34 +81,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      # TODO: remove once the dependabot PRs for cnquery go.mod work
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
-      - name: Updates to cnquery core go.mod?
-        id: cnquerygomod
-        if: ((github.event_name == 'push' && github.ref_name != 'main') || github.event_name == 'pull_request') && github.actor == 'dependabot[bot]'
-        run: |
-          echo "COUNT_GOMOD=$(git diff-tree --name-only -r origin/${{github.ref_name}} origin/main | grep -c -E "^go.mod$")" >> $GITHUB_OUTPUT
-
-      - name: Fix providers go.mod for dependabot PRs
-        if: github.actor == 'dependabot[bot]' && steps.cnquerygomod.outputs.COUNT_GOMOD == '1'
-        run: |
-          go run providers-sdk/v1/util/version/version.go mod-tidy providers/*/
-          COUNT=$(git status --short | wc -l)
-          if [ "$COUNT" -eq "0" ]; then
-            echo "No changes to providers go.mod"
-            exit 0
-          fi
-          git config --global user.email "tools@mondoo.com"
-          git config --global user.name "Mondoo Tools"
-          git add providers/
-          git commit -m "🧹 Update providers go.mod for dependabot PR ${{ github.event.number }}"
-          git push
-        shell: bash
-
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v1'
 
