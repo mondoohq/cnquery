@@ -15,6 +15,7 @@ func TestIamPolicies(t *testing.T) {
 	files := []string{
 		"./testdata/iam_policy1.json",
 		"./testdata/iam_policy2.json",
+		"./testdata/iam_policy3.json",
 	}
 
 	for _, f := range files {

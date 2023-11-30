@@ -14,10 +14,11 @@ type IamPolicyDocument struct {
 }
 
 type IamPolicyStatement struct {
-	Sid      string           `json:"Sid,omitempty"`
-	Effect   string           `json:"Effect,omitempty"`
-	Action   statementSection `json:"Action,omitempty"`
-	Resource statementSection `json:"Resource,omitempty"`
+	Sid       string           `json:"Sid,omitempty"`
+	Effect    string           `json:"Effect,omitempty"`
+	Action    statementSection `json:"Action,omitempty"`
+	NotAction statementSection `json:"NotAction,omitempty"`
+	Resource  statementSection `json:"Resource,omitempty"`
 }
 
 type policyStatements []IamPolicyStatement
