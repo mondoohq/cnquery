@@ -122,9 +122,7 @@ private aws.vpc.flowlog @defaults("id region status") {
 }
 
 // Amazon WAF v2
-private aws.waf @defaults("id") {
-  // ID of the WAF
-  id string
+private aws.waf {
   // List of waf acls
   acls() []aws.waf.acl
   // List of waf rules
@@ -155,6 +153,8 @@ private aws.waf.rule @defaults("name") {
   name string
   // Priority
   priority int
+  // Statements
+  statement dict
 }
 
 // Amazon WAF v2 ACL
@@ -172,7 +172,7 @@ private aws.waf.rulegroup @defaults("name") {
 }
 
 // Amazon WAF v2 ACL
-private aws.waf.ipset @defaults("id") {
+private aws.waf.ipset @defaults("name") {
   // ARN of the ipset
   arn string
   // ID of the ipset

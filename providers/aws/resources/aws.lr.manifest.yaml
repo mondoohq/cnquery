@@ -2426,6 +2426,7 @@ resources:
       id: {}
       name: {}
       priority: {}
+      statement: {}
     is_private: true
     min_mondoo_version: latest
     platform:

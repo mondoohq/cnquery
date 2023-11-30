@@ -709,9 +709,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.flowlog.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.waf.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWaf).GetId()).ToDataRes(types.String)
-	},
 	"aws.waf.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetAcls()).ToDataRes(types.Array(types.Resource("aws.waf.acl")))
 	},
@@ -744,6 +741,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.priority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"aws.waf.rule.statement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Dict)
 	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
@@ -3144,10 +3144,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWaf).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.waf.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWaf).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.waf.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWaf).Acls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3198,6 +3194,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Statement, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7219,7 +7219,6 @@ type mqlAwsWaf struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafInternal it will be used here
-	Id plugin.TValue[string]
 	Acls plugin.TValue[[]interface{}]
 	RuleGroups plugin.TValue[[]interface{}]
 	IpSets plugin.TValue[[]interface{}]
@@ -7260,10 +7259,6 @@ func (c *mqlAwsWaf) MqlName() string {
 
 func (c *mqlAwsWaf) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlAwsWaf) GetId() *plugin.TValue[string] {
-	return &c.Id
 }
 
 func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]interface{}] {
@@ -7338,7 +7333,12 @@ func createAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.acl", res.__id)
@@ -7402,6 +7402,7 @@ type mqlAwsWafRule struct {
 	// optional: if you define mqlAwsWafRuleInternal it will be used here
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
+	Statement plugin.TValue[interface{}]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -7415,7 +7416,12 @@ func createAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule", res.__id)
@@ -7444,6 +7450,10 @@ func (c *mqlAwsWafRule) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
 }
 
+func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[interface{}] {
+	return &c.Statement
+}
+
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource
 type mqlAwsWafRulegroup struct {
 	MqlRuntime *plugin.Runtime
@@ -7467,7 +7477,12 @@ func createAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rulegroup", res.__id)
@@ -7544,7 +7559,12 @@ func createAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.ipset", res.__id)

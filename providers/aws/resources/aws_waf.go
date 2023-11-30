@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -20,6 +19,22 @@ import (
 
 func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
+}
+
+func (a *mqlAwsWafAcl) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAwsWafRule) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRulegroup) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafIpset) id() (string, error) {
+	return a.Name.Data, nil
 }
 
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
@@ -93,10 +108,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
+		ruleStatement, err := convert.JsonToDict(rule.Statement)
+		if err != nil {
+			return nil, err
+		}
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"name":     llx.StringDataPtr(rule.Name),
-				"priority": llx.IntData(int64(rule.Priority)),
+				"name":      llx.StringDataPtr(rule.Name),
+				"priority":  llx.IntData(int64(rule.Priority)),
+				"statement": llx.DictData(ruleStatement),
 			},
 		)
 		if err != nil {
@@ -236,4 +256,33 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 		}
 	}
 	return acls, nil
+}
+
+// Root structure to match the top-level JSON object
+type Statement struct {
+	SqliMatchStatement *SqliMatchStatement `json:"SqliMatchStatement,omitempty"`
+}
+
+// SqliMatchStatement represents the SQL injection match statement
+type SqliMatchStatement struct {
+	FieldToMatch        FieldToMatch         `json:"FieldToMatch"`
+	TextTransformations []TextTransformation `json:"TextTransformations"`
+	SensitivityLevel    string               `json:"SensitivityLevel"`
+}
+
+// FieldToMatch represents the field to match in SQL injection match statement
+type FieldToMatch struct {
+	SingleHeader *SingleHeader `json:"SingleHeader,omitempty"`
+	// Add other fields as necessary
+}
+
+// SingleHeader represents the single header field to match
+type SingleHeader struct {
+	Name string `json:"Name"`
+}
+
+// TextTransformation represents a text transformation in SQL injection match statement
+type TextTransformation struct {
+	Priority int    `json:"Priority"`
+	Type     string `json:"Type"`
 }
