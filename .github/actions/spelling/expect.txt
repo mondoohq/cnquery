@@ -42,6 +42,7 @@ mgroup
 Mpim
 nodepool
 nullgroup
+nullstring
 opcplc
 Pids
 postgre

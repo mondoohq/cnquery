@@ -261,37 +261,37 @@ func TestDict_Methods_Contains(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        p + "params['hello'].contains('ll')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['hello'].contains('lloo')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		{
 			Code:        p + "params['hello'].contains(['xx','he'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['hello'].contains(['xx'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		{
 			Code:        p + "params['string-array'].contains('a')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['string-array'].containsOnly(['c', 'a', 'b'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['string-array'].containsOnly(['a', 'b'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		// {
@@ -300,37 +300,37 @@ func TestDict_Methods_Contains(t *testing.T) {
 		// },
 		{
 			Code:        p + "params['string-array'].containsNone(['d','e'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['string-array'].containsNone(['a', 'e'])",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		{
 			Code:        p + "params['string-array'].none('a')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		{
 			Code:        p + "params['string-array'].contains(_ == 'a')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['string-array'].none(_ == /a/)",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 		{
 			Code:        p + "params['string-array'].contains(value == 'a')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: true,
 		},
 		{
 			Code:        p + "params['string-array'].none(value == 'a')",
-			ResultIndex: 1,
+			ResultIndex: 2,
 			Expectation: false,
 		},
 	})
@@ -346,6 +346,11 @@ func TestDict_Methods_Map(t *testing.T) {
 
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        p + "params.nonexistent.contains('sth')",
+			Expectation: false,
+			ResultIndex: 1,
+		},
 		{
 			Code:        p + "params['string-array'].where(_ == 'a')",
 			Expectation: []interface{}{"a"},

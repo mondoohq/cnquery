@@ -8,7 +8,9 @@ muser {
   name string
   group() mgroup
   nullgroup() mgroup
+  nullstring() string
   groups() []mgroup
+  dict() dict
 }
 
 mgroup {

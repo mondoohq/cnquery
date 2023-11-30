@@ -137,16 +137,47 @@ func compileDictContains(c *compiler, typ types.Type, ref uint64, id string, cal
 			Binding: c.tailRef(),
 		},
 	})
+	lengthRef := c.tailRef()
 
-	// > 0
+	// FIXME: DEPRECATED, replace in v10.0 wit the use of != empty vv
+	// != 0
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   string(">" + types.Int),
+		Id:   string("!=" + types.Int),
 		Function: &llx.Function{
 			Type:    string(types.Bool),
-			Binding: c.tailRef(),
+			Binding: lengthRef,
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(0),
+			},
+		},
+	})
+	neq0Ref := c.tailRef()
+
+	// != null
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("!=" + types.Nil),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: ref,
+			Args: []*llx.Primitive{
+				// Note: we need this for backwards compatibility because labels
+				// require 1 argument on < v9.1
+				llx.NilPrimitive,
+			},
+		},
+	})
+	neqNullRef := c.tailRef()
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   string("&&" + types.Bool),
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: neqNullRef,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(neq0Ref),
 			},
 		},
 	})

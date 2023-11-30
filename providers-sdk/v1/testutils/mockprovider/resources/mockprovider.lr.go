@@ -102,8 +102,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"muser.nullgroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMuser).GetNullgroup()).ToDataRes(types.Resource("mgroup"))
 	},
+	"muser.nullstring": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMuser).GetNullstring()).ToDataRes(types.String)
+	},
 	"muser.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMuser).GetGroups()).ToDataRes(types.Array(types.Resource("mgroup")))
+	},
+	"muser.dict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMuser).GetDict()).ToDataRes(types.Dict)
 	},
 	"mgroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMgroup).GetName()).ToDataRes(types.String)
@@ -136,8 +142,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMuser).Nullgroup, ok = plugin.RawToTValue[*mqlMgroup](v.Value, v.Error)
 		return
 	},
+	"muser.nullstring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMuser).Nullstring, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"muser.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMuser).Groups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"muser.dict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMuser).Dict, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"mgroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -180,7 +194,9 @@ type mqlMuser struct {
 	Name plugin.TValue[string]
 	Group plugin.TValue[*mqlMgroup]
 	Nullgroup plugin.TValue[*mqlMgroup]
+	Nullstring plugin.TValue[string]
 	Groups plugin.TValue[[]interface{}]
+	Dict plugin.TValue[interface{}]
 }
 
 // createMuser creates a new instance of this resource
@@ -256,6 +272,12 @@ func (c *mqlMuser) GetNullgroup() *plugin.TValue[*mqlMgroup] {
 	})
 }
 
+func (c *mqlMuser) GetNullstring() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Nullstring, func() (string, error) {
+		return c.nullstring()
+	})
+}
+
 func (c *mqlMuser) GetGroups() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Groups, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
@@ -269,6 +291,12 @@ func (c *mqlMuser) GetGroups() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.groups()
+	})
+}
+
+func (c *mqlMuser) GetDict() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Dict, func() (interface{}, error) {
+		return c.dict()
 	})
 }
 
