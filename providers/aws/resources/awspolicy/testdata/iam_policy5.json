@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+      "Effect": "Deny",
+      "NotPrincipal": {"AWS": [
+          "arn:aws:iam::444455556666:user/Bob",
+          "arn:aws:iam::444455556666:root"
+      ]},
+      "Action": "s3:*",
+      "Resource": [
+          "arn:aws:s3:::BUCKETNAME",
+          "arn:aws:s3:::BUCKETNAME/*"
+      ]
+  }]
+}
