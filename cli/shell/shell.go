@@ -217,6 +217,8 @@ func (s *Shell) ExecCmd(cmd string) {
 		s.execQuery(cmd)
 	case cmd == "":
 		return
+	case cmd == "quit":
+		fallthrough
 	case cmd == "exit":
 		s.handleExit()
 		return
