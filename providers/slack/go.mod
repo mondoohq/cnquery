@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/rs/zerolog v1.31.0
 	github.com/slack-go/slack v0.12.3
-	go.mondoo.com/cnquery/v9 v9.9.1
+	go.mondoo.com/cnquery/v9 v9.9.3
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.48.9 // indirect
+	github.com/aws/aws-sdk-go v1.48.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.25.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.8 // indirect

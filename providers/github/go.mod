@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v55 v55.0.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.9.1
+	go.mondoo.com/cnquery/v9 v9.9.3
 	go.mondoo.com/ranger-rpc v0.5.3
 	golang.org/x/oauth2 v0.15.0
 	sigs.k8s.io/yaml v1.4.0
@@ -52,7 +52,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.48.9 // indirect
+	github.com/aws/aws-sdk-go v1.48.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.25.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.8 // indirect
