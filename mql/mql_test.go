@@ -219,3 +219,25 @@ func TestNullResources(t *testing.T) {
 		},
 	})
 }
+
+func TestNullString(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "muser.nullstring.contains('123')",
+			ResultIndex: 0,
+			Expectation: false,
+		},
+	})
+}
+
+func TestDictMethods(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "muser.dict.nonexisting.contains('abc')",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+	})
+}

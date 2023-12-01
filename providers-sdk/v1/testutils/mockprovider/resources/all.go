@@ -27,6 +27,11 @@ func (c *mqlMuser) nullgroup() (*mqlMgroup, error) {
 	return nil, nil
 }
 
+func (c *mqlMuser) nullstring() (string, error) {
+	c.Nullstring.State = plugin.StateIsSet | plugin.StateIsNull
+	return "", nil
+}
+
 func (c *mqlMuser) groups() ([]interface{}, error) {
 	one, err := CreateResource(c.MqlRuntime, "mgroup", map[string]*llx.RawData{
 		"name": llx.StringData("group one"),
@@ -42,4 +47,11 @@ func (c *mqlMuser) groups() ([]interface{}, error) {
 
 func (c *mqlMgroup) id() (string, error) {
 	return c.Name.Data, nil
+}
+
+func (c *mqlMuser) dict() (any, error) {
+	return map[string]any{
+		"a1": []any{int64(1), int64(2), int64(3)},
+		"s1": "hello world",
+	}, nil
 }
