@@ -1561,6 +1561,25 @@ func dictNotStringarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	return rawboolNotOpV2(e, bind, chunk, ref, opDictCmpStringarray)
 }
 
+func opDictCmpRegexarray(left *RawData, right *RawData) bool {
+	switch left.Value.(type) {
+	case string:
+		return cmpArrayOne(right, left, opStringCmpRegex)
+	case []interface{}:
+		return cmpArrays(left, right, opDictCmpRegex)
+	default:
+		return false
+	}
+}
+
+func dictCmpRegexarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolOpV2(e, bind, chunk, ref, opDictCmpRegexarray)
+}
+
+func dictNotRegexarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return rawboolNotOpV2(e, bind, chunk, ref, opDictCmpRegexarray)
+}
+
 func opDictCmpBoolarray(left *RawData, right *RawData) bool {
 	switch left.Value.(type) {
 	case string:

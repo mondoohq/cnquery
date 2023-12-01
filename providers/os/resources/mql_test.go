@@ -309,6 +309,16 @@ func TestDict_Methods_Contains(t *testing.T) {
 			Expectation: false,
 		},
 		{
+			Code:        p + "params['string-array'].containsNone([/z/, /ひ/])",
+			ResultIndex: 2,
+			Expectation: true,
+		},
+		{
+			Code:        p + "params['string-array'].containsNone([/a/, /z/])",
+			ResultIndex: 2,
+			Expectation: false,
+		},
+		{
 			Code:        p + "params['string-array'].none('a')",
 			ResultIndex: 2,
 			Expectation: false,
