@@ -7488,7 +7488,7 @@ func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]interface{}] {
 type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsWafRuleInternal
+	// optional: if you define mqlAwsWafRuleInternal it will be used here
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
 	Statement plugin.TValue[*mqlAwsWafRuleStatement]
@@ -7541,19 +7541,7 @@ func (c *mqlAwsWafRule) GetPriority() *plugin.TValue[int64] {
 }
 
 func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
-	return plugin.GetOrCompute[*mqlAwsWafRuleStatement](&c.Statement, func() (*mqlAwsWafRuleStatement, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule", c.__id, "statement")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsWafRuleStatement), nil
-			}
-		}
-
-		return c.statement()
-	})
+	return &c.Statement
 }
 
 func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
@@ -7564,7 +7552,7 @@ func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
 type mqlAwsWafRuleStatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsWafRuleStatementInternal
+	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
 	AndStatement plugin.TValue[*mqlAwsWafRuleStatementAndstatement]
 	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
 }
@@ -7602,35 +7590,11 @@ func (c *mqlAwsWafRuleStatement) MqlID() string {
 }
 
 func (c *mqlAwsWafRuleStatement) GetAndStatement() *plugin.TValue[*mqlAwsWafRuleStatementAndstatement] {
-	return plugin.GetOrCompute[*mqlAwsWafRuleStatementAndstatement](&c.AndStatement, func() (*mqlAwsWafRuleStatementAndstatement, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement", c.__id, "andStatement")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsWafRuleStatementAndstatement), nil
-			}
-		}
-
-		return c.andStatement()
-	})
+	return &c.AndStatement
 }
 
 func (c *mqlAwsWafRuleStatement) GetSqliMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement] {
-	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatement](&c.SqliMatchStatement, func() (*mqlAwsWafRuleStatementSqlimatchstatement, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement", c.__id, "sqliMatchStatement")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatement), nil
-			}
-		}
-
-		return c.sqliMatchStatement()
-	})
+	return &c.SqliMatchStatement
 }
 
 // mqlAwsWafRuleStatementAndstatement for the aws.waf.rule.statement.andstatement resource
@@ -7681,7 +7645,7 @@ func (c *mqlAwsWafRuleStatementAndstatement) GetName() *plugin.TValue[string] {
 type mqlAwsWafRuleStatementSqlimatchstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsWafRuleStatementSqlimatchstatementInternal
+	// optional: if you define mqlAwsWafRuleStatementSqlimatchstatementInternal it will be used here
 	FieldToMatch plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch]
 }
 
@@ -7718,26 +7682,14 @@ func (c *mqlAwsWafRuleStatementSqlimatchstatement) MqlID() string {
 }
 
 func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch] {
-	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch](&c.FieldToMatch, func() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement", c.__id, "fieldToMatch")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch), nil
-			}
-		}
-
-		return c.fieldToMatch()
-	})
+	return &c.FieldToMatch
 }
 
 // mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch for the aws.waf.rule.statement.sqlimatchstatement.fieldtomatch resource
 type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal
+	// optional: if you define mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal it will be used here
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader]
 }
 
@@ -7774,26 +7726,14 @@ func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) MqlID() string {
 }
 
 func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader] {
-	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader](&c.SingleHeader, func() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", c.__id, "singleHeader")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader), nil
-			}
-		}
-
-		return c.singleHeader()
-	})
+	return &c.SingleHeader
 }
 
 // mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader resource
 type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheaderInternal
+	// optional: if you define mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheaderInternal it will be used here
 	Name plugin.TValue[string]
 }
 

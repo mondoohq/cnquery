@@ -5,8 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -14,35 +12,11 @@ import (
 
 	//"github.com/aws/aws-sdk-go/aws"
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
 	"go.mondoo.com/cnquery/v9/types"
 )
-
-type mqlAwsWafRuleInternal struct {
-	lock sync.Mutex
-	rule waftypes.Rule
-}
-
-type mqlAwsWafRuleStatementInternal struct {
-	lock sync.Mutex
-	rule waftypes.Rule
-}
-
-type mqlAwsWafRuleStatementSqlimatchstatementInternal struct {
-	lock sync.Mutex
-	rule waftypes.Rule
-}
-
-type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal struct {
-	lock sync.Mutex
-	rule waftypes.Rule
-}
-
-type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheaderInternal struct {
-	lock sync.Mutex
-	rule waftypes.Rule
-}
 
 func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
@@ -135,68 +109,57 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
+		var statement plugin.Resource
+		if rule.Statement != nil {
+			var sqlimatchstatement plugin.Resource
+			if rule.Statement.SqliMatchStatement != nil {
+				var fieldToMatch plugin.Resource
+				if rule.Statement.SqliMatchStatement.FieldToMatch != nil {
+					var singleHeader plugin.Resource
+					if rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader != nil {
+						singleHeader, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", map[string]*llx.RawData{
+						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				sqlimatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{
+					"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch"),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+			statement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement", map[string]*llx.RawData{
+				"sqliMatchStatement": llx.ResourceData(sqlimatchstatement, "aws.waf.rule.statement.sqlimatchstatement"),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
 		ruleAction, err := convert.JsonToDict(rule.Action)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"name":     llx.StringDataPtr(rule.Name),
-				"priority": llx.IntData(int64(rule.Priority)),
-				"action":   llx.DictData(ruleAction),
+				"name":      llx.StringDataPtr(rule.Name),
+				"priority":  llx.IntData(int64(rule.Priority)),
+				"action":    llx.DictData(ruleAction),
+				"statement": llx.ResourceData(statement, "aws.waf.rule.statement"),
 			},
 		)
 		if err != nil {
 			return nil, err
 		}
-		mqlRule.(*mqlAwsWafRule).rule = rule
 		rules = append(rules, mqlRule)
 	}
 	return rules, nil
-}
-
-func (a *mqlAwsWafRule) statement() (*mqlAwsWafRuleStatement, error) {
-	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	statement.(*mqlAwsWafRuleStatement).rule = a.rule
-	return statement.(*mqlAwsWafRuleStatement), nil
-}
-
-func (a *mqlAwsWafRuleStatement) andStatement() (*mqlAwsWafRuleStatementAndstatement, error) {
-	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.andstatement", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	return statement.(*mqlAwsWafRuleStatementAndstatement), nil
-}
-
-func (a *mqlAwsWafRuleStatement) sqliMatchStatement() (*mqlAwsWafRuleStatementSqlimatchstatement, error) {
-	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	statement.(*mqlAwsWafRuleStatementSqlimatchstatement).rule = a.rule
-	return statement.(*mqlAwsWafRuleStatementSqlimatchstatement), nil
-}
-
-func (a *mqlAwsWafRuleStatementSqlimatchstatement) fieldToMatch() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch, error) {
-	fieldToMatch, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	fieldToMatch.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).rule = a.rule
-	return fieldToMatch.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch), nil
-}
-
-func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) singleHeader() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader, error) {
-	fmt.Printf("Hello Single Header")
-	fmt.Printf(*a.rule.Name)
-	singleHeader, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
-		"name": llx.StringDataPtr(a.rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return singleHeader.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader), nil
 }
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
@@ -328,33 +291,4 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 		}
 	}
 	return acls, nil
-}
-
-// Root structure to match the top-level JSON object
-type Statement struct {
-	SqliMatchStatement *SqliMatchStatement `json:"SqliMatchStatement,omitempty"`
-}
-
-// SqliMatchStatement represents the SQL injection match statement
-type SqliMatchStatement struct {
-	FieldToMatch        FieldToMatch         `json:"FieldToMatch"`
-	TextTransformations []TextTransformation `json:"TextTransformations"`
-	SensitivityLevel    string               `json:"SensitivityLevel"`
-}
-
-// FieldToMatch represents the field to match in SQL injection match statement
-type FieldToMatch struct {
-	SingleHeader *SingleHeader `json:"SingleHeader,omitempty"`
-	// Add other fields as necessary
-}
-
-// SingleHeader represents the single header field to match
-type SingleHeader struct {
-	Name string `json:"Name"`
-}
-
-// TextTransformation represents a text transformation in SQL injection match statement
-type TextTransformation struct {
-	Priority int    `json:"Priority"`
-	Type     string `json:"Type"`
 }

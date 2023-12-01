@@ -154,14 +154,14 @@ private aws.waf.rule @defaults("name") {
   // Priority
   priority int
   // Statement
-  statement() aws.waf.rule.statement
+  statement aws.waf.rule.statement
   // Action
   action dict
 }
 
 private aws.waf.rule.statement {
-  andStatement() aws.waf.rule.statement.andstatement
-  sqliMatchStatement() aws.waf.rule.statement.sqlimatchstatement
+  andStatement aws.waf.rule.statement.andstatement
+  sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
 }
 
 private aws.waf.rule.statement.andstatement {
@@ -169,11 +169,11 @@ private aws.waf.rule.statement.andstatement {
 }
 
 private aws.waf.rule.statement.sqlimatchstatement {
-  fieldToMatch() aws.waf.rule.statement.sqlimatchstatement.fieldtomatch
+  fieldToMatch aws.waf.rule.statement.sqlimatchstatement.fieldtomatch
 }
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch {
-  singleHeader() aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
+  singleHeader aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
 }
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader {
