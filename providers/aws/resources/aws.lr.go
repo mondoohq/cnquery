@@ -66,6 +66,18 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatement,
 		},
+		"aws.waf.rule.statement.bytematchstatement": {
+			// to override args, implement: initAwsWafRuleStatementBytematchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementBytematchstatement,
+		},
+		"aws.waf.rule.statement.bytematchstatement.fieldtomatch": {
+			// to override args, implement: initAwsWafRuleStatementBytematchstatementFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementBytematchstatementFieldtomatch,
+		},
+		"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader": {
+			// to override args, implement: initAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader,
+		},
 		"aws.waf.rule.statement.xssmatchstatement": {
 			// to override args, implement: initAwsWafRuleStatementXssmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementXssmatchstatement,
@@ -786,8 +798,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.xssMatchStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetXssMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.xssmatchstatement"))
 	},
+	"aws.waf.rule.statement.byteMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetByteMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement"))
+	},
 	"aws.waf.rule.statement.andStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetAndStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.andstatement"))
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.xssmatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementXssmatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.xssmatchstatement.fieldtomatch"))
@@ -3281,8 +3305,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatement).XssMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementXssmatchstatement](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.byteMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).ByteMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatement](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.andStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatement).AndStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementAndstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementBytematchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.bytematchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.xssmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7607,6 +7659,7 @@ type mqlAwsWafRuleStatement struct {
 	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
 	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
 	XssMatchStatement plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement]
+	ByteMatchStatement plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement]
 	AndStatement plugin.TValue[*mqlAwsWafRuleStatementAndstatement]
 }
 
@@ -7650,8 +7703,144 @@ func (c *mqlAwsWafRuleStatement) GetXssMatchStatement() *plugin.TValue[*mqlAwsWa
 	return &c.XssMatchStatement
 }
 
+func (c *mqlAwsWafRuleStatement) GetByteMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement] {
+	return &c.ByteMatchStatement
+}
+
 func (c *mqlAwsWafRuleStatement) GetAndStatement() *plugin.TValue[*mqlAwsWafRuleStatementAndstatement] {
 	return &c.AndStatement
+}
+
+// mqlAwsWafRuleStatementBytematchstatement for the aws.waf.rule.statement.bytematchstatement resource
+type mqlAwsWafRuleStatementBytematchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementBytematchstatementInternal it will be used here
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatch]
+}
+
+// createAwsWafRuleStatementBytematchstatement creates a new instance of this resource
+func createAwsWafRuleStatementBytematchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementBytematchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.bytematchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) MqlName() string {
+	return "aws.waf.rule.statement.bytematchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+// mqlAwsWafRuleStatementBytematchstatementFieldtomatch for the aws.waf.rule.statement.bytematchstatement.fieldtomatch resource
+type mqlAwsWafRuleStatementBytematchstatementFieldtomatch struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementBytematchstatementFieldtomatchInternal it will be used here
+	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader]
+}
+
+// createAwsWafRuleStatementBytematchstatementFieldtomatch creates a new instance of this resource
+func createAwsWafRuleStatementBytematchstatementFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementBytematchstatementFieldtomatch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.bytematchstatement.fieldtomatch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) MqlName() string {
+	return "aws.waf.rule.statement.bytematchstatement.fieldtomatch"
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader] {
+	return &c.SingleHeader
+}
+
+// mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader resource
+type mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheaderInternal it will be used here
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader creates a new instance of this resource
+func createAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader) MqlName() string {
+	return "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAwsWafRuleStatementXssmatchstatement for the aws.waf.rule.statement.xssmatchstatement resource
