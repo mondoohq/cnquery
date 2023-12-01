@@ -26,6 +26,48 @@ type VulnReport struct {
 	Advisories []*Advisory
 	Cves       []*Cve
 	Packages   []*Package
+	Stats      *ReportStats
+}
+
+type ReportStats struct {
+	Score struct {
+		Id     string
+		Value  int
+		Type   int
+		Vector string
+		Source string
+	}
+	Cves struct {
+		Total    int
+		Critical int
+		High     int
+		Medium   int
+		Low      int
+		None     int
+		Unknown  int
+	}
+	Packages struct {
+		Total    int
+		Affected int
+		Critical int
+		High     int
+		Medium   int
+		Low      int
+		None     int
+		Unknown  int
+	}
+	Advisories struct {
+		Total    int
+		Critical int
+		High     int
+		Medium   int
+		Low      int
+		None     int
+		Unknown  int
+	}
+	Exploits struct {
+		Total int
+	}
 }
 
 type Cve struct {
@@ -79,9 +121,15 @@ type Advisory struct {
 		Vector string
 		Source string
 	}
-	Vendorscore int
-	PublishedAt string
-	ModifiedAt  string
+	Vendorscore      int
+	PublishedAt      string
+	ModifiedAt       string
+	AffectedPackages []struct {
+		Package
+	}
+	FixedByPackages []struct {
+		Package
+	}
 }
 
 type Package struct {
@@ -104,17 +152,10 @@ type Package struct {
 		Vector string
 		Source string
 	}
-
-	Advisories []struct {
-		Advisory
-	}
-	Cves []struct {
-		Cve
-	}
 }
 
-// GetVulnReport fetches the vuln report for a given asset
-func (c *MondooClient) GetVulnReport(mrn string) (*VulnReport, error) {
+// GetVulnCompactReport fetches the compact vuln report for a given asset
+func (c *MondooClient) GetVulnCompactReport(mrn string) (*VulnReport, error) {
 	var m struct {
 		AssetVulnerabilityReportResponse struct {
 			AssetVulnerabilityCompactReport struct {
@@ -128,6 +169,7 @@ func (c *MondooClient) GetVulnReport(mrn string) (*VulnReport, error) {
 				Packages []struct {
 					Package
 				}
+				Stats ReportStats
 			} `graphql:"... on AssetVulnerabilityCompactReport"`
 		} `graphql:"assetVulnerabilityCompactReport(input: $input)"`
 	}
@@ -141,18 +183,22 @@ func (c *MondooClient) GetVulnReport(mrn string) (*VulnReport, error) {
 		Advisories: make([]*Advisory, len(m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Advisories)),
 		Cves:       make([]*Cve, len(m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Cves)),
 		Packages:   make([]*Package, len(m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Packages)),
+		Stats:      &m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Stats,
 	}
 
-	for i, a := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Advisories {
-		gqlVulnReport.Advisories[i] = &a.Advisory
+	for i := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Advisories {
+		advisory := m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Advisories[i].Advisory
+		gqlVulnReport.Advisories[i] = &advisory
 	}
 
-	for i, c := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Cves {
-		gqlVulnReport.Cves[i] = &c.Cve
+	for i := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Cves {
+		cve := m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Cves[i].Cve
+		gqlVulnReport.Cves[i] = &cve
 	}
 
-	for i, p := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Packages {
-		gqlVulnReport.Packages[i] = &p.Package
+	for i := range m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Packages {
+		pkg := m.AssetVulnerabilityReportResponse.AssetVulnerabilityCompactReport.Packages[i].Package
+		gqlVulnReport.Packages[i] = &pkg
 	}
 
 	return gqlVulnReport, nil
@@ -192,16 +238,19 @@ func (c *MondooClient) GetIncognitoVulnReport(platform mondoogql.PlatformInput, 
 		Packages:   make([]*Package, len(m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Packages)),
 	}
 
-	for i, a := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Advisories {
-		gqlVulnReport.Advisories[i] = &a.Advisory
+	for i := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Advisories {
+		advisory := m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Advisories[i].Advisory
+		gqlVulnReport.Advisories[i] = &advisory
 	}
 
-	for i, c := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Cves {
-		gqlVulnReport.Cves[i] = &c.Cve
+	for i := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Cves {
+		cve := m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Cves[i].Cve
+		gqlVulnReport.Cves[i] = &cve
 	}
 
-	for i, p := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Packages {
-		gqlVulnReport.Packages[i] = &p.Package
+	for i := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Packages {
+		pkg := m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Packages[i].Package
+		gqlVulnReport.Packages[i] = &pkg
 	}
 
 	return gqlVulnReport, nil

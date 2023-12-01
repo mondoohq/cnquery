@@ -170,8 +170,7 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 		log.Debug().Msg("no asset mrn available")
 		return v.getIncognitoReport(mondooClient)
 	}
-	// gqlVulnReport, err := GetVulnReport("//assets.api.mondoo.app/spaces/test-infallible-taussig-796596/assets/2YTpHJnJXnfmuBtQde2HQgWqX1n")
-	gqlVulnReport, err := mondooClient.GetVulnReport(v.MqlRuntime.Upstream.AssetMrn)
+	gqlVulnReport, err := mondooClient.GetVulnCompactReport(v.MqlRuntime.Upstream.AssetMrn)
 	if err != nil {
 		return nil, err
 	}
