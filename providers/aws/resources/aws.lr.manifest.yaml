@@ -2468,12 +2468,21 @@ resources:
     fields:
       queryString: {}
       singleHeader: {}
+      singleQueryArgument: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
     is_private: true
@@ -2493,12 +2502,21 @@ resources:
     fields:
       queryString: {}
       singleHeader: {}
+      singleQueryArgument: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
     is_private: true
@@ -2533,12 +2551,21 @@ resources:
     fields:
       queryString: {}
       singleHeader: {}
+      singleQueryArgument: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
     is_private: true
@@ -2558,12 +2585,21 @@ resources:
     fields:
       queryString: {}
       singleHeader: {}
+      singleQueryArgument: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
     is_private: true

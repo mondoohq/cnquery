@@ -173,10 +173,15 @@ private aws.waf.rule.statement.regexmatchstatement {
 
 private aws.waf.rule.statement.regexmatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader
+  singleQueryArgument aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument
   queryString bool
 }
 
 private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader {
+  name string
+}
+
+private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument {
   name string
 }
 
@@ -187,7 +192,12 @@ private aws.waf.rule.statement.bytematchstatement {
 
 private aws.waf.rule.statement.bytematchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader
+  singleQueryArgument aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument
   queryString bool
+}
+
+private aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument {
+  name string
 }
 
 private aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader {
@@ -200,7 +210,12 @@ private aws.waf.rule.statement.xssmatchstatement {
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader
+  singleQueryArgument aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument
   queryString bool
+}
+
+private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument {
+  name string
 }
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
@@ -217,7 +232,12 @@ private aws.waf.rule.statement.sqlimatchstatement {
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
+  singleQueryArgument aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument
   queryString bool
+}
+
+private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument {
+  name string
 }
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader {

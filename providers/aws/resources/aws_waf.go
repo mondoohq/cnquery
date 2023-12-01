@@ -134,6 +134,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var singleQueryArgument plugin.Resource
+					if rule.Statement.RegexMatchStatement.FieldToMatch.SingleQueryArgument != nil {
+						singleQueryArgument, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.RegexMatchStatement.FieldToMatch.SingleQueryArgument.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
 					var queryString bool
 					if rule.Statement.RegexMatchStatement.FieldToMatch.QueryString != nil {
 						queryString = true
@@ -141,8 +150,9 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 						queryString = false
 					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch", map[string]*llx.RawData{
-						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader"),
-						"queryString":  llx.BoolData(queryString),
+						"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader"),
+						"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument"),
+						"queryString":         llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -168,6 +178,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var singleQueryArgument plugin.Resource
+					if rule.Statement.ByteMatchStatement.FieldToMatch.SingleQueryArgument != nil {
+						singleQueryArgument, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.ByteMatchStatement.FieldToMatch.SingleQueryArgument.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
 					var queryString bool
 					if rule.Statement.ByteMatchStatement.FieldToMatch.QueryString != nil {
 						queryString = true
@@ -175,8 +194,9 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 						queryString = false
 					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.bytematchstatement.fieldtomatch", map[string]*llx.RawData{
-						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"),
-						"queryString":  llx.BoolData(queryString),
+						"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"),
+						"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument"),
+						"queryString":         llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -203,6 +223,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var singleQueryArgument plugin.Resource
+					if rule.Statement.XssMatchStatement.FieldToMatch.SingleQueryArgument != nil {
+						singleQueryArgument, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.XssMatchStatement.FieldToMatch.SingleQueryArgument.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
 					var queryString bool
 					if rule.Statement.XssMatchStatement.FieldToMatch.QueryString != nil {
 						queryString = true
@@ -210,8 +239,9 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 						queryString = false
 					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch", map[string]*llx.RawData{
-						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader"),
-						"queryString":  llx.BoolData(queryString),
+						"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader"),
+						"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument"),
+						"queryString":         llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -237,6 +267,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var singleQueryArgument plugin.Resource
+					if rule.Statement.SqliMatchStatement.FieldToMatch.SingleQueryArgument != nil {
+						singleQueryArgument, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.SqliMatchStatement.FieldToMatch.SingleQueryArgument.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
 					var queryString bool
 					if rule.Statement.SqliMatchStatement.FieldToMatch.QueryString != nil {
 						queryString = true
@@ -244,8 +283,9 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 						queryString = false
 					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", map[string]*llx.RawData{
-						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"),
-						"queryString":  llx.BoolData(queryString),
+						"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"),
+						"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument"),
+						"queryString":         llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
