@@ -18,11 +18,11 @@ packs:
           - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
         queries:
           - uid: mondoo-kubernetes-incident-response-cluster-version
-            title: Retrieve Kubernetes Cluster Version
+            title: Kubernetes Cluster Version
             mql: |
               k8s.serverVersion
           - uid: mondoo-kubernetes-incident-response-role-bindings-with-cluster-admin-permissions
-            title: Retrieve role bindings with cluster-admin permissions
+            title: Role bindings with cluster-admin permissions
             mql: |
               k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
                 name
@@ -31,7 +31,7 @@ packs:
                 roleRef
               }
           - uid: mondoo-kubernetes-incident-response-clusterrole-bindings-with-cluster-admin-permissions
-            title: Retrieve ClusterRoleBindings with cluster-admin permissions
+            title: ClusterRoleBindings with cluster-admin permissions
             mql: |
               k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
                 name
@@ -43,7 +43,7 @@ packs:
           - asset.platform == "k8s-pod"
         queries:
           - uid: mondoo-kubernetes-incident-response-pod-security-context
-            title: Retrieve Pod Security Context
+            title: Pod Security Context
             mql: |
               k8s.pod {
                 ephemeralContainers {
@@ -57,7 +57,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-pod-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.pod { 
                 name
@@ -105,7 +105,7 @@ packs:
           - asset.platform == "k8s-deployment"
         queries:
           - uid: mondoo-kubernetes-incident-response-deployment-security-context
-            title: Retrieve Deployment Security Context
+            title: Deployment Security Context
             mql: |
               k8s.deployment {
                 initContainers {
@@ -116,7 +116,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-deployment-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.deployment { 
                 name
@@ -151,7 +151,7 @@ packs:
           - asset.platform == "k8s-cronjob"
         queries:
           - uid: mondoo-kubernetes-incident-response-cronjob-security-context
-            title: Retrieve CronJob Security Context
+            title: CronJob Security Context
             mql: |
               k8s.cronjob {
                 initContainers {
@@ -162,7 +162,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-cronjob-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.cronjob { 
                 name
@@ -197,7 +197,7 @@ packs:
           - asset.platform == "k8s-job"
         queries:
           - uid: mondoo-kubernetes-incident-response-job-security-context
-            title: Retrieve Job Security Context
+            title: Job Security Context
             mql: |
               k8s.job {
                 initContainers {
@@ -208,7 +208,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-job-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.job { 
                 name
@@ -243,7 +243,7 @@ packs:
           - asset.platform == "k8s-daemonset"
         queries:
           - uid: mondoo-kubernetes-incident-response-daemonset-security-context
-            title: Retrieve DaemonSet Security Context
+            title: DaemonSet Security Context
             mql: |
               k8s.daemonset {
                 initContainers {
@@ -254,7 +254,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-daemonset-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.daemonset { 
                 name
@@ -289,7 +289,7 @@ packs:
           - asset.platform == "k8s-statefulset"
         queries:
           - uid: mondoo-kubernetes-incident-response-statefulset-security-context
-            title: Retrieve StatefulSet Security Context
+            title: StatefulSet Security Context
             mql: |
               k8s.statefulset {
                 initContainers {
@@ -300,7 +300,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-statefulset-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.statefulset { 
                 name
@@ -335,7 +335,7 @@ packs:
           - asset.platform == "k8s-replicaset"
         queries:
           - uid: mondoo-kubernetes-incident-response-replicaset-security-context
-            title: Retrieve ReplicaSet Security Context
+            title: ReplicaSet Security Context
             mql: |
               k8s.replicaset {
                 initContainers {
@@ -346,7 +346,7 @@ packs:
                 }
               }
           - uid: mondoo-kubernetes-incident-response-replicaset-container
-            title: Retrieve container image information
+            title: Container image information
             mql: |
               k8s.replicaset { 
                 name

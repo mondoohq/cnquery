@@ -16,35 +16,35 @@ packs:
       - asset.platform == "macos"
     queries:
       - uid: mondoo-macos-incident-response-platform-info
-        title: Retrieve platform information
+        title: Platform information
         mql: asset { platform title version arch }
       - uid: mondoo-macos-incident-response-regular-users
-        title: Retrieve regular users
+        title: Regular users
         mql: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ )
       - uid: mondoo-macos-incident-response-kernel-info
-        title: Retrieve the running macOS kernel
+        title: Running macOS kernel
         mql: kernel.info["version"]
       - uid: mondoo-macos-incident-response-kernel-modules
-        title: Retrieve macOS kernel modules
+        title: macOS kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-macos-incident-response-processes
-        title: Retrieve running processes
+        title: Running processes
         mql: processes.list { pid  command }
       - uid: mondoo-macos-incident-response-mounts
-        title: Retrieve mounted devices
+        title: Mounted devices
         mql: mount.list
       - uid: mondoo-macos-incident-response-uptime
-        title: Retrieve operating system uptime
+        title: Operating system uptime
         mql: os.uptime
       - uid: mondoo-macos-incident-response-installed-packages
-        title: Retrieve installed packages
+        title: Installed packages
         mql: packages
       - uid: mondoo-macos-incident-response-running-services
-        title: Retrieve running services
+        title: Running services
         mql: services
       - uid: mondoo-macos-incident-response-alf-extensions
-        title: Retrieve exceptions from the Application Layer Firewall
+        title: Exceptions from the Application Layer Firewall
         mql: macos.alf.exceptions
       - uid: mondoo-macos-incident-response-check-recommended-updates
-        title: Retrieve any recommended updates
+        title: Recommended OS and application updates
         mql: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']

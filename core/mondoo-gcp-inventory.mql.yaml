@@ -19,7 +19,7 @@ packs:
       - asset.platform == "gcp" || asset.platform == "gcp-project"
     queries:
       - uid: mondoo-asset-inventory-gcp-project-info
-        title: Retrieve GCP Project Information
+        title: GCP Project Information
         mql: |
           gcp.project { 
             name
@@ -29,68 +29,68 @@ packs:
             labels
           }
       - uid: mondoo-asset-inventory-gcp-project-owners
-        title: Retrieve data for all owners of the GCP project
+        title: GCP project owners
         docs:
           desc: |
             This query retrieves data for all owners of the GCP project
         mql: gcp.project.iamPolicy.where( role == "roles/owner" )
       - uid: mondoo-asset-inventory-gcp-project-editors
-        title: Retrieve data for all editors of the GCP project
+        title: GCP project editors
         docs:
           desc: |
             This query retrieves data for all editors of the GCP project
         mql: gcp.project.iamPolicy.where( role == "roles/editors" )
       - uid: mondoo-asset-inventory-gcp-iam-roles
-        title: Retrieve all IAM Policy roles for the GCP project
+        title: IAM Policy roles
         docs:
           desc: |
             This query retrieves all roles defined for a GCP project
         mql: gcp.project.iamPolicy { role }
       - uid: mondoo-asset-inventory-gcp-enabled-services
-        title: Retrieve all services enabled in the GCP project
+        title: Services enabled in the GCP project
         docs:
           desc: |
             This query retrieves all services enabled in the GCP Project
         mql: gcp.project.services.where( enabled == true )
       - uid: mondoo-asset-inventory-gcp-gke-clusters-count
-        title: Retrieve count of GKE clusters in a GCP project
+        title: GKE clusters count
         docs:
           desc: |
             This query retrieves a count of GKE clusters running in a GCP project
         mql: gcp.project.gke.clusters.length
       - uid: mondoo-asset-inventory-gcp-gke-clusters-data
-        title: Retrieve data on GKE clusters
+        title: GKE clusters configuration
         docs:
           desc: |
             This query retrieves all of the configuration data for GKE clusters within a project
         mql: gcp.project.gke.clusters
       - uid: mondoo-asset-inventory-gcp-compute-instances-count
-        title: Retrieve a count of GCP compute instances in a GCP project
+        title: GCP compute instances count
         docs:
           desc: |
             This query retrieves a count of running GCP compute instances in a GCP project
         mql: gcp.compute.instances.where( status == "RUNNING" ).length
       - uid: mondoo-asset-inventory-gcp-compute-instances-data
-        title: Retrieve data from all running GCP compute instances in a GCP project
+        title: GCP compute instances
         docs:
           desc: |
             This query retrieves the data for all running GCP compute instances in a GCP project
         mql: gcp.compute.instances.where( status == "RUNNING" )
       - uid: mondoo-asset-inventory-gcp-compute-instances-public
-        title: Retrieve data on public GCP Compute Engine instances
+        title: GCP Compute Engine instances
         docs:
           desc: |
             This query retrieves the data for all GCP Compute Engine instances that have been configured with an external IP address.
         mql: |
           gcp.compute.instances.where( networkInterfaces[0]['accessConfigs'][0]['name'] == "External NAT" )
       - uid: mondoo-asset-inventory-gcp-compute-networks-count
-        title: Retrieve a count of GCP Compute Engine networks in a GCP project
+        title: GCP Compute Engine networks count
         docs:
           desc: |
             This query retrieves a count of GCP Compute Engine networks configured in a GCP project
         mql: gcp.compute.networks.length
       - uid: mondoo-asset-inventory-gcp-compute-networks-data
-        title: Retrieve data for all GCP Compute Engine networks in a GCP project
+        title: GCP Compute Engine networks
         docs:
           desc: |
             This query retrieves the data for all GCP Compute Engine networks configured in a GCP project.

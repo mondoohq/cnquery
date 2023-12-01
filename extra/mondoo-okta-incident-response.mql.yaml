@@ -37,8 +37,8 @@ packs:
       - asset.platform == "okta" || asset.platform == "okta-org"
     queries:
       - uid: mondoo-okta-incident-response-users
-        title: Retrieve Users
+        title: Users
         mql: okta.users
       - uid: mondoo-okta-incident-response-team-id
-        title: Retrieve installed applications
+        title: Installed applications
         mql: okta.applications

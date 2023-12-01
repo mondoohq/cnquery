@@ -94,12 +94,12 @@ packs:
           - uid: mondoo-asset-count-gitlab-group-projects
 queries:
   - uid: mondoo-asset-count-on-vsphere-cluster-esxi
-    title: Retrieve all ESXi hosts
+    title: ESXi hosts
     mql: |
       vsphere.datacenters { hosts.length }
 
   - uid: mondoo-asset-count-on-vsphere-cluster-vms
-    title: Retrieve all VMs from vSphere cluster
+    title: VMs in vSphere cluster
     mql: |
      vsphere.datacenters { vms.length }
 
@@ -268,7 +268,7 @@ queries:
     mql: aws.sns.topics.length
 
   - uid: mondoo-asset-count-in-windows-domain
-    title: Retrieve all computer object from the Windows domain
+    title: All computer objects in the Windows domain
     mql: |
       parse.json(content: powershell('$time = (Get-Date).Adddays(-(180));Get-ADComputer -Filter {LastLogonTimeStamp -ge $time} -properties * | select Name,Enabled,OperatingSystem,OperatingSystemVersion,LastLogonDate | ConvertTo-Json').stdout).params
 

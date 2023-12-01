@@ -16,34 +16,34 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-linux-incident-response-installed-kernel
-        title: Retrieve installed Linux kernels
+        title: Installed Linux kernels
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.installed
       - uid: mondoo-linux-kernel-info
-        title: Retrieve the running Linux kernel
+        title: Running Linux kernel
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.info
       - uid: mondoo-linux-kernel-modules
-        title: Retrieve Linux kernel modules
+        title: Linux kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-incident-response-processes
-        title: Retrieve running processes
+        title: Running processes
         filters: mondoo.capabilities.contains("run-command")
         mql: processes { pid  command }
       - uid: mondoo-linux-mounts
-        title: Retrieve mounted devices
+        title: Mounted devices
         mql: mount.list { path fstype device options }
       - uid: mondoo-linux-listening-ports
-        title: Retrieve all listening ports
+        title: All listening ports
         filters: mondoo.capabilities.contains("run-command")
         mql: ports.listening
       - uid: mondoo-linux-uptime
-        title: Retrieve operating system uptime
+        title: Operating system uptime
         filters: mondoo.capabilities.contains("run-command")
         mql: os.uptime
       - uid: mondoo-linux-installed-packages
-        title: Retrieve installed packages
+        title: Installed packages
         mql: packages { name version arch installed }
       - uid: mondoo-linux-running-services
-        title: Retrieve running services
+        title: Running services
         mql: services { name running enabled masked type }

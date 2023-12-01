@@ -35,13 +35,13 @@ packs:
       - asset.platform == "vmware-esxi"
     queries:
       - uid: mondoo-vmware-incident-response-kernel-modules
-        title: Retrieve kernel modules
+        title: Kernel modules
         mql: vsphere.host.kernelModules
       - uid: mondoo-vmware-incident-response-installed-packages
-        title: Retrieve installed packages
+        title: Installed packages
         mql: vsphere.host.packages
       - uid: mondoo-vmware-incident-response-running-services
-        title: Retrieve all services
+        title: All services
         mql: vsphere.host.services
         refs:
           - title: VMSA-2021-0002
@@ -49,7 +49,7 @@ packs:
           - title: How to Disable/Enable the SLP Service on VMware ESXi (76372)
             url: https://kb.vmware.com/s/article/76372
       - uid: mondoo-vmware-incident-response-acceptance-level
-        title: Retrieve host acceptance level
+        title: Host acceptance level
         docs:
           desc: The host acceptance level determines which VIBs can be installed on a host.
         mql: vsphere.host.acceptanceLevel
@@ -57,5 +57,5 @@ packs:
           - title:
             url: https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.upgrade.doc/GUID-27BBBAB8-01EA-4238-8140-1C3C3EFC0AA6.html
       - uid: mondoo-vmware-incident-response-ntp-servers
-        title: Retrieve all configured NTP servers
+        title: Configured NTP servers
         mql: vsphere.host.ntp.server
