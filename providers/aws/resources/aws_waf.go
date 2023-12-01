@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,6 +25,21 @@ type mqlAwsWafRuleInternal struct {
 }
 
 type mqlAwsWafRuleStatementInternal struct {
+	lock sync.Mutex
+	rule waftypes.Rule
+}
+
+type mqlAwsWafRuleStatementSqlimatchstatementInternal struct {
+	lock sync.Mutex
+	rule waftypes.Rule
+}
+
+type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal struct {
+	lock sync.Mutex
+	rule waftypes.Rule
+}
+
+type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheaderInternal struct {
 	lock sync.Mutex
 	rule waftypes.Rule
 }
@@ -119,17 +135,12 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
-		ruleStatement, err := convert.JsonToDict(rule.Statement)
-		if err != nil {
-			return nil, err
-		}
 		ruleAction, err := convert.JsonToDict(rule.Action)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"name":      llx.StringDataPtr(rule.Name),
-				"priority":  llx.IntData(int64(rule.Priority)),
-				"statement": llx.DictData(ruleStatement),
-				"action":    llx.DictData(ruleAction),
+				"name":     llx.StringDataPtr(rule.Name),
+				"priority": llx.IntData(int64(rule.Priority)),
+				"action":   llx.DictData(ruleAction),
 			},
 		)
 		if err != nil {
@@ -142,29 +153,50 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 }
 
 func (a *mqlAwsWafRule) statement() (*mqlAwsWafRuleStatement, error) {
-	//conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	//var scope waftypes.Scope
-	//scope = "REGIONAL"
-	//ctx := context.Background()
-	//region := ""
-	//svc := conn.Wafv2(region)
-	var statement *mqlAwsWafRuleStatement
-	//svc.listRule
-	return statement, nil
+	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	statement.(*mqlAwsWafRuleStatement).rule = a.rule
+	return statement.(*mqlAwsWafRuleStatement), nil
 }
 
-func (a *mqlAwsWafRuleStatement) andStatement() (*mqlAwsWafRuleStatement, error) {
-	//conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+func (a *mqlAwsWafRuleStatement) andStatement() (*mqlAwsWafRuleStatementAndstatement, error) {
+	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.andstatement", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return statement.(*mqlAwsWafRuleStatementAndstatement), nil
+}
 
-	//var scope waftypes.Scope
-	//scope = "REGIONAL"
-	//ctx := context.Background()
-	//region := ""
-	//svc := conn.Wafv2(region)
-	var statement *mqlAwsWafRuleStatement
-	//svc.listRule
-	return statement, nil
+func (a *mqlAwsWafRuleStatement) sqliMatchStatement() (*mqlAwsWafRuleStatementSqlimatchstatement, error) {
+	statement, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	statement.(*mqlAwsWafRuleStatementSqlimatchstatement).rule = a.rule
+	return statement.(*mqlAwsWafRuleStatementSqlimatchstatement), nil
+}
+
+func (a *mqlAwsWafRuleStatementSqlimatchstatement) fieldToMatch() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch, error) {
+	fieldToMatch, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	fieldToMatch.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).rule = a.rule
+	return fieldToMatch.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch), nil
+}
+
+func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) singleHeader() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader, error) {
+	fmt.Printf("Hello Single Header")
+	fmt.Printf(*a.rule.Name)
+	singleHeader, err := CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
+		"name": llx.StringDataPtr(a.rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return singleHeader.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader), nil
 }
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {

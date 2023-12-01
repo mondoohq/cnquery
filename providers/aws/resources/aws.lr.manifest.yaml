@@ -2435,6 +2435,55 @@ resources:
       - aws
   aws.waf.rule.statement:
     fields:
+      andStatement: {}
+      name: {}
+      sqliMatchStatement: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.andstatement:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement:
+    fields:
+      fieldToMatch: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch:
+    fields:
+      singleHeader: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch.singleheader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch:
+    fields:
+      singleHeader: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
+    fields:
       name: {}
     is_private: true
     min_mondoo_version: latest

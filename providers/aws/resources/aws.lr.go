@@ -66,6 +66,22 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatement,
 		},
+		"aws.waf.rule.statement.andstatement": {
+			// to override args, implement: initAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementAndstatement,
+		},
+		"aws.waf.rule.statement.sqlimatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementSqlimatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSqlimatchstatement,
+		},
+		"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch": {
+			// to override args, implement: initAwsWafRuleStatementSqlimatchstatementFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSqlimatchstatementFieldtomatch,
+		},
+		"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader": {
+			// to override args, implement: initAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader,
+		},
 		"aws.waf.rulegroup": {
 			// to override args, implement: initAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRulegroup,
@@ -752,8 +768,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Dict)
 	},
-	"aws.waf.rule.statement.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRuleStatement).GetName()).ToDataRes(types.String)
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetAndStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.andstatement"))
+	},
+	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetSqliMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement"))
+	},
+	"aws.waf.rule.statement.andstatement.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
 	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
@@ -3218,8 +3249,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatement).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.waf.rule.statement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).AndStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementAndstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).SqliMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSqlimatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementAndstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.andstatement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSqlimatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7497,8 +7564,9 @@ func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
 type mqlAwsWafRuleStatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
-	Name plugin.TValue[string]
+	mqlAwsWafRuleStatementInternal
+	AndStatement plugin.TValue[*mqlAwsWafRuleStatementAndstatement]
+	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
 }
 
 // createAwsWafRuleStatement creates a new instance of this resource
@@ -7533,7 +7601,235 @@ func (c *mqlAwsWafRuleStatement) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsWafRuleStatement) GetName() *plugin.TValue[string] {
+func (c *mqlAwsWafRuleStatement) GetAndStatement() *plugin.TValue[*mqlAwsWafRuleStatementAndstatement] {
+	return plugin.GetOrCompute[*mqlAwsWafRuleStatementAndstatement](&c.AndStatement, func() (*mqlAwsWafRuleStatementAndstatement, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement", c.__id, "andStatement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafRuleStatementAndstatement), nil
+			}
+		}
+
+		return c.andStatement()
+	})
+}
+
+func (c *mqlAwsWafRuleStatement) GetSqliMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement] {
+	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatement](&c.SqliMatchStatement, func() (*mqlAwsWafRuleStatementSqlimatchstatement, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement", c.__id, "sqliMatchStatement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatement), nil
+			}
+		}
+
+		return c.sqliMatchStatement()
+	})
+}
+
+// mqlAwsWafRuleStatementAndstatement for the aws.waf.rule.statement.andstatement resource
+type mqlAwsWafRuleStatementAndstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementAndstatementInternal it will be used here
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementAndstatement creates a new instance of this resource
+func createAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementAndstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.andstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlName() string {
+	return "aws.waf.rule.statement.andstatement"
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+// mqlAwsWafRuleStatementSqlimatchstatement for the aws.waf.rule.statement.sqlimatchstatement resource
+type mqlAwsWafRuleStatementSqlimatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsWafRuleStatementSqlimatchstatementInternal
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch]
+}
+
+// createAwsWafRuleStatementSqlimatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementSqlimatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSqlimatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.sqlimatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch] {
+	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch](&c.FieldToMatch, func() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement", c.__id, "fieldToMatch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch), nil
+			}
+		}
+
+		return c.fieldToMatch()
+	})
+}
+
+// mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch for the aws.waf.rule.statement.sqlimatchstatement.fieldtomatch resource
+type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal
+	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader]
+}
+
+// createAwsWafRuleStatementSqlimatchstatementFieldtomatch creates a new instance of this resource
+func createAwsWafRuleStatementSqlimatchstatementFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) MqlName() string {
+	return "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch"
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader] {
+	return plugin.GetOrCompute[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader](&c.SingleHeader, func() (*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", c.__id, "singleHeader")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader), nil
+			}
+		}
+
+		return c.singleHeader()
+	})
+}
+
+// mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader resource
+type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheaderInternal
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader creates a new instance of this resource
+func createAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader) MqlName() string {
+	return "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 

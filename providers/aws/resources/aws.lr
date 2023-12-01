@@ -160,29 +160,24 @@ private aws.waf.rule @defaults("name") {
 }
 
 private aws.waf.rule.statement {
-  AndStatement() aws.waf.rule.statement.AndStatement
-  SqliMatchStatement() aws.waf.rule.statement.SqliMatchStatement
-  //ByteMatchStatement: null
-  //GeoMatchStatement: null
-  //IPSetReferenceStatement: null
-  //LabelMatchStatement: null
-  //ManagedRuleGroupStatement: null
-  //NotStatement: null
-  //OrStatement: null
-  //RateBasedStatement: null
-  //RegexMatchStatement: null
-  //RegexPatternSetReferenceStatement: null
-  //RuleGroupReferenceStatement: null
-  //SizeConstraintStatement: null
-  //XssMatchStatement: null
+  andStatement() aws.waf.rule.statement.andstatement
+  sqliMatchStatement() aws.waf.rule.statement.sqlimatchstatement
 }
 
-private aws.waf.rule.statement.AndStatement {
-
+private aws.waf.rule.statement.andstatement {
+  name string
 }
 
-privat aws.waf.rule.statement.SqliMatchStatement {
+private aws.waf.rule.statement.sqlimatchstatement {
+  fieldToMatch() aws.waf.rule.statement.sqlimatchstatement.fieldtomatch
+}
 
+private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch {
+  singleHeader() aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
+}
+
+private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader {
+  name string
 }
 
 // Amazon WAF v2 ACL
