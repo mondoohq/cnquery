@@ -11,9 +11,11 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"go.mondoo.com/cnquery/v9/logger"
 )
 
 var teamsReport = `
+$ErrorActionPreference = "Stop"
 $graphToken= '%s'
 $teamsToken = '%s'
 
@@ -77,6 +79,8 @@ func (c *Ms365Connection) getTeamsReport(accessToken, teamsToken string) (*MsTea
 		idx := strings.IndexByte(str, '{')
 		after := str[idx:]
 		newData := []byte(after)
+
+		logger.DebugDumpJSON("ms-teams-report", string(newData))
 		err = json.Unmarshal(newData, report)
 		if err != nil {
 			return nil, err
@@ -87,6 +91,7 @@ func (c *Ms365Connection) getTeamsReport(accessToken, teamsToken string) (*MsTea
 			return nil, err
 		}
 
+		logger.DebugDumpJSON("ms-teams-report", string(data))
 		return nil, fmt.Errorf("failed to generate ms teams report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 	return report, nil
