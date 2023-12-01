@@ -62,6 +62,10 @@ func init() {
 			// to override args, implement: initAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRule,
 		},
+		"aws.waf.rule.statement": {
+			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatement,
+		},
 		"aws.waf.rulegroup": {
 			// to override args, implement: initAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRulegroup,
@@ -743,10 +747,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsWafRule).GetPriority()).ToDataRes(types.Int)
 	},
 	"aws.waf.rule.statement": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
 	},
 	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Dict)
+	},
+	"aws.waf.rule.statement.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetName()).ToDataRes(types.String)
 	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
@@ -3200,11 +3207,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRule).Statement, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRule).Statement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7406,10 +7421,10 @@ func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]interface{}] {
 type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsWafRuleInternal it will be used here
+	mqlAwsWafRuleInternal
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
-	Statement plugin.TValue[interface{}]
+	Statement plugin.TValue[*mqlAwsWafRuleStatement]
 	Action plugin.TValue[interface{}]
 }
 
@@ -7458,12 +7473,68 @@ func (c *mqlAwsWafRule) GetPriority() *plugin.TValue[int64] {
 	return &c.Priority
 }
 
-func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[interface{}] {
-	return &c.Statement
+func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
+	return plugin.GetOrCompute[*mqlAwsWafRuleStatement](&c.Statement, func() (*mqlAwsWafRuleStatement, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rule", c.__id, "statement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafRuleStatement), nil
+			}
+		}
+
+		return c.statement()
+	})
 }
 
 func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
 	return &c.Action
+}
+
+// mqlAwsWafRuleStatement for the aws.waf.rule.statement resource
+type mqlAwsWafRuleStatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleStatement creates a new instance of this resource
+func createAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatement) MqlName() string {
+	return "aws.waf.rule.statement"
+}
+
+func (c *mqlAwsWafRuleStatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatement) GetName() *plugin.TValue[string] {
+	return &c.Name
 }
 
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource

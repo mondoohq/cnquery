@@ -154,9 +154,35 @@ private aws.waf.rule @defaults("name") {
   // Priority
   priority int
   // Statement
-  statement dict
+  statement() aws.waf.rule.statement
   // Action
   action dict
+}
+
+private aws.waf.rule.statement {
+  AndStatement() aws.waf.rule.statement.AndStatement
+  SqliMatchStatement() aws.waf.rule.statement.SqliMatchStatement
+  //ByteMatchStatement: null
+  //GeoMatchStatement: null
+  //IPSetReferenceStatement: null
+  //LabelMatchStatement: null
+  //ManagedRuleGroupStatement: null
+  //NotStatement: null
+  //OrStatement: null
+  //RateBasedStatement: null
+  //RegexMatchStatement: null
+  //RegexPatternSetReferenceStatement: null
+  //RuleGroupReferenceStatement: null
+  //SizeConstraintStatement: null
+  //XssMatchStatement: null
+}
+
+private aws.waf.rule.statement.AndStatement {
+
+}
+
+privat aws.waf.rule.statement.SqliMatchStatement {
+
 }
 
 // Amazon WAF v2 ACL

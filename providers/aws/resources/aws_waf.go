@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -16,6 +17,16 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
 	"go.mondoo.com/cnquery/v9/types"
 )
+
+type mqlAwsWafRuleInternal struct {
+	lock sync.Mutex
+	rule waftypes.Rule
+}
+
+type mqlAwsWafRuleStatementInternal struct {
+	lock sync.Mutex
+	rule waftypes.Rule
+}
 
 func (a *mqlAwsWaf) id() (string, error) {
 	return "aws.waf", nil
@@ -124,9 +135,36 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRule.(*mqlAwsWafRule).rule = rule
 		rules = append(rules, mqlRule)
 	}
 	return rules, nil
+}
+
+func (a *mqlAwsWafRule) statement() (*mqlAwsWafRuleStatement, error) {
+	//conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	//var scope waftypes.Scope
+	//scope = "REGIONAL"
+	//ctx := context.Background()
+	//region := ""
+	//svc := conn.Wafv2(region)
+	var statement *mqlAwsWafRuleStatement
+	//svc.listRule
+	return statement, nil
+}
+
+func (a *mqlAwsWafRuleStatement) andStatement() (*mqlAwsWafRuleStatement, error) {
+	//conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	//var scope waftypes.Scope
+	//scope = "REGIONAL"
+	//ctx := context.Background()
+	//region := ""
+	//svc := conn.Wafv2(region)
+	var statement *mqlAwsWafRuleStatement
+	//svc.listRule
+	return statement, nil
 }
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {

@@ -2433,6 +2433,14 @@ resources:
     platform:
       name:
       - aws
+  aws.waf.rule.statement:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.waf.rulegroup:
     fields:
       arn: {}
