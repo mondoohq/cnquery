@@ -160,12 +160,25 @@ private aws.waf.rule @defaults("name") {
 }
 
 private aws.waf.rule.statement {
-  andStatement aws.waf.rule.statement.andstatement
   sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
+  xssMatchStatement aws.waf.rule.statement.xssmatchstatement
+  andStatement aws.waf.rule.statement.andstatement
+}
+
+private aws.waf.rule.statement.xssmatchstatement {
+  fieldToMatch aws.waf.rule.statement.xssmatchstatement.fieldtomatch
+}
+
+private aws.waf.rule.statement.xssmatchstatement.fieldtomatch {
+  singleHeader aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader
+}
+
+private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
+  name string
 }
 
 private aws.waf.rule.statement.andstatement {
-  name string
+  statements []aws.waf.rule.statement
 }
 
 private aws.waf.rule.statement.sqlimatchstatement {

@@ -2438,6 +2438,7 @@ resources:
       andStatement: {}
       name: {}
       sqliMatchStatement: {}
+      xssMatchStatement: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2446,6 +2447,7 @@ resources:
   aws.waf.rule.statement.andstatement:
     fields:
       name: {}
+      statements: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2483,6 +2485,30 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement:
+    fields:
+      fieldToMatch: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch:
+    fields:
+      singleHeader: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader:
     fields:
       name: {}
     is_private: true

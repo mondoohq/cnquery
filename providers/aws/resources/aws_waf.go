@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -109,9 +110,37 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
+		fmt.Println("----- START -----")
 		var statement plugin.Resource
 		if rule.Statement != nil {
 			var sqlimatchstatement plugin.Resource
+			var xssmatchstatement plugin.Resource
+			if rule.Statement.XssMatchStatement != nil {
+				var fieldToMatch plugin.Resource
+				if rule.Statement.SqliMatchStatement.FieldToMatch != nil {
+					var singleHeader plugin.Resource
+					if rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader != nil {
+						singleHeader, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch", map[string]*llx.RawData{
+						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader"),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				xssmatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement", map[string]*llx.RawData{
+					"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch"),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
 			if rule.Statement.SqliMatchStatement != nil {
 				var fieldToMatch plugin.Resource
 				if rule.Statement.SqliMatchStatement.FieldToMatch != nil {
@@ -140,11 +169,14 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 			}
 			statement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement", map[string]*llx.RawData{
 				"sqliMatchStatement": llx.ResourceData(sqlimatchstatement, "aws.waf.rule.statement.sqlimatchstatement"),
+				"xssMatchStatement":  llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),
 			})
 			if err != nil {
 				return nil, err
 			}
+			fmt.Println("Created statement:", statement)
 		}
+		fmt.Println("Statement:", statement)
 		ruleAction, err := convert.JsonToDict(rule.Action)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
@@ -158,6 +190,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 			return nil, err
 		}
 		rules = append(rules, mqlRule)
+		fmt.Println("----- END -----")
 	}
 	return rules, nil
 }
