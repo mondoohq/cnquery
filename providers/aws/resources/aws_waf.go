@@ -134,8 +134,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var queryString bool
+					if rule.Statement.RegexMatchStatement.FieldToMatch.QueryString != nil {
+						queryString = true
+					} else {
+						queryString = false
+					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch", map[string]*llx.RawData{
 						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader"),
+						"queryString":  llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -161,8 +168,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var queryString bool
+					if rule.Statement.ByteMatchStatement.FieldToMatch.QueryString != nil {
+						queryString = true
+					} else {
+						queryString = false
+					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.bytematchstatement.fieldtomatch", map[string]*llx.RawData{
 						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"),
+						"queryString":  llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -170,6 +184,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 				bytematchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.bytematchstatement", map[string]*llx.RawData{
 					"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.bytematchstatement.fieldtomatch"),
+					"searchString": llx.StringData(string(rule.Statement.ByteMatchStatement.SearchString)),
 				})
 				if err != nil {
 					return nil, err
@@ -188,8 +203,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var queryString bool
+					if rule.Statement.XssMatchStatement.FieldToMatch.QueryString != nil {
+						queryString = true
+					} else {
+						queryString = false
+					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch", map[string]*llx.RawData{
 						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader"),
+						"queryString":  llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err
@@ -215,8 +237,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							return nil, err
 						}
 					}
+					var queryString bool
+					if rule.Statement.SqliMatchStatement.FieldToMatch.QueryString != nil {
+						queryString = true
+					} else {
+						queryString = false
+					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch", map[string]*llx.RawData{
 						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"),
+						"queryString":  llx.BoolData(queryString),
 					})
 					if err != nil {
 						return nil, err

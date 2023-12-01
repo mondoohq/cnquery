@@ -825,14 +825,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader"))
 	},
+	"aws.waf.rule.statement.regexmatchstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
+	},
 	"aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.bytematchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement.fieldtomatch"))
 	},
+	"aws.waf.rule.statement.bytematchstatement.searchString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetSearchString()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
 	},
 	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
@@ -842,6 +851,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementXssmatchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementXssmatchstatementFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
 	},
 	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
@@ -854,6 +866,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
 	},
 	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
@@ -3357,6 +3372,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.regexmatchstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader).__id, ok = v.Value.(string)
 			return
@@ -3373,12 +3392,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatementBytematchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatch](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.bytematchstatement.searchString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).SearchString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).__id, ok = v.Value.(string)
 			return
 		},
 	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3403,6 +3430,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementXssmatchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementXssmatchstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3435,6 +3466,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7823,6 +7858,7 @@ type mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch struct {
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchInternal it will be used here
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader]
+	QueryString plugin.TValue[bool]
 }
 
 // createAwsWafRuleStatementRegexmatchstatementFieldtomatch creates a new instance of this resource
@@ -7859,6 +7895,10 @@ func (c *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch) MqlID() string {
 
 func (c *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader] {
 	return &c.SingleHeader
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
 }
 
 // mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader resource
@@ -7911,6 +7951,7 @@ type mqlAwsWafRuleStatementBytematchstatement struct {
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementBytematchstatementInternal it will be used here
 	FieldToMatch plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatch]
+	SearchString plugin.TValue[string]
 }
 
 // createAwsWafRuleStatementBytematchstatement creates a new instance of this resource
@@ -7954,12 +7995,17 @@ func (c *mqlAwsWafRuleStatementBytematchstatement) GetFieldToMatch() *plugin.TVa
 	return &c.FieldToMatch
 }
 
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetSearchString() *plugin.TValue[string] {
+	return &c.SearchString
+}
+
 // mqlAwsWafRuleStatementBytematchstatementFieldtomatch for the aws.waf.rule.statement.bytematchstatement.fieldtomatch resource
 type mqlAwsWafRuleStatementBytematchstatementFieldtomatch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementBytematchstatementFieldtomatchInternal it will be used here
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader]
+	QueryString plugin.TValue[bool]
 }
 
 // createAwsWafRuleStatementBytematchstatementFieldtomatch creates a new instance of this resource
@@ -8001,6 +8047,10 @@ func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) MqlID() string {
 
 func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader] {
 	return &c.SingleHeader
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
 }
 
 // mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader resource
@@ -8107,6 +8157,7 @@ type mqlAwsWafRuleStatementXssmatchstatementFieldtomatch struct {
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementXssmatchstatementFieldtomatchInternal it will be used here
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader]
+	QueryString plugin.TValue[bool]
 }
 
 // createAwsWafRuleStatementXssmatchstatementFieldtomatch creates a new instance of this resource
@@ -8148,6 +8199,10 @@ func (c *mqlAwsWafRuleStatementXssmatchstatementFieldtomatch) MqlID() string {
 
 func (c *mqlAwsWafRuleStatementXssmatchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader] {
 	return &c.SingleHeader
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatementFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
 }
 
 // mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader resource
@@ -8298,6 +8353,7 @@ type mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch struct {
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchInternal it will be used here
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader]
+	QueryString plugin.TValue[bool]
 }
 
 // createAwsWafRuleStatementSqlimatchstatementFieldtomatch creates a new instance of this resource
@@ -8339,6 +8395,10 @@ func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) MqlID() string {
 
 func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader] {
 	return &c.SingleHeader
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
 }
 
 // mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader for the aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader resource

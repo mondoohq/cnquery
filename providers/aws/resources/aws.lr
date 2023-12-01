@@ -173,6 +173,7 @@ private aws.waf.rule.statement.regexmatchstatement {
 
 private aws.waf.rule.statement.regexmatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader
+  queryString bool
 }
 
 private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader {
@@ -181,10 +182,12 @@ private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader {
 
 private aws.waf.rule.statement.bytematchstatement {
   fieldToMatch aws.waf.rule.statement.bytematchstatement.fieldtomatch
+  searchString string
 }
 
 private aws.waf.rule.statement.bytematchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader
+  queryString bool
 }
 
 private aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader {
@@ -197,6 +200,7 @@ private aws.waf.rule.statement.xssmatchstatement {
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader
+  queryString bool
 }
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
@@ -213,6 +217,7 @@ private aws.waf.rule.statement.sqlimatchstatement {
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch {
   singleHeader aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
+  queryString bool
 }
 
 private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader {

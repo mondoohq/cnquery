@@ -2458,6 +2458,7 @@ resources:
   aws.waf.rule.statement.bytematchstatement:
     fields:
       fieldToMatch: {}
+      searchString: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2465,6 +2466,7 @@ resources:
       - aws
   aws.waf.rule.statement.bytematchstatement.fieldtomatch:
     fields:
+      queryString: {}
       singleHeader: {}
     is_private: true
     min_mondoo_version: latest
@@ -2489,6 +2491,7 @@ resources:
       - aws
   aws.waf.rule.statement.regexmatchstatement.fieldtomatch:
     fields:
+      queryString: {}
       singleHeader: {}
     is_private: true
     min_mondoo_version: latest
@@ -2528,6 +2531,7 @@ resources:
       - aws
   aws.waf.rule.statement.sqlimatchstatement.fieldtomatch:
     fields:
+      queryString: {}
       singleHeader: {}
     is_private: true
     min_mondoo_version: latest
@@ -2552,6 +2556,7 @@ resources:
       - aws
   aws.waf.rule.statement.xssmatchstatement.fieldtomatch:
     fields:
+      queryString: {}
       singleHeader: {}
     is_private: true
     min_mondoo_version: latest
