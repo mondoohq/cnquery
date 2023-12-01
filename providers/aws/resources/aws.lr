@@ -163,7 +163,20 @@ private aws.waf.rule.statement {
   sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
   xssMatchStatement aws.waf.rule.statement.xssmatchstatement
   byteMatchStatement aws.waf.rule.statement.bytematchstatement
+  regexMatchStatement aws.waf.rule.statement.regexmatchstatement
   andStatement aws.waf.rule.statement.andstatement
+}
+
+private aws.waf.rule.statement.regexmatchstatement {
+  fieldToMatch aws.waf.rule.statement.regexmatchstatement.fieldtomatch
+}
+
+private aws.waf.rule.statement.regexmatchstatement.fieldtomatch {
+  singleHeader aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader
+}
+
+private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader {
+  name string
 }
 
 private aws.waf.rule.statement.bytematchstatement {

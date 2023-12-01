@@ -2438,6 +2438,7 @@ resources:
       andStatement: {}
       byteMatchStatement: {}
       name: {}
+      regexMatchStatement: {}
       sqliMatchStatement: {}
       xssMatchStatement: {}
     is_private: true
@@ -2471,6 +2472,30 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement:
+    fields:
+      fieldToMatch: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch:
+    fields:
+      singleHeader: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader:
     fields:
       name: {}
     is_private: true

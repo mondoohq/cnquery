@@ -31,6 +31,10 @@ func (a *mqlAwsWafRule) id() (string, error) {
 	return a.Name.Data, nil
 }
 
+func (a *mqlAwsWafRuleStatement) id() (string, error) {
+	return "aws.waf.rule.statement", nil
+}
+
 func (a *mqlAwsWafRulegroup) id() (string, error) {
 	return a.Name.Data, nil
 }
@@ -110,12 +114,42 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
+		fmt.Println("Start for rule:", &rule.Name)
 		var statement plugin.Resource
 		if rule.Statement != nil {
 			var sqlimatchstatement plugin.Resource
 			var xssmatchstatement plugin.Resource
 			var bytematchstatement plugin.Resource
+			var regexmatchstatement plugin.Resource
+			if rule.Statement.RegexMatchStatement != nil {
+				fmt.Println("Found RegexMatchStatement")
+				var fieldToMatch plugin.Resource
+				if rule.Statement.RegexMatchStatement.FieldToMatch != nil {
+					var singleHeader plugin.Resource
+					if rule.Statement.RegexMatchStatement.FieldToMatch.SingleHeader != nil {
+						singleHeader, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.RegexMatchStatement.FieldToMatch.SingleHeader.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch", map[string]*llx.RawData{
+						"singleHeader": llx.ResourceData(singleHeader, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader"),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				regexmatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexmatchstatement", map[string]*llx.RawData{
+					"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch"),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
 			if rule.Statement.ByteMatchStatement != nil {
+				fmt.Println("Found ByteMatchStatement")
 				var fieldToMatch plugin.Resource
 				if rule.Statement.ByteMatchStatement.FieldToMatch != nil {
 					var singleHeader plugin.Resource
@@ -142,6 +176,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 			}
 			if rule.Statement.XssMatchStatement != nil {
+				fmt.Println("Found XssMatchStatement")
 				var fieldToMatch plugin.Resource
 				if rule.Statement.XssMatchStatement.FieldToMatch != nil {
 					var singleHeader plugin.Resource
@@ -168,6 +203,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 			}
 			if rule.Statement.SqliMatchStatement != nil {
+				fmt.Println("Found SqliMatchStatement")
 				var fieldToMatch plugin.Resource
 				if rule.Statement.SqliMatchStatement.FieldToMatch != nil {
 					var singleHeader plugin.Resource
@@ -194,9 +230,10 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 			}
 			statement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement", map[string]*llx.RawData{
-				"sqliMatchStatement": llx.ResourceData(sqlimatchstatement, "aws.waf.rule.statement.sqlimatchstatement"),
-				"xssMatchStatement":  llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),
-				"byteMatchStatement": llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
+				"sqliMatchStatement":  llx.ResourceData(sqlimatchstatement, "aws.waf.rule.statement.sqlimatchstatement"),
+				"xssMatchStatement":   llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),
+				"byteMatchStatement":  llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
+				"regexMatchStatement": llx.ResourceData(regexmatchstatement, "aws.waf.rule.statement.regexmatchstatement"),
 			})
 			if err != nil {
 				return nil, err
@@ -217,8 +254,45 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 			return nil, err
 		}
 		rules = append(rules, mqlRule)
+		fmt.Println("End for rule:", &rule.Name)
 	}
 	return rules, nil
+}
+
+func (a *mqlAwsWafRuleStatementSqlimatchstatement) id() (string, error) {
+	return "aws.waf.rule.sqlimatchstatement", nil
+}
+
+func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatch) id() (string, error) {
+	return "aws.waf.rule.sqlimatchstatement.fieldtomatch", nil
+}
+
+func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementBytematchstatement) id() (string, error) {
+	return "aws.waf.rule.bytematchstatement", nil
+}
+
+func (a *mqlAwsWafRuleStatementBytematchstatementFieldtomatch) id() (string, error) {
+	return "aws.waf.rule.bytematchstatement.fieldtomatch", nil
+}
+
+func (a *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementXssmatchstatement) id() (string, error) {
+	return "aws.waf.rule.xssmatchstatement", nil
+}
+
+func (a *mqlAwsWafRuleStatementXssmatchstatementFieldtomatch) id() (string, error) {
+	return "aws.waf.rule.sqlimatchstatement.fieldtomatch", nil
+}
+
+func (a *mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader) id() (string, error) {
+	return a.Name.Data, nil
 }
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
