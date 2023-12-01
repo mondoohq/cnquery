@@ -340,6 +340,10 @@ func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSingleheader) id() 
 	return a.Name.Data, nil
 }
 
+func (a *mqlAwsWafRuleStatementSqlimatchstatementFieldtomatchSinglequeryargument) id() (string, error) {
+	return a.Name.Data, nil
+}
+
 func (a *mqlAwsWafRuleStatementBytematchstatement) id() (string, error) {
 	return "aws.waf.rule.bytematchstatement", nil
 }
@@ -352,6 +356,10 @@ func (a *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSingleheader) id() 
 	return a.Name.Data, nil
 }
 
+func (a *mqlAwsWafRuleStatementBytematchstatementFieldtomatchSinglequeryargument) id() (string, error) {
+	return a.Name.Data, nil
+}
+
 func (a *mqlAwsWafRuleStatementXssmatchstatement) id() (string, error) {
 	return "aws.waf.rule.xssmatchstatement", nil
 }
@@ -361,6 +369,30 @@ func (a *mqlAwsWafRuleStatementXssmatchstatementFieldtomatch) id() (string, erro
 }
 
 func (a *mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSingleheader) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementXssmatchstatementFieldtomatchSinglequeryargument) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementAndstatement) id() (string, error) {
+	return "aws.waf.rule.andstatement", nil
+}
+
+func (a *mqlAwsWafRuleStatementRegexmatchstatement) id() (string, error) {
+	return "aws.waf.rule.andstatement", nil
+}
+
+func (a *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatch) id() (string, error) {
+	return "aws.waf.rule.sqlimatchstatement.fieldtomatch", nil
+}
+
+func (a *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementRegexmatchstatementFieldtomatchSinglequeryargument) id() (string, error) {
 	return a.Name.Data, nil
 }
 

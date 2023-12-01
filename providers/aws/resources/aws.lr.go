@@ -7915,7 +7915,12 @@ func createAwsWafRuleStatementRegexmatchstatement(runtime *plugin.Runtime, args 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexmatchstatement", res.__id)
@@ -7961,7 +7966,12 @@ func createAwsWafRuleStatementRegexmatchstatementFieldtomatch(runtime *plugin.Ru
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexmatchstatement.fieldtomatch", res.__id)
@@ -8013,7 +8023,12 @@ func createAwsWafRuleStatementRegexmatchstatementFieldtomatchSingleheader(runtim
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader", res.__id)
@@ -8057,7 +8072,12 @@ func createAwsWafRuleStatementRegexmatchstatementFieldtomatchSinglequeryargument
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument", res.__id)
@@ -8214,7 +8234,12 @@ func createAwsWafRuleStatementBytematchstatementFieldtomatchSinglequeryargument(
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument", res.__id)
@@ -8415,7 +8440,12 @@ func createAwsWafRuleStatementXssmatchstatementFieldtomatchSinglequeryargument(r
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument", res.__id)
@@ -8508,7 +8538,12 @@ func createAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[str
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.andstatement", res.__id)
@@ -8660,7 +8695,12 @@ func createAwsWafRuleStatementSqlimatchstatementFieldtomatchSinglequeryargument(
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument", res.__id)
