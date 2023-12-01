@@ -453,6 +453,8 @@ func init() {
 			string("!=" + types.ArrayLike):           {f: dictNotArrayV2, Label: "!="},
 			string("==" + types.Array(types.String)): {f: dictCmpStringarrayV2, Label: "=="},
 			string("!=" + types.Array(types.String)): {f: dictNotStringarrayV2, Label: "!="},
+			string("==" + types.Array(types.Regex)):  {f: dictCmpRegexarrayV2, Label: "=="},
+			string("!=" + types.Array(types.Regex)):  {f: dictNotRegexarrayV2, Label: "!="},
 			string("==" + types.Array(types.Bool)):   {f: dictCmpBoolarrayV2, Label: "=="},
 			string("!=" + types.Array(types.Bool)):   {f: dictNotBoolarrayV2, Label: "!="},
 			string("==" + types.Array(types.Int)):    {f: dictCmpIntarrayV2, Label: "=="},
