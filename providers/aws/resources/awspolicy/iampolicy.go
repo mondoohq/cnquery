@@ -10,15 +10,19 @@ import (
 
 type IamPolicyDocument struct {
 	Version   string           `json:"Version,omitempty"`
+	Id        string           `json:"Id,omitempty"`
 	Statement policyStatements `json:"Statement,omitempty"`
 }
 
 type IamPolicyStatement struct {
-	Sid       string           `json:"Sid,omitempty"`
-	Effect    string           `json:"Effect,omitempty"`
-	Action    statementSection `json:"Action,omitempty"`
-	NotAction statementSection `json:"NotAction,omitempty"`
-	Resource  statementSection `json:"Resource,omitempty"`
+	Sid          string             `json:"Sid,omitempty"`
+	Effect       string             `json:"Effect,omitempty"`
+	Action       statementSection   `json:"Action,omitempty"`
+	NotAction    statementSection   `json:"NotAction,omitempty"`
+	NotResource  statementSection   `json:"NotResource,omitempty"`
+	Principal    statementSection   `json:"Principal,omitempty"`
+	NotPrincipal statementSection   `json:"NotPrincipal,omitempty"`
+	Resource     statementSection   `json:"Resource,omitempty"`
 }
 
 type policyStatements []IamPolicyStatement

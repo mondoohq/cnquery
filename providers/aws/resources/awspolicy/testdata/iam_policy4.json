@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+      "Effect": "Allow",
+      "Principal" : { 
+        "AWS": [ 
+          "123456789012",
+          "555555555555" 
+          ]
+        },
+      "Action": "s3:*",
+      "Resource": [
+          "arn:aws:s3:::BUCKETNAME",
+          "arn:aws:s3:::BUCKETNAME/*"
+      ]
+  }]
+}

@@ -16,6 +16,8 @@ func TestIamPolicies(t *testing.T) {
 		"./testdata/iam_policy1.json",
 		"./testdata/iam_policy2.json",
 		"./testdata/iam_policy3.json",
+		"./testdata/iam_policy4.json",
+		"./testdata/iam_policy5.json",
 	}
 
 	for _, f := range files {
