@@ -44,8 +44,9 @@ type Runtime struct {
 }
 
 type ConnectedProvider struct {
-	Instance   *RunningProvider
-	Connection *plugin.ConnectRes
+	Instance        *RunningProvider
+	Connection      *plugin.ConnectRes
+	ConnectionError error
 }
 
 func (c *coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime {
@@ -219,10 +220,9 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		runtime: r,
 	}
 
-	var err error
-	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-	if err != nil {
-		return err
+	r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
+	if r.Provider.ConnectionError != nil {
+		return r.Provider.ConnectionError
 	}
 
 	// TODO: This is a stopgap that detects if the connect call returned an asset
@@ -244,9 +244,9 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if postProvider.ID != r.Provider.Instance.ID {
 		req.Asset = r.Provider.Connection.Asset
 		r.UseProvider(postProvider.ID)
-		r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
-		if err != nil {
-			return err
+		r.Provider.Connection, r.Provider.ConnectionError = r.Provider.Instance.Plugin.Connect(req, &callbacks)
+		if r.Provider.ConnectionError != nil {
+			return r.Provider.ConnectionError
 		}
 	}
 
@@ -536,15 +536,14 @@ func (r *Runtime) SetMockRecording(anyRecording Recording, providerID string, mo
 			runtime:   r,
 		}
 
-		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
+		provider.Connection, provider.ConnectionError = provider.Instance.Plugin.Connect(&plugin.ConnectReq{
 			Asset:        asset,
 			Upstream:     r.UpstreamConfig,
 			HasRecording: true,
 		}, &callbacks)
-		if err != nil {
-			return multierr.Wrap(err, "failed to set mock connection for recording")
+		if provider.ConnectionError != nil {
+			return multierr.Wrap(provider.ConnectionError, "failed to set mock connection for recording")
 		}
-		provider.Connection = res
 	}
 
 	if provider.Connection == nil {
@@ -573,7 +572,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	}
 
 	if provider := r.providers[info.Provider]; provider != nil {
-		return provider, info, nil
+		return provider, info, provider.ConnectionError
 	}
 
 	providerConn := r.Provider.Instance.ID
@@ -586,16 +585,14 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
 	}
 
-	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
+	res.Connection, res.ConnectionError = res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
 		Upstream: r.UpstreamConfig,
 		Asset:    r.Provider.Connection.Asset,
 	}, nil)
-	if err != nil {
-		return nil, nil, err
+	if res.ConnectionError != nil {
+		return nil, nil, res.ConnectionError
 	}
-
-	res.Connection = conn
 
 	return res, info, nil
 }
@@ -610,7 +607,7 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	}
 
 	if provider := r.providers[fieldInfo.Provider]; provider != nil {
-		return provider, resourceInfo, fieldInfo, nil
+		return provider, resourceInfo, fieldInfo, provider.ConnectionError
 	}
 
 	res, err := r.addProvider(fieldInfo.Provider, false)
@@ -618,16 +615,14 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 		return nil, nil, nil, multierr.Wrap(err, "failed to start provider '"+fieldInfo.Provider+"'")
 	}
 
-	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
+	res.Connection, res.ConnectionError = res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
 		Upstream: r.UpstreamConfig,
 		Asset:    r.Provider.Connection.Asset,
 	}, nil)
-	if err != nil {
-		return nil, nil, nil, err
+	if res.ConnectionError != nil {
+		return nil, nil, nil, res.ConnectionError
 	}
-
-	res.Connection = conn
 
 	return res, resourceInfo, fieldInfo, nil
 }
