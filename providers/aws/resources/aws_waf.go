@@ -372,6 +372,15 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				if rule.Statement.SizeConstraintStatement.FieldToMatch != nil {
 					var body plugin.Resource
 					var cookie plugin.Resource
+					var singleHeader plugin.Resource
+					var allQueryArguments plugin.Resource
+					var headerOrder plugin.Resource
+					var headers plugin.Resource
+					var ja3Fingerprint plugin.Resource
+					var jsonBody plugin.Resource
+					var queryString plugin.Resource
+					var singleQueryArgument plugin.Resource
+					var uriPath plugin.Resource
 					if rule.Statement.SizeConstraintStatement.FieldToMatch.Body != nil {
 						body, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body", map[string]*llx.RawData{
 							"overSizeHandling": llx.StringData(string(rule.Statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
@@ -382,9 +391,24 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 							"overSizeHandling": llx.StringData(string(rule.Statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
 						})
 					}
+					if rule.Statement.SizeConstraintStatement.FieldToMatch.SingleHeader != nil {
+						singleHeader, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
+							"name": llx.StringDataPtr(rule.Statement.SizeConstraintStatement.FieldToMatch.SingleHeader.Name),
+						})
+					}
 					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch", map[string]*llx.RawData{
-						"body":   llx.ResourceData(body, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body"),
-						"cookie": llx.ResourceData(cookie, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie"),
+						"method":              llx.AnyData(rule.Statement.SizeConstraintStatement.FieldToMatch.Method),
+						"body":                llx.ResourceData(body, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body"),
+						"cookie":              llx.ResourceData(cookie, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie"),
+						"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader"),
+						"allQueryArguments":   llx.ResourceData(allQueryArguments, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.allqueryarguments"),
+						"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.headerorder"),
+						"headers":             llx.ResourceData(headers, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.headers"),
+						"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.ja3fingerprint"),
+						"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.jsonbody"),
+						"queryString":         llx.ResourceData(queryString, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.querystring"),
+						"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.singlequeryargument"),
+						"uriPath":             llx.ResourceData(uriPath, "aws.waf.rule.statement.sizeconstraintstatement.fifieldToMatch.uripath"),
 					})
 				}
 				sizeconstraintstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{

@@ -200,8 +200,18 @@ private aws.waf.rule.statement.sizeconstraintstatement {
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
+  method string
   body aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body
   cookie aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie
+  singleHeader aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader
+	allQueryArguments aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments
+	headerOrder aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder
+	headers aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers
+	ja3Fingerprint aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint
+	jsonBody aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody
+	queryString aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring
+	singleQueryArgument aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument
+	uriPath aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body {
@@ -211,6 +221,19 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body {
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie {
   overSizeHandling string
 }
+
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader {
+  name string
+}
+
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument {}
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath {}
 
 
 private aws.waf.rule.statement.regexmatchstatement {

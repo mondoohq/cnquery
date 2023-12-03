@@ -2613,8 +2613,25 @@ resources:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch:
     fields:
+      allQueryArguments: {}
       body: {}
       cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
+      queryString: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+      uriPath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments:
+    fields: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2631,6 +2648,70 @@ resources:
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie:
     fields:
       overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleHeader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath:
+    fields: {}
     is_private: true
     min_mondoo_version: latest
     platform:
