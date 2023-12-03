@@ -166,7 +166,28 @@ private aws.waf.rule.statement {
   xssMatchStatement aws.waf.rule.statement.xssmatchstatement
   byteMatchStatement aws.waf.rule.statement.bytematchstatement
   regexMatchStatement aws.waf.rule.statement.regexmatchstatement
+  geoMatchStatement aws.waf.rule.statement.geomatchstatement
+  ipSetReferenceStatement aws.waf.rule.statement.ipsetreferencestatement
+  labelMatchStatement aws.waf.rule.statement.labelmatchstatement
+  managedRuleGroupStatement aws.waf.rule.statement.managedrulegroupstatement
+  notStatement aws.waf.rule.statement.notstatement
+  orStatement aws.waf.rule.statement.orstatement
+  rateBasedStatement aws.waf.rule.statement.ratebasedstatement
+  regexPatternSetReferenceStatement aws.waf.rule.statement.regexpatternsetreferencestatement
+  ruleGroupReferenceStatement aws.waf.rule.statement.rulegroupreferencestatement
+  sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
 }
+
+private aws.waf.rule.statement.geomatchstatement {}
+private aws.waf.rule.statement.ipsetreferencestatement {}
+private aws.waf.rule.statement.labelmatchstatement {}
+private aws.waf.rule.statement.managedrulegroupstatement {}
+private aws.waf.rule.statement.notstatement {}
+private aws.waf.rule.statement.orstatement {}
+private aws.waf.rule.statement.ratebasedstatement {}
+private aws.waf.rule.statement.regexpatternsetreferencestatement {}
+private aws.waf.rule.statement.rulegroupreferencestatement {}
+private aws.waf.rule.statement.sizeconstraintstatement {}
 
 private aws.waf.rule.statement.regexmatchstatement {
   fieldToMatch aws.waf.rule.statement.regexmatchstatement.fieldtomatch

@@ -66,6 +66,46 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatement,
 		},
+		"aws.waf.rule.statement.geomatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementGeomatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementGeomatchstatement,
+		},
+		"aws.waf.rule.statement.ipsetreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementIpsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementIpsetreferencestatement,
+		},
+		"aws.waf.rule.statement.labelmatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementLabelmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementLabelmatchstatement,
+		},
+		"aws.waf.rule.statement.managedrulegroupstatement": {
+			// to override args, implement: initAwsWafRuleStatementManagedrulegroupstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementManagedrulegroupstatement,
+		},
+		"aws.waf.rule.statement.notstatement": {
+			// to override args, implement: initAwsWafRuleStatementNotstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementNotstatement,
+		},
+		"aws.waf.rule.statement.orstatement": {
+			// to override args, implement: initAwsWafRuleStatementOrstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementOrstatement,
+		},
+		"aws.waf.rule.statement.ratebasedstatement": {
+			// to override args, implement: initAwsWafRuleStatementRatebasedstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRatebasedstatement,
+		},
+		"aws.waf.rule.statement.regexpatternsetreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementRegexpatternsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRegexpatternsetreferencestatement,
+		},
+		"aws.waf.rule.statement.rulegroupreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementRulegroupreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRulegroupreferencestatement,
+		},
+		"aws.waf.rule.statement.sizeconstraintstatement": {
+			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSizeconstraintstatement,
+		},
 		"aws.waf.rule.statement.regexmatchstatement": {
 			// to override args, implement: initAwsWafRuleStatementRegexmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementRegexmatchstatement,
@@ -830,6 +870,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.regexMatchStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetRegexMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.regexmatchstatement"))
+	},
+	"aws.waf.rule.statement.geoMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetGeoMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.geomatchstatement"))
+	},
+	"aws.waf.rule.statement.ipSetReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetIpSetReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.ipsetreferencestatement"))
+	},
+	"aws.waf.rule.statement.labelMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetLabelMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.labelmatchstatement"))
+	},
+	"aws.waf.rule.statement.managedRuleGroupStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetManagedRuleGroupStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.managedrulegroupstatement"))
+	},
+	"aws.waf.rule.statement.notStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetNotStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.notstatement"))
+	},
+	"aws.waf.rule.statement.orStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetOrStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.orstatement"))
+	},
+	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRateBasedStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.ratebasedstatement"))
+	},
+	"aws.waf.rule.statement.regexPatternSetReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRegexPatternSetReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.regexpatternsetreferencestatement"))
+	},
+	"aws.waf.rule.statement.ruleGroupReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRuleGroupReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.rulegroupreferencestatement"))
+	},
+	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetSizeConstraintStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement"))
 	},
 	"aws.waf.rule.statement.regexmatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.regexmatchstatement.fieldtomatch"))
@@ -3389,6 +3459,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatement).RegexMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRegexmatchstatement](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.geoMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).GeoMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementGeomatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipSetReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).IpSetReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementIpsetreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).LabelMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementLabelmatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedRuleGroupStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).ManagedRuleGroupStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementManagedrulegroupstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.notStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).NotStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementNotstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.orStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).OrStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementOrstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RateBasedStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRatebasedstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexPatternSetReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RegexPatternSetReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ruleGroupReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RuleGroupReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRulegroupreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).SizeConstraintStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.geomatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementGeomatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.ipsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementIpsetreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.labelmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementLabelmatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.managedrulegroupstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.notstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementNotstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.orstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementOrstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.ratebasedstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRatebasedstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.rulegroupreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sizeconstraintstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSizeconstraintstatement).__id, ok = v.Value.(string)
+			return
+		},
 	"aws.waf.rule.statement.regexmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementRegexmatchstatement).__id, ok = v.Value.(string)
 			return
@@ -7822,6 +7972,16 @@ type mqlAwsWafRuleStatement struct {
 	XssMatchStatement plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement]
 	ByteMatchStatement plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement]
 	RegexMatchStatement plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatement]
+	GeoMatchStatement plugin.TValue[*mqlAwsWafRuleStatementGeomatchstatement]
+	IpSetReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatement]
+	LabelMatchStatement plugin.TValue[*mqlAwsWafRuleStatementLabelmatchstatement]
+	ManagedRuleGroupStatement plugin.TValue[*mqlAwsWafRuleStatementManagedrulegroupstatement]
+	NotStatement plugin.TValue[*mqlAwsWafRuleStatementNotstatement]
+	OrStatement plugin.TValue[*mqlAwsWafRuleStatementOrstatement]
+	RateBasedStatement plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement]
+	RegexPatternSetReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement]
+	RuleGroupReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRulegroupreferencestatement]
+	SizeConstraintStatement plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatement]
 }
 
 // createAwsWafRuleStatement creates a new instance of this resource
@@ -7879,6 +8039,436 @@ func (c *mqlAwsWafRuleStatement) GetByteMatchStatement() *plugin.TValue[*mqlAwsW
 
 func (c *mqlAwsWafRuleStatement) GetRegexMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatement] {
 	return &c.RegexMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetGeoMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementGeomatchstatement] {
+	return &c.GeoMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetIpSetReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatement] {
+	return &c.IpSetReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetLabelMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementLabelmatchstatement] {
+	return &c.LabelMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetManagedRuleGroupStatement() *plugin.TValue[*mqlAwsWafRuleStatementManagedrulegroupstatement] {
+	return &c.ManagedRuleGroupStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetNotStatement() *plugin.TValue[*mqlAwsWafRuleStatementNotstatement] {
+	return &c.NotStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetOrStatement() *plugin.TValue[*mqlAwsWafRuleStatementOrstatement] {
+	return &c.OrStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRateBasedStatement() *plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement] {
+	return &c.RateBasedStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRegexPatternSetReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement] {
+	return &c.RegexPatternSetReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRuleGroupReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementRulegroupreferencestatement] {
+	return &c.RuleGroupReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetSizeConstraintStatement() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatement] {
+	return &c.SizeConstraintStatement
+}
+
+// mqlAwsWafRuleStatementGeomatchstatement for the aws.waf.rule.statement.geomatchstatement resource
+type mqlAwsWafRuleStatementGeomatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementGeomatchstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementGeomatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementGeomatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementGeomatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.geomatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.geomatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementIpsetreferencestatement for the aws.waf.rule.statement.ipsetreferencestatement resource
+type mqlAwsWafRuleStatementIpsetreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementIpsetreferencestatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementIpsetreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementIpsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementIpsetreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ipsetreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.ipsetreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementLabelmatchstatement for the aws.waf.rule.statement.labelmatchstatement resource
+type mqlAwsWafRuleStatementLabelmatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementLabelmatchstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementLabelmatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementLabelmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementLabelmatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.labelmatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.labelmatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementManagedrulegroupstatement for the aws.waf.rule.statement.managedrulegroupstatement resource
+type mqlAwsWafRuleStatementManagedrulegroupstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementManagedrulegroupstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementManagedrulegroupstatement creates a new instance of this resource
+func createAwsWafRuleStatementManagedrulegroupstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementManagedrulegroupstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.managedrulegroupstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlName() string {
+	return "aws.waf.rule.statement.managedrulegroupstatement"
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementNotstatement for the aws.waf.rule.statement.notstatement resource
+type mqlAwsWafRuleStatementNotstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementNotstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementNotstatement creates a new instance of this resource
+func createAwsWafRuleStatementNotstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementNotstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.notstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) MqlName() string {
+	return "aws.waf.rule.statement.notstatement"
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementOrstatement for the aws.waf.rule.statement.orstatement resource
+type mqlAwsWafRuleStatementOrstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementOrstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementOrstatement creates a new instance of this resource
+func createAwsWafRuleStatementOrstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementOrstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.orstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) MqlName() string {
+	return "aws.waf.rule.statement.orstatement"
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementRatebasedstatement for the aws.waf.rule.statement.ratebasedstatement resource
+type mqlAwsWafRuleStatementRatebasedstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRatebasedstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementRatebasedstatement creates a new instance of this resource
+func createAwsWafRuleStatementRatebasedstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRatebasedstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ratebasedstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) MqlName() string {
+	return "aws.waf.rule.statement.ratebasedstatement"
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementRegexpatternsetreferencestatement for the aws.waf.rule.statement.regexpatternsetreferencestatement resource
+type mqlAwsWafRuleStatementRegexpatternsetreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRegexpatternsetreferencestatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementRegexpatternsetreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementRegexpatternsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRegexpatternsetreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexpatternsetreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.regexpatternsetreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementRulegroupreferencestatement for the aws.waf.rule.statement.rulegroupreferencestatement resource
+type mqlAwsWafRuleStatementRulegroupreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRulegroupreferencestatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementRulegroupreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementRulegroupreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRulegroupreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.rulegroupreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.rulegroupreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementSizeconstraintstatement for the aws.waf.rule.statement.sizeconstraintstatement resource
+type mqlAwsWafRuleStatementSizeconstraintstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementSizeconstraintstatement creates a new instance of this resource
+func createAwsWafRuleStatementSizeconstraintstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSizeconstraintstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sizeconstraintstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) MqlName() string {
+	return "aws.waf.rule.statement.sizeconstraintstatement"
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) MqlID() string {
+	return c.__id
 }
 
 // mqlAwsWafRuleStatementRegexmatchstatement for the aws.waf.rule.statement.regexmatchstatement resource

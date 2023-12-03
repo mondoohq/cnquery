@@ -2437,9 +2437,19 @@ resources:
     fields:
       andStatement: {}
       byteMatchStatement: {}
+      geoMatchStatement: {}
       id: {}
+      ipSetReferenceStatement: {}
+      labelMatchStatement: {}
+      managedRuleGroupStatement: {}
       name: {}
+      notStatement: {}
+      orStatement: {}
+      rateBasedStatement: {}
       regexMatchStatement: {}
+      regexPatternSetReferenceStatement: {}
+      ruleGroupReferenceStatement: {}
+      sizeConstraintStatement: {}
       sqliMatchStatement: {}
       xssMatchStatement: {}
     is_private: true
@@ -2490,6 +2500,55 @@ resources:
     platform:
       name:
       - aws
+  aws.waf.rule.statement.geomatchstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.ipsetreferencestatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.labelmatchstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.managedrulegroupstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.notstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.orstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.ratebasedstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.waf.rule.statement.regexmatchstatement:
     fields:
       fieldToMatch: {}
@@ -2519,6 +2578,27 @@ resources:
   aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexpatternsetreferencestatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.rulegroupreferencestatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement:
+    fields: {}
     is_private: true
     min_mondoo_version: latest
     platform:
