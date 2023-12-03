@@ -2501,7 +2501,9 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.geomatchstatement:
-    fields: {}
+    fields:
+      countryCode: {}
+      countryCodes: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2515,7 +2517,9 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.labelmatchstatement:
-    fields: {}
+    fields:
+      key: {}
+      scope: {}
     is_private: true
     min_mondoo_version: latest
     platform:

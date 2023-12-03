@@ -901,6 +901,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetSizeConstraintStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement"))
 	},
+	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetCountryCodes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetKey()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.labelmatchstatement.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetScope()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.regexmatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.regexmatchstatement.fieldtomatch"))
 	},
@@ -3503,6 +3512,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementGeomatchstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).CountryCodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.ipsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementIpsetreferencestatement).__id, ok = v.Value.(string)
 			return
@@ -3511,6 +3524,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementLabelmatchstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelmatchstatement.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.managedrulegroupstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).__id, ok = v.Value.(string)
 			return
@@ -8086,6 +8107,7 @@ type mqlAwsWafRuleStatementGeomatchstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementGeomatchstatementInternal it will be used here
+	CountryCodes plugin.TValue[[]interface{}]
 }
 
 // createAwsWafRuleStatementGeomatchstatement creates a new instance of this resource
@@ -8118,6 +8140,10 @@ func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetCountryCodes() *plugin.TValue[[]interface{}] {
+	return &c.CountryCodes
 }
 
 // mqlAwsWafRuleStatementIpsetreferencestatement for the aws.waf.rule.statement.ipsetreferencestatement resource
@@ -8164,6 +8190,8 @@ type mqlAwsWafRuleStatementLabelmatchstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementLabelmatchstatementInternal it will be used here
+	Key plugin.TValue[string]
+	Scope plugin.TValue[string]
 }
 
 // createAwsWafRuleStatementLabelmatchstatement creates a new instance of this resource
@@ -8196,6 +8224,14 @@ func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetScope() *plugin.TValue[string] {
+	return &c.Scope
 }
 
 // mqlAwsWafRuleStatementManagedrulegroupstatement for the aws.waf.rule.statement.managedrulegroupstatement resource

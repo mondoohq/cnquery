@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -303,76 +304,90 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 			}
 			if rule.Statement.GeoMatchStatement != nil {
+				var countryCodes []string
+				for _, countryCode := range rule.Statement.GeoMatchStatement.CountryCodes {
+					countryCodes = append(countryCodes, string(countryCode))
+				}
+				countryCodesArray := convert.SliceAnyToInterface(countryCodes)
 				geomatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.geomatchstatement", map[string]*llx.RawData{
+					"countryCodes": llx.ArrayData(countryCodesArray, types.String),
 				})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.IPSetReferenceStatement != nil {
-				ipsetreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.ipsetreferencestatement", map[string]*llx.RawData{
-				})
+				ipsetreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.ipsetreferencestatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.LabelMatchStatement != nil {
 				labelmatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.labelmatchstatement", map[string]*llx.RawData{
+					"key":   llx.StringDataPtr(rule.Statement.LabelMatchStatement.Key),
+					"scope": llx.StringData(string(rule.Statement.LabelMatchStatement.Scope)),
 				})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.ManagedRuleGroupStatement != nil {
-				managedrulegroupstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{
-				})
+				managedrulegroupstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.NotStatement != nil {
-				notstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{
-				})
+				notstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.OrStatement != nil {
-				orstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{
-				})
+				orstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.RateBasedStatement != nil {
-				ratebasedstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.ratebasedstatement", map[string]*llx.RawData{
-				})
+				ratebasedstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.ratebasedstatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.RegexPatternSetReferenceStatement != nil {
-				regexpatternsetreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
-				})
+				regexpatternsetreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.RuleGroupReferenceStatement != nil {
-				rulegroupreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{
-				})
+				rulegroupreferencestatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.SizeConstraintStatement != nil {
-				sizeconstraintstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
-				})
+				sizeconstraintstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{})
 				if err != nil {
 					return nil, err
 				}
 			}
 		}
+		fmt.Println(regexmatchstatement)
+		fmt.Println(bytematchstatement)
+		fmt.Println(xssmatchstatement)
+		fmt.Println(sqlimatchstatement)
+		fmt.Println(geomatchstatement)
+		fmt.Println(ipsetreferencestatement)
+		fmt.Println(labelmatchstatement)
+		fmt.Println(managedrulegroupstatement)
+		fmt.Println(notstatement)
+		fmt.Println(orstatement)
+		fmt.Println(ratebasedstatement)
+		fmt.Println(regexpatternsetreferencestatement)
+		fmt.Println(rulegroupreferencestatement)
+		fmt.Println(sizeconstraintstatement)
 		var mqlStatement plugin.Resource
 		mqlStatementID := uuid.New() // maybe use the rule.name instead?
 		mqlStatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement",
@@ -382,18 +397,19 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				"byteMatchStatement":                llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
 				"xssMatchStatement":                 llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),
 				"sqliMatchStatement":                llx.ResourceData(sqlimatchstatement, "aws.waf.rule.statement.sqlimatchstatement"),
-				"geomatchstatement":                 llx.ResourceData(geomatchstatement, "aws.waf.rule.statement.geomatchstatement"),
-				"ipsetreferencestatement":           llx.ResourceData(ipsetreferencestatement, "aws.waf.rule.statement.ipsetreferencestatement"),
-				"labelmatchstatement":               llx.ResourceData(labelmatchstatement, "aws.waf.rule.statement.labelmatchstatement"),
-				"managedrulegroupstatement":         llx.ResourceData(managedrulegroupstatement, "aws.waf.rule.statement.managedrulegroupstatement"),
-				"notstatement":                      llx.ResourceData(notstatement, "aws.waf.rule.statement.notstatement"),
-				"orstatement":                       llx.ResourceData(orstatement, "aws.waf.rule.statement.orstatement"),
-				"ratebasedstatement":                llx.ResourceData(ratebasedstatement, "aws.waf.rule.statement.ratebasedstatement"),
-				"regexpatternsetreferencestatement": llx.ResourceData(regexpatternsetreferencestatement, "aws.waf.rule.statement.regexpatternsetreferencestatement"),
-				"rulegroupreferencestatement":       llx.ResourceData(rulegroupreferencestatement, "aws.waf.rule.statement.rulegroupreferencestatement"),
-				"sizeconstraintstatement":           llx.ResourceData(sizeconstraintstatement, "aws.waf.rule.statement.sizeconstraintstatement"),
+				"geoMatchStatement":                 llx.ResourceData(geomatchstatement, "aws.waf.rule.statement.geomatchstatement"),
+				"ipSetReferenceStatement":           llx.ResourceData(ipsetreferencestatement, "aws.waf.rule.statement.ipsetreferencestatement"),
+				"labelMatchStatement":               llx.ResourceData(labelmatchstatement, "aws.waf.rule.statement.labelmatchstatement"),
+				"managedRuleGroupStatement":         llx.ResourceData(managedrulegroupstatement, "aws.waf.rule.statement.managedrulegroupstatement"),
+				"notStatement":                      llx.ResourceData(notstatement, "aws.waf.rule.statement.notstatement"),
+				"orStatement":                       llx.ResourceData(orstatement, "aws.waf.rule.statement.orstatement"),
+				"rateBasedStatement":                llx.ResourceData(ratebasedstatement, "aws.waf.rule.statement.ratebasedstatement"),
+				"regexPatternSetReferenceStatement": llx.ResourceData(regexpatternsetreferencestatement, "aws.waf.rule.statement.regexpatternsetreferencestatement"),
+				"ruleGroupReferenceStatement":       llx.ResourceData(rulegroupreferencestatement, "aws.waf.rule.statement.rulegroupreferencestatement"),
+				"sizeConstraintStatement":           llx.ResourceData(sizeconstraintstatement, "aws.waf.rule.statement.sizeconstraintstatement"),
 			},
 		)
+		fmt.Println("mqlStatement:", mqlStatement)
 		ruleAction, err := convert.JsonToDict(rule.Action)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{

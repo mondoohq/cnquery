@@ -178,9 +178,14 @@ private aws.waf.rule.statement {
   sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
 }
 
-private aws.waf.rule.statement.geomatchstatement {}
+private aws.waf.rule.statement.geomatchstatement {
+  countryCodes []string
+}
 private aws.waf.rule.statement.ipsetreferencestatement {}
-private aws.waf.rule.statement.labelmatchstatement {}
+private aws.waf.rule.statement.labelmatchstatement {
+  key string
+  scope string
+}
 private aws.waf.rule.statement.managedrulegroupstatement {}
 private aws.waf.rule.statement.notstatement {}
 private aws.waf.rule.statement.orstatement {}
