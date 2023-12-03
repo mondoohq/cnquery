@@ -2602,7 +2602,35 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement:
-    fields: {}
+    fields:
+      comparisonOperator: {}
+      fieldToMatch: {}
+      size: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch:
+    fields:
+      body: {}
+      cookie: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body:
+    fields:
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie:
+    fields:
+      overSizeHandling: {}
     is_private: true
     min_mondoo_version: latest
     platform:

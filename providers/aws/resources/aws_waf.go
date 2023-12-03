@@ -368,7 +368,30 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 			}
 			if rule.Statement.SizeConstraintStatement != nil {
-				sizeconstraintstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{})
+				var fieldToMatch plugin.Resource
+				if rule.Statement.SizeConstraintStatement.FieldToMatch != nil {
+					var body plugin.Resource
+					var cookie plugin.Resource
+					if rule.Statement.SizeConstraintStatement.FieldToMatch.Body != nil {
+						body, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body", map[string]*llx.RawData{
+							"overSizeHandling": llx.StringData(string(rule.Statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
+						})
+					}
+					if rule.Statement.SizeConstraintStatement.FieldToMatch.Cookies != nil {
+						cookie, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
+							"overSizeHandling": llx.StringData(string(rule.Statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
+						})
+					}
+					fieldToMatch, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch", map[string]*llx.RawData{
+						"body":   llx.ResourceData(body, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body"),
+						"cookie": llx.ResourceData(cookie, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie"),
+					})
+				}
+				sizeconstraintstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
+					"size":               llx.IntData(rule.Statement.SizeConstraintStatement.Size),
+					"comparisonOperator": llx.StringData(string(rule.Statement.SizeConstraintStatement.ComparisonOperator)),
+					"fieldToMatch":       llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch"),
+				})
 				if err != nil {
 					return nil, err
 				}
