@@ -214,6 +214,17 @@ var popos = &PlatformResolver{
 	},
 }
 
+var devuan = &PlatformResolver{
+	Name:     "devuan",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "devuan" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
 	Name:     "redhat",
@@ -851,7 +862,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint, popos},
+	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint, popos, devuan},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
