@@ -200,7 +200,8 @@ private aws.waf.rule.statement.sizeconstraintstatement {
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
-  method string
+  method bool
+  uriPath bool
   body aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body
   cookie aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie
   singleHeader aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader
@@ -211,7 +212,6 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
 	jsonBody aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody
 	queryString aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring
 	singleQueryArgument aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument
-	uriPath aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body {
@@ -222,18 +222,37 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie {
   overSizeHandling string
 }
 
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder {
+  overSizeHandling string
+}
+
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader {
   name string
 }
 
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument {
+  name string
+}
+
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint {
+  fallbackBehavior string
+}
+
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody {
+  overSizeHandling string
+  invalidFallbackBehavior string
+  matchPattern aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern
+}
+
+private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern {
+  all bool
+  includePaths []string
+}
+
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder {}
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody {}
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath {}
+
 
 
 private aws.waf.rule.statement.regexmatchstatement {

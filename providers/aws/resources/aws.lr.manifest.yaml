@@ -2654,7 +2654,8 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder:
-    fields: {}
+    fields:
+      overSizeHandling: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2668,14 +2669,27 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint:
-    fields: {}
+    fields:
+      fallbackBehavior: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody:
-    fields: {}
+    fields:
+      invalidFallbackBehavior: {}
+      matchPattern: {}
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern:
+    fields:
+      all: {}
+      includePaths: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2704,7 +2718,8 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument:
-    fields: {}
+    fields:
+      name: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2712,7 +2727,6 @@ resources:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
