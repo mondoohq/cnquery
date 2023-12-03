@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -295,7 +294,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 			}
 		}
 		var mqlStatement plugin.Resource
-		mqlStatementID := uuid.New()
+		mqlStatementID := uuid.New() // maybe use the rule.name instead?
 		mqlStatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement",
 			map[string]*llx.RawData{
 				"id":                  llx.StringData(mqlStatementID.String()),
