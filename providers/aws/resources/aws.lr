@@ -202,15 +202,15 @@ private aws.waf.rule.statement.sizeconstraintstatement {
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
   method bool
   uriPath bool
+	queryString bool
+	allQueryArguments bool 
   body aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body
   cookie aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie
   singleHeader aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader
-	allQueryArguments aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments
 	headerOrder aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder
 	headers aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers
 	ja3Fingerprint aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint
 	jsonBody aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody
-	queryString aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring
 	singleQueryArgument aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument
 }
 
@@ -249,9 +249,7 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.mat
   includePaths []string
 }
 
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments {}
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers {}
-private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring {}
 
 
 

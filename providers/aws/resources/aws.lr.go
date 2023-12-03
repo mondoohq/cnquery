@@ -142,17 +142,9 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern,
 		},
-		"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments": {
-			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments,
-		},
 		"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers": {
 			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders,
-		},
-		"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring": {
-			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring,
 		},
 		"aws.waf.rule.statement.regexmatchstatement": {
 			// to override args, implement: initAwsWafRuleStatementRegexmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -973,6 +965,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uriPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetUriPath()).ToDataRes(types.Bool)
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allQueryArguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetAllQueryArguments()).ToDataRes(types.Bool)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetBody()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body"))
 	},
@@ -981,9 +979,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader"))
-	},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allQueryArguments": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetAllQueryArguments()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments"))
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerOrder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetHeaderOrder()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder"))
@@ -996,9 +991,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonBody": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetJsonBody()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody"))
-	},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetQueryString()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring"))
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleQueryArgument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetSingleQueryArgument()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument"))
@@ -3710,6 +3702,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).UriPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allQueryArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).AllQueryArguments, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).Body, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody](v.Value, v.Error)
 		return
@@ -3720,10 +3720,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader](v.Value, v.Error)
-		return
-	},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allQueryArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).AllQueryArguments, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3740,10 +3736,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).JsonBody, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody](v.Value, v.Error)
-		return
-	},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).QueryString, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleQueryArgument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3826,16 +3818,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).IncludePaths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments).__id, ok = v.Value.(string)
-			return
-		},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).__id, ok = v.Value.(string)
-			return
-		},
-	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring).__id, ok = v.Value.(string)
 			return
 		},
 	"aws.waf.rule.statement.regexmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8807,15 +8791,15 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch struct {
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchInternal it will be used here
 	Method plugin.TValue[bool]
 	UriPath plugin.TValue[bool]
+	QueryString plugin.TValue[bool]
+	AllQueryArguments plugin.TValue[bool]
 	Body plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody]
 	Cookie plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie]
 	SingleHeader plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader]
-	AllQueryArguments plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments]
 	HeaderOrder plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder]
 	Headers plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders]
 	Ja3Fingerprint plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint]
 	JsonBody plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody]
-	QueryString plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring]
 	SingleQueryArgument plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument]
 }
 
@@ -8859,6 +8843,14 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetUriPath()
 	return &c.UriPath
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetAllQueryArguments() *plugin.TValue[bool] {
+	return &c.AllQueryArguments
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetBody() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody] {
 	return &c.Body
 }
@@ -8869,10 +8861,6 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetCookie() 
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader] {
 	return &c.SingleHeader
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetAllQueryArguments() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments] {
-	return &c.AllQueryArguments
 }
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetHeaderOrder() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder] {
@@ -8889,10 +8877,6 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetJa3Finger
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetJsonBody() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody] {
 	return &c.JsonBody
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetQueryString() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring] {
-	return &c.QueryString
 }
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetSingleQueryArgument() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument] {
@@ -9266,45 +9250,6 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchp
 	return &c.IncludePaths
 }
 
-// mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments for the aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments resource
-type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryargumentsInternal it will be used here
-}
-
-// createAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments creates a new instance of this resource
-func createAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments) MqlName() string {
-	return "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments"
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchAllqueryarguments) MqlID() string {
-	return c.__id
-}
-
 // mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders for the aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers resource
 type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders struct {
 	MqlRuntime *plugin.Runtime
@@ -9341,45 +9286,6 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders) MqlNa
 }
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders) MqlID() string {
-	return c.__id
-}
-
-// mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring for the aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring resource
-type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystringInternal it will be used here
-}
-
-// createAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring creates a new instance of this resource
-func createAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring) MqlName() string {
-	return "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring"
-}
-
-func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchQuerystring) MqlID() string {
 	return c.__id
 }
 

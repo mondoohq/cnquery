@@ -2632,7 +2632,6 @@ resources:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2697,7 +2696,6 @@ resources:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
