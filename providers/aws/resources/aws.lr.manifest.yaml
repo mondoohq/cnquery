@@ -2437,6 +2437,7 @@ resources:
     fields:
       andStatement: {}
       byteMatchStatement: {}
+      id: {}
       name: {}
       regexMatchStatement: {}
       sqliMatchStatement: {}
@@ -2450,7 +2451,6 @@ resources:
     fields:
       name: {}
       statements: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:

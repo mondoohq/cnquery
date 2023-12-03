@@ -160,11 +160,12 @@ private aws.waf.rule @defaults("name") {
 }
 
 private aws.waf.rule.statement {
+  // random uuid, to make the statement unique, these don't exist in AWS
+  id string
   sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
   xssMatchStatement aws.waf.rule.statement.xssmatchstatement
   byteMatchStatement aws.waf.rule.statement.bytematchstatement
   regexMatchStatement aws.waf.rule.statement.regexmatchstatement
-  andStatement aws.waf.rule.statement.andstatement
 }
 
 private aws.waf.rule.statement.regexmatchstatement {
@@ -222,9 +223,6 @@ private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
   name string
 }
 
-private aws.waf.rule.statement.andstatement {
-  statements []aws.waf.rule.statement
-}
 
 private aws.waf.rule.statement.sqlimatchstatement {
   fieldToMatch aws.waf.rule.statement.sqlimatchstatement.fieldtomatch
