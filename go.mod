@@ -17,15 +17,15 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.0
-	github.com/aws/aws-sdk-go v1.48.10
-	github.com/aws/aws-sdk-go-v2 v1.23.4
-	github.com/aws/aws-sdk-go-v2/config v1.25.10
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.8
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.1
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.1
+	github.com/aws/aws-sdk-go v1.48.11
+	github.com/aws/aws-sdk-go-v2 v1.23.5
+	github.com/aws/aws-sdk-go-v2/config v1.25.11
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.9
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.2
 	github.com/aws/smithy-go v1.18.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231121224113-b6714ac5eb13
 	// pin v0.2.6
@@ -43,7 +43,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/golang-jwt/jwt/v5 v5.1.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang/mock v1.6.0
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/google/go-cmdtest v0.4.0
@@ -104,7 +104,7 @@ require (
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
-	howett.net/plist v1.0.0
+	howett.net/plist v1.0.1
 	k8s.io/apimachinery v0.28.4
 	k8s.io/client-go v0.28.4
 	k8s.io/component-base v0.28.4
@@ -178,15 +178,15 @@ require (
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.7 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.7 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.8 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.18.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.26.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.18.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.26.2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
