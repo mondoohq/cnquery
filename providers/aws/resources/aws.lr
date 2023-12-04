@@ -162,10 +162,14 @@ private aws.waf.rule @defaults("name") {
 private aws.waf.rule.action {
   allow aws.waf.rule.action.allow
   block aws.waf.rule.action.block
+  count aws.waf.rule.action.count
+  captcha aws.waf.rule.action.captcha
 }
 
 private aws.waf.rule.action.allow { }
 private aws.waf.rule.action.block { }
+private aws.waf.rule.action.count { }
+private aws.waf.rule.action.captcha { }
 
 private aws.waf.rule.statement {
   // random uuid, to make the statement unique, these don't exist in AWS

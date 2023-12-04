@@ -331,6 +331,8 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 
 	var allow plugin.Resource
 	var block plugin.Resource
+	var count plugin.Resource
+	var captcha plugin.Resource
 
 	if ruleAction != nil {
 		if ruleAction.Allow != nil {
@@ -340,10 +342,19 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 		if ruleAction.Block != nil {
 			block, err = CreateResource(runtime, "aws.waf.rule.action.block", map[string]*llx.RawData{})
 		}
+
+		if ruleAction.Count != nil {
+			count, err = CreateResource(runtime, "aws.waf.rule.action.count", map[string]*llx.RawData{})
+		}
+		if ruleAction.Captcha != nil {
+			captcha, err = CreateResource(runtime, "aws.waf.rule.action.captcha", map[string]*llx.RawData{})
+		}
 	}
 	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
-		"allow": llx.ResourceData(allow, "aws.waf.rule.action.allow"),
-		"block": llx.ResourceData(block, "aws.waf.rule.action.block"),
+		"allow":   llx.ResourceData(allow, "aws.waf.rule.action.allow"),
+		"block":   llx.ResourceData(block, "aws.waf.rule.action.block"),
+		"count":   llx.ResourceData(count, "aws.waf.rule.action.count"),
+		"captcha": llx.ResourceData(captcha, "aws.waf.rule.action.captcha"),
 	})
 	return mqlAction, err
 }

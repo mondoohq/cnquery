@@ -2437,6 +2437,8 @@ resources:
     fields:
       allow: {}
       block: {}
+      captcha: {}
+      count: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2450,6 +2452,20 @@ resources:
       name:
       - aws
   aws.waf.rule.action.block:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.captcha:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.count:
     fields: {}
     is_private: true
     min_mondoo_version: latest

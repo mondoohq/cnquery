@@ -74,6 +74,14 @@ func init() {
 			// to override args, implement: initAwsWafRuleActionBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleActionBlock,
 		},
+		"aws.waf.rule.action.count": {
+			// to override args, implement: initAwsWafRuleActionCount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleActionCount,
+		},
+		"aws.waf.rule.action.captcha": {
+			// to override args, implement: initAwsWafRuleActionCaptcha(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleActionCaptcha,
+		},
 		"aws.waf.rule.statement": {
 			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatement,
@@ -877,6 +885,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.action.block": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleAction).GetBlock()).ToDataRes(types.Resource("aws.waf.rule.action.block"))
+	},
+	"aws.waf.rule.action.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetCount()).ToDataRes(types.Resource("aws.waf.rule.action.count"))
+	},
+	"aws.waf.rule.action.captcha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetCaptcha()).ToDataRes(types.Resource("aws.waf.rule.action.captcha"))
 	},
 	"aws.waf.rule.statement.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetId()).ToDataRes(types.String)
@@ -3646,12 +3660,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleAction).Block, ok = plugin.RawToTValue[*mqlAwsWafRuleActionBlock](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.action.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).Count, ok = plugin.RawToTValue[*mqlAwsWafRuleActionCount](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.captcha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).Captcha, ok = plugin.RawToTValue[*mqlAwsWafRuleActionCaptcha](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.action.allow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleActionAllow).__id, ok = v.Value.(string)
 			return
 		},
 	"aws.waf.rule.action.block.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleActionBlock).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.action.count.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleActionCount).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.action.captcha.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleActionCaptcha).__id, ok = v.Value.(string)
 			return
 		},
 	"aws.waf.rule.statement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8428,6 +8458,8 @@ type mqlAwsWafRuleAction struct {
 	// optional: if you define mqlAwsWafRuleActionInternal it will be used here
 	Allow plugin.TValue[*mqlAwsWafRuleActionAllow]
 	Block plugin.TValue[*mqlAwsWafRuleActionBlock]
+	Count plugin.TValue[*mqlAwsWafRuleActionCount]
+	Captcha plugin.TValue[*mqlAwsWafRuleActionCaptcha]
 }
 
 // createAwsWafRuleAction creates a new instance of this resource
@@ -8468,6 +8500,14 @@ func (c *mqlAwsWafRuleAction) GetAllow() *plugin.TValue[*mqlAwsWafRuleActionAllo
 
 func (c *mqlAwsWafRuleAction) GetBlock() *plugin.TValue[*mqlAwsWafRuleActionBlock] {
 	return &c.Block
+}
+
+func (c *mqlAwsWafRuleAction) GetCount() *plugin.TValue[*mqlAwsWafRuleActionCount] {
+	return &c.Count
+}
+
+func (c *mqlAwsWafRuleAction) GetCaptcha() *plugin.TValue[*mqlAwsWafRuleActionCaptcha] {
+	return &c.Captcha
 }
 
 // mqlAwsWafRuleActionAllow for the aws.waf.rule.action.allow resource
@@ -8545,6 +8585,84 @@ func (c *mqlAwsWafRuleActionBlock) MqlName() string {
 }
 
 func (c *mqlAwsWafRuleActionBlock) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleActionCount for the aws.waf.rule.action.count resource
+type mqlAwsWafRuleActionCount struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionCountInternal it will be used here
+}
+
+// createAwsWafRuleActionCount creates a new instance of this resource
+func createAwsWafRuleActionCount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleActionCount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action.count", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleActionCount) MqlName() string {
+	return "aws.waf.rule.action.count"
+}
+
+func (c *mqlAwsWafRuleActionCount) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleActionCaptcha for the aws.waf.rule.action.captcha resource
+type mqlAwsWafRuleActionCaptcha struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionCaptchaInternal it will be used here
+}
+
+// createAwsWafRuleActionCaptcha creates a new instance of this resource
+func createAwsWafRuleActionCaptcha(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleActionCaptcha{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action.captcha", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleActionCaptcha) MqlName() string {
+	return "aws.waf.rule.action.captcha"
+}
+
+func (c *mqlAwsWafRuleActionCaptcha) MqlID() string {
 	return c.__id
 }
 
