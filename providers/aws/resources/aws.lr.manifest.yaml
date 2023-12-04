@@ -2945,6 +2945,8 @@ resources:
     fields:
       fieldToMatch: {}
       name: {}
+      ruleName: {}
+      sensitivityLevel: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2969,7 +2971,6 @@ resources:
       queryString: {}
       singleHeader: {}
       singleQueryArgument: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2977,7 +2978,6 @@ resources:
   aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
     fields:
       name: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2985,7 +2985,6 @@ resources:
   aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument:
     fields:
       name: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:

@@ -356,21 +356,9 @@ private aws.waf.rule.statement.xssmatchstatement {
 }
 
 private aws.waf.rule.statement.sqlimatchstatement {
-  fieldToMatch aws.waf.rule.statement.sqlimatchstatement.fieldtomatch
-}
-
-private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch {
-  singleHeader aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader
-  singleQueryArgument aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument
-  queryString bool
-}
-
-private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument {
-  name string
-}
-
-private aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader {
-  name string
+  ruleName string
+  fieldToMatch aws.waf.rule.fieldtomatch
+  sensitivityLevel string
 }
 
 // Amazon WAF v2 ACL
