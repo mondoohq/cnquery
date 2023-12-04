@@ -2858,7 +2858,6 @@ resources:
       singleHeader: {}
       singleQueryArgument: {}
       uriPath: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2873,7 +2872,6 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2882,7 +2880,6 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2891,7 +2888,6 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2902,7 +2898,6 @@ resources:
       matchScope: {}
       overSizeHandling: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2913,7 +2908,6 @@ resources:
       excludeHeaders: {}
       includeHeaders: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2922,7 +2916,6 @@ resources:
     fields:
       fallbackBehavior: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2934,7 +2927,6 @@ resources:
       matchScope: {}
       overSizeHandling: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2944,7 +2936,6 @@ resources:
       all: {}
       includePaths: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2966,7 +2957,6 @@ resources:
     fields:
       name: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2975,7 +2965,6 @@ resources:
     fields:
       name: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:

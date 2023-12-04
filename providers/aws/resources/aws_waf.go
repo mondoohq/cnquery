@@ -339,7 +339,6 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var notstatement plugin.Resource
 	var orstatement plugin.Resource
 	var ratebasedstatement plugin.Resource
-
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
@@ -524,7 +523,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				"ruleName":           llx.StringDataPtr(ruleName),
 				"size":               llx.IntData(statement.SizeConstraintStatement.Size),
 				"comparisonOperator": llx.StringData(string(statement.SizeConstraintStatement.ComparisonOperator)),
-				"fieldToMatch":       llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch"),
+				"fieldToMatch":       llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
 			})
 			if err != nil {
 				return nil, err
