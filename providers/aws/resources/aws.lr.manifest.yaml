@@ -2672,7 +2672,8 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.orstatement:
-    fields: {}
+    fields:
+      statements: {}
     is_private: true
     min_mondoo_version: latest
     platform:

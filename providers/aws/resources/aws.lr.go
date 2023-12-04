@@ -975,6 +975,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
 	},
+	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetSize()).ToDataRes(types.Int)
 	},
@@ -3821,6 +3824,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementOrstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementOrstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.ratebasedstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementRatebasedstatement).__id, ok = v.Value.(string)
 			return
@@ -8948,6 +8955,7 @@ type mqlAwsWafRuleStatementOrstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementOrstatementInternal it will be used here
+	Statements plugin.TValue[[]interface{}]
 }
 
 // createAwsWafRuleStatementOrstatement creates a new instance of this resource
@@ -8980,6 +8988,10 @@ func (c *mqlAwsWafRuleStatementOrstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementOrstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) GetStatements() *plugin.TValue[[]interface{}] {
+	return &c.Statements
 }
 
 // mqlAwsWafRuleStatementRatebasedstatement for the aws.waf.rule.statement.ratebasedstatement resource

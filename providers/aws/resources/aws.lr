@@ -201,7 +201,11 @@ private aws.waf.rule.statement.andstatement {
 }
 
 private aws.waf.rule.statement.notstatement {}
-private aws.waf.rule.statement.orstatement {}
+
+private aws.waf.rule.statement.orstatement {
+  statements []aws.waf.rule.statement
+}
+
 private aws.waf.rule.statement.ratebasedstatement {}
 private aws.waf.rule.statement.regexpatternsetreferencestatement {}
 private aws.waf.rule.statement.rulegroupreferencestatement {}

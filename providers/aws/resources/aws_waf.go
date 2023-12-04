@@ -961,10 +961,17 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.OrStatement != nil {
-			orstatement, err = CreateResource(runtime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{})
-			if err != nil {
-				return nil, err
+			var statements []interface{}
+			for _, statement := range statement.OrStatement.Statements {
+				orStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName)
+				if err != nil {
+					return nil, err
+				}
+				statements = append(statements, orStatementMqlStatement)
 			}
+			orstatement, err = CreateResource(runtime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{
+				"statements": llx.ArrayData(statements, types.ResourceLike),
+			})
 		}
 		if statement.RateBasedStatement != nil {
 			ratebasedstatement, err = CreateResource(runtime, "aws.waf.rule.statement.ratebasedstatement", map[string]*llx.RawData{})
@@ -1097,20 +1104,20 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 	}
-	fmt.Println(regexmatchstatement)
-	fmt.Println(bytematchstatement)
-	fmt.Println(xssmatchstatement)
-	fmt.Println(sqlimatchstatement)
-	fmt.Println(geomatchstatement)
-	fmt.Println(ipsetreferencestatement)
-	fmt.Println(labelmatchstatement)
-	fmt.Println(managedrulegroupstatement)
-	fmt.Println(notstatement)
-	fmt.Println(orstatement)
-	fmt.Println(ratebasedstatement)
-	fmt.Println(regexpatternsetreferencestatement)
-	fmt.Println(rulegroupreferencestatement)
-	fmt.Println(sizeconstraintstatement)
+	//fmt.Println(regexmatchstatement)
+	//fmt.Println(bytematchstatement)
+	//fmt.Println(xssmatchstatement)
+	//fmt.Println(sqlimatchstatement)
+	//fmt.Println(geomatchstatement)
+	//fmt.Println(ipsetreferencestatement)
+	//fmt.Println(labelmatchstatement)
+	//fmt.Println(managedrulegroupstatement)
+	//fmt.Println(notstatement)
+	//fmt.Println(orstatement)
+	//fmt.Println(ratebasedstatement)
+	//fmt.Println(regexpatternsetreferencestatement)
+	//fmt.Println(rulegroupreferencestatement)
+	//fmt.Println(sizeconstraintstatement)
 	var mqlStatement plugin.Resource
 	mqlStatementID := uuid.New() // maybe use the rule.name instead?
 	mqlStatement, err = CreateResource(runtime, "aws.waf.rule.statement",
