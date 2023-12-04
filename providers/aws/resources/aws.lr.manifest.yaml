@@ -2556,6 +2556,7 @@ resources:
   aws.waf.rule.statement.regexmatchstatement:
     fields:
       fieldToMatch: {}
+      regexString: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2563,9 +2564,90 @@ resources:
       - aws
   aws.waf.rule.statement.regexmatchstatement.fieldtomatch:
     fields:
+      allQueryArguments: {}
+      body: {}
+      cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
       queryString: {}
       singleHeader: {}
       singleQueryArgument: {}
+      uriPath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.body:
+    fields:
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.cookie:
+    fields:
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headerorder:
+    fields:
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers:
+    fields:
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers.matchpattern:
+    fields:
+      all: {}
+      excludeHeaders: {}
+      includeHeaders: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.ja3fingerprint:
+    fields:
+      fallbackBehavior: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody:
+    fields:
+      invalidFallbackBehavior: {}
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody.matchpattern:
+    fields:
+      all: {}
+      includePaths: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2661,7 +2743,20 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers:
-    fields: {}
+    fields:
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern:
+    fields:
+      all: {}
+      excludeHeaders: {}
+      includeHeaders: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2679,6 +2774,7 @@ resources:
     fields:
       invalidFallbackBehavior: {}
       matchPattern: {}
+      matchScope: {}
       overSizeHandling: {}
     is_private: true
     min_mondoo_version: latest
