@@ -133,23 +133,8 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCves[i] = mqlVulnCve
 	}
 
-	mqlVulnPackages := make([]interface{}, len(vulnReport.Packages))
-	for i, p := range vulnReport.Packages {
-		mqlVulnPackage, err := CreateResource(v.MqlRuntime, "vuln.package", map[string]*llx.RawData{
-			"name":      llx.StringData(p.Name),
-			"version":   llx.StringData(p.Version),
-			"available": llx.StringData(p.Available),
-			"arch":      llx.StringData(p.Arch),
-		})
-		if err != nil {
-			return err
-		}
-		mqlVulnPackages[i] = mqlVulnPackage
-	}
-
 	v.Advisories = plugin.TValue[[]interface{}]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
 	v.Cves = plugin.TValue[[]interface{}]{Data: mqlVulnCves, State: plugin.StateIsSet}
-	v.Packages = plugin.TValue[[]interface{}]{Data: mqlVulnPackages, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -187,27 +172,10 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 	conn := v.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 
-	pkgsRes, err := CreateResource(v.MqlRuntime, "packages", nil)
-	if err != nil {
-		return nil, err
-	}
-	pkgs := pkgsRes.(*mqlPackages)
-	pkgsList := pkgs.GetList().Data
-
-	gqlPackages := make([]mondoogql.PackageInput, len(pkgsList))
-	for i, p := range pkgs.GetList().Data {
-		mqlPkg := p.(*mqlPackage)
-		gqlPackages[i] = mondoogql.PackageInput{
-			Name:    mondoogql.String(mqlPkg.Name.Data),
-			Version: mondoogql.String(mqlPkg.Version.Data),
-			Arch:    mondoogql.NewStringPtr(mondoogql.String(mqlPkg.Arch.Data)),
-		}
-	}
-
 	gqlVulnReport, err := mondooClient.GetIncognitoVulnReport(mondoogql.PlatformInput{
 		Name:    mondoogql.NewStringPtr(mondoogql.String(platform.Name)),
 		Release: mondoogql.NewStringPtr(mondoogql.String(platform.Version)),
-	}, gqlPackages)
+	}, []mondoogql.PackageInput{})
 	if err != nil {
 		return nil, err
 	}

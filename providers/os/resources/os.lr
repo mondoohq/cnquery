@@ -62,6 +62,7 @@ platform {
   vulnerabilityReport() dict
 }
 
+// Vulnerability Information
 extend vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve
