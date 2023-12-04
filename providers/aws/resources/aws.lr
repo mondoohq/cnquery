@@ -264,108 +264,111 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matc
 
 
 private aws.waf.rule.statement.regexmatchstatement {
-  fieldToMatch aws.waf.rule.statement.regexmatchstatement.fieldtomatch
+  ruleName string
+  fieldToMatch aws.waf.rule.fieldtomatch
   regexString string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch {
+private aws.waf.rule.statement.bytematchstatement {
+  ruleName string
+  fieldToMatch aws.waf.rule.fieldtomatch
+  searchString string
+}
+
+private aws.waf.rule.fieldtomatch {
+  ruleName string
   method bool
   uriPath bool
 	queryString bool
 	allQueryArguments bool 
-  body aws.waf.rule.statement.regexmatchstatement.fieldtomatch.body
-  cookie aws.waf.rule.statement.regexmatchstatement.fieldtomatch.cookie
-  singleHeader aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader
-	headerOrder aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headerorder
-	headers aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers
-	ja3Fingerprint aws.waf.rule.statement.regexmatchstatement.fieldtomatch.ja3fingerprint
-	jsonBody aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody
-	singleQueryArgument aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument
+  body aws.waf.rule.fieldtomatch.body
+  cookie aws.waf.rule.fieldtomatch.cookie
+  singleHeader aws.waf.rule.fieldtomatch.singleheader
+	headerOrder aws.waf.rule.fieldtomatch.headerorder
+	headers aws.waf.rule.fieldtomatch.headers
+	ja3Fingerprint aws.waf.rule.fieldtomatch.ja3fingerprint
+	jsonBody aws.waf.rule.fieldtomatch.jsonbody
+	singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.body {
+private aws.waf.rule.fieldtomatch.body {
+  ruleName string
   overSizeHandling string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.cookie {
+private aws.waf.rule.fieldtomatch.cookie {
+  ruleName string
   overSizeHandling string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headerorder {
+private aws.waf.rule.fieldtomatch.headerorder {
+  ruleName string
   overSizeHandling string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader {
+private aws.waf.rule.fieldtomatch.singleheader {
+  ruleName string
   name string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument {
+private aws.waf.rule.fieldtomatch.singlequeryargument {
+  ruleName string
   name string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.ja3fingerprint {
+private aws.waf.rule.fieldtomatch.ja3fingerprint {
+  ruleName string
   fallbackBehavior string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody {
+private aws.waf.rule.fieldtomatch.jsonbody {
+  ruleName string
   overSizeHandling string
   matchScope string
   invalidFallbackBehavior string
-  matchPattern aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody.matchpattern
+  matchPattern aws.waf.rule.fieldtomatch.jsonbody.matchpattern
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody.matchpattern {
+private aws.waf.rule.fieldtomatch.jsonbody.matchpattern {
+  ruleName string
   all bool
   includePaths []string
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers {
+private aws.waf.rule.fieldtomatch.headers {
+  ruleName string
   matchScope string
   overSizeHandling string
-  matchPattern aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers.matchpattern
+  matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
 }
 
-private aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers.matchpattern {
+private aws.waf.rule.fieldtomatch.headers.matchpattern {
+  ruleName string
   all bool
   includeHeaders []string
   excludeHeaders []string
 }
 
 
-private aws.waf.rule.statement.bytematchstatement {
-  fieldToMatch aws.waf.rule.statement.bytematchstatement.fieldtomatch
-  searchString string
-}
-
-private aws.waf.rule.statement.bytematchstatement.fieldtomatch {
-  singleHeader aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader
-  singleQueryArgument aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument
-  queryString bool
-}
-
-private aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument {
-  name string
-}
-
-private aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader {
-  name string
-}
-
 private aws.waf.rule.statement.xssmatchstatement {
+  ruleName string
   fieldToMatch aws.waf.rule.statement.xssmatchstatement.fieldtomatch
 }
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch {
+  ruleName string
   singleHeader aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader
   singleQueryArgument aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument
   queryString bool
 }
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument {
+  ruleName string
   name string
 }
 
 private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
+  ruleName string
   name string
 }
 
