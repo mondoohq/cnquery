@@ -352,26 +352,8 @@ private aws.waf.rule.fieldtomatch.headers.matchpattern {
 
 private aws.waf.rule.statement.xssmatchstatement {
   ruleName string
-  fieldToMatch aws.waf.rule.statement.xssmatchstatement.fieldtomatch
+  fieldToMatch aws.waf.rule.fieldtomatch
 }
-
-private aws.waf.rule.statement.xssmatchstatement.fieldtomatch {
-  ruleName string
-  singleHeader aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader
-  singleQueryArgument aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument
-  queryString bool
-}
-
-private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument {
-  ruleName string
-  name string
-}
-
-private aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader {
-  ruleName string
-  name string
-}
-
 
 private aws.waf.rule.statement.sqlimatchstatement {
   fieldToMatch aws.waf.rule.statement.sqlimatchstatement.fieldtomatch

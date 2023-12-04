@@ -3005,7 +3005,6 @@ resources:
       ruleName: {}
       singleHeader: {}
       singleQueryArgument: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -3014,7 +3013,6 @@ resources:
     fields:
       name: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -3023,7 +3021,6 @@ resources:
     fields:
       name: {}
       ruleName: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
