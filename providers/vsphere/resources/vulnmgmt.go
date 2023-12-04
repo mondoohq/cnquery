@@ -169,6 +169,7 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 }
 
 func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.VulnReport, error) {
+	// FIXME: wrong connection
 	conn := v.MqlRuntime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 

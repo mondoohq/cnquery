@@ -219,6 +219,7 @@ func (c *MondooClient) GetIncognitoVulnReport(platform mondoogql.PlatformInput, 
 				Packages []struct {
 					Package
 				}
+				Stats ReportStats
 			} `graphql:"... on AssetIncognitoVulnerabilityReport"`
 		} `graphql:"analyseIncognitoAssetVulnerabilities(input: $input)"`
 	}
@@ -236,6 +237,7 @@ func (c *MondooClient) GetIncognitoVulnReport(platform mondoogql.PlatformInput, 
 		Advisories: make([]*Advisory, len(m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Advisories)),
 		Cves:       make([]*Cve, len(m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Cves)),
 		Packages:   make([]*Package, len(m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Packages)),
+		Stats:      &m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Stats,
 	}
 
 	for i := range m.AssetVulnerabilityReportResponse.AssetIncognitoVulnerabilityReport.Advisories {
