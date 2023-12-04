@@ -883,6 +883,7 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 				}
 				countryCodesArray := convert.SliceAnyToInterface(countryCodes)
 				geomatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.geomatchstatement", map[string]*llx.RawData{
+					"ruleName":     llx.StringDataPtr(rule.Name),
 					"countryCodes": llx.ArrayData(countryCodesArray, types.String),
 				})
 				if err != nil {
@@ -897,15 +898,20 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 			}
 			if rule.Statement.LabelMatchStatement != nil {
 				labelmatchstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.labelmatchstatement", map[string]*llx.RawData{
-					"key":   llx.StringDataPtr(rule.Statement.LabelMatchStatement.Key),
-					"scope": llx.StringData(string(rule.Statement.LabelMatchStatement.Scope)),
+					"ruleName": llx.StringDataPtr(rule.Name),
+					"key":      llx.StringDataPtr(rule.Statement.LabelMatchStatement.Key),
+					"scope":    llx.StringData(string(rule.Statement.LabelMatchStatement.Scope)),
 				})
 				if err != nil {
 					return nil, err
 				}
 			}
 			if rule.Statement.ManagedRuleGroupStatement != nil {
-				managedrulegroupstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{})
+				managedrulegroupstatement, err = CreateResource(a.MqlRuntime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{
+					"ruleName":   llx.StringDataPtr(rule.Name),
+					"Name":       llx.StringDataPtr(rule.Statement.ManagedRuleGroupStatement.Name),
+					"VendorName": llx.StringDataPtr(rule.Statement.ManagedRuleGroupStatement.VendorName),
+				})
 				if err != nil {
 					return nil, err
 				}

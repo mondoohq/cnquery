@@ -2630,6 +2630,7 @@ resources:
     fields:
       countryCode: {}
       countryCodes: {}
+      ruleName: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2645,6 +2646,7 @@ resources:
   aws.waf.rule.statement.labelmatchstatement:
     fields:
       key: {}
+      ruleName: {}
       scope: {}
     is_private: true
     min_mondoo_version: latest
@@ -2652,7 +2654,10 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.managedrulegroupstatement:
-    fields: {}
+    fields:
+      Name: {}
+      VendorName: {}
+      ruleName: {}
     is_private: true
     min_mondoo_version: latest
     platform:

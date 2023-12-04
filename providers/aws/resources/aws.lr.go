@@ -941,14 +941,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetSizeConstraintStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement"))
 	},
+	"aws.waf.rule.statement.geomatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetCountryCodes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.labelmatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetKey()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.labelmatchstatement.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.Name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetSize()).ToDataRes(types.Int)
@@ -3732,6 +3747,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementGeomatchstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.geomatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementGeomatchstatement).CountryCodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3744,6 +3763,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementLabelmatchstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.labelmatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementLabelmatchstatement).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3756,6 +3779,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.Name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.notstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementNotstatement).__id, ok = v.Value.(string)
 			return
@@ -8607,6 +8642,7 @@ type mqlAwsWafRuleStatementGeomatchstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementGeomatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	CountryCodes plugin.TValue[[]interface{}]
 }
 
@@ -8640,6 +8676,10 @@ func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleStatementGeomatchstatement) GetCountryCodes() *plugin.TValue[[]interface{}] {
@@ -8690,6 +8730,7 @@ type mqlAwsWafRuleStatementLabelmatchstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementLabelmatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Key plugin.TValue[string]
 	Scope plugin.TValue[string]
 }
@@ -8726,6 +8767,10 @@ func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetKey() *plugin.TValue[string] {
 	return &c.Key
 }
@@ -8739,6 +8784,9 @@ type mqlAwsWafRuleStatementManagedrulegroupstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementManagedrulegroupstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	Name plugin.TValue[string]
+	VendorName plugin.TValue[string]
 }
 
 // createAwsWafRuleStatementManagedrulegroupstatement creates a new instance of this resource
@@ -8771,6 +8819,18 @@ func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetVendorName() *plugin.TValue[string] {
+	return &c.VendorName
 }
 
 // mqlAwsWafRuleStatementNotstatement for the aws.waf.rule.statement.notstatement resource

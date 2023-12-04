@@ -179,14 +179,21 @@ private aws.waf.rule.statement {
 }
 
 private aws.waf.rule.statement.geomatchstatement {
+  ruleName string
   countryCodes []string
 }
 private aws.waf.rule.statement.ipsetreferencestatement {}
+
 private aws.waf.rule.statement.labelmatchstatement {
+  ruleName string
   key string
   scope string
 }
-private aws.waf.rule.statement.managedrulegroupstatement {}
+private aws.waf.rule.statement.managedrulegroupstatement {
+  ruleName string
+  Name string
+  VendorName string
+}
 private aws.waf.rule.statement.notstatement {}
 private aws.waf.rule.statement.orstatement {}
 private aws.waf.rule.statement.ratebasedstatement {}
