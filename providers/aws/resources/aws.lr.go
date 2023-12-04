@@ -82,6 +82,10 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatementManagedrulegroupstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementManagedrulegroupstatement,
 		},
+		"aws.waf.rule.statement.andstatement": {
+			// to override args, implement: initAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementAndstatement,
+		},
 		"aws.waf.rule.statement.notstatement": {
 			// to override args, implement: initAwsWafRuleStatementNotstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementNotstatement,
@@ -929,6 +933,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.orStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetOrStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.orstatement"))
 	},
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetAndStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.andstatement"))
+	},
 	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetRateBasedStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.ratebasedstatement"))
 	},
@@ -964,6 +971,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetSize()).ToDataRes(types.Int)
@@ -3727,6 +3737,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatement).OrStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementOrstatement](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).AndStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementAndstatement](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatement).RateBasedStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRatebasedstatement](v.Value, v.Error)
 		return
@@ -3789,6 +3803,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementAndstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.notstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8534,6 +8556,7 @@ type mqlAwsWafRuleStatement struct {
 	ManagedRuleGroupStatement plugin.TValue[*mqlAwsWafRuleStatementManagedrulegroupstatement]
 	NotStatement plugin.TValue[*mqlAwsWafRuleStatementNotstatement]
 	OrStatement plugin.TValue[*mqlAwsWafRuleStatementOrstatement]
+	AndStatement plugin.TValue[*mqlAwsWafRuleStatementAndstatement]
 	RateBasedStatement plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement]
 	RegexPatternSetReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement]
 	RuleGroupReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRulegroupreferencestatement]
@@ -8619,6 +8642,10 @@ func (c *mqlAwsWafRuleStatement) GetNotStatement() *plugin.TValue[*mqlAwsWafRule
 
 func (c *mqlAwsWafRuleStatement) GetOrStatement() *plugin.TValue[*mqlAwsWafRuleStatementOrstatement] {
 	return &c.OrStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetAndStatement() *plugin.TValue[*mqlAwsWafRuleStatementAndstatement] {
+	return &c.AndStatement
 }
 
 func (c *mqlAwsWafRuleStatement) GetRateBasedStatement() *plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement] {
@@ -8831,6 +8858,50 @@ func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetName() *plugin.TVal
 
 func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetVendorName() *plugin.TValue[string] {
 	return &c.VendorName
+}
+
+// mqlAwsWafRuleStatementAndstatement for the aws.waf.rule.statement.andstatement resource
+type mqlAwsWafRuleStatementAndstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementAndstatementInternal it will be used here
+	Statements plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleStatementAndstatement creates a new instance of this resource
+func createAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementAndstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.andstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlName() string {
+	return "aws.waf.rule.statement.andstatement"
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) GetStatements() *plugin.TValue[[]interface{}] {
+	return &c.Statements
 }
 
 // mqlAwsWafRuleStatementNotstatement for the aws.waf.rule.statement.notstatement resource
