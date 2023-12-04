@@ -1024,6 +1024,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.regexpatternsetreferencestatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
 	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetArn()).ToDataRes(types.String)
 	},
@@ -3988,6 +3991,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.rulegroupreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9390,6 +9397,7 @@ type mqlAwsWafRuleStatementRulegroupreferencestatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementRulegroupreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Arn plugin.TValue[string]
 	ExcludeRules plugin.TValue[[]interface{}]
 }
@@ -9424,6 +9432,10 @@ func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetArn() *plugin.TValue[string] {

@@ -339,139 +339,15 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var notstatement plugin.Resource
 	var orstatement plugin.Resource
 	var ratebasedstatement plugin.Resource
+
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
 	if statement != nil {
 		if statement.RegexMatchStatement != nil {
 			var fieldToMatch plugin.Resource
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexMatchStatement.FieldToMatch, ruleName)
 			if statement.RegexMatchStatement.FieldToMatch != nil {
-				var singleHeader plugin.Resource
-				var singleQueryArgument plugin.Resource
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				if statement.RegexMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.RegexMatchStatement.FieldToMatch.SingleQueryArgument != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.RegexMatchStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.RegexMatchStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.RegexMatchStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.RegexMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-				}
-				if statement.RegexMatchStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.RegexMatchStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.RegexMatchStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.RegexMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.RegexMatchStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.RegexMatchStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.RegexMatchStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-				if statement.RegexMatchStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.RegexMatchStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.RegexMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.RegexMatchStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.RegexMatchStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"queryString":         llx.BoolData(statement.RegexMatchStatement.FieldToMatch.QueryString != nil),
-					"method":              llx.BoolData(statement.RegexMatchStatement.FieldToMatch.Method != nil),
-					"uriPath":             llx.BoolData(statement.RegexMatchStatement.FieldToMatch.UriPath != nil),
-					"allQueryArguments":   llx.BoolData(statement.RegexMatchStatement.FieldToMatch.AllQueryArguments != nil),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
-					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
-				})
-				if err != nil {
-					return nil, err
-				}
 			}
 			regexmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexmatchstatement", map[string]*llx.RawData{
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -484,134 +360,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.ByteMatchStatement != nil {
 			var fieldToMatch plugin.Resource
-			if statement.ByteMatchStatement.FieldToMatch != nil {
-				var singleHeader plugin.Resource
-				var singleQueryArgument plugin.Resource
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				if statement.ByteMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.ByteMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.ByteMatchStatement.FieldToMatch.SingleQueryArgument != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.ByteMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.ByteMatchStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.ByteMatchStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.ByteMatchStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.ByteMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.ByteMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-				}
-				if statement.ByteMatchStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.ByteMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.ByteMatchStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.ByteMatchStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.ByteMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.ByteMatchStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.ByteMatchStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.ByteMatchStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-				if statement.ByteMatchStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.ByteMatchStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.ByteMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.ByteMatchStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.ByteMatchStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"queryString":         llx.BoolData(statement.ByteMatchStatement.FieldToMatch.QueryString != nil),
-					"method":              llx.BoolData(statement.ByteMatchStatement.FieldToMatch.Method != nil),
-					"uriPath":             llx.BoolData(statement.ByteMatchStatement.FieldToMatch.UriPath != nil),
-					"allQueryArguments":   llx.BoolData(statement.ByteMatchStatement.FieldToMatch.AllQueryArguments != nil),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
-					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.ByteMatchStatement.FieldToMatch, ruleName)
 			bytematchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.bytematchstatement", map[string]*llx.RawData{
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
@@ -623,134 +372,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.XssMatchStatement != nil {
 			var fieldToMatch plugin.Resource
-			if statement.XssMatchStatement.FieldToMatch != nil {
-				var singleHeader plugin.Resource
-				var singleQueryArgument plugin.Resource
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				if statement.XssMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.XssMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.XssMatchStatement.FieldToMatch.SingleQueryArgument != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.XssMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.XssMatchStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.XssMatchStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.XssMatchStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.XssMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.XssMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-				}
-				if statement.XssMatchStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.XssMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.XssMatchStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.XssMatchStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.XssMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.XssMatchStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.XssMatchStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.XssMatchStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.XssMatchStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-				if statement.XssMatchStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.XssMatchStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.XssMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.XssMatchStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.XssMatchStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.XssMatchStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.XssMatchStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"queryString":         llx.BoolData(statement.XssMatchStatement.FieldToMatch.QueryString != nil),
-					"method":              llx.BoolData(statement.XssMatchStatement.FieldToMatch.Method != nil),
-					"uriPath":             llx.BoolData(statement.XssMatchStatement.FieldToMatch.UriPath != nil),
-					"allQueryArguments":   llx.BoolData(statement.XssMatchStatement.FieldToMatch.AllQueryArguments != nil),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
-					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.XssMatchStatement.FieldToMatch, ruleName)
 			xssmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.xssmatchstatement", map[string]*llx.RawData{
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
@@ -761,134 +383,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.SqliMatchStatement != nil {
 			var fieldToMatch plugin.Resource
-			if statement.SqliMatchStatement.FieldToMatch != nil {
-				var singleHeader plugin.Resource
-				var singleQueryArgument plugin.Resource
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				if statement.SqliMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.SqliMatchStatement.FieldToMatch.SingleQueryArgument != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.SqliMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.SqliMatchStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.SqliMatchStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.SqliMatchStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.SqliMatchStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.SqliMatchStatement.FieldToMatch.SingleHeader.Name),
-					})
-				}
-				if statement.SqliMatchStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.SqliMatchStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.SqliMatchStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.SqliMatchStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.SqliMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.SqliMatchStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.SqliMatchStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.SqliMatchStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-				if statement.SqliMatchStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.SqliMatchStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.SqliMatchStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.SqliMatchStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.SqliMatchStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"queryString":         llx.BoolData(statement.SqliMatchStatement.FieldToMatch.QueryString != nil),
-					"method":              llx.BoolData(statement.SqliMatchStatement.FieldToMatch.Method != nil),
-					"uriPath":             llx.BoolData(statement.SqliMatchStatement.FieldToMatch.UriPath != nil),
-					"allQueryArguments":   llx.BoolData(statement.SqliMatchStatement.FieldToMatch.AllQueryArguments != nil),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
-					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
+			fieldToMatch, err := createFieldToMatchResource(runtime, statement.SqliMatchStatement.FieldToMatch, ruleName)
 			sqlimatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{
 				"ruleName":         llx.StringDataPtr(ruleName),
 				"fieldToMatch":     llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
@@ -1001,135 +496,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.RegexPatternSetReferenceStatement != nil {
 			var fieldToMatch plugin.Resource
-			if statement.RegexPatternSetReferenceStatement.FieldToMatch != nil {
-				var singleHeader plugin.Resource
-				var singleQueryArgument plugin.Resource
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader.Name),
-					})
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-				if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"queryString":         llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.QueryString != nil),
-					"method":              llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.Method != nil),
-					"uriPath":             llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.UriPath != nil),
-					"allQueryArguments":   llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.AllQueryArguments != nil),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
-					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexPatternSetReferenceStatement.FieldToMatch, ruleName)
 			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
+				"ruleName":     llx.StringDataPtr(ruleName),
 				"arn":          llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.ARN),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
 			})
@@ -1140,6 +509,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.RuleGroupReferenceStatement != nil {
 			excludeRules := convert.SliceAnyToInterface(statement.RuleGroupReferenceStatement.ExcludedRules)
 			rulegroupreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{
+				"ruleName":     llx.StringDataPtr(ruleName),
 				"arn":          llx.StringDataPtr(statement.RuleGroupReferenceStatement.ARN),
 				"excludeRules": llx.ArrayData(excludeRules, types.String),
 			})
@@ -1149,118 +519,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 		if statement.SizeConstraintStatement != nil {
 			var fieldToMatch plugin.Resource
-			if statement.SizeConstraintStatement.FieldToMatch != nil {
-				var body plugin.Resource
-				var cookie plugin.Resource
-				var singleHeader plugin.Resource
-				var headerOrder plugin.Resource
-				var headers plugin.Resource
-				var ja3Fingerprint plugin.Resource
-				var jsonBody plugin.Resource
-				var singleQueryArgument plugin.Resource
-				if statement.SizeConstraintStatement.FieldToMatch.Body != nil {
-					body, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
-					})
-				}
-				if statement.SizeConstraintStatement.FieldToMatch.Cookies != nil {
-					cookie, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Cookies.OversizeHandling)),
-					})
-				}
-				if statement.SizeConstraintStatement.FieldToMatch.HeaderOrder != nil {
-					headerOrder, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerOrder", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.OversizeHandling)),
-					})
-				}
-				if statement.SizeConstraintStatement.FieldToMatch.SingleHeader != nil {
-					singleHeader, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"name":     llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleHeader.Name),
-						"ruleName": llx.StringDataPtr(ruleName),
-					})
-				}
-				if statement.SizeConstraintStatement.FieldToMatch.HeaderOrder != nil {
-					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"ruleName": llx.StringDataPtr(ruleName),
-						"name":     llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleQueryArgument.Name),
-					})
-				}
-
-				if statement.SizeConstraintStatement.FieldToMatch.JA3Fingerprint != nil {
-					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"fallbackBehavior": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
-					})
-				}
-
-				if statement.SizeConstraintStatement.FieldToMatch.Headers != nil {
-					var matchPattern plugin.Resource
-					if statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						includeHeaders := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
-						excludeHeaders := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":       llx.StringDataPtr(ruleName),
-							"all":            llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.All != nil),
-							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
-							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
-						})
-					}
-					headers, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers", map[string]*llx.RawData{
-						"ruleName":         llx.StringDataPtr(ruleName),
-						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpatern"),
-						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.OversizeHandling)),
-						"matchScope":       llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchScope)),
-					})
-
-				}
-
-				if statement.SizeConstraintStatement.FieldToMatch.JsonBody != nil {
-					var matchPattern plugin.Resource
-					includePathsArray := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
-					if statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern != nil {
-						matchPattern, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
-							"ruleName":     llx.StringDataPtr(ruleName),
-							"all":          llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
-							"includePaths": llx.ArrayData(includePathsArray, types.String),
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-					jsonBody, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody", map[string]*llx.RawData{
-						"ruleName":                llx.StringDataPtr(ruleName),
-						"overSizeHandling":        llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.OversizeHandling)),
-						"invalidFallbackBehavior": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
-						"matchScope":              llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchScope)),
-						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern"),
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch", map[string]*llx.RawData{
-					"ruleName":            llx.StringDataPtr(ruleName),
-					"method":              llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.Method != nil),
-					"queryString":         llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.QueryString != nil),
-					"allQueryArguments":   llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.AllQueryArguments != nil),
-					"uriPath":             llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.UriPath != nil),
-					"body":                llx.ResourceData(body, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body"),
-					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie"),
-					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader"),
-					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch.headerorder"),
-					"headers":             llx.ResourceData(headers, "aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch.headers"),
-					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch.ja3fingerprint"),
-					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch.jsonbody"),
-					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch.singlequeryargument"),
-				})
-				if err != nil {
-					return nil, err
-				}
-			}
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.SizeConstraintStatement.FieldToMatch, ruleName)
 			sizeconstraintstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
 				"ruleName":           llx.StringDataPtr(ruleName),
 				"size":               llx.IntData(statement.SizeConstraintStatement.Size),
@@ -1272,20 +531,6 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 	}
-	//fmt.Println(regexmatchstatement)
-	//fmt.Println(bytematchstatement)
-	//fmt.Println(xssmatchstatement)
-	//fmt.Println(sqlimatchstatement)
-	//fmt.Println(geomatchstatement)
-	//fmt.Println(ipsetreferencestatement)
-	//fmt.Println(labelmatchstatement)
-	//fmt.Println(managedrulegroupstatement)
-	//fmt.Println(notstatement)
-	//fmt.Println(orstatement)
-	//fmt.Println(ratebasedstatement)
-	//fmt.Println(regexpatternsetreferencestatement)
-	//fmt.Println(rulegroupreferencestatement)
-	//fmt.Println(sizeconstraintstatement)
 	var mqlStatement plugin.Resource
 	mqlStatementID := uuid.New() // maybe use the rule.name instead?
 	mqlStatement, err = CreateResource(runtime, "aws.waf.rule.statement",
@@ -1310,4 +555,138 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	)
 
 	return mqlStatement, nil
+}
+
+func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.FieldToMatch, ruleName *string) (plugin.Resource, error) {
+	var err error
+	var singleHeader plugin.Resource
+	var singleQueryArgument plugin.Resource
+	var body plugin.Resource
+	var cookie plugin.Resource
+	var headerOrder plugin.Resource
+	var headers plugin.Resource
+	var ja3Fingerprint plugin.Resource
+	var jsonBody plugin.Resource
+	if fieldToMatch.SingleHeader != nil {
+		singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
+			"ruleName": llx.StringDataPtr(ruleName),
+			"name":     llx.StringDataPtr(fieldToMatch.SingleHeader.Name),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	if fieldToMatch.SingleQueryArgument != nil {
+		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+			"ruleName": llx.StringDataPtr(ruleName),
+			"name":     llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	fmt.Println("Somewhere in the middle")
+	if fieldToMatch.Body != nil {
+		body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
+			"ruleName":         llx.StringDataPtr(ruleName),
+			"overSizeHandling": llx.StringData(string(fieldToMatch.Body.OversizeHandling)),
+		})
+	}
+	if fieldToMatch.Cookies != nil {
+		cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
+			"ruleName":         llx.StringDataPtr(ruleName),
+			"overSizeHandling": llx.StringData(string(fieldToMatch.Cookies.OversizeHandling)),
+		})
+	}
+	if fieldToMatch.HeaderOrder != nil {
+		headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
+			"ruleName":         llx.StringDataPtr(ruleName),
+			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
+		})
+	}
+	if fieldToMatch.SingleHeader != nil {
+		singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
+			"ruleName": llx.StringDataPtr(ruleName),
+			"name":     llx.StringDataPtr(fieldToMatch.SingleHeader.Name),
+		})
+	}
+	if fieldToMatch.HeaderOrder != nil {
+		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+			"ruleName": llx.StringDataPtr(ruleName),
+			"name":     llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
+		})
+	}
+
+	if fieldToMatch.JA3Fingerprint != nil {
+		ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
+			"ruleName":         llx.StringDataPtr(ruleName),
+			"fallbackBehavior": llx.StringData(string(fieldToMatch.JA3Fingerprint.FallbackBehavior)),
+		})
+	}
+
+	if fieldToMatch.Headers != nil {
+		var matchPattern plugin.Resource
+		if fieldToMatch.JsonBody.MatchPattern != nil {
+			includeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.IncludedHeaders)
+			excludeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.ExcludedHeaders)
+			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+				"ruleName":       llx.StringDataPtr(ruleName),
+				"all":            llx.BoolData(fieldToMatch.Headers.MatchPattern.All != nil),
+				"includeHeaders": llx.ArrayData(includeHeaders, types.String),
+				"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
+			})
+		}
+		headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
+			"ruleName":         llx.StringDataPtr(ruleName),
+			"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
+			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
+			"matchScope":       llx.StringData(string(fieldToMatch.Headers.MatchScope)),
+		})
+
+	}
+	if fieldToMatch.JsonBody != nil {
+		var matchPattern plugin.Resource
+		includePathsArray := convert.SliceAnyToInterface(fieldToMatch.JsonBody.MatchPattern.IncludedPaths)
+		if fieldToMatch.JsonBody.MatchPattern != nil {
+			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+				"ruleName":     llx.StringDataPtr(ruleName),
+				"all":          llx.BoolData(fieldToMatch.JsonBody.MatchPattern.All != nil),
+				"includePaths": llx.ArrayData(includePathsArray, types.String),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
+			"ruleName":                llx.StringDataPtr(ruleName),
+			"overSizeHandling":        llx.StringData(string(fieldToMatch.JsonBody.OversizeHandling)),
+			"invalidFallbackBehavior": llx.StringData(string(fieldToMatch.JsonBody.InvalidFallbackBehavior)),
+			"matchScope":              llx.StringData(string(fieldToMatch.JsonBody.MatchScope)),
+			"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	fmt.Println("Almost Done")
+	mqlFieldToMatch, err := CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
+		"ruleName":            llx.StringDataPtr(ruleName),
+		"queryString":         llx.BoolData(fieldToMatch.QueryString != nil),
+		"method":              llx.BoolData(fieldToMatch.Method != nil),
+		"uriPath":             llx.BoolData(fieldToMatch.UriPath != nil),
+		"allQueryArguments":   llx.BoolData(fieldToMatch.AllQueryArguments != nil),
+		"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
+		"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
+		"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
+		"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
+		"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
+		"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
+		"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
+		"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlFieldToMatch, nil
 }

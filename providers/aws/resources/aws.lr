@@ -231,6 +231,7 @@ private aws.waf.rule.statement.regexpatternsetreferencestatement {
 }
 
 private aws.waf.rule.statement.rulegroupreferencestatement {
+  ruleName string
   arn string
   excludeRules []string
 }
