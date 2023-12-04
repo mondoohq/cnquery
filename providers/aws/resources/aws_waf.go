@@ -955,10 +955,14 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.NotStatement != nil {
-			notstatement, err = CreateResource(runtime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{})
+			var notStatementMqlStatement plugin.Resource
+			notStatementMqlStatement, err = createStatementResource(runtime, statement.NotStatement.Statement, ruleName)
 			if err != nil {
 				return nil, err
 			}
+			notstatement, err = CreateResource(runtime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{
+				"statement": llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
+			})
 		}
 		if statement.OrStatement != nil {
 			var statements []interface{}

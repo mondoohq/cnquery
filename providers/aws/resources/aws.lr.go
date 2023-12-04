@@ -975,6 +975,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
 	},
+	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementNotstatement).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
+	},
 	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
 	},
@@ -3820,6 +3823,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementNotstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementNotstatement).Statement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.orstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementOrstatement).__id, ok = v.Value.(string)
 			return
@@ -8916,6 +8923,7 @@ type mqlAwsWafRuleStatementNotstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementNotstatementInternal it will be used here
+	Statement plugin.TValue[*mqlAwsWafRuleStatement]
 }
 
 // createAwsWafRuleStatementNotstatement creates a new instance of this resource
@@ -8948,6 +8956,10 @@ func (c *mqlAwsWafRuleStatementNotstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementNotstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
+	return &c.Statement
 }
 
 // mqlAwsWafRuleStatementOrstatement for the aws.waf.rule.statement.orstatement resource
