@@ -123,11 +123,11 @@ private aws.vpc.flowlog @defaults("id region status") {
 
 // Amazon WAF v2
 private aws.waf {
-  // List of waf acls
+  // List of WAF ACLs
   acls() []aws.waf.acl
-  // List of waf rules
+  // List of WAF rules
   ruleGroups() []aws.waf.rulegroup
-  // List of waf ip sets
+  // List of WAF IP sets
   ipSets() []aws.waf.ipset
 }
 
@@ -141,9 +141,9 @@ private aws.waf.acl @defaults("name") {
   name string
   // Description of the ACL
   description string
-  // If the ACL is managed by FirewallManager
+  // Whether the ACL is managed by Firewall Manager
   managedByFirewallManager bool
-  // List of waf rules
+  // List of WAF rules
   rules() []aws.waf.rule
 }
 
@@ -153,9 +153,9 @@ private aws.waf.rule @defaults("name") {
   name string
   // Priority
   priority int
-  // Statement
+  // Part of the rule that tells WAF how to inspect a web request
   statement aws.waf.rule.statement
-  // Action
+  // Part of the rule that tells WAF what to do with a web request when it matches the criteria defined in the rule
   action aws.waf.rule.action
 }
 
