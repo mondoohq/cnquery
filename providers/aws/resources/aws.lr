@@ -183,7 +183,18 @@ private aws.waf.rule.statement.geomatchstatement {
   ruleName string
   countryCodes []string
 }
-private aws.waf.rule.statement.ipsetreferencestatement {}
+private aws.waf.rule.statement.ipsetreferencestatement {
+  ruleName string
+  arn string
+  ipSetForwardedIPConfig aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig
+}
+
+private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
+  ruleName string
+  headerName string
+  position string
+  fallbackBehavior string
+}
 
 private aws.waf.rule.statement.labelmatchstatement {
   ruleName string
@@ -197,14 +208,17 @@ private aws.waf.rule.statement.managedrulegroupstatement {
 }
 
 private aws.waf.rule.statement.andstatement {
+  ruleName string
   statements []aws.waf.rule.statement
 }
 
 private aws.waf.rule.statement.notstatement {
+  ruleName string
   statement aws.waf.rule.statement
 }
 
 private aws.waf.rule.statement.orstatement {
+  ruleName string
   statements []aws.waf.rule.statement
 }
 
@@ -213,12 +227,14 @@ private aws.waf.rule.statement.regexpatternsetreferencestatement {}
 private aws.waf.rule.statement.rulegroupreferencestatement {}
 
 private aws.waf.rule.statement.sizeconstraintstatement {
+  ruleName string
   size int
   comparisonOperator string
   fieldToMatch aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
+  ruleName string
   method bool
   uriPath bool
 	queryString bool
@@ -234,30 +250,37 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch {
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body {
+  ruleName string
   overSizeHandling string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie {
+  ruleName string
   overSizeHandling string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder {
+  ruleName string
   overSizeHandling string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader {
+  ruleName string
   name string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument {
+  ruleName string
   name string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint {
+  ruleName string
   fallbackBehavior string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody {
+  ruleName string
   overSizeHandling string
   matchScope string
   invalidFallbackBehavior string
@@ -265,17 +288,20 @@ private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody {
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern {
+  ruleName string
   all bool
   includePaths []string
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers {
+  ruleName string
   matchScope string
   overSizeHandling string
   matchPattern aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern
 }
 
 private aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern {
+  ruleName string
   all bool
   includeHeaders []string
   excludeHeaders []string

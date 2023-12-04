@@ -913,7 +913,23 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.IPSetReferenceStatement != nil {
-			ipsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement", map[string]*llx.RawData{})
+			var IPSetForwardedIPConfig plugin.Resource
+			if statement.IPSetReferenceStatement.IPSetForwardedIPConfig != nil {
+				IPSetForwardedIPConfig, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", map[string]*llx.RawData{
+					"ruleName":         llx.StringDataPtr(ruleName),
+					"headerName":       llx.StringDataPtr(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.HeaderName),
+					"position":         llx.StringData(string(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.Position)),
+					"fallbackBehavior": llx.StringData(string(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.FallbackBehavior)),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+			ipsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement", map[string]*llx.RawData{
+				"ruleName":               llx.StringDataPtr(ruleName),
+				"arn":                    llx.StringDataPtr(statement.IPSetReferenceStatement.ARN),
+				"ipSetForwardedIPConfig": llx.ResourceData(IPSetForwardedIPConfig, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"),
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -1008,32 +1024,38 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				var singleQueryArgument plugin.Resource
 				if statement.SizeConstraintStatement.FieldToMatch.Body != nil {
 					body, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
 						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Body.OversizeHandling)),
 					})
 				}
 				if statement.SizeConstraintStatement.FieldToMatch.Cookies != nil {
 					cookie, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
 						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Cookies.OversizeHandling)),
 					})
 				}
 				if statement.SizeConstraintStatement.FieldToMatch.HeaderOrder != nil {
 					headerOrder, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerOrder", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
 						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.OversizeHandling)),
 					})
 				}
 				if statement.SizeConstraintStatement.FieldToMatch.SingleHeader != nil {
 					singleHeader, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader", map[string]*llx.RawData{
-						"name": llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleHeader.Name),
+						"name":     llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleHeader.Name),
+						"ruleName": llx.StringDataPtr(ruleName),
 					})
 				}
 				if statement.SizeConstraintStatement.FieldToMatch.HeaderOrder != nil {
 					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-						"name": llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleQueryArgument.Name),
+						"ruleName": llx.StringDataPtr(ruleName),
+						"name":     llx.StringDataPtr(statement.SizeConstraintStatement.FieldToMatch.SingleQueryArgument.Name),
 					})
 				}
 
 				if statement.SizeConstraintStatement.FieldToMatch.JA3Fingerprint != nil {
 					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
 						"fallbackBehavior": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
 					})
 				}
@@ -1044,12 +1066,14 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 						includeHeaders := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
 						excludeHeaders := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
 						matchPattern, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+							"ruleName":       llx.StringDataPtr(ruleName),
 							"all":            llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchPattern.All != nil),
 							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
 							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
 						})
 					}
 					headers, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
 						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpatern"),
 						"overSizeHandling": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.OversizeHandling)),
 						"matchScope":       llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.Headers.MatchScope)),
@@ -1062,6 +1086,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 					includePathsArray := convert.SliceAnyToInterface(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
 					if statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern != nil {
 						matchPattern, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+							"ruleName":     llx.StringDataPtr(ruleName),
 							"all":          llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
 							"includePaths": llx.ArrayData(includePathsArray, types.String),
 						})
@@ -1070,6 +1095,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 						}
 					}
 					jsonBody, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody", map[string]*llx.RawData{
+						"ruleName":                llx.StringDataPtr(ruleName),
 						"overSizeHandling":        llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.OversizeHandling)),
 						"invalidFallbackBehavior": llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
 						"matchScope":              llx.StringData(string(statement.SizeConstraintStatement.FieldToMatch.JsonBody.MatchScope)),
@@ -1081,6 +1107,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				}
 
 				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch", map[string]*llx.RawData{
+					"ruleName":            llx.StringDataPtr(ruleName),
 					"method":              llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.Method != nil),
 					"queryString":         llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.QueryString != nil),
 					"allQueryArguments":   llx.BoolData(statement.SizeConstraintStatement.FieldToMatch.AllQueryArguments != nil),
@@ -1099,6 +1126,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				}
 			}
 			sizeconstraintstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
+				"ruleName":           llx.StringDataPtr(ruleName),
 				"size":               llx.IntData(statement.SizeConstraintStatement.Size),
 				"comparisonOperator": llx.StringData(string(statement.SizeConstraintStatement.ComparisonOperator)),
 				"fieldToMatch":       llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch"),

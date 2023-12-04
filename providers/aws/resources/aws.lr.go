@@ -74,6 +74,10 @@ func init() {
 			// to override args, implement: initAwsWafRuleStatementIpsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementIpsetreferencestatement,
 		},
+		"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig": {
+			// to override args, implement: initAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig,
+		},
 		"aws.waf.rule.statement.labelmatchstatement": {
 			// to override args, implement: initAwsWafRuleStatementLabelmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatementLabelmatchstatement,
@@ -954,6 +958,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetCountryCodes()).ToDataRes(types.Array(types.String))
 	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipSetForwardedIPConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetIpSetForwardedIPConfig()).ToDataRes(types.Resource("aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"))
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.headerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetHeaderName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.position": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetPosition()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.fallbackBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetFallbackBehavior()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.labelmatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetRuleName()).ToDataRes(types.String)
 	},
@@ -972,14 +997,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
+	},
+	"aws.waf.rule.statement.notstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementNotstatement).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementNotstatement).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
 	},
+	"aws.waf.rule.statement.orstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementOrstatement).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetSize()).ToDataRes(types.Int)
@@ -989,6 +1026,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.method": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetMethod()).ToDataRes(types.Bool)
@@ -1026,23 +1066,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleQueryArgument": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).GetSingleQueryArgument()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument"))
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie).GetOverSizeHandling()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument).GetName()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint.fallbackBehavior": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint).GetFallbackBehavior()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).GetOverSizeHandling()).ToDataRes(types.String)
@@ -1056,11 +1117,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchPattern": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).GetMatchPattern()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern"))
 	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).GetRuleName()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern.all": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).GetAll()).ToDataRes(types.Bool)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern.includePaths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).GetIncludePaths()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchScope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).GetMatchScope()).ToDataRes(types.String)
@@ -1070,6 +1137,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchPattern": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).GetMatchPattern()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern"))
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern.all": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern).GetAll()).ToDataRes(types.Bool)
@@ -3779,6 +3849,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementIpsetreferencestatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.ipsetreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipSetForwardedIPConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).IpSetForwardedIPConfig, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.headerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).HeaderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.position": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).Position, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.fallbackBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).FallbackBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.labelmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementLabelmatchstatement).__id, ok = v.Value.(string)
 			return
@@ -3815,6 +3917,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementAndstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementAndstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3823,6 +3929,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementNotstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.notstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementNotstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementNotstatement).Statement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
 		return
@@ -3831,6 +3941,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementOrstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.orstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementOrstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementOrstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3851,6 +3965,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -3867,6 +3985,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.method": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch).Method, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -3919,6 +4041,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3927,6 +4053,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3935,6 +4065,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3943,6 +4077,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3951,6 +4089,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3959,6 +4101,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint.fallbackBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint).FallbackBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3967,6 +4113,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3987,6 +4137,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern.all": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern).All, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -3999,6 +4153,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders).MatchScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4015,6 +4173,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern.all": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern).All, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -8732,6 +8894,9 @@ type mqlAwsWafRuleStatementIpsetreferencestatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementIpsetreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	Arn plugin.TValue[string]
+	IpSetForwardedIPConfig plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig]
 }
 
 // createAwsWafRuleStatementIpsetreferencestatement creates a new instance of this resource
@@ -8764,6 +8929,77 @@ func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetIpSetForwardedIPConfig() *plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig] {
+	return &c.IpSetForwardedIPConfig
+}
+
+// mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig for the aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig resource
+type mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfigInternal it will be used here
+	RuleName plugin.TValue[string]
+	HeaderName plugin.TValue[string]
+	Position plugin.TValue[string]
+	FallbackBehavior plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig creates a new instance of this resource
+func createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) MqlName() string {
+	return "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetHeaderName() *plugin.TValue[string] {
+	return &c.HeaderName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetPosition() *plugin.TValue[string] {
+	return &c.Position
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetFallbackBehavior() *plugin.TValue[string] {
+	return &c.FallbackBehavior
 }
 
 // mqlAwsWafRuleStatementLabelmatchstatement for the aws.waf.rule.statement.labelmatchstatement resource
@@ -8879,6 +9115,7 @@ type mqlAwsWafRuleStatementAndstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementAndstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Statements plugin.TValue[[]interface{}]
 }
 
@@ -8914,6 +9151,10 @@ func (c *mqlAwsWafRuleStatementAndstatement) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementAndstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementAndstatement) GetStatements() *plugin.TValue[[]interface{}] {
 	return &c.Statements
 }
@@ -8923,6 +9164,7 @@ type mqlAwsWafRuleStatementNotstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementNotstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Statement plugin.TValue[*mqlAwsWafRuleStatement]
 }
 
@@ -8958,6 +9200,10 @@ func (c *mqlAwsWafRuleStatementNotstatement) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementNotstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementNotstatement) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
 	return &c.Statement
 }
@@ -8967,6 +9213,7 @@ type mqlAwsWafRuleStatementOrstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementOrstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Statements plugin.TValue[[]interface{}]
 }
 
@@ -9000,6 +9247,10 @@ func (c *mqlAwsWafRuleStatementOrstatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementOrstatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleStatementOrstatement) GetStatements() *plugin.TValue[[]interface{}] {
@@ -9128,6 +9379,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementInternal it will be used here
+	RuleName plugin.TValue[string]
 	Size plugin.TValue[int64]
 	ComparisonOperator plugin.TValue[string]
 	FieldToMatch plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch]
@@ -9165,6 +9417,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatement) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetSize() *plugin.TValue[int64] {
 	return &c.Size
 }
@@ -9182,6 +9438,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchInternal it will be used here
+	RuleName plugin.TValue[string]
 	Method plugin.TValue[bool]
 	UriPath plugin.TValue[bool]
 	QueryString plugin.TValue[bool]
@@ -9226,6 +9483,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) MqlName() st
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatch) GetMethod() *plugin.TValue[bool] {
@@ -9281,6 +9542,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBodyInternal it will be used here
+	RuleName plugin.TValue[string]
 	OverSizeHandling plugin.TValue[string]
 }
 
@@ -9316,6 +9578,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody) MqlID() 
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchBody) GetOverSizeHandling() *plugin.TValue[string] {
 	return &c.OverSizeHandling
 }
@@ -9325,6 +9591,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookieInternal it will be used here
+	RuleName plugin.TValue[string]
 	OverSizeHandling plugin.TValue[string]
 }
 
@@ -9360,6 +9627,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie) MqlID(
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchCookie) GetOverSizeHandling() *plugin.TValue[string] {
 	return &c.OverSizeHandling
 }
@@ -9369,6 +9640,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder struct
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorderInternal it will be used here
+	RuleName plugin.TValue[string]
 	OverSizeHandling plugin.TValue[string]
 }
 
@@ -9404,6 +9676,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder) M
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaderorder) GetOverSizeHandling() *plugin.TValue[string] {
 	return &c.OverSizeHandling
 }
@@ -9413,6 +9689,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader struc
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheaderInternal it will be used here
+	RuleName plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
@@ -9448,6 +9725,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader) 
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSingleheader) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -9457,6 +9738,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargumen
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargumentInternal it will be used here
+	RuleName plugin.TValue[string]
 	Name plugin.TValue[string]
 }
 
@@ -9492,6 +9774,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryarg
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchSinglequeryargument) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -9501,6 +9787,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint str
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprintInternal it will be used here
+	RuleName plugin.TValue[string]
 	FallbackBehavior plugin.TValue[string]
 }
 
@@ -9536,6 +9823,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJa3fingerprint) GetFallbackBehavior() *plugin.TValue[string] {
 	return &c.FallbackBehavior
 }
@@ -9545,6 +9836,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyInternal it will be used here
+	RuleName plugin.TValue[string]
 	OverSizeHandling plugin.TValue[string]
 	MatchScope plugin.TValue[string]
 	InvalidFallbackBehavior plugin.TValue[string]
@@ -9583,6 +9875,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody) MqlI
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbody) GetOverSizeHandling() *plugin.TValue[string] {
 	return &c.OverSizeHandling
 }
@@ -9604,6 +9900,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpatte
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpatternInternal it will be used here
+	RuleName plugin.TValue[string]
 	All plugin.TValue[bool]
 	IncludePaths plugin.TValue[[]interface{}]
 }
@@ -9640,6 +9937,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchp
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchJsonbodyMatchpattern) GetAll() *plugin.TValue[bool] {
 	return &c.All
 }
@@ -9653,6 +9954,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersInternal it will be used here
+	RuleName plugin.TValue[string]
 	MatchScope plugin.TValue[string]
 	OverSizeHandling plugin.TValue[string]
 	MatchPattern plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern]
@@ -9690,6 +9992,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders) MqlID
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeaders) GetMatchScope() *plugin.TValue[string] {
 	return &c.MatchScope
 }
@@ -9707,6 +10013,7 @@ type mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpatter
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpatternInternal it will be used here
+	RuleName plugin.TValue[string]
 	All plugin.TValue[bool]
 	IncludeHeaders plugin.TValue[[]interface{}]
 	ExcludeHeaders plugin.TValue[[]interface{}]
@@ -9742,6 +10049,10 @@ func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpa
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleStatementSizeconstraintstatementFieldtomatchHeadersMatchpattern) GetAll() *plugin.TValue[bool] {
