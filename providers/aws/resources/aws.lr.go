@@ -1015,6 +1015,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
 	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.excludeRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetExcludeRules()).ToDataRes(types.Array(types.String))
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetRuleName()).ToDataRes(types.String)
 	},
@@ -3957,10 +3972,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.rulegroupreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.excludeRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).ExcludeRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.sizeconstraintstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatementSizeconstraintstatement).__id, ok = v.Value.(string)
 			return
@@ -9301,6 +9336,9 @@ type mqlAwsWafRuleStatementRegexpatternsetreferencestatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementRegexpatternsetreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	Arn plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
 }
 
 // createAwsWafRuleStatementRegexpatternsetreferencestatement creates a new instance of this resource
@@ -9335,11 +9373,25 @@ func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) MqlID() string
 	return c.__id
 }
 
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
 // mqlAwsWafRuleStatementRulegroupreferencestatement for the aws.waf.rule.statement.rulegroupreferencestatement resource
 type mqlAwsWafRuleStatementRulegroupreferencestatement struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementRulegroupreferencestatementInternal it will be used here
+	Arn plugin.TValue[string]
+	ExcludeRules plugin.TValue[[]interface{}]
 }
 
 // createAwsWafRuleStatementRulegroupreferencestatement creates a new instance of this resource
@@ -9372,6 +9424,14 @@ func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlName() string {
 
 func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetExcludeRules() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeRules
 }
 
 // mqlAwsWafRuleStatementSizeconstraintstatement for the aws.waf.rule.statement.sizeconstraintstatement resource

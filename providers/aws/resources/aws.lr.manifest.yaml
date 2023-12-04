@@ -2811,14 +2811,19 @@ resources:
       name:
       - aws
   aws.waf.rule.statement.regexpatternsetreferencestatement:
-    fields: {}
+    fields:
+      arn: {}
+      fieldToMatch: {}
+      ruleName: {}
     is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.statement.rulegroupreferencestatement:
-    fields: {}
+    fields:
+      arn: {}
+      excludeRules: {}
     is_private: true
     min_mondoo_version: latest
     platform:

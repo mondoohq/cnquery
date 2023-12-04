@@ -1000,13 +1000,149 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.RegexPatternSetReferenceStatement != nil {
-			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{})
+			var fieldToMatch plugin.Resource
+			if statement.RegexPatternSetReferenceStatement.FieldToMatch != nil {
+				var singleHeader plugin.Resource
+				var singleQueryArgument plugin.Resource
+				var body plugin.Resource
+				var cookie plugin.Resource
+				var headerOrder plugin.Resource
+				var headers plugin.Resource
+				var ja3Fingerprint plugin.Resource
+				var jsonBody plugin.Resource
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader != nil {
+					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
+						"ruleName": llx.StringDataPtr(ruleName),
+						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader.Name),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument != nil {
+					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+						"ruleName": llx.StringDataPtr(ruleName),
+						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument.Name),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Body != nil {
+					body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
+						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Body.OversizeHandling)),
+					})
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Cookies != nil {
+					cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
+						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Cookies.OversizeHandling)),
+					})
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.HeaderOrder != nil {
+					headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
+						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.OversizeHandling)),
+					})
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader != nil {
+					singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
+						"ruleName": llx.StringDataPtr(ruleName),
+						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleHeader.Name),
+					})
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.HeaderOrder != nil {
+					singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
+						"ruleName": llx.StringDataPtr(ruleName),
+						"name":     llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.FieldToMatch.SingleQueryArgument.Name),
+					})
+				}
+
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.JA3Fingerprint != nil {
+					ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
+						"fallbackBehavior": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JA3Fingerprint.FallbackBehavior)),
+					})
+				}
+
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers != nil {
+					var matchPattern plugin.Resource
+					if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern != nil {
+						includeHeaders := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.IncludedHeaders)
+						excludeHeaders := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.ExcludedHeaders)
+						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+							"ruleName":       llx.StringDataPtr(ruleName),
+							"all":            llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchPattern.All != nil),
+							"includeHeaders": llx.ArrayData(includeHeaders, types.String),
+							"excludeHeaders": llx.ArrayData(excludeHeaders, types.String),
+						})
+					}
+					headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
+						"ruleName":         llx.StringDataPtr(ruleName),
+						"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
+						"overSizeHandling": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.OversizeHandling)),
+						"matchScope":       llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.Headers.MatchScope)),
+					})
+
+				}
+				if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody != nil {
+					var matchPattern plugin.Resource
+					includePathsArray := convert.SliceAnyToInterface(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern.IncludedPaths)
+					if statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern != nil {
+						matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+							"ruleName":     llx.StringDataPtr(ruleName),
+							"all":          llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchPattern.All != nil),
+							"includePaths": llx.ArrayData(includePathsArray, types.String),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+					jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
+						"ruleName":                llx.StringDataPtr(ruleName),
+						"overSizeHandling":        llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.OversizeHandling)),
+						"invalidFallbackBehavior": llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.InvalidFallbackBehavior)),
+						"matchScope":              llx.StringData(string(statement.RegexPatternSetReferenceStatement.FieldToMatch.JsonBody.MatchScope)),
+						"matchPattern":            llx.ResourceData(matchPattern, "aws.waf.fieldtomatch.jsonbody.matchpattern"),
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				fieldToMatch, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
+					"ruleName":            llx.StringDataPtr(ruleName),
+					"queryString":         llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.QueryString != nil),
+					"method":              llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.Method != nil),
+					"uriPath":             llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.UriPath != nil),
+					"allQueryArguments":   llx.BoolData(statement.RegexPatternSetReferenceStatement.FieldToMatch.AllQueryArguments != nil),
+					"singleHeader":        llx.ResourceData(singleHeader, "aws.waf.rule.fieldtomatch.singleheader"),
+					"singleQueryArgument": llx.ResourceData(singleQueryArgument, "aws.waf.rule.fieldtomatch.singlequeryargument"),
+					"body":                llx.ResourceData(body, "aws.waf.rule.fieldtomatch.body"),
+					"cookie":              llx.ResourceData(cookie, "aws.waf.rule.fieldtomatch.cookie"),
+					"headerOrder":         llx.ResourceData(headerOrder, "aws.waf.rule.fieldToMatch.headerorder"),
+					"headers":             llx.ResourceData(headers, "aws.waf.rule.fieldToMatch.headers"),
+					"ja3Fingerprint":      llx.ResourceData(ja3Fingerprint, "aws.waf.rule.fieldToMatch.ja3fingerprint"),
+					"jsonBody":            llx.ResourceData(jsonBody, "aws.waf.rule.fieldToMatch.jsonbody"),
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
+				"arn":          llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.ARN),
+				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
+			})
 			if err != nil {
 				return nil, err
 			}
 		}
 		if statement.RuleGroupReferenceStatement != nil {
-			rulegroupreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{})
+			excludeRules := convert.SliceAnyToInterface(statement.RuleGroupReferenceStatement.ExcludedRules)
+			rulegroupreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{
+				"arn":          llx.StringDataPtr(statement.RuleGroupReferenceStatement.ARN),
+				"excludeRules": llx.ArrayData(excludeRules, types.String),
+			})
 			if err != nil {
 				return nil, err
 			}

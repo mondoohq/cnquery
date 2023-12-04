@@ -223,8 +223,17 @@ private aws.waf.rule.statement.orstatement {
 }
 
 private aws.waf.rule.statement.ratebasedstatement {}
-private aws.waf.rule.statement.regexpatternsetreferencestatement {}
-private aws.waf.rule.statement.rulegroupreferencestatement {}
+
+private aws.waf.rule.statement.regexpatternsetreferencestatement {
+  ruleName string
+  arn string
+  fieldToMatch aws.waf.rule.fieldtomatch
+}
+
+private aws.waf.rule.statement.rulegroupreferencestatement {
+  arn string
+  excludeRules []string
+}
 
 private aws.waf.rule.statement.sizeconstraintstatement {
   ruleName string
