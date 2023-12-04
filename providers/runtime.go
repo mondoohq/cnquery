@@ -250,6 +250,14 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
+	// We have a special case here, where we loose the platform information
+	// when doing container-image discovery for k8s.
+	// This way we make sure to preserve the platform information across plugins.
+	pf := r.Provider.Connection.Asset.Platform
+	if req.Asset.Platform == nil {
+		req.Asset.Platform = pf
+	}
+
 	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
 	return nil
