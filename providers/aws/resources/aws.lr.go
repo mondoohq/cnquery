@@ -62,6 +62,18 @@ func init() {
 			// to override args, implement: initAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRule,
 		},
+		"aws.waf.rule.action": {
+			// to override args, implement: initAwsWafRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleAction,
+		},
+		"aws.waf.rule.action.allow": {
+			// to override args, implement: initAwsWafRuleActionAllow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleActionAllow,
+		},
+		"aws.waf.rule.action.block": {
+			// to override args, implement: initAwsWafRuleActionBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleActionBlock,
+		},
 		"aws.waf.rule.statement": {
 			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRuleStatement,
@@ -858,7 +870,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
 	},
 	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Resource("aws.waf.rule.action"))
+	},
+	"aws.waf.rule.action.allow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetAllow()).ToDataRes(types.Resource("aws.waf.rule.action.allow"))
+	},
+	"aws.waf.rule.action.block": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetBlock()).ToDataRes(types.Resource("aws.waf.rule.action.block"))
 	},
 	"aws.waf.rule.statement.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetId()).ToDataRes(types.String)
@@ -3613,9 +3631,29 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.waf.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[*mqlAwsWafRuleAction](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleAction).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.action.allow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).Allow, ok = plugin.RawToTValue[*mqlAwsWafRuleActionAllow](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.block": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).Block, ok = plugin.RawToTValue[*mqlAwsWafRuleActionBlock](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.allow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleActionAllow).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.action.block.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleActionBlock).__id, ok = v.Value.(string)
+			return
+		},
 	"aws.waf.rule.statement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleStatement).__id, ok = v.Value.(string)
 			return
@@ -8327,7 +8365,7 @@ type mqlAwsWafRule struct {
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
 	Statement plugin.TValue[*mqlAwsWafRuleStatement]
-	Action plugin.TValue[interface{}]
+	Action plugin.TValue[*mqlAwsWafRuleAction]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -8379,8 +8417,135 @@ func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
 	return &c.Statement
 }
 
-func (c *mqlAwsWafRule) GetAction() *plugin.TValue[interface{}] {
+func (c *mqlAwsWafRule) GetAction() *plugin.TValue[*mqlAwsWafRuleAction] {
 	return &c.Action
+}
+
+// mqlAwsWafRuleAction for the aws.waf.rule.action resource
+type mqlAwsWafRuleAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionInternal it will be used here
+	Allow plugin.TValue[*mqlAwsWafRuleActionAllow]
+	Block plugin.TValue[*mqlAwsWafRuleActionBlock]
+}
+
+// createAwsWafRuleAction creates a new instance of this resource
+func createAwsWafRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleAction) MqlName() string {
+	return "aws.waf.rule.action"
+}
+
+func (c *mqlAwsWafRuleAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleAction) GetAllow() *plugin.TValue[*mqlAwsWafRuleActionAllow] {
+	return &c.Allow
+}
+
+func (c *mqlAwsWafRuleAction) GetBlock() *plugin.TValue[*mqlAwsWafRuleActionBlock] {
+	return &c.Block
+}
+
+// mqlAwsWafRuleActionAllow for the aws.waf.rule.action.allow resource
+type mqlAwsWafRuleActionAllow struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionAllowInternal it will be used here
+}
+
+// createAwsWafRuleActionAllow creates a new instance of this resource
+func createAwsWafRuleActionAllow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleActionAllow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action.allow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleActionAllow) MqlName() string {
+	return "aws.waf.rule.action.allow"
+}
+
+func (c *mqlAwsWafRuleActionAllow) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleActionBlock for the aws.waf.rule.action.block resource
+type mqlAwsWafRuleActionBlock struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionBlockInternal it will be used here
+}
+
+// createAwsWafRuleActionBlock creates a new instance of this resource
+func createAwsWafRuleActionBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleActionBlock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action.block", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleActionBlock) MqlName() string {
+	return "aws.waf.rule.action.block"
+}
+
+func (c *mqlAwsWafRuleActionBlock) MqlID() string {
+	return c.__id
 }
 
 // mqlAwsWafRuleStatement for the aws.waf.rule.statement resource

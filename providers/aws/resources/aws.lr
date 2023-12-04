@@ -156,8 +156,16 @@ private aws.waf.rule @defaults("name") {
   // Statement
   statement aws.waf.rule.statement
   // Action
-  action dict
+  action aws.waf.rule.action
 }
+
+private aws.waf.rule.action {
+  allow aws.waf.rule.action.allow
+  block aws.waf.rule.action.block
+}
+
+private aws.waf.rule.action.allow { }
+private aws.waf.rule.action.block { }
 
 private aws.waf.rule.statement {
   // random uuid, to make the statement unique, these don't exist in AWS

@@ -2433,6 +2433,29 @@ resources:
     platform:
       name:
       - aws
+  aws.waf.rule.action:
+    fields:
+      allow: {}
+      block: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.allow:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.block:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.waf.rule.fieldtomatch:
     fields:
       allQueryArguments: {}

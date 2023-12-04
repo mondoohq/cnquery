@@ -308,12 +308,12 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	for _, rule := range aclDetails.WebACL.Rules {
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name)
 		fmt.Println("mqlStatement:", mqlStatement)
-		ruleAction, err := convert.JsonToDict(rule.Action)
+		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
 				"name":      llx.StringDataPtr(rule.Name),
 				"priority":  llx.IntData(int64(rule.Priority)),
-				"action":    llx.DictData(ruleAction),
+				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
 				"statement": llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
 			},
 		)
@@ -323,6 +323,29 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		rules = append(rules, mqlRule)
 	}
 	return rules, nil
+}
+
+func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleAction, ruleName *string) (plugin.Resource, error) {
+	var mqlAction plugin.Resource
+	var err error
+
+	var allow plugin.Resource
+	var block plugin.Resource
+
+	if ruleAction != nil {
+		if ruleAction.Allow != nil {
+			allow, err = CreateResource(runtime, "aws.waf.rule.action.allow", map[string]*llx.RawData{})
+		}
+
+		if ruleAction.Block != nil {
+			block, err = CreateResource(runtime, "aws.waf.rule.action.block", map[string]*llx.RawData{})
+		}
+	}
+	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
+		"allow": llx.ResourceData(allow, "aws.waf.rule.action.allow"),
+		"block": llx.ResourceData(block, "aws.waf.rule.action.block"),
+	})
+	return mqlAction, err
 }
 
 func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statement, ruleName *string) (plugin.Resource, error) {
