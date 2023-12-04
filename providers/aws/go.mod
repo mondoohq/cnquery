@@ -8,10 +8,10 @@ toolchain go1.21.3
 
 require (
 	github.com/aws/aws-sdk-go v1.48.10
-	github.com/aws/aws-sdk-go-v2 v1.23.4
+	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.8
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.8
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.21.1
