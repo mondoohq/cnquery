@@ -28,21 +28,19 @@ var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
 // If no port is set, we estimate what it might be from the scheme.
 // If that doesn't help, we set it to 443.
 func connTlsPort(conn *connection.HostConnection) int64 {
-	port := conn.Conf.Options["port"]
-	portNumber, _ := strconv.ParseInt(port, 10, 64)
-	if portNumber != 0 {
-		return int64(portNumber)
+	if conn.Conf.Port != 0 {
+		return int64(conn.Conf.Port)
 	}
 
 	if conn.Conf.Options["runtime"] == "" {
 		return 443
 	}
 
-	portInt := CommonPorts[conn.Conf.Options["runtime"]]
-	if portInt == 0 {
+	port := CommonPorts[conn.Conf.Options["runtime"]]
+	if port == 0 {
 		return 443
 	}
-	return int64(portInt)
+	return int64(port)
 }
 
 func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

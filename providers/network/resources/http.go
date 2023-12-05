@@ -60,7 +60,7 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 			// At this point we are in best effort territory. Which means we will
 			// go HTTP unless port 443 is specified. Users can always provide a
 			// scheme to be prescriptive.
-			if conn.Conf.Options["port"] == "443" {
+			if conn.Conf.Port == 443 {
 				scheme = "https"
 			} else {
 				scheme = "http"

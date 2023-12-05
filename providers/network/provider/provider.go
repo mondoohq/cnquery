@@ -93,6 +93,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	conf.Options["path"] = url.Path
 	conf.Options["runtime"] = scheme
 	conf.Options["insecure"] = fmt.Sprintf("%t", insecure)
+	conf.Host = host
+	conf.Port = int32(port)
 
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
@@ -188,7 +190,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	asset.Name = conn.Conf.Options["host"]
+	asset.Name = conn.Conf.Host
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
 		Family: []string{"network"},
