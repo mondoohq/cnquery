@@ -203,6 +203,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vulnmgmt.lastAssessment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnmgmt).GetLastAssessment()).ToDataRes(types.Time)
 	},
+	"vulnmgmt.stats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetStats()).ToDataRes(types.Resource("audit.cvss"))
+	},
 	"vuln.cve.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVulnCve).GetId()).ToDataRes(types.String)
 	},
@@ -589,6 +592,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"vulnmgmt.lastAssessment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVulnmgmt).LastAssessment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).Stats, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
 		return
 	},
 	"vuln.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1265,6 +1272,7 @@ type mqlVulnmgmt struct {
 	Advisories plugin.TValue[[]interface{}]
 	Packages plugin.TValue[[]interface{}]
 	LastAssessment plugin.TValue[*time.Time]
+	Stats plugin.TValue[*mqlAuditCvss]
 }
 
 // createVulnmgmt creates a new instance of this resource
@@ -1350,6 +1358,22 @@ func (c *mqlVulnmgmt) GetPackages() *plugin.TValue[[]interface{}] {
 func (c *mqlVulnmgmt) GetLastAssessment() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.LastAssessment, func() (*time.Time, error) {
 		return c.lastAssessment()
+	})
+}
+
+func (c *mqlVulnmgmt) GetStats() *plugin.TValue[*mqlAuditCvss] {
+	return plugin.GetOrCompute[*mqlAuditCvss](&c.Stats, func() (*mqlAuditCvss, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "stats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuditCvss), nil
+			}
+		}
+
+		return c.stats()
 	})
 }
 

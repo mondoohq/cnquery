@@ -67,6 +67,10 @@ func (v *mqlVulnmgmt) packages() ([]interface{}, error) {
 	return nil, v.populateData()
 }
 
+func (v *mqlVulnmgmt) stats() (*mqlAuditCvss, error) {
+	return nil, v.populateData()
+}
+
 func (v *mqlVulnmgmt) populateData() error {
 	vulnReport, err := v.getReport()
 	if err != nil {
@@ -147,9 +151,19 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnPackages[i] = mqlVulnPackage
 	}
 
+	res, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"score":  llx.FloatData(float64(vulnReport.Stats.Score.Value) / 10),
+		"vector": llx.StringData(vulnReport.Stats.Score.Vector),
+	})
+	if err != nil {
+		return err
+	}
+	statsCvssScore := res.(*mqlAuditCvss)
+
 	v.Advisories = plugin.TValue[[]interface{}]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
 	v.Cves = plugin.TValue[[]interface{}]{Data: mqlVulnCves, State: plugin.StateIsSet}
 	v.Packages = plugin.TValue[[]interface{}]{Data: mqlVulnPackages, State: plugin.StateIsSet}
+	v.Stats = plugin.TValue[*mqlAuditCvss]{Data: statsCvssScore, State: plugin.StateIsSet}
 
 	return nil
 }

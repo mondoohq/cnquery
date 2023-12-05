@@ -331,4 +331,5 @@ resources:
       cves: {}
       lastAssessment: {}
       packages: {}
+      stats: {}
     min_mondoo_version: latest

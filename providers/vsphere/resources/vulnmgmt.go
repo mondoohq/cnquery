@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/gql"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
 	mondoogql "go.mondoo.com/mondoo-go"
 )
 
@@ -64,6 +64,10 @@ func (v *mqlVulnmgmt) advisories() ([]interface{}, error) {
 }
 
 func (v *mqlVulnmgmt) packages() ([]interface{}, error) {
+	return nil, v.populateData()
+}
+
+func (v *mqlVulnmgmt) stats() (*mqlAuditCvss, error) {
 	return nil, v.populateData()
 }
 
@@ -133,8 +137,18 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCves[i] = mqlVulnCve
 	}
 
+	res, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"score":  llx.FloatData(float64(vulnReport.Stats.Score.Value) / 10),
+		"vector": llx.StringData(vulnReport.Stats.Score.Vector),
+	})
+	if err != nil {
+		return err
+	}
+	statsCvssScore := res.(*mqlAuditCvss)
+
 	v.Advisories = plugin.TValue[[]interface{}]{Data: mqlVulAdvisories, State: plugin.StateIsSet}
 	v.Cves = plugin.TValue[[]interface{}]{Data: mqlVulnCves, State: plugin.StateIsSet}
+	v.Stats = plugin.TValue[*mqlAuditCvss]{Data: statsCvssScore, State: plugin.StateIsSet}
 
 	return nil
 }
@@ -169,8 +183,7 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 }
 
 func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.VulnReport, error) {
-	// FIXME: wrong connection
-	conn := v.MqlRuntime.Connection.(shared.Connection)
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	platform := conn.Asset().Platform
 
 	gqlVulnReport, err := mondooClient.GetIncognitoVulnReport(mondoogql.PlatformInput{

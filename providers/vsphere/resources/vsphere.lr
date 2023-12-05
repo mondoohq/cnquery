@@ -21,7 +21,7 @@ platform {
 }
 
 // Vulnerability Information
-extend vulnmgmt {
+vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve
   // List of all Advisories affecting the asset
@@ -30,6 +30,8 @@ extend vulnmgmt {
   packages() []vuln.package
   // Last time the vulnerability information was updated
   lastAssessment() time
+  // Statistics about the vulnerabilities
+  stats() audit.cvss
 }
 
 // CVE information
