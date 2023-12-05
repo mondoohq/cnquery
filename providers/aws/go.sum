@@ -30,8 +30,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/aws/aws-sdk-go v1.48.11 h1:9YbiSbaF/jWi+qLRl+J5dEhr2mcbDYHmKg2V7RBcD5M=
-github.com/aws/aws-sdk-go v1.48.11/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.48.12 h1:n+eGzflzzvYubu2cOjqpVll7lF+Ci0ThyCpg5kzfzbo=
+github.com/aws/aws-sdk-go v1.48.12/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.23.5 h1:xK6C4udTyDMd82RFvNkDQxtAd00xlzFUtX4fF2nMZyg=
 github.com/aws/aws-sdk-go-v2 v1.23.5/go.mod h1:t3szzKfP0NeRU27uBFczDivYJjsmSnqI8kIvKyWb9ds=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.3 h1:Zx9+31KyB8wQna6SXFWOewlgoY5uGdDAu6PTOEU3OQI=
@@ -80,8 +80,8 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.3 h1:Ytz7+VR04GK7wF1C+yQScMZ
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.3/go.mod h1:qqiIi0EbEEovHG/nQXYGAXcVvHPaUg7KMwh3VARzQz4=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2 h1:e3Imv1oXz+W3Tfclflkh72t5TUPUwWdkHP7ctQGk8Dc=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
-github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.1 h1:Ro41Zqa/vjMPNZj6oHSuAKKeEoqT/RiXagALTRz3W7Q=
-github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.1/go.mod h1:y1svkXRBeWsPjdRkwfjFabrl/a5O0P7geItkbOrldrI=
+github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2 h1:owl9n1S8bJ4w/GpXvvwC9a/zpJnfvoOyvFWHKdSPJW8=
+github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2/go.mod h1:ZcQxDix5cJNOmrtaf8xbP8QO5t80DHirSeB564n1wuk=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2 h1:ETo/9bTM+fp1Gf6l04jhoA8emIjZNDRu1qoNRBd419g=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2/go.mod h1:/m9MiYl5Ds0cZqy/bbeSUWxKLwTarGugjXxSgiXNQFc=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.2 h1:BwF80uV9Ga4yB6UMUggQ4RGwwd0QLwyqxip5RZ0GylE=
@@ -124,8 +124,8 @@ github.com/aws/aws-sdk-go-v2/service/organizations v1.23.2 h1:d1gVC7Nj6D4ioaVAPF
 github.com/aws/aws-sdk-go-v2/service/organizations v1.23.2/go.mod h1:LOrAwNKyZxBMBNREGdmSvd2d3JaUTU4oMpjG2kl4flU=
 github.com/aws/aws-sdk-go-v2/service/rds v1.64.2 h1:PTOyeFw0q+Kikm+9PlUaZdYFrPOAhVWDgI3b68s1zUs=
 github.com/aws/aws-sdk-go-v2/service/rds v1.64.2/go.mod h1:Ty2c2SC4jhY6hvGeeOe8T50m1PkioZD9lk6iiOsADkU=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.39.2 h1:A7IL6bIfdTeJGO2E4nZ2hjpdXgGHNVsmuggGQxe6GRU=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.39.2/go.mod h1:q/daVwXNIrBfWCijnW383tRVolStQWzmBc27+ztkt0U=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.39.3 h1:m8068DK3jgAN+bF43HFheFrzOjFM1hAr0oKJK5EiA6Q=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.39.3/go.mod h1:q/daVwXNIrBfWCijnW383tRVolStQWzmBc27+ztkt0U=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.47.2 h1:DLSAG8zpJV2pYsU+UPkj1IEZghyBnnUsvIRs6UuXSDU=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.47.2/go.mod h1:thjZng67jGsvMyVZnSxlcqKyLwB0XTG8bHIRZPTJ+Bs=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.2 h1:6f2J5YGijkZPQ9BGgbB0GI5cn7ousrEexi4Hi8cbYzg=
@@ -226,8 +226,8 @@ github.com/gofrs/uuid v4.4.0+incompatible h1:3qXRTX8/NbyulANqlc0lchS1gqAVxRgsuW1
 github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
-github.com/golang-jwt/jwt/v5 v5.1.0 h1:UGKbA/IPjtS6zLcdB7i5TyACMgSbOTiR8qzXgw8HWQU=
-github.com/golang-jwt/jwt/v5 v5.1.0/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
+github.com/golang-jwt/jwt/v5 v5.2.0 h1:d/ix8ftRUorsN+5eMIlF4T6J8CAt9rch3My2winC1Jw=
+github.com/golang-jwt/jwt/v5 v5.2.0/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
@@ -279,8 +279,8 @@ github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brv
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
 github.com/hashicorp/go-hclog v0.9.2/go.mod h1:5CU+agLiy3J7N7QjHK5d05KxGsuXiQLrjA0H7acj2lQ=
-github.com/hashicorp/go-hclog v1.5.0 h1:bI2ocEMgcVlz55Oj1xZNBsVi900c7II+fWDyV9o+13c=
-github.com/hashicorp/go-hclog v1.5.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
+github.com/hashicorp/go-hclog v1.6.1 h1:pa92nu9bPoAqI7p+uPDCIWGAibUdlCi6TYWJEQQkLf8=
+github.com/hashicorp/go-hclog v1.6.1/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
 github.com/hashicorp/go-plugin v1.6.0 h1:wgd4KxHJTVGGqWBq4QPB1i5BZNEx9BR8+OFmHDmTk8A=
