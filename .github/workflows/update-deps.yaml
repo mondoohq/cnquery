@@ -52,6 +52,20 @@ jobs:
         shell: bash
 
       - name: Create pull request
-        run: gh pr create --base main --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body "Created by Mondoo Tools via Github actions\n\nWorkflow ${{ github.workflow }}"
+        run: |
+          PR_MD_FILE=$(mktemp)
+          echo << EOF > ${PR_MD_FILE}
+          !!! IGNORE THIS PR !!! Just a test - Christian
+          
+          Created by Mondoo Tools via Github actions
+          
+          Workflow:
+          https://github.com/mondoohq/cnquery/actions/workflows/update-deps.yaml
+          EOF
+          
+          cat ${PR_MD_FILE}
+          
+          gh pr create --base main --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body-file "${PR_MD_FILE}"
+          rm ${PR_MD_FILE}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
