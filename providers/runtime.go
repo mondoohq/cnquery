@@ -250,7 +250,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
-	// We have a special case here, where we loose the platform information
+	// We have a special case here, where we lose the platform information
 	// when doing container-image discovery for k8s.
 	// This way we make sure to preserve the platform information across plugins.
 	pf := r.Provider.Connection.Asset.Platform
