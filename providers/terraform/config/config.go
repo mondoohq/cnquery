@@ -27,7 +27,15 @@ var Config = plugin.Provider{
 			MinArgs:   1,
 			MaxArgs:   2,
 			Discovery: []string{},
-			Flags:     []plugin.Flag{},
+			Flags: []plugin.Flag{
+				{
+					Long:        "ignore-dot-terraform",
+					Type:        plugin.FlagType_Bool,
+					Default:     "false",
+					Desc:        "Ignore the .terraform directory.",
+					ConfigEntry: "ignore_dot_terraform",
+				},
+			},
 		},
 	},
 }

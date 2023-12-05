@@ -30,19 +30,40 @@ func TestTerraform(t *testing.T) {
 
 func TestModuleManifestIssue676(t *testing.T) {
 	// See https://github.com/mondoohq/cnquery/issues/676
-	p, err := NewHclConnection(0, &inventory.Asset{
-		Connections: []*inventory.Config{
-			{
-				Options: map[string]string{
-					"path": "./testdata/issue676",
+	t.Run("issue#676", func(t *testing.T) {
+		p, err := NewHclConnection(0, &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Options: map[string]string{
+						"path": "./testdata/issue676",
+					},
+					Type: "hcl",
 				},
-				Type: "hcl",
 			},
-		},
-	})
-	require.NoError(t, err)
+		})
+		require.NoError(t, err)
 
-	moduleManifest := p.ModulesManifest()
-	require.NotNil(t, moduleManifest)
-	require.Len(t, moduleManifest.Records, 3)
+		moduleManifest := p.ModulesManifest()
+		require.NotNil(t, moduleManifest)
+		require.Len(t, moduleManifest.Records, 3)
+	})
+
+	// https://github.com/mondoohq/cnspec/issues/605
+	t.Run("issue#676", func(t *testing.T) {
+		p, err := NewHclConnection(0, &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Options: map[string]string{
+						"path":                 "./testdata/issue676",
+						"ignore-dot-terraform": "true",
+					},
+					Type: "hcl",
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		moduleManifest := p.ModulesManifest()
+		require.Nil(t, moduleManifest)
+	})
 }

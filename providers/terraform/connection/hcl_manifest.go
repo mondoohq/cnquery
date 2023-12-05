@@ -51,6 +51,15 @@ func NewHclConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 
 func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) {
 	// NOTE: right now we are only supporting to load either state, plan or hcl files but not at the same time
+	if len(asset.Connections) != 1 {
+		return nil, errors.New("only one connection is supported")
+	}
+
+	confOptions := asset.Connections[0].Options
+	includeTerraform := true
+	if confOptions["ignore-dot-terraform"] == "true" {
+		includeTerraform = false
+	}
 
 	var assetType terraformAssetType
 	// hcl files
@@ -75,6 +84,11 @@ func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) 
 			foundExamples := MODULE_EXAMPLES.FindString(path)
 			if foundExamples != "" {
 				log.Debug().Str("path", path).Msg("ignoring terraform module example")
+				return nil
+			}
+
+			// if user asked to ignore .terraform, we skip all files in .terraform
+			if strings.Contains(path, ".terraform") && !includeTerraform {
 				return nil
 			}
 
