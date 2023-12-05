@@ -28,19 +28,21 @@ var rexUrlDomain = regexp.MustCompile(regex.UrlDomain)
 // If no port is set, we estimate what it might be from the scheme.
 // If that doesn't help, we set it to 443.
 func connTlsPort(conn *connection.HostConnection) int64 {
-	if conn.Conf.Port != 0 {
-		return int64(conn.Conf.Port)
+	port := conn.Conf.Options["port"]
+	portNumber, _ := strconv.ParseInt(port, 10, 64)
+	if portNumber != 0 {
+		return int64(portNumber)
 	}
 
-	if conn.Conf.Runtime == "" {
+	if conn.Conf.Options["runtime"] == "" {
 		return 443
 	}
 
-	port := CommonPorts[conn.Conf.Runtime]
-	if port == 0 {
+	portInt := CommonPorts[conn.Conf.Options["runtime"]]
+	if portInt == 0 {
 		return 443
 	}
-	return int64(port)
+	return int64(portInt)
 }
 
 func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -92,14 +94,14 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 		socket, err := CreateResource(runtime, "socket", map[string]*llx.RawData{
 			"protocol": llx.StringData("tcp"),
 			"port":     llx.IntData(port),
-			"address":  llx.StringData(conn.Conf.Host),
+			"address":  llx.StringData(conn.Conf.Options["host"]),
 		})
 		if err != nil {
 			return nil, nil, err
 		}
 
 		args["socket"] = llx.ResourceData(socket, "socket")
-		args["domainName"] = llx.StringData(conn.Conf.Host)
+		args["domainName"] = llx.StringData(conn.Conf.Options["host"])
 	}
 
 	return args, nil, nil

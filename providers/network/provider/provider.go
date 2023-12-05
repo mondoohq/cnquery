@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -36,7 +37,15 @@ func Init() *Service {
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
+	if len(req.Args) != 1 {
+		return nil, errors.New("missing argument, use `host <hostname>`")
+	}
 	target := req.Args[0]
+
+	conf := &inventory.Config{
+		Type:    req.Connector,
+		Options: map[string]string{},
+	}
 
 	// Note on noSchema handling:
 	// A user may type in a target like: `google.com`. Technically, this is not
@@ -78,15 +87,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		insecure, _ = found.RawData().Value.(bool)
 	}
 
+	conf.Options["host"] = host
+	conf.Options["port"] = fmt.Sprint(port)
+	conf.Options["type"] = "host"
+	conf.Options["path"] = url.Path
+	conf.Options["runtime"] = scheme
+	conf.Options["insecure"] = fmt.Sprintf("%t", insecure)
+
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{{
-			Type:     "host",
-			Port:     int32(port),
-			Host:     host,
-			Path:     url.Path,
-			Runtime:  scheme,
-			Insecure: insecure,
-		}},
+		Connections: []*inventory.Config{conf},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
@@ -179,15 +188,16 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	asset.Name = conn.Conf.Host
+	asset.Name = conn.Conf.Options["host"]
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
 		Family: []string{"network"},
 		Kind:   "network",
 		Title:  "Network API",
 	}
+
 	asset.Fqdn = conn.FQDN()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Host}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Options["host"]}
 
 	return nil
 }
