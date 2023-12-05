@@ -52,6 +52,7 @@ jobs:
         shell: bash
 
       - name: Create pull request
-        run: gh pr create --base main --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body "Created by Mondoo Tools via Github actions\n\nWorkflow ${{ github.workflow }}"
+        run: |
+          gh pr create --base main --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body-file .github/pr-body.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
