@@ -14,12 +14,11 @@ type HostConnection struct {
 }
 
 func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *HostConnection {
-	conn := &HostConnection{
+	return &HostConnection{
 		Conf:  conf,
 		id:    id,
 		asset: asset,
 	}
-	return conn
 }
 
 func (h *HostConnection) Name() string {
