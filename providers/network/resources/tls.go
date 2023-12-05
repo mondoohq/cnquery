@@ -32,11 +32,11 @@ func connTlsPort(conn *connection.HostConnection) int64 {
 		return int64(conn.Conf.Port)
 	}
 
-	if conn.Conf.Options["runtime"] == "" {
+	if conn.Conf.Runtime == "" {
 		return 443
 	}
 
-	port := CommonPorts[conn.Conf.Options["runtime"]]
+	port := CommonPorts[conn.Conf.Runtime]
 	if port == 0 {
 		return 443
 	}

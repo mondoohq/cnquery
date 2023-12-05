@@ -55,7 +55,7 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 			return nil, nil, errors.New("missing URL for http.get")
 		}
 
-		scheme := conn.Conf.Options["runtime"]
+		scheme := conn.Conf.Runtime
 		if scheme == "" {
 			// At this point we are in best effort territory. Which means we will
 			// go HTTP unless port 443 is specified. Users can always provide a

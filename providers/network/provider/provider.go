@@ -5,7 +5,6 @@ package provider
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -37,15 +36,7 @@ func Init() *Service {
 }
 
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
-	if len(req.Args) != 1 {
-		return nil, errors.New("missing argument, use `host <hostname>`")
-	}
 	target := req.Args[0]
-
-	conf := &inventory.Config{
-		Type:    req.Connector,
-		Options: map[string]string{},
-	}
 
 	// Note on noSchema handling:
 	// A user may type in a target like: `google.com`. Technically, this is not
@@ -87,17 +78,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		insecure, _ = found.RawData().Value.(bool)
 	}
 
-	conf.Options["host"] = host
-	conf.Options["port"] = fmt.Sprint(port)
-	conf.Options["type"] = "host"
-	conf.Options["path"] = url.Path
-	conf.Options["runtime"] = scheme
-	conf.Options["insecure"] = fmt.Sprintf("%t", insecure)
-	conf.Host = host
-	conf.Port = int32(port)
-
 	asset := inventory.Asset{
-		Connections: []*inventory.Config{conf},
+		Connections: []*inventory.Config{{
+			Type:     "host",
+			Port:     int32(port),
+			Host:     host,
+			Path:     url.Path,
+			Runtime:  scheme,
+			Insecure: insecure,
+		}},
 	}
 
 	return &plugin.ParseCLIRes{Asset: &asset}, nil
@@ -160,6 +149,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		// generic host connection, without anything else
 		s.lastConnectionID++
 		conn = connection.NewHostConnection(s.lastConnectionID, asset, conf)
+	}
+
+	if conn.Conf.Options != nil && conn.Conf.Options["host"] != "" {
+		conn.Conf.Host = conn.Conf.Options["host"]
 	}
 
 	if err != nil {
