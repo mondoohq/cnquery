@@ -5,12 +5,16 @@ package provider
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/os/id/ids"
 )
 
@@ -68,7 +72,7 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 }
 
 func TestIdentifyDockerString(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		input string
 		want  string
 	}{
@@ -85,4 +89,57 @@ func TestIdentifyDockerString(t *testing.T) {
 			assert.Equal(t, tt.want, result, "Mismatch for input: %s", tt.input)
 		})
 	}
+}
+
+func TestService_ParseCLI(t *testing.T) {
+	file, err := os.CreateTemp("/tmp", "cnquery_tests")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	s := &Service{
+		runtimes:         map[uint32]*plugin.Runtime{},
+		lastConnectionID: 0,
+	}
+
+	req := &plugin.ParseCLIReq{
+		Connector: "ssh",
+		Args:      []string{"pi@localhost"},
+		Flags: map[string]*llx.Primitive{
+			"password": {Value: []byte("password123")},
+		},
+	}
+	res, err := s.ParseCLI(req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	require.Len(t, res.Asset.Connections[0].Credentials, 2)
+	require.Equal(t, vault.CredentialType_password, res.Asset.Connections[0].Credentials[0].Type)
+	require.Equal(t, vault.CredentialType_ssh_agent, res.Asset.Connections[0].Credentials[1].Type)
+
+	req = &plugin.ParseCLIReq{
+		Connector: "ssh",
+		Args:      []string{"pi@localhost"},
+	}
+	res, err = s.ParseCLI(req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	require.Len(t, res.Asset.Connections[0].Credentials, 1)
+	require.Equal(t, vault.CredentialType_ssh_agent, res.Asset.Connections[0].Credentials[0].Type)
+
+	req = &plugin.ParseCLIReq{
+		Connector: "ssh",
+		Args:      []string{"pi@localhost"},
+		Flags: map[string]*llx.Primitive{
+			"identity-file": {Value: []byte(file.Name())},
+		},
+	}
+	res, err = s.ParseCLI(req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	require.Len(t, res.Asset.Connections[0].Credentials, 1)
+	require.Equal(t, vault.CredentialType_private_key, res.Asset.Connections[0].Credentials[0].Type)
 }
