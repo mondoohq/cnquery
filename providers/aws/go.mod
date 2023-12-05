@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.48.11
+	github.com/aws/aws-sdk-go v1.48.12
 	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.9
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.64.2
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.39.2
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.120.1
@@ -57,7 +57,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.9.3
+	go.mondoo.com/cnquery/v9 v9.9.4
 	k8s.io/client-go v0.28.4
 )
 
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.9 // indirect
@@ -116,7 +116,7 @@ require (
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-containerregistry v0.17.0 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v1.6.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
