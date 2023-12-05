@@ -329,32 +329,33 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 	var mqlAction plugin.Resource
 	var err error
 
-	var allow plugin.Resource
-	var block plugin.Resource
-	var count plugin.Resource
-	var captcha plugin.Resource
-
+	var action string
+	responseCode := ""
 	if ruleAction != nil {
 		if ruleAction.Allow != nil {
-			allow, err = CreateResource(runtime, "aws.waf.rule.action.allow", map[string]*llx.RawData{})
+			action = "allow"
 		}
 
 		if ruleAction.Block != nil {
-			block, err = CreateResource(runtime, "aws.waf.rule.action.block", map[string]*llx.RawData{})
+			action = "block"
+			if ruleAction.Block.CustomResponse != nil {
+				responseCodeNumber := *ruleAction.Block.CustomResponse.ResponseCode
+				responseCode = string(responseCodeNumber)
+			} else {
+				responseCode = "403" // Default for Block
+			}
 		}
 
 		if ruleAction.Count != nil {
-			count, err = CreateResource(runtime, "aws.waf.rule.action.count", map[string]*llx.RawData{})
+			action = "count"
 		}
 		if ruleAction.Captcha != nil {
-			captcha, err = CreateResource(runtime, "aws.waf.rule.action.captcha", map[string]*llx.RawData{})
+			action = "captcha"
 		}
 	}
 	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
-		"allow":   llx.ResourceData(allow, "aws.waf.rule.action.allow"),
-		"block":   llx.ResourceData(block, "aws.waf.rule.action.block"),
-		"count":   llx.ResourceData(count, "aws.waf.rule.action.count"),
-		"captcha": llx.ResourceData(captcha, "aws.waf.rule.action.captcha"),
+		"action":       llx.StringData(action),
+		"responseCode": llx.StringData(responseCode),
 	})
 	return mqlAction, err
 }
@@ -618,7 +619,6 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			return nil, err
 		}
 	}
-	fmt.Println("Somewhere in the middle")
 	if fieldToMatch.Body != nil {
 		body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
 			"ruleName":         llx.StringDataPtr(ruleName),
@@ -701,7 +701,6 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			return nil, err
 		}
 	}
-	fmt.Println("Almost Done")
 	mqlFieldToMatch, err := CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
 		"ruleName":            llx.StringDataPtr(ruleName),
 		"queryString":         llx.BoolData(fieldToMatch.QueryString != nil),

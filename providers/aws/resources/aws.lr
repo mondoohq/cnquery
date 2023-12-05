@@ -122,7 +122,7 @@ private aws.vpc.flowlog @defaults("id region status") {
 }
 
 // Amazon WAF v2
-private aws.waf {
+aws.waf {
   // List of WAF ACLs
   acls() []aws.waf.acl
   // List of WAF rules
@@ -147,6 +147,20 @@ private aws.waf.acl @defaults("name") {
   rules() []aws.waf.rule
 }
 
+// Amazon WAF v2 RuleGroup
+private aws.waf.rulegroup @defaults("name") {
+  // ARN of the rulegroup
+  arn string
+  // ID of the rulegroup
+  id string
+  // Name of the rulegroup
+  name string
+  // Description of the rulegroup
+  description string
+  // List of waf rules
+  rules() []aws.waf.rule
+}
+
 // Amazon WAF rule
 private aws.waf.rule @defaults("name") {
   // Name of the rule
@@ -160,16 +174,9 @@ private aws.waf.rule @defaults("name") {
 }
 
 private aws.waf.rule.action {
-  allow aws.waf.rule.action.allow
-  block aws.waf.rule.action.block
-  count aws.waf.rule.action.count
-  captcha aws.waf.rule.action.captcha
+  action string
+  responseCode string
 }
-
-private aws.waf.rule.action.allow { }
-private aws.waf.rule.action.block { }
-private aws.waf.rule.action.count { }
-private aws.waf.rule.action.captcha { }
 
 private aws.waf.rule.statement {
   // random uuid, to make the statement unique, these don't exist in AWS
@@ -354,19 +361,6 @@ private aws.waf.rule.statement.sqlimatchstatement {
   sensitivityLevel string
 }
 
-// Amazon WAF v2 ACL
-private aws.waf.rulegroup @defaults("name") {
-  // ARN of the rulegroup
-  arn string
-  // ID of the rulegroup
-  id string
-  // Name of the rulegroup
-  name string
-  // Description of the rulegroup
-  description string
-  // List of waf rules
-  rules() []aws.waf.rule
-}
 
 // Amazon WAF v2 ACL
 private aws.waf.ipset @defaults("name") {

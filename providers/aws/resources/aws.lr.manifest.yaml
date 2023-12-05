@@ -2388,7 +2388,6 @@ resources:
       rules: {}
       subnets: {}
       tags: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -2435,10 +2434,12 @@ resources:
       - aws
   aws.waf.rule.action:
     fields:
+      action: {}
       allow: {}
       block: {}
       captcha: {}
       count: {}
+      responseCode: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2446,28 +2447,24 @@ resources:
       - aws
   aws.waf.rule.action.allow:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.action.block:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.action.captcha:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - aws
   aws.waf.rule.action.count:
     fields: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
