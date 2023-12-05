@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -307,7 +306,6 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name)
-		fmt.Println("mqlStatement:", mqlStatement)
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
@@ -377,8 +375,10 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
+	var kind string
 	if statement != nil {
 		if statement.RegexMatchStatement != nil {
+			kind = "RegexMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexMatchStatement.FieldToMatch, ruleName)
 			if statement.RegexMatchStatement.FieldToMatch != nil {
@@ -393,6 +393,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.ByteMatchStatement != nil {
+			kind = "ByteMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.ByteMatchStatement.FieldToMatch, ruleName)
 			bytematchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.bytematchstatement", map[string]*llx.RawData{
@@ -405,6 +406,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.XssMatchStatement != nil {
+			kind = "XssMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.XssMatchStatement.FieldToMatch, ruleName)
 			xssmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.xssmatchstatement", map[string]*llx.RawData{
@@ -416,6 +418,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.SqliMatchStatement != nil {
+			kind = "SqliMatchStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err := createFieldToMatchResource(runtime, statement.SqliMatchStatement.FieldToMatch, ruleName)
 			sqlimatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{
@@ -428,6 +431,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.GeoMatchStatement != nil {
+			kind = "GeoMatchStatement"
 			var countryCodes []string
 			for _, countryCode := range statement.GeoMatchStatement.CountryCodes {
 				countryCodes = append(countryCodes, string(countryCode))
@@ -442,6 +446,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.IPSetReferenceStatement != nil {
+			kind = "IPSetReferenceStatement"
 			var IPSetForwardedIPConfig plugin.Resource
 			if statement.IPSetReferenceStatement.IPSetForwardedIPConfig != nil {
 				IPSetForwardedIPConfig, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", map[string]*llx.RawData{
@@ -464,6 +469,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.LabelMatchStatement != nil {
+			kind = "LabelMatchStatement"
 			labelmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.labelmatchstatement", map[string]*llx.RawData{
 				"ruleName": llx.StringDataPtr(ruleName),
 				"key":      llx.StringDataPtr(statement.LabelMatchStatement.Key),
@@ -474,6 +480,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.ManagedRuleGroupStatement != nil {
+			kind = "ManagedRuleGroupStatement"
 			managedrulegroupstatement, err = CreateResource(runtime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{
 				"ruleName":   llx.StringDataPtr(ruleName),
 				"Name":       llx.StringDataPtr(statement.ManagedRuleGroupStatement.Name),
@@ -484,6 +491,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.AndStatement != nil {
+			kind = "AndStatement"
 			var statements []interface{}
 			for _, statement := range statement.AndStatement.Statements {
 				andStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName)
@@ -500,6 +508,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.NotStatement != nil {
+			kind = "NotStatement"
 			var notStatementMqlStatement plugin.Resource
 			notStatementMqlStatement, err = createStatementResource(runtime, statement.NotStatement.Statement, ruleName)
 			if err != nil {
@@ -510,6 +519,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			})
 		}
 		if statement.OrStatement != nil {
+			kind = "OrStatement"
 			var statements []interface{}
 			for _, statement := range statement.OrStatement.Statements {
 				orStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName)
@@ -523,12 +533,14 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			})
 		}
 		if statement.RateBasedStatement != nil {
+			kind = "RateBasedStatement"
 			ratebasedstatement, err = CreateResource(runtime, "aws.waf.rule.statement.ratebasedstatement", map[string]*llx.RawData{})
 			if err != nil {
 				return nil, err
 			}
 		}
 		if statement.RegexPatternSetReferenceStatement != nil {
+			kind = "RegexPatternSetReferenceStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexPatternSetReferenceStatement.FieldToMatch, ruleName)
 			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
@@ -541,6 +553,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.RuleGroupReferenceStatement != nil {
+			kind = "RuleGroupReferenceStatement"
 			excludeRules := convert.SliceAnyToInterface(statement.RuleGroupReferenceStatement.ExcludedRules)
 			rulegroupreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{
 				"ruleName":     llx.StringDataPtr(ruleName),
@@ -552,6 +565,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 		}
 		if statement.SizeConstraintStatement != nil {
+			kind = "SizeConstraintStatement"
 			var fieldToMatch plugin.Resource
 			fieldToMatch, err = createFieldToMatchResource(runtime, statement.SizeConstraintStatement.FieldToMatch, ruleName)
 			sizeconstraintstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
@@ -570,6 +584,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	mqlStatement, err = CreateResource(runtime, "aws.waf.rule.statement",
 		map[string]*llx.RawData{
 			"id":                                llx.StringData(mqlStatementID.String()),
+			"kind":                              llx.StringData(kind),
 			"regexMatchStatement":               llx.ResourceData(regexmatchstatement, "aws.waf.rule.statement.regexmatchstatement"),
 			"byteMatchStatement":                llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
 			"xssMatchStatement":                 llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),

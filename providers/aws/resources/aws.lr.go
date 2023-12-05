@@ -888,6 +888,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetId()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetKind()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatement).GetSqliMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement"))
 	},
@@ -3668,6 +3671,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"aws.waf.rule.statement.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatement).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8541,6 +8548,7 @@ type mqlAwsWafRuleStatement struct {
 	__id string
 	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
 	Id plugin.TValue[string]
+	Kind plugin.TValue[string]
 	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
 	XssMatchStatement plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement]
 	ByteMatchStatement plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement]
@@ -8597,6 +8605,10 @@ func (c *mqlAwsWafRuleStatement) MqlID() string {
 
 func (c *mqlAwsWafRuleStatement) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsWafRuleStatement) GetKind() *plugin.TValue[string] {
+	return &c.Kind
 }
 
 func (c *mqlAwsWafRuleStatement) GetSqliMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement] {

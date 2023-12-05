@@ -2594,6 +2594,7 @@ resources:
       geoMatchStatement: {}
       id: {}
       ipSetReferenceStatement: {}
+      kind: {}
       labelMatchStatement: {}
       managedRuleGroupStatement: {}
       name: {}
