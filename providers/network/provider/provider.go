@@ -151,6 +151,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		conn = connection.NewHostConnection(s.lastConnectionID, asset, conf)
 	}
 
+	if conn.Conf.Options != nil && conn.Conf.Options["host"] != "" {
+		conn.Conf.Host = conn.Conf.Options["host"]
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +190,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 		Kind:   "network",
 		Title:  "Network API",
 	}
+
 	asset.Fqdn = conn.FQDN()
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Host}
 

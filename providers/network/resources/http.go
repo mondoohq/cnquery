@@ -66,7 +66,6 @@ func initHttpGet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 				scheme = "http"
 			}
 		}
-
 		url, err := NewResource(runtime, "url", map[string]*llx.RawData{
 			"host":   llx.StringData(conn.Conf.Host),
 			"port":   llx.IntData(int64(conn.Conf.Port)),
