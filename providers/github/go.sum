@@ -804,8 +804,8 @@ github.com/pkg/sftp v1.13.6/go.mod h1:tz1ryNURKu77RL+GuCzmoJYxQczL3wLNNpPWagdg4Q
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/polyfloyd/go-errorlint v1.4.6 h1:6E7ITe++G4eQ8+/ciIz9yONm+pDy+1LI/AZdZG0cP5Y=
-github.com/polyfloyd/go-errorlint v1.4.6/go.mod h1:WGkLzUkLXGGr6BfD33l7yRidBa+T+8xB8TupCpId2ZE=
+github.com/polyfloyd/go-errorlint v1.4.7 h1:BI/hD59Rpapkj68yQsOF3ai9UkGDRrWgO47eqt38RKY=
+github.com/polyfloyd/go-errorlint v1.4.7/go.mod h1:WGkLzUkLXGGr6BfD33l7yRidBa+T+8xB8TupCpId2ZE=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
