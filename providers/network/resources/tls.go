@@ -92,14 +92,14 @@ func initTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 		socket, err := CreateResource(runtime, "socket", map[string]*llx.RawData{
 			"protocol": llx.StringData("tcp"),
 			"port":     llx.IntData(port),
-			"address":  llx.StringData(conn.Conf.Options["host"]),
+			"address":  llx.StringData(conn.Conf.Host),
 		})
 		if err != nil {
 			return nil, nil, err
 		}
 
 		args["socket"] = llx.ResourceData(socket, "socket")
-		args["domainName"] = llx.StringData(conn.Conf.Options["host"])
+		args["domainName"] = llx.StringData(conn.Conf.Host)
 	}
 
 	return args, nil, nil
