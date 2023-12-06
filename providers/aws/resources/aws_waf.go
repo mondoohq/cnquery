@@ -45,13 +45,13 @@ func (a *mqlAwsWafIpset) id() (string, error) {
 
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	//waf := a.Id.Data
+	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	//scope := "REGIONAL"
+	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	var scope waftypes.Scope
 	scope = "REGIONAL"
@@ -156,7 +156,7 @@ func (a *mqlAwsWafRuleStatementRegexmatchstatement) id() (string, error) {
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	//waf := a.Id.Data
+	// waf := a.Id.Data
 
 	var scope waftypes.Scope
 	scope = "REGIONAL"
@@ -190,13 +190,13 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 
 func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	//waf := a.Id.Data
+	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	//scope := "REGIONAL"
+	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	var scope waftypes.Scope
 	scope = "REGIONAL"
@@ -231,13 +231,13 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 
 func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	//waf := a.Id.Data
+	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	//scope := "REGIONAL"
+	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	var scope waftypes.Scope
 	scope = "REGIONAL"
@@ -287,7 +287,7 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 
 func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	//waf := a.Id.Data
+	// waf := a.Id.Data
 
 	var scope waftypes.Scope
 	scope = "REGIONAL"
