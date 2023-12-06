@@ -984,10 +984,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.managedrulegroupstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetRuleName()).ToDataRes(types.String)
 	},
-	"aws.waf.rule.statement.managedrulegroupstatement.Name": func(r plugin.Resource) *plugin.DataRes {
+	"aws.waf.rule.statement.managedrulegroupstatement.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetName()).ToDataRes(types.String)
 	},
-	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource) *plugin.DataRes {
+	"aws.waf.rule.statement.managedrulegroupstatement.vendorName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
@@ -1055,6 +1055,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.bytematchstatement.searchString": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetSearchString()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetTarget()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.fieldtomatch.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleFieldtomatch).GetRuleName()).ToDataRes(types.String)
@@ -3830,11 +3833,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.waf.rule.statement.managedrulegroupstatement.Name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"aws.waf.rule.statement.managedrulegroupstatement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.waf.rule.statement.managedrulegroupstatement.VendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+	"aws.waf.rule.statement.managedrulegroupstatement.vendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
@@ -3966,6 +3969,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRuleFieldtomatch).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.fieldtomatch.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.fieldtomatch.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleFieldtomatch).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9453,6 +9460,7 @@ type mqlAwsWafRuleFieldtomatch struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleFieldtomatchInternal it will be used here
+	Target plugin.TValue[string]
 	RuleName plugin.TValue[string]
 	Method plugin.TValue[bool]
 	UriPath plugin.TValue[bool]
@@ -9503,6 +9511,10 @@ func (c *mqlAwsWafRuleFieldtomatch) MqlName() string {
 
 func (c *mqlAwsWafRuleFieldtomatch) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetTarget() *plugin.TValue[string] {
+	return &c.Target
 }
 
 func (c *mqlAwsWafRuleFieldtomatch) GetRuleName() *plugin.TValue[string] {

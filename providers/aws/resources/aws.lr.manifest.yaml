@@ -2486,6 +2486,7 @@ resources:
       ruleName: {}
       singleHeader: {}
       singleQueryArgument: {}
+      target: {}
       uriPath: {}
     is_private: true
     min_mondoo_version: latest
@@ -2713,7 +2714,9 @@ resources:
     fields:
       Name: {}
       VendorName: {}
+      name: {}
       ruleName: {}
+      vendorName: {}
     is_private: true
     min_mondoo_version: latest
     platform:

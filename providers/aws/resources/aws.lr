@@ -208,7 +208,7 @@ private aws.waf.rule.statement @defaults("kind") {
   sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
 }
 
-private aws.waf.rule.statement.geomatchstatement {
+private aws.waf.rule.statement.geomatchstatement @defaults("countryCodes") {
   ruleName string
   countryCodes []string
 }
@@ -230,10 +230,10 @@ private aws.waf.rule.statement.labelmatchstatement {
   key string
   scope string
 }
-private aws.waf.rule.statement.managedrulegroupstatement {
+private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
   ruleName string
-  Name string
-  VendorName string
+  name string
+  vendorName string
 }
 
 private aws.waf.rule.statement.andstatement {
@@ -279,13 +279,14 @@ private aws.waf.rule.statement.regexmatchstatement {
   regexString string
 }
 
-private aws.waf.rule.statement.bytematchstatement {
+private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
   ruleName string
   fieldToMatch aws.waf.rule.fieldtomatch
   searchString string
 }
 
-private aws.waf.rule.fieldtomatch {
+private aws.waf.rule.fieldtomatch @defaults("target") {
+  target string
   ruleName string
   method bool
   uriPath bool
@@ -372,7 +373,7 @@ private aws.waf.rule.statement.sqlimatchstatement {
 }
 
 
-// Amazon WAF v2 ACL
+// Amazon WAF IPSet (defining IP Ranges)
 private aws.waf.ipset @defaults("name") {
   // ARN of the ipset
   arn string
