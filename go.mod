@@ -17,12 +17,12 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.48.12
+	github.com/aws/aws-sdk-go v1.48.13
 	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.2

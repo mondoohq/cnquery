@@ -152,8 +152,8 @@ github.com/ashanbrown/makezero v1.1.1 h1:iCQ87C0V0vSyO+M9E/FZYbu65auqH0lnsOkf5Fc
 github.com/ashanbrown/makezero v1.1.1/go.mod h1:i1bJLCRSCHOcOa9Y6MyF2FTfMZMFdHvxKHxgO5Z1axI=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
-github.com/aws/aws-sdk-go v1.48.12 h1:n+eGzflzzvYubu2cOjqpVll7lF+Ci0ThyCpg5kzfzbo=
-github.com/aws/aws-sdk-go v1.48.12/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.48.13 h1:6N4GTme6MpxfCisWf5pql8k3TBORiKTmbeutZCDXlG8=
+github.com/aws/aws-sdk-go v1.48.13/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.23.5 h1:xK6C4udTyDMd82RFvNkDQxtAd00xlzFUtX4fF2nMZyg=
 github.com/aws/aws-sdk-go-v2 v1.23.5/go.mod h1:t3szzKfP0NeRU27uBFczDivYJjsmSnqI8kIvKyWb9ds=
 github.com/aws/aws-sdk-go-v2/config v1.25.11 h1:RWzp7jhPRliIcACefGkKp03L0Yofmd2p8M25kbiyvno=
@@ -168,8 +168,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.8 h1:ZE2ds/qeBkhk3yqYvS3
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.8/go.mod h1:/lAPPymDYL023+TS6DJmjuL42nxix2AvEvfjqOBRODk=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 h1:uR9lXYjdPX0xY+NhvaJ4dD8rpSRz5VY81ccIIoNG+lw=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1/go.mod h1:6fQQgfuGmw8Al/3M2IgIllycxV7ZW7WCdVSqfBeUiCY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2 h1:e3Imv1oXz+W3Tfclflkh72t5TUPUwWdkHP7ctQGk8Dc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0 h1:sl7srh3DGVE2Vwuau5fEW8eIX79MAqe3bLqahYBH60s=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
 github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2 h1:owl9n1S8bJ4w/GpXvvwC9a/zpJnfvoOyvFWHKdSPJW8=
 github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2/go.mod h1:ZcQxDix5cJNOmrtaf8xbP8QO5t80DHirSeB564n1wuk=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2 h1:ETo/9bTM+fp1Gf6l04jhoA8emIjZNDRu1qoNRBd419g=
