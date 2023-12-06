@@ -40,3 +40,13 @@ spec:
           credentials:
             - type: ssh_agent
               user: chris
+    # ssh with agent and keyfile
+    - id: linux-ssh-agent-and-key
+      connections:
+        - host: 192.168.178.20
+          backend: ssh
+          credentials:
+            - type: ssh_agent
+              user: chris
+            - private_key_path: ./private_key_02 # implicit type private key
+              user: chris

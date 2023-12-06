@@ -203,6 +203,14 @@ func TestParseSshInventory(t *testing.T) {
 	a = findAsset(inventory.Spec.Assets, "linux-identity-key")
 	require.NotNil(t, a)
 	assert.Equal(t, vault.CredentialType_private_key, inventory.Spec.Credentials[a.Connections[0].Credentials[0].SecretId].Type)
+	// ensure we only have one credential
+	assert.Len(t, a.Connections[0].Credentials, 1)
+
+	a = findAsset(inventory.Spec.Assets, "linux-ssh-agent-and-key")
+	require.NotNil(t, a)
+	assert.Len(t, a.Connections[0].Credentials, 2)
+	assert.Equal(t, vault.CredentialType_ssh_agent, inventory.Spec.Credentials[a.Connections[0].Credentials[0].SecretId].Type)
+	assert.Equal(t, vault.CredentialType_private_key, inventory.Spec.Credentials[a.Connections[0].Credentials[1].SecretId].Type)
 }
 
 func TestParseVaultInventory(t *testing.T) {
