@@ -124,6 +124,90 @@ func (g *mqlGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
+func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	var number int64
+	if x, ok := args["number"]; ok {
+		number, ok = x.Value.(int64)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'number' in github.mergeRequest initialization, it must be a number")
+		}
+	}
+	if number == 0 {
+		return nil, nil, errors.New("number must be set for github.mergeRequest initialization")
+	}
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.GithubConnection)
+	var org *github.Organization
+	var user *github.User
+	var err error
+	org, err = conn.Organization()
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			log.Debug().Msg("could not find organization, trying to get user")
+			user, err = conn.User()
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			return nil, nil, err
+		}
+	}
+	owner := ""
+	if org != nil {
+		owner = org.GetLogin()
+	} else if user != nil {
+		owner = user.GetLogin()
+	}
+	reponame := ""
+	if x, ok := args["name"]; ok {
+		reponame = x.Value.(string)
+	} else {
+		repo, err := conn.Repository()
+		if err != nil {
+			return nil, nil, err
+		}
+		reponame = *repo.Name
+	}
+	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+	if owner != "" && reponame != "" {
+		pr, _, err := conn.Client().PullRequests.Get(context.Background(), owner, reponame, int(number))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntData(pr.GetUser().GetID()),
+			"login": llx.StringData(pr.GetUser().GetLogin()),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		assignee, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntData(pr.GetAssignee().GetID()),
+			"login": llx.StringData(pr.GetAssignee().GetLogin()),
+		})
+		var labels []interface{}
+		for _, label := range pr.Labels {
+			labels = append(labels, label)
+		}
+		var assignees []interface{}
+		assignees = append(assignees, assignee)
+		prNumber := int64(*pr.Number)
+		args["id"] = llx.IntDataPtr(pr.ID)
+		args["number"] = llx.IntDataPtr(&prNumber)
+		args["state"] = llx.StringDataPtr(pr.State)
+		args["createdAt"] = llx.TimeData(pr.CreatedAt.Time)
+		args["title"] = llx.StringDataPtr(pr.Title)
+		args["owner"] = llx.ResourceData(owner, owner.MqlID())
+		args["assignees"] = llx.ArrayData(assignees, types.Resource(assignee.MqlID()))
+		args["repoName"] = llx.StringData(reponame)
+		args["labels"] = llx.ArrayData(labels, types.Dict)
+	}
+	return args, nil, nil
+}
+
 func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -265,6 +349,89 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 		return nil, err
 	}
 	return res.(*mqlGithubLicense), nil
+}
+
+func (g *mqlGithubRepository) allMergeRequests() ([]interface{}, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	repoName := g.Name.Data
+	if g.Owner.Error != nil {
+		return nil, g.Owner.Error
+	}
+	ownerName := g.Owner.Data
+	if ownerName.Login.Error != nil {
+		return nil, ownerName.Login.Error
+	}
+	ownerLogin := ownerName.Login.Data
+
+	listOpts := &github.PullRequestListOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		State:       "all",
+	}
+	var allPulls []*github.PullRequest
+	for {
+		pulls, resp, err := conn.Client().PullRequests.List(context.TODO(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allPulls = append(allPulls, pulls...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []interface{}{}
+	for i := range allPulls {
+		pr := allPulls[i]
+
+		labels, err := convert.JsonToDictSlice(pr.Labels)
+		if err != nil {
+			return nil, err
+		}
+		owner, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntDataPtr(pr.User.ID),
+			"login": llx.StringDataPtr(pr.User.Login),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		assigneesRes := []interface{}{}
+		for i := range pr.Assignees {
+			assignee, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(pr.Assignees[i].ID),
+				"login": llx.StringDataPtr(pr.Assignees[i].Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+			assigneesRes = append(assigneesRes, assignee)
+		}
+
+		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
+			"id":        llx.IntDataPtr(pr.ID),
+			"number":    llx.IntData(int64(*pr.Number)),
+			"state":     llx.StringDataPtr(pr.State),
+			"labels":    llx.ArrayData(labels, types.Any),
+			"createdAt": llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
+			"title":     llx.StringDataPtr(pr.Title),
+			"owner":     llx.ResourceData(owner, owner.MqlName()),
+			"assignees": llx.ArrayData(assigneesRes, types.Any),
+			"repoName":  llx.StringData(repoName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+
+	return res, nil
 }
 
 func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {

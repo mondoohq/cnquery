@@ -291,6 +291,8 @@ private github.repository @defaults("fullName") {
   isTemplate bool
   // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
+  // List All MergeRequests for the repo, both open and closed
+  allMergeRequests() []github.mergeRequest
   // List of branches for the repository
   branches() []github.branch
   // Default branch name for the repository
