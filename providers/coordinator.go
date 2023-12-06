@@ -13,6 +13,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/muesli/termenv"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -197,8 +198,7 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		}
 	}
 
-	pluginCmd := exec.Command(provider.binPath(), "run_as_plugin")
-	log.Debug().Str("path", pluginCmd.Path).Msg("running provider plugin")
+	pluginCmd := exec.Command(provider.binPath(), []string{"--run-as-plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
 	addColorConfig(pluginCmd)
 
