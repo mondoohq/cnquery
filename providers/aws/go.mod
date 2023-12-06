@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.48.12
+	github.com/aws/aws-sdk-go v1.48.13
 	github.com/aws/aws-sdk-go-v2 v1.23.5
 	github.com/aws/aws-sdk-go-v2/config v1.25.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.9
@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.35.2
