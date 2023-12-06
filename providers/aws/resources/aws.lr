@@ -163,6 +163,8 @@ private aws.waf.rulegroup @defaults("name") {
 
 // Amazon WAF rule
 private aws.waf.rule @defaults("name") {
+  // arn of the acl/ruleGroup + the name of the rule
+  id string
   // Name of the rule
   name string
   // Priority
@@ -171,10 +173,17 @@ private aws.waf.rule @defaults("name") {
   statement aws.waf.rule.statement
   // Part of the rule that tells WAF what to do with a web request when it matches the criteria defined in the rule
   action aws.waf.rule.action
+  // The ARN of either rule ACL or the RuleGroup that this rule belongs to
+  belongsTo string
 }
 
-private aws.waf.rule.action {
+// Action that happens if a rule statement matches
+private aws.waf.rule.action @defaults("action") {
+  // Name of the rule this action belongs to
+  ruleName string
+  // One of Block, Allow, Count, Captcha
   action string
+  // HTTP Response Code, only if the action is Block
   responseCode string
 }
 

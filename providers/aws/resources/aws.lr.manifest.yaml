@@ -2422,6 +2422,7 @@ resources:
     fields:
       action: {}
       arn: {}
+      belongsTo: {}
       description: {}
       id: {}
       name: {}
@@ -2434,12 +2435,14 @@ resources:
       - aws
   aws.waf.rule.action:
     fields:
+      RuleName: {}
       action: {}
       allow: {}
       block: {}
       captcha: {}
       count: {}
       responseCode: {}
+      ruleName: {}
     is_private: true
     min_mondoo_version: latest
     platform:

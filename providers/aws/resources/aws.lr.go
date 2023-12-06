@@ -867,6 +867,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rulegroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
 	},
+	"aws.waf.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetId()).ToDataRes(types.String)
+	},
 	"aws.waf.rule.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetName()).ToDataRes(types.String)
 	},
@@ -878,6 +881,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Resource("aws.waf.rule.action"))
+	},
+	"aws.waf.rule.belongsTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetBelongsTo()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.action.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetRuleName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.action.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleAction).GetAction()).ToDataRes(types.String)
@@ -3637,6 +3646,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsWafRule).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -3653,10 +3666,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[*mqlAwsWafRuleAction](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.belongsTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).BelongsTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRuleAction).__id, ok = v.Value.(string)
 			return
 		},
+	"aws.waf.rule.action.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.action.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleAction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -8434,10 +8455,12 @@ type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleInternal it will be used here
+	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Priority plugin.TValue[int64]
 	Statement plugin.TValue[*mqlAwsWafRuleStatement]
 	Action plugin.TValue[*mqlAwsWafRuleAction]
+	BelongsTo plugin.TValue[string]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -8477,6 +8500,10 @@ func (c *mqlAwsWafRule) MqlID() string {
 	return c.__id
 }
 
+func (c *mqlAwsWafRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
 func (c *mqlAwsWafRule) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -8493,11 +8520,16 @@ func (c *mqlAwsWafRule) GetAction() *plugin.TValue[*mqlAwsWafRuleAction] {
 	return &c.Action
 }
 
+func (c *mqlAwsWafRule) GetBelongsTo() *plugin.TValue[string] {
+	return &c.BelongsTo
+}
+
 // mqlAwsWafRuleAction for the aws.waf.rule.action resource
 type mqlAwsWafRuleAction struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsWafRuleActionInternal it will be used here
+	RuleName plugin.TValue[string]
 	Action plugin.TValue[string]
 	ResponseCode plugin.TValue[string]
 }
@@ -8532,6 +8564,10 @@ func (c *mqlAwsWafRuleAction) MqlName() string {
 
 func (c *mqlAwsWafRuleAction) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAwsWafRuleAction) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
 }
 
 func (c *mqlAwsWafRuleAction) GetAction() *plugin.TValue[string] {

@@ -24,11 +24,11 @@ func (a *mqlAwsWaf) id() (string, error) {
 }
 
 func (a *mqlAwsWafAcl) id() (string, error) {
-	return a.Id.Data, nil
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsWafRule) id() (string, error) {
-	return a.Name.Data, nil
+	return a.Id.Data, nil
 }
 
 func (a *mqlAwsWafRuleStatement) id() (string, error) {
@@ -36,11 +36,11 @@ func (a *mqlAwsWafRuleStatement) id() (string, error) {
 }
 
 func (a *mqlAwsWafRulegroup) id() (string, error) {
-	return a.Name.Data, nil
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsWafIpset) id() (string, error) {
-	return a.Name.Data, nil
+	return a.Arn.Data, nil
 }
 
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
@@ -309,10 +309,12 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
+				"id":        llx.StringData(a.Arn.Data + "/" + *rule.Name),
 				"name":      llx.StringDataPtr(rule.Name),
 				"priority":  llx.IntData(int64(rule.Priority)),
 				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
 				"statement": llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
+				"belongsTo": llx.StringData(a.Arn.Data),
 			},
 		)
 		if err != nil {
@@ -352,6 +354,7 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 		}
 	}
 	mqlAction, err = CreateResource(runtime, "aws.waf.rule.action", map[string]*llx.RawData{
+		"ruleName":     llx.StringDataPtr(ruleName),
 		"action":       llx.StringData(action),
 		"responseCode": llx.StringData(responseCode),
 	})
