@@ -38,6 +38,31 @@ func Init() *Service {
 func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	target := req.Args[0]
 
+	host, port, scheme, path, err := parseTarget(target)
+	if err != nil {
+		return nil, err
+	}
+
+	insecure := false
+	if found, ok := req.Flags["insecure"]; ok {
+		insecure, _ = found.RawData().Value.(bool)
+	}
+
+	asset := inventory.Asset{
+		Connections: []*inventory.Config{{
+			Type:     "host",
+			Port:     int32(port),
+			Host:     host,
+			Path:     path,
+			Runtime:  scheme,
+			Insecure: insecure,
+		}},
+	}
+
+	return &plugin.ParseCLIRes{Asset: &asset}, nil
+}
+
+func parseTarget(target string) (string, int, string, string, error) {
 	// Note on noSchema handling:
 	// A user may type in a target like: `google.com`. Technically, this is not
 	// avalid scheme. We need to make it into a valid url scheme for parsing
@@ -60,7 +85,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 
 	url, err := url.Parse(target)
 	if err != nil {
-		return nil, err
+		return "", 0, "", "", err
 	}
 
 	host, port := domain.SplitHostPort(url.Host)
@@ -73,23 +98,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		scheme = ""
 	}
 
-	insecure := false
-	if found, ok := req.Flags["insecure"]; ok {
-		insecure, _ = found.RawData().Value.(bool)
-	}
+	path := url.Path
 
-	asset := inventory.Asset{
-		Connections: []*inventory.Config{{
-			Type:     "host",
-			Port:     int32(port),
-			Host:     host,
-			Path:     url.Path,
-			Runtime:  scheme,
-			Insecure: insecure,
-		}},
-	}
+	return host, port, scheme, path, nil
 
-	return &plugin.ParseCLIRes{Asset: &asset}, nil
 }
 
 // Shutdown is automatically called when the shell closes.
@@ -152,21 +164,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	if conn.Conf.Options != nil && conn.Conf.Options["host"] != "" {
-		conn.Conf.Host = conn.Conf.Options["host"]
-	}
-
-	if conn.Conf.Options != nil && conn.Conf.Options["port"] != "" {
-		portNumber, err := strconv.ParseInt(conn.Conf.Options["port"], 10, 32)
+		target := conn.Conf.Options["host"]
+		host, port, scheme, path, err := parseTarget(target)
 		if err != nil {
 			return nil, err
 		}
-		conn.Conf.Port = int32(portNumber)
-		if conn.Conf.Port == 80 {
-			conn.Conf.Runtime = "http://"
-		}
-		if conn.Conf.Port == 443 {
-			conn.Conf.Runtime = "https://"
-		}
+		conn.Conf.Host = host
+		conn.Conf.Path = path
+		conn.Conf.Port = int32(port)
+		conn.Conf.Runtime = scheme
 	}
 
 	if err != nil {
