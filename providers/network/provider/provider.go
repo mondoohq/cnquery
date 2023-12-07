@@ -203,7 +203,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	hostWithScheme := conn.Conf.Runtime + conn.Conf.Host
+	hostWithScheme := conn.Conf.Runtime + "://" + conn.Conf.Host
 	asset.Name = hostWithScheme
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
