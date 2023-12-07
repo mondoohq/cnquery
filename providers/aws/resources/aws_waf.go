@@ -519,6 +519,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 			andStatement, err = CreateResource(runtime, "aws.waf.rule.statement.andstatement", map[string]*llx.RawData{
 				"statements": llx.ArrayData(statements, types.ResourceLike),
+				"ruleName":   llx.StringDataPtr(ruleName),
 			})
 			if err != nil {
 				return nil, err
@@ -533,6 +534,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 			notstatement, err = CreateResource(runtime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{
 				"statement": llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
+				"ruleName":  llx.StringDataPtr(ruleName),
 			})
 		}
 		if statement.OrStatement != nil {
@@ -547,6 +549,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 			orstatement, err = CreateResource(runtime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{
 				"statements": llx.ArrayData(statements, types.ResourceLike),
+				"ruleName":   llx.StringDataPtr(ruleName),
 			})
 		}
 		if statement.RateBasedStatement != nil {
