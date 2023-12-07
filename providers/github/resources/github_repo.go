@@ -125,6 +125,10 @@ func (g *mqlGithubRepository) id() (string, error) {
 }
 
 func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
 	var number int64
 	if x, ok := args["number"]; ok {
 		number, ok = x.Value.(int64)
@@ -132,12 +136,11 @@ func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return nil, nil, errors.New("wrong type for 'number' in github.mergeRequest initialization, it must be a number")
 		}
 	}
+
 	if number == 0 {
 		return nil, nil, errors.New("number must be set for github.mergeRequest initialization")
 	}
-	if len(args) > 2 {
-		return args, nil, nil
-	}
+
 	conn := runtime.Connection.(*connection.GithubConnection)
 	var org *github.Organization
 	var user *github.User
@@ -200,8 +203,8 @@ func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		args["state"] = llx.StringDataPtr(pr.State)
 		args["createdAt"] = llx.TimeData(pr.CreatedAt.Time)
 		args["title"] = llx.StringDataPtr(pr.Title)
-		args["owner"] = llx.ResourceData(owner, owner.MqlID())
-		args["assignees"] = llx.ArrayData(assignees, types.Resource(assignee.MqlID()))
+		args["owner"] = llx.ResourceData(owner, owner.MqlName())
+		args["assignees"] = llx.ArrayData(assignees, types.Resource(assignee.MqlName()))
 		args["repoName"] = llx.StringData(reponame)
 		args["labels"] = llx.ArrayData(labels, types.Dict)
 	}
