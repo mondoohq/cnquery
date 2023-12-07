@@ -155,6 +155,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		conn.Conf.Host = conn.Conf.Options["host"]
 	}
 
+	if conn.Conf.Options != nil && conn.Conf.Options["port"] != "" {
+		portNumber, err := strconv.ParseInt(conn.Conf.Options["port"], 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		conn.Conf.Port = int32(portNumber)
+		if conn.Conf.Port == 80 {
+			conn.Conf.Runtime = "http://"
+		}
+		if conn.Conf.Port == 443 {
+			conn.Conf.Runtime = "https://"
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +197,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	asset.Name = conn.Conf.Host
+	hostWithSchmeme := conn.Conf.Runtime + conn.Conf.Host
+	asset.Name = hostWithSchmeme
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
 		Family: []string{"network"},
@@ -192,7 +207,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 	}
 
 	asset.Fqdn = conn.FQDN()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Host}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + hostWithSchmeme}
 
 	return nil
 }
