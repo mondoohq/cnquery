@@ -167,7 +167,7 @@ private aws.waf.rule @defaults("name") {
   id string
   // Name of the rule
   name string
-  // Priority
+  // Priority from lowest to highest number
   priority int
   // Part of the rule that tells WAF how to inspect a web request
   statement aws.waf.rule.statement
@@ -208,10 +208,13 @@ private aws.waf.rule.statement @defaults("kind") {
   sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
 }
 
+// Rule statement that checks for request from certain countrys
 private aws.waf.rule.statement.geomatchstatement @defaults("countryCodes") {
   ruleName string
   countryCodes []string
 }
+
+// Rule statement that checks for requests from IP addresses defined in an IPSet
 private aws.waf.rule.statement.ipsetreferencestatement {
   ruleName string
   arn string
@@ -230,22 +233,27 @@ private aws.waf.rule.statement.labelmatchstatement {
   key string
   scope string
 }
+
+// Rule statement that is managed by AWS
 private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
   ruleName string
   name string
   vendorName string
 }
 
+// Rule statement that matches if all of the rule statements inside it match
 private aws.waf.rule.statement.andstatement {
   ruleName string
   statements []aws.waf.rule.statement
 }
 
+// Rule statement that negates another rule statement
 private aws.waf.rule.statement.notstatement {
   ruleName string
   statement aws.waf.rule.statement
 }
 
+// Rule statement that matches if one of the rule statements inside it matches
 private aws.waf.rule.statement.orstatement {
   ruleName string
   statements []aws.waf.rule.statement
@@ -253,18 +261,21 @@ private aws.waf.rule.statement.orstatement {
 
 private aws.waf.rule.statement.ratebasedstatement {}
 
+// Rule statement that checks for a regex pattern defined in a regex pattern set 
 private aws.waf.rule.statement.regexpatternsetreferencestatement {
   ruleName string
   arn string
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
+// Rule statement that refers to a group of rules
 private aws.waf.rule.statement.rulegroupreferencestatement {
   ruleName string
   arn string
   excludeRules []string
 }
 
+// Rule statement that checks the size of the specified field
 private aws.waf.rule.statement.sizeconstraintstatement {
   ruleName string
   size int
@@ -272,13 +283,14 @@ private aws.waf.rule.statement.sizeconstraintstatement {
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
-
+// Rule statement that matches a specified regex pattern
 private aws.waf.rule.statement.regexmatchstatement {
   ruleName string
   fieldToMatch aws.waf.rule.fieldtomatch
   regexString string
 }
 
+// Rule statement that matches a specified sequence of bytes
 private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
   ruleName string
   fieldToMatch aws.waf.rule.fieldtomatch
