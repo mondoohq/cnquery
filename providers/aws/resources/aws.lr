@@ -208,7 +208,7 @@ private aws.waf.rule.statement @defaults("kind") {
   sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
 }
 
-// Rule statement that checks for request from certain countrys
+// Rule statement that checks for request from certain countries
 private aws.waf.rule.statement.geomatchstatement @defaults("countryCodes") {
   ruleName string
   countryCodes []string
