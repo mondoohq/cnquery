@@ -211,18 +211,21 @@ private aws.waf.rule.statement @defaults("kind") {
 // Rule statement that checks for request from certain countries
 private aws.waf.rule.statement.geomatchstatement @defaults("countryCodes") {
   ruleName string
+  statementID string
   countryCodes []string
 }
 
 // Rule statement that checks for requests from IP addresses defined in an IPSet
 private aws.waf.rule.statement.ipsetreferencestatement {
   ruleName string
+  statementID string
   arn string
   ipSetForwardedIPConfig aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig
 }
 
 private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
   ruleName string
+  statementID string
   headerName string
   position string
   fallbackBehavior string
@@ -230,6 +233,7 @@ private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
 
 private aws.waf.rule.statement.labelmatchstatement {
   ruleName string
+  statementID string
   key string
   scope string
 }
@@ -237,6 +241,7 @@ private aws.waf.rule.statement.labelmatchstatement {
 // Rule statement that is managed by AWS
 private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
   ruleName string
+  statementID string
   name string
   vendorName string
 }
@@ -244,18 +249,21 @@ private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
 // Rule statement that matches if all of the rule statements inside it match
 private aws.waf.rule.statement.andstatement {
   ruleName string
+  statementID string
   statements []aws.waf.rule.statement
 }
 
 // Rule statement that negates another rule statement
 private aws.waf.rule.statement.notstatement {
   ruleName string
+  statementID string
   statement aws.waf.rule.statement
 }
 
 // Rule statement that matches if one of the rule statements inside it matches
 private aws.waf.rule.statement.orstatement {
   ruleName string
+  statementID string
   statements []aws.waf.rule.statement
 }
 
@@ -264,6 +272,7 @@ private aws.waf.rule.statement.ratebasedstatement {}
 // Rule statement that checks for a regex pattern defined in a regex pattern set 
 private aws.waf.rule.statement.regexpatternsetreferencestatement {
   ruleName string
+  statementID string
   arn string
   fieldToMatch aws.waf.rule.fieldtomatch
 }
@@ -271,6 +280,7 @@ private aws.waf.rule.statement.regexpatternsetreferencestatement {
 // Rule statement that refers to a group of rules
 private aws.waf.rule.statement.rulegroupreferencestatement {
   ruleName string
+  statementID string
   arn string
   excludeRules []string
 }
@@ -278,6 +288,7 @@ private aws.waf.rule.statement.rulegroupreferencestatement {
 // Rule statement that checks the size of the specified field
 private aws.waf.rule.statement.sizeconstraintstatement {
   ruleName string
+  statementID string
   size int
   comparisonOperator string
   fieldToMatch aws.waf.rule.fieldtomatch
@@ -286,6 +297,7 @@ private aws.waf.rule.statement.sizeconstraintstatement {
 // Rule statement that matches a specified regex pattern
 private aws.waf.rule.statement.regexmatchstatement {
   ruleName string
+  statementID string
   fieldToMatch aws.waf.rule.fieldtomatch
   regexString string
 }
@@ -293,6 +305,7 @@ private aws.waf.rule.statement.regexmatchstatement {
 // Rule statement that matches a specified sequence of bytes
 private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
   ruleName string
+  statementID string
   fieldToMatch aws.waf.rule.fieldtomatch
   searchString string
 }
@@ -300,6 +313,7 @@ private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
 private aws.waf.rule.fieldtomatch @defaults("target") {
   target string
   ruleName string
+  statementID string
   method bool
   uriPath bool
 	queryString bool
@@ -316,36 +330,43 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
 
 private aws.waf.rule.fieldtomatch.body {
   ruleName string
+  statementID string
   overSizeHandling string
 }
 
 private aws.waf.rule.fieldtomatch.cookie {
   ruleName string
+  statementID string
   overSizeHandling string
 }
 
 private aws.waf.rule.fieldtomatch.headerorder {
   ruleName string
+  statementID string
   overSizeHandling string
 }
 
 private aws.waf.rule.fieldtomatch.singleheader {
   ruleName string
+  statementID string
   name string
 }
 
 private aws.waf.rule.fieldtomatch.singlequeryargument {
   ruleName string
+  statementID string
   name string
 }
 
 private aws.waf.rule.fieldtomatch.ja3fingerprint {
   ruleName string
+  statementID string
   fallbackBehavior string
 }
 
 private aws.waf.rule.fieldtomatch.jsonbody {
   ruleName string
+  statementID string
   overSizeHandling string
   matchScope string
   invalidFallbackBehavior string
@@ -354,12 +375,14 @@ private aws.waf.rule.fieldtomatch.jsonbody {
 
 private aws.waf.rule.fieldtomatch.jsonbody.matchpattern {
   ruleName string
+  statementID string
   all bool
   includePaths []string
 }
 
 private aws.waf.rule.fieldtomatch.headers {
   ruleName string
+  statementID string
   matchScope string
   overSizeHandling string
   matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
@@ -367,6 +390,7 @@ private aws.waf.rule.fieldtomatch.headers {
 
 private aws.waf.rule.fieldtomatch.headers.matchpattern {
   ruleName string
+  statementID string
   all bool
   includeHeaders []string
   excludeHeaders []string
@@ -375,11 +399,13 @@ private aws.waf.rule.fieldtomatch.headers.matchpattern {
 
 private aws.waf.rule.statement.xssmatchstatement {
   ruleName string
+  statementID string
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
 private aws.waf.rule.statement.sqlimatchstatement {
   ruleName string
+  statementID string
   fieldToMatch aws.waf.rule.fieldtomatch
   sensitivityLevel string
 }

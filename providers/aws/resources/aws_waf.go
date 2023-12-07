@@ -97,63 +97,107 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 }
 
 func (a *mqlAwsWafRuleStatementSqlimatchstatement) id() (string, error) {
-	return a.RuleName.Data, nil
+	return a.StatementID.Data, nil
 }
 
 func (a *mqlAwsWafRuleStatementBytematchstatement) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatch) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchBody) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchJsonbody) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchCookie) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchHeaders) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchHeaderorder) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchSingleheader) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchSinglequeryargument) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) id() (string, error) {
-	return a.RuleName.Data, nil
-}
-
-func (a *mqlAwsWafRuleFieldtomatchJa3fingerprint) id() (string, error) {
-	return a.RuleName.Data, nil
+	return a.StatementID.Data, nil
 }
 
 func (a *mqlAwsWafRuleStatementXssmatchstatement) id() (string, error) {
-	return "aws.waf.rule.xssmatchstatement", nil
+	return a.StatementID.Data, nil
 }
 
 func (a *mqlAwsWafRuleStatementRegexmatchstatement) id() (string, error) {
-	return "aws.waf.rule.regexstatement", nil
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementGeomatchstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementIpsetreferencestatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementLabelmatchstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementManagedrulegroupstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementNotstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementOrstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementAndstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementRatebasedstatement) id() (string, error) {
+	return "not implemented", nil
+}
+
+func (a *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementRulegroupreferencestatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleStatementSizeconstraintstatement) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatch) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchBody) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchJsonbody) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchCookie) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchHeaders) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchHeaderorder) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchSingleheader) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchSinglequeryargument) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) id() (string, error) {
+	return a.StatementID.Data, nil
+}
+
+func (a *mqlAwsWafRuleFieldtomatchJa3fingerprint) id() (string, error) {
+	return a.StatementID.Data, nil
 }
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
@@ -319,11 +363,12 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
-		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name)
+		ruleID := a.Arn.Data + "/" + *rule.Name
+		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"id":        llx.StringData(a.Arn.Data + "/" + *rule.Name),
+				"id":        llx.StringData(ruleID),
 				"name":      llx.StringDataPtr(rule.Name),
 				"priority":  llx.IntData(int64(rule.Priority)),
 				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
@@ -375,7 +420,7 @@ func createActionResource(runtime *plugin.Runtime, ruleAction *waftypes.RuleActi
 	return mqlAction, err
 }
 
-func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statement, ruleName *string) (plugin.Resource, error) {
+func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statement, ruleName *string, ruleID string) (plugin.Resource, error) {
 	var err error
 	var sqlimatchstatement plugin.Resource
 	var xssmatchstatement plugin.Resource
@@ -392,15 +437,17 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
+	mqlStatementID := ruleID + "/" + uuid.New().String()
 	var kind string
 	if statement != nil {
 		if statement.RegexMatchStatement != nil {
 			kind = "RegexMatchStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexMatchStatement.FieldToMatch, ruleName)
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexMatchStatement.FieldToMatch, ruleName, mqlStatementID)
 			if statement.RegexMatchStatement.FieldToMatch != nil {
 			}
 			regexmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexmatchstatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.statement.regexmatchstatement.fieldtomatch"),
 				"regexString":  llx.StringDataPtr(statement.RegexMatchStatement.RegexString),
@@ -412,8 +459,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.ByteMatchStatement != nil {
 			kind = "ByteMatchStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err = createFieldToMatchResource(runtime, statement.ByteMatchStatement.FieldToMatch, ruleName)
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.ByteMatchStatement.FieldToMatch, ruleName, mqlStatementID)
 			bytematchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.bytematchstatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
 				"searchString": llx.StringData(string(statement.ByteMatchStatement.SearchString)),
@@ -425,8 +473,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.XssMatchStatement != nil {
 			kind = "XssMatchStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err = createFieldToMatchResource(runtime, statement.XssMatchStatement.FieldToMatch, ruleName)
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.XssMatchStatement.FieldToMatch, ruleName, mqlStatementID)
 			xssmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.xssmatchstatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
 			})
@@ -437,8 +486,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.SqliMatchStatement != nil {
 			kind = "SqliMatchStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err := createFieldToMatchResource(runtime, statement.SqliMatchStatement.FieldToMatch, ruleName)
+			fieldToMatch, err := createFieldToMatchResource(runtime, statement.SqliMatchStatement.FieldToMatch, ruleName, mqlStatementID)
 			sqlimatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sqlimatchstatement", map[string]*llx.RawData{
+				"statementID":      llx.StringData(mqlStatementID),
 				"ruleName":         llx.StringDataPtr(ruleName),
 				"fieldToMatch":     llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
 				"sensitivityLevel": llx.StringData(string(statement.SqliMatchStatement.SensitivityLevel)),
@@ -455,6 +505,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			}
 			countryCodesArray := convert.SliceAnyToInterface(countryCodes)
 			geomatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.geomatchstatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"countryCodes": llx.ArrayData(countryCodesArray, types.String),
 			})
@@ -467,6 +518,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			var IPSetForwardedIPConfig plugin.Resource
 			if statement.IPSetReferenceStatement.IPSetForwardedIPConfig != nil {
 				IPSetForwardedIPConfig, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", map[string]*llx.RawData{
+					"statementID":      llx.StringData(mqlStatementID),
 					"ruleName":         llx.StringDataPtr(ruleName),
 					"headerName":       llx.StringDataPtr(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.HeaderName),
 					"position":         llx.StringData(string(statement.IPSetReferenceStatement.IPSetForwardedIPConfig.Position)),
@@ -477,6 +529,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 				}
 			}
 			ipsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.ipsetreferencestatement", map[string]*llx.RawData{
+				"statementID":            llx.StringData(mqlStatementID),
 				"ruleName":               llx.StringDataPtr(ruleName),
 				"arn":                    llx.StringDataPtr(statement.IPSetReferenceStatement.ARN),
 				"ipSetForwardedIPConfig": llx.ResourceData(IPSetForwardedIPConfig, "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"),
@@ -488,9 +541,10 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.LabelMatchStatement != nil {
 			kind = "LabelMatchStatement"
 			labelmatchstatement, err = CreateResource(runtime, "aws.waf.rule.statement.labelmatchstatement", map[string]*llx.RawData{
-				"ruleName": llx.StringDataPtr(ruleName),
-				"key":      llx.StringDataPtr(statement.LabelMatchStatement.Key),
-				"scope":    llx.StringData(string(statement.LabelMatchStatement.Scope)),
+				"statementID": llx.StringData(mqlStatementID),
+				"ruleName":    llx.StringDataPtr(ruleName),
+				"key":         llx.StringDataPtr(statement.LabelMatchStatement.Key),
+				"scope":       llx.StringData(string(statement.LabelMatchStatement.Scope)),
 			})
 			if err != nil {
 				return nil, err
@@ -499,9 +553,10 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.ManagedRuleGroupStatement != nil {
 			kind = "ManagedRuleGroupStatement"
 			managedrulegroupstatement, err = CreateResource(runtime, "aws.waf.rule.statement.managedrulegroupstatement", map[string]*llx.RawData{
-				"ruleName":   llx.StringDataPtr(ruleName),
-				"name":       llx.StringDataPtr(statement.ManagedRuleGroupStatement.Name),
-				"vendorName": llx.StringDataPtr(statement.ManagedRuleGroupStatement.VendorName),
+				"statementID": llx.StringData(mqlStatementID),
+				"ruleName":    llx.StringDataPtr(ruleName),
+				"name":        llx.StringDataPtr(statement.ManagedRuleGroupStatement.Name),
+				"vendorName":  llx.StringDataPtr(statement.ManagedRuleGroupStatement.VendorName),
 			})
 			if err != nil {
 				return nil, err
@@ -511,15 +566,16 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "AndStatement"
 			var statements []interface{}
 			for _, statement := range statement.AndStatement.Statements {
-				andStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName)
+				andStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName, ruleID)
 				if err != nil {
 					return nil, err
 				}
 				statements = append(statements, andStatementMqlStatement)
 			}
 			andStatement, err = CreateResource(runtime, "aws.waf.rule.statement.andstatement", map[string]*llx.RawData{
-				"statements": llx.ArrayData(statements, types.ResourceLike),
-				"ruleName":   llx.StringDataPtr(ruleName),
+				"statementID": llx.StringData(mqlStatementID),
+				"statements":  llx.ArrayData(statements, types.ResourceLike),
+				"ruleName":    llx.StringDataPtr(ruleName),
 			})
 			if err != nil {
 				return nil, err
@@ -528,28 +584,30 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.NotStatement != nil {
 			kind = "NotStatement"
 			var notStatementMqlStatement plugin.Resource
-			notStatementMqlStatement, err = createStatementResource(runtime, statement.NotStatement.Statement, ruleName)
+			notStatementMqlStatement, err = createStatementResource(runtime, statement.NotStatement.Statement, ruleName, ruleID)
 			if err != nil {
 				return nil, err
 			}
 			notstatement, err = CreateResource(runtime, "aws.waf.rule.statement.notstatement", map[string]*llx.RawData{
-				"statement": llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
-				"ruleName":  llx.StringDataPtr(ruleName),
+				"statementID": llx.StringData(mqlStatementID),
+				"statement":   llx.ResourceData(notStatementMqlStatement, "aws.waf.rule.statement.notstatement"),
+				"ruleName":    llx.StringDataPtr(ruleName),
 			})
 		}
 		if statement.OrStatement != nil {
 			kind = "OrStatement"
 			var statements []interface{}
 			for _, statement := range statement.OrStatement.Statements {
-				orStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName)
+				orStatementMqlStatement, err := createStatementResource(runtime, &statement, ruleName, ruleID)
 				if err != nil {
 					return nil, err
 				}
 				statements = append(statements, orStatementMqlStatement)
 			}
 			orstatement, err = CreateResource(runtime, "aws.waf.rule.statement.orstatement", map[string]*llx.RawData{
-				"statements": llx.ArrayData(statements, types.ResourceLike),
-				"ruleName":   llx.StringDataPtr(ruleName),
+				"statementID": llx.StringData(mqlStatementID),
+				"statements":  llx.ArrayData(statements, types.ResourceLike),
+				"ruleName":    llx.StringDataPtr(ruleName),
 			})
 		}
 		if statement.RateBasedStatement != nil {
@@ -562,8 +620,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.RegexPatternSetReferenceStatement != nil {
 			kind = "RegexPatternSetReferenceStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexPatternSetReferenceStatement.FieldToMatch, ruleName)
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.RegexPatternSetReferenceStatement.FieldToMatch, ruleName, mqlStatementID)
 			regexpatternsetreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.regexpatternsetreferencestatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"arn":          llx.StringDataPtr(statement.RegexPatternSetReferenceStatement.ARN),
 				"fieldToMatch": llx.ResourceData(fieldToMatch, "aws.waf.rule.fieldtomatch"),
@@ -576,6 +635,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 			kind = "RuleGroupReferenceStatement"
 			excludeRules := convert.SliceAnyToInterface(statement.RuleGroupReferenceStatement.ExcludedRules)
 			rulegroupreferencestatement, err = CreateResource(runtime, "aws.waf.rule.statement.rulegroupreferencestatement", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"arn":          llx.StringDataPtr(statement.RuleGroupReferenceStatement.ARN),
 				"excludeRules": llx.ArrayData(excludeRules, types.String),
@@ -587,8 +647,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		if statement.SizeConstraintStatement != nil {
 			kind = "SizeConstraintStatement"
 			var fieldToMatch plugin.Resource
-			fieldToMatch, err = createFieldToMatchResource(runtime, statement.SizeConstraintStatement.FieldToMatch, ruleName)
+			fieldToMatch, err = createFieldToMatchResource(runtime, statement.SizeConstraintStatement.FieldToMatch, ruleName, mqlStatementID)
 			sizeconstraintstatement, err = CreateResource(runtime, "aws.waf.rule.statement.sizeconstraintstatement", map[string]*llx.RawData{
+				"statementID":        llx.StringData(mqlStatementID),
 				"ruleName":           llx.StringDataPtr(ruleName),
 				"size":               llx.IntData(statement.SizeConstraintStatement.Size),
 				"comparisonOperator": llx.StringData(string(statement.SizeConstraintStatement.ComparisonOperator)),
@@ -600,10 +661,9 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		}
 	}
 	var mqlStatement plugin.Resource
-	mqlStatementID := uuid.New() // maybe use the rule.name instead?
 	mqlStatement, err = CreateResource(runtime, "aws.waf.rule.statement",
 		map[string]*llx.RawData{
-			"id":                                llx.StringData(mqlStatementID.String()),
+			"id":                                llx.StringData(mqlStatementID),
 			"kind":                              llx.StringData(kind),
 			"regexMatchStatement":               llx.ResourceData(regexmatchstatement, "aws.waf.rule.statement.regexmatchstatement"),
 			"byteMatchStatement":                llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
@@ -626,7 +686,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	return mqlStatement, nil
 }
 
-func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.FieldToMatch, ruleName *string) (plugin.Resource, error) {
+func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.FieldToMatch, ruleName *string, mqlStatementID string) (plugin.Resource, error) {
 	var err error
 	var singleHeader plugin.Resource
 	var singleQueryArgument plugin.Resource
@@ -640,8 +700,9 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.SingleHeader != nil {
 		target = "SingleHeader"
 		singleHeader, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singleheader", map[string]*llx.RawData{
-			"ruleName": llx.StringDataPtr(ruleName),
-			"name":     llx.StringDataPtr(fieldToMatch.SingleHeader.Name),
+			"statementID": llx.StringData(mqlStatementID),
+			"ruleName":    llx.StringDataPtr(ruleName),
+			"name":        llx.StringDataPtr(fieldToMatch.SingleHeader.Name),
 		})
 		if err != nil {
 			return nil, err
@@ -650,8 +711,9 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.SingleQueryArgument != nil {
 		target = "SingleQueryArgument"
 		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-			"ruleName": llx.StringDataPtr(ruleName),
-			"name":     llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
+			"statementID": llx.StringData(mqlStatementID),
+			"ruleName":    llx.StringDataPtr(ruleName),
+			"name":        llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
 		})
 		if err != nil {
 			return nil, err
@@ -660,6 +722,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.Body != nil {
 		target = "Body"
 		body, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.body", map[string]*llx.RawData{
+			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Body.OversizeHandling)),
 		})
@@ -667,6 +730,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.Cookies != nil {
 		target = "Cookies"
 		cookie, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.cookie", map[string]*llx.RawData{
+			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Cookies.OversizeHandling)),
 		})
@@ -674,6 +738,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.HeaderOrder != nil {
 		target = "HeaderOrder"
 		headerOrder, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headerOrder", map[string]*llx.RawData{
+			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
 		})
@@ -681,14 +746,16 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 	if fieldToMatch.SingleQueryArgument != nil {
 		target = "SingleQueryArgument"
 		singleQueryArgument, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.singlequeryargument", map[string]*llx.RawData{
-			"ruleName": llx.StringDataPtr(ruleName),
-			"name":     llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
+			"statementID": llx.StringData(mqlStatementID),
+			"ruleName":    llx.StringDataPtr(ruleName),
+			"name":        llx.StringDataPtr(fieldToMatch.SingleQueryArgument.Name),
 		})
 	}
 
 	if fieldToMatch.JA3Fingerprint != nil {
 		target = "JA3Fingerprint"
 		ja3Fingerprint, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.ja3fingerprint", map[string]*llx.RawData{
+			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"fallbackBehavior": llx.StringData(string(fieldToMatch.JA3Fingerprint.FallbackBehavior)),
 		})
@@ -701,6 +768,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			includeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.IncludedHeaders)
 			excludeHeaders := convert.SliceAnyToInterface(fieldToMatch.Headers.MatchPattern.ExcludedHeaders)
 			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+				"statementID":    llx.StringData(mqlStatementID),
 				"ruleName":       llx.StringDataPtr(ruleName),
 				"all":            llx.BoolData(fieldToMatch.Headers.MatchPattern.All != nil),
 				"includeHeaders": llx.ArrayData(includeHeaders, types.String),
@@ -708,6 +776,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			})
 		}
 		headers, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.headers", map[string]*llx.RawData{
+			"statementID":      llx.StringData(mqlStatementID),
 			"ruleName":         llx.StringDataPtr(ruleName),
 			"matchPattern":     llx.ResourceData(matchPattern, "aws.waf.rule.fieldtomatch.headers.matchpatern"),
 			"overSizeHandling": llx.StringData(string(fieldToMatch.Headers.OversizeHandling)),
@@ -721,6 +790,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 		includePathsArray := convert.SliceAnyToInterface(fieldToMatch.JsonBody.MatchPattern.IncludedPaths)
 		if fieldToMatch.JsonBody.MatchPattern != nil {
 			matchPattern, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody.matchpattern", map[string]*llx.RawData{
+				"statementID":  llx.StringData(mqlStatementID),
 				"ruleName":     llx.StringDataPtr(ruleName),
 				"all":          llx.BoolData(fieldToMatch.JsonBody.MatchPattern.All != nil),
 				"includePaths": llx.ArrayData(includePathsArray, types.String),
@@ -730,6 +800,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 			}
 		}
 		jsonBody, err = CreateResource(runtime, "aws.waf.rule.fieldtomatch.jsonbody", map[string]*llx.RawData{
+			"statementID":             llx.StringData(mqlStatementID),
 			"ruleName":                llx.StringDataPtr(ruleName),
 			"overSizeHandling":        llx.StringData(string(fieldToMatch.JsonBody.OversizeHandling)),
 			"invalidFallbackBehavior": llx.StringData(string(fieldToMatch.JsonBody.InvalidFallbackBehavior)),
@@ -753,6 +824,7 @@ func createFieldToMatchResource(runtime *plugin.Runtime, fieldToMatch *waftypes.
 		target = "allQueryArguments"
 	}
 	mqlFieldToMatch, err := CreateResource(runtime, "aws.waf.rule.fieldtomatch", map[string]*llx.RawData{
+		"statementID":         llx.StringData(mqlStatementID),
 		"target":              llx.StringData(target),
 		"ruleName":            llx.StringDataPtr(ruleName),
 		"queryString":         llx.BoolData(fieldToMatch.QueryString != nil),

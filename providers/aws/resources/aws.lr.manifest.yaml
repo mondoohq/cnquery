@@ -2486,6 +2486,7 @@ resources:
       ruleName: {}
       singleHeader: {}
       singleQueryArgument: {}
+      statementID: {}
       target: {}
       uriPath: {}
     is_private: true
@@ -2497,6 +2498,7 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2506,6 +2508,7 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2515,6 +2518,7 @@ resources:
     fields:
       overSizeHandling: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2526,6 +2530,7 @@ resources:
       matchScope: {}
       overSizeHandling: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2537,6 +2542,7 @@ resources:
       excludeHeaders: {}
       includeHeaders: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2546,6 +2552,7 @@ resources:
     fields:
       fallbackBehavior: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2558,6 +2565,7 @@ resources:
       matchScope: {}
       overSizeHandling: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2568,6 +2576,7 @@ resources:
       all: {}
       includePaths: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2577,6 +2586,7 @@ resources:
     fields:
       name: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2586,6 +2596,7 @@ resources:
     fields:
       name: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2620,6 +2631,7 @@ resources:
     fields:
       name: {}
       ruleName: {}
+      statementID: {}
       statements: {}
     is_private: true
     min_mondoo_version: latest
@@ -2631,6 +2643,7 @@ resources:
       fieldToMatch: {}
       ruleName: {}
       searchString: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2674,6 +2687,7 @@ resources:
       countryCode: {}
       countryCodes: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2684,6 +2698,7 @@ resources:
       arn: {}
       ipSetForwardedIPConfig: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2695,6 +2710,7 @@ resources:
       headerName: {}
       position: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2705,6 +2721,7 @@ resources:
       key: {}
       ruleName: {}
       scope: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2716,6 +2733,7 @@ resources:
       VendorName: {}
       name: {}
       ruleName: {}
+      statementID: {}
       vendorName: {}
     is_private: true
     min_mondoo_version: latest
@@ -2726,6 +2744,7 @@ resources:
     fields:
       ruleName: {}
       statement: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2734,6 +2753,7 @@ resources:
   aws.waf.rule.statement.orstatement:
     fields:
       ruleName: {}
+      statementID: {}
       statements: {}
     is_private: true
     min_mondoo_version: latest
@@ -2752,6 +2772,7 @@ resources:
       fieldToMatch: {}
       regexString: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2858,6 +2879,7 @@ resources:
       arn: {}
       fieldToMatch: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2869,6 +2891,7 @@ resources:
       arn: {}
       excludeRules: {}
       ruleName: {}
+      statementID: {}
       string: {}
     is_private: true
     min_mondoo_version: latest
@@ -2881,6 +2904,7 @@ resources:
       fieldToMatch: {}
       ruleName: {}
       size: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -3024,6 +3048,7 @@ resources:
       name: {}
       ruleName: {}
       sensitivityLevel: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -3070,6 +3095,7 @@ resources:
     fields:
       fieldToMatch: {}
       ruleName: {}
+      statementID: {}
     is_private: true
     min_mondoo_version: latest
     platform:
