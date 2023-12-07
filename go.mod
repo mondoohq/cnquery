@@ -17,15 +17,15 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.48.12
+	github.com/aws/aws-sdk-go v1.48.14
 	github.com/aws/aws-sdk-go-v2 v1.23.5
-	github.com/aws/aws-sdk-go-v2/config v1.25.11
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.9
+	github.com/aws/aws-sdk-go-v2/config v1.25.12
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.10
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.2
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.140.0
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.3
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.3
 	github.com/aws/smithy-go v1.18.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231121224113-b6714ac5eb13
 	// pin v0.2.6
@@ -73,7 +73,7 @@ require (
 	// pin v1.1.0-rc5
 	github.com/opencontainers/image-spec v1.1.0-rc5
 	github.com/package-url/packageurl-go v0.1.2
-	github.com/pierrec/lz4/v4 v4.1.18
+	github.com/pierrec/lz4/v4 v4.1.19
 	github.com/pkg/sftp v1.13.6
 	// pin v1.2.0-beta.2
 	github.com/pkg/term v1.2.0-beta.2
@@ -85,7 +85,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.17.0
+	github.com/spf13/viper v1.18.0
 	github.com/stretchr/testify v1.8.4
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.11
@@ -184,9 +184,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.18.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.26.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.18.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.26.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
@@ -380,7 +380,7 @@ require (
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.152.0 // indirect
+	google.golang.org/api v0.153.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231127180814-3a041ad873d4 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
