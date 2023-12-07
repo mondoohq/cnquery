@@ -292,6 +292,8 @@ resources:
     min_mondoo_version: 6.4.0
   github.repository:
     fields:
+      MergeRequests:
+        min_mondoo_version: latest
       allowAutoMerge:
         min_mondoo_version: 6.4.0
       allowForking:

@@ -87,7 +87,7 @@ func init() {
 			Create: createGithubCommit,
 		},
 		"github.mergeRequest": {
-			// to override args, implement: initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGithubMergeRequest,
 			Create: createGithubMergeRequest,
 		},
 		"github.review": {

@@ -124,6 +124,93 @@ func (g *mqlGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
+func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	var number int64
+	if x, ok := args["number"]; ok {
+		number, ok = x.Value.(int64)
+		if !ok {
+			return nil, nil, errors.New("wrong type for 'number' in github.mergeRequest initialization, it must be a number")
+		}
+	}
+
+	if number == 0 {
+		return nil, nil, errors.New("number must be set for github.mergeRequest initialization")
+	}
+
+	conn := runtime.Connection.(*connection.GithubConnection)
+	var org *github.Organization
+	var user *github.User
+	var err error
+	org, err = conn.Organization()
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			log.Debug().Msg("could not find organization, trying to get user")
+			user, err = conn.User()
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			return nil, nil, err
+		}
+	}
+	owner := ""
+	if org != nil {
+		owner = org.GetLogin()
+	} else if user != nil {
+		owner = user.GetLogin()
+	}
+	reponame := ""
+	if x, ok := args["name"]; ok {
+		reponame = x.Value.(string)
+	} else {
+		repo, err := conn.Repository()
+		if err != nil {
+			return nil, nil, err
+		}
+		reponame = *repo.Name
+	}
+	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
+	if owner != "" && reponame != "" {
+		pr, _, err := conn.Client().PullRequests.Get(context.Background(), owner, reponame, int(number))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntData(pr.GetUser().GetID()),
+			"login": llx.StringData(pr.GetUser().GetLogin()),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		assignee, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntData(pr.GetAssignee().GetID()),
+			"login": llx.StringData(pr.GetAssignee().GetLogin()),
+		})
+		var labels []interface{}
+		for _, label := range pr.Labels {
+			labels = append(labels, label)
+		}
+		var assignees []interface{}
+		assignees = append(assignees, assignee)
+		prNumber := int64(*pr.Number)
+		args["id"] = llx.IntDataPtr(pr.ID)
+		args["number"] = llx.IntDataPtr(&prNumber)
+		args["state"] = llx.StringDataPtr(pr.State)
+		args["createdAt"] = llx.TimeData(pr.CreatedAt.Time)
+		args["title"] = llx.StringDataPtr(pr.Title)
+		args["owner"] = llx.ResourceData(owner, owner.MqlName())
+		args["assignees"] = llx.ArrayData(assignees, types.Resource(assignee.MqlName()))
+		args["repoName"] = llx.StringData(reponame)
+		args["labels"] = llx.ArrayData(labels, types.Dict)
+	}
+	return args, nil, nil
+}
+
 func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
