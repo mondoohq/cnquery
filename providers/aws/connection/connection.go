@@ -32,6 +32,7 @@ type AwsConnection struct {
 	connectionOptions map[string]string
 	Filters           DiscoveryFilters
 	RegionLimits      []string
+	scope             string
 }
 
 type DiscoveryFilters struct {
@@ -105,6 +106,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.cfg = cfg
 	c.accountId = *identity.Account
 	c.profile = asset.Options["profile"]
+	c.scope = asset.Options["scope"]
 	c.connectionOptions = asset.Options
 	if conf.Discover != nil {
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
@@ -243,6 +245,10 @@ func (p *AwsConnection) AccountId() string {
 
 func (p *AwsConnection) Profile() string {
 	return p.profile
+}
+
+func (p *AwsConnection) Scope() string {
+	return p.scope
 }
 
 func (p *AwsConnection) ConnectionOptions() map[string]string {

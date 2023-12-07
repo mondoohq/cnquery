@@ -51,10 +51,12 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	var scope waftypes.Scope
-	scope = "CLOUDFRONT"
+	scopeString := conn.Scope()
+	if scopeString == "" {
+		scopeString = "CLOUDFRONT"
+	}
+	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListWebACLsInput{Scope: scope}
 	for nextMarker != nil {
 		aclsRes, err := svc.ListWebACLs(ctx, params)
@@ -158,8 +160,11 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	// waf := a.Id.Data
 
-	var scope waftypes.Scope
-	scope = "CLOUDFRONT"
+	scopeString := conn.Scope()
+	if scopeString == "" {
+		scopeString = "CLOUDFRONT"
+	}
+	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
 	region := ""
 	svc := conn.Wafv2(region)
@@ -198,8 +203,11 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	acls := []interface{}{}
 	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	var scope waftypes.Scope
-	scope = "CLOUDFRONT"
+	scopeString := conn.Scope()
+	if scopeString == "" {
+		scopeString = "CLOUDFRONT"
+	}
+	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListRuleGroupsInput{Scope: scope}
 	for nextMarker != nil {
 		aclsRes, err := svc.ListRuleGroups(ctx, params)
@@ -239,8 +247,11 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 	acls := []interface{}{}
 	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	var scope waftypes.Scope
-	scope = "CLOUDFRONT"
+	scopeString := conn.Scope()
+	if scopeString == "" {
+		scopeString = "CLOUDFRONT"
+	}
+	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListIPSetsInput{Scope: scope}
 	for nextMarker != nil {
 		aclsRes, err := svc.ListIPSets(ctx, params)
@@ -289,8 +300,11 @@ func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	// waf := a.Id.Data
 
-	var scope waftypes.Scope
-	scope = "CLOUDFRONT"
+	scopeString := conn.Scope()
+	if scopeString == "" {
+		scopeString = "CLOUDFRONT"
+	}
+	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
 	region := ""
 	svc := conn.Wafv2(region)
