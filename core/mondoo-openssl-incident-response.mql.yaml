@@ -10,7 +10,7 @@ packs:
       - name: Mondoo, Inc
         email: hello@mondoo.com
     tags:
-      mondoo.com/platform: linux,host
+      mondoo.com/platform: linux
       mondoo.com/category: security
     filters:
       - asset.family.contains("linux")

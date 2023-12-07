@@ -10,7 +10,7 @@ packs:
       - name: Mondoo, Inc
         email: hello@mondoo.com
     tags:
-      mondoo.com/platform: windows,host
+      mondoo.com/platform: windows
       mondoo.com/category: best-practices
     docs:
       desc: |
