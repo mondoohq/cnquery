@@ -65,7 +65,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 func parseTarget(target string) (string, int, string, string, error) {
 	// Note on noSchema handling:
 	// A user may type in a target like: `google.com`. Technically, this is not
-	// avalid scheme. We need to make it into a valid url scheme for parsing
+	// a valid scheme. We need to make it into a valid url scheme for parsing
 	// and further processing, but we also want to be mindful of what users intend.
 	//
 	// If we set this to e.g. an HTTP scheme with port 80, then we break
@@ -203,8 +203,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	hostWithSchmeme := conn.Conf.Runtime + conn.Conf.Host
-	asset.Name = hostWithSchmeme
+	hostWithScheme := conn.Conf.Runtime + conn.Conf.Host
+	asset.Name = hostWithScheme
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
 		Family: []string{"network"},
@@ -213,7 +213,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 	}
 
 	asset.Fqdn = conn.FQDN()
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + hostWithSchmeme}
+	hostWithTrimedScheme := strings.Replace(hostWithScheme, "://", "", -1)
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + hostWithTrimedScheme}
 
 	return nil
 }
