@@ -16,16 +16,26 @@ import (
 	mondoogql "go.mondoo.com/mondoo-go"
 )
 
+type mqlVulnmgmtInternal struct {
+	gqlClient *gql.MondooClient
+}
+
 func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 	mcc := v.MqlRuntime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
 	}
 
-	// get new gql client
-	mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
-	if err != nil {
-		return nil, err
+	var mondooClient *gql.MondooClient
+	if v.gqlClient != nil {
+		mondooClient = v.gqlClient
+	} else {
+		// get new gql client
+		mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		if err != nil {
+			return nil, err
+		}
+		v.gqlClient = mondooClient
 	}
 
 	if v.MqlRuntime.Upstream.AssetMrn == "" {
@@ -159,10 +169,16 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 		return nil, resources.MissingUpstreamError{}
 	}
 
-	// get new gql client
-	mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
-	if err != nil {
-		return nil, err
+	var mondooClient *gql.MondooClient
+	if v.gqlClient != nil {
+		mondooClient = v.gqlClient
+	} else {
+		// get new gql client
+		mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		if err != nil {
+			return nil, err
+		}
+		v.gqlClient = mondooClient
 	}
 
 	if v.MqlRuntime.Upstream.AssetMrn == "" {

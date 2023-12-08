@@ -4725,7 +4725,7 @@ func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 type mqlVulnmgmt struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlVulnmgmtInternal it will be used here
+	mqlVulnmgmtInternal
 	Cves plugin.TValue[[]interface{}]
 	Advisories plugin.TValue[[]interface{}]
 	Packages plugin.TValue[[]interface{}]
