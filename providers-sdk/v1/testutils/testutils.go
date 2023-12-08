@@ -290,6 +290,10 @@ func KubeletAKSMock() llx.Runtime {
 	return mockRuntime("testdata/kubelet-aks.json")
 }
 
+func KubeletEKSMock() llx.Runtime {
+	return mockRuntime("testdata/kubelet-eks.json")
+}
+
 func WindowsMock() llx.Runtime {
 	return mockRuntime("testdata/windows.json")
 }
