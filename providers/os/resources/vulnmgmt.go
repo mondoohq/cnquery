@@ -209,7 +209,7 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 	pkgsList := pkgs.GetList().Data
 
 	gqlPackages := make([]mondoogql.PackageInput, len(pkgsList))
-	for i, p := range pkgs.GetList().Data {
+	for i, p := range pkgsList {
 		mqlPkg := p.(*mqlPackage)
 		gqlPackages[i] = mondoogql.PackageInput{
 			Name:    mondoogql.String(mqlPkg.Name.Data),
