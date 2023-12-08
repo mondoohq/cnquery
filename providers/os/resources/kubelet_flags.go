@@ -150,16 +150,16 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 		kubeletConfig["authentication"] = auth
 	}
 	if _, ok := flags["client-ca-file"]; ok {
-		authz := map[string]interface{}{}
-		if _, ok := kubeletConfig["authorization"]; ok {
-			authz = kubeletConfig["authorization"].(map[string]interface{})
+		auth := map[string]interface{}{}
+		if _, ok := kubeletConfig["authentication"]; ok {
+			auth = kubeletConfig["authentication"].(map[string]interface{})
 		}
 		x509 := map[string]interface{}{}
-		if _, ok := authz["x509"]; ok {
-			x509 = authz["x509"].(map[string]interface{})
+		if _, ok := auth["x509"]; ok {
+			x509 = auth["x509"].(map[string]interface{})
 		}
 		x509["clientCAFile"] = flags["client-ca-file"]
-		kubeletConfig["authorization"] = authz
+		kubeletConfig["authentication"] = auth
 	}
 	if _, ok := flags["authorization-mode"]; ok {
 		authz := map[string]interface{}{}

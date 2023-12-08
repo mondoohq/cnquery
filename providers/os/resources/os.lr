@@ -1046,7 +1046,7 @@ kubelet {
   // Kubelet process
   process process
   // Combination of config file parameters and CLI parameters
-  configuration dict
+  configuration() dict
 }
 
 // Python package details found on the operating system image
