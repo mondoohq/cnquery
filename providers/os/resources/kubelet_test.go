@@ -151,3 +151,28 @@ func TestResource_K8sKubeletAKS(t *testing.T) {
 		assert.Equal(t, "0", res[0].Data.Value)
 	})
 }
+
+func TestResource_K8sKubeletEKS(t *testing.T) {
+	// EKS is differetn becasue it uses a JSON config file
+	// and set's the read-only-port to 0
+	x := testutils.InitTester(testutils.KubeletEKSMock())
+
+	t.Run("k8s.kubelet resource", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet")
+		assert.NotEmpty(t, res)
+		assert.NoError(t, res[0].Data.Error)
+	})
+
+	t.Run("kubelet configFile path", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.configFile")
+		assert.NotEmpty(t, res)
+		assert.NoError(t, res[0].Data.Error)
+	})
+
+	t.Run("kubelet config readOnlyPort", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.configuration[\"readOnlyPort\"]")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, 0.0, res[0].Data.Value)
+	})
+}
