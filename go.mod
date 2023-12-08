@@ -370,7 +370,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20231115081401-e27ff48607b6
+	go.mondoo.com/mondoo-go v0.0.0-20231208095824-90b6fcd58afb
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	go.tmz.dev/musttag v0.7.2 // indirect
@@ -402,5 +402,3 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
 )
-
-replace go.mondoo.com/mondoo-go => /home/christian/workspace/mondoo/github.com/mondoo-go
