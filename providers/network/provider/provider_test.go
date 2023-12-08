@@ -10,7 +10,6 @@ import (
 )
 
 func TestParseTarget(t *testing.T) {
-	// Define the test cases
 	testCases := []struct {
 		name           string
 		target         string
@@ -47,10 +46,8 @@ func TestParseTarget(t *testing.T) {
 			expectedPath:   "",
 			expectError:    false,
 		},
-		// Add more test cases for different scenarios...
 	}
 
-	// Iterate over the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			host, port, scheme, path, err := parseTarget(tc.target)
