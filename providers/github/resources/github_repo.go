@@ -125,7 +125,7 @@ func (g *mqlGithubRepository) id() (string, error) {
 }
 
 func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	if len(args) > 2 {
 		return args, nil, nil
 	}
 
@@ -164,7 +164,7 @@ func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		owner = user.GetLogin()
 	}
 	reponame := ""
-	if x, ok := args["name"]; ok {
+	if x, ok := args["repoName"]; ok {
 		reponame = x.Value.(string)
 	} else {
 		repo, err := conn.Repository()
@@ -354,7 +354,7 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 	return res.(*mqlGithubLicense), nil
 }
 
-func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
+func (g *mqlGithubRepository) getMergeRequests(state string) ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	if g.Name.Error != nil {
 		return nil, g.Name.Error
@@ -371,7 +371,7 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 
 	listOpts := &github.PullRequestListOptions{
 		ListOptions: github.ListOptions{PerPage: paginationPerPage},
-		State:       "open",
+		State:       state,
 	}
 	var allPulls []*github.PullRequest
 	for {
@@ -435,6 +435,30 @@ func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (g *mqlGithubRepository) allMergeRequests() ([]interface{}, error) {
+	res, err := g.getMergeRequests("all")
+	if err != nil {
+		return nil, err
+	}
+	return res, err
+}
+
+func (g *mqlGithubRepository) closedMergeRequests() ([]interface{}, error) {
+	res, err := g.getMergeRequests("closed")
+	if err != nil {
+		return nil, err
+	}
+	return res, err
+}
+
+func (g *mqlGithubRepository) openMergeRequests() ([]interface{}, error) {
+	res, err := g.getMergeRequests("open")
+	if err != nil {
+		return nil, err
+	}
+	return res, err
 }
 
 func (g *mqlGithubMergeRequest) id() (string, error) {
