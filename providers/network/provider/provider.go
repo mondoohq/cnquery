@@ -213,7 +213,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 		Name:   "host",
 		Family: []string{"network"},
 		Kind:   "network",
-		Title:  "Network API",
+		Title:  "Network Host",
 	}
 
 	asset.Fqdn = conn.FQDN()
