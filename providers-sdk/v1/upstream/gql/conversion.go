@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package gql
 
 import "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
