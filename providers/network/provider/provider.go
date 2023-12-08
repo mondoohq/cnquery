@@ -203,8 +203,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
-	hostWithScheme := conn.Conf.Runtime + conn.Conf.Host
-	asset.Name = hostWithScheme
+	if conn.Conf.Runtime != "" {
+		hostWithScheme := conn.Conf.Runtime + "://" + conn.Conf.Host
+		asset.Name = hostWithScheme
+	} else {
+		asset.Name = conn.Conf.Host
+	}
 	asset.Platform = &inventory.Platform{
 		Name:   "host",
 		Family: []string{"network"},
@@ -213,8 +217,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 	}
 
 	asset.Fqdn = conn.FQDN()
-	hostWithTrimedScheme := strings.Replace(hostWithScheme, "://", "", -1)
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + hostWithTrimedScheme}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Runtime + conn.Conf.Host}
 
 	return nil
 }
