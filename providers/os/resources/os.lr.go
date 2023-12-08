@@ -10531,7 +10531,9 @@ func (c *mqlKubelet) GetProcess() *plugin.TValue[*mqlProcess] {
 }
 
 func (c *mqlKubelet) GetConfiguration() *plugin.TValue[interface{}] {
-	return &c.Configuration
+	return plugin.GetOrCompute[interface{}](&c.Configuration, func() (interface{}, error) {
+		return c.configuration()
+	})
 }
 
 // mqlPython for the python resource

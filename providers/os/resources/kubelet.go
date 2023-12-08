@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/afero"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 
 	"sigs.k8s.io/yaml"
@@ -17,8 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/types"
 )
 
 const defaultKubeletConfig = "/var/lib/kubelet/config.yaml"
@@ -50,56 +47,48 @@ func initKubelet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 		configFilePath = path
 	}
 
-	provider, ok := runtime.Connection.(shared.Connection)
-	if !ok {
-		return nil, nil, fmt.Errorf("error getting operating system provider")
-	}
-	// AKS has no kubelet config file
-	configFileExists, err := afero.Exists(provider.FileSystem(), configFilePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error when checking whether config file exists: %v", err)
-	}
-
-	if configFileExists {
-		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
-			"path": llx.StringData(configFilePath),
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-		mqlFile, ok := f.(*mqlFile)
-		if !ok {
-			return nil, nil, err
-		}
-		args["configFile"] = llx.ResourceData(mqlFile, "file")
-	} else {
-		args["configFile"] = llx.NilData
-	}
-
-	// I cannot re-use "mqlFile" here, as it is not read at this point in time
-	configuration, err := createConfiguration(kubeletFlags, configFilePath, provider, configFileExists)
+	f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(configFilePath),
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	args["configuration"] = llx.MapData(configuration, types.String)
+	mqlFile, ok := f.(*mqlFile)
+	if !ok {
+		return nil, nil, err
+	}
+	args["configFile"] = llx.ResourceData(mqlFile, "file")
 
 	return args, nil, nil
+}
+
+func (m *mqlKubelet) configuration() (map[string]interface{}, error) {
+	configFileData := ""
+	if m.ConfigFile.Data.GetContent() != nil {
+		configFileData = m.ConfigFile.Data.GetContent().Data
+	}
+	kubeletFlags := map[string]interface{}{}
+	if m.Process.Data.GetFlags() != nil {
+		kubeletFlags = m.Process.Data.GetFlags().Data
+	}
+	// I cannot re-use "mqlFile" here, as it is not read at this point in time
+	configuration, err := createConfiguration(kubeletFlags, configFileData)
+	if err != nil {
+		return nil, err
+	}
+	return configuration, nil
 }
 
 // createConfiguration applies the kubelet defaults to the config and then
 // merges the kubelet flags and the kubelet config file into a single map
 // This map is representing the running state of the kubelet config
-func createConfiguration(kubeletFlags map[string]interface{}, configFilePath string, provider shared.Connection, configFileExists bool) (map[string]interface{}, error) {
+func createConfiguration(kubeletFlags map[string]interface{}, configFileContent string) (map[string]interface{}, error) {
 	kubeletConfig := kubeletconfigv1beta1.KubeletConfiguration{}
 	SetDefaults_KubeletConfiguration(&kubeletConfig)
 
 	// AKS has no kubelet config file
-	if configFileExists {
-		configFileContent, err := afero.ReadFile(provider.FileSystem(), configFilePath)
-		if err != nil {
-			return nil, fmt.Errorf("error when getting file content: %v", err)
-		}
-		err = yaml.Unmarshal([]byte(configFileContent), &kubeletConfig)
+	if configFileContent != "" {
+		err := yaml.Unmarshal([]byte(configFileContent), &kubeletConfig)
 		if err != nil {
 			return nil, fmt.Errorf("error when converting file content into KubeletConfiguration: %v", err)
 		}
