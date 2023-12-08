@@ -53,15 +53,15 @@ packs:
         title: Members of the wheel group
         mql: groups.where( name == "wheel") { members }
       - uid: mondoo-linux-installed-kernel
-        title: Installed Linux kernels
+        title: Installed kernels
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.installed
       - uid: mondoo-linux-kernel-info
-        title: Running Linux kernel
+        title: Running kernel versions
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.info
       - uid: mondoo-linux-kernel-modules
-        title: Linux kernel modules
+        title: Kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
         title: Running processes
@@ -90,7 +90,7 @@ packs:
         mql: |
           parse.json(content: command('ip -j a').stdout).params
       - uid: mondoo-sshd-interface-configuration
-        title: sshd configuration of the system
+        title: sshd configuration
         filters: package('openssh-server').installed || package('openssh').installed
         mql: sshd.config.params
       - uid: mondoo-linux-system-manufacturer

@@ -16,15 +16,15 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-linux-incident-response-installed-kernel
-        title: Installed Linux kernels
+        title: Installed kernels
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.installed
       - uid: mondoo-linux-kernel-info
-        title: Running Linux kernel
+        title: Running kernel version
         filters: mondoo.capabilities.contains("run-command")
         mql: kernel.info
       - uid: mondoo-linux-kernel-modules
-        title: Linux kernel modules
+        title: Kernel modules
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-incident-response-processes
         title: Running processes
