@@ -359,10 +359,21 @@ func LatestVersion(name string) (string, error) {
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
-	if err != nil {
-		return "", err
+	// Define the maximum number of retries
+	maxRetries := 3
+	var res *http.Response
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		res, err = client.Get("https://releases.mondoo.com/providers/latest.json")
+		if err == nil {
+			break
+		}
+		if attempt == maxRetries {
+			return "", err
+		}
+		time.Sleep(time.Second * time.Duration(attempt))
 	}
+
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Debug().Err(err).Msg("reading latest.json failed")
