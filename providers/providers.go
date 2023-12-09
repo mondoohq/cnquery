@@ -359,7 +359,6 @@ func LatestVersion(name string) (string, error) {
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	// Define the maximum number of retries
 	maxRetries := 3
 	var res *http.Response
 
@@ -371,6 +370,7 @@ func LatestVersion(name string) (string, error) {
 		if attempt == maxRetries {
 			return "", err
 		}
+		log.Debug().Msgf("Failed to get https://releases.mondoo.com/providers/latest.json, trying again in %d seconds", attempt)
 		time.Sleep(time.Second * time.Duration(attempt))
 	}
 
