@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -43,6 +44,25 @@ func (a *mqlAwsWafIpset) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	fmt.Println("Hello")
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	scope := ""
+	if x, ok := args["scope"]; ok {
+		scope = x.Value.(string)
+	} else {
+		scope = "CLOUDFRONT"
+	}
+	fmt.Println("Setting scope:", scope)
+	args["scope"] = llx.StringData(scope)
+
+	return args, nil, nil
+
+}
+
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -51,11 +71,7 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	ctx := context.Background()
 	acls := []interface{}{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := conn.Scope()
-	if scopeString == "" {
-		scopeString = "CLOUDFRONT"
-	}
-	scope := waftypes.Scope(scopeString)
+	scope := waftypes.Scope(a.Scope.Data)
 	params := &wafv2.ListWebACLsInput{Scope: scope}
 	for nextMarker != nil {
 		aclsRes, err := svc.ListWebACLs(ctx, params)
@@ -202,10 +218,7 @@ func (a *mqlAwsWafRuleFieldtomatchJa3fingerprint) id() (string, error) {
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	scopeString := conn.Scope()
-	if scopeString == "" {
-		scopeString = "CLOUDFRONT"
-	}
+	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
 	region := ""
@@ -250,10 +263,7 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	ctx := context.Background()
 	acls := []interface{}{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := conn.Scope()
-	if scopeString == "" {
-		scopeString = "CLOUDFRONT"
-	}
+	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListRuleGroupsInput{Scope: scope}
 	for nextMarker != nil {
@@ -273,6 +283,7 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 					"arn":         llx.StringDataPtr(ruleGroup.ARN),
 					"name":        llx.StringDataPtr(ruleGroup.Name),
 					"description": llx.StringDataPtr(ruleGroup.Description),
+					"scope":       llx.StringData(scopeString),
 				},
 			)
 			if err != nil {
@@ -292,10 +303,7 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 	ctx := context.Background()
 	acls := []interface{}{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scopeString := conn.Scope()
-	if scopeString == "" {
-		scopeString = "CLOUDFRONT"
-	}
+	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListIPSetsInput{Scope: scope}
 	for nextMarker != nil {
@@ -330,6 +338,7 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 					"description": llx.StringDataPtr(ipset.Description),
 					"addressType": llx.StringDataPtr((*string)(&ipsetDetails.IPSet.IPAddressVersion)),
 					"addresses":   llx.ArrayData(ipsetAddresses, types.String),
+					"scope":       llx.StringData(scopeString),
 				},
 			)
 			if err != nil {
@@ -344,10 +353,7 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	scopeString := conn.Scope()
-	if scopeString == "" {
-		scopeString = "CLOUDFRONT"
-	}
+	scopeString := a.Scope.Data
 	scope := waftypes.Scope(scopeString)
 	ctx := context.Background()
 	region := ""

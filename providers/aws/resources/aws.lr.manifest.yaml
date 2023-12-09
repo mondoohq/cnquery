@@ -2386,6 +2386,7 @@ resources:
       region: {}
       ruleGroups: {}
       rules: {}
+      scope: {}
       subnets: {}
       tags: {}
     min_mondoo_version: latest
@@ -2400,6 +2401,7 @@ resources:
       managedByFirewallManager: {}
       name: {}
       rules: {}
+      scope: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -3136,6 +3138,7 @@ resources:
       id: {}
       name: {}
       rules: {}
+      scope: {}
     is_private: true
     min_mondoo_version: latest
     platform:

@@ -51,7 +51,7 @@ func init() {
 			Create: createAwsVpcFlowlog,
 		},
 		"aws.waf": {
-			// to override args, implement: initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsWaf,
 			Create: createAwsWaf,
 		},
 		"aws.waf.acl": {
@@ -834,6 +834,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetIpSets()).ToDataRes(types.Array(types.Resource("aws.waf.ipset")))
 	},
+	"aws.waf.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetScope()).ToDataRes(types.String)
+	},
 	"aws.waf.acl.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetArn()).ToDataRes(types.String)
 	},
@@ -852,6 +855,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
 	},
+	"aws.waf.acl.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetScope()).ToDataRes(types.String)
+	},
 	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
 	},
@@ -866,6 +872,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rulegroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
+	},
+	"aws.waf.rulegroup.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetScope()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetId()).ToDataRes(types.String)
@@ -3674,6 +3683,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.waf.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafAcl).__id, ok = v.Value.(string)
 			return
@@ -3702,6 +3715,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsWafAcl).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.waf.acl.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsWafRulegroup).__id, ok = v.Value.(string)
 			return
@@ -3724,6 +3741,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.rulegroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRulegroup).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8392,6 +8413,7 @@ type mqlAwsWaf struct {
 	Acls plugin.TValue[[]interface{}]
 	RuleGroups plugin.TValue[[]interface{}]
 	IpSets plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
 }
 
 // createAwsWaf creates a new instance of this resource
@@ -8479,6 +8501,10 @@ func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlAwsWaf) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
 // mqlAwsWafAcl for the aws.waf.acl resource
 type mqlAwsWafAcl struct {
 	MqlRuntime *plugin.Runtime
@@ -8490,6 +8516,7 @@ type mqlAwsWafAcl struct {
 	Description plugin.TValue[string]
 	ManagedByFirewallManager plugin.TValue[bool]
 	Rules plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
 }
 
 // createAwsWafAcl creates a new instance of this resource
@@ -8565,6 +8592,10 @@ func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]interface{}] {
 	})
 }
 
+func (c *mqlAwsWafAcl) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
 // mqlAwsWafRulegroup for the aws.waf.rulegroup resource
 type mqlAwsWafRulegroup struct {
 	MqlRuntime *plugin.Runtime
@@ -8575,6 +8606,7 @@ type mqlAwsWafRulegroup struct {
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Rules plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
 }
 
 // createAwsWafRulegroup creates a new instance of this resource
@@ -8644,6 +8676,10 @@ func (c *mqlAwsWafRulegroup) GetRules() *plugin.TValue[[]interface{}] {
 
 		return c.rules()
 	})
+}
+
+func (c *mqlAwsWafRulegroup) GetScope() *plugin.TValue[string] {
+	return &c.Scope
 }
 
 // mqlAwsWafRule for the aws.waf.rule resource

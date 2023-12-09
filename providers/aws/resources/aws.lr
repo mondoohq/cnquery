@@ -129,6 +129,8 @@ aws.waf {
   ruleGroups() []aws.waf.rulegroup
   // List of WAF IP sets
   ipSets() []aws.waf.ipset
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
 }
 
 // Amazon WAF v2 ACL
@@ -145,6 +147,8 @@ private aws.waf.acl @defaults("name") {
   managedByFirewallManager bool
   // List of WAF rules
   rules() []aws.waf.rule
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
 }
 
 // Amazon WAF v2 RuleGroup
@@ -159,6 +163,8 @@ private aws.waf.rulegroup @defaults("name") {
   description string
   // List of waf rules
   rules() []aws.waf.rule
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
 }
 
 // Amazon WAF rule
