@@ -1087,9 +1087,17 @@ resources:
         min_mondoo_version: 5.25.0
       encrypted: {}
       id: {}
+      iops:
+        min_mondoo_version: 9.11.0
+      multiAttachEnabled:
+        min_mondoo_version: 9.11.0
       region: {}
+      size:
+        min_mondoo_version: 9.11.0
       state: {}
       tags: {}
+      throughput:
+        min_mondoo_version: 9.11.0
       volumeType: {}
     is_private: true
     min_mondoo_version: 5.15.0

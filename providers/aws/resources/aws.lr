@@ -1748,7 +1748,7 @@ private aws.ec2.snapshot @defaults("arn") {
 }
 
 // Amazon EC2 volume
-private aws.ec2.volume @defaults("arn encrypted state") {
+private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   // ARN for the EC2 volume
   arn string
   // ID of the EC2 volume
@@ -1769,6 +1769,14 @@ private aws.ec2.volume @defaults("arn encrypted state") {
   createTime time
   // Region where the EC2 volume is stored
   region string
+  // Whether Amazon EBS Multi-Attach is enabled.
+  multiAttachEnabled bool
+  // The throughput that the volume supports, in MiB/s.
+  throughput int
+  // The size of the volume, in GiBs.
+  size int
+  // The number of I/O operations per second (IOPS). For gp3, io1, and io2 volumes, this represents the number of IOPS that are provisioned for the volume. For gp2 volumes, this represents the baseline performance of the volume and the rate at which the volume accumulates I/O credits for bursting.
+  iops int
 }
 
 // Amazon EC2 instance
