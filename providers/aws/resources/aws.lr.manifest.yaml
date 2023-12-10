@@ -874,6 +874,8 @@ resources:
       detailedMonitoring: {}
       deviceMappings: {}
       ebsOptimized: {}
+      enaSupported:
+        min_mondoo_version: 9.11.0
       httpEndpoint:
         min_mondoo_version: 9.0.0
       httpTokens: {}

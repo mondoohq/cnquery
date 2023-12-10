@@ -1772,7 +1772,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
 }
 
 // Amazon EC2 instance
-private aws.ec2.instance @defaults("instanceId region state platformDetails") {
+private aws.ec2.instance @defaults("instanceId region state instanceType platformDetails") {
   // ARN for the instance
   arn string
   // Instance ID for the instance
@@ -1799,7 +1799,7 @@ private aws.ec2.instance @defaults("instanceId region state platformDetails") {
   deviceMappings []aws.ec2.instance.device
   // List of security groups (IDs) associated with the instance
   securityGroups []aws.ec2.securitygroup
-  // Platform details 
+  // Platform details
   platformDetails string
   // Public DNS name for the instance
   publicDnsName string
@@ -1811,6 +1811,8 @@ private aws.ec2.instance @defaults("instanceId region state platformDetails") {
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
   ebsOptimized bool
+  // Whether the instance supports the Elastic Network Adapter (ENA)
+  enaSupported bool
   // Instance type (e.g., t2.micro)
   instanceType string
   // Tags on the instance

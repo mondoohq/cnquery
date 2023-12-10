@@ -2594,6 +2594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.ebsOptimized": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetEbsOptimized()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.instance.enaSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetEnaSupported()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.instance.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceType()).ToDataRes(types.String)
 	},
@@ -5949,6 +5952,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.ebsOptimized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).EbsOptimized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.enaSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).EnaSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15659,6 +15666,7 @@ type mqlAwsEc2Instance struct {
 	StateReason plugin.TValue[interface{}]
 	StateTransitionReason plugin.TValue[string]
 	EbsOptimized plugin.TValue[bool]
+	EnaSupported plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	Image plugin.TValue[*mqlAwsEc2Image]
@@ -15799,6 +15807,10 @@ func (c *mqlAwsEc2Instance) GetStateTransitionReason() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetEbsOptimized() *plugin.TValue[bool] {
 	return &c.EbsOptimized
+}
+
+func (c *mqlAwsEc2Instance) GetEnaSupported() *plugin.TValue[bool] {
+	return &c.EnaSupported
 }
 
 func (c *mqlAwsEc2Instance) GetInstanceType() *plugin.TValue[string] {
