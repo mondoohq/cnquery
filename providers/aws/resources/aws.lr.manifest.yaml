@@ -883,6 +883,8 @@ resources:
         min_mondoo_version: 9.11.0
       image: {}
       instanceId: {}
+      instanceLifecycle:
+        min_mondoo_version: 9.11.0
       instanceStatus: {}
       instanceType: {}
       keypair: {}

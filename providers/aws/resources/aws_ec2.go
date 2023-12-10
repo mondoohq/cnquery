@@ -719,6 +719,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"httpTokens":            llx.StringData(httpTokens),
 				"hypervisor":            llx.StringData(string(instance.Hypervisor)),
 				"instanceId":            llx.StringDataPtr(instance.InstanceId),
+				"instanceLifecycle":     llx.StringData(string(instance.InstanceLifecycle)),
 				"instanceType":          llx.StringData(string(instance.InstanceType)),
 				"launchTime":            llx.TimeDataPtr(instance.LaunchTime),
 				"platformDetails":       llx.StringDataPtr(instance.PlatformDetails),

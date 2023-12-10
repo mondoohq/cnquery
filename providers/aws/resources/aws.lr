@@ -1833,6 +1833,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType platfor
   vpcArn string
   // The hypervisor type of the instance: ovm or xen
   hypervisor string
+  // Whether this is a Spot Instance or a Scheduled Instance: spot, scheduled, or capacity-block
+  instanceLifecycle string
 }
 
 // Amazon EC2 key pair
