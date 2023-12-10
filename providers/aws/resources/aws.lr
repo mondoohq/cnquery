@@ -1811,7 +1811,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType platfor
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
   ebsOptimized bool
-  // Whether the instance supports the Elastic Network Adapter (ENA)
+  // Whether enhanced networking with ENA is enabled.
   enaSupported bool
   // Instance type (e.g., t2.micro)
   instanceType string
@@ -1831,6 +1831,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType platfor
   stateTransitionTime time
   // The ARN of the VPC associated with the instance
   vpcArn string
+  // The hypervisor type of the instance: ovm or xen
+  hypervisor string
 }
 
 // Amazon EC2 key pair

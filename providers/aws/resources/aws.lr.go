@@ -2624,6 +2624,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.vpcArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetVpcArn()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.hypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetHypervisor()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -5992,6 +5995,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.vpcArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).VpcArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15676,6 +15683,7 @@ type mqlAwsEc2Instance struct {
 	Keypair plugin.TValue[*mqlAwsEc2Keypair]
 	StateTransitionTime plugin.TValue[*time.Time]
 	VpcArn plugin.TValue[string]
+	Hypervisor plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -15859,6 +15867,10 @@ func (c *mqlAwsEc2Instance) GetStateTransitionTime() *plugin.TValue[*time.Time] 
 
 func (c *mqlAwsEc2Instance) GetVpcArn() *plugin.TValue[string] {
 	return &c.VpcArn
+}
+
+func (c *mqlAwsEc2Instance) GetHypervisor() *plugin.TValue[string] {
+	return &c.Hypervisor
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

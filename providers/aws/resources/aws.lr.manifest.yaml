@@ -879,6 +879,8 @@ resources:
       httpEndpoint:
         min_mondoo_version: 9.0.0
       httpTokens: {}
+      hypervisor:
+        min_mondoo_version: 9.11.0
       image: {}
       instanceId: {}
       instanceStatus: {}
