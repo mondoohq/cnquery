@@ -2636,6 +2636,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetRootDeviceName()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetArchitecture()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -6020,6 +6023,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).RootDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15708,6 +15715,7 @@ type mqlAwsEc2Instance struct {
 	InstanceLifecycle plugin.TValue[string]
 	RootDeviceType plugin.TValue[string]
 	RootDeviceName plugin.TValue[string]
+	Architecture plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -15907,6 +15915,10 @@ func (c *mqlAwsEc2Instance) GetRootDeviceType() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetRootDeviceName() *plugin.TValue[string] {
 	return &c.RootDeviceName
+}
+
+func (c *mqlAwsEc2Instance) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

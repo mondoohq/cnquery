@@ -710,6 +710,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				}
 			}
 			args := map[string]*llx.RawData{
+				"architecture":          llx.StringData(string(instance.Architecture)),
 				"arn":                   llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
 				"detailedMonitoring":    llx.StringData(string(instance.Monitoring.State)),
 				"deviceMappings":        llx.ArrayData(mqlDevices, types.Resource("aws.ec2.instance.device")),

@@ -1772,7 +1772,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
 }
 
 // Amazon EC2 instance
-private aws.ec2.instance @defaults("instanceId region state instanceType platformDetails") {
+private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
   // ARN for the instance
   arn string
   // Instance ID for the instance
@@ -1839,6 +1839,8 @@ private aws.ec2.instance @defaults("instanceId region state instanceType platfor
   rootDeviceType string
   // The device name of the root device volume (for example, /dev/sda1)
   rootDeviceName string
+  // The architecture of the instance
+  architecture string
 }
 
 // Amazon EC2 key pair
