@@ -899,6 +899,10 @@ resources:
       publicDnsName: {}
       publicIp: {}
       region: {}
+      rootDeviceName:
+        min_mondoo_version: 9.11.0
+      rootDeviceType:
+        min_mondoo_version: 9.11.0
       securityGroups: {}
       ssm: {}
       state: {}

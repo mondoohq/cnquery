@@ -728,6 +728,8 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"publicDnsName":         llx.StringDataPtr(instance.PublicDnsName),
 				"publicIp":              llx.StringDataPtr(instance.PublicIpAddress),
 				"region":                llx.StringData(regionVal),
+				"rootDeviceName":        llx.StringDataPtr(instance.RootDeviceName),
+				"rootDeviceType":        llx.StringData(string(instance.RootDeviceType)),
 				"securityGroups":        llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 				"state":                 llx.StringData(string(instance.State.Name)),
 				"stateReason":           llx.MapData(stateReason, types.Any),

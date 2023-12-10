@@ -2630,6 +2630,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceLifecycle()).ToDataRes(types.String)
 	},
+	"aws.ec2.instance.rootDeviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetRootDeviceType()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetRootDeviceName()).ToDataRes(types.String)
+	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
 	},
@@ -6006,6 +6012,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).InstanceLifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.rootDeviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).RootDeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).RootDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15692,6 +15706,8 @@ type mqlAwsEc2Instance struct {
 	VpcArn plugin.TValue[string]
 	Hypervisor plugin.TValue[string]
 	InstanceLifecycle plugin.TValue[string]
+	RootDeviceType plugin.TValue[string]
+	RootDeviceName plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -15883,6 +15899,14 @@ func (c *mqlAwsEc2Instance) GetHypervisor() *plugin.TValue[string] {
 
 func (c *mqlAwsEc2Instance) GetInstanceLifecycle() *plugin.TValue[string] {
 	return &c.InstanceLifecycle
+}
+
+func (c *mqlAwsEc2Instance) GetRootDeviceType() *plugin.TValue[string] {
+	return &c.RootDeviceType
+}
+
+func (c *mqlAwsEc2Instance) GetRootDeviceName() *plugin.TValue[string] {
+	return &c.RootDeviceName
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

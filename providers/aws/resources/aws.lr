@@ -1835,6 +1835,10 @@ private aws.ec2.instance @defaults("instanceId region state instanceType platfor
   hypervisor string
   // Whether this is a Spot Instance or a Scheduled Instance: spot, scheduled, or capacity-block
   instanceLifecycle string
+  // The root device type used by the AMI: ebs or instance-store
+  rootDeviceType string
+  // The device name of the root device volume (for example, /dev/sda1)
+  rootDeviceName string
 }
 
 // Amazon EC2 key pair
