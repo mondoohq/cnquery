@@ -123,7 +123,7 @@ private aws.vpc.flowlog @defaults("id region status") {
 
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
 aws.accessAnalyzer @defaults("analyzers") {
-  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account 
+  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
   analyzers() []aws.accessanalyzer.analyzer
 }
 
@@ -265,7 +265,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // Denotes if mfa is active in the account
   mfaActive() bool
-  // Denotes if passwords are enabled 
+  // Whether passwords are enabled
   passwordEnabled() bool
   // Time when the password was last changed
   passwordLastChanged() time
@@ -282,7 +282,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
 // AWS IAM user
 private aws.iam.user @defaults("arn name") {
-  // ARN of the IAM user 
+  // ARN of the IAM user
   arn string
   // ID of the IAM user
   id string
@@ -405,7 +405,7 @@ private aws.sagemaker.notebookinstance @defaults("arn name") {
   arn string
   // Name of the notebook instance
   name string
-  // Details about the notebook 
+  // Details about the notebook
   details() aws.sagemaker.notebookinstance.details
   // Region where the notebook instance exists
   region string
@@ -450,7 +450,7 @@ private aws.sns.topic @defaults("arn") {
   // Region where the SNS topic exists
   region string
   // List of subscriptions associated with the topic ARN
-  subscriptions() []aws.sns.subscription 
+  subscriptions() []aws.sns.subscription
   // Attributes for the SNS topic, including KMS ID if any
   attributes() dict
   // Tags for the topic
@@ -732,7 +732,7 @@ private aws.ecs.task {
   clusterName string
   // Connectivity status of the ECS task
   connectivity dict
-  // Last reported status for the ECS task 
+  // Last reported status for the ECS task
   lastStatus string
   // Platform Family assigned to the ECS task
   platformFamily string
@@ -744,7 +744,7 @@ private aws.ecs.task {
   containers []aws.ecs.container
 }
 
-// Amazon ECS container 
+// Amazon ECS container
 private aws.ecs.container {
   // Name of the ECS container + IP for unique identification
   name string
@@ -851,7 +851,7 @@ private aws.cloudwatch.metric @defaults("name region") {
   // Dimensions that apply to the metric
   dimensions() []aws.cloudwatch.metricdimension
   // Statistics for the metric
-  statistics() aws.cloudwatch.metricstatistics 
+  statistics() aws.cloudwatch.metricstatistics
 }
 
 // Amazon CloudWatch metric dimension
@@ -1101,7 +1101,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
   allowedMethods []string
   // List of origins from which the bucket can be accessed
   allowedOrigins []string
-  // List of exposed response headers  
+  // List of exposed response headers
   exposeHeaders []string
   // Time in seconds that the browser caches preflight response
   maxAgeSeconds int
@@ -1142,7 +1142,7 @@ private aws.applicationautoscaling.target @defaults("arn") {
   // Minimum capacity set for the auto scaling target
   minCapacity int
   // Maximum capacity set for the auto scaling target
-  maxCapacity int 
+  maxCapacity int
   // suspendedState for the auto scaling target
   suspendedState dict
 }
@@ -1207,7 +1207,7 @@ aws.dynamodb {
 
 // Amazon DynamoDB limits
 private aws.dynamodb.limit @defaults("arn") {
-  // ARN representing the account + region where the limit applies 
+  // ARN representing the account + region where the limit applies
   arn string
   // Region where the limits apply
   region string
@@ -1375,13 +1375,13 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // Whether Redis authentication tokens (or passwords) enable Redis to require a password before allowing clients to run commands
   authTokenEnabled bool
   // Date and time authentication token was last modified
-  authTokenLastModifiedDate time 
+  authTokenLastModifiedDate time
   // Whether the cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
   autoMinorVersionUpgrade bool
   // The date and time when the cluster was created
-  cacheClusterCreateTime time 
+  cacheClusterCreateTime time
   // The user-supplied unique key that identifies the cluster
-  cacheClusterId string 
+  cacheClusterId string
   // The current state of the cluster: available, creating, deleted, deleting, incompatible-network, modifying, rebooting cluster nodes, restore-failed, or snapshotting
   cacheClusterStatus string
   // The name of the compute and memory capacity node type for the cluster
@@ -1393,13 +1393,13 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // The name of the cache subnet group associated with the cluster
   cacheSubnetGroupName string
   // The URL of the web page where you can download the latest ElastiCache client library
-  clientDownloadLandingPage string 
+  clientDownloadLandingPage string
   // The node type for the nodes in the cluster
   nodeType string
   // The name of the cache engine (Memcached or Redis) used for this cluster
   engine string
   // The version of the cache engine that is used in this cluster
-  engineVersion string 
+  engineVersion string
   // The network type associated with the cluster: ipv4 or ipv6
   ipDiscovery string
   // The log delivery configurations being modified
@@ -1409,7 +1409,7 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // Describes a notification topic and its status
   notificationConfiguration string
   // The number of cache nodes in the cluster
-  numCacheNodes int 
+  numCacheNodes int
   // The name of the availability zone in which the cluster is located or "Multiple" if the cache nodes are located in different availability zones
   preferredAvailabilityZone string
   // Region where the cluster exists
@@ -1417,7 +1417,7 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   // A list of VPC security groups associated with the cluster
   securityGroups []aws.ec2.securitygroup
   // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them
-  snapshotRetentionLimit int 
+  snapshotRetentionLimit int
   // Whether in-transit encryption is enabled
   transitEncryptionEnabled bool
   // Whether migrating clients to use in-transit encryption (with no downtime) is allowed
@@ -1640,7 +1640,7 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
 // Amazon EC2
 aws.ec2 {
   // List of security groups available to the account
-  securityGroups() []aws.ec2.securitygroup 
+  securityGroups() []aws.ec2.securitygroup
   // List of instances across the AWS account (all regions)
   instances() []aws.ec2.instance
   // map[region]boolean used to denote if ebs encryption is on by default per region
@@ -1651,9 +1651,9 @@ aws.ec2 {
   snapshots() []aws.ec2.snapshot
   // List of internet gateways
   internetGateways() []aws.ec2.internetgateway
-  // List of VPN connections 
+  // List of VPN connections
   vpnConnections() []aws.ec2.vpnconnection
-  // List of network ACLs 
+  // List of network ACLs
   networkAcls() []aws.ec2.networkacl
   // List of keypairs for the account
   keypairs() []aws.ec2.keypair
@@ -1663,9 +1663,9 @@ aws.ec2 {
 private aws.ec2.networkacl @defaults("id region") {
   // ARN for the network ACL
   arn string
-  // ID for the network ACL 
+  // ID for the network ACL
   id string
-  // Region for the network ACL 
+  // Region for the network ACL
   region string
   // Entries for the network ACL
   entries() []aws.ec2.networkacl.entry
@@ -1745,7 +1745,7 @@ private aws.ec2.snapshot @defaults("arn") {
   tags map[string]string
   // State of the snapshot (pending, completed, error, recoverable, or recovering)
   state string
-} 
+}
 
 // Amazon EC2 volume
 private aws.ec2.volume @defaults("arn encrypted state") {
@@ -1757,7 +1757,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
   attachments []dict
   // Whether the volume is encrypted
   encrypted bool
-  // State of the volume (creating, available, in-use, etc.) 
+  // State of the volume (creating, available, in-use, etc.)
   state string
   // A map of tags associated with the EBS volume
   tags map[string]string
@@ -1772,7 +1772,7 @@ private aws.ec2.volume @defaults("arn encrypted state") {
 }
 
 // Amazon EC2 instance
-private aws.ec2.instance @defaults("arn state") {
+private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
   // ARN for the instance
   arn string
   // Instance ID for the instance
@@ -1799,7 +1799,7 @@ private aws.ec2.instance @defaults("arn state") {
   deviceMappings []aws.ec2.instance.device
   // List of security groups (IDs) associated with the instance
   securityGroups []aws.ec2.securitygroup
-  // Platform details 
+  // Platform details
   platformDetails string
   // Public DNS name for the instance
   publicDnsName string
@@ -1811,6 +1811,8 @@ private aws.ec2.instance @defaults("arn state") {
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
   ebsOptimized bool
+  // Whether enhanced networking with ENA is enabled
+  enaSupported bool
   // Instance type (e.g., t2.micro)
   instanceType string
   // Tags on the instance
@@ -1829,6 +1831,16 @@ private aws.ec2.instance @defaults("arn state") {
   stateTransitionTime time
   // The ARN of the VPC associated with the instance
   vpcArn string
+  // The hypervisor type of the instance: ovm or xen
+  hypervisor string
+  // Whether this is a Spot Instance or a Scheduled Instance: spot, scheduled, or capacity-block
+  instanceLifecycle string
+  // The root device type used by the AMI: ebs or instance-store
+  rootDeviceType string
+  // The device name of the root device volume (for example, /dev/sda1)
+  rootDeviceName string
+  // The architecture of the instance
+  architecture string
 }
 
 // Amazon EC2 key pair

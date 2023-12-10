@@ -2594,6 +2594,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instance.ebsOptimized": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetEbsOptimized()).ToDataRes(types.Bool)
 	},
+	"aws.ec2.instance.enaSupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetEnaSupported()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.instance.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetInstanceType()).ToDataRes(types.String)
 	},
@@ -2620,6 +2623,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.vpcArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetVpcArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.hypervisor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetHypervisor()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetInstanceLifecycle()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.rootDeviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetRootDeviceType()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetRootDeviceName()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetArchitecture()).ToDataRes(types.String)
 	},
 	"aws.ec2.keypair.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetArn()).ToDataRes(types.String)
@@ -5951,6 +5969,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEc2Instance).EbsOptimized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.instance.enaSupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).EnaSupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.instance.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5985,6 +6007,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.instance.vpcArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).VpcArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.hypervisor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Hypervisor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.instanceLifecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).InstanceLifecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.rootDeviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).RootDeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.rootDeviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).RootDeviceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15659,6 +15701,7 @@ type mqlAwsEc2Instance struct {
 	StateReason plugin.TValue[interface{}]
 	StateTransitionReason plugin.TValue[string]
 	EbsOptimized plugin.TValue[bool]
+	EnaSupported plugin.TValue[bool]
 	InstanceType plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	Image plugin.TValue[*mqlAwsEc2Image]
@@ -15668,6 +15711,11 @@ type mqlAwsEc2Instance struct {
 	Keypair plugin.TValue[*mqlAwsEc2Keypair]
 	StateTransitionTime plugin.TValue[*time.Time]
 	VpcArn plugin.TValue[string]
+	Hypervisor plugin.TValue[string]
+	InstanceLifecycle plugin.TValue[string]
+	RootDeviceType plugin.TValue[string]
+	RootDeviceName plugin.TValue[string]
+	Architecture plugin.TValue[string]
 }
 
 // createAwsEc2Instance creates a new instance of this resource
@@ -15801,6 +15849,10 @@ func (c *mqlAwsEc2Instance) GetEbsOptimized() *plugin.TValue[bool] {
 	return &c.EbsOptimized
 }
 
+func (c *mqlAwsEc2Instance) GetEnaSupported() *plugin.TValue[bool] {
+	return &c.EnaSupported
+}
+
 func (c *mqlAwsEc2Instance) GetInstanceType() *plugin.TValue[string] {
 	return &c.InstanceType
 }
@@ -15847,6 +15899,26 @@ func (c *mqlAwsEc2Instance) GetStateTransitionTime() *plugin.TValue[*time.Time] 
 
 func (c *mqlAwsEc2Instance) GetVpcArn() *plugin.TValue[string] {
 	return &c.VpcArn
+}
+
+func (c *mqlAwsEc2Instance) GetHypervisor() *plugin.TValue[string] {
+	return &c.Hypervisor
+}
+
+func (c *mqlAwsEc2Instance) GetInstanceLifecycle() *plugin.TValue[string] {
+	return &c.InstanceLifecycle
+}
+
+func (c *mqlAwsEc2Instance) GetRootDeviceType() *plugin.TValue[string] {
+	return &c.RootDeviceType
+}
+
+func (c *mqlAwsEc2Instance) GetRootDeviceName() *plugin.TValue[string] {
+	return &c.RootDeviceName
+}
+
+func (c *mqlAwsEc2Instance) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
 }
 
 // mqlAwsEc2Keypair for the aws.ec2.keypair resource

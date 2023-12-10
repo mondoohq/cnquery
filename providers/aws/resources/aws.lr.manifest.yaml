@@ -870,15 +870,23 @@ resources:
       desc: |
         The `aws.ec2.instance` resource provides fields for assessing the configuration of EC2 instances within an account. For usage see `aws.ec2` resource.
     fields:
+      architecture:
+        min_mondoo_version: 9.11.0
       arn: {}
       detailedMonitoring: {}
       deviceMappings: {}
       ebsOptimized: {}
+      enaSupported:
+        min_mondoo_version: 9.11.0
       httpEndpoint:
         min_mondoo_version: 9.0.0
       httpTokens: {}
+      hypervisor:
+        min_mondoo_version: 9.11.0
       image: {}
       instanceId: {}
+      instanceLifecycle:
+        min_mondoo_version: 9.11.0
       instanceStatus: {}
       instanceType: {}
       keypair: {}
@@ -893,6 +901,10 @@ resources:
       publicDnsName: {}
       publicIp: {}
       region: {}
+      rootDeviceName:
+        min_mondoo_version: 9.11.0
+      rootDeviceType:
+        min_mondoo_version: 9.11.0
       securityGroups: {}
       ssm: {}
       state: {}
