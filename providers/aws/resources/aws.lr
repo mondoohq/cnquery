@@ -1888,7 +1888,7 @@ private aws.ec2.instance.device {
 }
 
 // Amazon EC2 security group
-private aws.ec2.securitygroup @defaults("arn") {
+private aws.ec2.securitygroup @defaults("id name region vpc.id") {
   // Security group ARN
   arn string
   // Security group ID

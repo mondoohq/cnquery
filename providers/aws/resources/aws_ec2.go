@@ -269,7 +269,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p)),
 								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
 								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
-								"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
+								"ipProtocol": llx.StringDataPtr(permission.IpProtocol),
 								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
 								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
 							})
@@ -304,7 +304,7 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p) + "-egress"),
 								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
 								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
-								"ipProtocol": llx.StringData(convert.ToString(permission.IpProtocol)),
+								"ipProtocol": llx.StringDataPtr(permission.IpProtocol),
 								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
 								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
 							})
@@ -317,9 +317,9 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 
 					args := map[string]*llx.RawData{
 						"arn":                 llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(group.GroupId))),
-						"id":                  llx.StringData(convert.ToString(group.GroupId)),
-						"name":                llx.StringData(convert.ToString(group.GroupName)),
-						"description":         llx.StringData(convert.ToString(group.Description)),
+						"id":                  llx.StringDataPtr(group.GroupId),
+						"name":                llx.StringDataPtr(group.GroupName),
+						"description":         llx.StringDataPtr(group.Description),
 						"tags":                llx.MapData(Ec2TagsToMap(group.Tags), types.String),
 						"ipPermissions":       llx.ArrayData(mqlIpPermissions, types.Resource("aws.ec2.securitygroup.ippermission")),
 						"ipPermissionsEgress": llx.ArrayData(mqlIpPermissionsEgress, types.Resource("aws.ec2.securitygroup.ippermission")),
