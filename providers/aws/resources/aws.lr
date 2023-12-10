@@ -265,7 +265,7 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
 
   // Denotes if mfa is active in the account
   mfaActive() bool
-  // Denotes if passwords are enabled
+  // Whether passwords are enabled
   passwordEnabled() bool
   // Time when the password was last changed
   passwordLastChanged() time
