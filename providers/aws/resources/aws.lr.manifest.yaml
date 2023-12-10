@@ -1051,12 +1051,18 @@ resources:
     fields:
       arn: {}
       createVolumePermission: {}
+      description:
+        min_mondoo_version: 9.11.0
+      encrypted:
+        min_mondoo_version: 9.11.0
       id: {}
       region: {}
       startTime: {}
       state: {}
       tags: {}
       volumeId: {}
+      volumeSize:
+        min_mondoo_version: 9.11.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:

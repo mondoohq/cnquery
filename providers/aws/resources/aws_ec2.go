@@ -1338,13 +1338,16 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 				for _, snapshot := range snapshots.Snapshots {
 					mqlSnap, err := CreateResource(a.MqlRuntime, "aws.ec2.snapshot",
 						map[string]*llx.RawData{
-							"arn":       llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
-							"id":        llx.StringData(convert.ToString(snapshot.SnapshotId)),
-							"region":    llx.StringData(regionVal),
-							"volumeId":  llx.StringData(convert.ToString(snapshot.VolumeId)),
-							"startTime": llx.TimeDataPtr(snapshot.StartTime),
-							"tags":      llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
-							"state":     llx.StringData(string(snapshot.State)),
+							"arn":         llx.StringData(fmt.Sprintf(snapshotArnPattern, regionVal, conn.AccountId(), convert.ToString(snapshot.SnapshotId))),
+							"description": llx.StringDataPtr(snapshot.Description),
+							"encrypted":   llx.BoolDataPtr(snapshot.Encrypted),
+							"id":          llx.StringDataPtr(snapshot.SnapshotId),
+							"region":      llx.StringData(regionVal),
+							"startTime":   llx.TimeDataPtr(snapshot.StartTime),
+							"state":       llx.StringData(string(snapshot.State)),
+							"tags":        llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
+							"volumeId":    llx.StringDataPtr(snapshot.VolumeId),
+							"volumeSize":  llx.IntData(convert.ToInt64From32(snapshot.VolumeSize)),
 						})
 					if err != nil {
 						return nil, err
