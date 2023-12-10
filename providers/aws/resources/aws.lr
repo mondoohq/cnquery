@@ -1669,6 +1669,10 @@ private aws.ec2.networkacl @defaults("id region") {
   region string
   // Entries for the network ACL
   entries() []aws.ec2.networkacl.entry
+  // Whether the ACL is the default network ACL for the VPC
+  isDefault bool
+  // Tags for the ACL
+  tags map[string]string
 }
 
 // Amazon EC2 network ACL entry

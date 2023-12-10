@@ -2429,6 +2429,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.networkacl.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkacl).GetEntries()).ToDataRes(types.Array(types.Resource("aws.ec2.networkacl.entry")))
 	},
+	"aws.ec2.networkacl.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkacl).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.networkacl.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkacl).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.ec2.networkacl.entry.egress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetEgress()).ToDataRes(types.Bool)
 	},
@@ -5715,6 +5721,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.networkacl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkacl).Entries, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkacl).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkacl).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15108,6 +15122,8 @@ type mqlAwsEc2Networkacl struct {
 	Id plugin.TValue[string]
 	Region plugin.TValue[string]
 	Entries plugin.TValue[[]interface{}]
+	IsDefault plugin.TValue[bool]
+	Tags plugin.TValue[map[string]interface{}]
 }
 
 // createAwsEc2Networkacl creates a new instance of this resource
@@ -15173,6 +15189,14 @@ func (c *mqlAwsEc2Networkacl) GetEntries() *plugin.TValue[[]interface{}] {
 
 		return c.entries()
 	})
+}
+
+func (c *mqlAwsEc2Networkacl) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAwsEc2Networkacl) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
 }
 
 // mqlAwsEc2NetworkaclEntry for the aws.ec2.networkacl.entry resource
