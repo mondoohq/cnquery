@@ -52,7 +52,9 @@ func (a *mqlAzureSubscriptionMySqlService) servers() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	dbClient, err := mysql.NewServersClient(subId, token, &arm.ClientOptions{})
+	dbClient, err := mysql.NewServersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,9 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]interface{}, err
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	dbClient, err := flexible.NewServersClient(subId, token, &arm.ClientOptions{})
+	dbClient, err := flexible.NewServersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +147,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) databases() ([]interface{}, err
 		return nil, err
 	}
 
-	dbDatabaseClient, err := mysql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbDatabaseClient, err := mysql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +194,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{},
 		return nil, err
 	}
 
-	dbFirewallClient, err := mysql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbFirewallClient, err := mysql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +241,9 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) configuration() ([]interface{},
 		return nil, err
 	}
 
-	dbConfClient, err := mysql.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbConfClient, err := mysql.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +291,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) databases() ([]interfac
 		return nil, err
 	}
 
-	dbDatabaseClient, err := flexible.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbDatabaseClient, err := flexible.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +337,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]inte
 	if err != nil {
 		return nil, err
 	}
-	dbFirewallClient, err := flexible.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbFirewallClient, err := flexible.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +384,9 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]inte
 		return nil, err
 	}
 
-	dbConfClient, err := flexible.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbConfClient, err := flexible.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

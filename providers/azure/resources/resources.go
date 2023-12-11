@@ -22,7 +22,9 @@ func (a *mqlAzureSubscription) resources() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := azureres.NewClient(subId, token, &arm.ClientOptions{})
+	client, err := azureres.NewClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -79,7 +79,9 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := monitor.NewLogProfilesClient(subId, token, &arm.ClientOptions{})
+	client, err := monitor.NewLogProfilesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +130,9 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := appinsights.NewComponentsClient(subId, token, &arm.ClientOptions{})
+	client, err := appinsights.NewComponentsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +174,9 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := monitor.NewActivityLogAlertsClient(subId, token, &arm.ClientOptions{})
+	client, err := monitor.NewActivityLogAlertsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +303,9 @@ func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (
 func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.AzureConnection) ([]interface{}, error) {
 	ctx := context.Background()
 	token := conn.Token()
-	client, err := monitor.NewDiagnosticSettingsClient(token, &arm.ClientOptions{})
+	client, err := monitor.NewDiagnosticSettingsClient(token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

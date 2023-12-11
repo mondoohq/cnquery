@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
@@ -41,7 +40,9 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 	subId := a.SubscriptionId.Data
 
 	// list compute instances
-	vmClient, err := compute.NewVirtualMachinesClient(subId, token, &arm.ClientOptions{})
+	vmClient, err := compute.NewVirtualMachinesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +98,9 @@ func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, erro
 		return nil, err
 	}
 
-	client, err := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +138,9 @@ func (a *mqlAzureSubscriptionComputeService) disks() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := compute.NewDisksClient(subId, token, &arm.ClientOptions{})
+	client, err := compute.NewDisksClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +242,9 @@ func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionCo
 	ctx := context.Background()
 	token := conn.Token()
 
-	client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +295,9 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]interface{}, error
 			return nil, err
 		}
 
-		client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+		client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -347,11 +356,15 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{
 	res := []interface{}{}
 
 	ctx := context.Background()
-	nicClient, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{})
+	nicClient, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
-	ipClient, err := network.NewPublicIPAddressesClient(subId, token, &arm.ClientOptions{})
+	ipClient, err := network.NewPublicIPAddressesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

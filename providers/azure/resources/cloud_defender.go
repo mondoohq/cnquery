@@ -106,7 +106,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) monitoringAgentAutoProvision(
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := security.NewAutoProvisioningSettingsClient(subId, token, &arm.ClientOptions{})
+	client, err := security.NewAutoProvisioningSettingsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return false, err
 	}

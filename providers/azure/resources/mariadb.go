@@ -46,7 +46,9 @@ func (a *mqlAzureSubscriptionMariaDbService) servers() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	dbClient, err := mariadb.NewServersClient(subId, token, &arm.ClientOptions{})
+	dbClient, err := mariadb.NewServersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +97,9 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) databases() ([]interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	dbDatabaseClient, err := mariadb.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbDatabaseClient, err := mariadb.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +144,9 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) firewallRules() ([]interface{
 		return nil, err
 	}
 
-	dbFirewallClient, err := mariadb.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbFirewallClient, err := mariadb.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +192,9 @@ func (a *mqlAzureSubscriptionMariaDbServiceServer) configuration() ([]interface{
 		return nil, err
 	}
 
-	dbConfClient, err := mariadb.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbConfClient, err := mariadb.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

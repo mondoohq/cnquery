@@ -5,6 +5,7 @@ package connection
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
@@ -25,6 +26,7 @@ type AzureConnection struct {
 	token azcore.TokenCredential
 	// note: in the future, we might make this optional if we have a tenant-level asset.
 	subscriptionId string
+	clientOptions  policy.ClientOptions
 }
 
 func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AzureConnection, error) {
@@ -72,4 +74,8 @@ func (p *AzureConnection) Token() azcore.TokenCredential {
 
 func (p *AzureConnection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + p.subscriptionId
+}
+
+func (p *AzureConnection) ClientOptions() policy.ClientOptions {
+	return p.clientOptions
 }

@@ -24,7 +24,9 @@ func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData
 
 	conn := runtime.Connection.(*connection.AzureConnection)
 
-	subscriptionsC, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{})
+	subscriptionsC, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, nil, err
 	}

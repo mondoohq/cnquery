@@ -41,7 +41,9 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	accClient, err := cosmosdb.NewDatabaseAccountsClient(subId, token, &arm.ClientOptions{})
+	accClient, err := cosmosdb.NewDatabaseAccountsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
