@@ -224,16 +224,16 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	region := ""
 	svc := conn.Wafv2(region)
 	rules := []interface{}{}
-	params := &wafv2.GetWebACLInput{
+	params := &wafv2.GetRuleGroupInput{
 		Id:    &a.Id.Data,
 		Name:  &a.Name.Data,
 		Scope: scope,
 	}
-	aclDetails, err := svc.GetWebACL(ctx, params)
+	ruleGroupDetails, err := svc.GetRuleGroup(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-	for _, rule := range aclDetails.WebACL.Rules {
+	for _, rule := range ruleGroupDetails.RuleGroup.Rules {
 		ruleID := a.Arn.Data + "/" + *rule.Name
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
 		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
