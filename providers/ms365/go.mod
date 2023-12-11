@@ -118,6 +118,7 @@ require (
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/std-uritemplate/std-uritemplate/go v0.0.50 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	go.mondoo.com/ranger-rpc v0.5.3 // indirect
