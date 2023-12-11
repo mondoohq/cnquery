@@ -289,8 +289,12 @@ private github.repository @defaults("fullName") {
   hasDiscussions bool
   // Whether the repository is an organization repository template
   isTemplate bool
-  // Whether the repository has open merge requests
+  // List of open merge requests for the repository
   openMergeRequests() []github.mergeRequest
+  // List of closed merge requests for the repository
+  closedMergeRequests() []github.mergeRequest
+  // List of all merge requests for the repository
+  allMergeRequests() []github.mergeRequest
   // List of branches for the repository
   branches() []github.branch
   // Default branch name for the repository

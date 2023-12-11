@@ -556,6 +556,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.openMergeRequests": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetOpenMergeRequests()).ToDataRes(types.Array(types.Resource("github.mergeRequest")))
 	},
+	"github.repository.closedMergeRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetClosedMergeRequests()).ToDataRes(types.Array(types.Resource("github.mergeRequest")))
+	},
+	"github.repository.allMergeRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetAllMergeRequests()).ToDataRes(types.Array(types.Resource("github.mergeRequest")))
+	},
 	"github.repository.branches": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetBranches()).ToDataRes(types.Array(types.Resource("github.branch")))
 	},
@@ -1457,6 +1463,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.repository.openMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).OpenMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.repository.closedMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).ClosedMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.repository.allMergeRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).AllMergeRequests, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"github.repository.branches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3002,6 +3016,8 @@ type mqlGithubRepository struct {
 	HasDiscussions plugin.TValue[bool]
 	IsTemplate plugin.TValue[bool]
 	OpenMergeRequests plugin.TValue[[]interface{}]
+	ClosedMergeRequests plugin.TValue[[]interface{}]
+	AllMergeRequests plugin.TValue[[]interface{}]
 	Branches plugin.TValue[[]interface{}]
 	DefaultBranchName plugin.TValue[string]
 	Commits plugin.TValue[[]interface{}]
@@ -3201,6 +3217,38 @@ func (c *mqlGithubRepository) GetOpenMergeRequests() *plugin.TValue[[]interface{
 		}
 
 		return c.openMergeRequests()
+	})
+}
+
+func (c *mqlGithubRepository) GetClosedMergeRequests() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ClosedMergeRequests, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "closedMergeRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.closedMergeRequests()
+	})
+}
+
+func (c *mqlGithubRepository) GetAllMergeRequests() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.AllMergeRequests, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "allMergeRequests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.allMergeRequests()
 	})
 }
 
