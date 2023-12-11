@@ -1751,7 +1751,7 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   tags map[string]string
   // State of the snapshot (pending, completed, error, recoverable, or recovering)
   state string
-  // The size of the volume, in GiB.
+  // The size of the volume, in GiB
   volumeSize int
   // The description of the snapshot
   description string
