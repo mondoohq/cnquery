@@ -678,11 +678,18 @@ resources:
       - aws
   aws.config.rule:
     docs:
-      desc: "The `aws.config.rule` resource provides fields representing an individual
-        AWS Config rule configured within an account. For usage see the `aws.config`
-        resource documentation. \n"
+      desc: |
+        The `aws.config.rule` resource provides fields representing an individual AWS Config rule configured within an account. For usage see the `aws.config` resource documentation.
     fields:
       arn: {}
+      description:
+        min_mondoo_version: 9.11.0
+      id:
+        min_mondoo_version: 9.11.0
+      name:
+        min_mondoo_version: 9.11.0
+      region:
+        min_mondoo_version: 9.11.0
       source: {}
       state: {}
     is_private: true

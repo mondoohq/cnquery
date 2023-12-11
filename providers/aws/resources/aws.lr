@@ -1673,7 +1673,7 @@ private aws.ec2.networkacl @defaults("id region") {
   entries() []aws.ec2.networkacl.entry
   // Whether the ACL is the default network ACL for the VPC
   isDefault bool
-  // Tags for the ACL
+  // Tags for the network ACL
   tags map[string]string
 }
 
@@ -1751,7 +1751,7 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   tags map[string]string
   // State of the snapshot (pending, completed, error, recoverable, or recovering)
   state string
-  // The size of the volume, in GiB.
+  // The size of the volume, in GiB
   volumeSize int
   // The description of the snapshot
   description string
@@ -1947,7 +1947,6 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipv6Ranges []string
 }
 
-
 // AWS config
 aws.config {
   // List of configuration recorders for each region in the account
@@ -1957,13 +1956,21 @@ aws.config {
 }
 
 // AWS config rule
-private aws.config.rule @defaults("arn state") {
+private aws.config.rule @defaults("name id region state") {
   // ARN for the config rule
   arn string
   // State of the rule
   state string
   // Rule identifier that causes the function to evaluate resources
   source dict
+  // The ID of the Config rule
+  id string
+  // The name that you assigned to the Config rule
+  name string
+  // The description that provided for the Config rule
+  description string
+  // Region for the Config rule
+  region string
 }
 
 // AWS config recorder

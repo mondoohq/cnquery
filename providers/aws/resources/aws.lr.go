@@ -2780,6 +2780,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.config.rule.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRule).GetSource()).ToDataRes(types.Dict)
 	},
+	"aws.config.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigRule).GetId()).ToDataRes(types.String)
+	},
+	"aws.config.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.config.rule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigRule).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.config.rule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigRule).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.config.recorder.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRecorder).GetName()).ToDataRes(types.String)
 	},
@@ -6273,6 +6285,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.config.rule.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsConfigRule).Source, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.config.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.rule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.rule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.config.recorder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16509,6 +16537,10 @@ type mqlAwsConfigRule struct {
 	Arn plugin.TValue[string]
 	State plugin.TValue[string]
 	Source plugin.TValue[interface{}]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Region plugin.TValue[string]
 }
 
 // createAwsConfigRule creates a new instance of this resource
@@ -16558,6 +16590,22 @@ func (c *mqlAwsConfigRule) GetState() *plugin.TValue[string] {
 
 func (c *mqlAwsConfigRule) GetSource() *plugin.TValue[interface{}] {
 	return &c.Source
+}
+
+func (c *mqlAwsConfigRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsConfigRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsConfigRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsConfigRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsConfigRecorder for the aws.config.recorder resource
