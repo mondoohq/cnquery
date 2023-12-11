@@ -56,9 +56,9 @@ func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) 
 	}
 
 	confOptions := asset.Connections[0].Options
-	includeTerraform := true
+	includeDotTerraform := true
 	if confOptions["ignore-dot-terraform"] == "true" {
-		includeTerraform = false
+		includeDotTerraform = false
 	}
 
 	var assetType terraformAssetType
@@ -88,7 +88,7 @@ func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) 
 			}
 
 			// if user asked to ignore .terraform, we skip all files in .terraform
-			if strings.Contains(path, ".terraform") && !includeTerraform {
+			if strings.Contains(path, ".terraform") && !includeDotTerraform {
 				return nil
 			}
 
