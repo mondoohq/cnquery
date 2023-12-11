@@ -2415,6 +2415,7 @@ resources:
       description: {}
       id: {}
       name: {}
+      scope: {}
     is_private: true
     min_mondoo_version: latest
     platform:

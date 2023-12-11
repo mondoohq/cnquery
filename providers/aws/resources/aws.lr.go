@@ -1293,6 +1293,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetId()).ToDataRes(types.String)
 	},
+	"aws.waf.ipset.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetScope()).ToDataRes(types.String)
+	},
 	"aws.waf.ipset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetName()).ToDataRes(types.String)
 	},
@@ -4425,6 +4428,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.waf.ipset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.ipset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10684,6 +10691,7 @@ type mqlAwsWafIpset struct {
 	// optional: if you define mqlAwsWafIpsetInternal it will be used here
 	Arn plugin.TValue[string]
 	Id plugin.TValue[string]
+	Scope plugin.TValue[string]
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	AddressType plugin.TValue[string]
@@ -10733,6 +10741,10 @@ func (c *mqlAwsWafIpset) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsWafIpset) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsWafIpset) GetScope() *plugin.TValue[string] {
+	return &c.Scope
 }
 
 func (c *mqlAwsWafIpset) GetName() *plugin.TValue[string] {

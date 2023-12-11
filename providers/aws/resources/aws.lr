@@ -425,6 +425,8 @@ private aws.waf.ipset @defaults("name") {
   arn string
   // ID of the ipset
   id string
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
   // Name of the ipset
   name string
   // Description of the ipset
