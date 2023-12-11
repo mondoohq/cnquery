@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/secretmanager v1.11.4
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.3.2
-	github.com/CycloneDX/cyclonedx-go v0.7.2
+	github.com/CycloneDX/cyclonedx-go v0.8.0
 	github.com/GoogleCloudPlatform/berglas v1.0.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
