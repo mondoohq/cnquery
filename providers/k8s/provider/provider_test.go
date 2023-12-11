@@ -19,6 +19,10 @@ func newTestService(t *testing.T, path string) (*Service, *plugin.ConnectRes) {
 		lastConnectionID: 0,
 	}
 
+	callbacks := &providerCallbacks{
+		runtime: srv.runtimes[0],
+	}
+
 	resp, err := srv.Connect(&plugin.ConnectReq{
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
@@ -30,7 +34,7 @@ func newTestService(t *testing.T, path string) (*Service, *plugin.ConnectRes) {
 				},
 			},
 		},
-	}, nil)
+	}, callbacks)
 	if err != nil {
 		panic(err)
 	}
@@ -139,61 +143,76 @@ func TestK8sServiceAccountNoAutomount(t *testing.T) {
 	assert.False(t, dataResp.Data.RawData().Value.(bool))
 }
 
-// TODO: this doesn't work now because a shared resource is created from the OS provider. The test
-// panic in this case.
-// func TestIngress(t *testing.T) {
-// 	srv, connRes := newTestService(t, "../connection/shared/resources/testdata/ingress.yaml")
+func TestIngress(t *testing.T) {
+	srv, connRes := newTestService(t, "../connection/shared/resources/testdata/ingress.yaml")
 
-// 	dataResp, err := srv.GetData(&plugin.DataReq{
-// 		Connection: connRes.Id,
-// 		Resource:   "k8s",
-// 	})
-// 	require.NoError(t, err)
-// 	resourceId := string(dataResp.Data.Value)
+	dataResp, err := srv.GetData(&plugin.DataReq{
+		Connection: connRes.Id,
+		Resource:   "k8s",
+	})
+	require.NoError(t, err)
+	resourceId := string(dataResp.Data.Value)
 
-// 	dataResp, err = srv.GetData(&plugin.DataReq{
-// 		Connection: connRes.Id,
-// 		Resource:   "k8s",
-// 		ResourceId: resourceId,
-// 		Field:      "ingresses",
-// 	})
-// 	require.NoError(t, err)
+	dataResp, err = srv.GetData(&plugin.DataReq{
+		Connection: connRes.Id,
+		Resource:   "k8s",
+		ResourceId: resourceId,
+		Field:      "ingresses",
+	})
+	require.NoError(t, err)
 
-// 	assert.Equal(t, 3, len(dataResp.Data.Array))
+	assert.Equal(t, 3, len(dataResp.Data.Array))
 
-// 	t.Run("without-tls", func(t *testing.T) {
-// 		tlsResp, err := srv.GetData(&plugin.DataReq{
-// 			Connection: connRes.Id,
-// 			Resource:   "k8s.ingress",
-// 			ResourceId: string(dataResp.Data.Array[0].Value),
-// 			Field:      "tls",
-// 		})
-// 		require.NoError(t, err)
+	t.Run("without-tls", func(t *testing.T) {
+		tlsResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "k8s.ingress",
+			ResourceId: string(dataResp.Data.Array[0].Value),
+			Field:      "tls",
+		})
+		require.NoError(t, err)
 
-// 		assert.Empty(t, tlsResp.Data.RawData().Value)
-// 	})
+		assert.Empty(t, tlsResp.Data.RawData().Value)
+	})
 
-// 	t.Run("with-tls", func(t *testing.T) {
-// 		tlsResp, err := srv.GetData(&plugin.DataReq{
-// 			Connection: connRes.Id,
-// 			Resource:   "k8s.ingress",
-// 			ResourceId: string(dataResp.Data.Array[1].Value),
-// 			Field:      "tls",
-// 		})
-// 		require.NoError(t, err)
+	t.Run("with-tls", func(t *testing.T) {
+		tlsResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "k8s.ingress",
+			ResourceId: string(dataResp.Data.Array[1].Value),
+			Field:      "tls",
+		})
+		require.NoError(t, err)
 
-// 		assert.Empty(t, tlsResp.Data.RawData().Value)
-// 	})
+		assert.Empty(t, tlsResp.Data.RawData().Value)
+	})
 
-// 	t.Run("missing-tls-secret", func(t *testing.T) {
-// 		tlsResp, err := srv.GetData(&plugin.DataReq{
-// 			Connection: connRes.Id,
-// 			Resource:   "k8s.ingress",
-// 			ResourceId: string(dataResp.Data.Array[1].Value),
-// 			Field:      "tls",
-// 		})
-// 		require.NoError(t, err)
+	t.Run("missing-tls-secret", func(t *testing.T) {
+		tlsResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "k8s.ingress",
+			ResourceId: string(dataResp.Data.Array[1].Value),
+			Field:      "tls",
+		})
+		require.NoError(t, err)
 
-// 		assert.Empty(t, tlsResp.Data.RawData().Value)
-// 	})
-// }
+		assert.Empty(t, tlsResp.Data.RawData().Value)
+	})
+}
+
+type providerCallbacks struct {
+	runtime *plugin.Runtime
+}
+
+func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
+	res := plugin.ResourceData{}
+	return &res, nil
+}
+
+func (p *providerCallbacks) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
+	return &plugin.DataRes{}, nil
+}
+
+func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
+	return nil
+}
