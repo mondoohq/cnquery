@@ -5,12 +5,12 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	waftypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	//"github.com/aws/aws-sdk-go/aws"
 	"go.mondoo.com/cnquery/v9/llx"
@@ -45,7 +45,6 @@ func (a *mqlAwsWafIpset) id() (string, error) {
 }
 
 func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	fmt.Println("Hello")
 	if len(args) > 1 {
 		return args, nil, nil
 	}
@@ -56,8 +55,9 @@ func initAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 	} else {
 		scope = "CLOUDFRONT"
 	}
-	fmt.Println("Setting scope:", scope)
 	args["scope"] = llx.StringData(scope)
+
+	log.Debug().Msgf("AWS WAF using scope: %s", scope)
 
 	return args, nil, nil
 
