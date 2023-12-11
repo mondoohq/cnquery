@@ -119,7 +119,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT}}
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v1'
+        uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: 'Build dependencies'
         run: |

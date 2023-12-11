@@ -82,7 +82,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v1'
+        uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: Test cnquery
         run: make test/go/plain-ci
