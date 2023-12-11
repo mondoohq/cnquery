@@ -907,6 +907,8 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   kmsKey() aws.kms.key
   // Region where the log group is stored
   region string
+  // The number of days to retain the log events in the specified log group
+  retentionInDays int
 }
 
 // Amazon CloudWatch log group metrics filter

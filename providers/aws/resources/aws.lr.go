@@ -1547,6 +1547,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetRetentionInDays()).ToDataRes(types.Int)
+	},
 	"aws.cloudwatch.loggroup.metricsfilter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetId()).ToDataRes(types.String)
 	},
@@ -4367,6 +4370,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.cloudwatch.loggroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).RetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.metricsfilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11202,6 +11209,7 @@ type mqlAwsCloudwatchLoggroup struct {
 	MetricsFilters plugin.TValue[[]interface{}]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
 	Region plugin.TValue[string]
+	RetentionInDays plugin.TValue[int64]
 }
 
 // createAwsCloudwatchLoggroup creates a new instance of this resource
@@ -11283,6 +11291,10 @@ func (c *mqlAwsCloudwatchLoggroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 
 func (c *mqlAwsCloudwatchLoggroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsCloudwatchLoggroup) GetRetentionInDays() *plugin.TValue[int64] {
+	return &c.RetentionInDays
 }
 
 // mqlAwsCloudwatchLoggroupMetricsfilter for the aws.cloudwatch.loggroup.metricsfilter resource
