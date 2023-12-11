@@ -1966,9 +1966,9 @@ private aws.config.rule @defaults("name id region state") {
   // The ID of the Config rule
   id string
   // The name that you assigned to the Config rule
-	name string
+  name string
   // The description that provided for the Config rule
-	description string
+  description string
   // Region for the Config rule
   region string
 }
