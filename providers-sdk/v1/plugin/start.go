@@ -4,13 +4,13 @@
 package plugin
 
 import (
-	"flag"
 	"io"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/pflag"
 	"go.mondoo.com/cnquery/v9/logger"
 )
 
@@ -48,11 +48,9 @@ type Connector struct {
 func Start(args []string, impl ProviderPlugin) {
 	logger.CliCompactLogger(logger.LogOutputWriter)
 
-	runAsPlugin := true
-	logLevel := "warn"
-	flag.BoolVar(&runAsPlugin, "run-as-plugin", true, "Run as plugin")
-	flag.StringVar(&logLevel, "log-level", "warn", "Log level")
-	flag.Parse()
+	var logLevel string
+	pflag.StringVar(&logLevel, "log-level", "warn", "Log level")
+	pflag.Parse()
 
 	ll, err := zerolog.ParseLevel(logLevel)
 	if err != nil {

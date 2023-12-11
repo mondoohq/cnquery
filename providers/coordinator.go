@@ -198,7 +198,7 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		}
 	}
 
-	pluginCmd := exec.Command(provider.binPath(), []string{"--run-as-plugin", "--log-level", zerolog.GlobalLevel().String()}...)
+	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
 	addColorConfig(pluginCmd)
 
