@@ -1051,16 +1051,20 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 					}
 					mqlVol, err := CreateResource(a.MqlRuntime, "aws.ec2.volume",
 						map[string]*llx.RawData{
-							"arn":              llx.StringData(fmt.Sprintf(volumeArnPattern, region, conn.AccountId(), convert.ToString(vol.VolumeId))),
-							"id":               llx.StringData(convert.ToString(vol.VolumeId)),
-							"attachments":      llx.ArrayData(jsonAttachments, types.Any),
-							"encrypted":        llx.BoolData(convert.ToBool(vol.Encrypted)),
-							"state":            llx.StringData(string(vol.State)),
-							"tags":             llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
-							"availabilityZone": llx.StringData(convert.ToString(vol.AvailabilityZone)),
-							"volumeType":       llx.StringData(string(vol.VolumeType)),
-							"createTime":       llx.TimeDataPtr(vol.CreateTime),
-							"region":           llx.StringData(regionVal),
+							"arn":                llx.StringData(fmt.Sprintf(volumeArnPattern, region, conn.AccountId(), convert.ToString(vol.VolumeId))),
+							"attachments":        llx.ArrayData(jsonAttachments, types.Any),
+							"availabilityZone":   llx.StringDataPtr(vol.AvailabilityZone),
+							"createTime":         llx.TimeDataPtr(vol.CreateTime),
+							"encrypted":          llx.BoolDataPtr(vol.Encrypted),
+							"id":                 llx.StringDataPtr(vol.VolumeId),
+							"iops":               llx.IntData(convert.ToInt64From32(vol.Iops)),
+							"multiAttachEnabled": llx.BoolDataPtr(vol.MultiAttachEnabled),
+							"region":             llx.StringData(regionVal),
+							"size":               llx.IntData(convert.ToInt64From32(vol.Size)),
+							"state":              llx.StringData(string(vol.State)),
+							"tags":               llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
+							"throughput":         llx.IntData(convert.ToInt64From32(vol.Throughput)),
+							"volumeType":         llx.StringData(string(vol.VolumeType)),
 						})
 					if err != nil {
 						return nil, err

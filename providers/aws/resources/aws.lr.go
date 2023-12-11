@@ -2546,6 +2546,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.volume.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ec2.volume.multiAttachEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetMultiAttachEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.volume.throughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetThroughput()).ToDataRes(types.Int)
+	},
+	"aws.ec2.volume.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetSize()).ToDataRes(types.Int)
+	},
+	"aws.ec2.volume.iops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Volume).GetIops()).ToDataRes(types.Int)
+	},
 	"aws.ec2.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetArn()).ToDataRes(types.String)
 	},
@@ -5908,6 +5920,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.volume.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Volume).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.multiAttachEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).MultiAttachEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.throughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).Throughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.volume.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Volume).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15634,6 +15662,10 @@ type mqlAwsEc2Volume struct {
 	VolumeType plugin.TValue[string]
 	CreateTime plugin.TValue[*time.Time]
 	Region plugin.TValue[string]
+	MultiAttachEnabled plugin.TValue[bool]
+	Throughput plugin.TValue[int64]
+	Size plugin.TValue[int64]
+	Iops plugin.TValue[int64]
 }
 
 // createAwsEc2Volume creates a new instance of this resource
@@ -15711,6 +15743,22 @@ func (c *mqlAwsEc2Volume) GetCreateTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsEc2Volume) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Volume) GetMultiAttachEnabled() *plugin.TValue[bool] {
+	return &c.MultiAttachEnabled
+}
+
+func (c *mqlAwsEc2Volume) GetThroughput() *plugin.TValue[int64] {
+	return &c.Throughput
+}
+
+func (c *mqlAwsEc2Volume) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlAwsEc2Volume) GetIops() *plugin.TValue[int64] {
+	return &c.Iops
 }
 
 // mqlAwsEc2Instance for the aws.ec2.instance resource
