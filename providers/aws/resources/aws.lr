@@ -191,6 +191,8 @@ private aws.waf.rule.statement @defaults("kind") {
   // random uuid, to make the statement unique, these don't exist in AWS
   id string
   kind string
+  // The entire Statement as JSON
+  json dict
   sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
   xssMatchStatement aws.waf.rule.statement.xssmatchstatement
   byteMatchStatement aws.waf.rule.statement.bytematchstatement

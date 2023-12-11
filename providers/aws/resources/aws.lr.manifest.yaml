@@ -2428,6 +2428,7 @@ resources:
       name: {}
       priority: {}
       statement: {}
+      statementJson: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2609,6 +2610,7 @@ resources:
       geoMatchStatement: {}
       id: {}
       ipSetReferenceStatement: {}
+      json: {}
       kind: {}
       labelMatchStatement: {}
       managedRuleGroupStatement: {}

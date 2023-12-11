@@ -45,7 +45,6 @@ func (a *mqlAwsWafIpset) id() (string, error) {
 
 func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
@@ -202,7 +201,6 @@ func (a *mqlAwsWafRuleFieldtomatchJa3fingerprint) id() (string, error) {
 
 func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	// waf := a.Id.Data
 
 	scopeString := conn.Scope()
 	if scopeString == "" {
@@ -223,10 +221,17 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 		return nil, err
 	}
 	for _, rule := range aclDetails.WebACL.Rules {
+		ruleID := a.Arn.Data + "/" + *rule.Name
+		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
+		ruleAction, err := createActionResource(a.MqlRuntime, rule.Action, rule.Name)
 		mqlRule, err := CreateResource(a.MqlRuntime, "aws.waf.rule",
 			map[string]*llx.RawData{
-				"name":     llx.StringDataPtr(rule.Name),
-				"priority": llx.IntData(int64(rule.Priority)),
+				"id":        llx.StringData(ruleID),
+				"name":      llx.StringDataPtr(rule.Name),
+				"priority":  llx.IntData(int64(rule.Priority)),
+				"action":    llx.ResourceData(ruleAction, "aws.waf.rule.action"),
+				"statement": llx.ResourceData(mqlStatement, "aws.waf.rule.statement"),
+				"belongsTo": llx.StringData(a.Arn.Data),
 			},
 		)
 		if err != nil {
@@ -239,13 +244,11 @@ func (a *mqlAwsWafRulegroup) rules() ([]interface{}, error) {
 
 func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	scopeString := conn.Scope()
 	if scopeString == "" {
@@ -283,13 +286,11 @@ func (a *mqlAwsWaf) ruleGroups() ([]interface{}, error) {
 
 func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	// waf := a.Id.Data
 
 	region := ""
 	svc := conn.Wafv2(region)
 	ctx := context.Background()
 	acls := []interface{}{}
-	// scope := "REGIONAL"
 	nextMarker := aws.String("No-Marker-to-begin-with")
 	scopeString := conn.Scope()
 	if scopeString == "" {
@@ -342,7 +343,6 @@ func (a *mqlAwsWaf) ipSets() ([]interface{}, error) {
 
 func (a *mqlAwsWafAcl) rules() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	// waf := a.Id.Data
 
 	scopeString := conn.Scope()
 	if scopeString == "" {
@@ -437,9 +437,11 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 	var regexpatternsetreferencestatement plugin.Resource
 	var rulegroupreferencestatement plugin.Resource
 	var sizeconstraintstatement plugin.Resource
+	var statementJson map[string]interface{}
 	mqlStatementID := ruleID + "/" + uuid.New().String()
 	var kind string
 	if statement != nil {
+		statementJson, err = convert.JsonToDict(statement)
 		if statement.RegexMatchStatement != nil {
 			kind = "RegexMatchStatement"
 			var fieldToMatch plugin.Resource
@@ -665,6 +667,7 @@ func createStatementResource(runtime *plugin.Runtime, statement *waftypes.Statem
 		map[string]*llx.RawData{
 			"id":                                llx.StringData(mqlStatementID),
 			"kind":                              llx.StringData(kind),
+			"json":                              llx.DictData(statementJson),
 			"regexMatchStatement":               llx.ResourceData(regexmatchstatement, "aws.waf.rule.statement.regexmatchstatement"),
 			"byteMatchStatement":                llx.ResourceData(bytematchstatement, "aws.waf.rule.statement.bytematchstatement"),
 			"xssMatchStatement":                 llx.ResourceData(xssmatchstatement, "aws.waf.rule.statement.xssmatchstatement"),
