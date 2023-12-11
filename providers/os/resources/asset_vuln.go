@@ -5,14 +5,15 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/logger"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/gql"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd/cvss"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
@@ -115,31 +116,30 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 }
 
 func getAdvisoryReport(runtime *plugin.Runtime) (*mvd.VulnReport, error) {
-	obj, err := CreateResource(runtime, "asset", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
+	mcc := runtime.Upstream
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, resources.MissingUpstreamError{}
 	}
-	asset := obj.(*mqlAsset)
 
-	r := asset.GetVulnerabilityReport()
-	if r.Error != nil {
-		return nil, r.Error
-	}
-	rawReport := r.Data
-
-	var vulnReport mvd.VulnReport
-	cfg := &mapstructure.DecoderConfig{
-		Metadata: nil,
-		Result:   &vulnReport,
-		TagName:  "json",
-	}
-	decoder, _ := mapstructure.NewDecoder(cfg)
-	err = decoder.Decode(rawReport)
+	// get new gql client
+	mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vulnReport, nil
+	gqlVulnReport, err := mondooClient.GetVulnCompactReport(runtime.Upstream.AssetMrn)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug().Interface("gqlReport", gqlVulnReport).Msg("search for asset vuln report")
+	if gqlVulnReport == nil {
+		return nil, errors.New("no vulnerability report available")
+	}
+
+	vulnReport := gql.ConvertToMvdVulnReport(gqlVulnReport)
+
+	return vulnReport, nil
 }
 
 func (a *mqlPlatformAdvisories) id() (string, error) {

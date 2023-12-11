@@ -7,6 +7,12 @@ resources:
       cpes: {}
       vulnerabilityReport: {}
     min_mondoo_version: latest
+  audit.cvss:
+    fields:
+      score: {}
+      vector: {}
+    is_private: true
+    min_mondoo_version: latest
   esxi:
     docs:
       desc: |
@@ -290,3 +296,40 @@ resources:
       name:
       - vmware-esxi
       - vmware-vsphere
+  vuln.advisory:
+    fields:
+      description: {}
+      id: {}
+      modified: {}
+      published: {}
+      title: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  vuln.cve:
+    fields:
+      id: {}
+      modified: {}
+      published: {}
+      state: {}
+      summary: {}
+      unscored: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  vuln.package:
+    fields:
+      arch: {}
+      available: {}
+      name: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+  vulnmgmt:
+    fields:
+      advisories: {}
+      cves: {}
+      lastAssessment: {}
+      packages: {}
+      stats: {}
+    min_mondoo_version: latest

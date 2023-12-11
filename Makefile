@@ -74,6 +74,8 @@ prep/tools: prep/tools/protolint
 
 cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate sbom/generate
 
+cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core explorer/generate
+
 define buildProvider
 	$(eval $@_HOME = $(1))
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))

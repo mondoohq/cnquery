@@ -26,6 +26,26 @@ func init() {
 			// to override args, implement: initPlatform(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPlatform,
 		},
+		"vulnmgmt": {
+			// to override args, implement: initVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnmgmt,
+		},
+		"vuln.cve": {
+			// to override args, implement: initVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnCve,
+		},
+		"vuln.advisory": {
+			// to override args, implement: initVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnAdvisory,
+		},
+		"vuln.package": {
+			// to override args, implement: initVulnPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVulnPackage,
+		},
+		"audit.cvss": {
+			// to override args, implement: initAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditCvss,
+		},
 		"vsphere": {
 			// to override args, implement: initVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphere,
@@ -170,6 +190,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"platform.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPlatform).GetVulnerabilityReport()).ToDataRes(types.Dict)
+	},
+	"vulnmgmt.cves": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetCves()).ToDataRes(types.Array(types.Resource("vuln.cve")))
+	},
+	"vulnmgmt.advisories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetAdvisories()).ToDataRes(types.Array(types.Resource("vuln.advisory")))
+	},
+	"vulnmgmt.packages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetPackages()).ToDataRes(types.Array(types.Resource("vuln.package")))
+	},
+	"vulnmgmt.lastAssessment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetLastAssessment()).ToDataRes(types.Time)
+	},
+	"vulnmgmt.stats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnmgmt).GetStats()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"vuln.cve.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetId()).ToDataRes(types.String)
+	},
+	"vuln.cve.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetState()).ToDataRes(types.String)
+	},
+	"vuln.cve.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetSummary()).ToDataRes(types.String)
+	},
+	"vuln.cve.unscored": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetUnscored()).ToDataRes(types.Bool)
+	},
+	"vuln.cve.published": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetPublished()).ToDataRes(types.Time)
+	},
+	"vuln.cve.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetModified()).ToDataRes(types.Time)
+	},
+	"vuln.cve.worstScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnCve).GetWorstScore()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"vuln.advisory.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetId()).ToDataRes(types.String)
+	},
+	"vuln.advisory.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetTitle()).ToDataRes(types.String)
+	},
+	"vuln.advisory.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetDescription()).ToDataRes(types.String)
+	},
+	"vuln.advisory.published": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetPublished()).ToDataRes(types.Time)
+	},
+	"vuln.advisory.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetModified()).ToDataRes(types.Time)
+	},
+	"vuln.advisory.worstScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnAdvisory).GetWorstScore()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"vuln.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnPackage).GetName()).ToDataRes(types.String)
+	},
+	"vuln.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"vuln.package.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnPackage).GetAvailable()).ToDataRes(types.String)
+	},
+	"vuln.package.arch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVulnPackage).GetArch()).ToDataRes(types.String)
+	},
+	"audit.cvss.score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCvss).GetScore()).ToDataRes(types.Float)
+	},
+	"audit.cvss.vector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCvss).GetVector()).ToDataRes(types.String)
 	},
 	"vsphere.about": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetAbout()).ToDataRes(types.Dict)
@@ -480,6 +572,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"platform.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPlatform).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnmgmt).__id, ok = v.Value.(string)
+			return
+		},
+	"vulnmgmt.cves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).Cves, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.advisories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).Advisories, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.lastAssessment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).LastAssessment, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vulnmgmt.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnmgmt).Stats, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnCve).__id, ok = v.Value.(string)
+			return
+		},
+	"vuln.cve.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.unscored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).Unscored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.published": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).Published, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vuln.cve.worstScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnCve).WorstScore, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnAdvisory).__id, ok = v.Value.(string)
+			return
+		},
+	"vuln.advisory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.published": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).Published, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vuln.advisory.worstScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnAdvisory).WorstScore, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"vuln.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlVulnPackage).__id, ok = v.Value.(string)
+			return
+		},
+	"vuln.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.package.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnPackage).Available, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vuln.package.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVulnPackage).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.cvss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditCvss).__id, ok = v.Value.(string)
+			return
+		},
+	"audit.cvss.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCvss).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"audit.cvss.vector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCvss).Vector, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1053,6 +1261,371 @@ func (c *mqlPlatform) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
 		return c.vulnerabilityReport()
 	})
+}
+
+// mqlVulnmgmt for the vulnmgmt resource
+type mqlVulnmgmt struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlVulnmgmtInternal
+	Cves plugin.TValue[[]interface{}]
+	Advisories plugin.TValue[[]interface{}]
+	Packages plugin.TValue[[]interface{}]
+	LastAssessment plugin.TValue[*time.Time]
+	Stats plugin.TValue[*mqlAuditCvss]
+}
+
+// createVulnmgmt creates a new instance of this resource
+func createVulnmgmt(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnmgmt{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vulnmgmt", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnmgmt) MqlName() string {
+	return "vulnmgmt"
+}
+
+func (c *mqlVulnmgmt) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnmgmt) GetCves() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Cves, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "cves")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cves()
+	})
+}
+
+func (c *mqlVulnmgmt) GetAdvisories() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Advisories, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "advisories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.advisories()
+	})
+}
+
+func (c *mqlVulnmgmt) GetPackages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Packages, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "packages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.packages()
+	})
+}
+
+func (c *mqlVulnmgmt) GetLastAssessment() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastAssessment, func() (*time.Time, error) {
+		return c.lastAssessment()
+	})
+}
+
+func (c *mqlVulnmgmt) GetStats() *plugin.TValue[*mqlAuditCvss] {
+	return plugin.GetOrCompute[*mqlAuditCvss](&c.Stats, func() (*mqlAuditCvss, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vulnmgmt", c.__id, "stats")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuditCvss), nil
+			}
+		}
+
+		return c.stats()
+	})
+}
+
+// mqlVulnCve for the vuln.cve resource
+type mqlVulnCve struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnCveInternal it will be used here
+	Id plugin.TValue[string]
+	State plugin.TValue[string]
+	Summary plugin.TValue[string]
+	Unscored plugin.TValue[bool]
+	Published plugin.TValue[*time.Time]
+	Modified plugin.TValue[*time.Time]
+	WorstScore plugin.TValue[*mqlAuditCvss]
+}
+
+// createVulnCve creates a new instance of this resource
+func createVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnCve{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vuln.cve", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnCve) MqlName() string {
+	return "vuln.cve"
+}
+
+func (c *mqlVulnCve) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnCve) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVulnCve) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlVulnCve) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlVulnCve) GetUnscored() *plugin.TValue[bool] {
+	return &c.Unscored
+}
+
+func (c *mqlVulnCve) GetPublished() *plugin.TValue[*time.Time] {
+	return &c.Published
+}
+
+func (c *mqlVulnCve) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlVulnCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
+	return &c.WorstScore
+}
+
+// mqlVulnAdvisory for the vuln.advisory resource
+type mqlVulnAdvisory struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnAdvisoryInternal it will be used here
+	Id plugin.TValue[string]
+	Title plugin.TValue[string]
+	Description plugin.TValue[string]
+	Published plugin.TValue[*time.Time]
+	Modified plugin.TValue[*time.Time]
+	WorstScore plugin.TValue[*mqlAuditCvss]
+}
+
+// createVulnAdvisory creates a new instance of this resource
+func createVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnAdvisory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vuln.advisory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnAdvisory) MqlName() string {
+	return "vuln.advisory"
+}
+
+func (c *mqlVulnAdvisory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnAdvisory) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVulnAdvisory) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlVulnAdvisory) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVulnAdvisory) GetPublished() *plugin.TValue[*time.Time] {
+	return &c.Published
+}
+
+func (c *mqlVulnAdvisory) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlVulnAdvisory) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
+	return &c.WorstScore
+}
+
+// mqlVulnPackage for the vuln.package resource
+type mqlVulnPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlVulnPackageInternal it will be used here
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Available plugin.TValue[string]
+	Arch plugin.TValue[string]
+}
+
+// createVulnPackage creates a new instance of this resource
+func createVulnPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVulnPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vuln.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVulnPackage) MqlName() string {
+	return "vuln.package"
+}
+
+func (c *mqlVulnPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVulnPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVulnPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVulnPackage) GetAvailable() *plugin.TValue[string] {
+	return &c.Available
+}
+
+func (c *mqlVulnPackage) GetArch() *plugin.TValue[string] {
+	return &c.Arch
+}
+
+// mqlAuditCvss for the audit.cvss resource
+type mqlAuditCvss struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditCvssInternal it will be used here
+	Score plugin.TValue[float64]
+	Vector plugin.TValue[string]
+}
+
+// createAuditCvss creates a new instance of this resource
+func createAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditCvss{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("audit.cvss", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditCvss) MqlName() string {
+	return "audit.cvss"
+}
+
+func (c *mqlAuditCvss) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditCvss) GetScore() *plugin.TValue[float64] {
+	return &c.Score
+}
+
+func (c *mqlAuditCvss) GetVector() *plugin.TValue[string] {
+	return &c.Vector
 }
 
 // mqlVsphere for the vsphere resource

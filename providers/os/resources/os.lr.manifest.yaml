@@ -884,6 +884,49 @@ resources:
           name != "Guest"
         }
       title: Search for a specific SID and check for its values
+  vuln.advisory:
+    fields:
+      cve: {}
+      cvss: {}
+      cvssVector: {}
+      description: {}
+      id: {}
+      modified: {}
+      published: {}
+      severity: {}
+      title: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  vuln.cve:
+    fields:
+      cvss: {}
+      cvssVector: {}
+      id: {}
+      modified: {}
+      published: {}
+      state: {}
+      summary: {}
+      unscored: {}
+      worstScore: {}
+    is_private: true
+    min_mondoo_version: latest
+  vuln.package:
+    fields:
+      arch: {}
+      available: {}
+      name: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+  vulnmgmt:
+    fields:
+      advisories: {}
+      cves: {}
+      lastAssessment: {}
+      packages: {}
+      stats: {}
+    min_mondoo_version: latest
   windows:
     fields:
       computerInfo: {}

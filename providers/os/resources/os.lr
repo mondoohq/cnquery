@@ -21,6 +21,8 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
+  // Deprecated; will be removed in version 10.0
+  // use vulnmgmt instead
   vulnerabilityReport() dict
 }
 
@@ -55,8 +57,69 @@ platform.eol @defaults("date") {
 }
 
 platform {
-  // deprecated; use asset.vulnerabilityReport instead
+  // Deprecated; will be removed in version 10.0
+  // use vulnmgmt instead
   vulnerabilityReport() dict
+}
+
+// Vulnerability Information
+vulnmgmt {
+  // List of all CVEs affecting the asset
+  cves() []vuln.cve
+  // List of all Advisories affecting the asset
+  advisories() []vuln.advisory
+  // List of all packages affected by vulnerabilities
+  packages() []vuln.package
+  // Last time the vulnerability information was updated
+  lastAssessment() time
+  // Statistics about the vulnerabilities
+  stats() audit.cvss
+}
+
+// CVE information
+private vuln.cve @defaults("id") {
+  // CVE ID
+  id string
+  // CVE state
+  state     string
+  // Summary description
+  summary   string
+  // Whether the CVE has a CVSS score
+  unscored  bool
+  // Publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
+// Advisory information
+private vuln.advisory @defaults("id") {
+  // Advisory ID
+  id string  
+  // Title of the advisory
+  title string
+  // Description of the advisory
+  description string
+  // Advisory publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
+// Package information relevant for vulnerability management
+private vuln.package @defaults("name version") {
+  // Package name
+  name string
+  // Package version
+  version string
+  // Available package version
+  available string
+  // Architecture of this package
+  arch string
 }
 
 // All platform/package advisories
@@ -78,7 +141,7 @@ platform.cves {
 }
 
 // Common Vulnerability Scoring System (CVSS) score
-private audit.cvss {
+private audit.cvss @defaults("score") {
   // CVSS score ranging from 0.0 to 10.0
   score   float
   // CVSS score represented as a vector string

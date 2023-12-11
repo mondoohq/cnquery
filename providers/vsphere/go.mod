@@ -12,6 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware/govmomi v0.33.1
 	go.mondoo.com/cnquery/v9 v9.10.0
+	go.mondoo.com/mondoo-go v0.0.0-20231208095824-90b6fcd58afb
 )
 
 require (
@@ -102,6 +103,7 @@ require (
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
+	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	go.mondoo.com/ranger-rpc v0.5.3 // indirect
