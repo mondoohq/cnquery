@@ -2516,6 +2516,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.snapshot.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetState()).ToDataRes(types.String)
 	},
+	"aws.ec2.snapshot.volumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.ec2.snapshot.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.snapshot.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetEncrypted()).ToDataRes(types.Bool)
+	},
 	"aws.ec2.volume.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetArn()).ToDataRes(types.String)
 	},
@@ -5876,6 +5885,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.snapshot.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.volumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).VolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15574,6 +15595,9 @@ type mqlAwsEc2Snapshot struct {
 	StartTime plugin.TValue[*time.Time]
 	Tags plugin.TValue[map[string]interface{}]
 	State plugin.TValue[string]
+	VolumeSize plugin.TValue[int64]
+	Description plugin.TValue[string]
+	Encrypted plugin.TValue[bool]
 }
 
 // createAwsEc2Snapshot creates a new instance of this resource
@@ -15645,6 +15669,18 @@ func (c *mqlAwsEc2Snapshot) GetTags() *plugin.TValue[map[string]interface{}] {
 
 func (c *mqlAwsEc2Snapshot) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAwsEc2Snapshot) GetVolumeSize() *plugin.TValue[int64] {
+	return &c.VolumeSize
+}
+
+func (c *mqlAwsEc2Snapshot) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2Snapshot) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
 }
 
 // mqlAwsEc2Volume for the aws.ec2.volume resource

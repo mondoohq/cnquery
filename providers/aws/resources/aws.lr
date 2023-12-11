@@ -1734,7 +1734,7 @@ private aws.ec2.internetgateway @defaults("arn") {
 }
 
 // Amazon EC2 snapshot
-private aws.ec2.snapshot @defaults("arn") {
+private aws.ec2.snapshot @defaults("id region volumeSize state") {
   // ARN for the snapshot
   arn string
   // ID for the snapshot
@@ -1751,6 +1751,12 @@ private aws.ec2.snapshot @defaults("arn") {
   tags map[string]string
   // State of the snapshot (pending, completed, error, recoverable, or recovering)
   state string
+  // The size of the volume, in GiB.
+  volumeSize int
+  // The description of the snapshot
+  description string
+  // Whether the snapshot is encrypted
+  encrypted bool
 }
 
 // Amazon EC2 volume
