@@ -1673,7 +1673,7 @@ private aws.ec2.networkacl @defaults("id region") {
   entries() []aws.ec2.networkacl.entry
   // Whether the ACL is the default network ACL for the VPC
   isDefault bool
-  // Tags for the ACL
+  // Tags for the network ACL
   tags map[string]string
 }
 
