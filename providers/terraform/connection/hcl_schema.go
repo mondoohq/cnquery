@@ -6,8 +6,8 @@ package connection
 import "github.com/hashicorp/hcl/v2"
 
 // TODO: update the schema
-// lifted from terraform 0.12 source
-var TerraformSchema_0_12 = &hcl.BodySchema{
+// Same schema as defined in terraform itself https://github.com/hashicorp/terraform/blob/60ab95d3a7cde5e2aca82ee9df78e57cbba04534/internal/configs/parser_config.go#L269
+var TerraformSchema_1 = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
 		{
 			Type: "terraform",
@@ -38,6 +38,19 @@ var TerraformSchema_0_12 = &hcl.BodySchema{
 		{
 			Type:       "data",
 			LabelNames: []string{"type", "name"},
+		},
+		{
+			Type: "moved",
+		},
+		{
+			Type: "removed",
+		},
+		{
+			Type: "import",
+		},
+		{
+			Type:       "check",
+			LabelNames: []string{"name"},
 		},
 	},
 }

@@ -587,7 +587,7 @@ func listHclBlocks(runtime *plugin.Runtime, rawBody interface{}, file *hcl.File)
 			mqlHclBlocks = append(mqlHclBlocks, mqlBlock)
 		}
 	case hcl.Body:
-		content, _, _ := body.PartialContent(connection.TerraformSchema_0_12)
+		content, _, _ := body.PartialContent(connection.TerraformSchema_1)
 		for i := range content.Blocks {
 			mqlBlock, err := newMqlHclBlock(runtime, content.Blocks[i], file)
 			if err != nil {
@@ -761,7 +761,7 @@ func getBlockByName(hb *hcl.Block, name string) *hcl.Block {
 			}
 		}
 	case hcl.Body:
-		content, _, _ := body.PartialContent(connection.TerraformSchema_0_12)
+		content, _, _ := body.PartialContent(connection.TerraformSchema_1)
 		for i := range content.Blocks {
 			b := content.Blocks[i]
 			if b.Type == name {

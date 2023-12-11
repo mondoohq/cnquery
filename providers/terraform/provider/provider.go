@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"github.com/rs/zerolog/log"
 	"strconv"
 	"strings"
 
@@ -80,6 +81,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 		conf.Type = HclConnectionType
 		conf.Options["path"] = req.Args[0]
+	}
+
+	if x, ok := flags["ignore-dot-terraform"]; ok {
+		if x != nil {
+			conf.Options["ignore-dot-terraform"] = strconv.FormatBool(x.RawData().Value.(bool))
+			log.Info().Msg("user requested to ignore .terraform")
+		}
 	}
 
 	asset := &inventory.Asset{
