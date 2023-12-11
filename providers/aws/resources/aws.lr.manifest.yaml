@@ -483,6 +483,8 @@ resources:
       metricsFilters: {}
       name: {}
       region: {}
+      retentionInDays:
+        min_mondoo_version: 9.11.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
