@@ -1947,7 +1947,6 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipv6Ranges []string
 }
 
-
 // AWS config
 aws.config {
   // List of configuration recorders for each region in the account
@@ -1957,13 +1956,21 @@ aws.config {
 }
 
 // AWS config rule
-private aws.config.rule @defaults("arn state") {
+private aws.config.rule @defaults("name id region state") {
   // ARN for the config rule
   arn string
   // State of the rule
   state string
   // Rule identifier that causes the function to evaluate resources
   source dict
+  // The ID of the Config rule
+  id string
+  // The name that you assigned to the Config rule
+	name string
+  // The description that provided for the Config rule
+	description string
+  // Region for the Config rule
+  region string
 }
 
 // AWS config recorder

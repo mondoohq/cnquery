@@ -75,8 +75,8 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 				}
 				mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
-						"name":                       llx.StringData(convert.ToString(r.Name)),
-						"roleArn":                    llx.StringData(convert.ToString(r.RoleARN)),
+						"name":                       llx.StringDataPtr(r.Name),
+						"roleArn":                    llx.StringDataPtr(r.RoleARN),
 						"allSupported":               llx.BoolData(r.RecordingGroup.AllSupported),
 						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
 						"recording":                  llx.BoolData(recording),
@@ -171,9 +171,13 @@ func (a *mqlAwsConfig) getRules(conn *connection.AwsConnection) []*jobpool.Job {
 				}
 				mqlRule, err := CreateResource(a.MqlRuntime, "aws.config.rule",
 					map[string]*llx.RawData{
-						"arn":    llx.StringData(convert.ToString(r.ConfigRuleArn)),
-						"state":  llx.StringData(string(r.ConfigRuleState)),
-						"source": llx.MapData(jsonSource, types.Any),
+						"arn":         llx.StringDataPtr(r.ConfigRuleArn),
+						"name":        llx.StringDataPtr(r.ConfigRuleName),
+						"description": llx.StringDataPtr(r.Description),
+						"id":          llx.StringDataPtr(r.ConfigRuleId),
+						"source":      llx.MapData(jsonSource, types.Any),
+						"state":       llx.StringData(string(r.ConfigRuleState)),
+						"region":      llx.StringData(regionVal),
 					})
 				if err != nil {
 					return nil, err
