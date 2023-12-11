@@ -103,9 +103,11 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 					acl := networkAcls.NetworkAcls[i]
 					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
 						map[string]*llx.RawData{
-							"arn":    llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToString(acl.NetworkAclId))),
-							"id":     llx.StringDataPtr(acl.NetworkAclId),
-							"region": llx.StringData(regionVal),
+							"arn":       llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToString(acl.NetworkAclId))),
+							"id":        llx.StringDataPtr(acl.NetworkAclId),
+							"region":    llx.StringData(regionVal),
+							"isDefault": llx.BoolDataPtr(acl.IsDefault),
+							"tags":      llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
 						})
 					if err != nil {
 						return nil, err
