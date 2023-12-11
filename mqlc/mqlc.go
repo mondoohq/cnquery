@@ -2243,11 +2243,11 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf CompilerC
 // Compile a code piece against a schema into chunky code
 func compile(input string, props map[string]*llx.Primitive, compilerConf CompilerConfig) (*llx.CodeBundle, error) {
 
-	conf := compilerConf
-	conf.Stats = compilerConf.Stats.CompileQuery(input)
-
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
+
+	conf := compilerConf
+	conf.Stats = compilerConf.Stats.CompileQuery(input)
 
 	ast, err := parser.Parse(input)
 	if ast == nil {
