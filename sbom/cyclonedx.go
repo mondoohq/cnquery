@@ -20,11 +20,13 @@ func (ccx *CycloneDX) convert(bom *Sbom) (*cyclonedx.BOM, error) {
 	sbom.SerialNumber = uuid.New().URN()
 	sbom.Metadata = &cyclonedx.Metadata{
 		Timestamp: time.Now().Format(time.RFC3339),
-		Tools: &[]cyclonedx.Tool{
-			{
-				Vendor:  bom.Generator.Vendor,
-				Name:    bom.Generator.Name,
-				Version: bom.Generator.Version,
+		Tools: &cyclonedx.ToolsChoice{
+			Components: &[]cyclonedx.Component{
+				{
+					Author:  bom.Generator.Vendor,
+					Name:    bom.Generator.Name,
+					Version: bom.Generator.Version,
+				},
 			},
 		},
 		Component: &cyclonedx.Component{
