@@ -1310,3 +1310,49 @@ func (a *mqlAwsIamUser) groups() ([]interface{}, error) {
 
 	return res, nil
 }
+
+func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+	name := a.Name.Data
+
+	profile, err := svc.GetLoginProfile(ctx, &iam.GetLoginProfileInput{
+		UserName: &name,
+	})
+
+	var ae smithy.APIError
+	if errors.As(err, &ae) {
+		if ae.ErrorCode() == "NoSuchEntity" {
+			a.LoginProfile.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	date := profile.LoginProfile.CreateDate
+	if date == nil {
+		return nil, errors.New("login profile doesn't have a createDate")
+	}
+
+	o, err := CreateResource(a.MqlRuntime, "aws.iam.loginProfile", map[string]*llx.RawData{
+		"createDate": llx.TimeData(*date),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlAwsIamLoginProfile), nil
+}
+
+func (a *mqlAwsIamLoginProfile) init() (string, error) {
+	date := a.CreateDate.Data
+	if date == nil {
+		return "", nil
+	}
+	// Note: the precision of AWS logins is in seconds. Current AWS docs don't
+	// specify a precision. Using seconds is reasonable.
+	return strconv.FormatInt(date.Unix(), 10), nil
+}

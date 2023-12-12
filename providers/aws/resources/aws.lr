@@ -777,6 +777,14 @@ private aws.iam.user @defaults("arn name") {
   groups() []string
   // List of access keys metadata associated with the user
   accessKeys() []dict
+  // Login profile for the user
+  loginProfile() aws.iam.loginProfile
+}
+
+// AWS IAM login profile for a user
+private aws.iam.loginProfile @defaults("createDate") {
+  // Time when the login profile was created
+  createDate time
 }
 
 // AWS IAM policy

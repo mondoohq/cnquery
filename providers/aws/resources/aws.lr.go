@@ -222,6 +222,10 @@ func init() {
 			Init: initAwsIamUser,
 			Create: createAwsIamUser,
 		},
+		"aws.iam.loginProfile": {
+			// to override args, implement: initAwsIamLoginProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamLoginProfile,
+		},
 		"aws.iam.policy": {
 			// to override args, implement: initAwsIamPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamPolicy,
@@ -1544,6 +1548,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
+	},
+	"aws.iam.loginProfile.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamLoginProfile).GetCreateDate()).ToDataRes(types.Time)
 	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
@@ -4941,6 +4951,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).LoginProfile, ok = plugin.RawToTValue[*mqlAwsIamLoginProfile](v.Value, v.Error)
+		return
+	},
+	"aws.iam.loginProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamLoginProfile).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.loginProfile.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamLoginProfile).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11992,6 +12014,7 @@ type mqlAwsIamUser struct {
 	AttachedPolicies plugin.TValue[[]interface{}]
 	Groups plugin.TValue[[]interface{}]
 	AccessKeys plugin.TValue[[]interface{}]
+	LoginProfile plugin.TValue[*mqlAwsIamLoginProfile]
 }
 
 // createAwsIamUser creates a new instance of this resource
@@ -12087,6 +12110,66 @@ func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AccessKeys, func() ([]interface{}, error) {
 		return c.accessKeys()
 	})
+}
+
+func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile] {
+	return plugin.GetOrCompute[*mqlAwsIamLoginProfile](&c.LoginProfile, func() (*mqlAwsIamLoginProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "loginProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamLoginProfile), nil
+			}
+		}
+
+		return c.loginProfile()
+	})
+}
+
+// mqlAwsIamLoginProfile for the aws.iam.loginProfile resource
+type mqlAwsIamLoginProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamLoginProfileInternal it will be used here
+	CreateDate plugin.TValue[*time.Time]
+}
+
+// createAwsIamLoginProfile creates a new instance of this resource
+func createAwsIamLoginProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamLoginProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.loginProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamLoginProfile) MqlName() string {
+	return "aws.iam.loginProfile"
+}
+
+func (c *mqlAwsIamLoginProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamLoginProfile) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
 }
 
 // mqlAwsIamPolicy for the aws.iam.policy resource
