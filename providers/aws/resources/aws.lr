@@ -553,7 +553,7 @@ private aws.waf.rule.statement.sqlimatchstatement {
   statementID string
   // Describes the field that is being matched
   fieldToMatch aws.waf.rule.fieldtomatch
-  // Defines how aggresive the statement matches
+  // Defines how aggressive the statement matches
   sensitivityLevel string
 }
 
