@@ -85,6 +85,12 @@ var Config = plugin.Provider{
 					Desc:    "Override option for EBS scanning that tells it to not create the snapshot or volume",
 				},
 				{
+					Long:    "scope",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Set Scope for the aws wafv2 either CLOUDFRONT or REGIONAL",
+				},
+				{
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",

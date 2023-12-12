@@ -2384,3 +2384,771 @@ resources:
     platform:
       name:
       - aws
+  aws.waf:
+    fields:
+      acls: {}
+      arn: {}
+      id: {}
+      ipSets: {}
+      region: {}
+      ruleGroups: {}
+      rules: {}
+      scope: {}
+      subnets: {}
+      tags: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.acl:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      managedByFirewallManager: {}
+      name: {}
+      rules: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.ipset:
+    fields:
+      addressType: {}
+      addresses: {}
+      arn: {}
+      description: {}
+      id: {}
+      name: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule:
+    fields:
+      action: {}
+      arn: {}
+      belongsTo: {}
+      description: {}
+      id: {}
+      name: {}
+      priority: {}
+      statement: {}
+      statementJson: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action:
+    fields:
+      RuleName: {}
+      action: {}
+      allow: {}
+      block: {}
+      captcha: {}
+      count: {}
+      responseCode: {}
+      ruleName: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.allow:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.block:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.captcha:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.action.count:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch:
+    fields:
+      allQueryArguments: {}
+      body: {}
+      cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
+      queryString: {}
+      ruleName: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+      statementID: {}
+      target: {}
+      uriPath: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.body:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.cookie:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.headerorder:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.headers:
+    fields:
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.headers.matchpattern:
+    fields:
+      all: {}
+      excludeHeaders: {}
+      includeHeaders: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.ja3fingerprint:
+    fields:
+      fallbackBehavior: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.jsonbody:
+    fields:
+      invalidFallbackBehavior: {}
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.jsonbody.matchpattern:
+    fields:
+      all: {}
+      includePaths: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.singleheader:
+    fields:
+      name: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement:
+    fields:
+      andStatement: {}
+      byteMatchStatement: {}
+      geoMatchStatement: {}
+      id: {}
+      ipSetReferenceStatement: {}
+      json: {}
+      kind: {}
+      labelMatchStatement: {}
+      managedRuleGroupStatement: {}
+      name: {}
+      notStatement: {}
+      orStatement: {}
+      rateBasedStatement: {}
+      regexMatchStatement: {}
+      regexPatternSetReferenceStatement: {}
+      ruleGroupReferenceStatement: {}
+      sizeConstraintStatement: {}
+      sqliMatchStatement: {}
+      xssMatchStatement: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.andstatement:
+    fields:
+      name: {}
+      ruleName: {}
+      statementID: {}
+      statements: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.bytematchstatement:
+    fields:
+      fieldToMatch: {}
+      ruleName: {}
+      searchString: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.bytematchstatement.fieldtomatch:
+    fields:
+      allQueryArguments: {}
+      body: {}
+      cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
+      queryString: {}
+      ruleName: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+      uriPath: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.bytematchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.bytematchstatement.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.geomatchstatement:
+    fields:
+      countryCode: {}
+      countryCodes: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.ipsetreferencestatement:
+    fields:
+      arn: {}
+      ipSetForwardedIPConfig: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig:
+    fields:
+      fallbackBehavior: {}
+      headerName: {}
+      position: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.labelmatchstatement:
+    fields:
+      key: {}
+      ruleName: {}
+      scope: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.managedrulegroupstatement:
+    fields:
+      Name: {}
+      VendorName: {}
+      name: {}
+      ruleName: {}
+      statementID: {}
+      vendorName: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.notstatement:
+    fields:
+      ruleName: {}
+      statement: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.orstatement:
+    fields:
+      ruleName: {}
+      statementID: {}
+      statements: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.ratebasedstatement:
+    fields: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement:
+    fields:
+      fieldToMatch: {}
+      regexString: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch:
+    fields:
+      allQueryArguments: {}
+      body: {}
+      cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
+      queryString: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+      uriPath: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.body:
+    fields:
+      overSizeHandling: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.cookie:
+    fields:
+      overSizeHandling: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headerorder:
+    fields:
+      overSizeHandling: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers:
+    fields:
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.headers.matchpattern:
+    fields:
+      all: {}
+      excludeHeaders: {}
+      includeHeaders: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.ja3fingerprint:
+    fields:
+      fallbackBehavior: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody:
+    fields:
+      invalidFallbackBehavior: {}
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.jsonbody.matchpattern:
+    fields:
+      all: {}
+      includePaths: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexmatchstatement.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.regexpatternsetreferencestatement:
+    fields:
+      arn: {}
+      fieldToMatch: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.rulegroupreferencestatement:
+    fields:
+      "": {}
+      arn: {}
+      excludeRules: {}
+      ruleName: {}
+      statementID: {}
+      string: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement:
+    fields:
+      comparisonOperator: {}
+      fieldToMatch: {}
+      ruleName: {}
+      size: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch:
+    fields:
+      allQueryArguments: {}
+      body: {}
+      cookie: {}
+      headerOrder: {}
+      headers: {}
+      ja3Fingerprint: {}
+      jsonBody: {}
+      method: {}
+      queryString: {}
+      ruleName: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+      uriPath: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.allqueryarguments:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.body:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.cookie:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headerorder:
+    fields:
+      overSizeHandling: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers:
+    fields:
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.headers.matchpattern:
+    fields:
+      all: {}
+      excludeHeaders: {}
+      includeHeaders: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.ja3fingerprint:
+    fields:
+      fallbackBehavior: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody:
+    fields:
+      invalidFallbackBehavior: {}
+      matchPattern: {}
+      matchScope: {}
+      overSizeHandling: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.jsonbody.matchpattern:
+    fields:
+      all: {}
+      includePaths: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.querystring:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleHeader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sizeconstraintstatement.fieldtomatch.uripath:
+    fields: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement:
+    fields:
+      fieldToMatch: {}
+      name: {}
+      ruleName: {}
+      sensitivityLevel: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch:
+    fields:
+      singleHeader: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldToMatch.singleheader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch:
+    fields:
+      queryString: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.sqlimatchstatement.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement:
+    fields:
+      fieldToMatch: {}
+      ruleName: {}
+      statementID: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch:
+    fields:
+      queryString: {}
+      ruleName: {}
+      singleHeader: {}
+      singleQueryArgument: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singleheader:
+    fields:
+      name: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rule.statement.xssmatchstatement.fieldtomatch.singlequeryargument:
+    fields:
+      name: {}
+      ruleName: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.waf.rulegroup:
+    fields:
+      arn: {}
+      description: {}
+      id: {}
+      name: {}
+      rules: {}
+      scope: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws

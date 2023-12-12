@@ -50,6 +50,142 @@ func init() {
 			// to override args, implement: initAwsVpcFlowlog(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVpcFlowlog,
 		},
+		"aws.waf": {
+			Init: initAwsWaf,
+			Create: createAwsWaf,
+		},
+		"aws.waf.acl": {
+			// to override args, implement: initAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafAcl,
+		},
+		"aws.waf.rulegroup": {
+			// to override args, implement: initAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRulegroup,
+		},
+		"aws.waf.rule": {
+			// to override args, implement: initAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRule,
+		},
+		"aws.waf.rule.action": {
+			// to override args, implement: initAwsWafRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleAction,
+		},
+		"aws.waf.rule.statement": {
+			// to override args, implement: initAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatement,
+		},
+		"aws.waf.rule.statement.geomatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementGeomatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementGeomatchstatement,
+		},
+		"aws.waf.rule.statement.ipsetreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementIpsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementIpsetreferencestatement,
+		},
+		"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig": {
+			// to override args, implement: initAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig,
+		},
+		"aws.waf.rule.statement.labelmatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementLabelmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementLabelmatchstatement,
+		},
+		"aws.waf.rule.statement.managedrulegroupstatement": {
+			// to override args, implement: initAwsWafRuleStatementManagedrulegroupstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementManagedrulegroupstatement,
+		},
+		"aws.waf.rule.statement.andstatement": {
+			// to override args, implement: initAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementAndstatement,
+		},
+		"aws.waf.rule.statement.notstatement": {
+			// to override args, implement: initAwsWafRuleStatementNotstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementNotstatement,
+		},
+		"aws.waf.rule.statement.orstatement": {
+			// to override args, implement: initAwsWafRuleStatementOrstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementOrstatement,
+		},
+		"aws.waf.rule.statement.ratebasedstatement": {
+			// to override args, implement: initAwsWafRuleStatementRatebasedstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRatebasedstatement,
+		},
+		"aws.waf.rule.statement.regexpatternsetreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementRegexpatternsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRegexpatternsetreferencestatement,
+		},
+		"aws.waf.rule.statement.rulegroupreferencestatement": {
+			// to override args, implement: initAwsWafRuleStatementRulegroupreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRulegroupreferencestatement,
+		},
+		"aws.waf.rule.statement.sizeconstraintstatement": {
+			// to override args, implement: initAwsWafRuleStatementSizeconstraintstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSizeconstraintstatement,
+		},
+		"aws.waf.rule.statement.regexmatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementRegexmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementRegexmatchstatement,
+		},
+		"aws.waf.rule.statement.bytematchstatement": {
+			// to override args, implement: initAwsWafRuleStatementBytematchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementBytematchstatement,
+		},
+		"aws.waf.rule.fieldtomatch": {
+			// to override args, implement: initAwsWafRuleFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatch,
+		},
+		"aws.waf.rule.fieldtomatch.body": {
+			// to override args, implement: initAwsWafRuleFieldtomatchBody(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchBody,
+		},
+		"aws.waf.rule.fieldtomatch.cookie": {
+			// to override args, implement: initAwsWafRuleFieldtomatchCookie(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchCookie,
+		},
+		"aws.waf.rule.fieldtomatch.headerorder": {
+			// to override args, implement: initAwsWafRuleFieldtomatchHeaderorder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchHeaderorder,
+		},
+		"aws.waf.rule.fieldtomatch.singleheader": {
+			// to override args, implement: initAwsWafRuleFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchSingleheader,
+		},
+		"aws.waf.rule.fieldtomatch.singlequeryargument": {
+			// to override args, implement: initAwsWafRuleFieldtomatchSinglequeryargument(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchSinglequeryargument,
+		},
+		"aws.waf.rule.fieldtomatch.ja3fingerprint": {
+			// to override args, implement: initAwsWafRuleFieldtomatchJa3fingerprint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchJa3fingerprint,
+		},
+		"aws.waf.rule.fieldtomatch.jsonbody": {
+			// to override args, implement: initAwsWafRuleFieldtomatchJsonbody(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchJsonbody,
+		},
+		"aws.waf.rule.fieldtomatch.jsonbody.matchpattern": {
+			// to override args, implement: initAwsWafRuleFieldtomatchJsonbodyMatchpattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchJsonbodyMatchpattern,
+		},
+		"aws.waf.rule.fieldtomatch.headers": {
+			// to override args, implement: initAwsWafRuleFieldtomatchHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchHeaders,
+		},
+		"aws.waf.rule.fieldtomatch.headers.matchpattern": {
+			// to override args, implement: initAwsWafRuleFieldtomatchHeadersMatchpattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleFieldtomatchHeadersMatchpattern,
+		},
+		"aws.waf.rule.statement.xssmatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementXssmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementXssmatchstatement,
+		},
+		"aws.waf.rule.statement.sqlimatchstatement": {
+			// to override args, implement: initAwsWafRuleStatementSqlimatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafRuleStatementSqlimatchstatement,
+		},
+		"aws.waf.ipset": {
+			// to override args, implement: initAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafIpset,
+		},
 		"aws.accessAnalyzer": {
 			// to override args, implement: initAwsAccessAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAccessAnalyzer,
@@ -688,6 +824,489 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.waf.acls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetAcls()).ToDataRes(types.Array(types.Resource("aws.waf.acl")))
+	},
+	"aws.waf.ruleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetRuleGroups()).ToDataRes(types.Array(types.Resource("aws.waf.rulegroup")))
+	},
+	"aws.waf.ipSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetIpSets()).ToDataRes(types.Array(types.Resource("aws.waf.ipset")))
+	},
+	"aws.waf.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWaf).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.acl.managedByFirewallManager": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetManagedByFirewallManager()).ToDataRes(types.Bool)
+	},
+	"aws.waf.acl.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
+	},
+	"aws.waf.acl.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetRules()).ToDataRes(types.Array(types.Resource("aws.waf.rule")))
+	},
+	"aws.waf.rulegroup.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"aws.waf.rule.statement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
+	},
+	"aws.waf.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetAction()).ToDataRes(types.Resource("aws.waf.rule.action"))
+	},
+	"aws.waf.rule.belongsTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetBelongsTo()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.action.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.action.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetAction()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.action.responseCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleAction).GetResponseCode()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetKind()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.json": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetJson()).ToDataRes(types.Dict)
+	},
+	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetSqliMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sqlimatchstatement"))
+	},
+	"aws.waf.rule.statement.xssMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetXssMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.xssmatchstatement"))
+	},
+	"aws.waf.rule.statement.byteMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetByteMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.bytematchstatement"))
+	},
+	"aws.waf.rule.statement.regexMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRegexMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.regexmatchstatement"))
+	},
+	"aws.waf.rule.statement.geoMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetGeoMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.geomatchstatement"))
+	},
+	"aws.waf.rule.statement.ipSetReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetIpSetReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.ipsetreferencestatement"))
+	},
+	"aws.waf.rule.statement.labelMatchStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetLabelMatchStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.labelmatchstatement"))
+	},
+	"aws.waf.rule.statement.managedRuleGroupStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetManagedRuleGroupStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.managedrulegroupstatement"))
+	},
+	"aws.waf.rule.statement.notStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetNotStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.notstatement"))
+	},
+	"aws.waf.rule.statement.orStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetOrStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.orstatement"))
+	},
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetAndStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.andstatement"))
+	},
+	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRateBasedStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.ratebasedstatement"))
+	},
+	"aws.waf.rule.statement.regexPatternSetReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRegexPatternSetReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.regexpatternsetreferencestatement"))
+	},
+	"aws.waf.rule.statement.ruleGroupReferenceStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetRuleGroupReferenceStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.rulegroupreferencestatement"))
+	},
+	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatement).GetSizeConstraintStatement()).ToDataRes(types.Resource("aws.waf.rule.statement.sizeconstraintstatement"))
+	},
+	"aws.waf.rule.statement.geomatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.geomatchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementGeomatchstatement).GetCountryCodes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipSetForwardedIPConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatement).GetIpSetForwardedIPConfig()).ToDataRes(types.Resource("aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"))
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.headerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetHeaderName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.position": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetPosition()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.fallbackBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).GetFallbackBehavior()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.labelmatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.labelmatchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetKey()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.labelmatchstatement.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementLabelmatchstatement).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.vendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.andstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementAndstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
+	},
+	"aws.waf.rule.statement.notstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementNotstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.notstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementNotstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementNotstatement).GetStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
+	},
+	"aws.waf.rule.statement.orstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementOrstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.orstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementOrstatement).GetStatements()).ToDataRes(types.Array(types.Resource("aws.waf.rule.statement")))
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.excludeRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).GetExcludeRules()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetSize()).ToDataRes(types.Int)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.comparisonOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetComparisonOperator()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSizeconstraintstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.regexmatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexmatchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.regexmatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.regexmatchstatement.regexString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRegexmatchstatement).GetRegexString()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.bytematchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.bytematchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.bytematchstatement.searchString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementBytematchstatement).GetSearchString()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetTarget()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.method": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetMethod()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.uriPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetUriPath()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.queryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetQueryString()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.allQueryArguments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetAllQueryArguments()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.body": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetBody()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.body"))
+	},
+	"aws.waf.rule.fieldtomatch.cookie": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetCookie()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.cookie"))
+	},
+	"aws.waf.rule.fieldtomatch.singleHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetSingleHeader()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.singleheader"))
+	},
+	"aws.waf.rule.fieldtomatch.headerOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetHeaderOrder()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.headerorder"))
+	},
+	"aws.waf.rule.fieldtomatch.headers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetHeaders()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.headers"))
+	},
+	"aws.waf.rule.fieldtomatch.ja3Fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetJa3Fingerprint()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.ja3fingerprint"))
+	},
+	"aws.waf.rule.fieldtomatch.jsonBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetJsonBody()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.jsonbody"))
+	},
+	"aws.waf.rule.fieldtomatch.singleQueryArgument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatch).GetSingleQueryArgument()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.singlequeryargument"))
+	},
+	"aws.waf.rule.fieldtomatch.body.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchBody).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.body.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchBody).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.body.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchBody).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.cookie.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchCookie).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.cookie.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchCookie).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.cookie.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchCookie).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaderorder).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaderorder).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaderorder).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSingleheader).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSingleheader).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSingleheader).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.fallbackBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).GetFallbackBehavior()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetMatchScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.invalidFallbackBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetInvalidFallbackBehavior()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbody).GetMatchPattern()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.jsonbody.matchpattern"))
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.all": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).GetAll()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.includePaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).GetIncludePaths()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.fieldtomatch.headers.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaders).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaders).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaders).GetMatchScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.overSizeHandling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaders).GetOverSizeHandling()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeaders).GetMatchPattern()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch.headers.matchpattern"))
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.all": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).GetAll()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.includeHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).GetIncludeHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.excludeHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).GetExcludeHeaders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.waf.rule.statement.xssmatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementXssmatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.xssmatchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementXssmatchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.xssmatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementXssmatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatement).GetRuleName()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldToMatch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatement).GetFieldToMatch()).ToDataRes(types.Resource("aws.waf.rule.fieldtomatch"))
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.sensitivityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementSqlimatchstatement).GetSensitivityLevel()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetArn()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetId()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetName()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.addressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetAddressType()).ToDataRes(types.String)
+	},
+	"aws.waf.ipset.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetAddresses()).ToDataRes(types.Dict)
 	},
 	"aws.accessAnalyzer.analyzers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccessAnalyzer).GetAnalyzers()).ToDataRes(types.Array(types.Resource("aws.accessanalyzer.analyzer")))
@@ -3061,6 +3680,786 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWaf).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Acls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ruleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).RuleGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).IpSets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWaf).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafAcl).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.acl.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.managedByFirewallManager": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).ManagedByFirewallManager, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRulegroup).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rulegroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRule).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Statement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Action, ok = plugin.RawToTValue[*mqlAwsWafRuleAction](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.belongsTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).BelongsTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleAction).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.action.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.action.responseCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleAction).ResponseCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.json": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).Json, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqliMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).SqliMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSqlimatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.xssMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).XssMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementXssmatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.byteMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).ByteMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementBytematchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RegexMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRegexmatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.geoMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).GeoMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementGeomatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipSetReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).IpSetReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementIpsetreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelMatchStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).LabelMatchStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementLabelmatchstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedRuleGroupStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).ManagedRuleGroupStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementManagedrulegroupstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.notStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).NotStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementNotstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.orStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).OrStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementOrstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).AndStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementAndstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rateBasedStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RateBasedStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRatebasedstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexPatternSetReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RegexPatternSetReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ruleGroupReferenceStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).RuleGroupReferenceStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementRulegroupreferencestatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeConstraintStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatement).SizeConstraintStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementSizeconstraintstatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.geomatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementGeomatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.geomatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.geomatchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.geomatchstatement.countryCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementGeomatchstatement).CountryCodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementIpsetreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.ipsetreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipSetForwardedIPConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatement).IpSetForwardedIPConfig, ok = plugin.RawToTValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.headerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).HeaderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.position": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).Position, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig.fallbackBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig).FallbackBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementLabelmatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.labelmatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelmatchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelmatchstatement.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.labelmatchstatement.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementLabelmatchstatement).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.vendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementAndstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.andstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementAndstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.notstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementNotstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.notstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementNotstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.notstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementNotstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.notstatement.statement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementNotstatement).Statement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.orstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementOrstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.orstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementOrstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.orstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementOrstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.orstatement.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementOrstatement).Statements, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRatebasedstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexpatternsetreferencestatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.rulegroupreferencestatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.rulegroupreferencestatement.excludeRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRulegroupreferencestatement).ExcludeRules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSizeconstraintstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sizeconstraintstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.comparisonOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).ComparisonOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sizeconstraintstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSizeconstraintstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementRegexmatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.regexmatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexmatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexmatchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexmatchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexmatchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexmatchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.regexmatchstatement.regexString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRegexmatchstatement).RegexString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementBytematchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.bytematchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.bytematchstatement.searchString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementBytematchstatement).SearchString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatch).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.method": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Method, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.uriPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).UriPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.queryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).QueryString, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.allQueryArguments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).AllQueryArguments, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Body, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchBody](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.cookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Cookie, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchCookie](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singleHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).SingleHeader, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchSingleheader](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headerOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).HeaderOrder, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchHeaderorder](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Headers, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchHeaders](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.ja3Fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).Ja3Fingerprint, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchJa3fingerprint](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).JsonBody, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchJsonbody](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singleQueryArgument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatch).SingleQueryArgument, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchSinglequeryargument](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.body.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchBody).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.body.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchBody).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.body.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchBody).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.body.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchBody).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.cookie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchCookie).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.cookie.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchCookie).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.cookie.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchCookie).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.cookie.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchCookie).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchHeaderorder).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.headerorder.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaderorder).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaderorder).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headerorder.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaderorder).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchSingleheader).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.singleheader.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSingleheader).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSingleheader).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singleheader.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSingleheader).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.singlequeryargument.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchSinglequeryargument).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.ja3fingerprint.fallbackBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJa3fingerprint).FallbackBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchJsonbody).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.jsonbody.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).MatchScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.invalidFallbackBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).InvalidFallbackBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbody).MatchPattern, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.all": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).All, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.jsonbody.matchpattern.includePaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern).IncludePaths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchHeaders).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.headers.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaders).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaders).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaders).MatchScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.overSizeHandling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaders).OverSizeHandling, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeaders).MatchPattern, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatchHeadersMatchpattern](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.all": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).All, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.includeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).IncludeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.fieldtomatch.headers.matchpattern.excludeHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleFieldtomatchHeadersMatchpattern).ExcludeHeaders, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.xssmatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementXssmatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.xssmatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementXssmatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.xssmatchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementXssmatchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.xssmatchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementXssmatchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafRuleStatementSqlimatchstatement).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.rule.statement.sqlimatchstatement.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatement).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.fieldToMatch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatement).FieldToMatch, ok = plugin.RawToTValue[*mqlAwsWafRuleFieldtomatch](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.sqlimatchstatement.sensitivityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementSqlimatchstatement).SensitivityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsWafIpset).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.waf.ipset.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.addressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).AddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.ipset.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Addresses, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.accessAnalyzer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7039,6 +8438,2357 @@ func (c *mqlAwsVpcFlowlog) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+// mqlAwsWaf for the aws.waf resource
+type mqlAwsWaf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafInternal it will be used here
+	Acls plugin.TValue[[]interface{}]
+	RuleGroups plugin.TValue[[]interface{}]
+	IpSets plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
+}
+
+// createAwsWaf creates a new instance of this resource
+func createAwsWaf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWaf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWaf) MqlName() string {
+	return "aws.waf"
+}
+
+func (c *mqlAwsWaf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWaf) GetAcls() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Acls, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "acls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.acls()
+	})
+}
+
+func (c *mqlAwsWaf) GetRuleGroups() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.RuleGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ruleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ruleGroups()
+	})
+}
+
+func (c *mqlAwsWaf) GetIpSets() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.IpSets, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf", c.__id, "ipSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ipSets()
+	})
+}
+
+func (c *mqlAwsWaf) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+// mqlAwsWafAcl for the aws.waf.acl resource
+type mqlAwsWafAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafAclInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	ManagedByFirewallManager plugin.TValue[bool]
+	Rules plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
+}
+
+// createAwsWafAcl creates a new instance of this resource
+func createAwsWafAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafAcl) MqlName() string {
+	return "aws.waf.acl"
+}
+
+func (c *mqlAwsWafAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafAcl) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafAcl) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafAcl) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafAcl) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWafAcl) GetManagedByFirewallManager() *plugin.TValue[bool] {
+	return &c.ManagedByFirewallManager
+}
+
+func (c *mqlAwsWafAcl) GetRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+// mqlAwsWafRulegroup for the aws.waf.rulegroup resource
+type mqlAwsWafRulegroup struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRulegroupInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Rules plugin.TValue[[]interface{}]
+	Scope plugin.TValue[string]
+}
+
+// createAwsWafRulegroup creates a new instance of this resource
+func createAwsWafRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRulegroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rulegroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRulegroup) MqlName() string {
+	return "aws.waf.rulegroup"
+}
+
+func (c *mqlAwsWafRulegroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRulegroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRulegroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRulegroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRulegroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWafRulegroup) GetRules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Rules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.rulegroup", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAwsWafRulegroup) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+// mqlAwsWafRule for the aws.waf.rule resource
+type mqlAwsWafRule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Priority plugin.TValue[int64]
+	Statement plugin.TValue[*mqlAwsWafRuleStatement]
+	Action plugin.TValue[*mqlAwsWafRuleAction]
+	BelongsTo plugin.TValue[string]
+}
+
+// createAwsWafRule creates a new instance of this resource
+func createAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRule) MqlName() string {
+	return "aws.waf.rule"
+}
+
+func (c *mqlAwsWafRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAwsWafRule) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
+	return &c.Statement
+}
+
+func (c *mqlAwsWafRule) GetAction() *plugin.TValue[*mqlAwsWafRuleAction] {
+	return &c.Action
+}
+
+func (c *mqlAwsWafRule) GetBelongsTo() *plugin.TValue[string] {
+	return &c.BelongsTo
+}
+
+// mqlAwsWafRuleAction for the aws.waf.rule.action resource
+type mqlAwsWafRuleAction struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleActionInternal it will be used here
+	RuleName plugin.TValue[string]
+	Action plugin.TValue[string]
+	ResponseCode plugin.TValue[string]
+}
+
+// createAwsWafRuleAction creates a new instance of this resource
+func createAwsWafRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleAction) MqlName() string {
+	return "aws.waf.rule.action"
+}
+
+func (c *mqlAwsWafRuleAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleAction) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleAction) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsWafRuleAction) GetResponseCode() *plugin.TValue[string] {
+	return &c.ResponseCode
+}
+
+// mqlAwsWafRuleStatement for the aws.waf.rule.statement resource
+type mqlAwsWafRuleStatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementInternal it will be used here
+	Id plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Json plugin.TValue[interface{}]
+	SqliMatchStatement plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement]
+	XssMatchStatement plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement]
+	ByteMatchStatement plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement]
+	RegexMatchStatement plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatement]
+	GeoMatchStatement plugin.TValue[*mqlAwsWafRuleStatementGeomatchstatement]
+	IpSetReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatement]
+	LabelMatchStatement plugin.TValue[*mqlAwsWafRuleStatementLabelmatchstatement]
+	ManagedRuleGroupStatement plugin.TValue[*mqlAwsWafRuleStatementManagedrulegroupstatement]
+	NotStatement plugin.TValue[*mqlAwsWafRuleStatementNotstatement]
+	OrStatement plugin.TValue[*mqlAwsWafRuleStatementOrstatement]
+	AndStatement plugin.TValue[*mqlAwsWafRuleStatementAndstatement]
+	RateBasedStatement plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement]
+	RegexPatternSetReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement]
+	RuleGroupReferenceStatement plugin.TValue[*mqlAwsWafRuleStatementRulegroupreferencestatement]
+	SizeConstraintStatement plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatement]
+}
+
+// createAwsWafRuleStatement creates a new instance of this resource
+func createAwsWafRuleStatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatement) MqlName() string {
+	return "aws.waf.rule.statement"
+}
+
+func (c *mqlAwsWafRuleStatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatement) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafRuleStatement) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAwsWafRuleStatement) GetJson() *plugin.TValue[interface{}] {
+	return &c.Json
+}
+
+func (c *mqlAwsWafRuleStatement) GetSqliMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementSqlimatchstatement] {
+	return &c.SqliMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetXssMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementXssmatchstatement] {
+	return &c.XssMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetByteMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementBytematchstatement] {
+	return &c.ByteMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRegexMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementRegexmatchstatement] {
+	return &c.RegexMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetGeoMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementGeomatchstatement] {
+	return &c.GeoMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetIpSetReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatement] {
+	return &c.IpSetReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetLabelMatchStatement() *plugin.TValue[*mqlAwsWafRuleStatementLabelmatchstatement] {
+	return &c.LabelMatchStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetManagedRuleGroupStatement() *plugin.TValue[*mqlAwsWafRuleStatementManagedrulegroupstatement] {
+	return &c.ManagedRuleGroupStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetNotStatement() *plugin.TValue[*mqlAwsWafRuleStatementNotstatement] {
+	return &c.NotStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetOrStatement() *plugin.TValue[*mqlAwsWafRuleStatementOrstatement] {
+	return &c.OrStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetAndStatement() *plugin.TValue[*mqlAwsWafRuleStatementAndstatement] {
+	return &c.AndStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRateBasedStatement() *plugin.TValue[*mqlAwsWafRuleStatementRatebasedstatement] {
+	return &c.RateBasedStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRegexPatternSetReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementRegexpatternsetreferencestatement] {
+	return &c.RegexPatternSetReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetRuleGroupReferenceStatement() *plugin.TValue[*mqlAwsWafRuleStatementRulegroupreferencestatement] {
+	return &c.RuleGroupReferenceStatement
+}
+
+func (c *mqlAwsWafRuleStatement) GetSizeConstraintStatement() *plugin.TValue[*mqlAwsWafRuleStatementSizeconstraintstatement] {
+	return &c.SizeConstraintStatement
+}
+
+// mqlAwsWafRuleStatementGeomatchstatement for the aws.waf.rule.statement.geomatchstatement resource
+type mqlAwsWafRuleStatementGeomatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementGeomatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	CountryCodes plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleStatementGeomatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementGeomatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementGeomatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.geomatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.geomatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementGeomatchstatement) GetCountryCodes() *plugin.TValue[[]interface{}] {
+	return &c.CountryCodes
+}
+
+// mqlAwsWafRuleStatementIpsetreferencestatement for the aws.waf.rule.statement.ipsetreferencestatement resource
+type mqlAwsWafRuleStatementIpsetreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementIpsetreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Arn plugin.TValue[string]
+	IpSetForwardedIPConfig plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig]
+}
+
+// createAwsWafRuleStatementIpsetreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementIpsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementIpsetreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ipsetreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.ipsetreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatement) GetIpSetForwardedIPConfig() *plugin.TValue[*mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig] {
+	return &c.IpSetForwardedIPConfig
+}
+
+// mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig for the aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig resource
+type mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfigInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	HeaderName plugin.TValue[string]
+	Position plugin.TValue[string]
+	FallbackBehavior plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig creates a new instance of this resource
+func createAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) MqlName() string {
+	return "aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig"
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetHeaderName() *plugin.TValue[string] {
+	return &c.HeaderName
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetPosition() *plugin.TValue[string] {
+	return &c.Position
+}
+
+func (c *mqlAwsWafRuleStatementIpsetreferencestatementIpsetforwardedipconfig) GetFallbackBehavior() *plugin.TValue[string] {
+	return &c.FallbackBehavior
+}
+
+// mqlAwsWafRuleStatementLabelmatchstatement for the aws.waf.rule.statement.labelmatchstatement resource
+type mqlAwsWafRuleStatementLabelmatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementLabelmatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Key plugin.TValue[string]
+	Scope plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementLabelmatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementLabelmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementLabelmatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.labelmatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.labelmatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAwsWafRuleStatementLabelmatchstatement) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+// mqlAwsWafRuleStatementManagedrulegroupstatement for the aws.waf.rule.statement.managedrulegroupstatement resource
+type mqlAwsWafRuleStatementManagedrulegroupstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementManagedrulegroupstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Name plugin.TValue[string]
+	VendorName plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementManagedrulegroupstatement creates a new instance of this resource
+func createAwsWafRuleStatementManagedrulegroupstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementManagedrulegroupstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.managedrulegroupstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlName() string {
+	return "aws.waf.rule.statement.managedrulegroupstatement"
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetVendorName() *plugin.TValue[string] {
+	return &c.VendorName
+}
+
+// mqlAwsWafRuleStatementAndstatement for the aws.waf.rule.statement.andstatement resource
+type mqlAwsWafRuleStatementAndstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementAndstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Statements plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleStatementAndstatement creates a new instance of this resource
+func createAwsWafRuleStatementAndstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementAndstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.andstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlName() string {
+	return "aws.waf.rule.statement.andstatement"
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementAndstatement) GetStatements() *plugin.TValue[[]interface{}] {
+	return &c.Statements
+}
+
+// mqlAwsWafRuleStatementNotstatement for the aws.waf.rule.statement.notstatement resource
+type mqlAwsWafRuleStatementNotstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementNotstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Statement plugin.TValue[*mqlAwsWafRuleStatement]
+}
+
+// createAwsWafRuleStatementNotstatement creates a new instance of this resource
+func createAwsWafRuleStatementNotstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementNotstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.notstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) MqlName() string {
+	return "aws.waf.rule.statement.notstatement"
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementNotstatement) GetStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
+	return &c.Statement
+}
+
+// mqlAwsWafRuleStatementOrstatement for the aws.waf.rule.statement.orstatement resource
+type mqlAwsWafRuleStatementOrstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementOrstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Statements plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleStatementOrstatement creates a new instance of this resource
+func createAwsWafRuleStatementOrstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementOrstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.orstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) MqlName() string {
+	return "aws.waf.rule.statement.orstatement"
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementOrstatement) GetStatements() *plugin.TValue[[]interface{}] {
+	return &c.Statements
+}
+
+// mqlAwsWafRuleStatementRatebasedstatement for the aws.waf.rule.statement.ratebasedstatement resource
+type mqlAwsWafRuleStatementRatebasedstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRatebasedstatementInternal it will be used here
+}
+
+// createAwsWafRuleStatementRatebasedstatement creates a new instance of this resource
+func createAwsWafRuleStatementRatebasedstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRatebasedstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.ratebasedstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) MqlName() string {
+	return "aws.waf.rule.statement.ratebasedstatement"
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) MqlID() string {
+	return c.__id
+}
+
+// mqlAwsWafRuleStatementRegexpatternsetreferencestatement for the aws.waf.rule.statement.regexpatternsetreferencestatement resource
+type mqlAwsWafRuleStatementRegexpatternsetreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRegexpatternsetreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Arn plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+}
+
+// createAwsWafRuleStatementRegexpatternsetreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementRegexpatternsetreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRegexpatternsetreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexpatternsetreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.regexpatternsetreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementRegexpatternsetreferencestatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+// mqlAwsWafRuleStatementRulegroupreferencestatement for the aws.waf.rule.statement.rulegroupreferencestatement resource
+type mqlAwsWafRuleStatementRulegroupreferencestatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRulegroupreferencestatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Arn plugin.TValue[string]
+	ExcludeRules plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleStatementRulegroupreferencestatement creates a new instance of this resource
+func createAwsWafRuleStatementRulegroupreferencestatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRulegroupreferencestatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.rulegroupreferencestatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlName() string {
+	return "aws.waf.rule.statement.rulegroupreferencestatement"
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafRuleStatementRulegroupreferencestatement) GetExcludeRules() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeRules
+}
+
+// mqlAwsWafRuleStatementSizeconstraintstatement for the aws.waf.rule.statement.sizeconstraintstatement resource
+type mqlAwsWafRuleStatementSizeconstraintstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementSizeconstraintstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Size plugin.TValue[int64]
+	ComparisonOperator plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+}
+
+// createAwsWafRuleStatementSizeconstraintstatement creates a new instance of this resource
+func createAwsWafRuleStatementSizeconstraintstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSizeconstraintstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sizeconstraintstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) MqlName() string {
+	return "aws.waf.rule.statement.sizeconstraintstatement"
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetComparisonOperator() *plugin.TValue[string] {
+	return &c.ComparisonOperator
+}
+
+func (c *mqlAwsWafRuleStatementSizeconstraintstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+// mqlAwsWafRuleStatementRegexmatchstatement for the aws.waf.rule.statement.regexmatchstatement resource
+type mqlAwsWafRuleStatementRegexmatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementRegexmatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+	RegexString plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementRegexmatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementRegexmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementRegexmatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.regexmatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.regexmatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+func (c *mqlAwsWafRuleStatementRegexmatchstatement) GetRegexString() *plugin.TValue[string] {
+	return &c.RegexString
+}
+
+// mqlAwsWafRuleStatementBytematchstatement for the aws.waf.rule.statement.bytematchstatement resource
+type mqlAwsWafRuleStatementBytematchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementBytematchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+	SearchString plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementBytematchstatement creates a new instance of this resource
+func createAwsWafRuleStatementBytematchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementBytematchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.bytematchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) MqlName() string {
+	return "aws.waf.rule.statement.bytematchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+func (c *mqlAwsWafRuleStatementBytematchstatement) GetSearchString() *plugin.TValue[string] {
+	return &c.SearchString
+}
+
+// mqlAwsWafRuleFieldtomatch for the aws.waf.rule.fieldtomatch resource
+type mqlAwsWafRuleFieldtomatch struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchInternal it will be used here
+	Target plugin.TValue[string]
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Method plugin.TValue[bool]
+	UriPath plugin.TValue[bool]
+	QueryString plugin.TValue[bool]
+	AllQueryArguments plugin.TValue[bool]
+	Body plugin.TValue[*mqlAwsWafRuleFieldtomatchBody]
+	Cookie plugin.TValue[*mqlAwsWafRuleFieldtomatchCookie]
+	SingleHeader plugin.TValue[*mqlAwsWafRuleFieldtomatchSingleheader]
+	HeaderOrder plugin.TValue[*mqlAwsWafRuleFieldtomatchHeaderorder]
+	Headers plugin.TValue[*mqlAwsWafRuleFieldtomatchHeaders]
+	Ja3Fingerprint plugin.TValue[*mqlAwsWafRuleFieldtomatchJa3fingerprint]
+	JsonBody plugin.TValue[*mqlAwsWafRuleFieldtomatchJsonbody]
+	SingleQueryArgument plugin.TValue[*mqlAwsWafRuleFieldtomatchSinglequeryargument]
+}
+
+// createAwsWafRuleFieldtomatch creates a new instance of this resource
+func createAwsWafRuleFieldtomatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) MqlName() string {
+	return "aws.waf.rule.fieldtomatch"
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetMethod() *plugin.TValue[bool] {
+	return &c.Method
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetUriPath() *plugin.TValue[bool] {
+	return &c.UriPath
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetQueryString() *plugin.TValue[bool] {
+	return &c.QueryString
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetAllQueryArguments() *plugin.TValue[bool] {
+	return &c.AllQueryArguments
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetBody() *plugin.TValue[*mqlAwsWafRuleFieldtomatchBody] {
+	return &c.Body
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetCookie() *plugin.TValue[*mqlAwsWafRuleFieldtomatchCookie] {
+	return &c.Cookie
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetSingleHeader() *plugin.TValue[*mqlAwsWafRuleFieldtomatchSingleheader] {
+	return &c.SingleHeader
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetHeaderOrder() *plugin.TValue[*mqlAwsWafRuleFieldtomatchHeaderorder] {
+	return &c.HeaderOrder
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetHeaders() *plugin.TValue[*mqlAwsWafRuleFieldtomatchHeaders] {
+	return &c.Headers
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetJa3Fingerprint() *plugin.TValue[*mqlAwsWafRuleFieldtomatchJa3fingerprint] {
+	return &c.Ja3Fingerprint
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetJsonBody() *plugin.TValue[*mqlAwsWafRuleFieldtomatchJsonbody] {
+	return &c.JsonBody
+}
+
+func (c *mqlAwsWafRuleFieldtomatch) GetSingleQueryArgument() *plugin.TValue[*mqlAwsWafRuleFieldtomatchSinglequeryargument] {
+	return &c.SingleQueryArgument
+}
+
+// mqlAwsWafRuleFieldtomatchBody for the aws.waf.rule.fieldtomatch.body resource
+type mqlAwsWafRuleFieldtomatchBody struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchBodyInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	OverSizeHandling plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchBody creates a new instance of this resource
+func createAwsWafRuleFieldtomatchBody(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchBody{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.body", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchBody) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.body"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchBody) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchBody) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchBody) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchBody) GetOverSizeHandling() *plugin.TValue[string] {
+	return &c.OverSizeHandling
+}
+
+// mqlAwsWafRuleFieldtomatchCookie for the aws.waf.rule.fieldtomatch.cookie resource
+type mqlAwsWafRuleFieldtomatchCookie struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchCookieInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	OverSizeHandling plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchCookie creates a new instance of this resource
+func createAwsWafRuleFieldtomatchCookie(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchCookie{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.cookie", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchCookie) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.cookie"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchCookie) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchCookie) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchCookie) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchCookie) GetOverSizeHandling() *plugin.TValue[string] {
+	return &c.OverSizeHandling
+}
+
+// mqlAwsWafRuleFieldtomatchHeaderorder for the aws.waf.rule.fieldtomatch.headerorder resource
+type mqlAwsWafRuleFieldtomatchHeaderorder struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchHeaderorderInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	OverSizeHandling plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchHeaderorder creates a new instance of this resource
+func createAwsWafRuleFieldtomatchHeaderorder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchHeaderorder{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.headerorder", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaderorder) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.headerorder"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaderorder) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaderorder) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaderorder) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaderorder) GetOverSizeHandling() *plugin.TValue[string] {
+	return &c.OverSizeHandling
+}
+
+// mqlAwsWafRuleFieldtomatchSingleheader for the aws.waf.rule.fieldtomatch.singleheader resource
+type mqlAwsWafRuleFieldtomatchSingleheader struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchSingleheaderInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchSingleheader creates a new instance of this resource
+func createAwsWafRuleFieldtomatchSingleheader(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchSingleheader{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.singleheader", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSingleheader) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.singleheader"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSingleheader) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSingleheader) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSingleheader) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSingleheader) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+// mqlAwsWafRuleFieldtomatchSinglequeryargument for the aws.waf.rule.fieldtomatch.singlequeryargument resource
+type mqlAwsWafRuleFieldtomatchSinglequeryargument struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchSinglequeryargumentInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	Name plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchSinglequeryargument creates a new instance of this resource
+func createAwsWafRuleFieldtomatchSinglequeryargument(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchSinglequeryargument{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.singlequeryargument", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSinglequeryargument) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.singlequeryargument"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSinglequeryargument) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSinglequeryargument) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSinglequeryargument) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchSinglequeryargument) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+// mqlAwsWafRuleFieldtomatchJa3fingerprint for the aws.waf.rule.fieldtomatch.ja3fingerprint resource
+type mqlAwsWafRuleFieldtomatchJa3fingerprint struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchJa3fingerprintInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	FallbackBehavior plugin.TValue[string]
+}
+
+// createAwsWafRuleFieldtomatchJa3fingerprint creates a new instance of this resource
+func createAwsWafRuleFieldtomatchJa3fingerprint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchJa3fingerprint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.ja3fingerprint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJa3fingerprint) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.ja3fingerprint"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJa3fingerprint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJa3fingerprint) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJa3fingerprint) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJa3fingerprint) GetFallbackBehavior() *plugin.TValue[string] {
+	return &c.FallbackBehavior
+}
+
+// mqlAwsWafRuleFieldtomatchJsonbody for the aws.waf.rule.fieldtomatch.jsonbody resource
+type mqlAwsWafRuleFieldtomatchJsonbody struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchJsonbodyInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	OverSizeHandling plugin.TValue[string]
+	MatchScope plugin.TValue[string]
+	InvalidFallbackBehavior plugin.TValue[string]
+	MatchPattern plugin.TValue[*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern]
+}
+
+// createAwsWafRuleFieldtomatchJsonbody creates a new instance of this resource
+func createAwsWafRuleFieldtomatchJsonbody(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchJsonbody{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.jsonbody", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.jsonbody"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetOverSizeHandling() *plugin.TValue[string] {
+	return &c.OverSizeHandling
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetMatchScope() *plugin.TValue[string] {
+	return &c.MatchScope
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetInvalidFallbackBehavior() *plugin.TValue[string] {
+	return &c.InvalidFallbackBehavior
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbody) GetMatchPattern() *plugin.TValue[*mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern] {
+	return &c.MatchPattern
+}
+
+// mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern for the aws.waf.rule.fieldtomatch.jsonbody.matchpattern resource
+type mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchJsonbodyMatchpatternInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	All plugin.TValue[bool]
+	IncludePaths plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleFieldtomatchJsonbodyMatchpattern creates a new instance of this resource
+func createAwsWafRuleFieldtomatchJsonbodyMatchpattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.jsonbody.matchpattern", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.jsonbody.matchpattern"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetAll() *plugin.TValue[bool] {
+	return &c.All
+}
+
+func (c *mqlAwsWafRuleFieldtomatchJsonbodyMatchpattern) GetIncludePaths() *plugin.TValue[[]interface{}] {
+	return &c.IncludePaths
+}
+
+// mqlAwsWafRuleFieldtomatchHeaders for the aws.waf.rule.fieldtomatch.headers resource
+type mqlAwsWafRuleFieldtomatchHeaders struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchHeadersInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	MatchScope plugin.TValue[string]
+	OverSizeHandling plugin.TValue[string]
+	MatchPattern plugin.TValue[*mqlAwsWafRuleFieldtomatchHeadersMatchpattern]
+}
+
+// createAwsWafRuleFieldtomatchHeaders creates a new instance of this resource
+func createAwsWafRuleFieldtomatchHeaders(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchHeaders{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.headers", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.headers"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) GetMatchScope() *plugin.TValue[string] {
+	return &c.MatchScope
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) GetOverSizeHandling() *plugin.TValue[string] {
+	return &c.OverSizeHandling
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeaders) GetMatchPattern() *plugin.TValue[*mqlAwsWafRuleFieldtomatchHeadersMatchpattern] {
+	return &c.MatchPattern
+}
+
+// mqlAwsWafRuleFieldtomatchHeadersMatchpattern for the aws.waf.rule.fieldtomatch.headers.matchpattern resource
+type mqlAwsWafRuleFieldtomatchHeadersMatchpattern struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleFieldtomatchHeadersMatchpatternInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	All plugin.TValue[bool]
+	IncludeHeaders plugin.TValue[[]interface{}]
+	ExcludeHeaders plugin.TValue[[]interface{}]
+}
+
+// createAwsWafRuleFieldtomatchHeadersMatchpattern creates a new instance of this resource
+func createAwsWafRuleFieldtomatchHeadersMatchpattern(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleFieldtomatchHeadersMatchpattern{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.fieldtomatch.headers.matchpattern", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) MqlName() string {
+	return "aws.waf.rule.fieldtomatch.headers.matchpattern"
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetAll() *plugin.TValue[bool] {
+	return &c.All
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetIncludeHeaders() *plugin.TValue[[]interface{}] {
+	return &c.IncludeHeaders
+}
+
+func (c *mqlAwsWafRuleFieldtomatchHeadersMatchpattern) GetExcludeHeaders() *plugin.TValue[[]interface{}] {
+	return &c.ExcludeHeaders
+}
+
+// mqlAwsWafRuleStatementXssmatchstatement for the aws.waf.rule.statement.xssmatchstatement resource
+type mqlAwsWafRuleStatementXssmatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementXssmatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+}
+
+// createAwsWafRuleStatementXssmatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementXssmatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementXssmatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.xssmatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.xssmatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementXssmatchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+// mqlAwsWafRuleStatementSqlimatchstatement for the aws.waf.rule.statement.sqlimatchstatement resource
+type mqlAwsWafRuleStatementSqlimatchstatement struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafRuleStatementSqlimatchstatementInternal it will be used here
+	RuleName plugin.TValue[string]
+	StatementID plugin.TValue[string]
+	FieldToMatch plugin.TValue[*mqlAwsWafRuleFieldtomatch]
+	SensitivityLevel plugin.TValue[string]
+}
+
+// createAwsWafRuleStatementSqlimatchstatement creates a new instance of this resource
+func createAwsWafRuleStatementSqlimatchstatement(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafRuleStatementSqlimatchstatement{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.rule.statement.sqlimatchstatement", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) MqlName() string {
+	return "aws.waf.rule.statement.sqlimatchstatement"
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetStatementID() *plugin.TValue[string] {
+	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetFieldToMatch() *plugin.TValue[*mqlAwsWafRuleFieldtomatch] {
+	return &c.FieldToMatch
+}
+
+func (c *mqlAwsWafRuleStatementSqlimatchstatement) GetSensitivityLevel() *plugin.TValue[string] {
+	return &c.SensitivityLevel
+}
+
+// mqlAwsWafIpset for the aws.waf.ipset resource
+type mqlAwsWafIpset struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsWafIpsetInternal it will be used here
+	Arn plugin.TValue[string]
+	Id plugin.TValue[string]
+	Scope plugin.TValue[string]
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	AddressType plugin.TValue[string]
+	Addresses plugin.TValue[interface{}]
+}
+
+// createAwsWafIpset creates a new instance of this resource
+func createAwsWafIpset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafIpset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.ipset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafIpset) MqlName() string {
+	return "aws.waf.ipset"
+}
+
+func (c *mqlAwsWafIpset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafIpset) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsWafIpset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWafIpset) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAwsWafIpset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWafIpset) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsWafIpset) GetAddressType() *plugin.TValue[string] {
+	return &c.AddressType
+}
+
+func (c *mqlAwsWafIpset) GetAddresses() *plugin.TValue[interface{}] {
+	return &c.Addresses
 }
 
 // mqlAwsAccessAnalyzer for the aws.accessAnalyzer resource

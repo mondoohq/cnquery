@@ -105,7 +105,7 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 func parseFlagsToOptions(m map[string]*llx.Primitive) map[string]string {
 	o := make(map[string]string, 0)
 	for k, v := range m {
-		if k == "profile" || k == "region" || k == "role" || k == "endpoint-url" || k == "no-setup" {
+		if k == "profile" || k == "region" || k == "role" || k == "endpoint-url" || k == "no-setup" || k == "scope" {
 			if val := string(v.Value); val != "" {
 				o[k] = string(v.Value)
 			}

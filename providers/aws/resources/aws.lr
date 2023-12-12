@@ -121,6 +121,322 @@ private aws.vpc.flowlog @defaults("id region status") {
   tags map[string]string
 }
 
+// Amazon WAF v2
+aws.waf {
+  // List of WAF ACLs
+  acls() []aws.waf.acl
+  // List of WAF rules
+  ruleGroups() []aws.waf.rulegroup
+  // List of WAF IP sets
+  ipSets() []aws.waf.ipset
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
+}
+
+// Amazon WAF v2 ACL
+private aws.waf.acl @defaults("name") {
+  // ARN of the ACL
+  arn string
+  // ID of the ACL
+  id string
+  // Name of the ACL
+  name string
+  // Description of the ACL
+  description string
+  // Whether the ACL is managed by Firewall Manager
+  managedByFirewallManager bool
+  // List of WAF rules
+  rules() []aws.waf.rule
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
+}
+
+// Amazon WAF v2 RuleGroup
+private aws.waf.rulegroup @defaults("name") {
+  // ARN of the rulegroup
+  arn string
+  // ID of the rulegroup
+  id string
+  // Name of the rulegroup
+  name string
+  // Description of the rulegroup
+  description string
+  // List of waf rules
+  rules() []aws.waf.rule
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
+}
+
+// Amazon WAF rule
+private aws.waf.rule @defaults("name") {
+  // arn of the acl/ruleGroup + the name of the rule
+  id string
+  // Name of the rule
+  name string
+  // Priority from lowest to highest number
+  priority int
+  // Part of the rule that tells WAF how to inspect a web request
+  statement aws.waf.rule.statement
+  // Part of the rule that tells WAF what to do with a web request when it matches the criteria defined in the rule
+  action aws.waf.rule.action
+  // The ARN of either rule ACL or the RuleGroup that this rule belongs to
+  belongsTo string
+}
+
+// Action that happens if a rule statement matches
+private aws.waf.rule.action @defaults("action") {
+  // Name of the rule this action belongs to
+  ruleName string
+  // One of Block, Allow, Count, Captcha
+  action string
+  // HTTP Response Code, only if the action is Block
+  responseCode string
+}
+
+private aws.waf.rule.statement @defaults("kind") {
+  // random uuid, to make the statement unique, these don't exist in AWS
+  id string
+  kind string
+  // The entire Statement as JSON
+  json dict
+  sqliMatchStatement aws.waf.rule.statement.sqlimatchstatement
+  xssMatchStatement aws.waf.rule.statement.xssmatchstatement
+  byteMatchStatement aws.waf.rule.statement.bytematchstatement
+  regexMatchStatement aws.waf.rule.statement.regexmatchstatement
+  geoMatchStatement aws.waf.rule.statement.geomatchstatement
+  ipSetReferenceStatement aws.waf.rule.statement.ipsetreferencestatement
+  labelMatchStatement aws.waf.rule.statement.labelmatchstatement
+  managedRuleGroupStatement aws.waf.rule.statement.managedrulegroupstatement
+  notStatement aws.waf.rule.statement.notstatement
+  orStatement aws.waf.rule.statement.orstatement
+  andStatement aws.waf.rule.statement.andstatement
+  rateBasedStatement aws.waf.rule.statement.ratebasedstatement
+  regexPatternSetReferenceStatement aws.waf.rule.statement.regexpatternsetreferencestatement
+  ruleGroupReferenceStatement aws.waf.rule.statement.rulegroupreferencestatement
+  sizeConstraintStatement aws.waf.rule.statement.sizeconstraintstatement
+}
+
+// Rule statement that checks for request from certain countries
+private aws.waf.rule.statement.geomatchstatement @defaults("countryCodes") {
+  ruleName string
+  statementID string
+  countryCodes []string
+}
+
+// Rule statement that checks for requests from IP addresses defined in an IPSet
+private aws.waf.rule.statement.ipsetreferencestatement {
+  ruleName string
+  statementID string
+  arn string
+  ipSetForwardedIPConfig aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig
+}
+
+private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
+  ruleName string
+  statementID string
+  headerName string
+  position string
+  fallbackBehavior string
+}
+
+private aws.waf.rule.statement.labelmatchstatement {
+  ruleName string
+  statementID string
+  key string
+  scope string
+}
+
+// Rule statement that is managed by AWS
+private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
+  ruleName string
+  statementID string
+  name string
+  vendorName string
+}
+
+// Rule statement that matches if all of the rule statements inside it match
+private aws.waf.rule.statement.andstatement {
+  ruleName string
+  statementID string
+  statements []aws.waf.rule.statement
+}
+
+// Rule statement that negates another rule statement
+private aws.waf.rule.statement.notstatement {
+  ruleName string
+  statementID string
+  statement aws.waf.rule.statement
+}
+
+// Rule statement that matches if one of the rule statements inside it matches
+private aws.waf.rule.statement.orstatement {
+  ruleName string
+  statementID string
+  statements []aws.waf.rule.statement
+}
+
+private aws.waf.rule.statement.ratebasedstatement {}
+
+// Rule statement that checks for a regex pattern defined in a regex pattern set 
+private aws.waf.rule.statement.regexpatternsetreferencestatement {
+  ruleName string
+  statementID string
+  arn string
+  fieldToMatch aws.waf.rule.fieldtomatch
+}
+
+// Rule statement that refers to a group of rules
+private aws.waf.rule.statement.rulegroupreferencestatement {
+  ruleName string
+  statementID string
+  arn string
+  excludeRules []string
+}
+
+// Rule statement that checks the size of the specified field
+private aws.waf.rule.statement.sizeconstraintstatement {
+  ruleName string
+  statementID string
+  size int
+  comparisonOperator string
+  fieldToMatch aws.waf.rule.fieldtomatch
+}
+
+// Rule statement that matches a specified regex pattern
+private aws.waf.rule.statement.regexmatchstatement {
+  ruleName string
+  statementID string
+  fieldToMatch aws.waf.rule.fieldtomatch
+  regexString string
+}
+
+// Rule statement that matches a specified sequence of bytes
+private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
+  ruleName string
+  statementID string
+  fieldToMatch aws.waf.rule.fieldtomatch
+  searchString string
+}
+
+private aws.waf.rule.fieldtomatch @defaults("target") {
+  target string
+  ruleName string
+  statementID string
+  method bool
+  uriPath bool
+	queryString bool
+	allQueryArguments bool 
+  body aws.waf.rule.fieldtomatch.body
+  cookie aws.waf.rule.fieldtomatch.cookie
+  singleHeader aws.waf.rule.fieldtomatch.singleheader
+	headerOrder aws.waf.rule.fieldtomatch.headerorder
+	headers aws.waf.rule.fieldtomatch.headers
+	ja3Fingerprint aws.waf.rule.fieldtomatch.ja3fingerprint
+	jsonBody aws.waf.rule.fieldtomatch.jsonbody
+	singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
+}
+
+private aws.waf.rule.fieldtomatch.body {
+  ruleName string
+  statementID string
+  overSizeHandling string
+}
+
+private aws.waf.rule.fieldtomatch.cookie {
+  ruleName string
+  statementID string
+  overSizeHandling string
+}
+
+private aws.waf.rule.fieldtomatch.headerorder {
+  ruleName string
+  statementID string
+  overSizeHandling string
+}
+
+private aws.waf.rule.fieldtomatch.singleheader {
+  ruleName string
+  statementID string
+  name string
+}
+
+private aws.waf.rule.fieldtomatch.singlequeryargument {
+  ruleName string
+  statementID string
+  name string
+}
+
+private aws.waf.rule.fieldtomatch.ja3fingerprint {
+  ruleName string
+  statementID string
+  fallbackBehavior string
+}
+
+private aws.waf.rule.fieldtomatch.jsonbody {
+  ruleName string
+  statementID string
+  overSizeHandling string
+  matchScope string
+  invalidFallbackBehavior string
+  matchPattern aws.waf.rule.fieldtomatch.jsonbody.matchpattern
+}
+
+private aws.waf.rule.fieldtomatch.jsonbody.matchpattern {
+  ruleName string
+  statementID string
+  all bool
+  includePaths []string
+}
+
+private aws.waf.rule.fieldtomatch.headers {
+  ruleName string
+  statementID string
+  matchScope string
+  overSizeHandling string
+  matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
+}
+
+private aws.waf.rule.fieldtomatch.headers.matchpattern {
+  ruleName string
+  statementID string
+  all bool
+  includeHeaders []string
+  excludeHeaders []string
+}
+
+
+private aws.waf.rule.statement.xssmatchstatement {
+  ruleName string
+  statementID string
+  fieldToMatch aws.waf.rule.fieldtomatch
+}
+
+private aws.waf.rule.statement.sqlimatchstatement {
+  ruleName string
+  statementID string
+  fieldToMatch aws.waf.rule.fieldtomatch
+  sensitivityLevel string
+}
+
+
+// Amazon WAF IPSet (defining IP Ranges)
+private aws.waf.ipset @defaults("name") {
+  // ARN of the ipset
+  arn string
+  // ID of the ipset
+  id string
+  // Scope either REGIONAL or CLOUDFRONT
+  scope string
+  // Name of the ipset
+  name string
+  // Description of the ipset
+  description string
+  // AddressType either ipv4 or ipv6
+  addressType string
+  // list of IP addresses
+  addresses dict
+}
+
 // AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
 aws.accessAnalyzer @defaults("analyzers") {
   // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
