@@ -208,7 +208,7 @@ private aws.waf.rule.statement @defaults("kind") {
   byteMatchStatement aws.waf.rule.statement.bytematchstatement
   // Statement that matches a regex pattern
   regexMatchStatement aws.waf.rule.statement.regexmatchstatement
-  // Statement that matches requests from certain countrys
+  // Statement that matches requests from certain countries
   geoMatchStatement aws.waf.rule.statement.geomatchstatement
   // Statement that matches requests from certain ips defined in an IPSet
   ipSetReferenceStatement aws.waf.rule.statement.ipsetreferencestatement
