@@ -535,6 +535,7 @@ private aws.waf.rule.fieldtomatch.headers.matchpattern {
 }
 
 
+// A statement that matches xss attacks
 private aws.waf.rule.statement.xssmatchstatement {
   // the name of the rule this statement belongs to
   ruleName string
@@ -544,6 +545,7 @@ private aws.waf.rule.statement.xssmatchstatement {
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
+// A statement that matches sqli attacks
 private aws.waf.rule.statement.sqlimatchstatement {
   // the name of the rule this statement belongs to
   ruleName string
