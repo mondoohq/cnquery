@@ -76,7 +76,9 @@ func (a *mqlAzureSubscriptionStorageService) accounts() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := storage.NewAccountsClient(subId, token, &arm.ClientOptions{})
+	client, err := storage.NewAccountsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +116,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]interface{},
 	if err != nil {
 		return nil, err
 	}
-	client, err := storage.NewBlobContainersClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := storage.NewBlobContainersClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +196,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 	if err != nil {
 		return nil, err
 	}
-	client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := storage.NewBlobServicesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +388,9 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 }
 
 func getStorageAccount(id string, runtime *plugin.Runtime, azureConnection *connection.AzureConnection) (*mqlAzureSubscriptionStorageServiceAccount, error) {
-	client, err := storage.NewAccountsClient(azureConnection.SubId(), azureConnection.Token(), &arm.ClientOptions{})
+	client, err := storage.NewAccountsClient(azureConnection.SubId(), azureConnection.Token(), &arm.ClientOptions{
+		ClientOptions: azureConnection.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -47,7 +47,9 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error)
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	dbClient, err := postgresql.NewServersClient(subId, token, &arm.ClientOptions{})
+	dbClient, err := postgresql.NewServersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +108,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}
 		return nil, err
 	}
 
-	dbDatabaseClient, err := postgresql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbDatabaseClient, err := postgresql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, &json.MarshalerError{}
 	}
@@ -150,7 +154,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interfa
 	if err != nil {
 		return nil, err
 	}
-	dbFirewallClient, err := postgresql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbFirewallClient, err := postgresql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +200,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interfa
 	if err != nil {
 		return nil, err
 	}
-	dbConfClient, err := postgresql.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbConfClient, err := postgresql.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

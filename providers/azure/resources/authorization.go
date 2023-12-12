@@ -45,7 +45,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interfac
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := authorization.NewRoleDefinitionsClient(token, &arm.ClientOptions{})
+	client, err := authorization.NewRoleDefinitionsClient(token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

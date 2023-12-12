@@ -22,7 +22,9 @@ func (a *mqlAzureSubscription) resourceGroups() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := azureres.NewResourceGroupsClient(subId, token, &arm.ClientOptions{})
+	client, err := azureres.NewResourceGroupsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

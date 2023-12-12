@@ -40,7 +40,9 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := clusters.NewManagedClustersClient(subId, token, &arm.ClientOptions{})
+	client, err := clusters.NewManagedClustersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

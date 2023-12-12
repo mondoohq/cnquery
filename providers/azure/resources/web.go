@@ -85,7 +85,9 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := web.NewWebAppsClient(subId, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +135,9 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]interface{}, err
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := web.NewProviderClient(subId, token, &arm.ClientOptions{})
+	client, err := web.NewProviderClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +269,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		return nil, err
 	}
 
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +318,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 		return nil, err
 	}
 
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +365,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (interface{}, error) 
 		return nil, err
 	}
 
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +402,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) connectionSettings() (interface{
 		return nil, err
 	}
 
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +573,9 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) applicationSettings() (interface
 		return nil, err
 	}
 
-	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

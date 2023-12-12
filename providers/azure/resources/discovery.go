@@ -68,12 +68,12 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	targets := rootConf.GetDiscover().GetTargets()
 	subsToInclude := rootConf.Options["subscriptions"]
 	subsToExclude := rootConf.Options["subscriptions-exclude"]
-	filter := subscriptionsFilter{}
+	filter := connection.SubscriptionsFilter{}
 	if len(subsToInclude) > 0 {
-		filter.include = strings.Split(subsToInclude, ",")
+		filter.Include = strings.Split(subsToInclude, ",")
 	}
 	if len(subsToExclude) > 0 {
-		filter.exclude = strings.Split(subsToExclude, ",")
+		filter.Exclude = strings.Split(subsToExclude, ",")
 	}
 	// note: we always need the subscriptions, either to return them as assets or discover resources inside the subs
 	subs, err := discoverSubscriptions(conn, filter)
@@ -603,8 +603,8 @@ func getInstancesLabels(vm *mqlAzureSubscriptionComputeServiceVm) (map[string]st
 	return labels, nil
 }
 
-func discoverSubscriptions(conn *connection.AzureConnection, filter subscriptionsFilter) ([]subscriptions.Subscription, error) {
-	subsClient := NewSubscriptionsClient(conn.Token())
+func discoverSubscriptions(conn *connection.AzureConnection, filter connection.SubscriptionsFilter) ([]subscriptions.Subscription, error) {
+	subsClient := connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions())
 	subs, err := subsClient.GetSubscriptions(filter)
 	if err != nil {
 		return nil, err

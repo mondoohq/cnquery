@@ -61,7 +61,9 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	dbClient, err := sql.NewServersClient(subId, token, &arm.ClientOptions{})
+	dbClient, err := sql.NewServersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +113,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 	if err != nil {
 		return nil, err
 	}
-	dbDatabaseClient, err := sql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbDatabaseClient, err := sql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +178,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, e
 		return nil, err
 	}
 
-	dbFirewallClient, err := sql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	dbFirewallClient, err := sql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +225,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interfac
 		return nil, err
 	}
 
-	client, err := sql.NewVirtualNetworkRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewVirtualNetworkRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +276,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interf
 	if err != nil {
 		return nil, err
 	}
-	administratorClient, err := sql.NewServerAzureADAdministratorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	administratorClient, err := sql.NewServerAzureADAdministratorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +325,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) connectionPolicy() (interface{}, 
 		return nil, err
 	}
 
-	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +354,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) securityAlertPolicy() (interface{
 		return nil, err
 	}
 
-	secAlertClient, err := sql.NewServerSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	secAlertClient, err := sql.NewServerSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +382,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) auditingPolicy() (interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	auditClient, err := sql.NewServerBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	auditClient, err := sql.NewServerBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +411,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) threatDetectionPolicy() (interfac
 		return nil, err
 	}
 
-	serverClient, err := sql.NewServerAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	serverClient, err := sql.NewServerAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +440,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtector() (interface{
 		return nil, err
 	}
 
-	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewEncryptionProtectorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +468,9 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 		return nil, err
 	}
 
-	serverClient, err := sql.NewServerVulnerabilityAssessmentsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	serverClient, err := sql.NewServerVulnerabilityAssessmentsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -494,7 +516,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) transparentDataEncryption() (in
 		return nil, err
 	}
 
-	client, err := sql.NewTransparentDataEncryptionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewTransparentDataEncryptionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -526,7 +550,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) advisor() ([]interface{}, error
 	if err != nil {
 		return nil, err
 	}
-	client, err := sql.NewDatabaseAdvisorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewDatabaseAdvisorsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +596,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) threatDetectionPolicy() (interf
 	if err != nil {
 		return nil, err
 	}
-	client, err := sql.NewDatabaseSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewDatabaseSecurityAlertPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +626,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) connectionPolicy() (interface{}
 		return nil, err
 	}
 
-	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	connectionClient, err := sql.NewServerConnectionPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -630,7 +660,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) auditingPolicy() (interface{}, 
 		return nil, err
 	}
 
-	auditClient, err := sql.NewDatabaseBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	auditClient, err := sql.NewDatabaseBlobAuditingPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -663,7 +695,9 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) 
 		return nil, err
 	}
 
-	client, err := sql.NewDatabaseUsagesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := sql.NewDatabaseUsagesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

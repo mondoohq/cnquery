@@ -86,7 +86,9 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := keyvault.NewVaultsClient(subId, token, &arm.ClientOptions{})
+	client, err := keyvault.NewVaultsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +139,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) properties() (interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := keyvault.NewVaultsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +171,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 	ctx := context.Background()
 	token := conn.Token()
 	vaultUri := a.GetVaultUri()
-	client, err := azkeys.NewClient(vaultUri.Data, token, &azkeys.ClientOptions{})
+	client, err := azkeys.NewClient(vaultUri.Data, token, &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +213,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 	ctx := context.Background()
 	token := conn.Token()
 	vaultUri := a.GetVaultUri()
-	client, err := azsecrets.NewClient(vaultUri.Data, token, &azsecrets.ClientOptions{})
+	client, err := azsecrets.NewClient(vaultUri.Data, token, &azsecrets.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +255,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 	ctx := context.Background()
 	token := conn.Token()
 	vaultUri := a.GetVaultUri()
-	client, err := azcertificates.NewClient(vaultUri.Data, token, &azcertificates.ClientOptions{})
+	client, err := azcertificates.NewClient(vaultUri.Data, token, &azcertificates.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +332,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 		return nil, errors.New("only key ids are supported")
 	}
 
-	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{})
+	client, err := azkeys.NewClient(kvid.BaseUrl, conn.Token(), &azkeys.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +407,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface
 
 	vaultUrl := kvid.BaseUrl
 	name := kvid.Name
-	client, err := azcertificates.NewClient(vaultUrl, conn.Token(), &azcertificates.ClientOptions{})
+	client, err := azcertificates.NewClient(vaultUrl, conn.Token(), &azcertificates.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +483,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, e
 	name := kvid.Name
 
 	ctx := context.Background()
-	client, err := azsecrets.NewClient(vaultUrl, conn.Token(), &azsecrets.ClientOptions{})
+	client, err := azsecrets.NewClient(vaultUrl, conn.Token(), &azsecrets.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}

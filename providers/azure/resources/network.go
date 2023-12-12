@@ -41,7 +41,9 @@ func (a *mqlAzureSubscriptionNetworkService) interfaces() ([]interface{}, error)
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +74,9 @@ func (a *mqlAzureSubscriptionNetworkService) securityGroups() ([]interface{}, er
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewSecurityGroupsClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewSecurityGroupsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +107,9 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewWatchersClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewWatchersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +153,9 @@ func (a *mqlAzureSubscriptionNetworkService) publicIpAddresses() ([]interface{},
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewPublicIPAddressesClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewPublicIPAddressesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +186,9 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]interface{}, erro
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewBastionHostsClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewBastionHostsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +243,9 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 		return nil, err
 	}
 	subId := resourceID.SubscriptionID
-	client, err := network.NewFlowLogsClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewFlowLogsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +321,9 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewLoadBalancersClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewLoadBalancersClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +513,9 @@ func (a *mqlAzureSubscriptionNetworkService) natGateways() ([]interface{}, error
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewNatGatewaysClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewNatGatewaysClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +545,9 @@ func (a *mqlAzureSubscriptionNetworkService) firewalls() ([]interface{}, error) 
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := network.NewAzureFirewallsClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewAzureFirewallsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -572,7 +590,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewall) policy() (*mqlAzureSubscrip
 		if err != nil {
 			return nil, err
 		}
-		client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		client, err := network.NewFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -608,7 +628,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) publicIpAddress() (
 		if err != nil {
 			return nil, err
 		}
-		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -644,7 +666,9 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) public
 		if err != nil {
 			return nil, err
 		}
-		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -680,7 +704,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallIpConfig) subnet() (*mqlAzure
 		if err != nil {
 			return nil, err
 		}
-		client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+		client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -707,7 +733,9 @@ func (a *mqlAzureSubscriptionNetworkService) firewallPolicies() ([]interface{}, 
 	ctx := context.Background()
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
-	client, err := network.NewFirewallPoliciesClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewFirewallPoliciesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -738,7 +766,9 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewVirtualNetworksClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewVirtualNetworksClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -808,7 +838,9 @@ func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]inte
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewApplicationSecurityGroupsClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewApplicationSecurityGroupsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -850,7 +882,9 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewVirtualNetworkGatewaysClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewVirtualNetworkGatewaysClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1002,7 +1036,9 @@ func (a *mqlAzureSubscriptionNetworkService) applicationGateways() ([]interface{
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewApplicationGatewaysClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewApplicationGatewaysClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1033,7 +1069,9 @@ func (a *mqlAzureSubscriptionNetworkService) applicationFirewallPolicies() ([]in
 	token := conn.Token()
 	subId := a.SubscriptionId.Data
 
-	client, err := network.NewWebApplicationFirewallPoliciesClient(subId, token, &arm.ClientOptions{})
+	client, err := network.NewWebApplicationFirewallPoliciesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1080,7 +1118,9 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) policy() (*mqlAzu
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	client, err := network.NewWebApplicationFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewWebApplicationFirewallPoliciesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1108,7 +1148,9 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	token := conn.Token()
-	client, err := network.NewApplicationGatewaysClient(conn.SubId(), token, &arm.ClientOptions{})
+	client, err := network.NewApplicationGatewaysClient(conn.SubId(), token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1157,7 +1199,9 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) publicIpAddresses() ([]in
 	}
 
 	res := []interface{}{}
-	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1195,7 +1239,9 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 	if err != nil {
 		return nil, err
 	}
-	client, err := network.NewVirtualNetworkGatewayConnectionsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewVirtualNetworkGatewayConnectionsClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1260,7 +1306,9 @@ func (a *mqlAzureSubscriptionNetworkServiceNatGateway) subnets() ([]interface{},
 		return nil, nil
 	}
 	res := []interface{}{}
-	client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewSubnetsClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1318,7 +1366,9 @@ func (a *mqlAzureSubscriptionNetworkServiceSubnet) natGateway() (*mqlAzureSubscr
 	if err != nil {
 		return nil, err
 	}
-	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewNatGatewaysClient(azureId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1397,7 +1447,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) basePolicy() (*mqlAzu
 	if err != nil {
 		return nil, err
 	}
-	client, err := network.NewFirewallPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewFirewallPoliciesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1427,7 +1479,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) childPolicies() ([]in
 		return nil, err
 	}
 
-	client, err := network.NewFirewallPoliciesClient(baseResourceId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewFirewallPoliciesClient(baseResourceId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1472,7 +1526,9 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) firewalls() ([]interf
 		return nil, err
 	}
 
-	client, err := network.NewAzureFirewallsClient(baseResourceId.SubscriptionID, token, &arm.ClientOptions{})
+	client, err := network.NewAzureFirewallsClient(baseResourceId.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
 	if err != nil {
 		return nil, err
 	}
