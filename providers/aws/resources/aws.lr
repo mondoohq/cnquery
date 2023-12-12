@@ -353,7 +353,7 @@ private aws.waf.rule.statement.sizeconstraintstatement {
   ruleName string
   // the ID of the statement
   statementID string
-  // The size that tirggers this statement
+  // The size that triggers this statement
   size int
   // Describes how to compare
   comparisonOperator string
