@@ -71,7 +71,8 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 	ctx := context.Background()
 	acls := []interface{}{}
 	nextMarker := aws.String("No-Marker-to-begin-with")
-	scope := waftypes.Scope(a.Scope.Data)
+	scopeString := a.Scope.Data
+	scope := waftypes.Scope(scopeString)
 	params := &wafv2.ListWebACLsInput{Scope: scope}
 	for nextMarker != nil {
 		aclsRes, err := svc.ListWebACLs(ctx, params)
@@ -96,6 +97,7 @@ func (a *mqlAwsWaf) acls() ([]interface{}, error) {
 			mqlAcl, err := CreateResource(a.MqlRuntime, "aws.waf.acl",
 				map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(acl.Id),
+					"scope":                    llx.StringData(scopeString),
 					"arn":                      llx.StringDataPtr(acl.ARN),
 					"name":                     llx.StringDataPtr(acl.Name),
 					"description":              llx.StringDataPtr(acl.Description),
