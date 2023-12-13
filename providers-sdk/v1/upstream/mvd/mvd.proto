@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package mondoo.mvd.v1;
 
-import "cvss/cvss.proto";
+import "providers-sdk/v1/upstream/mvd/cvss/cvss.proto";
 
 option go_package = 
   "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd/mvd";
