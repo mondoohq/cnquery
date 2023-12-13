@@ -103,14 +103,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	}
 	k8s := res.(*mqlK8s)
 
-	nsFilter := NamespaceFilterOpts{}
-	if include, ok := invConfig.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
-		nsFilter.include = strings.Split(include, ",")
-	}
-
-	if exclude, ok := invConfig.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
-		nsFilter.exclude = strings.Split(exclude, ",")
-	}
+	nsFilter := setNamespaceFilters(invConfig)
 
 	resFilters, err := resourceFilters(invConfig)
 	if err != nil {
@@ -1081,4 +1074,16 @@ func resourceFilters(cfg *inventory.Config) (*ResourceFilters, error) {
 		}
 	}
 	return resourcesFilter, nil
+}
+
+func setNamespaceFilters(cfg *inventory.Config) NamespaceFilterOpts {
+	nsFilter := NamespaceFilterOpts{}
+	if include, ok := cfg.Options[shared.OPTION_NAMESPACE]; ok && len(include) > 0 {
+		nsFilter.include = strings.Split(include, ",")
+	}
+
+	if exclude, ok := cfg.Options[shared.OPTION_NAMESPACE_EXCLUDE]; ok && len(exclude) > 0 {
+		nsFilter.exclude = strings.Split(exclude, ",")
+	}
+	return nsFilter
 }

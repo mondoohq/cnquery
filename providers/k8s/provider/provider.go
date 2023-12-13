@@ -71,11 +71,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[shared.OPTION_CONTEXT] = string(context.Value)
 	}
 
-	if ns, ok := req.Flags["namespaces"]; ok {
+	if ns, ok := req.Flags[shared.OPTION_NAMESPACE]; ok {
 		conf.Options[shared.OPTION_NAMESPACE] = string(ns.Value)
 	}
 
-	if ns, ok := req.Flags["namespaces-exclude"]; ok {
+	if ns, ok := req.Flags[shared.OPTION_NAMESPACE_EXCLUDE]; ok {
 		conf.Options[shared.OPTION_NAMESPACE_EXCLUDE] = string(ns.Value)
 	}
 

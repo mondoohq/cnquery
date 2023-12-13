@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared"
@@ -215,4 +216,86 @@ func (p *providerCallbacks) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 
 func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
+}
+
+func TestParseCLI(t *testing.T) {
+	srv := &Service{}
+
+	t.Run("WithNamespace", func(t *testing.T) {
+		req := &plugin.ParseCLIReq{
+			Args:      []string{"path/to/manifest.yaml"},
+			Connector: "k8s",
+			Flags: map[string]*llx.Primitive{
+				"namespace": {
+					Value: []byte("my-namespace"),
+				},
+				"namespace-exclude": {
+					Value: []byte("excluded-namespace"),
+				},
+			},
+		}
+
+		res, err := srv.ParseCLI(req)
+		require.NoError(t, err)
+
+		expectedConf := &inventory.Config{
+			Discover: &inventory.Discovery{
+				Targets: []string{"auto"},
+			},
+			Type: "k8s",
+			Options: map[string]string{
+				shared.OPTION_MANIFEST: "path/to/manifest.yaml",
+			},
+		}
+
+		expectedAsset := &inventory.Asset{
+			Connections: []*inventory.Config{expectedConf},
+			IdDetector:  []string{"hostname"},
+		}
+
+		expectedRes := &plugin.ParseCLIRes{
+			Asset: expectedAsset,
+		}
+
+		assert.Equal(t, expectedRes, res)
+	})
+
+	t.Run("WithNamespaces", func(t *testing.T) {
+		req := &plugin.ParseCLIReq{
+			Connector: "k8s",
+			Flags: map[string]*llx.Primitive{
+				"namespaces-exclude": {
+					Value: []byte("excluded-namespace"),
+				},
+				"namespaces": {
+					Value: []byte("my-namespace"),
+				},
+			},
+		}
+
+		res, err := srv.ParseCLI(req)
+		require.NoError(t, err)
+
+		expectedConf := &inventory.Config{
+			Discover: &inventory.Discovery{
+				Targets: []string{"auto"},
+			},
+			Type: "k8s",
+			Options: map[string]string{
+				shared.OPTION_NAMESPACE:         "my-namespace",
+				shared.OPTION_NAMESPACE_EXCLUDE: "excluded-namespace",
+			},
+		}
+
+		expectedAsset := &inventory.Asset{
+			Connections: []*inventory.Config{expectedConf},
+			IdDetector:  []string{"hostname"},
+		}
+
+		expectedRes := &plugin.ParseCLIRes{
+			Asset: expectedAsset,
+		}
+
+		assert.Equal(t, expectedRes, res)
+	})
 }
