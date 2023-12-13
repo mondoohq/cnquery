@@ -129,7 +129,7 @@ github.organization @defaults("login name") {
 }
 
 // GitHub user
-private github.user @defaults("id name") {
+private github.user @defaults("login name email company") {
   // User ID
   id int
   // User login
@@ -403,9 +403,9 @@ private github.workflow @defaults("id name") {
   createdAt time
   // Workflow update time
   updatedAt time
-  // Workflow file 
+  // Workflow file
   file() github.file
-  // Workflow configuration 
+  // Workflow configuration
   configuration() dict
 }
 
@@ -473,7 +473,7 @@ private github.commit @defaults("sha") {
   stats dict
 }
 
-// GitHub repository pull request 
+// GitHub repository pull request
 private github.mergeRequest @defaults("id state") {
   // Pull request ID
   id int
@@ -505,7 +505,7 @@ private github.review @defaults("url state") {
   url string
   // Review state
   state string
-  // Author association 
+  // Author association
   authorAssociation string
   // Review user information
   user github.user
