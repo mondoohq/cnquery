@@ -2247,7 +2247,7 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
 }
 
 // Amazon EC2 instance
-private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
+private aws.ec2.instance @defaults("instanceId region state instanceType platformDetails") {
   // ARN for the instance
   arn string
   // Instance ID for the instance
