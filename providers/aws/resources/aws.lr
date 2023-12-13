@@ -400,21 +400,21 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
 	queryString bool
   // Whether to match all query arguments
 	allQueryArguments bool 
-  // Body of the field to match
+  // Whether to match the body (match if not null)
   body aws.waf.rule.fieldtomatch.body
-  // Cookie of the field to match
+  // Whether to match the cookie (match if not null)
   cookie aws.waf.rule.fieldtomatch.cookie
-  // Single header of the field to match
+  // Whether to match the single header (match if not null)
   singleHeader aws.waf.rule.fieldtomatch.singleheader
-  // Header order of the field to match
+  // Whether to match the header order (match if not null)
 	headerOrder aws.waf.rule.fieldtomatch.headerorder
-  // Header of the field to match
+  // Whether to match the header (match if not null)
 	headers aws.waf.rule.fieldtomatch.headers
-  // JA3 fingerprint of the field to match
+  // Whether to match the JA3 fingerprint (match if not null)
 	ja3Fingerprint aws.waf.rule.fieldtomatch.ja3fingerprint
-  // JSON body of the field to match
+  // Whether to match the JSON body (match if not null)
 	jsonBody aws.waf.rule.fieldtomatch.jsonbody
-  // Single query argument of the field to match
+  // Whether to match the single query argument of the field (match if not null)
 	singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
 }
 
