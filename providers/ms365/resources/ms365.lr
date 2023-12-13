@@ -376,6 +376,18 @@ ms365.exchangeonline {
   sharingPolicy []dict
   // List of role assignment policies
   roleAssignmentPolicy []dict
+  // List of external sender configurations
+  externalInOutlook []ms365.exchangeonline.externalSender
+}
+
+// Microsoft 365 ExchangeOnline ExternalSender
+private ms365.exchangeonline.externalSender {
+  // The identity of the external sender
+  identity string
+  // The list of specified senders that do not receive the External icon in the area of subject line.
+  allowList []string
+  // Indicates whether the feature is enabled
+  enabled bool
 }
 
 // Microsoft 365 SharePoint Online
@@ -390,4 +402,44 @@ ms365.sharepointonline {
 ms365.teams {
   // CS Teams client configuration
   csTeamsClientConfiguration dict
+  // CS Teams tenant federated configuration
+  csTenantFederationConfiguration ms365.teams.tenantFederationConfig
+  // CS Teams meeting policy configuration
+  csTeamsMeetingPolicy ms365.teams.teamsMeetingPolicyConfig
+}
+
+// Microsoft 365 Teams tenant federation configuration
+private ms365.teams.tenantFederationConfig {
+  // ID of the collection of tenant federation configuration settings
+  identity string
+  // Blocked domains
+  blockedDomains dict
+  // Whether federated users are allowed
+  allowFederatedUsers bool
+  // Whether public users are allowed
+  allowPublicUsers bool
+  allowTeamsConsumer bool
+  allowTeamsConsumerInbound bool
+  // Whether to treat discovered partners as unverified
+  treatDiscoveredPartnersAsUnverified bool
+  // Whether shared SIP address space is enabled
+  sharedSipAddressSpace bool
+  restrictTeamsConsumerToExternalUserProfiles bool
+}
+
+// Teams meeting policy configuration
+private ms365.teams.teamsMeetingPolicyConfig {
+  // Whether anonymous users are allowed to join
+  allowAnonymousUsersToJoinMeeting bool
+  // Whether anonymous users are allowed to start the meeting
+  allowAnonymousUsersToStartMeeting bool
+  autoAdmittedUsers string
+  // Whether public switched telephone network (PSTN) users can bypass the lobby
+  allowPSTNUsersToBypassLobby bool
+  // Whether meeting chat is enabled
+  meetingChatEnabledType string
+  // Designated presenter role mode
+  designatedPresenterRoleMode string
+  // Whether external participants can give or request control of the meeting
+  allowExternalParticipantGiveRequestControl bool
 }

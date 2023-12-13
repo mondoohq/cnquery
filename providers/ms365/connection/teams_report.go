@@ -24,12 +24,15 @@ Import-Module MicrosoftTeams
 Connect-MicrosoftTeams -AccessTokens @("$graphToken", "$teamsToken")
 
 $CsTeamsClientConfiguration = (Get-CsTeamsClientConfiguration)
+$CsTenantFederationConfiguration = (Get-CsTenantFederationConfiguration)
+$CsTeamsMeetingPolicy = (Get-CsTeamsMeetingPolicy -Identity Global)
 
 $msteams = New-Object PSObject
 Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsClientConfiguration -Value $CsTeamsClientConfiguration
+Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTenantFederationConfiguration -Value $CsTenantFederationConfiguration
+Add-Member -InputObject $msteams -MemberType NoteProperty -Name CsTeamsMeetingPolicy -Value $CsTeamsMeetingPolicy
 
 Disconnect-MicrosoftTeams -Confirm:$false
-
 ConvertTo-Json -Depth 4 $msteams
 `
 
@@ -98,5 +101,32 @@ func (c *Ms365Connection) getTeamsReport(accessToken, teamsToken string) (*MsTea
 }
 
 type MsTeamsReport struct {
-	CsTeamsClientConfiguration interface{} `json:"CsTeamsClientConfiguration"`
+	CsTeamsClientConfiguration      interface{}                      `json:"CsTeamsClientConfiguration"`
+	CsTenantFederationConfiguration *CsTenantFederationConfiguration `json:"CsTenantFederationConfiguration"`
+	CsTeamsMeetingPolicy            *CsTeamsMeetingPolicy            `json:"CsTeamsMeetingPolicy"`
+}
+
+type CsTenantFederationConfiguration struct {
+	Identity                                    string `json:"Identity"`
+	AllowFederatedUsers                         bool   `json:"AllowFederatedUsers"`
+	AllowPublicUsers                            bool   `json:"AllowPublicUsers"`
+	AllowTeamsConsumer                          bool   `json:"AllowTeamsConsumer"`
+	AllowTeamsConsumerInbound                   bool   `json:"AllowTeamsConsumerInbound"`
+	TreatDiscoveredPartnersAsUnverified         bool   `json:"TreatDiscoveredPartnersAsUnverified"`
+	SharedSipAddressSpace                       bool   `json:"SharedSipAddressSpace"`
+	RestrictTeamsConsumerToExternalUserProfiles bool   `json:"RestrictTeamsConsumerToExternalUserProfiles"`
+	// TODO: we need to figure out how to get this right when using Convert-ToJson
+	// it currently comes back as an empty json object {} but the pwsh cmdlet spits out a string-looking value
+	AllowedDomains interface{} `json:"AllowedDomains"`
+	BlockedDomains interface{} `json:"BlockedDomains"`
+}
+
+type CsTeamsMeetingPolicy struct {
+	AllowAnonymousUsersToJoinMeeting           bool   `json:"AllowFederatedUsers"`
+	AllowAnonymousUsersToStartMeeting          bool   `json:"AllowAnonymousUsersToStartMeeting"`
+	AutoAdmittedUsers                          string `json:"AutoAdmittedUsers"`
+	AllowPSTNUsersToBypassLobby                bool   `json:"AllowPSTNUsersToBypassLobby"`
+	MeetingChatEnabledType                     string `json:"MeetingChatEnabledType"`
+	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
+	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
 }

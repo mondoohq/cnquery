@@ -17,6 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v9/types"
 )
 
+func (m *mqlMs365ExchangeonlineExternalSender) id() (string, error) {
+	return m.Identity.Data, nil
+}
+
 func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	ctx := context.Background()
@@ -61,6 +65,20 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	sharingPolicy, _ := convert.JsonToDictSlice(report.SharingPolicy)
 	roleAssignmentPolicy, _ := convert.JsonToDictSlice(report.RoleAssignmentPolicy)
 
+	externalInOutlook := []interface{}{}
+	for _, e := range report.ExternalInOutlook {
+		mql, err := CreateResource(runtime, "ms365.exchangeonline.externalSender",
+			map[string]*llx.RawData{
+				"identity":  llx.StringData(e.Identity),
+				"enabled":   llx.BoolData(e.Enabled),
+				"allowList": llx.ArrayData(llx.TArr2Raw(e.AllowList), types.Any),
+			})
+		if err != nil {
+			return args, nil, err
+		}
+
+		externalInOutlook = append(externalInOutlook, mql)
+	}
 	args["malwareFilterPolicy"] = llx.ArrayData(malwareFilterPolicy, types.Any)
 	args["hostedOutboundSpamFilterPolicy"] = llx.ArrayData(hostedOutboundSpamFilterPolicy, types.Any)
 	args["transportRule"] = llx.ArrayData(transportRule, types.Any)
@@ -78,6 +96,7 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["atpPolicyForO365"] = llx.ArrayData(atpPolicyForO365, types.Any)
 	args["sharingPolicy"] = llx.ArrayData(sharingPolicy, types.Any)
 	args["roleAssignmentPolicy"] = llx.ArrayData(roleAssignmentPolicy, types.Any)
+	args["externalInOutlook"] = llx.ArrayData(externalInOutlook, types.ResourceLike)
 
 	return args, nil, nil
 }
@@ -138,6 +157,42 @@ func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 	csTeamsClientConfiguration, _ := convert.JsonToDict(report.CsTeamsClientConfiguration)
 	args["csTeamsClientConfiguration"] = llx.DictData(csTeamsClientConfiguration)
+
+	tenantConfig := report.CsTenantFederationConfiguration
+	teamsPolicy := report.CsTeamsMeetingPolicy
+	tenantConfigBlockedDomains, _ := convert.JsonToDict(tenantConfig.BlockedDomains)
+
+	mqlTenantConfig, err := CreateResource(runtime, "ms365.teams.tenantFederationConfig",
+		map[string]*llx.RawData{
+			"identity":                                    llx.StringData(tenantConfig.Identity),
+			"blockedDomains":                              llx.DictData(tenantConfigBlockedDomains),
+			"allowFederatedUsers":                         llx.BoolData(tenantConfig.AllowFederatedUsers),
+			"allowPublicUsers":                            llx.BoolData(tenantConfig.AllowPublicUsers),
+			"allowTeamsConsumer":                          llx.BoolData(tenantConfig.AllowTeamsConsumer),
+			"allowTeamsConsumerInbound":                   llx.BoolData(tenantConfig.AllowTeamsConsumerInbound),
+			"treatDiscoveredPartnersAsUnverified":         llx.BoolData(tenantConfig.TreatDiscoveredPartnersAsUnverified),
+			"sharedSipAddressSpace":                       llx.BoolData(tenantConfig.SharedSipAddressSpace),
+			"restrictTeamsConsumerToExternalUserProfiles": llx.BoolData(tenantConfig.RestrictTeamsConsumerToExternalUserProfiles),
+		})
+	if err != nil {
+		return args, nil, err
+	}
+	mqlTeamsPolicy, err := CreateResource(runtime, "ms365.teams.teamsMeetingPolicyConfig",
+		map[string]*llx.RawData{
+			"allowAnonymousUsersToJoinMeeting":           llx.BoolData(teamsPolicy.AllowAnonymousUsersToJoinMeeting),
+			"allowAnonymousUsersToStartMeeting":          llx.BoolData(teamsPolicy.AllowAnonymousUsersToStartMeeting),
+			"autoAdmittedUsers":                          llx.StringData(teamsPolicy.AutoAdmittedUsers),
+			"allowPSTNUsersToBypassLobby":                llx.BoolData(teamsPolicy.AllowPSTNUsersToBypassLobby),
+			"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
+			"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
+			"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
+		})
+	if err != nil {
+		return args, nil, err
+	}
+
+	args["csTenantFederationConfiguration"] = llx.ResourceData(mqlTenantConfig, mqlTenantConfig.MqlName())
+	args["csTeamsMeetingPolicy"] = llx.ResourceData(mqlTeamsPolicy, mqlTeamsPolicy.MqlName())
 
 	return args, nil, nil
 }

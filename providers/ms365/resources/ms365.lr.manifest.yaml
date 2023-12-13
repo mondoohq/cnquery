@@ -242,6 +242,7 @@ resources:
       atpPolicyForO365: {}
       authenticationPolicy: {}
       dkimSigningConfig: {}
+      externalInOutlook: {}
       hostedOutboundSpamFilterPolicy: {}
       mailbox: {}
       malwareFilterPolicy: {}
@@ -258,6 +259,16 @@ resources:
     platform:
       name:
       - microsoft365
+  ms365.exchangeonline.externalSender:
+    fields:
+      allowList: {}
+      enabled: {}
+      identity: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
   ms365.sharepointonline:
     fields:
       spoTenant: {}
@@ -268,9 +279,44 @@ resources:
       - microsoft365
   ms365.teams:
     fields:
-      csOAuthConfiguration: {}
       csTeamsClientConfiguration: {}
+      csTeamsMeetingPolicy:
+        min_mondoo_version: 9.0.0
+      csTenantFederationConfiguration:
+        min_mondoo_version: 9.0.0
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.teams.teamsMeetingPolicyConfig:
+    fields:
+      allowAnonymousUsersToJoinMeeting: {}
+      allowAnonymousUsersToStartMeeting: {}
+      allowExternalParticipantGiveRequestControl: {}
+      allowPSTNUsersToBypassLobby: {}
+      autoAdmittedUsers: {}
+      designatedPresenterRoleMode: {}
+      meetingChatEnabledType: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - microsoft365
+  ms365.teams.tenantFederationConfig:
+    fields:
+      allowFederatedUsers: {}
+      allowPublicUsers: {}
+      allowTeamsConsumer: {}
+      allowTeamsConsumerInbound: {}
+      allowedDomains: {}
+      blockedDomains: {}
+      identity: {}
+      restrictTeamsConsumerToExternalUserProfiles: {}
+      sestrictTeamsConsumerToExternalUserProfiles: {}
+      sharedSipAddressSpace: {}
+      treatDiscoveredPartnersAsUnverified: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - microsoft365
