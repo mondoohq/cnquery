@@ -1,3 +1,5 @@
+!!! ONLY A TEST !!!
+
 Created by Mondoo Tools via GitHub Actions
 
 Workflow:

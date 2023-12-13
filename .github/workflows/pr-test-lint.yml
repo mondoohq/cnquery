@@ -58,12 +58,18 @@ jobs:
   go-test:
     runs-on: self-hosted
     timeout-minutes: 120
-    steps:         
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Debug event
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq
 
       - name: Install Go
         uses: actions/setup-go@v5
