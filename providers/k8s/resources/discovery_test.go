@@ -31,3 +31,33 @@ func TestConvertImagesToAssets(t *testing.T) {
 		require.Equal(t, expectedAssets[i].Name, assets[i].Name)
 	}
 }
+
+func TestSetNamespaceFilters(t *testing.T) {
+	cfg := &inventory.Config{
+		Options: map[string]string{
+			"namespaces":         "namespace1,namespace2",
+			"namespaces-exclude": "namespace3,namespace4",
+		},
+	}
+
+	nsFilter := setNamespaceFilters(cfg)
+
+	expectedInclude := []string{"namespace1", "namespace2"}
+	expectedExclude := []string{"namespace3", "namespace4"}
+
+	require.Equal(t, expectedInclude, nsFilter.include)
+	require.Equal(t, expectedExclude, nsFilter.exclude)
+
+	// missing "s" in namespaces
+	cfg = &inventory.Config{
+		Options: map[string]string{
+			"namespace":         "namespace1,namespace2",
+			"namespace-exclude": "namespace3,namespace4",
+		},
+	}
+
+	nsFilter = setNamespaceFilters(cfg)
+
+	require.Nil(t, nsFilter.include)
+	require.Nil(t, nsFilter.exclude)
+}

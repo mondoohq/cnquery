@@ -18,8 +18,8 @@ import (
 const (
 	OPTION_MANIFEST          = "path"
 	OPTION_IMMEMORY_CONTENT  = "manifest-content"
-	OPTION_NAMESPACE         = "namespace"
-	OPTION_NAMESPACE_EXCLUDE = "namespace-exclude"
+	OPTION_NAMESPACE         = "namespaces"
+	OPTION_NAMESPACE_EXCLUDE = "namespaces-exclude"
 	OPTION_ADMISSION         = "k8s-admission-review"
 	OPTION_OBJECT_KIND       = "object-kind"
 	OPTION_CONTEXT           = "context"
