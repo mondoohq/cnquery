@@ -1,0 +1,1053 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_3: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_4: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_5: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_6: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_7: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_8: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_9: ignore
+  labels:
+    app.kubernetes.io/name: mondoo-operator
+  name: mondoo-operator
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.10.0
+  name: mondooauditconfigs.k8s.mondoo.com
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: webhook-service
+          namespace: mondoo-operator
+          path: /convert
+      conversionReviewVersions:
+      - v1
+  group: k8s.mondoo.com
+  names:
+    kind: MondooAuditConfig
+    listKind: MondooAuditConfigList
+    plural: mondooauditconfigs
+    singular: mondooauditconfig
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        description: MondooAuditConfig is the Schema for the mondooauditconfigs API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MondooAuditConfigSpec defines the desired state of MondooAuditConfig
+            properties:
+              admission:
+                properties:
+                  certificateProvisioning:
+                    description: CertificateProvisioning defines the certificate provisioning
+                      configuration within the cluster.
+                    properties:
+                      mode:
+                        default: manual
+                        description: CertificateProvisioningMode is the specified
+                          method the cluster uses for provisioning TLS certificates
+                        enum:
+                        - cert-manager
+                        - openshift
+                        - manual
+                        type: string
+                    type: object
+                  enable:
+                    type: boolean
+                  image:
+                    properties:
+                      name:
+                        type: string
+                      tag:
+                        type: string
+                    type: object
+                  mode:
+                    default: permissive
+                    description: Mode represents whether the webhook will behave in
+                      a "permissive" mode (the default) which will only scan and report
+                      on k8s resources or "enforcing" mode where depending on the
+                      scan results may reject the k8s resource creation/modification.
+                    enum:
+                    - permissive
+                    - enforcing
+                    type: string
+                  replicas:
+                    default: 1
+                    description: Number of replicas for the admission webhook. For
+                      enforcing mode, the minimum should be two to prevent problems
+                      during Pod failures, e.g. node failure, node scaling, etc.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  serviceAccountName:
+                    default: mondoo-operator-webhook
+                    description: ServiceAccountName specifies the Kubernetes ServiceAccount
+                      the webhook should use during its operation.
+                    type: string
+                type: object
+              consoleIntegration:
+                properties:
+                  enable:
+                    type: boolean
+                type: object
+              containers:
+                properties:
+                  enable:
+                    type: boolean
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Limits describes the maximum amount of compute
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Requests describes the minimum amount of compute
+                          resources required. If Requests is omitted for a container,
+                          it defaults to Limits if that is explicitly specified, otherwise
+                          to an implementation-defined value. Requests cannot exceed
+                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                    type: object
+                  schedule:
+                    description: Specify a custom crontab schedule for the container
+                      image scanning job. If not specified, the default schedule is
+                      used.
+                    type: string
+                type: object
+              filtering:
+                properties:
+                  namespaces:
+                    properties:
+                      exclude:
+                        description: Exclude is the list of resources to ignore for
+                          any watching/scanning actions. Use this if the goal is to
+                          watch/scan all resources except for this Exclude list.
+                        items:
+                          type: string
+                        type: array
+                      include:
+                        description: Include is the list of resources to watch/scan.
+                          Setting Include overrides anything in the Exclude list as
+                          specifying an Include list is effectively excluding everything
+                          except for what is on the Include list.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              kubernetesResources:
+                properties:
+                  containerImageScanning:
+                    description: 'DEPRECATED: ContainerImageScanning determines whether
+                      container images are being scanned. The current implementation
+                      runs a separate job once every 24h that scans the container
+                      images running in the cluster.'
+                    type: boolean
+                  enable:
+                    type: boolean
+                  schedule:
+                    description: Specify a custom crontab schedule for the Kubernetes
+                      resource scanning job. If not specified, the default schedule
+                      is used.
+                    type: string
+                type: object
+              mondooCredsSecretRef:
+                description: Config is an example field of MondooAuditConfig. Edit
+                  mondooauditconfig_types.go to remove/update
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              mondooTokenSecretRef:
+                description: MondooTokenSecretRef can optionally hold a time-limited
+                  token that the mondoo-operator will use to create a Mondoo service
+                  account saved to the Secret specified in .spec.mondooCredsSecretRef
+                  if that Secret does not exist.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              nodes:
+                properties:
+                  enable:
+                    type: boolean
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Limits describes the maximum amount of compute
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Requests describes the minimum amount of compute
+                          resources required. If Requests is omitted for a container,
+                          it defaults to Limits if that is explicitly specified, otherwise
+                          to an implementation-defined value. Requests cannot exceed
+                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                    type: object
+                  schedule:
+                    description: Specify a custom crontab schedule for the node scanning
+                      job. If not specified, the default schedule is used.
+                    type: string
+                type: object
+              scanner:
+                description: Scanner defines the settings for the Mondoo scanner that
+                  will be running in the cluster. The same scanner is used for scanning
+                  the Kubernetes API, the nodes and for serving the admission controller.
+                properties:
+                  env:
+                    description: Env allows setting extra environment variables for
+                      the scanner. If the operator sets already an env variable with
+                      the same name, the value specified here will override it.
+                    items:
+                      description: EnvVar represents an environment variable present
+                        in a Container.
+                      properties:
+                        name:
+                          description: Name of the environment variable. Must be a
+                            C_IDENTIFIER.
+                          type: string
+                        value:
+                          description: 'Variable references $(VAR_NAME) are expanded
+                            using the previously defined environment variables in
+                            the container and any service environment variables. If
+                            a variable cannot be resolved, the reference in the input
+                            string will be unchanged. Double $$ are reduced to a single
+                            $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+                            "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+                            Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Defaults to "".'
+                          type: string
+                        valueFrom:
+                          description: Source for the environment variable's value.
+                            Cannot be used if value is not empty.
+                          properties:
+                            configMapKeyRef:
+                              description: Selects a key of a ConfigMap.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            fieldRef:
+                              description: 'Selects a field of the pod: supports metadata.name,
+                                metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                spec.serviceAccountName, status.hostIP, status.podIP,
+                                status.podIPs.'
+                              properties:
+                                apiVersion:
+                                  description: Version of the schema the FieldPath
+                                    is written in terms of, defaults to "v1".
+                                  type: string
+                                fieldPath:
+                                  description: Path of the field to select in the
+                                    specified API version.
+                                  type: string
+                              required:
+                              - fieldPath
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            resourceFieldRef:
+                              description: 'Selects a resource of the container: only
+                                resources limits and requests (limits.cpu, limits.memory,
+                                limits.ephemeral-storage, requests.cpu, requests.memory
+                                and requests.ephemeral-storage) are currently supported.'
+                              properties:
+                                containerName:
+                                  description: 'Container name: required for volumes,
+                                    optional for env vars'
+                                  type: string
+                                divisor:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  description: Specifies the output format of the
+                                    exposed resources, defaults to "1"
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                resource:
+                                  description: 'Required: resource to select'
+                                  type: string
+                              required:
+                              - resource
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            secretKeyRef:
+                              description: Selects a key of a secret in the pod's
+                                namespace
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                          type: object
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  image:
+                    properties:
+                      name:
+                        type: string
+                      tag:
+                        type: string
+                    type: object
+                  privateRegistriesPullSecretRef:
+                    description: PrivateRegistryScanning defines the name of a secret
+                      that contains the credentials for the private registries we
+                      have to pull images from.
+                    properties:
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  replicas:
+                    default: 1
+                    description: Number of replicas for the scanner. For enforcing
+                      mode, the minimum should be two to prevent problems during Pod
+                      failures, e.g. node failure, node scaling, etc.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  resources:
+                    description: ResourceRequirements describes the compute resource
+                      requirements.
+                    properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Limits describes the maximum amount of compute
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Requests describes the minimum amount of compute
+                          resources required. If Requests is omitted for a container,
+                          it defaults to Limits if that is explicitly specified, otherwise
+                          to an implementation-defined value. Requests cannot exceed
+                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        type: object
+                    type: object
+                  serviceAccountName:
+                    default: mondoo-operator-k8s-resources-scanning
+                    type: string
+                type: object
+            required:
+            - mondooCredsSecretRef
+            type: object
+          status:
+            description: MondooAuditConfigStatus defines the observed state of MondooAuditConfig
+            properties:
+              conditions:
+                description: Conditions includes detailed status for the MondooAuditConfig
+                items:
+                  properties:
+                    affectedPods:
+                      description: AffectedPods, when filled, contains a list which
+                        are affected by an issue
+                      items:
+                        type: string
+                      type: array
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the condition
+                        transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    lastUpdateTime:
+                      description: LastUpdateTime is the last time we probed the condition
+                      format: date-time
+                      type: string
+                    memoryLimit:
+                      description: MemoryLimit contains the currently active memory
+                        limit for a Pod
+                      type: string
+                    message:
+                      description: Message is a human-readable message indicating
+                        details about the last transition
+                      type: string
+                    reason:
+                      description: Reason is a unique, one-word, CamelCase reason
+                        for the condition's last transition
+                      type: string
+                    status:
+                      description: Status is the status of the condition
+                      type: string
+                    type:
+                      description: Type is the specific type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              pods:
+                description: Pods store the name of the pods which are running mondoo
+                  instances
+                items:
+                  type: string
+                type: array
+              reconciledByOperatorVersion:
+                description: ReconciledByOperatorVersion contains the version of the
+                  operator which reconciled this MondooAuditConfig
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.10.0
+  creationTimestamp: null
+  name: mondoooperatorconfigs.k8s.mondoo.com
+spec:
+  group: k8s.mondoo.com
+  names:
+    kind: MondooOperatorConfig
+    listKind: MondooOperatorConfigList
+    plural: mondoooperatorconfigs
+    singular: mondoooperatorconfig
+  scope: Cluster
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        description: MondooOperatorConfig is the Schema for the mondoooperatorconfigs
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MondooOperatorConfigSpec defines the desired state of MondooOperatorConfig
+            properties:
+              httpProxy:
+                description: HttpProxy specifies a proxy to use for HTTP requests
+                  to the Mondoo Platform.
+                type: string
+              metrics:
+                description: Metrics controls the enabling/disabling of metrics report
+                  of mondoo-operator
+                properties:
+                  enable:
+                    type: boolean
+                  resourceLabels:
+                    additionalProperties:
+                      type: string
+                    description: ResourceLabels allows providing a list of extra labels
+                      to apply to the metrics-related resources (eg. ServiceMonitor)
+                    type: object
+                type: object
+              skipContainerResolution:
+                description: Allows skipping Image resolution from upstream repository
+                type: boolean
+            type: object
+          status:
+            description: MondooOperatorConfigStatus defines the observed state of
+              MondooOperatorConfig
+            properties:
+              conditions:
+                description: Conditions includes more detailed status for the mondoo
+                  config
+                items:
+                  description: Condition contains details for the current condition
+                    of a MondooOperatorConfig
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the condition
+                        transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    lastUpdateTime:
+                      description: LastUpdateTime is the last time the condition was
+                        updated.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message is a human-readable message indicating
+                        details about last transition.
+                      type: string
+                    reason:
+                      description: Reason is a unique, one-word, CamelCase reason
+                        for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status is the status of the condition.
+                      type: string
+                    type:
+                      description: Type is the type of the condition.
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-webhook
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mondoo-operator-leader-election-role
+  namespace: mondoo-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: mondoo-operator-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - issuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mondoo-operator-leader-election-rolebinding
+  namespace: mondoo-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mondoo-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mondoo-operator-k8s-resources-scanning
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-k8s-resources-scanning
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mondoo-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mondoo-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: v1
+data:
+  controller_manager_config.yaml: |
+    # Copyright (c) Mondoo, Inc.
+    # SPDX-License-Identifier: BUSL-1.1
+
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: 60679458.mondoo.com
+kind: ConfigMap
+metadata:
+  name: mondoo-operator-manager-config
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: mondoo-operator
+  name: mondoo-operator-controller-manager-metrics-service
+  namespace: mondoo-operator
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    app.kubernetes.io/name: mondoo-operator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: mondoo-operator
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mondoo-operator
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/name: mondoo-operator
+    spec:
+      containers:
+      - args:
+        - operator
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=:8080
+        - --leader-elect
+        command:
+        - /mondoo-operator
+        env:
+        - name: FEATURE_ENABLE_V9
+          value: "true"
+        image: ghcr.io/mondoohq/mondoo-operator:sha256-19ae3336b86891dea30d3f7942ed6a9332621a3c.sig
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports:
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 200m
+            memory: 140Mi
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: mondoo-operator-controller-manager
+      terminationGracePeriodSeconds: 10

@@ -1,0 +1,337 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_3: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_4: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_5: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_6: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_7: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_8: ignore
+    policies.k8s.mondoo.com/cis-kubernetes-v1-23-benchmark--5_2_9: ignore
+  labels:
+    app.kubernetes.io/name: mondoo-operator
+  name: mondoo-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mondoo-operator-webhook
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mondoo-operator-leader-election-role
+  namespace: mondoo-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: mondoo-operator-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  - issuers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondooauditconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.mondoo.com
+  resources:
+  - mondoooperatorconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mondoo-operator-leader-election-rolebinding
+  namespace: mondoo-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mondoo-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mondoo-operator-k8s-resources-scanning
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mondoo-operator-k8s-resources-scanning
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-k8s-resources-scanning
+  namespace: mondoo-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mondoo-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mondoo-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: mondoo-operator-controller-manager
+  namespace: mondoo-operator
+---
+apiVersion: v1
+data:
+  controller_manager_config.yaml: |
+    # Copyright (c) Mondoo, Inc.
+    # SPDX-License-Identifier: BUSL-1.1
+
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: 60679458.mondoo.com
+kind: ConfigMap
+metadata:
+  name: mondoo-operator-manager-config
+  namespace: mondoo-operator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: mondoo-operator
+  name: mondoo-operator-controller-manager-metrics-service
+  namespace: mondoo-operator
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    app.kubernetes.io/name: mondoo-operator

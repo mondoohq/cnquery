@@ -81,12 +81,6 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 		asset.Name = clusterName
 	}
 
-	platformId, err := c.AssetId()
-	if err != nil {
-		return nil, err
-	}
-	asset.PlatformIds = []string{platformId}
-
 	c.ManifestParser, err = shared.NewManifestParser(manifest, c.namespace, "")
 	if err != nil {
 		return nil, err
