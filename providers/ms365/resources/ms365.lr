@@ -38,6 +38,8 @@ private microsoft.organization @defaults("displayName") {
   displayName string
   // Organization verified domains
   verifiedDomains []dict
+  // Indicates whether password hash sync is enabled for hybrid deployments
+  onPremisesSyncEnabled bool
 }
 
 // Microsoft user

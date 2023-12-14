@@ -212,6 +212,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.organization.verifiedDomains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftOrganization).GetVerifiedDomains()).ToDataRes(types.Array(types.Dict))
 	},
+	"microsoft.organization.onPremisesSyncEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOrganization).GetOnPremisesSyncEnabled()).ToDataRes(types.Bool)
+	},
 	"microsoft.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetId()).ToDataRes(types.String)
 	},
@@ -700,6 +703,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.organization.verifiedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftOrganization).VerifiedDomains, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"microsoft.organization.onPremisesSyncEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOrganization).OnPremisesSyncEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1536,6 +1543,7 @@ type mqlMicrosoftOrganization struct {
 	CreatedDateTime plugin.TValue[*time.Time]
 	DisplayName plugin.TValue[string]
 	VerifiedDomains plugin.TValue[[]interface{}]
+	OnPremisesSyncEnabled plugin.TValue[bool]
 }
 
 // createMicrosoftOrganization creates a new instance of this resource
@@ -1593,6 +1601,10 @@ func (c *mqlMicrosoftOrganization) GetDisplayName() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftOrganization) GetVerifiedDomains() *plugin.TValue[[]interface{}] {
 	return &c.VerifiedDomains
+}
+
+func (c *mqlMicrosoftOrganization) GetOnPremisesSyncEnabled() *plugin.TValue[bool] {
+	return &c.OnPremisesSyncEnabled
 }
 
 // mqlMicrosoftUser for the microsoft.user resource
