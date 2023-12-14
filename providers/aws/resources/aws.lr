@@ -323,7 +323,7 @@ private aws.waf.rule.statement.orstatement {
 // Rule statement that matches at a certain rate of requests (rate limiting)
 private aws.waf.rule.statement.ratebasedstatement {}
 
-// Rule statement that checks for a regex pattern defined in a regex pattern set 
+// Rule statement that checks for a regex pattern defined in a regex pattern set
 private aws.waf.rule.statement.regexpatternsetreferencestatement {
   // Name of the rule this statement belongs to
   ruleName string
@@ -399,7 +399,7 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
   // Whether to match the query string
 	queryString bool
   // Whether to match all query arguments
-	allQueryArguments bool 
+	allQueryArguments bool
   // Whether to match the body (match if not null)
   body aws.waf.rule.fieldtomatch.body
   // Whether to match the cookie (match if not null)
@@ -1714,7 +1714,6 @@ private aws.dynamodb.table @defaults("name region") {
   globalTableVersion string
   // The table ID
   id string
-
 }
 
 // Amazon Relational Database Service (RDS)
@@ -1739,6 +1738,34 @@ private aws.rds.dbcluster @defaults("id region") {
   snapshots() []aws.rds.snapshot
   // Tags for the database cluster
   tags map[string]string
+  // Whether the cluster is encrypted
+  storageEncrypted bool
+  // The amount of storage, in GiB, provisioned on the cluster
+  storageAllocated int
+  // The storage IOPS provisioned on the cluster
+  storageIops int
+  // The type of storage provisioned on the cluster
+  storageType string
+  // Current state of the cluster
+  status string
+  // The creation date of the RDS cluster
+  createdTime time
+  // Number of days for which automated snapshots are retained
+  backupRetentionPeriod int
+  // Whether minor version patches are applied automatically
+  autoMinorVersionUpgrade bool
+  // Name of the compute and memory capacity class of the Cluster DB instances
+  clusterDbInstanceClass string
+  // Name of the database engine for this DB cluster
+  engine string
+  // The version of the database engine for this DB cluster
+  engineVersion string
+  // Whether the cluster is publicly accessible
+  publiclyAccessible bool
+  // Whether the cluster is a Multi-AZ deployment
+  multiAZ bool
+  // Whether deletion protection is enabled
+  deletionProtection bool
 }
 
 // Amazon RDS snapshot
@@ -1759,6 +1786,12 @@ private aws.rds.snapshot @defaults("id region type encrypted") {
   isClusterSnapshot bool
   // Tags for the snapshot
   tags map[string]string
+  // The snapshot DB engine
+  engine string
+  // The snapshot status
+  status string
+  // The amount of storage allocated to the snapshot
+  allocatedStorage int
 }
 
 // Amazon RDS database instance

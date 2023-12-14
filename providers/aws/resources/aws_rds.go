@@ -93,6 +93,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"autoMinorVersionUpgrade":       llx.BoolDataPtr(dbInstance.AutoMinorVersionUpgrade),
 							"availabilityZone":              llx.StringDataPtr(dbInstance.AvailabilityZone),
 							"backupRetentionPeriod":         llx.IntData(convert.ToInt64From32(dbInstance.BackupRetentionPeriod)),
+							"createdTime":                   llx.TimeDataPtr(dbInstance.InstanceCreateTime),
 							"dbInstanceClass":               llx.StringDataPtr(dbInstance.DBInstanceClass),
 							"dbInstanceIdentifier":          llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 							"deletionProtection":            llx.BoolDataPtr(dbInstance.DeletionProtection),
@@ -109,10 +110,9 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"status":                        llx.StringDataPtr(dbInstance.DBInstanceStatus),
 							"storageAllocated":              llx.IntData(convert.ToInt64From32(dbInstance.AllocatedStorage)),
 							"storageEncrypted":              llx.BoolDataPtr(dbInstance.StorageEncrypted),
-							"storageType":                   llx.StringDataPtr(dbInstance.StorageType),
 							"storageIops":                   llx.IntData(convert.ToInt64From32(dbInstance.Iops)),
+							"storageType":                   llx.StringDataPtr(dbInstance.StorageType),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
-							"createdTime":                   llx.TimeDataPtr(dbInstance.InstanceCreateTime),
 						})
 					if err != nil {
 						return nil, err
@@ -240,11 +240,25 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					// }
 					mqlDbCluster, err := CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
 						map[string]*llx.RawData{
-							"arn":    llx.StringDataPtr(cluster.DBClusterArn),
-							"region": llx.StringData(regionVal),
-							"id":     llx.StringDataPtr(cluster.DBClusterIdentifier),
+							"arn":                     llx.StringDataPtr(cluster.DBClusterArn),
+							"autoMinorVersionUpgrade": llx.BoolDataPtr(cluster.AutoMinorVersionUpgrade),
+							"backupRetentionPeriod":   llx.IntData(convert.ToInt64From32(cluster.BackupRetentionPeriod)),
+							"clusterDbInstanceClass":  llx.StringDataPtr(cluster.DBClusterInstanceClass),
+							"createdTime":             llx.TimeDataPtr(cluster.ClusterCreateTime),
+							"deletionProtection":      llx.BoolDataPtr(cluster.DeletionProtection),
+							"engine":                  llx.StringDataPtr(cluster.Engine),
+							"engineVersion":           llx.StringDataPtr(cluster.EngineVersion),
+							"id":                      llx.StringDataPtr(cluster.DBClusterIdentifier),
+							"multiAZ":                 llx.BoolDataPtr(cluster.MultiAZ),
+							"publiclyAccessible":      llx.BoolDataPtr(cluster.PubliclyAccessible),
+							"region":                  llx.StringData(regionVal),
+							"status":                  llx.StringDataPtr(cluster.Status),
+							"storageAllocated":        llx.IntData(convert.ToInt64From32(cluster.AllocatedStorage)),
+							"storageEncrypted":        llx.BoolDataPtr(cluster.StorageEncrypted),
+							"storageIops":             llx.IntData(convert.ToInt64From32(cluster.Iops)),
+							"storageType":             llx.StringDataPtr(cluster.StorageType),
+							"tags":                    llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
 							// "members": mqlRdsDbInstances,
-							"tags": llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
 						})
 					if err != nil {
 						return nil, err
@@ -289,6 +303,9 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 					"encrypted":         llx.BoolDataPtr(snapshot.StorageEncrypted),
 					"isClusterSnapshot": llx.BoolData(true),
 					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+					"engine":            llx.StringDataPtr(snapshot.Engine),
+					"status":            llx.StringDataPtr(snapshot.Status),
+					"allocatedStorage":  llx.IntData(convert.ToInt64From32(snapshot.AllocatedStorage)),
 				})
 			if err != nil {
 				return nil, err
@@ -328,6 +345,9 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 					"encrypted":         llx.BoolDataPtr(snapshot.Encrypted),
 					"isClusterSnapshot": llx.BoolData(false),
 					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+					"engine":            llx.StringDataPtr(snapshot.Engine),
+					"status":            llx.StringDataPtr(snapshot.Status),
+					"allocatedStorage":  llx.IntData(convert.ToInt64From32(snapshot.AllocatedStorage)),
 				})
 			if err != nil {
 				return nil, err

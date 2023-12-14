@@ -1883,10 +1883,38 @@ resources:
         The `aws.rds.dbcluster` provides fields for assessing the configuration of AWS RDS Clusters.
     fields:
       arn: {}
+      autoMinorVersionUpgrade:
+        min_mondoo_version: 9.0.0
+      backupRetentionPeriod:
+        min_mondoo_version: 9.0.0
+      clusterDbInstanceClass:
+        min_mondoo_version: 9.0.0
+      createdTime:
+        min_mondoo_version: 9.0.0
+      deletionProtection:
+        min_mondoo_version: 9.0.0
+      engine:
+        min_mondoo_version: 9.0.0
+      engineVersion:
+        min_mondoo_version: 9.0.0
       id: {}
       members: {}
+      multiAZ:
+        min_mondoo_version: 9.0.0
+      publiclyAccessible:
+        min_mondoo_version: 9.0.0
       region: {}
       snapshots: {}
+      status:
+        min_mondoo_version: 9.0.0
+      storageAllocated:
+        min_mondoo_version: 9.0.0
+      storageEncrypted:
+        min_mondoo_version: 9.0.0
+      storageIops:
+        min_mondoo_version: 9.0.0
+      storageType:
+        min_mondoo_version: 9.0.0
       tags: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -1945,12 +1973,18 @@ resources:
       desc: |
         The `aws.rds.snapshot` fields for assessing the configuration of RDS snapshots. For usage see the `aws.rds` resource documentation.
     fields:
+      allocatedStorage:
+        min_mondoo_version: 9.0.0
       arn: {}
       attributes: {}
       encrypted: {}
+      engine:
+        min_mondoo_version: 9.0.0
       id: {}
       isClusterSnapshot: {}
       region: {}
+      status:
+        min_mondoo_version: 9.0.0
       tags: {}
       type: {}
     is_private: true

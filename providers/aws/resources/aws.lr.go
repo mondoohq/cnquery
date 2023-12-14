@@ -2583,6 +2583,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.rds.dbcluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.storageAllocated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStorageAllocated()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.storageIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStorageIops()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStorageType()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"aws.rds.dbcluster.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.clusterDbInstanceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetClusterDbInstanceClass()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbcluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -2606,6 +2648,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.snapshot.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.rds.snapshot.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetAllocatedStorage()).ToDataRes(types.Int)
 	},
 	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
@@ -6462,6 +6513,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.storageAllocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).StorageAllocated, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.storageIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).StorageIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.clusterDbInstanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).ClusterDbInstanceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -6496,6 +6603,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17079,6 +17198,20 @@ type mqlAwsRdsDbcluster struct {
 	Members plugin.TValue[[]interface{}]
 	Snapshots plugin.TValue[[]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
+	StorageEncrypted plugin.TValue[bool]
+	StorageAllocated plugin.TValue[int64]
+	StorageIops plugin.TValue[int64]
+	StorageType plugin.TValue[string]
+	Status plugin.TValue[string]
+	CreatedTime plugin.TValue[*time.Time]
+	BackupRetentionPeriod plugin.TValue[int64]
+	AutoMinorVersionUpgrade plugin.TValue[bool]
+	ClusterDbInstanceClass plugin.TValue[string]
+	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
+	PubliclyAccessible plugin.TValue[bool]
+	MultiAZ plugin.TValue[bool]
+	DeletionProtection plugin.TValue[bool]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -17154,6 +17287,62 @@ func (c *mqlAwsRdsDbcluster) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
 }
 
+func (c *mqlAwsRdsDbcluster) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsDbcluster) GetStorageAllocated() *plugin.TValue[int64] {
+	return &c.StorageAllocated
+}
+
+func (c *mqlAwsRdsDbcluster) GetStorageIops() *plugin.TValue[int64] {
+	return &c.StorageIops
+}
+
+func (c *mqlAwsRdsDbcluster) GetStorageType() *plugin.TValue[string] {
+	return &c.StorageType
+}
+
+func (c *mqlAwsRdsDbcluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsDbcluster) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAwsRdsDbcluster) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsRdsDbcluster) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsRdsDbcluster) GetClusterDbInstanceClass() *plugin.TValue[string] {
+	return &c.ClusterDbInstanceClass
+}
+
+func (c *mqlAwsRdsDbcluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsRdsDbcluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsRdsDbcluster) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsRdsDbcluster) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsRdsDbcluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
 type mqlAwsRdsSnapshot struct {
 	MqlRuntime *plugin.Runtime
@@ -17167,6 +17356,9 @@ type mqlAwsRdsSnapshot struct {
 	Region plugin.TValue[string]
 	IsClusterSnapshot plugin.TValue[bool]
 	Tags plugin.TValue[map[string]interface{}]
+	Engine plugin.TValue[string]
+	Status plugin.TValue[string]
+	AllocatedStorage plugin.TValue[int64]
 }
 
 // createAwsRdsSnapshot creates a new instance of this resource
@@ -17238,6 +17430,18 @@ func (c *mqlAwsRdsSnapshot) GetIsClusterSnapshot() *plugin.TValue[bool] {
 
 func (c *mqlAwsRdsSnapshot) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsRdsSnapshot) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsRdsSnapshot) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
 }
 
 // mqlAwsRdsDbinstance for the aws.rds.dbinstance resource
