@@ -151,6 +151,54 @@ func TestOperatorManifest(t *testing.T) {
 	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/7b0dacb1266786d90e70e4c924064ef619eff6b1ccb4b0769f408510570fbbd2/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
 }
 
+func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
+	path := "./testdata/mondoo-operator-manifests.yaml"
+
+	runtime := K8s()
+	rootAsset := &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Type: "k8s",
+			Options: map[string]string{
+				shared.OPTION_MANIFEST:  path,
+				shared.OPTION_NAMESPACE: "mondoo-operator",
+			},
+			Discover: &inventory.Discovery{
+				Targets: []string{"auto"},
+			},
+		}},
+	}
+	conn, err := manifest.NewConnection(0, rootAsset, manifest.WithManifestFile(path))
+	require.NoError(t, err)
+
+	err = runtime.Connect(&plugin.ConnectReq{
+		Asset: rootAsset,
+	})
+	require.NoError(t, err)
+
+	pluginRuntime := &plugin.Runtime{
+		Connection:     conn,
+		HasRecording:   false,
+		CreateResource: resources.CreateResource,
+	}
+	inv, err := resources.Discover(pluginRuntime)
+	require.NoError(t, err)
+	require.Len(t, inv.Spec.Assets, 2)
+
+	require.Len(t, inv.Spec.Assets[1].PlatformIds, 1)
+
+	for i := range inv.Spec.Assets {
+		asset := inv.Spec.Assets[i]
+		err = runtime.Connect(&plugin.ConnectReq{
+			Asset: asset,
+		})
+		require.NoError(t, err)
+		require.NotEmpty(t, asset.PlatformIds[0])
+	}
+	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator", inv.Spec.Assets[0].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
+}
+
 func TestManifestNoObjects(t *testing.T) {
 	path := "./testdata/no-discovered-objects.yaml"
 
