@@ -337,8 +337,59 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		}
 	// case DiscoveryECSContainersAPI:
 	// case DiscoveryECRImageAPI:
-	// case DiscoveryEC2InstanceAPI:
-	// case DiscoverySSMInstanceAPI:
+	case DiscoveryEC2InstanceAPI:
+		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ec2 := res.(*mqlAwsEc2)
+
+		ins := ec2.GetInstances()
+		if ins == nil {
+			return assetList, nil
+		}
+
+		for i := range ins.Data {
+			instance := ins.Data[i].(*mqlAwsEc2Instance)
+			if !instanceMatchesFilters(instance, filters) {
+				continue
+			}
+			l := mapStringInterfaceToStringString(instance.Tags.Data)
+			assetList = append(assetList, MqlObjectToAsset(accountId,
+				mqlObject{
+					name: getInstanceName(instance.InstanceId.Data, l), labels: l,
+					awsObject: awsObject{
+						account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
+						id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
+					},
+				}, conn))
+		}
+	case DiscoverySSMInstanceAPI:
+		res, err := NewResource(runtime, "aws.ssm", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ssm := res.(*mqlAwsSsm)
+
+		ins := ssm.GetInstances()
+		if ins == nil {
+			return assetList, nil
+		}
+
+		for i := range ins.Data {
+			instance := ins.Data[i].(*mqlAwsSsmInstance)
+			l := mapStringInterfaceToStringString(instance.Tags.Data)
+			assetList = append(assetList, MqlObjectToAsset(accountId,
+				mqlObject{
+					name: getInstanceName(instance.InstanceId.Data, l), labels: l,
+					awsObject: awsObject{
+						account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
+						id: instance.InstanceId.Data, service: "ssm", objectType: "instance",
+					},
+				}, conn))
+		}
 	case DiscoveryS3Buckets:
 		res, err := NewResource(runtime, "aws.s3", map[string]*llx.RawData{})
 		if err != nil {

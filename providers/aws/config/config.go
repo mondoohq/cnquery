@@ -28,7 +28,9 @@ var Config = plugin.Provider{
 				resources.DiscoveryAuto,
 
 				resources.DiscoveryInstances,
+				resources.DiscoveryEC2InstanceAPI,
 				resources.DiscoverySSMInstances,
+				resources.DiscoverySSMInstanceAPI,
 				resources.DiscoveryECR,
 				resources.DiscoveryECS,
 
