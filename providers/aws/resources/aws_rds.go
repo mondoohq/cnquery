@@ -238,6 +238,18 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 					// 	}
 					// 	mqlRdsDbInstances = append(mqlRdsDbInstances, mqlInstance)
 					// }
+					sgs := []interface{}{}
+					for i := range cluster.VpcSecurityGroups {
+						// NOTE: this will create the resource and determine the data in its init method
+						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(cluster.VpcSecurityGroups[i].VpcSecurityGroupId))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						sgs = append(sgs, mqlSg.(*mqlAwsEc2Securitygroup))
+					}
 					mqlDbCluster, err := CreateResource(a.MqlRuntime, "aws.rds.dbcluster",
 						map[string]*llx.RawData{
 							"arn":                     llx.StringDataPtr(cluster.DBClusterArn),
@@ -258,6 +270,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 							"storageIops":             llx.IntData(convert.ToInt64From32(cluster.Iops)),
 							"storageType":             llx.StringDataPtr(cluster.StorageType),
 							"tags":                    llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
+							"securityGroups":          llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 							// "members": mqlRdsDbInstances,
 						})
 					if err != nil {
