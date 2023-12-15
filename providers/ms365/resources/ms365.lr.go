@@ -94,6 +94,10 @@ func init() {
 			Init: initMs365Exchangeonline,
 			Create: createMs365Exchangeonline,
 		},
+		"ms365.exchangeonline.externalSender": {
+			// to override args, implement: initMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineExternalSender,
+		},
 		"ms365.sharepointonline": {
 			Init: initMs365Sharepointonline,
 			Create: createMs365Sharepointonline,
@@ -101,6 +105,14 @@ func init() {
 		"ms365.teams": {
 			Init: initMs365Teams,
 			Create: createMs365Teams,
+		},
+		"ms365.teams.tenantFederationConfig": {
+			// to override args, implement: initMs365TeamsTenantFederationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTenantFederationConfig,
+		},
+		"ms365.teams.teamsMeetingPolicyConfig": {
+			// to override args, implement: initMs365TeamsTeamsMeetingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365TeamsTeamsMeetingPolicyConfig,
 		},
 	}
 }
@@ -620,6 +632,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.roleAssignmentPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetRoleAssignmentPolicy()).ToDataRes(types.Array(types.Dict))
 	},
+	"ms365.exchangeonline.externalInOutlook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetExternalInOutlook()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.externalSender")))
+	},
+	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExternalSender).GetIdentity()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.externalSender.allowList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExternalSender).GetAllowList()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.externalSender.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExternalSender).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"ms365.sharepointonline.spoTenant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenant()).ToDataRes(types.Dict)
 	},
@@ -628,6 +652,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
+	},
+	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetCsTenantFederationConfiguration()).ToDataRes(types.Resource("ms365.teams.tenantFederationConfig"))
+	},
+	"ms365.teams.csTeamsMeetingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Teams).GetCsTeamsMeetingPolicy()).ToDataRes(types.Resource("ms365.teams.teamsMeetingPolicyConfig"))
+	},
+	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetIdentity()).ToDataRes(types.String)
+	},
+	"ms365.teams.tenantFederationConfig.blockedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetBlockedDomains()).ToDataRes(types.Dict)
+	},
+	"ms365.teams.tenantFederationConfig.allowFederatedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowFederatedUsers()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.allowPublicUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowPublicUsers()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.allowTeamsConsumer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowTeamsConsumer()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.allowTeamsConsumerInbound": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetAllowTeamsConsumerInbound()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.treatDiscoveredPartnersAsUnverified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetTreatDiscoveredPartnersAsUnverified()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.sharedSipAddressSpace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetSharedSipAddressSpace()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.tenantFederationConfig.restrictTeamsConsumerToExternalUserProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTenantFederationConfig).GetRestrictTeamsConsumerToExternalUserProfiles()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToJoinMeeting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowAnonymousUsersToJoinMeeting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToStartMeeting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowAnonymousUsersToStartMeeting()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.autoAdmittedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAutoAdmittedUsers()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowPSTNUsersToBypassLobby": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowPSTNUsersToBypassLobby()).ToDataRes(types.Bool)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.meetingChatEnabledType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetMeetingChatEnabledType()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.designatedPresenterRoleMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetDesignatedPresenterRoleMode()).ToDataRes(types.String)
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowExternalParticipantGiveRequestControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowExternalParticipantGiveRequestControl()).ToDataRes(types.Bool)
 	},
 }
 
@@ -1317,6 +1395,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Exchangeonline).RoleAssignmentPolicy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.externalInOutlook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).ExternalInOutlook, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.externalSender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365ExchangeonlineExternalSender).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExternalSender).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.externalSender.allowList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExternalSender).AllowList, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.externalSender.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExternalSender).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"ms365.sharepointonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365Sharepointonline).__id, ok = v.Value.(string)
 			return
@@ -1335,6 +1433,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Teams).CsTeamsClientConfiguration, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.csTenantFederationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).CsTenantFederationConfiguration, ok = plugin.RawToTValue[*mqlMs365TeamsTenantFederationConfig](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.csTeamsMeetingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Teams).CsTeamsMeetingPolicy, ok = plugin.RawToTValue[*mqlMs365TeamsTeamsMeetingPolicyConfig](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365TeamsTenantFederationConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.teams.tenantFederationConfig.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.blockedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).BlockedDomains, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.allowFederatedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).AllowFederatedUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.allowPublicUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).AllowPublicUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.allowTeamsConsumer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).AllowTeamsConsumer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.allowTeamsConsumerInbound": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).AllowTeamsConsumerInbound, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.treatDiscoveredPartnersAsUnverified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).TreatDiscoveredPartnersAsUnverified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.sharedSipAddressSpace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).SharedSipAddressSpace, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.tenantFederationConfig.restrictTeamsConsumerToExternalUserProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTenantFederationConfig).RestrictTeamsConsumerToExternalUserProfiles, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToJoinMeeting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowAnonymousUsersToJoinMeeting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowAnonymousUsersToStartMeeting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowAnonymousUsersToStartMeeting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.autoAdmittedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AutoAdmittedUsers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowPSTNUsersToBypassLobby": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowPSTNUsersToBypassLobby, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.meetingChatEnabledType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).MeetingChatEnabledType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.designatedPresenterRoleMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).DesignatedPresenterRoleMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.allowExternalParticipantGiveRequestControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowExternalParticipantGiveRequestControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -3009,6 +3187,7 @@ type mqlMs365Exchangeonline struct {
 	AtpPolicyForO365 plugin.TValue[[]interface{}]
 	SharingPolicy plugin.TValue[[]interface{}]
 	RoleAssignmentPolicy plugin.TValue[[]interface{}]
+	ExternalInOutlook plugin.TValue[[]interface{}]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -3111,6 +3290,69 @@ func (c *mqlMs365Exchangeonline) GetRoleAssignmentPolicy() *plugin.TValue[[]inte
 	return &c.RoleAssignmentPolicy
 }
 
+func (c *mqlMs365Exchangeonline) GetExternalInOutlook() *plugin.TValue[[]interface{}] {
+	return &c.ExternalInOutlook
+}
+
+// mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource
+type mqlMs365ExchangeonlineExternalSender struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365ExchangeonlineExternalSenderInternal it will be used here
+	Identity plugin.TValue[string]
+	AllowList plugin.TValue[[]interface{}]
+	Enabled plugin.TValue[bool]
+}
+
+// createMs365ExchangeonlineExternalSender creates a new instance of this resource
+func createMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineExternalSender{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.externalSender", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineExternalSender) MqlName() string {
+	return "ms365.exchangeonline.externalSender"
+}
+
+func (c *mqlMs365ExchangeonlineExternalSender) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineExternalSender) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMs365ExchangeonlineExternalSender) GetAllowList() *plugin.TValue[[]interface{}] {
+	return &c.AllowList
+}
+
+func (c *mqlMs365ExchangeonlineExternalSender) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
 // mqlMs365Sharepointonline for the ms365.sharepointonline resource
 type mqlMs365Sharepointonline struct {
 	MqlRuntime *plugin.Runtime
@@ -3166,6 +3408,8 @@ type mqlMs365Teams struct {
 	__id string
 	// optional: if you define mqlMs365TeamsInternal it will be used here
 	CsTeamsClientConfiguration plugin.TValue[interface{}]
+	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
+	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
 }
 
 // createMs365Teams creates a new instance of this resource
@@ -3202,4 +3446,170 @@ func (c *mqlMs365Teams) MqlID() string {
 
 func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[interface{}] {
 	return &c.CsTeamsClientConfiguration
+}
+
+func (c *mqlMs365Teams) GetCsTenantFederationConfiguration() *plugin.TValue[*mqlMs365TeamsTenantFederationConfig] {
+	return &c.CsTenantFederationConfiguration
+}
+
+func (c *mqlMs365Teams) GetCsTeamsMeetingPolicy() *plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig] {
+	return &c.CsTeamsMeetingPolicy
+}
+
+// mqlMs365TeamsTenantFederationConfig for the ms365.teams.tenantFederationConfig resource
+type mqlMs365TeamsTenantFederationConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365TeamsTenantFederationConfigInternal it will be used here
+	Identity plugin.TValue[string]
+	BlockedDomains plugin.TValue[interface{}]
+	AllowFederatedUsers plugin.TValue[bool]
+	AllowPublicUsers plugin.TValue[bool]
+	AllowTeamsConsumer plugin.TValue[bool]
+	AllowTeamsConsumerInbound plugin.TValue[bool]
+	TreatDiscoveredPartnersAsUnverified plugin.TValue[bool]
+	SharedSipAddressSpace plugin.TValue[bool]
+	RestrictTeamsConsumerToExternalUserProfiles plugin.TValue[bool]
+}
+
+// createMs365TeamsTenantFederationConfig creates a new instance of this resource
+func createMs365TeamsTenantFederationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTenantFederationConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.tenantFederationConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) MqlName() string {
+	return "ms365.teams.tenantFederationConfig"
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetBlockedDomains() *plugin.TValue[interface{}] {
+	return &c.BlockedDomains
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetAllowFederatedUsers() *plugin.TValue[bool] {
+	return &c.AllowFederatedUsers
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetAllowPublicUsers() *plugin.TValue[bool] {
+	return &c.AllowPublicUsers
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetAllowTeamsConsumer() *plugin.TValue[bool] {
+	return &c.AllowTeamsConsumer
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetAllowTeamsConsumerInbound() *plugin.TValue[bool] {
+	return &c.AllowTeamsConsumerInbound
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetTreatDiscoveredPartnersAsUnverified() *plugin.TValue[bool] {
+	return &c.TreatDiscoveredPartnersAsUnverified
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetSharedSipAddressSpace() *plugin.TValue[bool] {
+	return &c.SharedSipAddressSpace
+}
+
+func (c *mqlMs365TeamsTenantFederationConfig) GetRestrictTeamsConsumerToExternalUserProfiles() *plugin.TValue[bool] {
+	return &c.RestrictTeamsConsumerToExternalUserProfiles
+}
+
+// mqlMs365TeamsTeamsMeetingPolicyConfig for the ms365.teams.teamsMeetingPolicyConfig resource
+type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365TeamsTeamsMeetingPolicyConfigInternal it will be used here
+	AllowAnonymousUsersToJoinMeeting plugin.TValue[bool]
+	AllowAnonymousUsersToStartMeeting plugin.TValue[bool]
+	AutoAdmittedUsers plugin.TValue[string]
+	AllowPSTNUsersToBypassLobby plugin.TValue[bool]
+	MeetingChatEnabledType plugin.TValue[string]
+	DesignatedPresenterRoleMode plugin.TValue[string]
+	AllowExternalParticipantGiveRequestControl plugin.TValue[bool]
+}
+
+// createMs365TeamsTeamsMeetingPolicyConfig creates a new instance of this resource
+func createMs365TeamsTeamsMeetingPolicyConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365TeamsTeamsMeetingPolicyConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.teams.teamsMeetingPolicyConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) MqlName() string {
+	return "ms365.teams.teamsMeetingPolicyConfig"
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowAnonymousUsersToJoinMeeting() *plugin.TValue[bool] {
+	return &c.AllowAnonymousUsersToJoinMeeting
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowAnonymousUsersToStartMeeting() *plugin.TValue[bool] {
+	return &c.AllowAnonymousUsersToStartMeeting
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAutoAdmittedUsers() *plugin.TValue[string] {
+	return &c.AutoAdmittedUsers
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowPSTNUsersToBypassLobby() *plugin.TValue[bool] {
+	return &c.AllowPSTNUsersToBypassLobby
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetMeetingChatEnabledType() *plugin.TValue[string] {
+	return &c.MeetingChatEnabledType
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetDesignatedPresenterRoleMode() *plugin.TValue[string] {
+	return &c.DesignatedPresenterRoleMode
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalParticipantGiveRequestControl() *plugin.TValue[bool] {
+	return &c.AllowExternalParticipantGiveRequestControl
 }

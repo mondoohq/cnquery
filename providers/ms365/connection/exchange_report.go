@@ -41,6 +41,8 @@ $Mailbox = (Get-Mailbox -ResultSize Unlimited)
 $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
 $RoleAssignmentPolicy = (Get-RoleAssignmentPolicy)
+$ExternalInOutlook = (Get-ExternalInOutlook)
+
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -60,6 +62,8 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name Mailbox -
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicyForO365 -Value @($AtpPolicyForO365)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RoleAssignmentPolicy -Value @($RoleAssignmentPolicy)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExternalInOutlook -Value @($ExternalInOutlook)
+
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -123,21 +127,28 @@ func (c *Ms365Connection) getReport(outlookToken, organization string) (*Exchang
 }
 
 type ExchangeOnlineReport struct {
-	MalwareFilterPolicy            []interface{} `json:"MalwareFilterPolicy"`
-	HostedOutboundSpamFilterPolicy []interface{} `json:"HostedOutboundSpamFilterPolicy"`
-	TransportRule                  []interface{} `json:"TransportRule"`
-	RemoteDomain                   []interface{} `json:"RemoteDomain"`
-	SafeLinksPolicy                []interface{} `json:"SafeLinksPolicy"`
-	SafeAttachmentPolicy           []interface{} `json:"SafeAttachmentPolicy"`
-	OrganizationConfig             interface{}   `json:"OrganizationConfig"`
-	AuthenticationPolicy           interface{}   `json:"AuthenticationPolicy"`
-	AntiPhishPolicy                []interface{} `json:"AntiPhishPolicy"`
-	DkimSigningConfig              interface{}   `json:"DkimSigningConfig"`
-	OwaMailboxPolicy               interface{}   `json:"OwaMailboxPolicy"`
-	AdminAuditLogConfig            interface{}   `json:"AdminAuditLogConfig"`
-	PhishFilterPolicy              []interface{} `json:"PhishFilterPolicy"`
-	Mailbox                        []interface{} `json:"Mailbox"`
-	AtpPolicyForO365               []interface{} `json:"AtpPolicyForO365"`
-	SharingPolicy                  []interface{} `json:"SharingPolicy"`
-	RoleAssignmentPolicy           []interface{} `json:"RoleAssignmentPolicy"`
+	MalwareFilterPolicy            []interface{}     `json:"MalwareFilterPolicy"`
+	HostedOutboundSpamFilterPolicy []interface{}     `json:"HostedOutboundSpamFilterPolicy"`
+	TransportRule                  []interface{}     `json:"TransportRule"`
+	RemoteDomain                   []interface{}     `json:"RemoteDomain"`
+	SafeLinksPolicy                []interface{}     `json:"SafeLinksPolicy"`
+	SafeAttachmentPolicy           []interface{}     `json:"SafeAttachmentPolicy"`
+	OrganizationConfig             interface{}       `json:"OrganizationConfig"`
+	AuthenticationPolicy           interface{}       `json:"AuthenticationPolicy"`
+	AntiPhishPolicy                []interface{}     `json:"AntiPhishPolicy"`
+	DkimSigningConfig              interface{}       `json:"DkimSigningConfig"`
+	OwaMailboxPolicy               interface{}       `json:"OwaMailboxPolicy"`
+	AdminAuditLogConfig            interface{}       `json:"AdminAuditLogConfig"`
+	PhishFilterPolicy              []interface{}     `json:"PhishFilterPolicy"`
+	Mailbox                        []interface{}     `json:"Mailbox"`
+	AtpPolicyForO365               []interface{}     `json:"AtpPolicyForO365"`
+	SharingPolicy                  []interface{}     `json:"SharingPolicy"`
+	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
+	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
+}
+
+type ExternalSender struct {
+	Identity  string   `json:"Identity"`
+	Enabled   bool     `json:"Enabled"`
+	AllowList []string `json:"AllowList"`
 }
