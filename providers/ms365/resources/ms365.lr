@@ -386,7 +386,7 @@ private ms365.exchangeonline.externalSender {
   identity string
   // The list of specified senders that do not receive the External icon in the area of subject line
   allowList []string
-  // Indicates whether the feature is enabled
+  // Whether the feature is enabled
   enabled bool
 }
 
