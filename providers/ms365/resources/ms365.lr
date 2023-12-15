@@ -418,6 +418,7 @@ private ms365.teams.tenantFederationConfig {
   allowFederatedUsers bool
   // Whether public users are allowed
   allowPublicUsers bool
+  // Whether to allow external Teams consumers 
   allowTeamsConsumer bool
   allowTeamsConsumerInbound bool
   // Whether to treat discovered partners as unverified
