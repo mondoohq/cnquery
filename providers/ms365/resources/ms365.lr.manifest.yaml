@@ -262,6 +262,8 @@ resources:
       - microsoft365
   ms365.sharepointonline:
     fields:
+      spoSite:
+        min_mondoo_version: latest
       spoTenant: {}
       spoTenantSyncClientRestriction: {}
     min_mondoo_version: 5.15.0

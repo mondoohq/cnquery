@@ -626,6 +626,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenantSyncClientRestriction()).ToDataRes(types.Dict)
 	},
+	"ms365.sharepointonline.spoSite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Sharepointonline).GetSpoSite()).ToDataRes(types.Dict)
+	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
 	},
@@ -1327,6 +1330,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Sharepointonline).SpoTenantSyncClientRestriction, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.spoSite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Sharepointonline).SpoSite, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3118,6 +3125,7 @@ type mqlMs365Sharepointonline struct {
 	// optional: if you define mqlMs365SharepointonlineInternal it will be used here
 	SpoTenant plugin.TValue[interface{}]
 	SpoTenantSyncClientRestriction plugin.TValue[interface{}]
+	SpoSite plugin.TValue[interface{}]
 }
 
 // createMs365Sharepointonline creates a new instance of this resource
@@ -3158,6 +3166,10 @@ func (c *mqlMs365Sharepointonline) GetSpoTenant() *plugin.TValue[interface{}] {
 
 func (c *mqlMs365Sharepointonline) GetSpoTenantSyncClientRestriction() *plugin.TValue[interface{}] {
 	return &c.SpoTenantSyncClientRestriction
+}
+
+func (c *mqlMs365Sharepointonline) GetSpoSite() *plugin.TValue[interface{}] {
+	return &c.SpoSite
 }
 
 // mqlMs365Teams for the ms365.teams resource
