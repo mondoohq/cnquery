@@ -771,6 +771,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.routetable.routes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetRoutes()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.vpc.routetable.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcRoutetable).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.vpc.subnet.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetArn()).ToDataRes(types.String)
 	},
@@ -788,6 +791,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.subnet.defaultForAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetDefaultForAvailabilityZone()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.subnet.assignIpv6AddressOnCreation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetAssignIpv6AddressOnCreation()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.subnet.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetState()).ToDataRes(types.String)
 	},
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
@@ -810,6 +819,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.endpoint.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetSubnets()).ToDataRes(types.Array(types.String))
 	},
+	"aws.vpc.endpoint.privateDnsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetPrivateDnsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.endpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"aws.vpc.endpoint.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcEndpoint).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.vpc.flowlog.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetId()).ToDataRes(types.String)
 	},
@@ -824,6 +842,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.flowlog.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpc.flowlog.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetDestination()).ToDataRes(types.String)
+	},
+	"aws.vpc.flowlog.maxAggregationInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetMaxAggregationInterval()).ToDataRes(types.Int)
+	},
+	"aws.vpc.flowlog.trafficType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetTrafficType()).ToDataRes(types.String)
 	},
 	"aws.waf.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWaf).GetAcls()).ToDataRes(types.Array(types.Resource("aws.waf.acl")))
@@ -2559,6 +2589,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dynamodb.table.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDynamodbTable).GetId()).ToDataRes(types.String)
 	},
+	"aws.dynamodb.table.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"aws.dynamodb.table.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDynamodbTable).GetStatus()).ToDataRes(types.String)
+	},
 	"aws.rds.dbInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetDbInstances()).ToDataRes(types.Array(types.Resource("aws.rds.dbinstance")))
 	},
@@ -3649,6 +3685,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpcRoutetable).Routes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.routetable.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcRoutetable).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.subnet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsVpcSubnet).__id, ok = v.Value.(string)
 			return
@@ -3675,6 +3715,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.subnet.defaultForAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcSubnet).DefaultForAvailabilityZone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.assignIpv6AddressOnCreation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).AssignIpv6AddressOnCreation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3709,6 +3757,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsVpcEndpoint).Subnets, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.vpc.endpoint.privateDnsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).PrivateDnsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.endpoint.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcEndpoint).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.vpc.flowlog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsVpcFlowlog).__id, ok = v.Value.(string)
 			return
@@ -3731,6 +3791,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.flowlog.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcFlowlog).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.maxAggregationInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).MaxAggregationInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.trafficType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).TrafficType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6473,6 +6549,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsDynamodbTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.dynamodb.table.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dynamodb.table.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDynamodbTable).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRds).__id, ok = v.Value.(string)
 			return
@@ -8295,6 +8379,7 @@ type mqlAwsVpcRoutetable struct {
 	// optional: if you define mqlAwsVpcRoutetableInternal it will be used here
 	Id plugin.TValue[string]
 	Routes plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
 }
 
 // createAwsVpcRoutetable creates a new instance of this resource
@@ -8342,6 +8427,10 @@ func (c *mqlAwsVpcRoutetable) GetRoutes() *plugin.TValue[[]interface{}] {
 	return &c.Routes
 }
 
+func (c *mqlAwsVpcRoutetable) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
 // mqlAwsVpcSubnet for the aws.vpc.subnet resource
 type mqlAwsVpcSubnet struct {
 	MqlRuntime *plugin.Runtime
@@ -8353,6 +8442,8 @@ type mqlAwsVpcSubnet struct {
 	MapPublicIpOnLaunch plugin.TValue[bool]
 	AvailabilityZone plugin.TValue[string]
 	DefaultForAvailabilityZone plugin.TValue[bool]
+	AssignIpv6AddressOnCreation plugin.TValue[bool]
+	State plugin.TValue[string]
 }
 
 // createAwsVpcSubnet creates a new instance of this resource
@@ -8416,6 +8507,14 @@ func (c *mqlAwsVpcSubnet) GetDefaultForAvailabilityZone() *plugin.TValue[bool] {
 	return &c.DefaultForAvailabilityZone
 }
 
+func (c *mqlAwsVpcSubnet) GetAssignIpv6AddressOnCreation() *plugin.TValue[bool] {
+	return &c.AssignIpv6AddressOnCreation
+}
+
+func (c *mqlAwsVpcSubnet) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
 // mqlAwsVpcEndpoint for the aws.vpc.endpoint resource
 type mqlAwsVpcEndpoint struct {
 	MqlRuntime *plugin.Runtime
@@ -8428,6 +8527,9 @@ type mqlAwsVpcEndpoint struct {
 	ServiceName plugin.TValue[string]
 	PolicyDocument plugin.TValue[string]
 	Subnets plugin.TValue[[]interface{}]
+	PrivateDnsEnabled plugin.TValue[bool]
+	State plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsVpcEndpoint creates a new instance of this resource
@@ -8495,6 +8597,18 @@ func (c *mqlAwsVpcEndpoint) GetSubnets() *plugin.TValue[[]interface{}] {
 	return &c.Subnets
 }
 
+func (c *mqlAwsVpcEndpoint) GetPrivateDnsEnabled() *plugin.TValue[bool] {
+	return &c.PrivateDnsEnabled
+}
+
+func (c *mqlAwsVpcEndpoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsVpcEndpoint) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
 // mqlAwsVpcFlowlog for the aws.vpc.flowlog resource
 type mqlAwsVpcFlowlog struct {
 	MqlRuntime *plugin.Runtime
@@ -8505,6 +8619,10 @@ type mqlAwsVpcFlowlog struct {
 	Region plugin.TValue[string]
 	Status plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
+	CreatedAt plugin.TValue[*time.Time]
+	Destination plugin.TValue[string]
+	MaxAggregationInterval plugin.TValue[int64]
+	TrafficType plugin.TValue[string]
 }
 
 // createAwsVpcFlowlog creates a new instance of this resource
@@ -8557,6 +8675,22 @@ func (c *mqlAwsVpcFlowlog) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsVpcFlowlog) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsVpcFlowlog) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpcFlowlog) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlAwsVpcFlowlog) GetMaxAggregationInterval() *plugin.TValue[int64] {
+	return &c.MaxAggregationInterval
+}
+
+func (c *mqlAwsVpcFlowlog) GetTrafficType() *plugin.TValue[string] {
+	return &c.TrafficType
 }
 
 // mqlAwsWaf for the aws.waf resource
@@ -17016,6 +17150,8 @@ type mqlAwsDynamodbTable struct {
 	DeletionProtectionEnabled plugin.TValue[bool]
 	GlobalTableVersion plugin.TValue[string]
 	Id plugin.TValue[string]
+	SizeBytes plugin.TValue[int64]
+	Status plugin.TValue[string]
 }
 
 // createAwsDynamodbTable creates a new instance of this resource
@@ -17107,6 +17243,14 @@ func (c *mqlAwsDynamodbTable) GetGlobalTableVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsDynamodbTable) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlAwsDynamodbTable) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlAwsDynamodbTable) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAwsRds for the aws.rds resource

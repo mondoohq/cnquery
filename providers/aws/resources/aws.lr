@@ -71,6 +71,8 @@ private aws.vpc.routetable @defaults("id routes.length") {
   id string
   // A list of route descriptions
   routes []dict
+  // Tags on the route table
+  tags map[string]string
 }
 
 // Amazon Virtual Private Cloud (VPC) subnet
@@ -87,6 +89,10 @@ private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabili
   availabilityZone string
   // Indicates whether this is the default subnet for the availability zone
   defaultForAvailabilityZone bool
+  // Whether a network interface created in this subnet (including a network interface created by RunInstances ) receives an IPv6 address.
+  assignIpv6AddressOnCreation bool
+  // The state of the subnet. Pending or available
+  state string
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -105,6 +111,12 @@ private aws.vpc.endpoint @defaults("id type region") {
   policyDocument string
   // The subnets for the (interface) endpoint
   subnets []string
+  // Whether to associate a private hosted zone with the specified VPC
+  privateDnsEnabled bool
+  // VPC endpoint state
+  state string
+  // Creation timestamp
+  createdAt time
 }
 
 // Amazon Virtual Private Cloud (VPC) flow log
@@ -119,6 +131,14 @@ private aws.vpc.flowlog @defaults("id region status") {
   status string
   // Tags on the flow log
   tags map[string]string
+  // Creation timestamp
+  createdAt time
+  // The destination for the flow log data
+  destination string
+  // The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. The possible values are 60 seconds (1 minute) or 600 seconds (10 minutes).
+  maxAggregationInterval int
+  // The type of traffic to monitor. ACCEPT, ALL, and REJECT
+  trafficType string
 }
 
 // Amazon WAF v2
@@ -1714,6 +1734,10 @@ private aws.dynamodb.table @defaults("name region") {
   globalTableVersion string
   // The table ID
   id string
+  // The total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
+  sizeBytes int
+  // The current state of the table. CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED.
+  status string
 }
 
 // Amazon Relational Database Service (RDS)

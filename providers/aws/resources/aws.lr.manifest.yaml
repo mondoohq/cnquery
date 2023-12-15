@@ -801,7 +801,11 @@ resources:
       name: {}
       provisionedThroughput: {}
       region: {}
+      sizeBytes:
+        min_mondoo_version: 9.0.0
       sseDescription: {}
+      status:
+        min_mondoo_version: 9.0.0
       tags:
         min_mondoo_version: 5.16.0
     is_private: true
@@ -2370,10 +2374,16 @@ resources:
       - aws
   aws.vpc.endpoint:
     fields:
+      createdAt:
+        min_mondoo_version: 9.0.0
       id: {}
       policyDocument: {}
+      privateDnsEnabled:
+        min_mondoo_version: 9.0.0
       region: {}
       serviceName: {}
+      state:
+        min_mondoo_version: 9.0.0
       subnets: {}
       type: {}
       vpc: {}
@@ -2384,10 +2394,18 @@ resources:
       - aws
   aws.vpc.flowlog:
     fields:
+      createdAt:
+        min_mondoo_version: 9.0.0
+      destination:
+        min_mondoo_version: 9.0.0
       id: {}
+      maxAggregationInterval:
+        min_mondoo_version: 9.0.0
       region: {}
       status: {}
       tags: {}
+      trafficType:
+        min_mondoo_version: 9.0.0
       vpc: {}
     is_private: true
     min_mondoo_version: 5.15.0
@@ -2398,6 +2416,8 @@ resources:
     fields:
       id: {}
       routes: {}
+      tags:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -2406,6 +2426,8 @@ resources:
   aws.vpc.subnet:
     fields:
       arn: {}
+      assignIpv6AddressOnCreation:
+        min_mondoo_version: 9.0.0
       availabilityZone:
         min_mondoo_version: latest
       cidrs: {}
@@ -2413,6 +2435,8 @@ resources:
         min_mondoo_version: latest
       id: {}
       mapPublicIpOnLaunch: {}
+      state:
+        min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

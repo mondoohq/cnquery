@@ -302,6 +302,8 @@ func (a *mqlAwsDynamodb) getTables(conn *connection.AwsConnection) []*jobpool.Jo
 						"deletionProtectionEnabled": llx.BoolDataPtr(table.Table.DeletionProtectionEnabled),
 						"globalTableVersion":        llx.StringDataPtr(table.Table.GlobalTableVersion),
 						"id":                        llx.StringDataPtr(table.Table.TableId),
+						"sizeBytes":                 llx.IntDataPtr(table.Table.TableSizeBytes),
+						"status":                    llx.StringData(string(table.Table.TableStatus)),
 					})
 				if err != nil {
 					return nil, err
