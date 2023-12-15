@@ -45,11 +45,12 @@ func (a *mqlMicrosoft) organizations() ([]interface{}, error) {
 		}
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.organization",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(convert.ToString(org.GetId())),
-				"assignedPlans":   llx.ArrayData(assignedPlans, types.Any),
-				"createdDateTime": llx.TimeDataPtr(org.GetCreatedDateTime()),
-				"displayName":     llx.StringData(convert.ToString(org.GetDisplayName())),
-				"verifiedDomains": llx.ArrayData(verifiedDomains, types.Any),
+				"id":                    llx.StringData(convert.ToString(org.GetId())),
+				"assignedPlans":         llx.ArrayData(assignedPlans, types.Any),
+				"createdDateTime":       llx.TimeDataPtr(org.GetCreatedDateTime()),
+				"displayName":           llx.StringData(convert.ToString(org.GetDisplayName())),
+				"verifiedDomains":       llx.ArrayData(verifiedDomains, types.Any),
+				"onPremisesSyncEnabled": llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),
 			})
 		if err != nil {
 			return nil, err
