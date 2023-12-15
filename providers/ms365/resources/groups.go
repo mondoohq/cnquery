@@ -45,6 +45,7 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 				"mailEnabled":     llx.BoolData(convert.ToBool(grp.GetMailEnabled())),
 				"mailNickname":    llx.StringData(convert.ToString(grp.GetMailNickname())),
 				"securityEnabled": llx.BoolData(convert.ToBool(grp.GetSecurityEnabled())),
+				"visibility":      llx.StringDataPtr(grp.GetVisibility()),
 			})
 		if err != nil {
 			return nil, err

@@ -299,6 +299,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.group.mail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMail()).ToDataRes(types.String)
 	},
+	"microsoft.group.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftGroup).GetVisibility()).ToDataRes(types.String)
+	},
 	"microsoft.group.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftGroup).GetMembers()).ToDataRes(types.Array(types.Resource("microsoft.user")))
 	},
@@ -827,6 +830,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"microsoft.group.mail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftGroup).Mail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.group.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftGroup).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1774,6 +1781,7 @@ type mqlMicrosoftGroup struct {
 	MailEnabled plugin.TValue[bool]
 	MailNickname plugin.TValue[string]
 	Mail plugin.TValue[string]
+	Visibility plugin.TValue[string]
 	Members plugin.TValue[[]interface{}]
 }
 
@@ -1836,6 +1844,10 @@ func (c *mqlMicrosoftGroup) GetMailNickname() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftGroup) GetMail() *plugin.TValue[string] {
 	return &c.Mail
+}
+
+func (c *mqlMicrosoftGroup) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
 }
 
 func (c *mqlMicrosoftGroup) GetMembers() *plugin.TValue[[]interface{}] {

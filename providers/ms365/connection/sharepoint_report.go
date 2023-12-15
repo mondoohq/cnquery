@@ -17,7 +17,7 @@ var sharepointReport = `
 $ErrorActionPreference = "Stop"
 $token = '%s'
 $url = "%s"
-Install-Module PnP.PowerShell -Force -Scope CurrentUser -RequiredVersion 1.12.0
+Install-Module PnP.PowerShell -Force -Scope CurrentUser
 Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
@@ -30,7 +30,7 @@ Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSync
 
 Disconnect-PnPOnline 
 
-ConvertTo-Json -Depth 4 $sharepoint
+ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenant string) (*SharepointOnlineReport, error) {
