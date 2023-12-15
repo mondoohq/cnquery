@@ -426,6 +426,7 @@ private ms365.teams.tenantFederationConfig {
   treatDiscoveredPartnersAsUnverified bool
   // Whether shared SIP address space is enabled
   sharedSipAddressSpace bool
+  // Whether to restrict Teams consumer to external user profiles
   restrictTeamsConsumerToExternalUserProfiles bool
 }
 
