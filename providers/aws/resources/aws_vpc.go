@@ -133,13 +133,16 @@ func (a *mqlAwsVpc) endpoints() ([]interface{}, error) {
 			}
 			mqlEndpoint, err := CreateResource(a.MqlRuntime, "aws.vpc.endpoint",
 				map[string]*llx.RawData{
-					"id":             llx.StringData(fmt.Sprintf("%s/%s", a.Region.Data, *endpoint.VpcEndpointId)),
-					"type":           llx.StringData(string(endpoint.VpcEndpointType)),
-					"vpc":            llx.StringData(*endpoint.VpcId),
-					"region":         llx.StringData(a.Region.Data),
-					"serviceName":    llx.StringData(*endpoint.ServiceName),
-					"policyDocument": llx.StringData(*endpoint.PolicyDocument),
-					"subnets":        llx.ArrayData(subnetIds, types.String),
+					"id":                llx.StringData(fmt.Sprintf("%s/%s", a.Region.Data, *endpoint.VpcEndpointId)),
+					"policyDocument":    llx.StringDataPtr(endpoint.PolicyDocument),
+					"privateDnsEnabled": llx.BoolDataPtr(endpoint.PrivateDnsEnabled),
+					"region":            llx.StringData(a.Region.Data),
+					"serviceName":       llx.StringDataPtr(endpoint.ServiceName),
+					"state":             llx.StringData(string(endpoint.State)),
+					"subnets":           llx.ArrayData(subnetIds, types.String),
+					"type":              llx.StringData(string(endpoint.VpcEndpointType)),
+					"vpc":               llx.StringDataPtr(endpoint.VpcId),
+					"createdAt":         llx.TimeDataPtr(endpoint.CreationTimestamp),
 				},
 			)
 			if err != nil {
@@ -174,11 +177,15 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 		for _, flowLog := range flowLogsRes.FlowLogs {
 			mqlFlowLog, err := CreateResource(a.MqlRuntime, "aws.vpc.flowlog",
 				map[string]*llx.RawData{
-					"id":     llx.StringDataPtr(flowLog.FlowLogId),
-					"vpc":    llx.StringData(vpc),
-					"region": llx.StringData(a.Region.Data),
-					"status": llx.StringDataPtr(flowLog.FlowLogStatus),
-					"tags":   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
+					"createdAt":              llx.TimeDataPtr(flowLog.CreationTime),
+					"destination":            llx.StringDataPtr(flowLog.LogDestination),
+					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
+					"maxAggregationInterval": llx.IntData(convert.ToInt64From32(flowLog.MaxAggregationInterval)),
+					"region":                 llx.StringData(a.Region.Data),
+					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),
+					"tags":                   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),
+					"trafficType":            llx.StringData(string(flowLog.TrafficType)),
+					"vpc":                    llx.StringData(vpc),
 				},
 			)
 			if err != nil {
@@ -224,6 +231,7 @@ func (a *mqlAwsVpc) routeTables() ([]interface{}, error) {
 				map[string]*llx.RawData{
 					"id":     llx.StringDataPtr(routeTable.RouteTableId),
 					"routes": llx.ArrayData(dictRoutes, types.Any),
+					"tags":   llx.MapData(Ec2TagsToMap(routeTable.Tags), types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -262,12 +270,14 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 		for _, subnet := range subnets.Subnets {
 			subnetResource, err := CreateResource(a.MqlRuntime, "aws.vpc.subnet",
 				map[string]*llx.RawData{
-					"arn":                        llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
-					"id":                         llx.StringDataPtr(subnet.SubnetId),
-					"cidrs":                      llx.StringDataPtr(subnet.CidrBlock),
-					"mapPublicIpOnLaunch":        llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
-					"availabilityZone":           llx.StringDataPtr(subnet.AvailabilityZone),
-					"defaultForAvailabilityZone": llx.BoolDataPtr(subnet.DefaultForAz),
+					"arn":                         llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), convert.ToString(subnet.SubnetId))),
+					"assignIpv6AddressOnCreation": llx.BoolDataPtr(subnet.AssignIpv6AddressOnCreation),
+					"availabilityZone":            llx.StringDataPtr(subnet.AvailabilityZone),
+					"cidrs":                       llx.StringDataPtr(subnet.CidrBlock),
+					"defaultForAvailabilityZone":  llx.BoolDataPtr(subnet.DefaultForAz),
+					"id":                          llx.StringDataPtr(subnet.SubnetId),
+					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
+					"state":                       llx.StringData(string(subnet.State)),
 				})
 			if err != nil {
 				return nil, err
