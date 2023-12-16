@@ -128,7 +128,7 @@ func initAwsGuarddutyDetector(runtime *plugin.Runtime, args map[string]*llx.RawD
 	}
 
 	if args["id"] == nil && args["region"] == nil {
-		return nil, nil, errors.New("name and region required to fetch codebuild project")
+		return nil, nil, errors.New("name and region required to fetch guardduty detector")
 	}
 
 	id := args["id"].Value.(string)
