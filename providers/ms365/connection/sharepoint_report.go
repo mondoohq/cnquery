@@ -23,14 +23,15 @@ Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
 $SPOTenantSyncClientRestriction = (Get-PnPTenantSyncClientRestriction)
-$SPOSite = (Get-PnPTenantSite)
+$SPOSite = (Get-PnPTenantSite | Select-Object DenyAddAndCustomizePages)
+
 $sharepoint = New-Object PSObject
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Value $SPOTenant
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
-Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite
+Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite[0]
 Disconnect-PnPOnline 
 
-ConvertTo-Json -Depth 4 $sharepoint
+ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
 `
 
 func (c *Ms365Connection) GetSharepointOnlineReport(ctx context.Context, tenant string) (*SharepointOnlineReport, error) {
@@ -103,5 +104,5 @@ type SharepointOnlineReport struct {
 }
 
 type SpoSite struct {
-	DenyAddAndCustomizePages bool `json:"DenyAddAndCustomizePages"`
+	DenyAddAndCustomizePages string `json:"DenyAddAndCustomizePages"`
 }

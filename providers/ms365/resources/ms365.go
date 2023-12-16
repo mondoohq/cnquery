@@ -147,7 +147,7 @@ func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.Raw
 	// spoReport := report.SpoSite
 	mqlSpoSite, err := CreateResource(runtime, "ms365.sharepointonline.spoSite",
 		map[string]*llx.RawData{
-			"DenyAddAndCustomizePages": llx.BoolData(spoSite.DenyAddAndCustomizePages),
+			"DenyAddAndCustomizePages": llx.StringData(spoSite.DenyAddAndCustomizePages),
 		})
 	if err != nil {
 		return args, nil, err
