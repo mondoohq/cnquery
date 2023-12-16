@@ -17,17 +17,17 @@ var sharepointReport = `
 $ErrorActionPreference = "Stop"
 $token = '%s'
 $url = "%s"
-Install-Module PnP.PowerShell -Force -Scope CurrentUser -RequiredVersion 1.12.0
+Install-Module PnP.PowerShell -Force -Scope CurrentUser
 Import-Module PnP.PowerShell
 Connect-PnPOnline -AccessToken $token -Url $url
 
 $SPOTenant = (Get-PnPTenant)
 $SPOTenantSyncClientRestriction = (Get-PnPTenantSyncClientRestriction)
-
+$SPOSite = (Get-PnPTenantSite)
 $sharepoint = New-Object PSObject
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Value $SPOTenant
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
-
+Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite
 Disconnect-PnPOnline 
 
 ConvertTo-Json -Depth 4 $sharepoint
@@ -99,4 +99,9 @@ func (c *Ms365Connection) getSharepointReport(spToken, url string) (*SharepointO
 type SharepointOnlineReport struct {
 	SpoTenant                      interface{} `json:"SPOTenant"`
 	SpoTenantSyncClientRestriction interface{} `json:"SPOTenantSyncClientRestriction"`
+	SpoSite                        *SpoSite    `json:"SPOSite"`
+}
+
+type SpoSite struct {
+	DenyAddAndCustomizePages bool `json:"DenyAddAndCustomizePages"`
 }

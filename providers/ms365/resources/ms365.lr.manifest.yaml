@@ -273,9 +273,20 @@ resources:
       - microsoft365
   ms365.sharepointonline:
     fields:
+      spoSite:
+        min_mondoo_version: latest
       spoTenant: {}
       spoTenantSyncClientRestriction: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.sharepointonline.spoSite:
+    fields:
+      DenyAddAndCustomizePages:
+        min_mondoo_version: 9.0.0
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - microsoft365

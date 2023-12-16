@@ -143,8 +143,18 @@ func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.Raw
 	spoTenant, _ := convert.JsonToDict(report.SpoTenant)
 	spoTenantSyncClientRestriction, _ := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
 
+	spoSite := report.SpoSite
+	// spoReport := report.SpoSite
+	mqlSpoSite, err := CreateResource(runtime, "ms365.sharepointonline.spoSite",
+		map[string]*llx.RawData{
+			"DenyAddAndCustomizePages": llx.BoolData(spoSite.DenyAddAndCustomizePages),
+		})
+	if err != nil {
+		return args, nil, err
+	}
 	args["spoTenant"] = llx.DictData(spoTenant)
 	args["spoTenantSyncClientRestriction"] = llx.DictData(spoTenantSyncClientRestriction)
+	args["spoSite"] = llx.ResourceData(mqlSpoSite, mqlSpoSite.MqlName())
 	return args, nil, nil
 }
 
