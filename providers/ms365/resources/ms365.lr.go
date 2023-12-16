@@ -707,6 +707,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.teams.teamsMeetingPolicyConfig.allowExternalParticipantGiveRequestControl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowExternalParticipantGiveRequestControl()).ToDataRes(types.Bool)
 	},
+	"ms365.teams.teamsMeetingPolicyConfig.AllowSecurityEndUserReporting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).GetAllowSecurityEndUserReporting()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1513,6 +1516,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.teams.teamsMeetingPolicyConfig.allowExternalParticipantGiveRequestControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowExternalParticipantGiveRequestControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.teams.teamsMeetingPolicyConfig.AllowSecurityEndUserReporting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365TeamsTeamsMeetingPolicyConfig).AllowSecurityEndUserReporting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -3552,6 +3559,7 @@ type mqlMs365TeamsTeamsMeetingPolicyConfig struct {
 	MeetingChatEnabledType plugin.TValue[string]
 	DesignatedPresenterRoleMode plugin.TValue[string]
 	AllowExternalParticipantGiveRequestControl plugin.TValue[bool]
+	AllowSecurityEndUserReporting plugin.TValue[bool]
 }
 
 // createMs365TeamsTeamsMeetingPolicyConfig creates a new instance of this resource
@@ -3612,4 +3620,8 @@ func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetDesignatedPresenterRoleMode()
 
 func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowExternalParticipantGiveRequestControl() *plugin.TValue[bool] {
 	return &c.AllowExternalParticipantGiveRequestControl
+}
+
+func (c *mqlMs365TeamsTeamsMeetingPolicyConfig) GetAllowSecurityEndUserReporting() *plugin.TValue[bool] {
+	return &c.AllowSecurityEndUserReporting
 }

@@ -129,4 +129,5 @@ type CsTeamsMeetingPolicy struct {
 	MeetingChatEnabledType                     string `json:"MeetingChatEnabledType"`
 	DesignatedPresenterRoleMode                string `json:"DesignatedPresenterRoleMode"`
 	AllowExternalParticipantGiveRequestControl bool   `json:"AllowExternalParticipantGiveRequestControl"`
+	AllowSecurityEndUserReporting 						 bool   `json:"AllowSecurityEndUserReporting"`
 }

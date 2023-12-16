@@ -292,6 +292,7 @@ resources:
       - microsoft365
   ms365.teams.teamsMeetingPolicyConfig:
     fields:
+      AllowSecurityEndUserReporting: {}
       allowAnonymousUsersToJoinMeeting: {}
       allowAnonymousUsersToStartMeeting: {}
       allowExternalParticipantGiveRequestControl: {}
