@@ -186,6 +186,7 @@ func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
 			"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
 			"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
+			"allowSecurityEndUserReporting": 							llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
 		})
 	if err != nil {
 		return args, nil, err
