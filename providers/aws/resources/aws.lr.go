@@ -1776,6 +1776,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.acm.certificate.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcmCertificate).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.acm.certificate.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetSerial()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetSource()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"aws.acm.certificate.issuedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetIssuedAt()).ToDataRes(types.Time)
+	},
+	"aws.acm.certificate.importedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetImportedAt()).ToDataRes(types.Time)
+	},
 	"aws.autoscaling.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscaling).GetGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
 	},
@@ -5271,6 +5289,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.acm.certificate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAcmCertificate).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.issuedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).IssuedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.importedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).ImportedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13183,6 +13225,12 @@ type mqlAwsAcmCertificate struct {
 	Subject plugin.TValue[string]
 	Certificate plugin.TValue[plugin.Resource]
 	Tags plugin.TValue[map[string]interface{}]
+	KeyAlgorithm plugin.TValue[string]
+	Serial plugin.TValue[string]
+	Source plugin.TValue[string]
+	Issuer plugin.TValue[string]
+	IssuedAt plugin.TValue[*time.Time]
+	ImportedAt plugin.TValue[*time.Time]
 }
 
 // createAwsAcmCertificate creates a new instance of this resource
@@ -13268,6 +13316,30 @@ func (c *mqlAwsAcmCertificate) GetCertificate() *plugin.TValue[plugin.Resource] 
 
 func (c *mqlAwsAcmCertificate) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsAcmCertificate) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlAwsAcmCertificate) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlAwsAcmCertificate) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAwsAcmCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlAwsAcmCertificate) GetIssuedAt() *plugin.TValue[*time.Time] {
+	return &c.IssuedAt
+}
+
+func (c *mqlAwsAcmCertificate) GetImportedAt() *plugin.TValue[*time.Time] {
+	return &c.ImportedAt
 }
 
 // mqlAwsAutoscaling for the aws.autoscaling resource

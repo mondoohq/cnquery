@@ -417,9 +417,9 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
   // Whether to match the URI path
   uriPath bool
   // Whether to match the query string
-	queryString bool
+  queryString bool
   // Whether to match all query arguments
-	allQueryArguments bool
+  allQueryArguments bool
   // Whether to match the body (match if not null)
   body aws.waf.rule.fieldtomatch.body
   // Whether to match the cookie (match if not null)
@@ -427,15 +427,15 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
   // Whether to match the single header (match if not null)
   singleHeader aws.waf.rule.fieldtomatch.singleheader
   // Whether to match the header order (match if not null)
-	headerOrder aws.waf.rule.fieldtomatch.headerorder
+  headerOrder aws.waf.rule.fieldtomatch.headerorder
   // Whether to match the header (match if not null)
-	headers aws.waf.rule.fieldtomatch.headers
+  headers aws.waf.rule.fieldtomatch.headers
   // Whether to match the JA3 fingerprint (match if not null)
-	ja3Fingerprint aws.waf.rule.fieldtomatch.ja3fingerprint
+  ja3Fingerprint aws.waf.rule.fieldtomatch.ja3fingerprint
   // Whether to match the JSON body (match if not null)
-	jsonBody aws.waf.rule.fieldtomatch.jsonbody
+  jsonBody aws.waf.rule.fieldtomatch.jsonbody
   // Whether to match the single query argument of the field (match if not null)
-	singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
+  singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
 }
 
 // Body of the field to match
@@ -977,7 +977,7 @@ aws.acm @defaults("certificates") {
 }
 
 // AWS Certificate Manager Certificate resource (provides an object representing an individual ACM certificate)
-private aws.acm.certificate @defaults("arn domainName") {
+private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   // ARN for the certificate
   arn string
   // Time before which the certificate is not valid
@@ -996,6 +996,18 @@ private aws.acm.certificate @defaults("arn domainName") {
   certificate() network.certificate
   // Tags associated with the certificate
   tags map[string]string
+  // The algorithm that was used to generate the public-private key pair
+  keyAlgorithm string
+  // The serial number of the certificate
+  serial string
+  // The source of the certificate. AMAZON_ISSUED or IMPORTED
+  source string
+  // The name of the certificate authority that issued and signed the certificate
+  issuer string
+  // The time at which the certificate was issued. This value exists only when the certificate source is AMAZON_ISSUED
+  issuedAt time
+  // The date and time when the certificate was imported. This value exists only when the certificate source is IMPORTED.
+  importedAt time
 }
 
 // AWS Auto Scaling

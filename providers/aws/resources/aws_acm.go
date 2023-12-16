@@ -122,12 +122,18 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 
 	args["arn"] = llx.StringData(arnVal)
-	args["notBefore"] = llx.TimeDataPtr(certDetails.Certificate.NotBefore)
-	args["notAfter"] = llx.TimeDataPtr(certDetails.Certificate.NotAfter)
 	args["createdAt"] = llx.TimeDataPtr(certDetails.Certificate.CreatedAt)
-	args["domainName"] = llx.StringData(convert.ToString(certDetails.Certificate.DomainName))
+	args["domainName"] = llx.StringDataPtr(certDetails.Certificate.DomainName)
+	args["importedAt"] = llx.TimeDataPtr(certDetails.Certificate.ImportedAt)
+	args["issuedAt"] = llx.TimeDataPtr(certDetails.Certificate.IssuedAt)
+	args["issuer"] = llx.StringDataPtr(certDetails.Certificate.Issuer)
+	args["keyAlgorithm"] = llx.StringData(string(certDetails.Certificate.KeyAlgorithm))
+	args["notAfter"] = llx.TimeDataPtr(certDetails.Certificate.NotAfter)
+	args["notBefore"] = llx.TimeDataPtr(certDetails.Certificate.NotBefore)
+	args["serial"] = llx.StringDataPtr(certDetails.Certificate.Serial)
+	args["source"] = llx.StringData(string(certDetails.Certificate.Type))
 	args["status"] = llx.StringData(string(certDetails.Certificate.Status))
-	args["subject"] = llx.StringData(convert.ToString(certDetails.Certificate.Subject))
+	args["subject"] = llx.StringDataPtr(certDetails.Certificate.Subject)
 	args["tags"] = llx.MapData(CertTagsToMapTags(certTags.Tags), types.String)
 	return args, nil, nil
 }

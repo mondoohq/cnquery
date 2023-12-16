@@ -130,8 +130,20 @@ resources:
       certificate: {}
       createdAt: {}
       domainName: {}
+      importedAt:
+        min_mondoo_version: 9.0.0
+      issuedAt:
+        min_mondoo_version: 9.0.0
+      issuer:
+        min_mondoo_version: 9.0.0
+      keyAlgorithm:
+        min_mondoo_version: 9.0.0
       notAfter: {}
       notBefore: {}
+      serial:
+        min_mondoo_version: 9.0.0
+      source:
+        min_mondoo_version: 9.0.0
       status: {}
       subject: {}
       tags:
