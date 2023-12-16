@@ -29,6 +29,7 @@ $sharepoint = New-Object PSObject
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenant -Value $SPOTenant
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOTenantSyncClientRestriction -Value $SPOTenantSyncClientRestriction
 Add-Member -InputObject $sharepoint -MemberType NoteProperty -Name SPOSite -Value $SPOSite[0]
+
 Disconnect-PnPOnline 
 
 ConvertTo-Json -Depth 4 $sharepoint -EnumsAsStrings
@@ -100,9 +101,10 @@ func (c *Ms365Connection) getSharepointReport(spToken, url string) (*SharepointO
 type SharepointOnlineReport struct {
 	SpoTenant                      interface{} `json:"SPOTenant"`
 	SpoTenantSyncClientRestriction interface{} `json:"SPOTenantSyncClientRestriction"`
-	SpoSite                        *SpoSite    `json:"SPOSite"`
+	SpoSite                        interface{} `json:"SpoSite"`
+	// SpoSite                        *SpoSite    `json:"SPOSite"`
 }
 
-type SpoSite struct {
-	DenyAddAndCustomizePages string `json:"DenyAddAndCustomizePages"`
-}
+//type SpoSite struct {
+//	DenyAddAndCustomizePages string `json:"DenyAddAndCustomizePages"`
+//}

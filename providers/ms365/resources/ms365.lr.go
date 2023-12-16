@@ -102,10 +102,6 @@ func init() {
 			Init: initMs365Sharepointonline,
 			Create: createMs365Sharepointonline,
 		},
-		"ms365.sharepointonline.spoSite": {
-			// to override args, implement: initMs365SharepointonlineSpoSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createMs365SharepointonlineSpoSite,
-		},
 		"ms365.teams": {
 			Init: initMs365Teams,
 			Create: createMs365Teams,
@@ -655,10 +651,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenantSyncClientRestriction()).ToDataRes(types.Dict)
 	},
 	"ms365.sharepointonline.spoSite": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365Sharepointonline).GetSpoSite()).ToDataRes(types.Resource("ms365.sharepointonline.spoSite"))
-	},
-	"ms365.sharepointonline.spoSite.DenyAddAndCustomizePages": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMs365SharepointonlineSpoSite).GetDenyAddAndCustomizePages()).ToDataRes(types.Bool)
+		return (r.(*mqlMs365Sharepointonline).GetSpoSite()).ToDataRes(types.Dict)
 	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
@@ -1438,15 +1431,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"ms365.sharepointonline.spoSite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365Sharepointonline).SpoSite, ok = plugin.RawToTValue[*mqlMs365SharepointonlineSpoSite](v.Value, v.Error)
-		return
-	},
-	"ms365.sharepointonline.spoSite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlMs365SharepointonlineSpoSite).__id, ok = v.Value.(string)
-			return
-		},
-	"ms365.sharepointonline.spoSite.DenyAddAndCustomizePages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMs365SharepointonlineSpoSite).DenyAddAndCustomizePages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		r.(*mqlMs365Sharepointonline).SpoSite, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3382,7 +3367,7 @@ type mqlMs365Sharepointonline struct {
 	// optional: if you define mqlMs365SharepointonlineInternal it will be used here
 	SpoTenant plugin.TValue[interface{}]
 	SpoTenantSyncClientRestriction plugin.TValue[interface{}]
-	SpoSite plugin.TValue[*mqlMs365SharepointonlineSpoSite]
+	SpoSite plugin.TValue[interface{}]
 }
 
 // createMs365Sharepointonline creates a new instance of this resource
@@ -3425,52 +3410,8 @@ func (c *mqlMs365Sharepointonline) GetSpoTenantSyncClientRestriction() *plugin.T
 	return &c.SpoTenantSyncClientRestriction
 }
 
-func (c *mqlMs365Sharepointonline) GetSpoSite() *plugin.TValue[*mqlMs365SharepointonlineSpoSite] {
+func (c *mqlMs365Sharepointonline) GetSpoSite() *plugin.TValue[interface{}] {
 	return &c.SpoSite
-}
-
-// mqlMs365SharepointonlineSpoSite for the ms365.sharepointonline.spoSite resource
-type mqlMs365SharepointonlineSpoSite struct {
-	MqlRuntime *plugin.Runtime
-	__id string
-	// optional: if you define mqlMs365SharepointonlineSpoSiteInternal it will be used here
-	DenyAddAndCustomizePages plugin.TValue[bool]
-}
-
-// createMs365SharepointonlineSpoSite creates a new instance of this resource
-func createMs365SharepointonlineSpoSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlMs365SharepointonlineSpoSite{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("ms365.sharepointonline.spoSite", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlMs365SharepointonlineSpoSite) MqlName() string {
-	return "ms365.sharepointonline.spoSite"
-}
-
-func (c *mqlMs365SharepointonlineSpoSite) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlMs365SharepointonlineSpoSite) GetDenyAddAndCustomizePages() *plugin.TValue[bool] {
-	return &c.DenyAddAndCustomizePages
 }
 
 // mqlMs365Teams for the ms365.teams resource

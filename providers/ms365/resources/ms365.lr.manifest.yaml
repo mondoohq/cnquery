@@ -285,7 +285,6 @@ resources:
     fields:
       DenyAddAndCustomizePages:
         min_mondoo_version: 9.0.0
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
