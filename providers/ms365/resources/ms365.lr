@@ -448,4 +448,6 @@ private ms365.teams.teamsMeetingPolicyConfig {
   designatedPresenterRoleMode string
   // Whether external participants can give or request control of the meeting
   allowExternalParticipantGiveRequestControl bool
+  // Whether users can report security concerns
+  allowSecurityEndUserReporting bool
 }

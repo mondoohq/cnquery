@@ -296,6 +296,7 @@ resources:
       allowAnonymousUsersToStartMeeting: {}
       allowExternalParticipantGiveRequestControl: {}
       allowPSTNUsersToBypassLobby: {}
+      allowSecurityEndUserReporting: {}
       autoAdmittedUsers: {}
       designatedPresenterRoleMode: {}
       meetingChatEnabledType: {}
