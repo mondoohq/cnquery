@@ -17,13 +17,17 @@ import (
 var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	resourceFactories = map[string]plugin.ResourceFactory {
+	resourceFactories = map[string]plugin.ResourceFactory{
 		"slack": {
 			// to override args, implement: initSlack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSlack,
 		},
+		"slack.conversations": {
+			// to override args, implement: initSlackConversations(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSlackConversations,
+		},
 		"slack.team": {
-			Init: initSlackTeam,
+			Init:   initSlackTeam,
 			Create: createSlackTeam,
 		},
 		"slack.users": {
@@ -31,7 +35,7 @@ func init() {
 			Create: createSlackUsers,
 		},
 		"slack.user": {
-			Init: initSlackUser,
+			Init:   initSlackUser,
 			Create: createSlackUser,
 		},
 		"slack.enterpriseUser": {
@@ -69,7 +73,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		}
 
 		if res != nil {
-			id := name+"\x00"+res.MqlID()
+			id := name + "\x00" + res.MqlID()
 			if x, ok := runtime.Resources.Get(id); ok {
 				return x, nil
 			}
@@ -85,7 +89,7 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 		return nil, err
 	}
 
-	id := name+"\x00"+res.MqlID()
+	id := name + "\x00" + res.MqlID()
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -108,7 +112,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 		return nil, err
 	}
 
-	id := name+"\x00"+res.MqlID()
+	id := name + "\x00" + res.MqlID()
 	if x, ok := runtime.Resources.Get(id); ok {
 		return x, nil
 	}
@@ -124,8 +128,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"slack.userGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSlack).GetUserGroups()).ToDataRes(types.Array(types.Resource("slack.userGroup")))
 	},
-	"slack.conversations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSlack).GetConversations()).ToDataRes(types.Array(types.Resource("slack.conversation")))
+	"slack.conversations.privateChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackConversations).GetPrivateChannels()).ToDataRes(types.Array(types.Resource("slack.conversation")))
+	},
+	"slack.conversations.publicChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackConversations).GetPublicChannels()).ToDataRes(types.Array(types.Resource("slack.conversation")))
+	},
+	"slack.conversations.directMessages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackConversations).GetDirectMessages()).ToDataRes(types.Array(types.Resource("slack.conversation")))
+	},
+	"slack.conversations.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlackConversations).GetList()).ToDataRes(types.Array(types.Resource("slack.conversation")))
 	},
 	"slack.team.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSlackTeam).GetId()).ToDataRes(types.String)
@@ -387,11 +400,11 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	"slack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlack).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlack).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.accessLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlack).AccessLogs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -400,14 +413,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlSlack).UserGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
-	"slack.conversations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSlack).Conversations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+	"slack.conversations.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackConversations).__id, ok = v.Value.(string)
+		return
+	},
+	"slack.conversations.privateChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackConversations).PrivateChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"slack.conversations.publicChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackConversations).PublicChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"slack.conversations.directMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackConversations).DirectMessages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"slack.conversations.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlackConversations).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"slack.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackTeam).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackTeam).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.team.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackTeam).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -425,9 +454,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackUsers).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackUsers).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.users.bots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackUsers).Bots, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -449,9 +478,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackUser).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -553,9 +582,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.enterpriseUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackEnterpriseUser).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackEnterpriseUser).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.enterpriseUser.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackEnterpriseUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -577,9 +606,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.userGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackUserGroup).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackUserGroup).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.userGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackUserGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -637,9 +666,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.login.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackLogin).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackLogin).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.login.userID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackLogin).UserID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -681,9 +710,9 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"slack.conversation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-			r.(*mqlSlackConversation).__id, ok = v.Value.(string)
-			return
-		},
+		r.(*mqlSlackConversation).__id, ok = v.Value.(string)
+		return
+	},
 	"slack.conversation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSlackConversation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -767,13 +796,13 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
-	f, ok := setDataFields[resource.MqlName() + "." + field]
+	f, ok := setDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return errors.New("[slack] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[slack] cannot set '" + field + "' in resource '" + resource.MqlName() + "', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("[slack] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[slack] cannot set '" + field + "' in resource '" + resource.MqlName() + "', type does not match")
 	}
 	return nil
 }
@@ -791,11 +820,10 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 // mqlSlack for the slack resource
 type mqlSlack struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackInternal it will be used here
 	AccessLogs plugin.TValue[[]interface{}]
 	UserGroups plugin.TValue[[]interface{}]
-	Conversations plugin.TValue[[]interface{}]
 }
 
 // createSlack creates a new instance of this resource
@@ -810,7 +838,7 @@ func createSlack(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -867,10 +895,58 @@ func (c *mqlSlack) GetUserGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlSlack) GetConversations() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.Conversations, func() ([]interface{}, error) {
+// mqlSlackConversations for the slack.conversations resource
+type mqlSlackConversations struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlSlackConversationsInternal it will be used here
+	PrivateChannels plugin.TValue[[]interface{}]
+	PublicChannels  plugin.TValue[[]interface{}]
+	DirectMessages  plugin.TValue[[]interface{}]
+	List            plugin.TValue[[]interface{}]
+}
+
+// createSlackConversations creates a new instance of this resource
+func createSlackConversations(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSlackConversations{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("slack.conversations", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSlackConversations) MqlName() string {
+	return "slack.conversations"
+}
+
+func (c *mqlSlackConversations) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSlackConversations) GetPrivateChannels() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PrivateChannels, func() ([]interface{}, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("slack", c.__id, "conversations")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "privateChannels")
 			if err != nil {
 				return nil, err
 			}
@@ -879,18 +955,66 @@ func (c *mqlSlack) GetConversations() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		return c.conversations()
+		return c.privateChannels()
+	})
+}
+
+func (c *mqlSlackConversations) GetPublicChannels() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PublicChannels, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "publicChannels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.publicChannels()
+	})
+}
+
+func (c *mqlSlackConversations) GetDirectMessages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DirectMessages, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "directMessages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.directMessages()
+	})
+}
+
+func (c *mqlSlackConversations) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversations", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
 // mqlSlackTeam for the slack.team resource
 type mqlSlackTeam struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackTeamInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Domain plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Domain      plugin.TValue[string]
 	EmailDomain plugin.TValue[string]
 }
 
@@ -906,7 +1030,7 @@ func createSlackTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -950,13 +1074,13 @@ func (c *mqlSlackTeam) GetEmailDomain() *plugin.TValue[string] {
 // mqlSlackUsers for the slack.users resource
 type mqlSlackUsers struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackUsersInternal it will be used here
-	Bots plugin.TValue[[]interface{}]
+	Bots    plugin.TValue[[]interface{}]
 	Members plugin.TValue[[]interface{}]
-	Admins plugin.TValue[[]interface{}]
-	Owners plugin.TValue[[]interface{}]
-	List plugin.TValue[[]interface{}]
+	Admins  plugin.TValue[[]interface{}]
+	Owners  plugin.TValue[[]interface{}]
+	List    plugin.TValue[[]interface{}]
 }
 
 // createSlackUsers creates a new instance of this resource
@@ -971,7 +1095,7 @@ func createSlackUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1079,33 +1203,33 @@ func (c *mqlSlackUsers) GetList() *plugin.TValue[[]interface{}] {
 // mqlSlackUser for the slack.user resource
 type mqlSlackUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackUserInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	TeamId plugin.TValue[string]
-	Deleted plugin.TValue[bool]
-	Color plugin.TValue[string]
-	RealName plugin.TValue[string]
-	TimeZone plugin.TValue[string]
-	TimeZoneLabel plugin.TValue[string]
-	TimeZoneOffset plugin.TValue[int64]
-	IsBot plugin.TValue[bool]
-	IsAdmin plugin.TValue[bool]
-	IsOwner plugin.TValue[bool]
-	IsPrimaryOwner plugin.TValue[bool]
-	IsRestricted plugin.TValue[bool]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	TeamId            plugin.TValue[string]
+	Deleted           plugin.TValue[bool]
+	Color             plugin.TValue[string]
+	RealName          plugin.TValue[string]
+	TimeZone          plugin.TValue[string]
+	TimeZoneLabel     plugin.TValue[string]
+	TimeZoneOffset    plugin.TValue[int64]
+	IsBot             plugin.TValue[bool]
+	IsAdmin           plugin.TValue[bool]
+	IsOwner           plugin.TValue[bool]
+	IsPrimaryOwner    plugin.TValue[bool]
+	IsRestricted      plugin.TValue[bool]
 	IsUltraRestricted plugin.TValue[bool]
-	IsStranger plugin.TValue[bool]
-	IsAppUser plugin.TValue[bool]
-	IsInvitedUser plugin.TValue[bool]
-	Has2FA plugin.TValue[bool]
-	TwoFactorType plugin.TValue[string]
-	HasFiles plugin.TValue[bool]
-	Presence plugin.TValue[string]
-	Locale plugin.TValue[string]
-	Profile plugin.TValue[interface{}]
-	EnterpriseUser plugin.TValue[*mqlSlackEnterpriseUser]
+	IsStranger        plugin.TValue[bool]
+	IsAppUser         plugin.TValue[bool]
+	IsInvitedUser     plugin.TValue[bool]
+	Has2FA            plugin.TValue[bool]
+	TwoFactorType     plugin.TValue[string]
+	HasFiles          plugin.TValue[bool]
+	Presence          plugin.TValue[string]
+	Locale            plugin.TValue[string]
+	Profile           plugin.TValue[interface{}]
+	EnterpriseUser    plugin.TValue[*mqlSlackEnterpriseUser]
 }
 
 // createSlackUser creates a new instance of this resource
@@ -1120,7 +1244,7 @@ func createSlackUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1248,13 +1372,13 @@ func (c *mqlSlackUser) GetEnterpriseUser() *plugin.TValue[*mqlSlackEnterpriseUse
 // mqlSlackEnterpriseUser for the slack.enterpriseUser resource
 type mqlSlackEnterpriseUser struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackEnterpriseUserInternal it will be used here
-	Id plugin.TValue[string]
-	EnterpriseId plugin.TValue[string]
+	Id             plugin.TValue[string]
+	EnterpriseId   plugin.TValue[string]
 	EnterpriseName plugin.TValue[string]
-	IsAdmin plugin.TValue[bool]
-	IsOwner plugin.TValue[bool]
+	IsAdmin        plugin.TValue[bool]
+	IsOwner        plugin.TValue[bool]
 }
 
 // createSlackEnterpriseUser creates a new instance of this resource
@@ -1269,7 +1393,7 @@ func createSlackEnterpriseUser(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1317,22 +1441,22 @@ func (c *mqlSlackEnterpriseUser) GetIsOwner() *plugin.TValue[bool] {
 // mqlSlackUserGroup for the slack.userGroup resource
 type mqlSlackUserGroup struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackUserGroupInternal it will be used here
-	Id plugin.TValue[string]
-	TeamId plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id          plugin.TValue[string]
+	TeamId      plugin.TValue[string]
+	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
-	Handle plugin.TValue[string]
-	IsExternal plugin.TValue[bool]
-	Created plugin.TValue[*time.Time]
-	Updated plugin.TValue[*time.Time]
-	Deleted plugin.TValue[*time.Time]
-	CreatedBy plugin.TValue[*mqlSlackUser]
-	UpdatedBy plugin.TValue[*mqlSlackUser]
-	DeletedBy plugin.TValue[*mqlSlackUser]
-	UserCount plugin.TValue[int64]
-	Members plugin.TValue[[]interface{}]
+	Handle      plugin.TValue[string]
+	IsExternal  plugin.TValue[bool]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+	Deleted     plugin.TValue[*time.Time]
+	CreatedBy   plugin.TValue[*mqlSlackUser]
+	UpdatedBy   plugin.TValue[*mqlSlackUser]
+	DeletedBy   plugin.TValue[*mqlSlackUser]
+	UserCount   plugin.TValue[int64]
+	Members     plugin.TValue[[]interface{}]
 }
 
 // createSlackUserGroup creates a new instance of this resource
@@ -1347,7 +1471,7 @@ func createSlackUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1443,18 +1567,18 @@ func (c *mqlSlackUserGroup) GetMembers() *plugin.TValue[[]interface{}] {
 // mqlSlackLogin for the slack.login resource
 type mqlSlackLogin struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackLoginInternal it will be used here
-	UserID plugin.TValue[string]
-	Username plugin.TValue[string]
-	Count plugin.TValue[int64]
-	Ip plugin.TValue[string]
+	UserID    plugin.TValue[string]
+	Username  plugin.TValue[string]
+	Count     plugin.TValue[int64]
+	Ip        plugin.TValue[string]
 	UserAgent plugin.TValue[string]
-	Isp plugin.TValue[string]
-	Country plugin.TValue[string]
-	Region plugin.TValue[string]
+	Isp       plugin.TValue[string]
+	Country   plugin.TValue[string]
+	Region    plugin.TValue[string]
 	DateFirst plugin.TValue[*time.Time]
-	DateLast plugin.TValue[*time.Time]
+	DateLast  plugin.TValue[*time.Time]
 }
 
 // createSlackLogin creates a new instance of this resource
@@ -1469,7 +1593,7 @@ func createSlackLogin(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
@@ -1537,28 +1661,28 @@ func (c *mqlSlackLogin) GetDateLast() *plugin.TValue[*time.Time] {
 // mqlSlackConversation for the slack.conversation resource
 type mqlSlackConversation struct {
 	MqlRuntime *plugin.Runtime
-	__id string
+	__id       string
 	// optional: if you define mqlSlackConversationInternal it will be used here
-	Id plugin.TValue[string]
-	Name plugin.TValue[string]
-	Creator plugin.TValue[*mqlSlackUser]
-	Created plugin.TValue[*time.Time]
-	Locale plugin.TValue[string]
-	Topic plugin.TValue[interface{}]
-	Purpose plugin.TValue[interface{}]
-	IsArchived plugin.TValue[bool]
-	IsOpen plugin.TValue[bool]
-	IsPrivate plugin.TValue[bool]
-	IsIM plugin.TValue[bool]
-	IsMpim plugin.TValue[bool]
-	IsGroup plugin.TValue[bool]
-	IsChannel plugin.TValue[bool]
-	IsShared plugin.TValue[bool]
-	IsExtShared plugin.TValue[bool]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Creator            plugin.TValue[*mqlSlackUser]
+	Created            plugin.TValue[*time.Time]
+	Locale             plugin.TValue[string]
+	Topic              plugin.TValue[interface{}]
+	Purpose            plugin.TValue[interface{}]
+	IsArchived         plugin.TValue[bool]
+	IsOpen             plugin.TValue[bool]
+	IsPrivate          plugin.TValue[bool]
+	IsIM               plugin.TValue[bool]
+	IsMpim             plugin.TValue[bool]
+	IsGroup            plugin.TValue[bool]
+	IsChannel          plugin.TValue[bool]
+	IsShared           plugin.TValue[bool]
+	IsExtShared        plugin.TValue[bool]
 	IsPendingExtShared plugin.TValue[bool]
-	IsOrgShared plugin.TValue[bool]
-	Priority plugin.TValue[float64]
-	Members plugin.TValue[[]interface{}]
+	IsOrgShared        plugin.TValue[bool]
+	Priority           plugin.TValue[float64]
+	Members            plugin.TValue[[]interface{}]
 }
 
 // createSlackConversation creates a new instance of this resource
@@ -1573,7 +1697,7 @@ func createSlackConversation(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	}
 
 	if res.__id == "" {
-	res.__id, err = res.id()
+		res.__id, err = res.id()
 		if err != nil {
 			return nil, err
 		}
