@@ -7,7 +7,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -19,7 +18,7 @@ func (o *mqlSlackConversations) id() (string, error) {
 	return "slack.conversations", nil
 }
 
-func (s *mqlSlackConversations) listChannels(types ...string) ([]interface{}, error) {
+func (s *mqlSlackConversations) listChannels(excludeArchived bool, types ...string) ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -31,18 +30,14 @@ func (s *mqlSlackConversations) listChannels(types ...string) ([]interface{}, er
 	// https://api.slack.com/methods/conversations.list
 	// scopes: channels:read, groups:read, im:read, mpim:read
 	opts := &slack.GetConversationsParameters{
-		Limit: 1000, // use maximum
-		Types: types,
+		Limit:           1000, // use maximum
+		Types:           types,
+		ExcludeArchived: excludeArchived,
 	}
 
 	for {
 		conversations, cursor, err := client.GetConversations(opts)
-		var rateLimitedError *slack.RateLimitedError
-		if errors.As(err, &rateLimitedError) {
-			// wait for the rate limit to expire
-			log.Info().Msgf("Rate limited, waiting %s", rateLimitedError.RetryAfter)
-			time.Sleep(rateLimitedError.RetryAfter * time.Second)
-		} else if err != nil {
+		if err != nil {
 			return nil, err
 		}
 		for i := range conversations {
@@ -63,19 +58,19 @@ func (s *mqlSlackConversations) listChannels(types ...string) ([]interface{}, er
 }
 
 func (s *mqlSlackConversations) list() ([]interface{}, error) {
-	return s.listChannels("public_channel", "private_channel", "mpim", "im")
+	return s.listChannels(false, "public_channel", "private_channel", "mpim", "im")
 }
 
 func (s *mqlSlackConversations) privateChannels() ([]interface{}, error) {
-	return s.listChannels("private_channel")
+	return s.listChannels(true, "private_channel")
 }
 
 func (s *mqlSlackConversations) publicChannels() ([]interface{}, error) {
-	return s.listChannels("public_channel")
+	return s.listChannels(true, "public_channel")
 }
 
 func (s *mqlSlackConversations) directMessages() ([]interface{}, error) {
-	return s.listChannels("mpim", "im")
+	return s.listChannels(true, "mpim", "im")
 }
 
 type topic struct {
