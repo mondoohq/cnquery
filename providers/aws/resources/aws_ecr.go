@@ -118,10 +118,10 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 				}
 				mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 					map[string]*llx.RawData{
-						"arn":             llx.StringData(convert.ToString(r.RepositoryArn)),
-						"name":            llx.StringData(convert.ToString(r.RepositoryName)),
-						"uri":             llx.StringData(convert.ToString(r.RepositoryUri)),
-						"registryId":      llx.StringData(convert.ToString(r.RegistryId)),
+						"arn":             llx.StringDataPtr(r.RepositoryArn),
+						"name":            llx.StringDataPtr(r.RepositoryName),
+						"uri":             llx.StringDataPtr(r.RepositoryUri),
+						"registryId":      llx.StringDataPtr(r.RegistryId),
 						"public":          llx.BoolData(false),
 						"region":          llx.StringData(region),
 						"imageScanOnPush": llx.BoolData(imageScanOnPush),
@@ -167,10 +167,10 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
-					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
+					"digest":     llx.StringDataPtr(image.ImageDigest),
+					"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
 					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringData(convert.ToString(image.RegistryId)),
+					"registryId": llx.StringDataPtr(image.RegistryId),
 					"repoName":   llx.StringData(name),
 					"region":     llx.StringData(region),
 					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
@@ -199,10 +199,10 @@ func (a *mqlAwsEcrRepository) images() ([]interface{}, error) {
 			}
 			mqlImage, err := CreateResource(a.MqlRuntime, "aws.ecr.image",
 				map[string]*llx.RawData{
-					"digest":     llx.StringData(convert.ToString(image.ImageDigest)),
-					"mediaType":  llx.StringData(convert.ToString(image.ImageManifestMediaType)),
+					"digest":     llx.StringDataPtr(image.ImageDigest),
+					"mediaType":  llx.StringDataPtr(image.ImageManifestMediaType),
 					"tags":       llx.ArrayData(tags, types.String),
-					"registryId": llx.StringData(convert.ToString(image.RegistryId)),
+					"registryId": llx.StringDataPtr(image.RegistryId),
 					"repoName":   llx.StringData(name),
 					"region":     llx.StringData(region),
 					"arn":        llx.StringData(ecrImageArn(ImageInfo{Region: region, RegistryId: convert.ToString(image.RegistryId), RepoName: name, Digest: convert.ToString(image.ImageDigest)})),
@@ -283,10 +283,10 @@ func (a *mqlAwsEcr) publicRepositories() ([]interface{}, error) {
 
 		mqlRepoResource, err := CreateResource(a.MqlRuntime, "aws.ecr.repository",
 			map[string]*llx.RawData{
-				"arn":             llx.StringData(convert.ToString(r.RepositoryArn)),
-				"name":            llx.StringData(convert.ToString(r.RepositoryName)),
-				"uri":             llx.StringData(convert.ToString(r.RepositoryUri)),
-				"registryId":      llx.StringData(convert.ToString(r.RegistryId)),
+				"arn":             llx.StringDataPtr(r.RepositoryArn),
+				"name":            llx.StringDataPtr(r.RepositoryName),
+				"uri":             llx.StringDataPtr(r.RepositoryUri),
+				"registryId":      llx.StringDataPtr(r.RegistryId),
 				"public":          llx.BoolData(true),
 				"region":          llx.StringData("us-east-1"),
 				"imageScanOnPush": llx.BoolData(false),

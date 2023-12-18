@@ -223,7 +223,7 @@ func (a *mqlAwsDynamodb) globalTables() ([]interface{}, error) {
 		mqlTable, err := CreateResource(a.MqlRuntime, "aws.dynamodb.globaltable",
 			map[string]*llx.RawData{
 				"arn":  llx.StringData(fmt.Sprintf(dynamoGlobalTableArnPattern, conn.AccountId(), convert.ToString(table.GlobalTableName))),
-				"name": llx.StringData(convert.ToString(table.GlobalTableName)),
+				"name": llx.StringDataPtr(table.GlobalTableName),
 			})
 		if err != nil {
 			return nil, err

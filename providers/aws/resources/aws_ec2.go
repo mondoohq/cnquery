@@ -407,11 +407,12 @@ func (a *mqlAwsEc2) getKeypairs(conn *connection.AwsConnection) []*jobpool.Job {
 				mqlKeypair, err := CreateResource(a.MqlRuntime, "aws.ec2.keypair",
 					map[string]*llx.RawData{
 						"arn":         llx.StringData(fmt.Sprintf(keypairArnPattern, conn.AccountId(), regionVal, convert.ToString(kp.KeyPairId))),
-						"fingerprint": llx.StringData(convert.ToString(kp.KeyFingerprint)),
-						"name":        llx.StringData(convert.ToString(kp.KeyName)),
+						"fingerprint": llx.StringDataPtr(kp.KeyFingerprint),
+						"name":        llx.StringDataPtr(kp.KeyName),
 						"type":        llx.StringData(string(kp.KeyType)),
 						"tags":        llx.MapData(Ec2TagsToMap(kp.Tags), types.String),
 						"region":      llx.StringData(regionVal),
+						"createdAt":   llx.TimeDataPtr(kp.CreateTime),
 					})
 				if err != nil {
 					return nil, err

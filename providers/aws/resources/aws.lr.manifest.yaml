@@ -976,6 +976,7 @@ resources:
   aws.ec2.keypair:
     fields:
       arn: {}
+      createdAt: {}
       fingerprint: {}
       name: {}
       region: {}
@@ -2386,16 +2387,13 @@ resources:
       - aws
   aws.vpc.endpoint:
     fields:
-      createdAt:
-        min_mondoo_version: 9.0.0
+      createdAt: {}
       id: {}
       policyDocument: {}
-      privateDnsEnabled:
-        min_mondoo_version: 9.0.0
+      privateDnsEnabled: {}
       region: {}
       serviceName: {}
-      state:
-        min_mondoo_version: 9.0.0
+      state: {}
       subnets: {}
       type: {}
       vpc: {}
@@ -2438,17 +2436,13 @@ resources:
   aws.vpc.subnet:
     fields:
       arn: {}
-      assignIpv6AddressOnCreation:
-        min_mondoo_version: 9.0.0
-      availabilityZone:
-        min_mondoo_version: latest
+      assignIpv6AddressOnCreation: {}
+      availabilityZone: {}
       cidrs: {}
-      defaultForAvailabilityZone:
-        min_mondoo_version: latest
+      defaultForAvailabilityZone: {}
       id: {}
       mapPublicIpOnLaunch: {}
-      state:
-        min_mondoo_version: 9.0.0
+      state: {}
     is_private: true
     min_mondoo_version: 9.0.0
     platform:

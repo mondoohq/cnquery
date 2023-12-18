@@ -2388,7 +2388,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
 }
 
 // Amazon EC2 key pair
-private aws.ec2.keypair @defaults("arn name") {
+private aws.ec2.keypair @defaults("name type region") {
   // ARN of the key pair
   arn string
   // Fingerprint for the key pair
@@ -2401,6 +2401,8 @@ private aws.ec2.keypair @defaults("arn name") {
   tags map[string]string
   // Region where the key pair exists
   region string
+  // Date the keypair was created
+  createdAt time
 }
 
 // Amazon EC2 image (AMI)
