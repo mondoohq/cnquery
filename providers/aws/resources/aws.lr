@@ -51,7 +51,7 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   isDefault bool
   // How instance hardware tenancy settings are enforced on instances launched in this VPC
   instanceTenancy string
-  // Region the VPC exists in
+  // Region in which the VPC exists
   region string
   // A list of endpoints for the VPC
   endpoints() []aws.vpc.endpoint
@@ -81,17 +81,17 @@ private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabili
   arn string
   // Unique ID of the subnet
   id string
-  // A list of CIDR descriptions
+  // List of CIDR descriptions
   cidrs string
-  // Indicates whether instances launched in this subnet receive a public IPv4 address
+  // Whether instances launched in this subnet receive public IPv4 addresses
   mapPublicIpOnLaunch bool
   // The availability zone where this subnet is located
   availabilityZone string
-  // Indicates whether this is the default subnet for the availability zone
+  // Whether this is the default subnet for the availability zone
   defaultForAvailabilityZone bool
-  // Whether a network interface created in this subnet (including a network interface created by RunInstances ) receives an IPv6 address.
+  // Whether a network interface created in this subnet (including a network interface created by RunInstances ) receives an IPv6 address
   assignIpv6AddressOnCreation bool
-  // The state of the subnet. Pending or available
+  // The state of the subnet: pending or available
   state string
 }
 
@@ -101,9 +101,9 @@ private aws.vpc.endpoint @defaults("id type region") {
   id string
   // Type of the endpoint
   type string
-  // VPC the endpoint exists in
+  // VPC in which the endpoint exists
   vpc string
-  // Region the VPC exists in
+  // Region in which the VPC exists
   region string
   // The name of the endpoint service
   serviceName string
@@ -123,9 +123,9 @@ private aws.vpc.endpoint @defaults("id type region") {
 private aws.vpc.flowlog @defaults("id region status") {
   // Unique ID of the flow log
   id string
-  // VPC the flow log exists in
+  // VPC in which the flow log exists
   vpc string
-  // Region the flow log exists in
+  // Region in which the flow log exists
   region string
   // Status of the flow log
   status string
@@ -1000,13 +1000,13 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   keyAlgorithm string
   // The serial number of the certificate
   serial string
-  // The source of the certificate. AMAZON_ISSUED or IMPORTED
+  // The source of the certificate: AMAZON_ISSUED or IMPORTED
   source string
   // The name of the certificate authority that issued and signed the certificate
   issuer string
-  // The time at which the certificate was issued. This value exists only when the certificate source is AMAZON_ISSUED
+  // The time at which the certificate was issued (exists only when the certificate source is AMAZON_ISSUED)
   issuedAt time
-  // The date and time when the certificate was imported. This value exists only when the certificate source is IMPORTED.
+  // The date and time when the certificate was imported (exists only when the certificate source is IMPORTED)
   importedAt time
 }
 
@@ -1748,7 +1748,7 @@ private aws.dynamodb.table @defaults("name region") {
   id string
   // The total size of the specified table, in bytes. DynamoDB updates this value approximately every six hours.
   sizeBytes int
-  // The current state of the table. CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED.
+  // The current state of the table: CREATING, UPDATING, DELETING, ACTIVE, INACCESSIBLE_ENCRYPTION_CREDENTIALS, ARCHIVING, or ARCHIVED
   status string
 }
 
