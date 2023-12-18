@@ -78,6 +78,7 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	}
 
 	if os.Getenv("MONDOO_SSH_SCP") == "on" || conf.Options["ssh_scp"] == "on" {
+		log.Debug().Msg("use scp file transfer")
 		res.UseScpFilesystem = true
 	}
 
@@ -100,6 +101,8 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 			// configure sudo
 			log.Debug().Msg("activated sudo for ssh connection")
 			res.Sudo = conf.Sudo
+		} else {
+			log.Debug().Msg("deactivated sudo for ssh connection since user is root")
 		}
 	}
 
@@ -281,13 +284,23 @@ func (c *SshConnection) Close() {
 	}
 }
 
+// checks the connection config and set default values if not provided by the user
+func (c *SshConnection) setDefaultSettings() {
+	// we always want to ensure we use the default port if nothing was specified
+	if c.conf.Port == 0 {
+		c.conf.Port = 22
+	}
+
+	// we need to check if an executable was provided, otherwise fallback to use sudo
+	if c.conf.Sudo != nil && c.conf.Sudo.Active && c.conf.Sudo.Executable == "" {
+		c.conf.Sudo.Executable = "sudo"
+	}
+}
+
 func (c *SshConnection) Connect() error {
 	cc := c.conf
 
-	// we always want to ensure we use the default port if nothing was specified
-	if cc.Port == 0 {
-		cc.Port = 22
-	}
+	c.setDefaultSettings()
 
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := knownHostsCallback()
