@@ -1233,6 +1233,7 @@ resources:
       containerInstances: {}
       name: {}
       pendingTasksCount: {}
+      region: {}
       registeredContainerInstancesCount: {}
       runningTasksCount: {}
       status: {}
