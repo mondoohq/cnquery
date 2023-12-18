@@ -146,7 +146,7 @@ jobs:
 
       - name: 'Save Artifacts'
         if: ${{ inputs.skip_publish }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.provider }}
           path: dist
