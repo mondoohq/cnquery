@@ -10,8 +10,17 @@ slack {
   accessLogs() []slack.login
   // List of Slack user groups
   userGroups() []slack.userGroup
-  // List of channels in a Slack team
-  conversations() []slack.conversation
+}
+
+// Slack conversations (channels, direct messages, and group messages)
+slack.conversations {
+  []slack.conversation
+  // List of private channels in a Slack team
+  privateChannels() []slack.conversation
+  // List of public channels in a Slack team
+  publicChannels() []slack.conversation
+  // List of direct messages in a Slack team
+  directMessages() []slack.conversation
 }
 
 // Slack team
@@ -26,7 +35,7 @@ slack.team @defaults("id domain") {
   emailDomain string
 }
 
- // Slack users
+// Slack users
 slack.users {
   []slack.user
   // Bot users in the workspace

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -14,7 +15,11 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/slack/connection"
 )
 
-func (s *mqlSlack) conversations() ([]interface{}, error) {
+func (o *mqlSlackConversations) id() (string, error) {
+	return "slack.conversations", nil
+}
+
+func (s *mqlSlackConversations) listChannels(types ...string) ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -27,12 +32,17 @@ func (s *mqlSlack) conversations() ([]interface{}, error) {
 	// scopes: channels:read, groups:read, im:read, mpim:read
 	opts := &slack.GetConversationsParameters{
 		Limit: 1000, // use maximum
-		Types: []string{"public_channel", "private_channel", "mpim", "im"},
+		Types: types,
 	}
 
 	for {
 		conversations, cursor, err := client.GetConversations(opts)
-		if err != nil {
+		var rateLimitedError *slack.RateLimitedError
+		if errors.As(err, &rateLimitedError) {
+			// wait for the rate limit to expire
+			log.Info().Msgf("Rate limited, waiting %s", rateLimitedError.RetryAfter)
+			time.Sleep(rateLimitedError.RetryAfter * time.Second)
+		} else if err != nil {
 			return nil, err
 		}
 		for i := range conversations {
@@ -52,7 +62,22 @@ func (s *mqlSlack) conversations() ([]interface{}, error) {
 	return list, nil
 }
 
-// custom object to make sure the json values match and the time is properly parsed
+func (s *mqlSlackConversations) list() ([]interface{}, error) {
+	return s.listChannels("public_channel", "private_channel", "mpim", "im")
+}
+
+func (s *mqlSlackConversations) privateChannels() ([]interface{}, error) {
+	return s.listChannels("private_channel")
+}
+
+func (s *mqlSlackConversations) publicChannels() ([]interface{}, error) {
+	return s.listChannels("public_channel")
+}
+
+func (s *mqlSlackConversations) directMessages() ([]interface{}, error) {
+	return s.listChannels("mpim", "im")
+}
+
 type topic struct {
 	Value   string     `json:"value"`
 	Creator string     `json:"creator"`

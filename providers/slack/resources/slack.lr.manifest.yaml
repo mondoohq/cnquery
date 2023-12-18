@@ -5,7 +5,6 @@ resources:
   slack:
     fields:
       accessLogs: {}
-      conversations: {}
       userGroups: {}
     min_mondoo_version: latest
   slack.conversation:
@@ -30,6 +29,14 @@ resources:
       priority: {}
       purpose: {}
       topic: {}
+    min_mondoo_version: latest
+  slack.conversations:
+    fields:
+      "": {}
+      directMessages: {}
+      list: {}
+      privateChannels: {}
+      publicChannels: {}
     min_mondoo_version: latest
   slack.enterpriseUser:
     fields:
