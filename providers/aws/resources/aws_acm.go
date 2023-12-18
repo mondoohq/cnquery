@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v9/providers/aws/connection"
 
@@ -70,7 +69,7 @@ func (a *mqlAwsAcm) getCertificates(conn *connection.AwsConnection) []*jobpool.J
 				}
 				for _, cert := range certs.CertificateSummaryList {
 					mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate", map[string]*llx.RawData{
-						"arn": llx.StringData(convert.ToString(cert.CertificateArn)),
+						"arn": llx.StringDataPtr(cert.CertificateArn),
 					})
 					if err != nil {
 						return nil, err

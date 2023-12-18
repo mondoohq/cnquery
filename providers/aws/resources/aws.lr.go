@@ -3411,6 +3411,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.keypair.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Keypair).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.ec2.keypair.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Keypair).GetCreatedAt()).ToDataRes(types.Time)
+	},
 	"aws.ec2.image.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Image).GetArn()).ToDataRes(types.String)
 	},
@@ -7781,6 +7784,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.keypair.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Keypair).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.keypair.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Keypair).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20250,6 +20257,7 @@ type mqlAwsEc2Keypair struct {
 	Type plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	Region plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsEc2Keypair creates a new instance of this resource
@@ -20311,6 +20319,10 @@ func (c *mqlAwsEc2Keypair) GetTags() *plugin.TValue[map[string]interface{}] {
 
 func (c *mqlAwsEc2Keypair) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsEc2Keypair) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsEc2Image for the aws.ec2.image resource
