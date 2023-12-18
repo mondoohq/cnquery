@@ -19,7 +19,7 @@ func (o *mqlSlackConversations) id() (string, error) {
 	return "slack.conversations", nil
 }
 
-func (s *mqlSlackConversations) listChannels(types []string) ([]interface{}, error) {
+func (s *mqlSlackConversations) listChannels(types ...string) ([]interface{}, error) {
 	conn := s.MqlRuntime.Connection.(*connection.SlackConnection)
 	client := conn.Client()
 	if client == nil {
@@ -63,19 +63,19 @@ func (s *mqlSlackConversations) listChannels(types []string) ([]interface{}, err
 }
 
 func (s *mqlSlackConversations) list() ([]interface{}, error) {
-	return s.listChannels([]string{"public_channel", "private_channel", "mpim", "im"})
+	return s.listChannels("public_channel", "private_channel", "mpim", "im")
 }
 
 func (s *mqlSlackConversations) privateChannels() ([]interface{}, error) {
-	return s.listChannels([]string{"private_channel"})
+	return s.listChannels("private_channel")
 }
 
 func (s *mqlSlackConversations) publicChannels() ([]interface{}, error) {
-	return s.listChannels([]string{"public_channel"})
+	return s.listChannels("public_channel")
 }
 
 func (s *mqlSlackConversations) directMessages() ([]interface{}, error) {
-	return s.listChannels([]string{"mpim", "im"})
+	return s.listChannels("mpim", "im")
 }
 
 type topic struct {
