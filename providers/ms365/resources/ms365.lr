@@ -104,6 +104,8 @@ private microsoft.group @defaults("id displayName") {
   mailNickname string
   // Group email
   mail string
+  // Group visibility state
+  visibility string
   // List of group members
   members() []microsoft.user
 }
