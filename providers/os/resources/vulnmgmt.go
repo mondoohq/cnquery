@@ -27,11 +27,12 @@ func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 	}
 
 	var mondooClient *gql.MondooClient
+	var err error
 	if v.gqlClient != nil {
 		mondooClient = v.gqlClient
 	} else {
 		// get new gql client
-		mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		mondooClient, err = gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
 		if err != nil {
 			return nil, err
 		}
@@ -197,11 +198,12 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 	}
 
 	var mondooClient *gql.MondooClient
+	var err error
 	if v.gqlClient != nil {
 		mondooClient = v.gqlClient
 	} else {
 		// get new gql client
-		mondooClient, err := gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		mondooClient, err = gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
 		if err != nil {
 			return nil, err
 		}
@@ -260,4 +262,17 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 	}
 
 	return gqlVulnReport, nil
+}
+
+func (a *mqlVulnAdvisory) id() (string, error) {
+	return a.Id.Data, a.Id.Error
+}
+
+func (c *mqlVulnCve) id() (string, error) {
+	return c.Id.Data, c.Id.Error
+}
+
+func (p *mqlVulnPackage) id() (string, error) {
+	id := p.Name.Data + "-" + p.Version.Data
+	return id, p.Name.Error
 }
