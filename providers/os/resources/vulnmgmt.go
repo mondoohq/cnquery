@@ -245,6 +245,7 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 			Name:    mondoogql.String(mqlPkg.Name.Data),
 			Version: mondoogql.String(mqlPkg.Version.Data),
 			Arch:    mondoogql.NewStringPtr(mondoogql.String(mqlPkg.Arch.Data)),
+			Origin:  mondoogql.NewStringPtr(mondoogql.String(mqlPkg.Origin.Data)),
 		}
 	}
 
