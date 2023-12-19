@@ -1402,7 +1402,12 @@ func createVulnCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vuln.cve", res.__id)
@@ -1475,7 +1480,12 @@ func createVulnAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("vuln.advisory", res.__id)
