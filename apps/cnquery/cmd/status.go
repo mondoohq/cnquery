@@ -78,6 +78,13 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		}
 		s.Upstream = upstreamStatus
 
+		latestVersion, err := cnquery.GetLatestVersion(httpClient)
+		if err != nil {
+			return cli_errors.NewCommandError(errors.Wrap(err, "failed to get latest version"), 1)
+		}
+
+		s.Client.LatestVersion = latestVersion
+
 		// check valid agent authentication
 		plugins := []ranger.ClientPlugin{}
 
@@ -139,6 +146,7 @@ type ClientStatus struct {
 	ServiceAccount string              `json:"service_account,omitempty"`
 	ParentMrn      string              `json:"parentMrn,omitempty"`
 	Version        string              `json:"version,omitempty"`
+	LatestVersion  string              `json:"latest_version,omitempty"`
 	Build          string              `json:"build,omitempty"`
 	Labels         map[string]string   `json:"labels,omitempty"`
 	Platform       *inventory.Platform `json:"platform,omitempty"`
@@ -162,15 +170,10 @@ func (s Status) RenderCliStatus() {
 	log.Info().Msg("Time:\t\t\t" + s.Client.Timestamp)
 	log.Info().Msg("Version:\t\t" + cnquery.GetVersion() + " (API Version: " + cnquery.APIVersion() + ")")
 
-	latestVersion, err := cnquery.GetLatestVersion()
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to get latest version")
-	}
+	if s.Client.LatestVersion != "" {
+		log.Info().Msg("Latest Version:\t" + s.Client.LatestVersion)
 
-	if latestVersion != "" {
-		log.Info().Msg("Latest Version:\t" + latestVersion)
-
-		if cnquery.GetVersion() != latestVersion && cnquery.GetVersion() != "unstable" {
+		if cnquery.GetVersion() != s.Client.LatestVersion && cnquery.GetVersion() != "unstable" {
 			log.Warn().Msg("A newer version is available")
 		}
 	}
