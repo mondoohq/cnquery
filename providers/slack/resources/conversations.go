@@ -30,7 +30,7 @@ func (s *mqlSlackConversations) listChannels(excludeArchived bool, types ...stri
 	// https://api.slack.com/methods/conversations.list
 	// scopes: channels:read, groups:read, im:read, mpim:read
 	opts := &slack.GetConversationsParameters{
-		Limit:           1000, // use maximum
+		Limit:           999, // use maximum, must be lower than 1000
 		Types:           types,
 		ExcludeArchived: excludeArchived,
 	}
@@ -171,7 +171,7 @@ func (s *mqlSlackConversation) members() ([]interface{}, error) {
 
 	opts := &slack.GetUsersInConversationParameters{
 		ChannelID: s.Id.Data,
-		Limit:     1000,
+		Limit:     999, // must be less than 1000
 	}
 
 	for {
