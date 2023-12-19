@@ -52,8 +52,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.43.5
 	github.com/aws/smithy-go v1.19.0
 	github.com/cockroachdb/errors v1.11.1
+	github.com/google/uuid v1.4.0
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.8.4
@@ -90,7 +92,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.43.5 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231121224113-b6714ac5eb13 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
@@ -122,7 +123,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-containerregistry v0.17.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
