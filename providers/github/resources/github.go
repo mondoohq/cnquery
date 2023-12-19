@@ -6,7 +6,7 @@ package resources
 import (
 	"time"
 
-	"github.com/google/go-github/v55/github"
+	"github.com/google/go-github/v57/github"
 )
 
 func githubTimestamp(ts *github.Timestamp) *time.Time {
