@@ -4,13 +4,15 @@
 package cnquery
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetLatestVersion(t *testing.T) {
-	version, err := GetLatestVersion()
+	client := &http.Client{}
+	version, err := GetLatestVersion(client)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, version)
