@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -79,7 +80,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime)
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 2)
 
@@ -89,7 +90,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err = resources.Discover(pluginRuntime)
+	inv, err = resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 2)
 
@@ -99,7 +100,7 @@ func TestManifestDiscovery(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err = resources.Discover(pluginRuntime)
+	inv, err = resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 1)
 }
@@ -132,7 +133,7 @@ func TestOperatorManifest(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime)
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 2)
 
@@ -180,7 +181,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime)
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 2)
 
@@ -227,7 +228,7 @@ func TestManifestNoObjects(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime)
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 1)
 
@@ -272,7 +273,7 @@ func TestManifestDir(t *testing.T) {
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
 	}
-	inv, err := resources.Discover(pluginRuntime)
+	inv, err := resources.Discover(pluginRuntime, cnquery.Features{})
 	require.NoError(t, err)
 	require.Len(t, inv.Spec.Assets, 3)
 

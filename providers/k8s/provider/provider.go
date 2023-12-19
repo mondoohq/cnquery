@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
@@ -126,7 +127,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 	}
 
-	inventory, err := s.discover(conn)
+	inventory, err := s.discover(conn, req.Features)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) discover(conn shared.Connection) (*inventory.Inventory, error) {
+func (s *Service) discover(conn shared.Connection, features cnquery.Features) (*inventory.Inventory, error) {
 	if conn.InventoryConfig().Discover == nil {
 		return nil, nil
 	}
@@ -206,7 +207,7 @@ func (s *Service) discover(conn shared.Connection) (*inventory.Inventory, error)
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
 	}
 
-	return resources.Discover(runtime)
+	return resources.Discover(runtime, features)
 }
 
 func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
