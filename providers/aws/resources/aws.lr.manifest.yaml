@@ -1921,6 +1921,8 @@ resources:
       publiclyAccessible:
         min_mondoo_version: 9.0.0
       region: {}
+      securityGroups:
+        min_mondoo_version: 9.0.0
       snapshots: {}
       status:
         min_mondoo_version: 9.0.0

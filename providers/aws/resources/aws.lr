@@ -1802,6 +1802,8 @@ private aws.rds.dbcluster @defaults("id region") {
   multiAZ bool
   // Whether deletion protection is enabled
   deletionProtection bool
+  // List of VPC security group elements that the DB cluster belongs to
+  securityGroups []aws.ec2.securitygroup
 }
 
 // Amazon RDS snapshot

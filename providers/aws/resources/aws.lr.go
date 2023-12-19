@@ -2679,6 +2679,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetDeletionProtection()).ToDataRes(types.Bool)
 	},
+	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -6696,6 +6699,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17435,6 +17442,7 @@ type mqlAwsRdsDbcluster struct {
 	PubliclyAccessible plugin.TValue[bool]
 	MultiAZ plugin.TValue[bool]
 	DeletionProtection plugin.TValue[bool]
+	SecurityGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -17564,6 +17572,10 @@ func (c *mqlAwsRdsDbcluster) GetMultiAZ() *plugin.TValue[bool] {
 
 func (c *mqlAwsRdsDbcluster) GetDeletionProtection() *plugin.TValue[bool] {
 	return &c.DeletionProtection
+}
+
+func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.SecurityGroups
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
