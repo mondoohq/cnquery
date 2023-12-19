@@ -188,13 +188,14 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	args["name"] = llx.StringData(convert.ToString(c.ClusterName))
+	args["name"] = llx.StringDataPtr(c.ClusterName)
 	args["tags"] = llx.MapData(ecsTags(c.Tags), types.String)
 	args["runningTasksCount"] = llx.IntData(int64(c.RunningTasksCount))
 	args["pendingTasksCount"] = llx.IntData(int64(c.PendingTasksCount))
 	args["registeredContainerInstancesCount"] = llx.IntData(int64(c.RegisteredContainerInstancesCount))
 	args["configuration"] = llx.MapData(configuration, types.String)
-	args["status"] = llx.StringData(convert.ToString(c.Status))
+	args["status"] = llx.StringDataPtr(c.Status)
+	args["region"] = llx.StringData(region)
 	return args, nil, nil
 }
 

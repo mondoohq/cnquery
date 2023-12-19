@@ -1986,6 +1986,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.containerInstances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetContainerInstances()).ToDataRes(types.Array(types.Resource("aws.ecs.instance")))
 	},
+	"aws.ecs.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.ecs.instance.agentConnected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsInstance).GetAgentConnected()).ToDataRes(types.Bool)
 	},
@@ -5631,6 +5634,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ecs.cluster.containerInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).ContainerInstances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14339,6 +14346,7 @@ type mqlAwsEcsCluster struct {
 	Status plugin.TValue[string]
 	Tasks plugin.TValue[[]interface{}]
 	ContainerInstances plugin.TValue[[]interface{}]
+	Region plugin.TValue[string]
 }
 
 // createAwsEcsCluster creates a new instance of this resource
@@ -14440,6 +14448,10 @@ func (c *mqlAwsEcsCluster) GetContainerInstances() *plugin.TValue[[]interface{}]
 
 		return c.containerInstances()
 	})
+}
+
+func (c *mqlAwsEcsCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEcsInstance for the aws.ecs.instance resource

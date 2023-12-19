@@ -1172,7 +1172,7 @@ aws.ecs {
 }
 
 // Amazon ECS cluster
-private aws.ecs.cluster {
+private aws.ecs.cluster @defaults("name region status runningTasksCount pendingTasksCount") {
   // ARN of the ECS cluster
   arn string
   // Name of the ECS cluster
@@ -1193,6 +1193,8 @@ private aws.ecs.cluster {
   tasks() []aws.ecs.task
   // List of AWS ECS container instances
   containerInstances() []aws.ecs.instance
+  // The region where the cluster is located
+  region string
 }
 
 // AWS ECS container instance
