@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared"
@@ -83,7 +84,7 @@ func (f *NamespaceFilterOpts) skipNamespace(namespace string) bool {
 	return false
 }
 
-func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(shared.Connection)
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
@@ -136,7 +137,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 		if err != nil {
 			return nil, err
 		}
-		setRelatedAssets(conn, root, assets, od)
+		setRelatedAssets(conn, root, assets, od, features)
 		in.Spec.Assets = append(in.Spec.Assets, assets...)
 	} else {
 		nss, err := discoverNamespaces(conn, invConfig, "", nil, nsFilter)
@@ -159,7 +160,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 			if err != nil {
 				return nil, err
 			}
-			setRelatedAssets(conn, ns, assets, od)
+			setRelatedAssets(conn, ns, assets, od, features)
 			in.Spec.Assets = append(in.Spec.Assets, assets...)
 		}
 	}
@@ -978,7 +979,7 @@ func createPlatformData(objectKind, runtime string) (*inventory.Platform, error)
 	return platformData, nil
 }
 
-func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*inventory.Asset, od *PlatformIdOwnershipIndex) {
+func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*inventory.Asset, od *PlatformIdOwnershipIndex, features cnquery.Features) {
 	// everything is connected to the root asset
 	root.RelatedAssets = append(root.RelatedAssets, assets...)
 
@@ -1000,7 +1001,7 @@ func setRelatedAssets(conn shared.Connection, root *inventory.Asset, assets []*i
 				// from the ownerReference field
 				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
 					platformData, err := createPlatformData(platformEntry.Kind, conn.Runtime())
-					if err != nil {
+					if err != nil || (!features.IsActive(cnquery.K8sNodeDiscovery) && platformData.Name == "k8s-node") {
 						continue
 					}
 					a.RelatedAssets = append(a.RelatedAssets, &inventory.Asset{
