@@ -1,3 +1,6 @@
+[commands."command -v rpm"]
+stdout="/usr/bin/rpm"
+
 [commands."rpm -qa --queryformat '%{NAME} %{EPOCHNUM}:%{VERSION}-%{RELEASE} %{ARCH} %{SUMMARY}\\n'"]
 stdout="""
 tzdata 0:2018e-3.el7 noarch Timezone data
@@ -144,4 +147,12 @@ yum 0:3.4.3-158.el7.centos noarch RPM package installer/updater/manager
 yum-utils 0:1.1.31-46.el7_5 noarch Utilities based around the yum package manager
 passwd 0:0.79-4.el7 x86_64 An utility for setting or changing passwords using PAM
 rootfiles 0:8.1-11.el7 noarch The basic required files for the root user's directory
+"""
+
+[commands."rpm -ql hostname"]
+stdout="""
+/usr/bin/dnsdomainname
+/usr/bin/domainname
+/usr/share/man/man1/nisdomainname.1.gz
+/usr/share/man/man1/ypdomainname.1.gz
 """

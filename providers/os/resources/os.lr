@@ -623,6 +623,14 @@ package @defaults("name version") {
   installed bool
   // Whether the package is outdated
   outdated() bool
+
+  // Package files
+  files() []pkgFileInfo
+}
+
+private pkgFileInfo @defaults("path") {
+  // Path to the file
+  path string
 }
 
 // List of packages on this system

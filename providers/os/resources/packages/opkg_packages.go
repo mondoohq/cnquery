@@ -172,3 +172,8 @@ func (opkg *OpkgPkgManager) ListFromFile() ([]Package, error) {
 func (opkg *OpkgPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
+
+func (opkg *OpkgPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

@@ -55,23 +55,28 @@ type AixPkgManager struct {
 	platform *inventory.Platform
 }
 
-func (f *AixPkgManager) Name() string {
+func (a *AixPkgManager) Name() string {
 	return "AIX Package Manager"
 }
 
-func (f *AixPkgManager) Format() string {
+func (a *AixPkgManager) Format() string {
 	return AixPkgFormat
 }
 
-func (f *AixPkgManager) List() ([]Package, error) {
-	cmd, err := f.conn.RunCommand("lslpp -cl ")
+func (a *AixPkgManager) List() ([]Package, error) {
+	cmd, err := a.conn.RunCommand("lslpp -cl ")
 	if err != nil {
 		return nil, fmt.Errorf("could not read freebsd package list")
 	}
 
-	return parseAixPackages(f.platform, cmd.Stdout)
+	return parseAixPackages(a.platform, cmd.Stdout)
 }
 
-func (f *AixPkgManager) Available() (map[string]PackageUpdate, error) {
+func (a *AixPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
+}
+
+func (a *AixPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
 }

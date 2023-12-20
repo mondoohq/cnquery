@@ -100,3 +100,8 @@ func (s *SolarisPkgManager) List() ([]Package, error) {
 func (s *SolarisPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
+
+func (s *SolarisPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

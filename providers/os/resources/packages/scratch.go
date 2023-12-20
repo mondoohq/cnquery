@@ -24,3 +24,8 @@ func (dpm *ScratchPkgManager) List() ([]Package, error) {
 func (dpm *ScratchPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
+
+func (dpm *ScratchPkgManager) Files(nname string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

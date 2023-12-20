@@ -35,8 +35,7 @@ zziplib 0.13.67-1`
 	m := packages.ParsePacmanPackages(pf, strings.NewReader(pkgList))
 
 	assert.Equal(t, 8, len(m), "detected the right amount of packages")
-	var p packages.Package
-	p = packages.Package{
+	p := packages.Package{
 		Name:    "qpdfview",
 		Version: "0.4.17beta1-4.1",
 		PUrl:    "pkg:alpm/arch/qpdfview@0.4.17beta1-4.1?distro=arch",

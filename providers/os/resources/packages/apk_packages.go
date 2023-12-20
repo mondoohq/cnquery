@@ -11,6 +11,7 @@ import (
 	cpe2 "go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/purl"
 	"io"
+	"path/filepath"
 	"regexp"
 
 	"github.com/rs/zerolog/log"
@@ -58,6 +59,7 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 	scanner := bufio.NewScanner(input)
 	pkg := Package{}
 	var key string
+	var dir string
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -95,6 +97,14 @@ func ParseApkDbPackages(pf *inventory.Platform, input io.Reader) []Package {
 			pkg.Origin = m[2] // origin
 		case "T":
 			pkg.Description = m[2] // description
+		case "F":
+			dir = m[2]
+		case "R":
+			// files
+			pkg.FilesAvailable = PkgFilesIncluded
+			pkg.Files = append(pkg.Files, FileRecord{
+				Path: filepath.Join(dir, m[2]),
+			})
 		}
 	}
 
@@ -157,4 +167,9 @@ func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 		return nil, fmt.Errorf("could not read package update list")
 	}
 	return ParseApkUpdates(cmd.Stdout)
+}
+
+func (apm *AlpinePkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
 }

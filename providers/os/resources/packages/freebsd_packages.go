@@ -84,3 +84,8 @@ func (f *FreeBSDPkgManager) List() ([]Package, error) {
 func (f *FreeBSDPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
+
+func (mpm *FreeBSDPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

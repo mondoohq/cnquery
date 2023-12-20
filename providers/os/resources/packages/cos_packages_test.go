@@ -19,8 +19,7 @@ func TestParseCosPackages(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 3, len(m), "detected the right amount of packages")
 
-	var p Package
-	p = Package{
+	p := Package{
 		Name:    "zlib",
 		Version: "1.2.11-r4",
 		Arch:    "",

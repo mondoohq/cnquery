@@ -228,3 +228,18 @@ Description: Dynamic library for security auditing
  security related events.
 Homepage: http://people.redhat.com/sgrubb/audit/
 """
+
+[files."/var/lib/dpkg/info/libss2:amd64.list"]
+content="""
+/.
+/lib
+/lib/aarch64-linux-gnu
+/lib/aarch64-linux-gnu/libss.so.2.0
+/usr
+/usr/share
+/usr/share/doc
+/usr/share/doc/libss2
+/usr/share/doc/libss2/copyright
+/lib/aarch64-linux-gnu/libss.so.2
+/usr/share/doc/libss2/changelog.Debian.gz
+"""
