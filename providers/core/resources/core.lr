@@ -145,3 +145,9 @@ cpe @defaults("uri") {
   // Other of the CPE
   other() string
 }
+
+slow {
+  field() string
+  field2() string
+  list() []string
+}

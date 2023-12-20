@@ -341,6 +341,12 @@ resources:
       url: {}
       uuid: {}
     min_mondoo_version: 5.15.0
+  slow:
+    fields:
+      field: {}
+      field2: {}
+      list: {}
+    min_mondoo_version: latest
   socket:
     fields:
       address: {}

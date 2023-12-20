@@ -1,0 +1,36 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+policies:
+  - uid: slow-data-collector
+    name: Slow data collector policy
+    groups:
+      - filters:
+          - asset.family.contains("unix")
+        checks:
+        - uid: mondoo-slow-field-1
+          title: Slow query 1
+          mql: |
+            slow.field == "field"
+        - uid: mondoo-slow-field-2
+          title: Slow query 2
+          mql: |
+            slow.field2 == "field"
+        - uid: mondoo-slow-list
+          title: Slow list
+          mql: |
+            slow.list == empty
+        - uid: mondoo-slow-list-where
+          title: Slow list with filter
+          mql: |
+            slow.list.where( _ == "b").length == 2
+        - uid: mondoo-slow-list-all
+          title: Slow list with all
+          mql: |
+            slow.list.where( _ == "b").all(_ == "b")
+        - uid: mondoo-openssh-installed-version
+          title: Check ssh package is installed
+          mql: packages.any(name == /ssh/)
+        - uid: mondoo-openssh-config
+          title: Check ssh config
+          mql: sshd.config.params["UsePAM"] == "yes"

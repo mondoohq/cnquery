@@ -50,6 +50,10 @@ func init() {
 			Init: initCpe,
 			Create: createCpe,
 		},
+		"slow": {
+			// to override args, implement: initSlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSlow,
+		},
 	}
 }
 
@@ -273,6 +277,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cpe.other": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCpe).GetOther()).ToDataRes(types.String)
+	},
+	"slow.field": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlow).GetField()).ToDataRes(types.String)
+	},
+	"slow.field2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlow).GetField2()).ToDataRes(types.String)
+	},
+	"slow.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSlow).GetList()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -524,6 +537,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"cpe.other": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCpe).Other, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"slow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlSlow).__id, ok = v.Value.(string)
+			return
+		},
+	"slow.field": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlow).Field, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"slow.field2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlow).Field2, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"slow.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSlow).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -1204,5 +1233,70 @@ func (c *mqlCpe) GetTargetHw() *plugin.TValue[string] {
 func (c *mqlCpe) GetOther() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Other, func() (string, error) {
 		return c.other()
+	})
+}
+
+// mqlSlow for the slow resource
+type mqlSlow struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlSlowInternal it will be used here
+	Field plugin.TValue[string]
+	Field2 plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createSlow creates a new instance of this resource
+func createSlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSlow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("slow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSlow) MqlName() string {
+	return "slow"
+}
+
+func (c *mqlSlow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSlow) GetField() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Field, func() (string, error) {
+		return c.field()
+	})
+}
+
+func (c *mqlSlow) GetField2() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Field2, func() (string, error) {
+		return c.field2()
+	})
+}
+
+func (c *mqlSlow) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		return c.list()
 	})
 }
