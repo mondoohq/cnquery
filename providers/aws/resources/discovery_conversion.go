@@ -250,6 +250,8 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.Options = conn.ConnectionOptions()
 	asset.Labels["mondoo.com/region"] = instance.Region.Data
 	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
+	asset.Labels["mondoo.com/instance-type"] = instance.InstanceType.Data
+
 	if instance.GetImage().Data != nil {
 		asset.Labels["mondoo.com/image"] = instance.GetImage().Data.Id.Data
 	}

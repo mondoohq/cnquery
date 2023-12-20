@@ -335,8 +335,66 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				}
 			}
 		}
-	// case DiscoveryECSContainersAPI:
-	// case DiscoveryECRImageAPI:
+	case DiscoveryECSContainersAPI:
+		res, err := NewResource(runtime, "aws.ecs", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ecs := res.(*mqlAwsEcs)
+
+		containers := ecs.GetContainers()
+		if containers == nil {
+			return assetList, nil
+		}
+
+		for i := range containers.Data {
+			c := containers.Data[i].(*mqlAwsEcsContainer)
+			if !containerMatchesFilters(c, filters) {
+				continue
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId,
+				mqlObject{
+					name: c.ContainerName.Data, labels: map[string]string{},
+					awsObject: awsObject{
+						account: accountId, region: c.Region.Data, arn: c.Arn.Data,
+						id: c.Arn.Data, service: "ecs", objectType: "container",
+					},
+				}, conn))
+		}
+
+	case DiscoveryECRImageAPI:
+		res, err := NewResource(runtime, "aws.ecr", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		ecr := res.(*mqlAwsEcr)
+
+		images := ecr.GetImages()
+		if images == nil {
+			return assetList, nil
+		}
+
+		for i := range images.Data {
+			a := images.Data[i].(*mqlAwsEcrImage)
+			if !imageMatchesFilters(a, filters) {
+				continue
+			}
+			l := make(map[string]string)
+			for i := range a.Tags.Data {
+				l[a.Tags.Data[i].(string)] = ""
+			}
+
+			assetList = append(assetList, MqlObjectToAsset(accountId,
+				mqlObject{
+					name: l["Name"], labels: l,
+					awsObject: awsObject{
+						account: accountId, region: a.Region.Data, arn: a.Arn.Data,
+						id: a.Uri.Data, service: "ecr", objectType: "image",
+					},
+				}, conn))
+		}
 	case DiscoveryEC2InstanceAPI:
 		res, err := NewResource(runtime, "aws.ec2", map[string]*llx.RawData{})
 		if err != nil {
