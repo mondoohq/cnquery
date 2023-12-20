@@ -9,10 +9,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/mitchellh/hashstructure/v2"
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/explorer"
-	"time"
+	"go.mondoo.com/cnquery/v9/mrn"
 )
 
 // SBOMQueryPack is a protobuf message that contains the SBOM query pack
@@ -72,6 +75,8 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 				bom.Asset.Platform.Version = rb.Asset.Version
 				bom.Asset.Platform.Arch = rb.Asset.Arch
 				bom.Asset.Platform.Cpes = rb.Asset.CPEs
+				bom.Asset.Platform.Labels = rb.Asset.Labels
+				bom.Asset.PlatformIds = enrichPlatformIds(rb.Asset.IDs)
 			}
 			if rb.Packages != nil {
 				for _, pkg := range rb.Packages {
@@ -108,4 +113,32 @@ func (b *Package) Hash() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%016x", hash), nil
+}
+
+// enrichPlatformIds adds the platform id based on cnquery ids
+// - AWS EC2 instance ARN
+func enrichPlatformIds(ids []string) []string {
+	platformIds := []string{}
+	for i := range ids {
+		platformIds = append(platformIds, ids[i])
+
+		// handle AWS EC2 instance platform identifier and generate AWS ARN as additional identifier
+		// EC2 arns have the following format arn:aws:ec2:<REGION>:<ACCOUNT_ID>:instance/<instance-id>
+		// //platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/12345678910/regions/us-east-1/instances/i-1234567890abcdef0
+		if strings.HasPrefix(ids[i], "//platformid.api.mondoo.app/runtime/aws/ec2/v1") {
+			ec2mrn, err := mrn.NewMRN(ids[i])
+			if err != nil {
+				continue
+			}
+
+			accountID, _ := ec2mrn.ResourceID("accounts")
+			region, _ := ec2mrn.ResourceID("regions")
+			instanceID, _ := ec2mrn.ResourceID("instances")
+
+			if accountID != "" && region != "" && instanceID != "" {
+				platformIds = append(platformIds, fmt.Sprintf("arn:aws:ec2:%s:%s:instance/%s", region, accountID, instanceID))
+			}
+		}
+	}
+	return platformIds
 }

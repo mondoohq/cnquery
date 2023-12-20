@@ -29,12 +29,13 @@ type ReportCollectionJson struct {
 
 // Structures to parse the data from cnquery report
 type BomAsset struct {
-	Name     string   `json:"name,omitempty"`
-	Platform string   `json:"platform,omitempty"`
-	Version  string   `json:"version,omitempty"`
-	Arch     string   `json:"arch,omitempty"`
-	CPEs     []string `json:"cpes.map,omitempty"`
-	IDs      []string `json:"ids,omitempty"`
+	Name     string            `json:"name,omitempty"`
+	Platform string            `json:"platform,omitempty"`
+	Version  string            `json:"version,omitempty"`
+	Arch     string            `json:"arch,omitempty"`
+	CPEs     []string          `json:"cpes.map,omitempty"`
+	IDs      []string          `json:"ids,omitempty"`
+	Labels   map[string]string `json:"labels,omitempty"`
 }
 
 type BomPackage struct {
