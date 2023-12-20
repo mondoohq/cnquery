@@ -234,6 +234,24 @@ resources:
       title: Return a list of AWS API Gateway REST APIs configured across all enabled
         regions in the AWS account and the values for the arn and stages
   aws.applicationAutoscaling:
+    docs:
+      desc: |
+        The aws.applicationAutoscaling resource inspects targets in the AWS Application Auto Scaling service. The AWS Auto Scaling service allows users to load balance multiple AWS services including:
+          - AppStream 2.0 fleets
+          - Aurora replicas
+          - Amazon Comprehend document classification and entity recognizer endpoints
+          - DynamoDB tables and global secondary indexes
+          - Amazon Elastic Container Service (ECS) services
+          - ElastiCache for Redis clusters (replication groups)
+          - Amazon EMR clusters
+          - Amazon Keyspaces (for Apache Cassandra) tables
+          - Lambda function provisioned concurrency
+          - Amazon Managed Streaming for Apache Kafka (MSK) broker storage
+          - Amazon Neptune clusters
+          - SageMaker endpoint variants
+          - SageMaker inference components
+          - SageMaker Serverless provisioned concurrency
+          - Spot Fleet requests
     fields:
       namespace: {}
       scalableTargets: {}
@@ -254,6 +272,9 @@ resources:
     platform:
       name:
       - aws
+    refs:
+    - title: What is Application Auto Scaling?
+      url: https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html
   aws.autoscaling:
     docs:
       desc: |

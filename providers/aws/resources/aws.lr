@@ -1616,7 +1616,7 @@ private aws.s3.bucket.policy @defaults("name version") {
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
-  // Service namespace to query for application auto scaling
+  // Service namespace to query for application auto scaling. comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
   namespace string
   // List of scalable targets belonging to the service namespace
   scalableTargets() []aws.applicationautoscaling.target
