@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v55/github"
+	"github.com/google/go-github/v57/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"

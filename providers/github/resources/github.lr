@@ -90,7 +90,7 @@ github.organization @defaults("login name") {
   billingEmail string
   // GitHub plan the organization is subscribed to
   plan dict
-  // Whether two-factor authentication is required for all members
+  // Whether two-factor authentication is required for all members. This value will be null if the API token does not have owner access on the organization.
   twoFactorRequirementEnabled bool
   // Whether the organization is verified by GitHub
   isVerified bool
