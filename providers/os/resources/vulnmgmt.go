@@ -249,10 +249,20 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 		}
 	}
 
-	gqlVulnReport, err := mondooClient.GetIncognitoVulnReport(mondoogql.PlatformInput{
+	inputPlatform := mondoogql.PlatformInput{
 		Name:    mondoogql.NewStringPtr(mondoogql.String(platform.Name)),
 		Release: mondoogql.NewStringPtr(mondoogql.String(platform.Version)),
-	}, gqlPackages)
+		Build:   mondoogql.NewStringPtr(mondoogql.String(platform.Build)),
+	}
+	inputLabels := []*mondoogql.KeyValueInput{}
+	for k := range platform.Labels {
+		inputLabels = append(inputLabels, &mondoogql.KeyValueInput{
+			Key:   mondoogql.String(k),
+			Value: mondoogql.NewStringPtr(mondoogql.String(platform.Labels[k])),
+		})
+	}
+	inputPlatform.Labels = &inputLabels
+	gqlVulnReport, err := mondooClient.GetIncognitoVulnReport(inputPlatform, gqlPackages)
 	if err != nil {
 		return nil, err
 	}
