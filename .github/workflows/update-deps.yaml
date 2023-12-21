@@ -12,8 +12,15 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+# https://github.com/peter-evans/create-pull-request/issues/48
+# https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
+# tl;dr:
+# The GITHUB_TOKEN is limited when creating PRs from a workflow
+# becasue of that we use a ssh key for which the limitations do not apply
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.CNQUERY_DEPLOY_KEY_PRIV }}
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
@@ -33,27 +40,31 @@ jobs:
           version mod-update providers/*/ --latest
           version mod-tidy providers/*/
           version mod-tidy .
-          echo "COUNT_GOMOD=$(git status --short --untracked-files=no | wc -l)" >> $GITHUB_OUTPUT
 
-      - name: Commit changes upstream
+      - name: Prepare title and branch name
         id: branch
-        if: ${{ steps.update-deps.outputs.COUNT_GOMOD != '0' }}
         run: |
-          git config --global user.email "tools@mondoo.com"
-          git config --global user.name "Mondoo Tools"
           BRANCH_NAME="version/deps_update_$(date +%Y%m%d_%H%M)"
-          git checkout -b ${BRANCH_NAME}
-          git add go.mod go.sum || true
-          git add providers/ || true
           COMMIT_MSG="🧹 Update deps for cnquery and providers $(date +%Y%m%d)"
           echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
-          git commit -m "${COMMIT_MSG}"
-          git push --set-upstream origin ${BRANCH_NAME}
-        shell: bash
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 
+# We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
       - name: Create pull request
-        if: ${{ steps.update-deps.outputs.COUNT_GOMOD != '0' }}
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          labels: dependencies,go
+          committer: "Mondoo Tools <tools@mondoo.com>"
+          commit-message: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          author: "Mondoo Tools <tools@mondoo.com>"
+          title: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          branch: ${{ steps.branch.outputs.BRANCH_NAME }}
+          body-path: .github/pr-body.md
+
+      - name: PR infos
+        if: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          gh pr create --base main --label dependencies --label go --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body-file .github/pr-body.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
