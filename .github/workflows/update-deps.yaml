@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.CNQUERY_DEPLOY_KEY_PRIV }}
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
@@ -47,13 +49,25 @@ jobs:
           git add providers/ || true
           COMMIT_MSG="🧹 Update deps for cnquery and providers $(date +%Y%m%d)"
           echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           git commit -m "${COMMIT_MSG}"
           git push --set-upstream origin ${BRANCH_NAME}
         shell: bash
 
       - name: Create pull request
+        id: cpr
         if: ${{ steps.update-deps.outputs.COUNT_GOMOD != '0' }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          draft: true
+          # base: main
+          labels: dependencies,go
+          title: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          branch: ${{ steps.branch.outputs.BRANCH_NAME }}
+          body-path: .github/pr-body.md
+
+      - name: PR infos
+        if: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
-          gh pr create --base main --label dependencies --label go --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body-file .github/pr-body.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
