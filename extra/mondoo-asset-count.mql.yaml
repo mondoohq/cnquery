@@ -17,11 +17,14 @@ packs:
         queries:
           - uid: mondoo-asset-count-on-vsphere-cluster-esxi
           - uid: mondoo-asset-count-on-vsphere-cluster-vms
+      - title: Microsoft 365 asset counts
+        filters: asset.platform == 'microsoft365'
+        queries:
+          - uid: mondoo-count-users-in-entra-id
       - title: Azure asset counts
-        filters: asset.platform == 'azure' || asset.platform == 'microsoft365'
+        filters: asset.platform == 'azure'
         queries:
           - uid: mondoo-asset-count-on-azure
-          - uid: mondoo-count-users-in-azure
       - title: Windows Active Directory asset counts
         filters: asset.platform == "windows"
         queries:
@@ -108,8 +111,8 @@ queries:
     mql: |
       azure.subscription.compute.vms.length
 
-  - uid: mondoo-count-users-in-azure
-    title: Azure user count
+  - uid: mondoo-count-users-in-entra-id
+    title: Entra ID user count
     mql: |
       microsoft.users.length
 
