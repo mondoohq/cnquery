@@ -323,7 +323,7 @@ require (
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
 	go-simpler.org/sloglint v0.4.0 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20231219150337-47ab9e2aa496 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20231221074701-234c3c844ed9 // indirect
 	go.mondoo.com/ranger-rpc v0.5.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
