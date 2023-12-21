@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.CNQUERY_DEPLOY_KEY_PRIV }}
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
@@ -53,7 +55,10 @@ jobs:
 
       - name: Create pull request
         if: ${{ steps.update-deps.outputs.COUNT_GOMOD != '0' }}
-        run: |
-          gh pr create --base main --label dependencies --label go --title "${{ steps.branch.outputs.COMMIT_TITLE }}" --body-file .github/pr-body.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-pull-request@v5
+        with:
+          draft: true
+          base: main
+          labels: dependencies,go
+          title: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          body-path: .github/pr-body.md
