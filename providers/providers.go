@@ -17,6 +17,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
@@ -143,8 +144,7 @@ func httpClientWithRetry() (*http.Client, error) {
 	}
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
-	// slient retry
-	retryClient.Logger = nil
+	retryClient.Logger = &ZerologAdapter{logger: log.Logger}
 	retryClient.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(proxy),
@@ -377,7 +377,7 @@ func LatestVersion(name string) (string, error) {
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
+	res, err := client.Get("https://releases.mondoo.zom/providers/latest.json")
 	if err != nil {
 		return "", err
 	}
@@ -728,4 +728,38 @@ func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
 		panic("cannot read schema file: " + path)
 	}
 	return MustLoadSchema(name, raw)
+}
+
+// ZerologAdapter adapts the zerolog logger to the LeveledLogger interface.
+type ZerologAdapter struct {
+	logger zerolog.Logger
+}
+
+func (z *ZerologAdapter) Error(msg string, keysAndValues ...interface{}) {
+	// The error from retryable http tells us that the request failed
+	// Ignore, just log the fact that we are retrying - which is a debug msg
+}
+
+func (z *ZerologAdapter) Info(msg string, keysAndValues ...interface{}) {
+	z.logger.Info().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Debug(msg string, keysAndValues ...interface{}) {
+	if strings.Contains(msg, "retrying") {
+		z.logger.Warn().Fields(convertToFields(keysAndValues...)).Msg(msg)
+	}
+}
+
+func (z *ZerologAdapter) Warn(msg string, keysAndValues ...interface{}) {
+	z.logger.Warn().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
+	fields := make(map[string]interface{})
+	for i := 0; i < len(keysAndValues); i += 2 {
+		if i+1 < len(keysAndValues) {
+			fields[keysAndValues[i].(string)] = keysAndValues[i+1]
+		}
+	}
+	return fields
 }
