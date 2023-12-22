@@ -377,7 +377,7 @@ func LatestVersion(name string) (string, error) {
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
+	res, err := client.Get("https://releases.mondoo.zom/providers/latest.json")
 	if err != nil {
 		return "", err
 	}
@@ -731,27 +731,25 @@ func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
 }
 
 // ZerologAdapter adapts the zerolog logger to the LeveledLogger interface.
+// Converts all retry logs to debug logs
 type ZerologAdapter struct {
 	logger zerolog.Logger
 }
 
 func (z *ZerologAdapter) Error(msg string, keysAndValues ...interface{}) {
-	// The error from retryable http tells us that the request failed
-	// Ignore, just log the fact that we are retrying - which is a debug msg
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
 func (z *ZerologAdapter) Info(msg string, keysAndValues ...interface{}) {
-	z.logger.Info().Fields(convertToFields(keysAndValues...)).Msg(msg)
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
 func (z *ZerologAdapter) Debug(msg string, keysAndValues ...interface{}) {
-	if strings.Contains(msg, "retrying") {
-		z.logger.Warn().Fields(convertToFields(keysAndValues...)).Msg(msg)
-	}
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
 func (z *ZerologAdapter) Warn(msg string, keysAndValues ...interface{}) {
-	z.logger.Warn().Fields(convertToFields(keysAndValues...)).Msg(msg)
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
 }
 
 func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
