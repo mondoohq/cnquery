@@ -102,6 +102,10 @@ func init() {
 			Init: initMs365Sharepointonline,
 			Create: createMs365Sharepointonline,
 		},
+		"ms365.sharepointonline.site": {
+			// to override args, implement: initMs365SharepointonlineSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365SharepointonlineSite,
+		},
 		"ms365.teams": {
 			Init: initMs365Teams,
 			Create: createMs365Teams,
@@ -652,6 +656,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenantSyncClientRestriction()).ToDataRes(types.Dict)
+	},
+	"ms365.sharepointonline.spoSites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Sharepointonline).GetSpoSites()).ToDataRes(types.Array(types.Resource("ms365.sharepointonline.site")))
+	},
+	"ms365.sharepointonline.site.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetUrl()).ToDataRes(types.String)
+	},
+	"ms365.sharepointonline.site.denyAddAndCustomizePages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365SharepointonlineSite).GetDenyAddAndCustomizePages()).ToDataRes(types.Bool)
 	},
 	"ms365.teams.csTeamsClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Teams).GetCsTeamsClientConfiguration()).ToDataRes(types.Dict)
@@ -1435,6 +1448,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.sharepointonline.spoTenantSyncClientRestriction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365Sharepointonline).SpoTenantSyncClientRestriction, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.spoSites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Sharepointonline).SpoSites, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365SharepointonlineSite).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.sharepointonline.site.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.sharepointonline.site.denyAddAndCustomizePages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365SharepointonlineSite).DenyAddAndCustomizePages, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.teams.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3379,6 +3408,7 @@ type mqlMs365Sharepointonline struct {
 	// optional: if you define mqlMs365SharepointonlineInternal it will be used here
 	SpoTenant plugin.TValue[interface{}]
 	SpoTenantSyncClientRestriction plugin.TValue[interface{}]
+	SpoSites plugin.TValue[[]interface{}]
 }
 
 // createMs365Sharepointonline creates a new instance of this resource
@@ -3419,6 +3449,64 @@ func (c *mqlMs365Sharepointonline) GetSpoTenant() *plugin.TValue[interface{}] {
 
 func (c *mqlMs365Sharepointonline) GetSpoTenantSyncClientRestriction() *plugin.TValue[interface{}] {
 	return &c.SpoTenantSyncClientRestriction
+}
+
+func (c *mqlMs365Sharepointonline) GetSpoSites() *plugin.TValue[[]interface{}] {
+	return &c.SpoSites
+}
+
+// mqlMs365SharepointonlineSite for the ms365.sharepointonline.site resource
+type mqlMs365SharepointonlineSite struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365SharepointonlineSiteInternal it will be used here
+	Url plugin.TValue[string]
+	DenyAddAndCustomizePages plugin.TValue[bool]
+}
+
+// createMs365SharepointonlineSite creates a new instance of this resource
+func createMs365SharepointonlineSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365SharepointonlineSite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.sharepointonline.site", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365SharepointonlineSite) MqlName() string {
+	return "ms365.sharepointonline.site"
+}
+
+func (c *mqlMs365SharepointonlineSite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365SharepointonlineSite) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlMs365SharepointonlineSite) GetDenyAddAndCustomizePages() *plugin.TValue[bool] {
+	return &c.DenyAddAndCustomizePages
 }
 
 // mqlMs365Teams for the ms365.teams resource

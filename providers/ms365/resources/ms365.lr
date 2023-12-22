@@ -400,6 +400,16 @@ ms365.sharepointonline {
   spoTenant dict
   // SharePoint Online tenant sync client restriction
   spoTenantSyncClientRestriction dict
+  // SharePoint Online tenant sites
+  spoSites []ms365.sharepointonline.site
+}
+
+// Microsoft 365 SharePoint Site
+private ms365.sharepointonline.site {
+  // The site URL
+  url string
+  // Whether custom script execution on a particulate site allowed
+  denyAddAndCustomizePages bool
 }
 
 // Microsoft 365 Teams

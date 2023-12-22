@@ -21,6 +21,10 @@ func (m *mqlMs365ExchangeonlineExternalSender) id() (string, error) {
 	return m.Identity.Data, nil
 }
 
+func (m *mqlMs365SharepointonlineSite) id() (string, error) {
+	return m.Url.Data, nil
+}
+
 func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	ctx := context.Background()
@@ -143,8 +147,22 @@ func initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.Raw
 	spoTenant, _ := convert.JsonToDict(report.SpoTenant)
 	spoTenantSyncClientRestriction, _ := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
 
+	sites := []interface{}{}
+	for _, s := range report.SpoSite {
+		mqlSpoSite, err := CreateResource(runtime, "ms365.sharepointonline.site",
+			map[string]*llx.RawData{
+				"denyAddAndCustomizePages": llx.BoolData(s.DenyAddAndCustomizePages == "Enabled"),
+				"url":                      llx.StringData(s.Url),
+			})
+		if err != nil {
+			return args, nil, err
+		}
+		sites = append(sites, mqlSpoSite)
+
+	}
 	args["spoTenant"] = llx.DictData(spoTenant)
 	args["spoTenantSyncClientRestriction"] = llx.DictData(spoTenantSyncClientRestriction)
+	args["spoSites"] = llx.ArrayData(sites, types.ResourceLike)
 	return args, nil, nil
 }
 
