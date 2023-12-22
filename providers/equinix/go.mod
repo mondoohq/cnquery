@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/packethost/packngo v0.30.0
+	github.com/packethost/packngo v0.31.0
 	github.com/rs/zerolog v1.31.0
 	go.mondoo.com/cnquery/v9 v9.11.0
 )
