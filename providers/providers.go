@@ -377,7 +377,7 @@ func LatestVersion(name string) (string, error) {
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	res, err := client.Get("https://releases.mondoo.zom/providers/latest.json")
+	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
 	if err != nil {
 		return "", err
 	}
