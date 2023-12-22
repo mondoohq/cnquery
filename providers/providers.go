@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
@@ -133,6 +134,23 @@ func httpClient() (*http.Client, error) {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
 	return ranger.NewHttpClient(ranger.WithProxy(proxy)), nil
+}
+
+func httpClientWithRetry() (*http.Client, error) {
+	proxy, err := config.GetAPIProxy()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	// slient retry
+	retryClient.Logger = nil
+	retryClient.HTTPClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(proxy),
+		},
+	}
+	return retryClient.StandardClient(), nil
 }
 
 // List providers that are going to be used in their default order:
@@ -353,25 +371,15 @@ func installVersion(name string, version string) (*Provider, error) {
 }
 
 func LatestVersion(name string) (string, error) {
-	client, err := httpClient()
+	client, err := httpClientWithRetry()
 	if err != nil {
 		return "", err
 	}
 	client.Timeout = time.Duration(5 * time.Second)
 
-	maxRetries := 3
-	var res *http.Response
-
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		res, err = client.Get("https://releases.mondoo.com/providers/latest.json")
-		if err == nil {
-			break
-		}
-		if attempt == maxRetries {
-			return "", err
-		}
-		log.Debug().Msgf("Failed to get https://releases.mondoo.com/providers/latest.json, trying again in %d seconds", attempt)
-		time.Sleep(time.Second * time.Duration(attempt))
+	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
+	if err != nil {
+		return "", err
 	}
 
 	data, err := io.ReadAll(res.Body)
