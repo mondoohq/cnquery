@@ -32,7 +32,7 @@ azure.subscription @defaults ("name") {
   resources() []azure.subscription.resource
   // Resource groups in the subscription
   resourceGroups() []azure.subscription.resourcegroup
-  
+
   // Compute resources in the subscription
   compute() azure.subscription.computeService
   // Network resources in the subscription
@@ -319,7 +319,7 @@ azure.subscription.networkService.firewall @defaults("id name location") {
 
 // Azure network firewall IP configuration
 private azure.subscription.networkService.firewall.ipConfig @defaults("id name") {
-  // Firewall IP configuration ID 
+  // Firewall IP configuration ID
   id string
   // Firewall IP configuration name
   name string
@@ -332,12 +332,12 @@ private azure.subscription.networkService.firewall.ipConfig @defaults("id name")
   // Public IP address associated with this IP configuration
   publicIpAddress() azure.subscription.networkService.ipAddress
   // Subnet associated with this IP configuration
-  subnet() azure.subscription.networkService.subnet  
+  subnet() azure.subscription.networkService.subnet
 }
 
 // Azure network firewall network rule
 private azure.subscription.networkService.firewall.networkRule @defaults("id name") {
-  // Firewall network rule ID 
+  // Firewall network rule ID
   id string
   // Firewall network rule name
   name string
@@ -349,7 +349,7 @@ private azure.subscription.networkService.firewall.networkRule @defaults("id nam
 
 // Azure network firewall application rule
 private azure.subscription.networkService.firewall.applicationRule @defaults("id name") {
-  // Firewall application rule ID 
+  // Firewall application rule ID
   id string
   // Firewall application rule name
   name string
@@ -361,7 +361,7 @@ private azure.subscription.networkService.firewall.applicationRule @defaults("id
 
 // Azure network firewall NAT rule
 private azure.subscription.networkService.firewall.natRule @defaults("id name") {
-  // Firewall NAT rule ID 
+  // Firewall NAT rule ID
   id string
   // Firewall NAT rule name
   name string
@@ -399,7 +399,7 @@ azure.subscription.networkService.firewallPolicy @defaults("id name location") {
 
 // Azure Virtual Network (VNet) gateway IP configuration
 private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaults("id name") {
-  // VNet gateway IP Configuration ID 
+  // VNet gateway IP Configuration ID
   id string
   // VNet gateway IP Configuration name
   name string
@@ -415,7 +415,7 @@ private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaul
 
 // Azure Virtual Network (VNet) gateway connection
 private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name") {
-  // VNet gateway connection ID 
+  // VNet gateway connection ID
   id string
   // VNet gateway Connection name
   name string
@@ -426,7 +426,7 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
   // VNet gateway Connection properties
   properties dict
 }
-  
+
 // Azure network BGP settings
 private azure.subscription.networkService.bgpSettings @defaults("asn bgpPeeringAddress") {
   // BGP Settings ID
@@ -560,7 +560,7 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
   // List of Load Balancer inbound NAT pools
   inboundNatPools []azure.subscription.networkService.inboundNatPool
   // List of Load Balancer inbound NAT rules
-  inboundNatRules []azure.subscription.networkService.inboundNatRule 
+  inboundNatRules []azure.subscription.networkService.inboundNatRule
   // List of Load Balancer outbound rules
   outboundRules []azure.subscription.networkService.outboundRule
   // List of Load Balancer rules
@@ -812,7 +812,7 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
   // Network watcher flow log retention policy
   retentionPolicy dict
   // Network watcher flow log analytics
-  analytics dict 
+  analytics dict
 }
 
 // Azure Application Gateway
@@ -921,7 +921,7 @@ private azure.subscription.storageService.account.service.properties @defaults("
   logging azure.subscription.storageService.account.service.properties.logging
 }
 
-// Azure Storage account service properties metrics 
+// Azure Storage account service properties metrics
 private azure.subscription.storageService.account.service.properties.metrics @defaults("id includeAPIs enabled") {
   // ID of the metrics
   id string
@@ -942,7 +942,7 @@ private azure.subscription.storageService.account.service.properties.retentionPo
   // Number of days that metrics or logging data is retained
   retentionDays int
   // Whether a retention policy is enabled for the Azure Storage
-  enabled bool 
+  enabled bool
 }
 
 // Azure Storage account service properties logging
@@ -982,7 +982,7 @@ private azure.subscription.webService {
   subscriptionId string
   // List of web apps
   apps() []azure.subscription.webService.appsite
-  // Available runtimes 
+  // Available runtimes
   availableRuntimes() []dict
 }
 
@@ -1036,11 +1036,11 @@ private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
 private azure.subscription.webService.appsiteconfig @defaults("id name") {
   // Appsite config ID
   id string
-  // Appsite config name 
+  // Appsite config name
   name string
-  // Appsite config kind 
+  // Appsite config kind
   kind string
-  // Appsite config type 
+  // Appsite config type
   type string
   // Appsite config properties
   properties dict
@@ -1105,7 +1105,7 @@ private azure.subscription.sqlService.server.vulnerabilityassessmentsettings {
   storageContainerSasKey string
   // Whether recurring scan is enabled
   recurringScanEnabled bool
-  // Array of e-mail addresses to which the scan notification is sent
+  // Array of email addresses to which the scan notification is sent
   recurringScanEmails []string
   // Whether the schedule scan notification is also sent to the subscription administrators
   mailSubscriptionAdmins bool
@@ -1143,7 +1143,7 @@ private azure.subscription.sqlService.database @defaults("id name") {
   creationDate time
   // Database ID
   databaseId string
-  // SQL database earliest restore date 
+  // SQL database earliest restore date
   earliestRestoreDate time
   // SQL database create mode
   createMode string
@@ -1161,7 +1161,7 @@ private azure.subscription.sqlService.database @defaults("id name") {
   maxSizeBytes int
   // SQL database requested objective name
   requestedServiceObjectiveName string
-  // SQL database service level objective 
+  // SQL database service level objective
   serviceLevelObjective string
   // SQL database status
   status string
@@ -1461,19 +1461,19 @@ private azure.subscription.keyVaultService.vault  @defaults("vaultName type vaul
   location string
   // Vault tags
   tags map[string]string
-  // Vault URL 
+  // Vault URL
   vaultUri() string
-  // Vault properties 
+  // Vault properties
   properties() dict
   // Whether RBAC access to the vault is enabled
   rbacAuthorizationEnabled() bool
-  // Vault keys 
+  // Vault keys
   keys() []azure.subscription.keyVaultService.key
-  // Vault certificates 
+  // Vault certificates
   certificates() []azure.subscription.keyVaultService.certificate
-  // Vault secrets 
+  // Vault secrets
   secrets() []azure.subscription.keyVaultService.secret
-  // Vault diagnostic settings 
+  // Vault diagnostic settings
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
@@ -1559,7 +1559,7 @@ private azure.subscription.keyVaultService.secret  @defaults("id secretName") {
   version() string
   // List of secret versions
   versions() []azure.subscription.keyVaultService.secret
-}     
+}
 
 // Azure Monitor
 private azure.subscription.monitorService {
@@ -1572,7 +1572,7 @@ private azure.subscription.monitorService {
   // Application insights for the subscription
   applicationInsights() []azure.subscription.monitorService.applicationInsight
   // Monitor activity log
-  activityLog() azure.subscription.monitorService.activityLog 
+  activityLog() azure.subscription.monitorService.activityLog
 }
 
 // Azure Monitor activity log
@@ -1673,7 +1673,7 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers de
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
 }
 
-// Microsoft Defender for Cloud security contact 
+// Microsoft Defender for Cloud security contact
 private azure.subscription.cloudDefenderService.securityContact @defaults("name alertNotifications.state"){
   // ID of the security contact
   id string
@@ -1783,7 +1783,7 @@ private azure.subscription.advisorService @defaults("averageScore recommendation
   subscriptionId string
   // List of all recommendations by the advisor
   recommendations() []azure.subscription.advisorService.recommendation
-  // List of scores by categories 
+  // List of scores by categories
   scores() []azure.subscription.advisorService.score
   // Average advisory score
   averageScore() float
@@ -1826,7 +1826,7 @@ private azure.subscription.advisorService.score @defaults("name") {
   // Current score for the advisor category
   currentScore azure.subscription.advisorService.securityScore
   // List of time series, containing previous scores for the category
-  timeSeries []azure.subscription.advisorService.timeSeries 
+  timeSeries []azure.subscription.advisorService.timeSeries
 }
 
 // Azure Advisor time series
