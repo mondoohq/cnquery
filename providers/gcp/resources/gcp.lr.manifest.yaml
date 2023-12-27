@@ -102,7 +102,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.essentialContact:
     fields:
       email: {}
@@ -115,7 +115,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.folder:
     fields:
       created: {}
@@ -130,7 +130,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.folders:
     fields:
       children: {}
@@ -140,7 +140,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.organization:
     fields:
       accessApprovalSettings: {}
@@ -154,7 +154,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project:
     fields:
       accessApprovalSettings: {}
@@ -189,7 +189,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.apiKey:
     fields:
       annotations: {}
@@ -206,7 +206,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.apiKey.restrictions:
     fields:
       androidKeyRestrictions: {}
@@ -219,7 +219,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService:
     fields:
       datasets: {}
@@ -228,7 +228,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService.dataset:
     fields:
       access: {}
@@ -249,7 +249,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService.dataset.accessEntry:
     fields:
       datasetId: {}
@@ -264,7 +264,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService.model:
     fields:
       created: {}
@@ -283,7 +283,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService.routine:
     fields:
       created: {}
@@ -298,7 +298,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.bigqueryService.table:
     fields:
       clusteringFields: {}
@@ -330,7 +330,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudFunction:
     fields:
       availableMemoryMb: {}
@@ -370,7 +370,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService:
     fields:
       jobs: {}
@@ -382,7 +382,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.condition:
     fields:
       id: {}
@@ -395,7 +395,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.container:
     fields:
       args: {}
@@ -414,7 +414,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.container.probe:
     fields:
       failureThreshold: {}
@@ -428,7 +428,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.job:
     fields:
       annotations: {}
@@ -457,7 +457,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.job.executionTemplate:
     fields:
       annotations: {}
@@ -470,7 +470,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.job.executionTemplate.taskTemplate:
     fields:
       containers: {}
@@ -488,7 +488,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.operation:
     fields:
       done: {}
@@ -498,7 +498,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.service:
     fields:
       annotations: {}
@@ -531,7 +531,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.cloudRunService.service.revisionTemplate:
     fields:
       annotations: {}
@@ -553,7 +553,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService:
     fields:
       addresses: {}
@@ -575,7 +575,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.address:
     fields:
       address: {}
@@ -600,7 +600,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.attachedDisk:
     fields:
       architecture: {}
@@ -622,7 +622,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.backendService:
     fields:
       affinityCookieTtlSec: {}
@@ -662,7 +662,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.backendService.backend:
     fields:
       balancingMode: {}
@@ -682,7 +682,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.backendService.cdnPolicy:
     fields:
       bypassCacheOnRequestHeaders: {}
@@ -702,7 +702,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.disk:
     fields:
       architecture: {}
@@ -726,7 +726,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.firewall:
     fields:
       allowed: {}
@@ -748,7 +748,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.forwardingRule:
     fields:
       allPorts: {}
@@ -782,7 +782,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.image:
     fields:
       architecture: {}
@@ -801,7 +801,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.instance:
     fields:
       canIpForward: {}
@@ -847,7 +847,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.machineType:
     fields:
       created: {}
@@ -865,7 +865,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.network:
     fields:
       autoCreateSubnetworks: {}
@@ -887,7 +887,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.region:
     fields:
       created: {}
@@ -901,7 +901,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.router:
     fields:
       bgp: {}
@@ -916,7 +916,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.serviceaccount:
     fields:
       email: {}
@@ -925,7 +925,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.snapshot:
     fields:
       architecture: {}
@@ -948,7 +948,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.subnetwork:
     fields:
       created: {}
@@ -977,7 +977,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.subnetwork.logConfig:
     fields:
       aggregationInterval: {}
@@ -991,7 +991,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.computeService.zone:
     fields:
       created: {}
@@ -1003,7 +1003,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService:
     fields:
       clusters: {}
@@ -1014,7 +1014,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster:
     fields:
       config: {}
@@ -1030,7 +1030,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config:
     fields:
       autoscaling: {}
@@ -1054,7 +1054,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.gceCluster:
     fields:
       confidentialInstance: {}
@@ -1077,7 +1077,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity:
     fields:
       consumeReservationType: {}
@@ -1088,7 +1088,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig:
     fields:
       enableIntegrityMonitoring: {}
@@ -1099,7 +1099,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.gkeCluster:
     fields:
       gkeClusterTarget: {}
@@ -1109,7 +1109,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.instance:
     fields:
       accelerators: {}
@@ -1128,7 +1128,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.instance.diskConfig:
     fields:
       bootDiskSizeGb: {}
@@ -1140,7 +1140,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.config.lifecycle:
     fields:
       autoDeleteTime: {}
@@ -1152,7 +1152,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.status:
     fields:
       detail: {}
@@ -1164,7 +1164,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dataprocService.cluster.virtualClusterConfig:
     fields:
       auxiliaryServices: {}
@@ -1175,7 +1175,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dnsService:
     fields:
       managedZones: {}
@@ -1185,7 +1185,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dnsService.managedzone:
     fields:
       created: {}
@@ -1203,7 +1203,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dnsService.policy:
     fields:
       description: {}
@@ -1218,7 +1218,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.dnsService.recordset:
     fields:
       name: {}
@@ -1231,7 +1231,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService:
     fields:
       clusters: {}
@@ -1240,7 +1240,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster:
     fields:
       addonsConfig: {}
@@ -1280,7 +1280,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.addonsConfig:
     fields:
       cloudRunConfig: {}
@@ -1298,7 +1298,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.ipAllocationPolicy:
     fields:
       clusterIpv4CidrBlock: {}
@@ -1318,7 +1318,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.networkConfig:
     fields:
       datapathProvider: {}
@@ -1337,7 +1337,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool:
     fields:
       config: {}
@@ -1354,7 +1354,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config:
     fields:
       accelerators: {}
@@ -1389,7 +1389,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.accelerator:
     fields:
       count: {}
@@ -1401,7 +1401,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig:
     fields:
       id: {}
@@ -1411,7 +1411,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures:
     fields:
       id: {}
@@ -1420,7 +1420,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.confidentialNodes:
     fields:
       enabled: {}
@@ -1429,7 +1429,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.gcfsConfig:
     fields:
       enabled: {}
@@ -1438,7 +1438,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.gvnicConfig:
     fields:
       enabled: {}
@@ -1447,7 +1447,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.kubeletConfig:
     fields:
       cpuCfsQuotaPeriod: {}
@@ -1458,7 +1458,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig:
     fields:
       id: {}
@@ -1467,7 +1467,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.nodeTaint:
     fields:
       effect: {}
@@ -1478,7 +1478,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.sandboxConfig:
     fields:
       id: {}
@@ -1487,7 +1487,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig:
     fields:
       enableIntegrityMonitoring: {}
@@ -1497,7 +1497,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.networkConfig:
     fields:
       id: {}
@@ -1508,7 +1508,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig:
     fields:
       id: {}
@@ -1517,7 +1517,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.iamService:
     fields:
       projectId: {}
@@ -1526,7 +1526,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.iamService.serviceAccount:
     fields:
       description: {}
@@ -1542,7 +1542,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.iamService.serviceAccount.key:
     fields:
       disabled: {}
@@ -1556,7 +1556,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService:
     fields:
       keyrings: {}
@@ -1566,7 +1566,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring:
     fields:
       created: {}
@@ -1579,7 +1579,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring.cryptokey:
     fields:
       created: {}
@@ -1600,7 +1600,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring.cryptokey.version:
     fields:
       algorithm: {}
@@ -1622,7 +1622,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring.cryptokey.version.attestation:
     fields:
       certificateChains: {}
@@ -1632,7 +1632,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains:
     fields:
       caviumCerts: {}
@@ -1643,7 +1643,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions:
     fields:
       cryptoKeyVersionName: {}
@@ -1653,7 +1653,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.loggingservice:
     fields:
       buckets: {}
@@ -1664,7 +1664,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.loggingservice.bucket:
     fields:
       cmekSettings: {}
@@ -1682,7 +1682,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.loggingservice.bucket.indexConfig:
     fields:
       created: {}
@@ -1693,7 +1693,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.loggingservice.metric:
     fields:
       alertPolicies: {}
@@ -1705,7 +1705,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.loggingservice.sink:
     fields:
       destination: {}
@@ -1719,7 +1719,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.monitoringService:
     fields:
       alertPolicies: {}
@@ -1728,7 +1728,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.monitoringService.alertPolicy:
     fields:
       alertStrategy: {}
@@ -1750,7 +1750,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService:
     fields:
       projectId: {}
@@ -1761,7 +1761,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.snapshot:
     fields:
       expiration: {}
@@ -1772,7 +1772,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.subscription:
     fields:
       config: {}
@@ -1782,7 +1782,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.subscription.config:
     fields:
       ackDeadline: {}
@@ -1798,7 +1798,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.subscription.config.pushconfig:
     fields:
       attributes: {}
@@ -1808,7 +1808,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.topic:
     fields:
       config: {}
@@ -1818,7 +1818,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.topic.config:
     fields:
       kmsKeyName: {}
@@ -1830,7 +1830,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.pubsubService.topic.config.messagestoragepolicy:
     fields:
       allowedPersistenceRegions: {}
@@ -1839,7 +1839,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService:
     fields:
       instances: {}
@@ -1848,7 +1848,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance:
     fields:
       availableMaintenanceVersions: {}
@@ -1880,7 +1880,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.database:
     fields:
       charset: {}
@@ -1893,7 +1893,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.ipMapping:
     fields:
       id: {}
@@ -1904,7 +1904,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings:
     fields:
       activationPolicy: {}
@@ -1940,7 +1940,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings.backupconfiguration:
     fields:
       backupRetentionSettings: {}
@@ -1955,7 +1955,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings.denyMaintenancePeriod:
     fields:
       endDate: {}
@@ -1966,7 +1966,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings.ipConfiguration:
     fields:
       allocatedIpRange: {}
@@ -1979,7 +1979,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings.maintenanceWindow:
     fields:
       day: {}
@@ -1990,7 +1990,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.sqlService.instance.settings.passwordValidationPolicy:
     fields:
       complexity: {}
@@ -2004,7 +2004,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.storageService:
     fields:
       buckets: {}
@@ -2013,7 +2013,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.project.storageService.bucket:
     fields:
       created: {}
@@ -2033,7 +2033,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.projects:
     fields:
       children: {}
@@ -2043,7 +2043,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.recommendation:
     fields:
       additionalImpact: {}
@@ -2061,7 +2061,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.resourcemanager.binding:
     fields:
       id: {}
@@ -2071,7 +2071,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP
   gcp.service:
     fields:
       enabled: {}
@@ -2083,4 +2083,4 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - gcp
+      - GCP

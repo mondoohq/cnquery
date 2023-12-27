@@ -44,7 +44,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
     snippets:
     - query: k8s.pods { containers.where(securityContext["privileged"] == true) name
         }
@@ -75,14 +75,14 @@ resources:
     min_mondoo_version: 6.17.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.admissionreview:
     fields:
       request: {}
     min_mondoo_version: 6.17.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.apiresource:
     fields:
       categories: {}
@@ -97,7 +97,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.configmap:
     fields:
       annotations: {}
@@ -116,7 +116,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.container:
     fields:
       args: {}
@@ -145,7 +145,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.cronjob:
     fields:
       annotations:
@@ -172,7 +172,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.customresource:
     fields:
       annotations: {}
@@ -190,7 +190,7 @@ resources:
     min_mondoo_version: 6.1.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.daemonset:
     fields:
       annotations:
@@ -217,7 +217,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.deployment:
     fields:
       annotations:
@@ -244,7 +244,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ephemeralContainer:
     fields:
       args: {}
@@ -266,7 +266,7 @@ resources:
     min_mondoo_version: 7.2.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingress:
     fields:
       annotations: {}
@@ -285,7 +285,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingressbackend:
     fields:
       id: {}
@@ -295,7 +295,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingresshttprulepath:
     fields:
       backend: {}
@@ -306,7 +306,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingressresourceref:
     fields:
       apiGroup: {}
@@ -317,7 +317,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingressrule:
     fields:
       host: {}
@@ -327,7 +327,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingressservicebackend:
     fields:
       id: {}
@@ -338,7 +338,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.ingresstls:
     fields:
       certificates: {}
@@ -348,7 +348,7 @@ resources:
     min_mondoo_version: 7.9.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.initContainer:
     fields:
       args: {}
@@ -373,7 +373,7 @@ resources:
     min_mondoo_version: 6.10.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.job:
     fields:
       annotations:
@@ -400,7 +400,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.kubelet:
     fields:
       configFile: {}
@@ -409,7 +409,7 @@ resources:
     min_mondoo_version: 6.17.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.namespace:
     fields:
       annotations: {}
@@ -425,7 +425,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.networkpolicy:
     fields:
       annotations: {}
@@ -444,7 +444,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.node:
     fields:
       annotations:
@@ -462,7 +462,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.pod:
     fields:
       annotations: {}
@@ -489,7 +489,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.podsecuritypolicy:
     fields:
       annotations: {}
@@ -507,7 +507,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.rbac.clusterrole:
     fields:
       aggregationRule: {}
@@ -526,7 +526,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.rbac.clusterrolebinding:
     fields:
       annotations: {}
@@ -545,7 +545,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.rbac.role:
     fields:
       annotations: {}
@@ -564,7 +564,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.rbac.rolebinding:
     fields:
       annotations: {}
@@ -584,7 +584,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.replicaset:
     fields:
       annotations:
@@ -611,7 +611,7 @@ resources:
     min_mondoo_version: 6.7.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.secret:
     fields:
       annotations:
@@ -636,7 +636,7 @@ resources:
     min_mondoo_version: 5.26.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.service:
     fields:
       annotations: {}
@@ -655,7 +655,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.serviceaccount:
     fields:
       annotations: {}
@@ -676,7 +676,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.statefulset:
     fields:
       annotations:
@@ -703,7 +703,7 @@ resources:
     min_mondoo_version: 6.7.0
     platform:
       name:
-      - kubernetes
+      - Kubernetes
   k8s.userinfo:
     fields:
       uid: {}
@@ -712,4 +712,4 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - kubernetes
+      - Kubernetes

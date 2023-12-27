@@ -29,7 +29,7 @@ aws.account @defaults("id") {
 aws.organization @defaults("arn masterAccountEmail") {
   // ARN of the organization
   arn string
-  // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
+  // Specifies the functionality available to org: ALL or CONSOLIDATED_BILLING
   featureSet string
   // ID of the organization's master account
   masterAccountId string
@@ -45,17 +45,17 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   id string
   // IPv4 CIDR block of the VPC
   cidrBlock string
-  // State of the VPC (pending or available)
+  // State of the VPC: pending or available
   state string
-  // Whether the VPC is the default one
+  // Whether the VPC is the default VPC
   isDefault bool
-  // How instance hardware tenancy settings are enforced on instances launched in this VPC
+  // How instance hardware tenancy settings are enforced on instances launched in this VPC: default, dedicated, or host
   instanceTenancy string
   // Region in which the VPC exists
   region string
-  // A list of endpoints for the VPC
+  // List of endpoints for the VPC
   endpoints() []aws.vpc.endpoint
-  // A list of flowlogs for the VPC
+  // List of flow logs for the VPC
   flowLogs() []aws.vpc.flowlog
   // List of route tables for the VPC
   routeTables() []aws.vpc.routetable
@@ -1616,7 +1616,7 @@ private aws.s3.bucket.policy @defaults("name version") {
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
-  // Service namespace to query for application auto scaling. comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
+  // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
   namespace string
   // List of scalable targets belonging to the service namespace
   scalableTargets() []aws.applicationautoscaling.target

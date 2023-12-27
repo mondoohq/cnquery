@@ -122,7 +122,7 @@ private arista.eos.interface @defaults("name") {
   status() dict
 }
 
-// Arista EOS IP interfacea
+// Arista EOS IP interface
 private arista.eos.ipInterface @defaults("name") {
   // Interface Name
   name string

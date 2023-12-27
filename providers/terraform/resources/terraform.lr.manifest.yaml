@@ -17,7 +17,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
     snippets:
     - query: terraform.blocks { nameLabel arguments }
       title: Display all Terraform blocks and their arguments
@@ -42,7 +42,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
     snippets:
     - query: terraform.blocks { nameLabel arguments }
       title: Display all Terraform blocks and their arguments
@@ -54,7 +54,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
     snippets:
     - query: terraform.files { path blocks { nameLabel } }
       title: Display all files and their blocks
@@ -68,7 +68,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
   terraform.module:
     fields:
       block:
@@ -81,7 +81,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
     snippets:
     - query: terraform.modules { key version source}
       title: Display all loaded Terraform modules
@@ -93,7 +93,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-plan
+      - Terraform Plan
   terraform.plan.configuration:
     fields:
       providerConfig: {}
@@ -101,7 +101,7 @@ resources:
     min_mondoo_version: 8.10.0
     platform:
       name:
-      - terraform-plan
+      - Terraform Plan
   terraform.plan.proposedChange:
     fields:
       actions: {}
@@ -115,7 +115,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-plan
+      - Terraform Plan
   terraform.plan.resourceChange:
     fields:
       actionReason: {}
@@ -131,7 +131,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - terraform-plan
+      - Terraform Plan
   terraform.settings:
     fields:
       backend:
@@ -141,7 +141,7 @@ resources:
     min_mondoo_version: 5.31.0
     platform:
       name:
-      - terraform-hcl
+      - Terraform HCL
   terraform.state:
     fields:
       formatVersion: {}
@@ -154,7 +154,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - Terraform State
   terraform.state.module:
     fields:
       address: {}
@@ -163,7 +163,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - Terraform State
   terraform.state.output:
     fields:
       identifier: {}
@@ -173,7 +173,7 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - Terraform State
   terraform.state.resource:
     fields:
       address: {}
@@ -189,4 +189,4 @@ resources:
     min_mondoo_version: 6.11.0
     platform:
       name:
-      - terraform-state
+      - Terraform State

@@ -17,7 +17,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
     snippets:
     - query: arista.eos.version
       title: Arista EOS Version
@@ -53,7 +53,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.ipInterface:
     fields:
       address: {}
@@ -63,14 +63,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.ntpSetting:
     fields:
       status: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.role:
     fields:
       default: {}
@@ -80,14 +80,14 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.runningConfig:
     fields:
       content: {}
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.runningConfig.section:
     fields:
       content: {}
@@ -95,7 +95,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.snmpSetting:
     fields:
       enabled: {}
@@ -103,7 +103,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.spt.mstInterface:
     fields:
       boundaryType: {}
@@ -124,7 +124,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
     snippets:
     - query: |
         arista.eos.stp.mstInstances {
@@ -137,7 +137,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.stp.mst:
     fields:
       bridge: {}
@@ -150,7 +150,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS
   arista.eos.user:
     fields:
       format: {}
@@ -163,4 +163,4 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - arista-eos
+      - Arista EOS

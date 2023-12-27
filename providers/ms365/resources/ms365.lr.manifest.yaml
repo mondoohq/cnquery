@@ -262,7 +262,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - microsoft365
+      - Microsoft 365
   ms365.exchangeonline.externalSender:
     fields:
       allowList: {}
@@ -272,7 +272,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - microsoft365
+      - Microsoft 365
   ms365.sharepointonline:
     fields:
       spoTenant: {}
@@ -280,7 +280,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - microsoft365
+      - Microsoft 365
   ms365.teams:
     fields:
       csTeamsClientConfiguration: {}
@@ -291,7 +291,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - microsoft365
+      - Microsoft 365
   ms365.teams.teamsMeetingPolicyConfig:
     fields:
       allowAnonymousUsersToJoinMeeting: {}
@@ -306,7 +306,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - microsoft365
+      - Microsoft 365
   ms365.teams.tenantFederationConfig:
     fields:
       allowFederatedUsers: {}
@@ -324,4 +324,4 @@ resources:
     min_mondoo_version: 9.0.0
     platform:
       name:
-      - microsoft365
+      - Microsoft 365

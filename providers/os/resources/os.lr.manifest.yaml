@@ -148,7 +148,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - equinix
+      - Equinix
   equinix.metal.organization:
     fields:
       address: {}
@@ -168,7 +168,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - equinix
+      - Equinix
   equinix.metal.project:
     fields:
       createdAt: {}
@@ -185,7 +185,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - equinix
+      - Equinix
   equinix.metal.sshkey:
     fields:
       createdAt: {}
@@ -199,7 +199,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - equinix
+      - Equinix
   equinix.metal.user:
     fields:
       avatarUrl: {}
@@ -222,7 +222,7 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - equinix
+      - Equinix
   file:
     fields:
       basename: {}

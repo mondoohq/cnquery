@@ -7,7 +7,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription:
     fields:
       advisor: {}
@@ -39,7 +39,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisor:
     fields:
       recommendations: {}
@@ -47,7 +47,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisor.recommendation:
     fields:
       id: {}
@@ -55,7 +55,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisorService:
     fields:
       averageScore: {}
@@ -66,7 +66,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisorService.recommendation:
     fields:
       category: {}
@@ -84,7 +84,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisorService.score:
     fields:
       currentScore: {}
@@ -98,7 +98,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisorService.securityScore:
     fields:
       categoryCount: {}
@@ -113,7 +113,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.advisorService.timeSeries:
     fields:
       aggregationLevel: {}
@@ -124,7 +124,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.aks:
     fields:
       clusters: {}
@@ -132,7 +132,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.aks.cluster:
     fields:
       addonProfiles: {}
@@ -158,7 +158,7 @@ resources:
     min_mondoo_version: 7.17.0
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.aksService:
     fields:
       clusters: {}
@@ -167,7 +167,7 @@ resources:
     min_mondoo_version: 7.17.0
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.aksService.cluster:
     fields:
       addonProfiles: {}
@@ -194,7 +194,7 @@ resources:
     min_mondoo_version: 7.17.0
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorization:
     fields:
       roleDefinitions: {}
@@ -202,7 +202,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorization.roleDefinition:
     fields:
       description: {}
@@ -214,7 +214,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorization.roleDefinition.permission:
     fields:
       allowedActions: {}
@@ -225,7 +225,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorizationService:
     fields:
       roleDefinitions: {}
@@ -234,7 +234,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorizationService.roleDefinition:
     fields:
       description: {}
@@ -247,7 +247,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.authorizationService.roleDefinition.permission:
     fields:
       allowedActions: {}
@@ -259,7 +259,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cloudDefender:
     fields:
       defenderForContainers: {}
@@ -270,7 +270,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cloudDefender.securityContact:
     fields:
       alertNotifications: {}
@@ -281,7 +281,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cloudDefenderService:
     fields:
       defenderForContainers: {}
@@ -293,7 +293,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
@@ -305,7 +305,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.compute:
     fields:
       disks: {}
@@ -314,7 +314,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.compute.disk:
     fields:
       id: {}
@@ -330,7 +330,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.compute.vm:
     fields:
       dataDisks: {}
@@ -346,7 +346,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.computeService:
     fields:
       disks: {}
@@ -356,7 +356,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.computeService.disk:
     fields:
       id: {}
@@ -372,7 +372,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.computeService.vm:
     fields:
       dataDisks: {}
@@ -388,7 +388,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cosmosDb:
     fields:
       accounts: {}
@@ -396,7 +396,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cosmosDb.account:
     fields:
       id: {}
@@ -409,7 +409,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cosmosDbService:
     fields:
       accounts: {}
@@ -418,7 +418,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.cosmosDbService.account:
     fields:
       id: {}
@@ -432,7 +432,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVault:
     fields:
       subscriptionId: {}
@@ -440,7 +440,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVault.certificate:
     fields:
       certName: {}
@@ -458,7 +458,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVault.key:
     fields:
       created: {}
@@ -476,7 +476,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVault.secret:
     fields:
       contentType: {}
@@ -494,7 +494,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVault.vault:
     fields:
       certificates: {}
@@ -511,7 +511,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVaultService:
     fields:
       subscriptionId: {}
@@ -520,7 +520,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVaultService.certificate:
     fields:
       certName: {}
@@ -539,7 +539,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVaultService.key:
     fields:
       created: {}
@@ -558,7 +558,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVaultService.secret:
     fields:
       contentType: {}
@@ -577,7 +577,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.keyVaultService.vault:
     fields:
       certificates: {}
@@ -596,7 +596,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.managedIdentityService:
     fields:
       managedIdentities: {}
@@ -604,14 +604,14 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.managedIdentityService.managedIdentity:
     fields:
       id: {}
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDb:
     fields:
       servers: {}
@@ -619,7 +619,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDb.database:
     fields:
       charset: {}
@@ -630,7 +630,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDb.server:
     fields:
       configuration: {}
@@ -645,7 +645,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDbService:
     fields:
       servers: {}
@@ -654,7 +654,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDbService.database:
     fields:
       charset: {}
@@ -666,7 +666,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mariaDbService.server:
     fields:
       configuration: {}
@@ -682,7 +682,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor:
     fields:
       applicationInsights: {}
@@ -692,7 +692,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor.activityLog:
     fields:
       alerts: {}
@@ -700,7 +700,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor.activityLog.alert:
     fields:
       actions: {}
@@ -715,7 +715,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor.applicationInsight:
     fields:
       id: {}
@@ -728,7 +728,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor.diagnosticsetting:
     fields:
       id: {}
@@ -740,7 +740,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitor.logprofile:
     fields:
       id: {}
@@ -754,7 +754,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService:
     fields:
       activityLog: {}
@@ -766,7 +766,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService.activityLog:
     fields:
       alerts: {}
@@ -775,7 +775,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService.activityLog.alert:
     fields:
       actions: {}
@@ -791,7 +791,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService.applicationInsight:
     fields:
       id: {}
@@ -805,7 +805,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService.diagnosticsetting:
     fields:
       id: {}
@@ -818,7 +818,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.monitorService.logprofile:
     fields:
       id: {}
@@ -833,7 +833,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySql:
     fields:
       flexibleServers: {}
@@ -842,7 +842,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySql.database:
     fields:
       charset: {}
@@ -853,7 +853,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySql.flexibleServer:
     fields:
       configuration: {}
@@ -868,7 +868,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySql.server:
     fields:
       configuration: {}
@@ -883,7 +883,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySqlService:
     fields:
       flexibleServers: {}
@@ -893,7 +893,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySqlService.database:
     fields:
       charset: {}
@@ -905,7 +905,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySqlService.flexibleServer:
     fields:
       configuration: {}
@@ -921,7 +921,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.mySqlService.server:
     fields:
       configuration: {}
@@ -937,7 +937,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network:
     fields:
       bastionHosts: {}
@@ -949,7 +949,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.bastionHost:
     fields:
       id: {}
@@ -962,7 +962,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.interface:
     fields:
       etag: {}
@@ -976,7 +976,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.ipAddress:
     fields:
       id: {}
@@ -988,7 +988,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.securityGroup:
     fields:
       defaultSecurityRules: {}
@@ -1004,7 +1004,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.securityrule:
     fields:
       destinationPortRange: {}
@@ -1015,7 +1015,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.watcher:
     fields:
       etag: {}
@@ -1030,7 +1030,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.network.watcher.flowlog:
     fields:
       analytics: {}
@@ -1051,7 +1051,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService:
     fields:
       applicationFirewallPolicies: {}
@@ -1081,7 +1081,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.appSecurityGroup:
     fields:
       etag: {}
@@ -1094,7 +1094,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.applicationFirewallPolicy:
     fields:
       etag: {}
@@ -1108,7 +1108,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.applicationGateway:
     fields:
       etag: {}
@@ -1122,7 +1122,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.backendAddressPool:
     fields:
       etag: {}
@@ -1134,7 +1134,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.bastionHost:
     fields:
       id: {}
@@ -1148,7 +1148,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.bgpSettings:
     fields:
       asn: {}
@@ -1160,7 +1160,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress:
     fields:
       customBgpIpAddresses: {}
@@ -1172,7 +1172,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewall:
     fields:
       applicationRules: {}
@@ -1195,7 +1195,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewall.applicationRule:
     fields:
       etag: {}
@@ -1206,7 +1206,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewall.ipConfig:
     fields:
       etag: {}
@@ -1220,7 +1220,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewall.natRule:
     fields:
       etag: {}
@@ -1231,7 +1231,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewall.networkRule:
     fields:
       etag: {}
@@ -1242,7 +1242,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.firewallPolicy:
     fields:
       basePolicy: {}
@@ -1259,7 +1259,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.frontendIpConfig:
     fields:
       etag: {}
@@ -1272,7 +1272,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.inboundNatPool:
     fields:
       etag: {}
@@ -1284,7 +1284,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.inboundNatRule:
     fields:
       etag: {}
@@ -1296,7 +1296,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.interface:
     fields:
       etag: {}
@@ -1310,7 +1310,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.ipAddress:
     fields:
       id: {}
@@ -1323,7 +1323,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.loadBalancer:
     fields:
       backendPools: {}
@@ -1344,7 +1344,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.loadBalancerRule:
     fields:
       etag: {}
@@ -1356,7 +1356,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.natGateway:
     fields:
       etag: {}
@@ -1372,7 +1372,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.outboundRule:
     fields:
       etag: {}
@@ -1384,7 +1384,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.probe:
     fields:
       etag: {}
@@ -1396,7 +1396,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.securityGroup:
     fields:
       defaultSecurityRules: {}
@@ -1413,7 +1413,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.securityrule:
     fields:
       destinationPortRange: {}
@@ -1425,7 +1425,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.subnet:
     fields:
       addressPrefix: {}
@@ -1440,7 +1440,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.subnet.ipConfig:
     fields:
       etag: {}
@@ -1451,7 +1451,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.virtualNetwork:
     fields:
       dhcpOptions:
@@ -1471,7 +1471,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.virtualNetwork.dhcpOptions:
     fields:
       dnsServers: {}
@@ -1480,7 +1480,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.virtualNetworkGateway:
     fields:
       active: {}
@@ -1512,7 +1512,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.virtualNetworkGateway.connection:
     fields:
       etag: {}
@@ -1524,7 +1524,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.virtualNetworkGateway.ipConfig:
     fields:
       etag: {}
@@ -1538,7 +1538,7 @@ resources:
     min_mondoo_version: 9.0.3
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.watcher:
     fields:
       etag: {}
@@ -1554,7 +1554,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.networkService.watcher.flowlog:
     fields:
       analytics: {}
@@ -1576,7 +1576,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSql:
     fields:
       servers: {}
@@ -1584,7 +1584,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSql.database:
     fields:
       charset: {}
@@ -1595,7 +1595,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSql.server:
     fields:
       configuration: {}
@@ -1610,7 +1610,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSqlService:
     fields:
       servers: {}
@@ -1619,7 +1619,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSqlService.database:
     fields:
       charset: {}
@@ -1631,7 +1631,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.postgreSqlService.server:
     fields:
       configuration: {}
@@ -1647,7 +1647,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.resource:
     fields:
       changedTime: {}
@@ -1667,7 +1667,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.resourcegroup:
     fields:
       id: {}
@@ -1681,7 +1681,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql:
     fields:
       servers: {}
@@ -1689,7 +1689,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.configuration:
     fields:
       allowedValues: {}
@@ -1704,7 +1704,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.database:
     fields:
       advisor: {}
@@ -1739,7 +1739,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.databaseusage:
     fields:
       currentValue: {}
@@ -1752,7 +1752,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.firewallrule:
     fields:
       endIpAddress: {}
@@ -1763,7 +1763,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.server:
     fields:
       auditingPolicy: {}
@@ -1785,7 +1785,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.server.administrator:
     fields:
       administratorType: {}
@@ -1798,7 +1798,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.server.vulnerabilityassessmentsettings:
     fields:
       id: {}
@@ -1813,7 +1813,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sql.virtualNetworkRule:
     fields:
       id: {}
@@ -1824,7 +1824,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService:
     fields:
       servers: {}
@@ -1833,7 +1833,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.configuration:
     fields:
       allowedValues: {}
@@ -1849,7 +1849,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.database:
     fields:
       advisor: {}
@@ -1885,7 +1885,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.databaseusage:
     fields:
       currentValue: {}
@@ -1899,7 +1899,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.firewallrule:
     fields:
       endIpAddress: {}
@@ -1911,7 +1911,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.server:
     fields:
       auditingPolicy: {}
@@ -1934,7 +1934,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.server.administrator:
     fields:
       administratorType: {}
@@ -1948,7 +1948,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.server.vulnerabilityassessmentsettings:
     fields:
       id: {}
@@ -1964,7 +1964,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.sqlService.virtualNetworkRule:
     fields:
       id: {}
@@ -1976,7 +1976,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage:
     fields:
       accounts: {}
@@ -1984,7 +1984,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account:
     fields:
       blobProperties: {}
@@ -2004,7 +2004,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.container:
     fields:
       etag: {}
@@ -2015,7 +2015,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.dataProtection:
     fields:
       blobRetentionDays: {}
@@ -2026,7 +2026,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.service.properties:
     fields:
       hourMetrics: {}
@@ -2036,7 +2036,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.service.properties.logging:
     fields:
       delete: {}
@@ -2048,7 +2048,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.service.properties.metrics:
     fields:
       enabled: {}
@@ -2059,7 +2059,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storage.account.service.properties.retentionPolicy:
     fields:
       enabled: {}
@@ -2068,7 +2068,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService:
     fields:
       accounts: {}
@@ -2077,7 +2077,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account:
     fields:
       blobProperties: {}
@@ -2098,7 +2098,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.container:
     fields:
       etag: {}
@@ -2110,7 +2110,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.dataProtection:
     fields:
       blobRetentionDays: {}
@@ -2122,7 +2122,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.service.properties:
     fields:
       hourMetrics: {}
@@ -2133,7 +2133,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.service.properties.logging:
     fields:
       delete: {}
@@ -2146,7 +2146,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.service.properties.metrics:
     fields:
       enabled: {}
@@ -2158,7 +2158,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.storageService.account.service.properties.retentionPolicy:
     fields:
       enabled: {}
@@ -2168,7 +2168,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.web:
     fields:
       apps: {}
@@ -2177,7 +2177,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.web.appsite:
     fields:
       applicationSettings: {}
@@ -2197,7 +2197,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.web.appsiteauthsettings:
     fields:
       id: {}
@@ -2208,7 +2208,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.web.appsiteconfig:
     fields:
       id: {}
@@ -2219,7 +2219,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.webService:
     fields:
       apps: {}
@@ -2229,7 +2229,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.webService.appsite:
     fields:
       applicationSettings: {}
@@ -2250,7 +2250,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.webService.appsiteauthsettings:
     fields:
       id: {}
@@ -2262,7 +2262,7 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure
   azure.subscription.webService.appsiteconfig:
     fields:
       id: {}
@@ -2274,4 +2274,4 @@ resources:
     min_mondoo_version: latest
     platform:
       name:
-      - azure
+      - Azure

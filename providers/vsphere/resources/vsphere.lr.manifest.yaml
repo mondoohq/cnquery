@@ -24,8 +24,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
     snippets:
     - query: |
         esxi.host {
@@ -42,8 +42,8 @@ resources:
     min_mondoo_version: 5.27.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   esxi.kernelmodule:
     fields:
       enabled: {}
@@ -60,8 +60,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   esxi.ntpconfig:
     fields:
       config: {}
@@ -71,8 +71,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   esxi.service:
     fields:
       key: {}
@@ -86,8 +86,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   esxi.timezone:
     fields:
       description: {}
@@ -98,8 +98,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   esxi.vib:
     fields:
       acceptanceLevel: {}
@@ -114,8 +114,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   platform:
     fields:
       vulnerabilityReport: {}
@@ -128,8 +128,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
     snippets:
     - query: vsphere.about
       title: Display Information about the vSphere environment
@@ -161,8 +161,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.datacenter:
     fields:
       clusters: {}
@@ -175,8 +175,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.host:
     fields:
       acceptanceLevel: {}
@@ -199,8 +199,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
     snippets:
     - query: |
         // targeting a single ESXi host
@@ -231,8 +231,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.vm:
     fields:
       advancedSettings: {}
@@ -244,8 +244,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.vmknic:
     fields:
       ipv4: {}
@@ -257,8 +257,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.vmnic:
     fields:
       details: {}
@@ -269,8 +269,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.vswitch.dvs:
     fields:
       name: {}
@@ -280,8 +280,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vsphere.vswitch.standard:
     fields:
       failoverPolicy: {}
@@ -294,8 +294,8 @@ resources:
     min_mondoo_version: 5.15.0
     platform:
       name:
-      - vmware-esxi
-      - vmware-vsphere
+      - VMware ESXi
+      - VMware vSphere
   vuln.advisory:
     fields:
       description: {}
