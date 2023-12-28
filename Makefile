@@ -173,6 +173,9 @@ providers/defaults:
 providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
+providers/lr/install: providers/lr
+	cp ./lr ${GOPATH}/bin
+
 .PHONY: providers/build
 # Note we need \ to escape the target line into multiple lines
 providers/build: \
