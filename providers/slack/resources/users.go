@@ -29,7 +29,7 @@ func (s *mqlSlackUsers) list() ([]interface{}, error) {
 	ctx := context.Background()
 
 	// requires users:read scope
-	users, err := client.GetUsersContext(ctx)
+	users, err := client.GetUsersContext(ctx, slack.GetUsersOptionLimit(999))
 	if err != nil {
 		return nil, err
 	}
