@@ -10,7 +10,7 @@ require (
 	github.com/xanzy/go-gitlab v0.95.2
 	go.mondoo.com/cnquery/v9 v9.12.1
 	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
