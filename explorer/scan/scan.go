@@ -22,7 +22,6 @@ func init() {
 }
 
 type AssetJob struct {
-	DoRecord         bool
 	UpstreamConfig   *upstream.UpstreamConfig
 	Asset            *inventory.Asset
 	Bundle           *explorer.Bundle

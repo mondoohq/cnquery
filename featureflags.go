@@ -75,15 +75,22 @@ const (
 	// start: v8.x
 	// end:   v9.0
 	ErrorsAsFailures
+
+	// ResourceRecording feature flag
+	// desc:  Resource recording is reported to Mondoo Platform
+	// start: v9.x
+	// end:   v10.0
+	ResourceRecording
 )
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():      MassQueries,
-	PiperCode.String():        PiperCode,
-	BoolAssertions.String():   BoolAssertions,
-	MQLAssetContext.String():  MQLAssetContext,
-	ErrorsAsFailures.String(): ErrorsAsFailures,
+	MassQueries.String():       MassQueries,
+	PiperCode.String():         PiperCode,
+	BoolAssertions.String():    BoolAssertions,
+	MQLAssetContext.String():   MQLAssetContext,
+	ErrorsAsFailures.String():  ErrorsAsFailures,
+	ResourceRecording.String(): ResourceRecording,
 }
 
 // DefaultFeatures are a set of default flags that are active

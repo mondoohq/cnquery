@@ -53,12 +53,23 @@ func getFeatures() cnquery.Features {
 		}
 	}
 
-	envFeatures := viper.GetStringSlice("features")
-	for _, name := range envFeatures {
+	env := os.Getenv("FEATURES")
+	if env == "" {
+		return cnquery.Features{}
+	}
+
+	featureList := []string{}
+	envFeatures := os.Getenv("FEATURES")
+	if envFeatures != "" {
+		featureList = strings.Split(envFeatures, ",")
+	}
+
+	for _, name := range featureList {
 		flag, ok := cnquery.FeaturesValue[name]
 		if ok {
 			if !bitSet[byte(flag)] {
 				bitSet[byte(flag)] = true
+				log.Info().Msg("activate feature: " + name)
 				flags = append(flags, byte(flag))
 			}
 		} else {

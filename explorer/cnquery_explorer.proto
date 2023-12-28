@@ -8,6 +8,7 @@ package cnquery.explorer;
 import "google/protobuf/any.proto";
 import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
+import "providers-sdk/v1/recording/recording.proto";
 
 option go_package = "go.mondoo.com/cnquery/v9/explorer";
 
@@ -313,6 +314,7 @@ service QueryConductor {
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
   rpc GetReport(EntityDataRequest) returns (Report) {}
+  rpc StoreResources(StoreResourcesReq) returns (Empty) {}
 
   rpc SynchronizeAssets(SynchronizeAssetsReq) returns (SynchronizeAssetsResp) {}
 }
@@ -356,6 +358,12 @@ message UpdateAssetJobsReq {
 message StoreResultsReq {
   string asset_mrn = 1;
   map<string, cnquery.llx.Result> data = 3;
+}
+
+// Store resource data for a given asset
+message StoreResourcesReq {
+  string asset_mrn = 1;
+  repeated cnquery.providers.v1.RecordingResourceData resources = 3;
 }
 
 // Retrieve data for a given set of entities which was previously stored

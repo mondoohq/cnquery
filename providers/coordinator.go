@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/v9/providers/core/config"
 	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/semver"
@@ -329,7 +330,7 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
 		schema:          newExtensibleSchema(),
-		Recording:       NullRecording{},
+		Recording:       rpb.NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 		isEphemeral:     isEphemeral,
 	}

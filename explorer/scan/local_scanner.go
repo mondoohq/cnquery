@@ -12,9 +12,6 @@ import (
 	sync "sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory/manager"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -31,6 +28,9 @@ import (
 	"go.mondoo.com/cnquery/v9/mrn"
 	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -47,7 +47,7 @@ type LocalScanner struct {
 	ctx       context.Context
 	fetcher   *fetcher
 	upstream  *upstream.UpstreamConfig
-	recording providers.Recording
+	recording rpb.Recording
 }
 
 type ScannerOption func(*LocalScanner)
@@ -58,7 +58,7 @@ func WithUpstream(u *upstream.UpstreamConfig) func(s *LocalScanner) {
 	}
 }
 
-func WithRecording(r providers.Recording) func(s *LocalScanner) {
+func WithRecording(r rpb.Recording) func(s *LocalScanner) {
 	return func(s *LocalScanner) {
 		s.recording = r
 	}
@@ -74,7 +74,7 @@ func NewLocalScanner(opts ...ScannerOption) *LocalScanner {
 	}
 
 	if ls.recording == nil {
-		ls.recording = providers.NullRecording{}
+		ls.recording = rpb.NullRecording{}
 	}
 
 	return ls
@@ -308,6 +308,44 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		justAssets = append(justAssets, asset.asset)
 	}
 
+	// methods to optionally sync resources
+	syncResources := func() {}
+	// TODO: simplify code
+	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
+		if s.upstream != nil && config.Features.IsActive(cnquery.ResourceRecording) {
+			syncResources = func() {
+				log.Info().Msg("sending recording to upstream")
+				proptoRecording := s.recording.ToProto()
+				if proptoRecording != nil {
+					logger.DebugDumpJSON("recording", proptoRecording)
+
+					log.Info().Msg("synchronize assets")
+					client, err := upstream.InitClient()
+					if err != nil {
+						return
+					}
+
+					services, err := explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
+					if err != nil {
+						return
+					}
+
+					for i := range proptoRecording.Assets {
+						asset := proptoRecording.Assets[i]
+
+						_, err = services.StoreResources(ctx, &explorer.StoreResourcesReq{
+							AssetMrn:  asset.Asset.Mrn,
+							Resources: asset.Resources,
+						})
+						if err != nil {
+							log.Error().Err(err).Msg("failed to store resources")
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// sync assets
 	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
 		log.Info().Msg("synchronize assets")
@@ -343,6 +381,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			assets[i].asset.Mrn = platformAssetMapping[platformMrn].AssetMrn
 			assets[i].asset.Url = platformAssetMapping[platformMrn].Url
 		}
+
 	} else {
 		// ensure we have non-empty asset MRNs
 		for i := range assets {
@@ -409,9 +448,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			default:
 			}
 
+			// ensure asset
 			p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
 			s.RunAssetJob(&AssetJob{
-				DoRecord:         job.DoRecord,
+				// DoRecord:         job.DoRecord,
 				UpstreamConfig:   upstream,
 				Asset:            asset,
 				Bundle:           job.Bundle,
@@ -436,11 +476,17 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}()
 
 	scanGroup.Wait()
+
+	// send resources up to the platform
+	syncResources()
+
 	return reporter.Reports(), finished, nil
 }
 
 func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	log.Debug().Msgf("connecting to asset %s", job.Asset.HumanName())
+	job.runtime.Recording.SetAssetMrn(job.runtime.Provider.Connection.Id, job.Asset.Mrn)
+
 	results, err := s.runMotorizedAsset(job)
 	if err != nil {
 		log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")

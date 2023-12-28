@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/types"
@@ -27,7 +28,7 @@ const defaultShutdownTimeout = time.Duration(time.Second * 120)
 type Runtime struct {
 	Provider       *ConnectedProvider
 	UpstreamConfig *upstream.UpstreamConfig
-	Recording      Recording
+	Recording      rpb.Recording
 	AutoUpdate     UpdateProvidersConfig
 
 	features []byte
@@ -321,7 +322,7 @@ func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, ar
 		Resources: []*plugin.ResourceData{{
 			Name:   name,
 			Id:     id,
-			Fields: PrimitiveArgsToResultArgs(args),
+			Fields: rpb.PrimitiveArgsToResultArgs(args),
 		}},
 	})
 	if err != nil {
@@ -476,7 +477,7 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
 }
 
-func (r *Runtime) SetRecording(recording Recording) error {
+func (r *Runtime) SetRecording(recording rpb.Recording) error {
 	r.Recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {
 		log.Warn().Msg("set recording while no provider is set on runtime")
@@ -494,21 +495,10 @@ func (r *Runtime) SetRecording(recording Recording) error {
 	return nil
 }
 
-func baseRecording(anyRecording Recording) *recording {
-	var baseRecording *recording
-	switch x := anyRecording.(type) {
-	case *recording:
-		baseRecording = x
-	case *readOnlyRecording:
-		baseRecording = x.recording
-	}
-	return baseRecording
-}
-
 // SetMockRecording is only used for test utilities. Please do not use it!
 //
 // Deprecated: This function may not be necessary anymore, consider removing.
-func (r *Runtime) SetMockRecording(anyRecording Recording, providerID string, mockConnection bool) error {
+func (r *Runtime) SetMockRecording(anyRecording rpb.Recording, providerID string, mockConnection bool) error {
 	r.Recording = anyRecording
 
 	baseRecording := baseRecording(anyRecording)

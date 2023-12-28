@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/cnquery/v9/mqlc/parser"
 	"go.mondoo.com/cnquery/v9/providers"
 	pp "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/shared"
 	run "go.mondoo.com/cnquery/v9/shared/proto"
@@ -165,7 +166,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 		defer func() {
 			// prevent the recording from being closed multiple times
-			connectAssetRuntime.Recording = providers.NullRecording{}
+			connectAssetRuntime.Recording = rpb.NullRecording{}
 			sh.Close()
 		}()
 

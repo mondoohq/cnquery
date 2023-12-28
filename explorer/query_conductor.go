@@ -370,6 +370,13 @@ func (s *LocalServices) StoreResults(ctx context.Context, req *StoreResultsReq) 
 	return globalEmpty, nil
 }
 
+func (s *LocalServices) StoreResources(ctx context.Context, req *StoreResourcesReq) (*Empty, error) {
+	if s.Upstream != nil && !s.Incognito {
+		return s.Upstream.StoreResources(ctx, req)
+	}
+	return nil, nil
+}
+
 func (s *LocalServices) GetReport(ctx context.Context, req *EntityDataRequest) (*Report, error) {
 	return s.DataLake.GetReport(ctx, req.EntityMrn, req.DataMrn)
 }

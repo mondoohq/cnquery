@@ -12,16 +12,21 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/types"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
 )
 
-type Recording interface {
-	Save() error
-	EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config)
-	AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData)
-	GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool)
-	GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool)
+func baseRecording(anyRecording rpb.Recording) *recording {
+	var baseRecording *recording
+	switch x := anyRecording.(type) {
+	case *recording:
+		baseRecording = x
+	case *readOnlyRecording:
+		baseRecording = x.recording
+	}
+	return baseRecording
 }
 
 type recording struct {
@@ -91,6 +96,7 @@ type assetRecording struct {
 
 type assetInfo struct {
 	ID          string            `json:"id"`
+	Mrn         string            `json:"mrn"`
 	PlatformIDs []string          `json:"platformIDs,omitempty"`
 	Name        string            `json:"name,omitempty"`
 	Arch        string            `json:"arch,omitempty"`
@@ -117,26 +123,6 @@ type resourceRecording struct {
 	Fields   map[string]*llx.RawData
 }
 
-type NullRecording struct{}
-
-func (n NullRecording) Save() error {
-	return nil
-}
-
-func (n NullRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
-}
-
-func (n NullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
-}
-
-func (n NullRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	return nil, false
-}
-
-func (n NullRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
-	return nil, false
-}
-
 type readOnlyRecording struct {
 	*recording
 }
@@ -160,18 +146,20 @@ func (n *readOnlyRecording) AddData(connectionID uint32, resource string, id str
 type RecordingOptions struct {
 	DoRecord        bool
 	PrettyPrintJSON bool
+	Upstream        *upstream.UpstreamConfig
 }
 
 // NewRecording loads and creates a new recording based on user settings.
 // If no recording is available and users don't wish to record, it throws an error.
 // If users don't wish to record and no recording is available, it will return
 // the null-recording.
-func NewRecording(path string, opts RecordingOptions) (Recording, error) {
+func NewRecording(path string, opts RecordingOptions) (rpb.Recording, error) {
+	// TODO: handle case where upstream is configured and we want to record locally
 	if path == "" {
 		// we don't want to record and we don't want to load a recording path...
 		// so there is nothing to do, so return nil
 		if !opts.DoRecord {
-			return NullRecording{}, nil
+			return rpb.NullRecording{}, nil
 		}
 		// for all remaining cases we do want to record and we want to check
 		// if the recording exists at the default location
@@ -233,6 +221,7 @@ func LoadRecordingFile(path string) (*recording, error) {
 func (r *recording) Save() error {
 	r.finalize()
 
+	// store to local file
 	var raw []byte
 	var err error
 	if r.prettyPrintJSON {
@@ -481,6 +470,16 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	r.assets[connectionID] = assetObj
 }
 
+func (n recording) SetAssetMrn(connectionID uint32, mrn string) {
+	asset, ok := n.assets[connectionID]
+	if !ok {
+		log.Error().Uint32("connectionID", connectionID).Msg("cannot store recording, cannot find connection ID")
+		return
+	}
+
+	asset.Asset.Mrn = mrn
+}
+
 func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
@@ -540,9 +539,49 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 	return obj.Fields, true
 }
 
+func (r *recording) ToProto() *rpb.RecordingData {
+	if r == nil {
+		return nil
+	}
+
+	r.finalize()
+
+	protoRecording := &rpb.RecordingData{}
+	for i := range r.Assets {
+		a := r.Assets[i]
+
+		protoAsset := &rpb.RecordingAssetData{
+			Asset: a.Asset.ToInventory(),
+		}
+
+		for j := range a.Resources {
+			res := a.Resources[j]
+
+			fields, err := rpb.RawDataArgsToResultArgs(res.Fields)
+			if err != nil {
+				// TODO: switch to error logging
+				panic("failed to convert raw data to result")
+				continue
+			}
+
+			protoResource := &rpb.RecordingResourceData{
+				Name:   res.Resource,
+				Id:     res.ID,
+				Fields: fields,
+			}
+			protoAsset.Resources = append(protoAsset.Resources, protoResource)
+		}
+
+		protoRecording.Assets = append(protoRecording.Assets, protoAsset)
+	}
+
+	return protoRecording
+}
+
 func (a assetInfo) ToInventory() *inventory.Asset {
 	return &inventory.Asset{
 		Id:          a.ID,
+		Mrn:         a.Mrn,
 		Name:        a.Name,
 		Labels:      a.Labels,
 		PlatformIds: a.PlatformIDs,
@@ -558,27 +597,4 @@ func (a assetInfo) ToInventory() *inventory.Asset {
 			Labels:  a.Labels,
 		},
 	}
-}
-
-func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Result, error) {
-	all := make(map[string]*llx.Result, len(args))
-	var err multierr.Errors
-	for k, v := range args {
-		res := v.Result()
-		if res.Error != "" {
-			err.Add(errors.New("failed to convert '" + k + "': " + res.Error))
-		} else {
-			all[k] = res
-		}
-	}
-
-	return all, err.Deduplicate()
-}
-
-func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.Result {
-	res := make(map[string]*llx.Result, len(args))
-	for k, v := range args {
-		res[k] = &llx.Result{Data: v}
-	}
-	return res
 }

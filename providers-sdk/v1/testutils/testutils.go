@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/lr"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/lr/docs"
+	rpb "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils/mockprovider"
 	networkconf "go.mondoo.com/cnquery/v9/providers/network/config"
@@ -234,7 +235,7 @@ func mockRuntime(testdata string) llx.Runtime {
 	return mockRuntimeAbs(filepath.Join(TestutilsDir, testdata))
 }
 
-func MockFromRecording(recording providers.Recording) llx.Runtime {
+func MockFromRecording(recording rpb.Recording) llx.Runtime {
 	runtime := Local().(*providers.Runtime)
 
 	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true)
@@ -264,7 +265,7 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 	return MockFromRecording(roRecording)
 }
 
-func RecordingFromAsset(a *inventory.Asset) providers.Recording {
+func RecordingFromAsset(a *inventory.Asset) rpb.Recording {
 	recording, err := providers.FromAsset(a)
 	if err != nil {
 		panic("failed to create recording from an asset: " + err.Error())

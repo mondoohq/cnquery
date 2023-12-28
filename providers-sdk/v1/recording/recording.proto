@@ -1,0 +1,27 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+syntax = "proto3";
+
+package cnquery.providers.v1;
+
+import "llx/llx.proto";
+import "providers-sdk/v1/inventory/inventory.proto";
+
+option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/recording";
+
+message RecordingData {
+  repeated RecordingAssetData assets = 1;
+}
+
+message RecordingAssetData {
+  Asset asset = 1;
+  repeated RecordingResourceData resources = 2;
+}
+
+message RecordingResourceData {
+  string name = 1;
+  string id = 2;
+  map <string, cnquery.llx.Result> fields = 3;
+}
+
