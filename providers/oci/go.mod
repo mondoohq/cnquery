@@ -9,7 +9,7 @@ replace go.mondoo.com/cnquery/v9 => ../..
 require (
 	github.com/oracle/oci-go-sdk/v65 v65.55.0
 	github.com/rs/zerolog v1.31.0
-	go.mondoo.com/cnquery/v9 v9.12.1
+	go.mondoo.com/cnquery/v9 v9.12.2
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.49.11 // indirect
+	github.com/aws/aws-sdk-go v1.49.13 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.13 // indirect

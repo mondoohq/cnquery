@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.49.11
+	github.com/aws/aws-sdk-go v1.49.13
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.2
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.13
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.7
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.122.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.123.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.26.6
@@ -59,7 +59,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.12.1
+	go.mondoo.com/cnquery/v9 v9.12.2
 	k8s.io/client-go v0.29.0
 )
 
