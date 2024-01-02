@@ -55,8 +55,8 @@ type Release struct {
 var cnqueryLatestReleaseUrl = "https://releases.mondoo.com/cnquery/latest.json?ignoreCache=1"
 
 // GetLatestReleaseName fetches the name of the latest release from releases.mondoo.com
-func GetLatestReleaseName(url string) (string, error) {
-	resp, err := http.Get(url)
+func GetLatestReleaseName(releaseUrl string, client *http.Client) (string, error) {
+	resp, err := client.Get(releaseUrl)
 	if err != nil {
 		return "", fmt.Errorf("error fetching latest release: %v", err)
 	}
@@ -80,8 +80,8 @@ func GetLatestReleaseName(url string) (string, error) {
 }
 
 // GetLatestVersion returns the latest version available on releases.mondoo.com
-func GetLatestVersion() (string, error) {
-	releaseName, err := GetLatestReleaseName(cnqueryLatestReleaseUrl)
+func GetLatestVersion(client *http.Client) (string, error) {
+	releaseName, err := GetLatestReleaseName(cnqueryLatestReleaseUrl, client)
 	if err != nil {
 		return "", err
 	}
