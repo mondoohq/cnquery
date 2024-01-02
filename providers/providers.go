@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
@@ -133,6 +135,22 @@ func httpClient() (*http.Client, error) {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
 	return ranger.NewHttpClient(ranger.WithProxy(proxy)), nil
+}
+
+func httpClientWithRetry() (*http.Client, error) {
+	proxy, err := config.GetAPIProxy()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	retryClient.Logger = &ZerologAdapter{logger: log.Logger}
+	retryClient.HTTPClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(proxy),
+		},
+	}
+	return retryClient.StandardClient(), nil
 }
 
 // List providers that are going to be used in their default order:
@@ -353,7 +371,7 @@ func installVersion(name string, version string) (*Provider, error) {
 }
 
 func LatestVersion(name string) (string, error) {
-	client, err := httpClient()
+	client, err := httpClientWithRetry()
 	if err != nil {
 		return "", err
 	}
@@ -363,6 +381,7 @@ func LatestVersion(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Debug().Err(err).Msg("reading latest.json failed")
@@ -709,4 +728,36 @@ func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
 		panic("cannot read schema file: " + path)
 	}
 	return MustLoadSchema(name, raw)
+}
+
+// ZerologAdapter adapts the zerolog logger to the LeveledLogger interface.
+// Converts all retry logs to debug logs
+type ZerologAdapter struct {
+	logger zerolog.Logger
+}
+
+func (z *ZerologAdapter) Error(msg string, keysAndValues ...interface{}) {
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Info(msg string, keysAndValues ...interface{}) {
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Debug(msg string, keysAndValues ...interface{}) {
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func (z *ZerologAdapter) Warn(msg string, keysAndValues ...interface{}) {
+	z.logger.Debug().Fields(convertToFields(keysAndValues...)).Msg(msg)
+}
+
+func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
+	fields := make(map[string]interface{})
+	for i := 0; i < len(keysAndValues); i += 2 {
+		if i+1 < len(keysAndValues) {
+			fields[keysAndValues[i].(string)] = keysAndValues[i+1]
+		}
+	}
+	return fields
 }
