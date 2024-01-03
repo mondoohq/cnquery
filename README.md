@@ -120,7 +120,7 @@ These files can also contain multiple query packs for many different target syst
 
 To more easily explore your infrastructure, sign up for a free Mondoo Platform account. Mondoo's web-based console allows you to navigate, search, and arrange all of your assets.
 
-Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
+Go to [console.mondoo.com](https://console.mondoo.com) to sign up.
 
 To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://www.mondoo.com).
 
