@@ -227,17 +227,17 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 				}
 
 				for _, cluster := range dbClusters.DBClusters {
-					// mqlRdsDbInstances := []*mqlRdsDbInstance{}
-					// for _, instance := range cluster.DBClusterMembers {
-					// 	mqlInstance, err := NewResource(a.MqlRuntime, "aws.rds.dbinstance",
-					// 		map[string]*llx.RawData{
-					// 			"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, regionVal, conn, conn.AccountId(), convert.ToString(instance.DBInstanceIdentifier))),
-					// 		})
-					// 	if err != nil {
-					// 		return nil, err
-					// 	}
-					// 	mqlRdsDbInstances = append(mqlRdsDbInstances, mqlInstance)
-					// }
+					mqlRdsDbInstances := []interface{}{}
+					for _, instance := range cluster.DBClusterMembers {
+						mqlInstance, err := NewResource(a.MqlRuntime, "aws.rds.dbinstance",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(rdsInstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.DBInstanceIdentifier))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						mqlRdsDbInstances = append(mqlRdsDbInstances, mqlInstance)
+					}
 					sgs := []interface{}{}
 					for i := range cluster.VpcSecurityGroups {
 						// NOTE: this will create the resource and determine the data in its init method
@@ -271,7 +271,7 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 							"storageType":             llx.StringDataPtr(cluster.StorageType),
 							"tags":                    llx.MapData(rdsTagsToMap(cluster.TagList), types.String),
 							"securityGroups":          llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							// "members": mqlRdsDbInstances,
+							"members":                 llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
 						})
 					if err != nil {
 						return nil, err
