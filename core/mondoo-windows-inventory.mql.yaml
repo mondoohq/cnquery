@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.3.0
+    version: 1.4.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -54,7 +54,7 @@ packs:
         mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-features
         title: Installed Windows features
-        mql: windows.features
+        mql: windows.features.where(installed == true) { path name displayName }
       - uid: mondoo-windows-running-services
         title: Running services
         mql: services.where( running == true )
@@ -67,3 +67,39 @@ packs:
       - uid: mondoo-windows-computer-info
         title: Windows Computer/ System information
         mql: windows.computerInfo
+      - uid: mondoo-windows-security-products
+        title: Installed Security Products
+        filters: |
+          windows.computerInfo['OsProductType'] == 1
+        mql: windows.security.products { state type name productState signatureState timestamp }
+      - uid: mondoo-windows-bitlocker-volumes
+        title: Bitlocker Volumes
+        filters: |
+          windows.computerInfo['OsProductType'] == 1
+        mql: windows.bitlocker.volumes { driveLetter encryptionMethod protectionStatus conversionStatus }
+      - uid: mondoo-windows-security-center-health
+        title: Windows Security Health Information
+        filters: |
+          windows.computerInfo['OsProductType'] == 1
+        mql: windows.security.health { autoUpdate internetSettings securityCenterService firewall uac antiVirus antiSpyware }
+      - uid: mondoo-windows-windows-firewall-settings
+        title: Windows Firewall settings
+        mql: windows.firewall { settings profiles { allowUnicastResponseToMulticast logIgnored enabled allowLocalFirewallRules allowLocalIPsecRules logAllowed logBlocked allowUserApps instanceID allowUserPorts name notifyOnListen logFileName enableStealthModeForIPsec defaultInboundAction logMaxSizeKilobytes defaultOutboundAction allowInboundRules } }
+      - uid: mondoo-windows-windows-firewall-rules
+        title: Windows Firewall rules
+        mql: windows.firewall.rules { edgeTraversalPolicy status instanceID enabled looseSourceMapping displayGroup policyStoreSource name enforcementStatus description direction displayName policyStoreSourceType primaryStatus localOnlyMapping action }
+      - uid: mondoo-windows-windows-audit-policies
+        title: Windows audit policies
+        mql: auditpol { exclusionsetting machinename policytarget subcategory inclusionsetting subcategoryguid }
+      - uid: mondoo-windows-windows-system-access-policy
+        title: Windows local System Access security policy
+        mql: secpol.systemaccess
+      - uid: mondoo-windows-windows-event-audit-policy
+        title: Windows local Event Audit security policy
+        mql: secpol.eventaudit
+      - uid: mondoo-windows-manual-windows-registery-values-policy
+        title: Windows local Registry Values security policy
+        mql: secpol.registryvalues
+      - uid: mondoo-windows-manual-windows-privilige-rights-policy
+        title: Windows local Privilege Rights security policy
+        mql: secpol.privilegerights
