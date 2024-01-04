@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/azure/connection"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection/azureinstancesnapshot"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/azure/resources"
 )
 
@@ -80,6 +82,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		Options:     opts,
 	}
 
+	// handle azure subcommands
+	if len(req.Args) >= 3 && req.Args[0] == "compute" {
+		err := handleAzureComputeSubcommands(req.Args, config)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{config},
 	}
@@ -101,10 +111,37 @@ func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
 	return &inventory.Discovery{Targets: targets}
 }
 
+func handleAzureComputeSubcommands(args []string, config *inventory.Config) error {
+	switch args[1] {
+	case "instance":
+		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
+		config.Discover = nil
+		config.Options["type"] = "instance"
+		config.Options["instance-name"] = args[2]
+		return nil
+	case "snapshot":
+		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
+		config.Options["type"] = "snapshot"
+		config.Options["snapshot-name"] = args[2]
+		config.Discover = nil
+		return nil
+	default:
+		return errors.New("unknown subcommand " + args[1])
+	}
+}
+
 // Shutdown is automatically called when the shell closes.
 // It is not necessary to implement this method.
 // If you want to do some cleanup, you can do it here.
 func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
+	for i := range s.runtimes {
+		runtime := s.runtimes[i]
+		sharedConn := runtime.Connection.(shared.AzureConnection)
+		if sharedConn.Type() == azureinstancesnapshot.SnapshotConnectionType {
+			conn := runtime.Connection.(*azureinstancesnapshot.AzureSnapshotConnection)
+			conn.Close()
+		}
+	}
 	return &plugin.ShutdownRes{}, nil
 }
 
@@ -130,7 +167,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	// discovery assets for further scanning
-	inventory, err := s.discover(conn, conn.Conf)
+	inventory, err := s.discover(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +180,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*connection.AzureConnection, error) {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.AzureConnection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
@@ -151,7 +188,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 	s.lastConnectionID++
-	conn, err := connection.NewAzureConnection(s.lastConnectionID, asset, conf)
+	var conn shared.AzureConnection
+	var err error
+
+	switch conf.Type {
+	case string(azureinstancesnapshot.SnapshotConnectionType):
+		// A GcpSnapshotConnection is a wrapper around a FilesystemConnection
+		// To make sure the connection is later handled by the os provider, override the type
+		conf.Type = "filesystem"
+		s.lastConnectionID++
+		conn, err = azureinstancesnapshot.NewAzureSnapshotConnection(s.lastConnectionID, conf, asset)
+	default:
+		s.lastConnectionID++
+		conn, err = connection.NewAzureConnection(s.lastConnectionID, asset, conf)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +226,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return conn, err
 }
 
-func (s *Service) detect(asset *inventory.Asset, conn *connection.AzureConnection) error {
+func (s *Service) detect(asset *inventory.Asset, conn shared.AzureConnection) error {
 	// TODO: what do i put here
 	return nil
 }
@@ -268,8 +318,8 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	return &plugin.StoreRes{}, nil
 }
 
-func (s *Service) discover(conn *connection.AzureConnection, conf *inventory.Config) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, error) {
+	if conn.Config().Discover == nil {
 		return nil, nil
 	}
 
@@ -279,5 +329,5 @@ func (s *Service) discover(conn *connection.AzureConnection, conf *inventory.Con
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(conn.ID()), 10) + " not found")
 	}
 
-	return resources.Discover(runtime, conf)
+	return resources.Discover(runtime, conn.Config())
 }

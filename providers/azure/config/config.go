@@ -5,15 +5,19 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection/azureinstancesnapshot"
 	"go.mondoo.com/cnquery/v9/providers/azure/provider"
 	"go.mondoo.com/cnquery/v9/providers/azure/resources"
 )
 
 var Config = plugin.Provider{
-	Name:            "azure",
-	ID:              "go.mondoo.com/cnquery/v9/providers/azure",
-	Version:         "9.1.16",
-	ConnectionTypes: []string{provider.ConnectionType},
+	Name:    "azure",
+	ID:      "go.mondoo.com/cnquery/v9/providers/azure",
+	Version: "9.1.16",
+	ConnectionTypes: []string{
+		provider.ConnectionType,
+		string(azureinstancesnapshot.SnapshotConnectionType),
+	},
 	Connectors: []plugin.Connector{
 		{
 			Name:    "azure",

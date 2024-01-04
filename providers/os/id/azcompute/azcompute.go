@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
@@ -20,6 +19,10 @@ const (
 	identityUrl                   = "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
 	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 1 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
 )
+
+func MondooAzureInstanceID(instanceID string) string {
+	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
+}
 
 type instanceMetadata struct {
 	Compute struct {
@@ -86,7 +89,7 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	}
 
 	return Identity{
-		InstanceID: plugin.MondooAzureInstanceID(md.Compute.ResourceID),
+		InstanceID: MondooAzureInstanceID(md.Compute.ResourceID),
 		AccountID:  "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + md.Compute.SubscriptionID,
 	}, nil
 }
