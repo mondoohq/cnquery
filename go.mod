@@ -117,7 +117,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
+require github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
