@@ -117,6 +117,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+require github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Antonboom/testifylint v0.2.3 // indirect
@@ -149,7 +151,6 @@ require (
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
