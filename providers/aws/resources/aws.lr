@@ -1806,6 +1806,12 @@ private aws.rds.dbcluster @defaults("id region") {
   deletionProtection bool
   // List of VPC security group elements that the DB cluster belongs to
   securityGroups []aws.ec2.securitygroup
+  // List of Availability Zones (AZs) where instances in the DB cluster can be created
+  availabilityZones []string
+  // The port that the database engine is listening on
+  port int
+  // The connection endpoint for the primary instance of the DB cluster
+  endpoint string
 }
 
 // Amazon RDS snapshot
