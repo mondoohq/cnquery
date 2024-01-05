@@ -2685,6 +2685,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.rds.dbcluster.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.rds.dbcluster.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbcluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetEndpoint()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -6710,6 +6719,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbcluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17455,6 +17476,9 @@ type mqlAwsRdsDbcluster struct {
 	MultiAZ plugin.TValue[bool]
 	DeletionProtection plugin.TValue[bool]
 	SecurityGroups plugin.TValue[[]interface{}]
+	AvailabilityZones plugin.TValue[[]interface{}]
+	Port plugin.TValue[int64]
+	Endpoint plugin.TValue[string]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -17588,6 +17612,18 @@ func (c *mqlAwsRdsDbcluster) GetDeletionProtection() *plugin.TValue[bool] {
 
 func (c *mqlAwsRdsDbcluster) GetSecurityGroups() *plugin.TValue[[]interface{}] {
 	return &c.SecurityGroups
+}
+
+func (c *mqlAwsRdsDbcluster) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsRdsDbcluster) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsRdsDbcluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
