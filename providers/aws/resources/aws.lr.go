@@ -2802,6 +2802,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbinstance.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetCreatedTime()).ToDataRes(types.Time)
 	},
+	"aws.rds.dbinstance.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.rds.dbinstance.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetEndpoint()).ToDataRes(types.String)
+	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
 	},
@@ -6883,6 +6889,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17757,6 +17771,8 @@ type mqlAwsRdsDbinstance struct {
 	Status plugin.TValue[string]
 	AutoMinorVersionUpgrade plugin.TValue[bool]
 	CreatedTime plugin.TValue[*time.Time]
+	Port plugin.TValue[int64]
+	Endpoint plugin.TValue[string]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -17906,6 +17922,14 @@ func (c *mqlAwsRdsDbinstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] 
 
 func (c *mqlAwsRdsDbinstance) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsRdsDbinstance) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsRdsDbinstance) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

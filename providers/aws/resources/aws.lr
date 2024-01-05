@@ -1892,6 +1892,10 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   autoMinorVersionUpgrade bool
   // The creation date of the RDS instance
   createdTime time
+  // The port that the DB instance listens on. If the DB instance is part of a DB cluster, this can be a different port than the DB cluster port.
+  port int
+  // The connection endpoint for the DB instance
+  endpoint string
 }
 
 // Amazon ElastiCache

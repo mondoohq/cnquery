@@ -104,6 +104,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"id":                            llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 							"multiAZ":                       llx.BoolDataPtr(dbInstance.MultiAZ),
 							"name":                          llx.StringDataPtr(dbInstance.DBName),
+							"port":                          llx.IntData(convert.ToInt64From32(dbInstance.DbInstancePort)),
 							"publiclyAccessible":            llx.BoolDataPtr(dbInstance.PubliclyAccessible),
 							"region":                        llx.StringData(regionVal),
 							"securityGroups":                llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
@@ -113,6 +114,7 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"storageIops":                   llx.IntData(convert.ToInt64From32(dbInstance.Iops)),
 							"storageType":                   llx.StringDataPtr(dbInstance.StorageType),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
+							"endpoint":                      llx.StringDataPtr(dbInstance.Endpoint.Address),
 						})
 					if err != nil {
 						return nil, err
