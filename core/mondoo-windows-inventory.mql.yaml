@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.4.0
+    version: 1.5.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -57,10 +57,15 @@ packs:
         mql: windows.features.where(installed == true) { path name displayName }
       - uid: mondoo-windows-running-services
         title: Running services
-        mql: services.where( running == true )
+        mql: services.where(running == true)
       - uid: mondoo-windows-ports-listening
         title: Listening ports
-        mql: ports.listening
+        filters: mondoo.capabilities.contains("run-command")
+        mql: ports.listening { user state port address protocol process remoteAddress remotePort }
+      - uid: mondoo-windows-active-connections
+        title: Active connections of the system
+        filters: mondoo.capabilities.contains("run-command")
+        query: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-windows-interface-configuration
         title: Network interfaces
         mql: windows.computerInfo['CsNetworkAdapters']
@@ -97,9 +102,21 @@ packs:
       - uid: mondoo-windows-windows-event-audit-policy
         title: Windows local Event Audit security policy
         mql: secpol.eventaudit
-      - uid: mondoo-windows-manual-windows-registery-values-policy
+      - uid: mondoo-windows-registery-values-policy
         title: Windows local Registry Values security policy
         mql: secpol.registryvalues
-      - uid: mondoo-windows-manual-windows-privilige-rights-policy
+      - uid: mondoo-windows-privilige-rights-policy
         title: Windows local Privilege Rights security policy
         mql: secpol.privilegerights
+      - uid: mondoo-windows-smbios-baseboard
+        title: Retrieve SMBIOS baseboard (or module) information
+        mql: machine.baseboard { manufacturer version serial assetTag product }
+      - uid: mondoo-windows-smbios-bios
+        title: Retrieve SMBIOS BIOS information
+        mql: machine.bios { vendor version releaseDate }
+      - uid: mondoo-windows-smbios-system
+        title: Retrieve SMBIOS System information
+        mql: machine.system { sku serial family version product uuid manufacturer }
+      - uid: mondoo-windows-smbios-system
+        title: Retrieve SMBIOS Chassis information
+        mql: machine.chassis { manufacturer serial version assetTag }
