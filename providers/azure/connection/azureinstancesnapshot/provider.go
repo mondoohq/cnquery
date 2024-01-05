@@ -5,8 +5,6 @@ package azureinstancesnapshot
 
 import (
 	"fmt"
-	"io"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -25,21 +23,13 @@ import (
 )
 
 type scanTarget struct {
-	TargetType   string
-	InstanceName string
-	SnapshotName string
+	TargetType string
+	TargetName string
 }
 
 const (
 	SnapshotConnectionType shared.ConnectionType = "azure-snapshot"
 )
-
-type deviceInfo struct {
-	// the LUN number, e.g. 3
-	Lun string
-	// where the disk is mounted, e.g. /dev/sda
-	VolumePath string
-}
 
 // the instance from which we're performing the scan
 type azureScannerInstance struct {
@@ -50,90 +40,6 @@ type mountInfo struct {
 	deviceName string
 	diskId     string
 	diskName   string
-}
-
-func (a *azureScannerInstance) getAvailableLun(mountedDevices []deviceInfo) (int32, error) {
-	takenLuns := []string{}
-	for _, d := range mountedDevices {
-		takenLuns = append(takenLuns, d.Lun)
-	}
-
-	availableLuns := []int32{}
-	// the available LUNs are 0-63, so we exclude everything thats in takenLuns
-	for i := int32(0); i < 64; i++ {
-		exists := false
-		for _, d := range takenLuns {
-			if d == fmt.Sprintf("%d", i) {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			availableLuns = append(availableLuns, i)
-		} else {
-			// log just for visibility
-			log.Debug().Int32("LUN", i).Msg("azure snapshot> LUN is taken, skipping")
-		}
-	}
-	if len(availableLuns) == 0 {
-		return 0, errors.New("no available LUNs to attach disk to")
-	}
-	return availableLuns[0], nil
-}
-
-// https://learn.microsoft.com/en-us/azure/virtual-machines/linux/azure-to-guest-disk-mapping
-// for more information. we want to find the LUNs of the data disks and their mount location
-func getMountedDevices(localConn *connection.LocalConnection) ([]deviceInfo, error) {
-	cmd, err := localConn.RunCommand("lsscsi --brief")
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		outErr, err := io.ReadAll(cmd.Stderr)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("failed to list logical unit numbers: %s", outErr)
-	}
-	// output looks like this:
-	// [0:0:0:0]    /dev/sda
-	// [1:0:0:0]    /dev/sdb
-	data, err := io.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	strData := string(data)
-	lines := strings.Split(strings.TrimSpace(strData), "\n")
-	mountedDevices := []deviceInfo{}
-	for _, line := range lines {
-		log.Debug().Str("line", line).Msg("azure snapshot> parsing lsscsi output")
-		if line == "" {
-			continue
-		}
-		parts := strings.Fields(strings.TrimSpace(line))
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid lsscsi output: %s", line)
-		}
-		lunInfo := parts[0]
-		path := parts[1]
-		// trim the [], turning [1:0:0:0] into 1:0:0:0
-		trimLun := strings.Trim(lunInfo, "[]")
-		splitLun := strings.Split(trimLun, ":")
-		// the LUN is the last one
-		lun := splitLun[len(splitLun)-1]
-		mountedDevices = append(mountedDevices, deviceInfo{Lun: lun, VolumePath: path})
-	}
-
-	return mountedDevices, nil
-}
-
-func getMatchingDevice(mountedDevices []deviceInfo, lun int32) (deviceInfo, error) {
-	for _, d := range mountedDevices {
-		if d.Lun == fmt.Sprintf("%d", lun) {
-			return d, nil
-		}
-	}
-	return deviceInfo{}, errors.New("could not find matching device")
 }
 
 func determineScannerInstanceInfo(localConn *connection.LocalConnection, token azcore.TokenCredential) (*azureScannerInstance, error) {
@@ -181,9 +87,8 @@ func determineScannerInstanceInfo(localConn *connection.LocalConnection, token a
 
 func ParseTarget(conf *inventory.Config) scanTarget {
 	return scanTarget{
-		TargetType:   conf.Options["type"],
-		InstanceName: conf.Options["instance-name"],
-		SnapshotName: conf.Options["snapshot-name"],
+		TargetType: conf.Options["type"],
+		TargetName: conf.Options["target-name"],
 	}
 }
 
@@ -221,18 +126,20 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 
 	// setup disk image so and attach it to the instance
 	mi := mountInfo{}
+
+	diskName := "cnspec-" + target.TargetName + "-snapshot-" + time.Now().Format("2006-01-02t15-04-05z00-00")
 	switch target.TargetType {
 	case "instance":
-		instanceInfo, err := sc.InstanceInfo(scanner.ResourceGroup, target.InstanceName)
+		instanceInfo, err := sc.InstanceInfo(scanner.ResourceGroup, target.TargetName)
 		if err != nil {
 			return nil, err
 		}
 		if instanceInfo.BootDiskId == "" {
-			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
+			return nil, fmt.Errorf("could not find boot disk for instance %s", target.TargetName)
 		}
 
 		log.Debug().Str("boot disk", instanceInfo.BootDiskId).Msg("found boot disk for instance, cloning")
-		disk, err := sc.cloneDisk(instanceInfo.BootDiskId, scanner.ResourceGroup, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"), instanceInfo.Location, scanner.Vm.Zones)
+		disk, err := sc.cloneDisk(instanceInfo.BootDiskId, scanner.ResourceGroup, diskName, instanceInfo.Location, scanner.Vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete disk cloning")
 			return nil, errors.Wrap(err, "could not complete disk cloning")
@@ -243,12 +150,12 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 		asset.Name = instanceInfo.InstanceName
 		conf.PlatformId = azcompute.MondooAzureInstanceID(*instanceInfo.Vm.ID)
 	case "snapshot":
-		snapshotInfo, err := sc.SnapshotInfo(scanner.ResourceGroup, target.SnapshotName)
+		snapshotInfo, err := sc.SnapshotInfo(scanner.ResourceGroup, target.TargetName)
 		if err != nil {
 			return nil, err
 		}
 
-		disk, err := sc.createSnapshotDisk(snapshotInfo.SnapshotId, scanner.ResourceGroup, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"), snapshotInfo.Location, scanner.Vm.Zones)
+		disk, err := sc.createSnapshotDisk(snapshotInfo.SnapshotId, scanner.ResourceGroup, diskName, snapshotInfo.Location, scanner.Vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete snapshot disk creation")
 			return nil, errors.Wrap(err, "could not create disk from snapshot")
@@ -256,7 +163,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 		log.Debug().Str("disk", *disk.ID).Msg("created disk from snapshot")
 		mi.diskId = *disk.ID
 		mi.diskName = *disk.Name
-		asset.Name = target.SnapshotName
+		asset.Name = target.TargetName
 		conf.PlatformId = SnapshotPlatformMrn(snapshotInfo.SnapshotId)
 	default:
 		return nil, errors.New("invalid target type")

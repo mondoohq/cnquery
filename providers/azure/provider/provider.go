@@ -117,12 +117,12 @@ func handleAzureComputeSubcommands(args []string, config *inventory.Config) erro
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
 		config.Discover = nil
 		config.Options["type"] = "instance"
-		config.Options["instance-name"] = args[2]
+		config.Options["target-name"] = args[2]
 		return nil
 	case "snapshot":
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
 		config.Options["type"] = "snapshot"
-		config.Options["snapshot-name"] = args[2]
+		config.Options["target-name"] = args[2]
 		config.Discover = nil
 		return nil
 	default:
@@ -193,7 +193,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	switch conf.Type {
 	case string(azureinstancesnapshot.SnapshotConnectionType):
-		// A GcpSnapshotConnection is a wrapper around a FilesystemConnection
+		// An AzureSnapshotConnection is a wrapper around a FilesystemConnection
 		// To make sure the connection is later handled by the os provider, override the type
 		conf.Type = "filesystem"
 		s.lastConnectionID++
