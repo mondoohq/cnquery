@@ -1924,6 +1924,8 @@ resources:
       arn: {}
       autoMinorVersionUpgrade:
         min_mondoo_version: 9.0.0
+      availabilityZones:
+        min_mondoo_version: 9.0.0
       backupRetentionPeriod:
         min_mondoo_version: 9.0.0
       clusterDbInstanceClass:
@@ -1932,6 +1934,8 @@ resources:
         min_mondoo_version: 9.0.0
       deletionProtection:
         min_mondoo_version: 9.0.0
+      endpoint:
+        min_mondoo_version: 9.0.0
       engine:
         min_mondoo_version: 9.0.0
       engineVersion:
@@ -1939,6 +1943,8 @@ resources:
       id: {}
       members: {}
       multiAZ:
+        min_mondoo_version: 9.0.0
+      port:
         min_mondoo_version: 9.0.0
       publiclyAccessible:
         min_mondoo_version: 9.0.0
