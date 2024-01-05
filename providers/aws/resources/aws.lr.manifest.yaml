@@ -1987,6 +1987,8 @@ resources:
         min_mondoo_version: 5.19.1
       deletionProtection: {}
       enabledCloudwatchLogsExports: {}
+      endpoint:
+        min_mondoo_version: 9.0.0
       engine:
         min_mondoo_version: 5.19.1
       engineVersion:
@@ -1995,6 +1997,8 @@ resources:
       id: {}
       multiAZ: {}
       name: {}
+      port:
+        min_mondoo_version: 9.0.0
       publiclyAccessible: {}
       region: {}
       securityGroups:
