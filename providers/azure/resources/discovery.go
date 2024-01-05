@@ -62,6 +62,10 @@ type subWithConfig struct {
 	conf *inventory.Config
 }
 
+func MondooAzureInstanceID(instanceID string) string {
+	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
+}
+
 func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AzureConnection)
 	assets := []*inventory.Asset{}
@@ -264,7 +268,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				return nil, err
 			}
 			enrichWithLabels(asset, labels)
-			asset.PlatformIds = []string{plugin.MondooAzureInstanceID(vm.Id.Data)}
+			asset.PlatformIds = []string{MondooAzureInstanceID(vm.Id.Data)}
 			asset.Platform.Runtime = "azure"
 			asset.Platform.Kind = "virtualmachine"
 			assets = append(assets, asset)

@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package auth
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 )
 
-func getTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
+func GetTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
 	// fallback to CLI authorizer if no credentials are specified
@@ -24,7 +24,6 @@ func getTokenCredential(credential *vault.Credential, tenantId, clientId string)
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}
 	} else {
-		// we only support private key authentication for ms 365
 		switch credential.Type {
 		case vault.CredentialType_pkcs12:
 			certs, privateKey, err := azidentity.ParseCertificates(credential.Secret, []byte(credential.Password))

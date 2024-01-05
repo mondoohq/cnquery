@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection/auth"
+	"go.mondoo.com/cnquery/v9/providers/azure/connection/shared"
 )
 
 const (
@@ -39,7 +41,7 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		cred = conf.Credentials[0]
 	}
 
-	token, err := getTokenCredential(cred, tenantId, clientId)
+	token, err := auth.GetTokenCredential(cred, tenantId, clientId)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
@@ -78,4 +80,12 @@ func (p *AzureConnection) PlatformId() string {
 
 func (p *AzureConnection) ClientOptions() policy.ClientOptions {
 	return p.clientOptions
+}
+
+func (p *AzureConnection) Config() *inventory.Config {
+	return p.Conf
+}
+
+func (p *AzureConnection) Type() shared.ConnectionType {
+	return "azure"
 }
