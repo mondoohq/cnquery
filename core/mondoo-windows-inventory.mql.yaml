@@ -35,7 +35,7 @@ packs:
 
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
-      - asset.platform.contains("windows")
+      - asset.platform == "windows"
     queries:
       - uid: mondoo-windows-asset-info
         title: Asset information
