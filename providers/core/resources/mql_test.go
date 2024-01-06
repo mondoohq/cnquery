@@ -425,6 +425,18 @@ func TestString_Methods(t *testing.T) {
 			Expectation: true,
 		},
 		{
+			Code:        "'hi'.in(['one','hi','five'])",
+			Expectation: true,
+		},
+		{
+			Code:        "'hiya'.in(['one','hi','five'])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hiya'.in([])",
+			Expectation: false,
+		},
+		{
 			Code:        "'oh-hello-world!'.camelcase",
 			Expectation: "ohHelloWorld!",
 		},

@@ -42,6 +42,7 @@ func init() {
 		},
 		types.String: {
 			"contains":  {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
+			"in":        {typ: boolType, compile: compileStringIn},
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":    {typ: intType, signature: FunctionSignature{}},
 			"camelcase": {typ: stringType, signature: FunctionSignature{}},
@@ -77,6 +78,7 @@ func init() {
 			"last":         {typ: dictType, signature: FunctionSignature{}},
 			"where":        {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"contains":     {compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"in":           {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"containsOnly": {compile: compileDictContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsAll":  {compile: compileDictContainsAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsNone": {compile: compileDictContainsNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},

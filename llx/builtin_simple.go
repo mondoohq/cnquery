@@ -2220,11 +2220,36 @@ func stringContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref
 		}
 
 		if re.MatchString(bind.Value.(string)) {
-			return BoolData(true), 0, nil
+			return BoolTrue, 0, nil
 		}
 	}
 
-	return BoolData(false), 0, nil
+	return BoolFalse, 0, nil
+}
+
+func stringInArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	arr := arg.Value.([]interface{})
+	for i := range arr {
+		v := arr[i].(string)
+		if bind.Value.(string) == v {
+			return BoolTrue, 0, nil
+		}
+	}
+	return BoolFalse, 0, nil
 }
 
 func stringFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
