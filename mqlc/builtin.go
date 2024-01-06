@@ -34,6 +34,12 @@ var builtinFunctions map[types.Type]map[string]compileHandler
 
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
+		types.Int: {
+			"inRange": {typ: boolType, compile: compileInRange},
+		},
+		types.Float: {
+			"inRange": {typ: boolType, compile: compileInRange},
+		},
 		types.String: {
 			"contains":  {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},

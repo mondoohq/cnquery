@@ -1568,6 +1568,92 @@ func mapOrIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	return boolOpV2(e, bind, chunk, ref, opMapOrInt)
 }
 
+func int64InRange(e *blockExecutor, val int64, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	minRef := chunk.Function.Args[0]
+	min, rref, err := e.resolveValue(minRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch minval := min.Value.(type) {
+	case int64:
+		if val < minval {
+			return BoolFalse, 0, nil
+		}
+	case float64:
+		if float64(val) < minval {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	maxRef := chunk.Function.Args[1]
+	max, rref, err := e.resolveValue(maxRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch maxval := max.Value.(type) {
+	case int64:
+		if val > maxval {
+			return BoolFalse, 0, nil
+		}
+	case float64:
+		if float64(val) > maxval {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	return BoolTrue, 0, nil
+}
+
+func float64InRange(e *blockExecutor, val float64, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	minRef := chunk.Function.Args[0]
+	min, rref, err := e.resolveValue(minRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch minval := min.Value.(type) {
+	case int64:
+		if val < float64(minval) {
+			return BoolFalse, 0, nil
+		}
+	case float64:
+		if val < minval {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	maxRef := chunk.Function.Args[1]
+	max, rref, err := e.resolveValue(maxRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch maxval := max.Value.(type) {
+	case int64:
+		if val > float64(maxval) {
+			return BoolFalse, 0, nil
+		}
+	case float64:
+		if val > maxval {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	return BoolTrue, 0, nil
+}
+
+func intInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	val := bind.Value.(int64)
+	return int64InRange(e, val, chunk, ref)
+}
+
+func floatInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	val := bind.Value.(float64)
+	return float64InRange(e, val, chunk, ref)
+}
+
 // float &&/|| T
 
 func opFloatAndString(left interface{}, right interface{}) bool {

@@ -364,6 +364,12 @@ func TestNumber_Methods(t *testing.T) {
 		{
 			Code: "1 == NaN", Expectation: false,
 		},
+		{
+			Code: "2.inRange(1,2.0)", Expectation: true,
+		},
+		{
+			Code: "3.0.inRange(1.0,2)", Expectation: false,
+		},
 	})
 }
 
