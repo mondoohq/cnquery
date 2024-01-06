@@ -35,10 +35,10 @@ var builtinFunctions map[types.Type]map[string]compileHandler
 func init() {
 	builtinFunctions = map[types.Type]map[string]compileHandler{
 		types.Int: {
-			"inRange": {typ: boolType, compile: compileInRange},
+			"inRange": {typ: boolType, compile: compileNumberInRange},
 		},
 		types.Float: {
-			"inRange": {typ: boolType, compile: compileInRange},
+			"inRange": {typ: boolType, compile: compileNumberInRange},
 		},
 		types.String: {
 			"contains":  {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
@@ -58,12 +58,13 @@ func init() {
 			"hours":   {typ: intType, signature: FunctionSignature{}},
 			"days":    {typ: intType, signature: FunctionSignature{}},
 			"unix":    {typ: intType, signature: FunctionSignature{}},
+			"inRange": {typ: boolType, compile: compileTimeInRange},
 		},
 		types.Dict: {
 			"[]": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
 			"{}": {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			// number-ish
-			"inRange": {typ: boolType, compile: compileInRange},
+			"inRange": {typ: boolType, compile: compileNumberInRange},
 			// string-ish
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":    {typ: intType, signature: FunctionSignature{}},
