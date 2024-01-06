@@ -694,7 +694,8 @@ func init() {
 				return e.runBlock(bind, chunk.Function.Args[0], chunk.Function.Args[1:], ref)
 			}},
 			// TODO: [#32] unique builtin fields that need a long-term support in LR
-			string(types.Resource("parse") + ".date"): {f: resourceDateV2},
+			string(types.Resource("parse") + ".date"):     {f: resourceDateV2},
+			string(types.Resource("parse") + ".duration"): {f: resourceDuration},
 		},
 	}
 

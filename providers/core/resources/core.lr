@@ -102,6 +102,7 @@ regex {
 parse {
   // Built-in functions:
   // date(value, format) time
+  // duration(value) time
 }
 
 // UUIDs based on RFC 4122 and DCE 1.1

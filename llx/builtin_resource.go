@@ -5,7 +5,9 @@ package llx
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/v9/types"
@@ -281,4 +283,43 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	}
 
 	return nil, 0, errors.New("failed to parse time")
+}
+
+var durationRegex = regexp.MustCompile(`^(\d+|[.])(\w*)$`)
+
+func resourceDuration(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	args, rref, err := primitive2array(e, ref, chunk.Function.Args)
+	if err != nil || rref != 0 {
+		return nil, rref, err
+	}
+
+	// Note: Using the regex is slower than parsing it step by step, so this code can be improved
+	m := durationRegex.FindStringSubmatch(args[0].(string))
+	if m == nil {
+		return nil, 0, errors.New("failed to parse duration")
+	}
+
+	num, err := strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return nil, 0, errors.New("failed to parse duration numeric value")
+	}
+
+	var t time.Time
+	scalar := strings.ToLower(m[2])
+	switch scalar {
+	case "s", "", "sec", "second", "seconds":
+		t = DurationToTime(int64(num))
+	case "m", "min", "minute", "minutes":
+		t = DurationToTime(int64(num * 60))
+	case "h", "hour", "hours":
+		t = DurationToTime(int64(num * 60 * 60))
+	case "d", "day", "days":
+		t = DurationToTime(int64(num * 60 * 60 * 24))
+	case "y", "year", "years":
+		t = DurationToTime(int64(num * 60 * 60 * 24 * 365))
+	default:
+		return nil, 0, errors.New("failed to parsee duration (only supports: s/m/h/d/y)")
+	}
+
+	return TimeData(t), 0, nil
 }

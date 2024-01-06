@@ -1954,7 +1954,7 @@ func TestSuggestions(t *testing.T) {
 		{
 			// builtin calls
 			"parse.d",
-			[]string{"date"},
+			[]string{"date", "duration"},
 			errors.New("cannot find field 'd' in parse"),
 			nil,
 		},
