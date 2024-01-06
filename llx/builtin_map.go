@@ -1279,6 +1279,15 @@ func dictContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 	}
 }
 
+func dictIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringInArray(e, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `in`")
+	}
+}
+
 func dictFindV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case string:
