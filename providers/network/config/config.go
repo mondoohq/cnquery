@@ -10,13 +10,13 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "network",
-	ID:              "go.mondoo.com/cnquery/v9/providers/network",
+	ID:              "go.mondoo.com/cnquery/providers/network",
 	Version:         "9.1.8",
 	ConnectionTypes: []string{provider.HostConnectionType},
 	CrossProviderTypes: []string{
-		"go.mondoo.com/cnquery/v9/providers/os",
-		"go.mondoo.com/cnquery/v9/providers/k8s",
-		"go.mondoo.com/cnquery/v9/providers/aws",
+		"go.mondoo.com/cnquery/providers/os",
+		"go.mondoo.com/cnquery/providers/k8s",
+		"go.mondoo.com/cnquery/providers/aws",
 	},
 	Connectors: []plugin.Connector{
 		{

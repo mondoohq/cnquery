@@ -576,7 +576,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	}
 
 	providerConn := r.Provider.Instance.ID
-	if info.Provider != providerConn && info.Provider != "go.mondoo.com/cnquery/v9/providers/core" && info.Provider != "go.mondoo.com/cnquery/v9/providers/network" {
+	if info.Provider != providerConn && info.Provider != "go.mondoo.com/cnquery/providers/core" && info.Provider != "go.mondoo.com/cnquery/providers/network" {
 		return nil, nil, errors.New("incorrect provider for asset, not adding")
 	}
 

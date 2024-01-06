@@ -4,7 +4,7 @@
 import "../../core/resources/core.lr"
 import "../../network/resources/network.lr"
 
-option provider = "go.mondoo.com/cnquery/v9/providers/os"
+option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/v9/providers/os/resources"
 
 alias os.base.command = command

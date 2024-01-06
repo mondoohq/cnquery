@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
+option provider = "go.mondoo.com/cnquery/providers/vsphere"
 option go_package = "go.mondoo.com/cnquery/v9/providers/vsphere/resources"
 
 // vSphere asset resource
