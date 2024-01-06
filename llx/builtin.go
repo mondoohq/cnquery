@@ -513,6 +513,7 @@ func init() {
 			"last":                            {f: dictGetLastIndexV2},
 			"{}":                              {f: dictBlockCallV2},
 			"length":                          {f: dictLengthV2},
+			"inRange":                         {f: dictInRange},
 			"camelcase":                       {f: dictCamelcaseV2, Label: "camelcase"},
 			"downcase":                        {f: dictDowncaseV2, Label: "downcase"},
 			"upcase":                          {f: dictUpcaseV2, Label: "upcase"},

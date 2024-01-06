@@ -397,7 +397,22 @@ func dictLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	case map[string]interface{}:
 		return IntData(int64(len(x))), 0, nil
 	default:
-		return nil, 0, errors.New("dict value does not support field `length`")
+		return nil, 0, errors.New("dict value does not support `length`")
+	}
+}
+
+func dictInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case int64:
+		return int64InRange(e, x, chunk, ref)
+	case float64:
+		return float64InRange(e, x, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support `inRange`")
 	}
 }
 
