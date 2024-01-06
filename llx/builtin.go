@@ -176,6 +176,7 @@ func init() {
 			string("||" + types.ArrayLike):           {f: intOrArrayV2, Label: "||"},
 			string("&&" + types.MapLike):             {f: intAndMapV2, Label: "&&"},
 			string("||" + types.MapLike):             {f: intOrMapV2, Label: "||"},
+			string("inRange"):                        {f: intInRange, Label: "inRange"},
 		},
 		types.Float: {
 			// == / !=
@@ -246,6 +247,7 @@ func init() {
 			string("||" + types.ArrayLike):           {f: floatOrArrayV2, Label: "||"},
 			string("&&" + types.MapLike):             {f: floatAndMapV2, Label: "&&"},
 			string("||" + types.MapLike):             {f: floatOrMapV2, Label: "&&"},
+			string("inRange"):                        {f: floatInRange, Label: "inRange"},
 		},
 		types.String: {
 			// == / !=
