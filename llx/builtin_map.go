@@ -196,6 +196,58 @@ func mapWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return _mapWhereV2(e, bind, chunk, ref, true)
 }
 
+func mapAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+	}
+
+	filteredList := bind.Value.(map[string]interface{})
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func mapNone(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+	}
+
+	filteredList := bind.Value.(map[string]interface{})
+
+	if len(filteredList) != 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func mapAny(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+	}
+
+	filteredList := bind.Value.(map[string]interface{})
+
+	if len(filteredList) == 0 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
+func mapOne(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: types.Bool, Error: errors.New("failed to validate all entries (map is null)")}, 0, nil
+	}
+
+	filteredList := bind.Value.(map[string]interface{})
+
+	if len(filteredList) != 1 {
+		return BoolFalse, 0, nil
+	}
+	return BoolTrue, 0, nil
+}
+
 func mapBlockCallV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return e.runBlock(bind, chunk.Function.Args[0], nil, ref)
 }

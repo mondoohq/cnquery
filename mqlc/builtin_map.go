@@ -439,6 +439,19 @@ func compileDictFlat(c *compiler, typ types.Type, ref uint64, id string, call *p
 	return typ, nil
 }
 
+func compileMapValues(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	typ = types.Array(typ.Child())
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+		},
+	})
+	return typ, nil
+}
+
 func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
@@ -520,15 +533,106 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	return typ, nil
 }
 
-func compileMapValues(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	typ = types.Array(typ.Child())
+func compileMapContains(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileMapWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	listRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
-		Id:   id,
+		Id:   "$any",
 		Function: &llx.Function{
-			Type:    string(typ),
-			Binding: ref,
+			Type:    string(types.Bool),
+			Binding: listRef,
 		},
 	})
-	return typ, nil
+
+	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	c.Result.Labels.Labels[checksum] = "[].contains()"
+
+	return types.Bool, nil
+}
+
+func compileMapAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileMapWhere(c, typ, ref, "$whereNot", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	listRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$all",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
+
+	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	c.Result.Labels.Labels[checksum] = "[].all()"
+
+	return types.Bool, nil
+}
+
+func compileMapOne(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileMapWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	listRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$one",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
+
+	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	c.Result.Labels.Labels[checksum] = "[].one()"
+
+	return types.Bool, nil
+}
+
+func compileMapNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	_, err := compileMapWhere(c, typ, ref, "where", call)
+	if err != nil {
+		return types.Nil, err
+	}
+	listRef := c.tailRef()
+
+	if err := compileListAssertionMsg(c, typ, ref, listRef, listRef); err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "$none",
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: listRef,
+		},
+	})
+
+	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	c.Result.Labels.Labels[checksum] = "[].none()"
+
+	return types.Bool, nil
 }

@@ -688,6 +688,81 @@ func TestArray(t *testing.T) {
 	})
 }
 
+func TestMap(t *testing.T) {
+	m := "{'a': 1, 'b': 1, 'c': 2}"
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		// contains
+		{
+			Code:        m + ".contains(key == 'a')",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".contains(key == 'z')",
+			ResultIndex: 1, Expectation: false,
+		},
+		{
+			Code:        m + ".contains(value == 1)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".contains(value == 0)",
+			ResultIndex: 1, Expectation: false,
+		},
+		// all
+		{
+			Code:        m + ".all(key == /[abc]/)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".all(key == 'a')",
+			ResultIndex: 1, Expectation: false,
+		},
+		{
+			Code:        m + ".all(value > 0)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".all(value == 0)",
+			ResultIndex: 1, Expectation: false,
+		},
+		// none
+		{
+			Code:        m + ".none(key == /[m-z]/)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".none(key == /[b-z]/)",
+			ResultIndex: 1, Expectation: false,
+		},
+		{
+			Code:        m + ".none(value < 1)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".none(value <= 2)",
+			ResultIndex: 1, Expectation: false,
+		},
+		// one
+		{
+			Code:        m + ".one(key == 'a')",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".one(key == /[a-b]/)",
+			ResultIndex: 1, Expectation: false,
+		},
+		{
+			Code:        m + ".one(value == 2)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        m + ".one(value == 1)",
+			ResultIndex: 1, Expectation: false,
+		},
+	})
+}
+
 func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")
