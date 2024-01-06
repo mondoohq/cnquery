@@ -505,3 +505,41 @@ func compileResourceParseDate(c *compiler, typ types.Type, ref uint64, id string
 	})
 	return types.Time, nil
 }
+
+func compileResourceParseDuration(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call == nil {
+		return types.Nil, errors.New("missing arguments to parse duration")
+	}
+
+	functionID := string(typ) + "." + id
+
+	init := &resources.Init{
+		Args: []*resources.TypedArg{
+			{Name: "value", Type: string(types.String)},
+		},
+	}
+	args, err := c.unnamedArgs("parse."+id, init, call.Function)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	rawArgs := make([]*llx.Primitive, len(call.Function))
+	for i := range call.Function {
+		rawArgs[i] = args[i*2+1]
+	}
+
+	if len(rawArgs) == 0 {
+		return types.Nil, errors.New("missing arguments to parse duration")
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   functionID,
+		Function: &llx.Function{
+			Type:    string(types.Time),
+			Binding: ref,
+			Args:    rawArgs,
+		},
+	})
+	return types.Time, nil
+}

@@ -135,7 +135,8 @@ func init() {
 		},
 		// TODO: [#32] unique builtin fields that need a long-term support in LR
 		types.Resource("parse"): {
-			"date": {compile: compileResourceParseDate, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String, types.String}}},
+			"date":     {compile: compileResourceParseDate, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String, types.String}}},
+			"duration": {compile: compileResourceParseDuration, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 		},
 	}
 }
