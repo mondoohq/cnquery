@@ -61,6 +61,8 @@ func init() {
 		types.Dict: {
 			"[]": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
 			"{}": {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			// number-ish
+			"inRange": {typ: boolType, compile: compileInRange},
 			// string-ish
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":    {typ: intType, signature: FunctionSignature{}},
