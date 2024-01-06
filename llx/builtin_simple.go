@@ -2495,11 +2495,46 @@ func timeDaysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 func timeUnixV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	t := bind.Value.(*time.Time)
 	if t == nil {
-		return &RawData{Type: types.Array(types.Time)}, 0, nil
+		return &RawData{Type: types.Int}, 0, nil
 	}
 
 	raw := t.Unix()
 	return IntData(int64(raw)), 0, nil
+}
+
+func timeInRange(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	val := bind.Value.(*time.Time)
+	if val == nil {
+		return &RawData{Type: types.Array(types.Time)}, 0, nil
+	}
+
+	minRef := chunk.Function.Args[0]
+	min, rref, err := e.resolveValue(minRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch minval := min.Value.(type) {
+	case *time.Time:
+		if val.Before(*minval) {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	maxRef := chunk.Function.Args[1]
+	max, rref, err := e.resolveValue(maxRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	switch maxval := max.Value.(type) {
+	case *time.Time:
+		if val.After(*maxval) {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	return BoolTrue, 0, nil
 }
 
 // stringslice methods

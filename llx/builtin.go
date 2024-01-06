@@ -434,6 +434,7 @@ func init() {
 			string("hours"):   {f: timeHoursV2, Label: "hours"},
 			string("days"):    {f: timeDaysV2, Label: "days"},
 			string("unix"):    {f: timeUnixV2, Label: "unix"},
+			string("inRange"): {f: timeInRange, Label: "inRange"},
 		},
 		types.Dict: {
 			string("==" + types.Nil):                 {f: dictCmpNilV2, Label: "=="},

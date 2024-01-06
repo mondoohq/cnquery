@@ -775,6 +775,19 @@ func TestMap(t *testing.T) {
 	})
 }
 
+func TestTime(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "time.now.inRange(time.now, time.tomorrow)",
+			ResultIndex: 1, Expectation: true,
+		},
+		{
+			Code:        "time.now.inRange(time.tomorrow, time.tomorrow)",
+			ResultIndex: 1, Expectation: false,
+		},
+	})
+}
+
 func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")
