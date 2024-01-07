@@ -9,12 +9,62 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/groups"
 )
 
 type mqlGroupInternal struct {
 	membersArr []string
+}
+
+func initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+
+	// if user is only initialized with a name or uid, we will try to look it up
+	rawName, nameOk := args["name"]
+	rawGID, idOk := args["gid"]
+	if !nameOk && !idOk {
+		return args, nil, nil
+	}
+
+	raw, err := CreateResource(runtime, "groups", nil)
+	if err != nil {
+		return nil, nil, errors.New("cannot get list of groups: " + err.Error())
+	}
+	groups := raw.(*mqlGroups)
+
+	if err := groups.refreshCache(nil); err != nil {
+		return nil, nil, err
+	}
+
+	if nameOk {
+		name, ok := rawName.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("cannot detect group, invalid type for name (expected string)")
+		}
+		group, ok := groups.groupsByName[name]
+		if !ok {
+			return nil, nil, errors.New("cannot find group with name '" + name + "'")
+		}
+		return nil, group, nil
+	}
+
+	if idOk {
+		id, ok := rawGID.Value.(int64)
+		if !ok {
+			return nil, nil, errors.New("cannot detect group, invalid type for name (expected int)")
+		}
+		group, ok := groups.groupsByID[id]
+		if !ok {
+			return nil, nil, errors.New("cannot find group with UID '" + strconv.Itoa(int(id)) + "'")
+		}
+		return nil, group, nil
+	}
+
+	return nil, nil, errors.New("cannot find group, no search criteria provided")
 }
 
 func (x *mqlGroup) id() (string, error) {
@@ -48,8 +98,9 @@ func (x *mqlGroup) members() ([]interface{}, error) {
 }
 
 type mqlGroupsInternal struct {
-	lock       sync.Mutex
-	groupsByID map[int64]*mqlGroup
+	lock         sync.Mutex
+	groupsByID   map[int64]*mqlGroup
+	groupsByName map[string]*mqlGroup
 }
 
 func (x *mqlGroups) list() ([]interface{}, error) {
@@ -91,10 +142,30 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 
 		g := nu.(*mqlGroup)
 		g.membersArr = group.Members
-		x.groupsByID[g.Gid.Data] = g
 	}
 
-	return res, nil
+	return res, x.refreshCache(res)
+}
+
+func (x *mqlGroups) refreshCache(all []interface{}) error {
+	if all == nil {
+		raw := x.GetList()
+		if raw.Error != nil {
+			return raw.Error
+		}
+		all = raw.Data
+	}
+
+	x.groupsByID = map[int64]*mqlGroup{}
+	x.groupsByName = map[string]*mqlGroup{}
+
+	for i := range all {
+		g := all[i].(*mqlGroup)
+		x.groupsByID[g.Gid.Data] = g
+		x.groupsByName[g.Name.Data] = g
+	}
+
+	return nil
 }
 
 func (x *mqlGroups) findID(id int64) (*mqlGroup, error) {

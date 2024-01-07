@@ -35,4 +35,18 @@ func TestResource_Users(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, true, res[1].Data.Value)
 	})
+
+	t.Run("test user init (uid)", func(t *testing.T) {
+		res := x.TestQuery(t, "user(uid: 1000).name")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "chris", res[0].Data.Value)
+	})
+
+	t.Run("test user init (name)", func(t *testing.T) {
+		res := x.TestQuery(t, "user(name: 'chris').uid")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, int64(1000), res[0].Data.Value)
+	})
 }
