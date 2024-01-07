@@ -432,7 +432,7 @@ func bumpVersion(version string) (string, error) {
 
 	patch := v.IncPatch()
 	minor := v.IncMinor()
-	// TODO: check if the major version of the repo has changed and bump it
+	major := v.IncMajor()
 
 	if increment == "patch" {
 		return (&patch).String(), nil
@@ -440,8 +440,11 @@ func bumpVersion(version string) (string, error) {
 	if increment == "minor" {
 		return (&minor).String(), nil
 	}
+	if increment == "major" {
+		return (&major).String(), nil
+	}
 	if increment != "" {
-		return "", errors.New("do not understand --increment=" + increment + ", either pick patch or minor")
+		return "", errors.New("do not understand --increment=" + increment + ", either pick patch, minor, or major")
 	}
 
 	versions := []string{
@@ -660,7 +663,7 @@ var (
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&fastMode, "fast", false, "perform fast checking of git repo (not counting changes)")
 	rootCmd.PersistentFlags().BoolVar(&doCommit, "commit", false, "commit the change to git if there is a version bump")
-	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch or minor version")
+	rootCmd.PersistentFlags().StringVar(&increment, "increment", "", "automatically bump either patch, minor, or major version")
 
 	modUpdateCmd.PersistentFlags().BoolVar(&latestVersion, "latest", false, "update versions to latest")
 	modUpdateCmd.PersistentFlags().BoolVar(&latestPatchVersion, "patch", false, "update versions to latest patch")
