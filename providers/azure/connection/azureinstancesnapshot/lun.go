@@ -11,7 +11,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 )
 
 type deviceInfo struct {
@@ -52,7 +52,7 @@ func (a *azureScannerInstance) getAvailableLun(mountedDevices []deviceInfo) (int
 
 // https://learn.microsoft.com/en-us/azure/virtual-machines/linux/azure-to-guest-disk-mapping
 // for more information. we want to find the LUNs of the data disks and their mount location
-func getMountedDevices(localConn *connection.LocalConnection) ([]deviceInfo, error) {
+func getMountedDevices(localConn *local.LocalConnection) ([]deviceInfo, error) {
 	cmd, err := localConn.RunCommand("lsscsi --brief")
 	if err != nil {
 		return nil, err

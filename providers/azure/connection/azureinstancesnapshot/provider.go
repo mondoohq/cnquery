@@ -16,7 +16,8 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/azure/connection/auth"
 	"go.mondoo.com/cnquery/v9/providers/azure/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 	"go.mondoo.com/cnquery/v9/providers/os/id/azcompute"
@@ -44,7 +45,7 @@ type mountInfo struct {
 	diskName   string
 }
 
-func determineScannerInstanceInfo(localConn *connection.LocalConnection, token azcore.TokenCredential) (*azureScannerInstance, error) {
+func determineScannerInstanceInfo(localConn *local.LocalConnection, token azcore.TokenCredential) (*azureScannerInstance, error) {
 	pf, detected := detector.DetectOS(localConn)
 	if !detected {
 		return nil, errors.New("could not detect platform")
@@ -117,7 +118,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	if err != nil {
 		return nil, err
 	}
-	localConn := connection.NewLocalConnection(id, conf, asset)
+	localConn := local.NewConnection(id, conf, asset)
 
 	// check if we run on an azure instance
 	scanner, err := determineScannerInstanceInfo(localConn, token)
@@ -230,7 +231,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 
 	conf.Options["path"] = volumeMounter.ScanDir
 	// create and initialize fs provider
-	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
+	fsConn, err := fs.NewConnection(id, &inventory.Config{
 		Path:       volumeMounter.ScanDir,
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
@@ -260,7 +261,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 }
 
 type AzureSnapshotConnection struct {
-	*connection.FileSystemConnection
+	*fs.FileSystemConnection
 	opts            map[string]string
 	volumeMounter   *snapshot.VolumeMounter
 	snapshotCreator *SnapshotCreator

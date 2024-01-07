@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection_test
+package fs_test
 
 import (
 	"testing"
@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/fs/fsutil"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 )
 
 func TestOsDetection(t *testing.T) {
-	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
-		Path: "./fs/testdata/centos8",
+	conn, err := fs.NewConnection(0, &inventory.Config{
+		Path: "./testdata/centos8",
 	}, nil)
 	require.NoError(t, err)
 
@@ -29,8 +29,8 @@ func TestOsDetection(t *testing.T) {
 }
 
 func TestMountedDirectoryFile(t *testing.T) {
-	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
-		Path: "./fs/testdata/centos8",
+	conn, err := fs.NewConnection(0, &inventory.Config{
+		Path: "./testdata/centos8",
 	}, nil)
 	require.NoError(t, err)
 
@@ -67,8 +67,8 @@ func TestMountedDirectoryFile(t *testing.T) {
 }
 
 func TestRunCommandReturnsErr(t *testing.T) {
-	conn, err := connection.NewFileSystemConnection(0, &inventory.Config{
-		Path: "./fs/testdata/centos8",
+	conn, err := fs.NewConnection(0, &inventory.Config{
+		Path: "./testdata/centos8",
 	}, nil)
 	require.NoError(t, err)
 

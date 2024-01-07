@@ -19,7 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
 	awsec2ebstypes "go.mondoo.com/cnquery/v9/providers/aws/connection/awsec2ebsconn/types"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
@@ -34,7 +34,7 @@ const (
 type AwsEbsConnection struct {
 	id                  uint32
 	asset               *inventory.Asset
-	FsProvider          *connection.FileSystemConnection
+	FsProvider          *fs.FileSystemConnection
 	scannerRegionEc2svc *ec2.Client
 	targetRegionEc2svc  *ec2.Client
 	config              aws.Config
@@ -182,7 +182,7 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
 	// Create and initialize fs provider
 	conf.Options["path"] = volumeMounter.ScanDir
-	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
+	fsConn, err := fs.NewConnection(id, &inventory.Config{
 		Type:       "filesystem",
 		Path:       volumeMounter.ScanDir,
 		PlatformId: conf.PlatformId,

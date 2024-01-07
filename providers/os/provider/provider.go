@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
@@ -405,12 +406,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	case FilesystemConnectionType:
 		s.lastConnectionID++
-		conn, err = connection.NewFileSystemConnection(s.lastConnectionID, conf, asset)
+		conn, err = fs.NewConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
 			return nil, err
 		}
 		// This is a workaround to set Google COS platform IDs when scanned from inside k8s
-		pID, err := conn.(*connection.FileSystemConnection).Identifier()
+		pID, err := conn.(*fs.FileSystemConnection).Identifier()
 		if err != nil {
 			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {

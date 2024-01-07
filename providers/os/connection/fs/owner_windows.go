@@ -4,7 +4,7 @@
 //go:build windows
 // +build windows
 
-package connection
+package fs
 
 import "os"
 

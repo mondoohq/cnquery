@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package fs
 
 import (
 	"errors"
@@ -40,7 +40,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 	}, nil
 }
 
-func NewFileSystemConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*FileSystemConnection, error) {
+func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*FileSystemConnection, error) {
 	return NewFileSystemConnectionWithClose(id, conf, asset, nil)
 }
 
