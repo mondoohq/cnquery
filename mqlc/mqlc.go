@@ -1279,6 +1279,10 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 
 	variable, ok := c.vars.lookup(id)
 	if ok {
+		if variable.name == "" {
+			c.standalone = false
+		}
+
 		if variable.callback != nil {
 			variable.callback()
 		}

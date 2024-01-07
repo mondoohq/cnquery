@@ -231,6 +231,10 @@ func TestNamedFunctions(t *testing.T) {
 			Code:        "muser.groups.where(_: _ != empty).length",
 			ResultIndex: 0, Expectation: int64(1),
 		},
+		{
+			Code:        "muser.dict.listInt.where(x: x == 2)",
+			ResultIndex: 0, Expectation: []any{int64(2)},
+		},
 	})
 }
 

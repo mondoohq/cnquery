@@ -26,8 +26,9 @@ func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *
 	}
 
 	arg := call.Function[0]
+	bindingName := "_"
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
+		bindingName = arg.Name
 	}
 
 	keyType := types.Dict
@@ -60,6 +61,12 @@ func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *
 	// we want to make sure the `_` points to the value, which is useful when dealing
 	// with arrays and the default in maps
 	blockCompiler.Binding.ref = blockCompiler.tailRef()
+	if bindingName != "_" {
+		blockCompiler.vars.add(bindingName, variable{
+			ref: blockCompiler.Binding.ref,
+			typ: valueType,
+		})
+	}
 
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
@@ -467,8 +474,9 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	}
 
 	arg := call.Function[0]
+	bindingName := "_"
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
+		bindingName = arg.Name
 	}
 
 	keyType := typ.Key()
@@ -501,6 +509,12 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	// we want to make sure the `_` points to the value, which is useful when dealing
 	// with arrays and the default in maps
 	blockCompiler.Binding.ref = blockCompiler.tailRef()
+	if bindingName != "_" {
+		blockCompiler.vars.add(bindingName, variable{
+			ref: blockCompiler.Binding.ref,
+			typ: valueType,
+		})
+	}
 
 	err := blockCompiler.compileExpressions([]*parser.Expression{arg.Value})
 	c.Result.Suggestions = append(c.Result.Suggestions, blockCompiler.Result.Suggestions...)
