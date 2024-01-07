@@ -1558,7 +1558,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				return nil, err
 			}
 			if !found {
-				if typ != types.Dict || !reAccessor.MatchString(id) {
+				// we add simple accessors for maps and dicts, but this also requires
+				// the `id` to look like a regular accessor (to avoid matching against more
+				// native internal operators)
+				if !((typ == types.Dict || typ.IsMap()) && reAccessor.MatchString(id)) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
 					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
 				}
@@ -1569,7 +1572,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 					Call: llx.Chunk_FUNCTION,
 					Id:   "[]",
 					Function: &llx.Function{
-						Type:    string(typ),
+						Type:    string(typ.Child()),
 						Binding: ref,
 						Args:    []*llx.Primitive{llx.StringPrimitive(id)},
 					},

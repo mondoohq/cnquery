@@ -1946,9 +1946,9 @@ func TestSuggestions(t *testing.T) {
 		},
 		{
 			// native type function call
-			"sshd.config.params.leng",
+			"sshd.config.ciphers.leng",
 			[]string{"length"},
-			errors.New("cannot find field 'leng' in map[string]string"),
+			errors.New("cannot find field 'leng' in []string"),
 			nil,
 		},
 		{
