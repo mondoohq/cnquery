@@ -32,6 +32,7 @@ jobs:
           cnquery providers install ms365
           cnquery providers install google-workspace
           cnquery providers install okta 
+          cnquery providers install terraform
       - name: Lint packs
         run: |
           cnquery bundle validate .
