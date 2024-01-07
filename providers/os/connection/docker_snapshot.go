@@ -12,10 +12,6 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
-const (
-	DockerSnapshot shared.ConnectionType = "docker-snapshot"
-)
-
 var _ shared.Connection = &DockerSnapshotConnection{}
 
 type DockerSnapshotConnection struct {
@@ -82,9 +78,9 @@ func (p *DockerSnapshotConnection) ID() uint32 {
 }
 
 func (p *DockerSnapshotConnection) Name() string {
-	return string(DockerSnapshot)
+	return string(shared.Type_DockerSnapshot)
 }
 
 func (p *DockerSnapshotConnection) Type() shared.ConnectionType {
-	return DockerSnapshot
+	return shared.Type_DockerSnapshot
 }

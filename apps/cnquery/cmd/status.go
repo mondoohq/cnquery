@@ -17,10 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
-	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	"go.mondoo.com/cnquery/v9/cli/theme"
 	"go.mondoo.com/cnquery/v9/providers"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/health"
 	"go.mondoo.com/ranger-rpc"
@@ -64,7 +64,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 			return cli_errors.NewCommandError(errors.Wrap(err, "failed to set up Mondoo API client"), 1)
 		}
 
-		sysInfo, err := sysinfo.GatherSystemInfo()
+		sysInfo, err := sysinfo.Get()
 		if err == nil {
 			s.Client.Platform = sysInfo.Platform
 			s.Client.Hostname = sysInfo.Hostname

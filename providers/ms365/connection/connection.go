@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 )
@@ -120,7 +120,7 @@ func (p *Ms365Connection) runPowershellScript(script string) (*shared.Command, e
 }
 
 func (p *Ms365Connection) runCmd(cmd string) (*shared.Command, error) {
-	cmdR := connection.CommandRunner{}
+	cmdR := local.CommandRunner{}
 	if runtime.GOOS == "windows" {
 		cmdR.Shell = []string{"powershell", "-c"}
 	} else {

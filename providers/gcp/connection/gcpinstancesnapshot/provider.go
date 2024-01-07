@@ -12,7 +12,8 @@ import (
 	"go.mondoo.com/cnquery/v9/mrn"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/gcp/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/snapshot"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 	"go.mondoo.com/cnquery/v9/providers/os/id/gce"
@@ -45,7 +46,7 @@ type mountInfo struct {
 
 func determineScannerInstanceInfo(id uint32, conf *inventory.Config, asset *inventory.Asset) (*scannerInstance, error) {
 	// FIXME: need to pass conf
-	localConn := connection.NewLocalConnection(id, conf, asset)
+	localConn := local.NewConnection(id, conf, asset)
 	pf, detected := detector.DetectOS(localConn)
 	if !detected {
 		return nil, errors.New("could not detect platform")
@@ -215,7 +216,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 
 	conf.Options["path"] = volumeMounter.ScanDir
 	// create and initialize fs provider
-	fsConn, err := connection.NewFileSystemConnection(id, &inventory.Config{
+	fsConn, err := fs.NewConnection(id, &inventory.Config{
 		Path:       volumeMounter.ScanDir,
 		PlatformId: conf.PlatformId,
 		Options:    conf.Options,
@@ -252,7 +253,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 }
 
 type GcpSnapshotConnection struct {
-	*connection.FileSystemConnection
+	*fs.FileSystemConnection
 	opts map[string]string
 	// the type of object we're targeting (instance, disk, snapshot)
 	targetType      string

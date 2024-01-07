@@ -16,7 +16,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 )
@@ -51,7 +50,7 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 	}
 
 	log.Debug().Strs("families", asset.Platform.Family).Msg("check if platform is supported for network interface")
-	if r.conn.Type() == connection.Local {
+	if r.conn.Type() == shared.Type_Local {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
 	} else if asset.Platform.Name == "macos" {

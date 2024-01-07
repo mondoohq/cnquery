@@ -24,10 +24,9 @@ import (
 )
 
 const (
-	Tar              shared.ConnectionType = "tar"
-	OPTION_FILE                            = "path"
-	FLATTENED_IMAGE                        = "flattened_path"
-	COMPRESSED_IMAGE                       = "compressed_path"
+	OPTION_FILE      = "path"
+	FLATTENED_IMAGE  = "flattened_path"
+	COMPRESSED_IMAGE = "compressed_path"
 )
 
 type TarConnection struct {
@@ -54,11 +53,11 @@ func (p *TarConnection) ID() uint32 {
 }
 
 func (p *TarConnection) Name() string {
-	return string(Tar)
+	return string(shared.Type_Tar)
 }
 
 func (p *TarConnection) Type() shared.ConnectionType {
-	return Tar
+	return shared.Type_Tar
 }
 
 func (p *TarConnection) Asset() *inventory.Asset {
