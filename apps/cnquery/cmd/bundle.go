@@ -111,13 +111,28 @@ func validate(queryPackBundle *explorer.Bundle) []string {
 	return errors
 }
 
+// ensureProviders ensures that all providers are locally installed
+func ensureProviders() error {
+	for _, v := range providers.DefaultProviders {
+		if _, err := providers.EnsureProvider(providers.ProviderLookup{ID: v.ID}, true, nil); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 var queryPackLintCmd = &cobra.Command{
 	Use:     "lint [path]",
 	Aliases: []string{"validate"},
 	Short:   "Apply style formatting to a query pack.",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Info().Str("file", args[0]).Msg("validate query pack")
+		log.Info().Str("file", args[0]).Msg("lint query pack")
+		err := ensureProviders()
+		if err != nil {
+			log.Warn().Err(err).Msg("could not ensure all providers are installed")
+		}
+
 		queryPackBundle, err := explorer.BundleFromPaths(args[0])
 		if err != nil {
 			return cli_errors.NewCommandError(errors.Wrap(err, "could not load query pack"), 1)
