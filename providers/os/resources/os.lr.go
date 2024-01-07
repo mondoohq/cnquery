@@ -187,7 +187,7 @@ func init() {
 			Create: createAuthorizedkeysEntry,
 		},
 		"group": {
-			// to override args, implement: initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initGroup,
 			Create: createGroup,
 		},
 		"groups": {
