@@ -704,6 +704,14 @@ func TestMap(t *testing.T) {
 	m := "{'a': 1, 'b': 1, 'c': 2}"
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        m + "['c']",
+			ResultIndex: 0, Expectation: int64(2),
+		},
+		{
+			Code:        m + ".c",
+			ResultIndex: 0, Expectation: int64(2),
+		},
 		// contains
 		{
 			Code:        m + ".contains(key == 'a')",
