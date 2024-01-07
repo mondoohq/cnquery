@@ -34,6 +34,7 @@ func init() {
 		"switch":         switchCallV2,
 		"score":          scoreCallV2,
 		"typeof":         typeofCallV2,
+		"semver":         semverCall,
 		"{}":             blockV2,
 		"return":         returnCallV2,
 		"createResource": globalCreateResource,
@@ -180,6 +181,19 @@ func typeofCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, 
 	}
 
 	return StringData(res.Type.Label()), 0, nil
+}
+
+func semverCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `semver` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	return &RawData{Type: types.Semver, Value: res.Value}, 0, nil
 }
 
 func expectV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
