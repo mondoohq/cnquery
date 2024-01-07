@@ -788,6 +788,31 @@ func TestTime(t *testing.T) {
 	})
 }
 
+func TestSemver(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "semver('1.2.3') == semver('1.2.3')",
+			ResultIndex: 2, Expectation: true,
+		},
+		{
+			Code:        "semver('1.2.3') == semver('1.2')",
+			ResultIndex: 2, Expectation: false,
+		},
+		{
+			Code:        "semver('1.2') < semver('1.10.2')",
+			ResultIndex: 2, Expectation: true,
+		},
+		{
+			Code:        "semver('1.10') >= semver('1.2.3')",
+			ResultIndex: 2, Expectation: true,
+		},
+		{
+			Code:        "semver('1.10') >= '1.2'",
+			ResultIndex: 2, Expectation: true,
+		},
+	})
+}
+
 func TestResource_Default(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "mondoo")

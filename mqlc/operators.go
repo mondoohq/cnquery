@@ -43,6 +43,7 @@ func init() {
 		"switch": compileSwitch,
 		"Never":  compileNever,
 		"empty":  compileEmpty,
+		"semver": compileSemver,
 	}
 }
 
@@ -487,6 +488,33 @@ func compileTypeof(c *compiler, id string, call *parser.Call) (types.Type, error
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "typeof",
+		Function: &llx.Function{
+			Type: string(types.String),
+			Args: []*llx.Primitive{argValue},
+		},
+	})
+
+	return types.String, nil
+}
+
+func compileSemver(c *compiler, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || len(call.Function) < 1 {
+		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
+	}
+
+	arg := call.Function[0]
+	if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
+		return types.Nil, errors.New("failed to get parameter for '" + id + "'")
+	}
+
+	argValue, err := c.compileExpression(arg.Value)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "semver",
 		Function: &llx.Function{
 			Type: string(types.String),
 			Args: []*llx.Primitive{argValue},

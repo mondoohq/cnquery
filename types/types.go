@@ -47,7 +47,8 @@ const (
 	byteScore
 	byteBlock
 	byteEmpty
-	byteArray = 1<<4 + iota - 5 // set to 25 to avoid breaking changes
+	byteSemver
+	byteArray = 1<<4 + iota - 6 // set to 25 to avoid breaking changes
 	byteMap
 	byteResource
 	byteFunction
@@ -87,6 +88,8 @@ const (
 	Block = Type(rune(byteBlock))
 	// Empty value
 	Empty = Type(rune(byteEmpty))
+	// Semver value
+	Semver = Type(rune(byteSemver))
 	// ArrayLike is the underlying type of all arrays
 	ArrayLike = Type(rune(byteArray))
 	// MapLike is the underlying type of all maps
@@ -255,6 +258,7 @@ var labels = map[byte]string{
 	byteScore:       "score",
 	byteBlock:       "block",
 	byteEmpty:       "empty",
+	byteSemver:      "semver",
 	byteStringSlice: "stringslice",
 	byteRange:       "range",
 }
