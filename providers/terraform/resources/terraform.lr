@@ -27,7 +27,7 @@ terraform {
 }
 
 // Terraform configuration file (.tf or .tf.json file)
-terraform.file {
+terraform.file @defaults("path") {
   // Terraform (.tf or tf.json file)
   path string
   // All blocks within the file
@@ -71,7 +71,7 @@ terraform.block @defaults("type labels") {
 }
 
 // Terraform module block
-terraform.module @defaults("key") {
+terraform.module @defaults("key source") {
   // Unique identifier for the module
   key string
   // Source from which the module was loaded
@@ -112,7 +112,7 @@ terraform.state {
 }
 
 // Terraform state output values
-terraform.state.output {
+terraform.state.output @defaults("identifier") {
   init(identifier string)
   // Output identifier
   identifier string
@@ -136,7 +136,7 @@ terraform.state.module @defaults("address") {
 }
 
 // Terraform state resource
-terraform.state.resource @defaults("name") {
+terraform.state.resource @defaults("type name") {
   // Address is the absolute resource address
   address string
   // Mode: managed or data
