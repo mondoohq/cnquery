@@ -117,6 +117,6 @@ packs:
       - uid: mondoo-windows-smbios-system
         title: Retrieve SMBIOS System information
         mql: machine.system { sku serial family version product uuid manufacturer }
-      - uid: mondoo-windows-smbios-system
+      - uid: mondoo-windows-smbios-chassis
         title: Retrieve SMBIOS Chassis information
         mql: machine.chassis { manufacturer serial version assetTag }

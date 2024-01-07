@@ -124,7 +124,7 @@ packs:
       - uid: mondoo-linux-smbios-system
         title: SMBIOS System information
         mql: machine.system { sku serial family version product uuid manufacturer }
-      - uid: mondoo-linux-smbios-system
+      - uid: mondoo-linux-smbios-chassis
         title: SMBIOS Chassis information
         mql: machine.chassis { manufacturer serial version assetTag }
       - uid: mondoo-linux-workstation-security-permissions-on-bootloader-config-metadata
