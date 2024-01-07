@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/mrn"
@@ -23,8 +24,9 @@ import (
 )
 
 type scanTarget struct {
-	TargetType string
-	TargetName string
+	TargetType    string
+	Target        string
+	ResourceGroup string
 }
 
 const (
@@ -85,16 +87,28 @@ func determineScannerInstanceInfo(localConn *connection.LocalConnection, token a
 	}, nil
 }
 
-func ParseTarget(conf *inventory.Config) scanTarget {
-	return scanTarget{
-		TargetType: conf.Options["type"],
-		TargetName: conf.Options["target-name"],
+func ParseTarget(conf *inventory.Config, scanner *azureScannerInstance) (scanTarget, error) {
+	target := conf.Options["target"]
+	if target == "" {
+		return scanTarget{}, errors.New("target is required")
 	}
+	id, err := arm.ParseResourceID(conf.Options["target"])
+	if err != nil {
+		log.Debug().Msg("could not parse target as resource id, assuming it's only the resource name")
+		return scanTarget{
+			TargetType:    conf.Options["type"],
+			Target:        conf.Options["target"],
+			ResourceGroup: scanner.ResourceGroup,
+		}, nil
+	}
+	return scanTarget{
+		TargetType:    conf.Options["type"],
+		Target:        id.Name,
+		ResourceGroup: id.ResourceGroupName,
+	}, nil
 }
 
 func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*AzureSnapshotConnection, error) {
-	target := ParseTarget(conf)
-
 	var cred *vault.Credential
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
@@ -107,6 +121,11 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 
 	// check if we run on an azure instance
 	scanner, err := determineScannerInstanceInfo(localConn, token)
+	if err != nil {
+		return nil, err
+	}
+
+	target, err := ParseTarget(conf, scanner)
 	if err != nil {
 		return nil, err
 	}
@@ -127,19 +146,19 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	// setup disk image so and attach it to the instance
 	mi := mountInfo{}
 
-	diskName := "cnspec-" + target.TargetName + "-snapshot-" + time.Now().Format("2006-01-02t15-04-05z00-00")
+	diskName := "cnspec-" + target.Target + "-snapshot-" + time.Now().Format("2006-01-02t15-04-05z00-00")
 	switch target.TargetType {
 	case "instance":
-		instanceInfo, err := sc.InstanceInfo(scanner.ResourceGroup, target.TargetName)
+		instanceInfo, err := sc.InstanceInfo(target.ResourceGroup, target.Target)
 		if err != nil {
 			return nil, err
 		}
 		if instanceInfo.BootDiskId == "" {
-			return nil, fmt.Errorf("could not find boot disk for instance %s", target.TargetName)
+			return nil, fmt.Errorf("could not find boot disk for instance %s", target.Target)
 		}
 
 		log.Debug().Str("boot disk", instanceInfo.BootDiskId).Msg("found boot disk for instance, cloning")
-		disk, err := sc.cloneDisk(instanceInfo.BootDiskId, scanner.ResourceGroup, diskName, instanceInfo.Location, scanner.Vm.Zones)
+		disk, err := sc.cloneDisk(instanceInfo.BootDiskId, scanner.ResourceGroup, diskName, scanner.Location, scanner.Vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete disk cloning")
 			return nil, errors.Wrap(err, "could not complete disk cloning")
@@ -150,12 +169,12 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 		asset.Name = instanceInfo.InstanceName
 		conf.PlatformId = azcompute.MondooAzureInstanceID(*instanceInfo.Vm.ID)
 	case "snapshot":
-		snapshotInfo, err := sc.SnapshotInfo(scanner.ResourceGroup, target.TargetName)
+		snapshotInfo, err := sc.SnapshotInfo(target.ResourceGroup, target.Target)
 		if err != nil {
 			return nil, err
 		}
 
-		disk, err := sc.createSnapshotDisk(snapshotInfo.SnapshotId, scanner.ResourceGroup, diskName, snapshotInfo.Location, scanner.Vm.Zones)
+		disk, err := sc.createSnapshotDisk(snapshotInfo.SnapshotId, scanner.ResourceGroup, diskName, scanner.Location, scanner.Vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete snapshot disk creation")
 			return nil, errors.Wrap(err, "could not create disk from snapshot")
@@ -163,7 +182,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 		log.Debug().Str("disk", *disk.ID).Msg("created disk from snapshot")
 		mi.diskId = *disk.ID
 		mi.diskName = *disk.Name
-		asset.Name = target.TargetName
+		asset.Name = target.Target
 		conf.PlatformId = SnapshotPlatformMrn(snapshotInfo.SnapshotId)
 	default:
 		return nil, errors.New("invalid target type")
@@ -262,26 +281,34 @@ func (c *AzureSnapshotConnection) Close() {
 		}
 	}
 
-	err := c.volumeMounter.UnmountVolumeFromInstance()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to unmount volume")
+	if c.volumeMounter != nil {
+		err := c.volumeMounter.UnmountVolumeFromInstance()
+		if err != nil {
+			log.Error().Err(err).Msg("unable to unmount volume")
+		}
 	}
 
 	if c.snapshotCreator != nil {
-		err = c.snapshotCreator.detachDisk(c.mountInfo.diskName, c.scanner.instanceInfo)
-		if err != nil {
-			log.Error().Err(err).Msg("unable to detach volume")
+		if c.mountInfo.diskName != "" {
+			err := c.snapshotCreator.detachDisk(c.mountInfo.diskName, c.scanner.instanceInfo)
+			if err != nil {
+				log.Error().Err(err).Msg("unable to detach volume")
+			}
 		}
 
-		err = c.snapshotCreator.deleteCreatedDisk(c.scanner.ResourceGroup, c.mountInfo.diskName)
-		if err != nil {
-			log.Error().Err(err).Msg("could not delete created disk")
+		if c.mountInfo.diskName != "" {
+			err := c.snapshotCreator.deleteCreatedDisk(c.scanner.ResourceGroup, c.mountInfo.diskName)
+			if err != nil {
+				log.Error().Err(err).Msg("could not delete created disk")
+			}
 		}
 	}
 
-	err = c.volumeMounter.RemoveTempScanDir()
-	if err != nil {
-		log.Error().Err(err).Msg("unable to remove dir")
+	if c.volumeMounter != nil {
+		err := c.volumeMounter.RemoveTempScanDir()
+		if err != nil {
+			log.Error().Err(err).Msg("unable to remove dir")
+		}
 	}
 }
 

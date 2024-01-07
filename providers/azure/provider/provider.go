@@ -117,12 +117,12 @@ func handleAzureComputeSubcommands(args []string, config *inventory.Config) erro
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
 		config.Discover = nil
 		config.Options["type"] = "instance"
-		config.Options["target-name"] = args[2]
+		config.Options["target"] = args[2]
 		return nil
 	case "snapshot":
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
 		config.Options["type"] = "snapshot"
-		config.Options["target-name"] = args[2]
+		config.Options["target"] = args[2]
 		config.Discover = nil
 		return nil
 	default:
