@@ -9,8 +9,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 	"go.mondoo.com/cnquery/v9/providers/os/id/awsec2"
@@ -53,11 +51,11 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 	if len(idDetectors) == 0 {
 		// fallback to default id detectors
 		switch conn.Type() {
-		case local.Local:
+		case shared.Type_Local:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
-		case connection.SSH:
+		case shared.Type_SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
-		case connection.Tar, connection.FileSystem, connection.DockerSnapshot:
+		case shared.Type_Tar, shared.Type_FileSystem, shared.Type_DockerSnapshot:
 			idDetectors = []string{ids.IdDetector_Hostname}
 		}
 	}

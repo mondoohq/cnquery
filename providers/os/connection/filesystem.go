@@ -14,10 +14,6 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/fs"
 )
 
-const (
-	FileSystem shared.ConnectionType = "filesystem"
-)
-
 var _ shared.Connection = &FileSystemConnection{}
 
 func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
@@ -111,11 +107,11 @@ func (c *FileSystemConnection) ID() uint32 {
 }
 
 func (c *FileSystemConnection) Name() string {
-	return string(FileSystem)
+	return string(shared.Type_FileSystem)
 }
 
 func (c *FileSystemConnection) Type() shared.ConnectionType {
-	return FileSystem
+	return shared.Type_FileSystem
 }
 
 func (c *FileSystemConnection) Asset() *inventory.Asset {

@@ -43,7 +43,7 @@ func Get() (*SystemInfo, error) {
 		}},
 	}
 
-	conn := local.NewLocalConnection(0, &inventory.Config{
+	conn := local.NewConnection(0, &inventory.Config{
 		Type: "local",
 	}, &asset)
 

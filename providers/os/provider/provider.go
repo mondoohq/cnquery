@@ -321,7 +321,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	switch conf.Type {
 	case LocalConnectionType:
 		s.lastConnectionID++
-		conn = local.NewLocalConnection(s.lastConnectionID, conf, asset)
+		conn = local.NewConnection(s.lastConnectionID, conf, asset)
 
 		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 		if err == nil {

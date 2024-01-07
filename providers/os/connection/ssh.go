@@ -36,10 +36,6 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-const (
-	SSH shared.ConnectionType = "ssh"
-)
-
 type SshConnection struct {
 	id    uint32
 	conf  *inventory.Config
@@ -126,7 +122,7 @@ func (c *SshConnection) Name() string {
 }
 
 func (c *SshConnection) Type() shared.ConnectionType {
-	return SSH
+	return shared.Type_SSH
 }
 
 func (p *SshConnection) Asset() *inventory.Asset {

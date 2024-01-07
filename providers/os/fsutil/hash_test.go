@@ -16,7 +16,7 @@ import (
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := local.NewLocalConnection(0, &inventory.Config{
+	conn := local.NewConnection(0, &inventory.Config{
 		Path: path,
 	}, &inventory.Asset{})
 

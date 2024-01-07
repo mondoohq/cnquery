@@ -18,10 +18,6 @@ import (
 	"go.mondoo.com/cnquery/v9/providers/os/connection/ssh/cat"
 )
 
-const (
-	Local shared.ConnectionType = "local"
-)
-
 type LocalConnection struct {
 	shell   []string
 	fs      afero.Fs
@@ -31,7 +27,7 @@ type LocalConnection struct {
 	asset   *inventory.Asset
 }
 
-func NewLocalConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
+func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
 	// expect unix shell by default
 	res := LocalConnection{
 		id:    id,
@@ -61,7 +57,7 @@ func (p *LocalConnection) Name() string {
 }
 
 func (p *LocalConnection) Type() shared.ConnectionType {
-	return Local
+	return shared.Type_Local
 }
 
 func (p *LocalConnection) Asset() *inventory.Asset {

@@ -15,7 +15,7 @@ import (
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := local.NewLocalConnection(0, nil, nil)
+	conn := local.NewConnection(0, nil, nil)
 	assert.NotNil(t, conn)
 
 	fs := conn.FileSystem()
