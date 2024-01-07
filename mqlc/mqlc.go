@@ -335,7 +335,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		}
 	}
 
-	refs, err := c.blockExpressions(expressions, typ, bindingRef, "_")
+	refs, err := c.blockExpressions(expressions, typ, bindingRef)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -601,7 +601,7 @@ type blockRefs struct {
 
 // evaluates the given expressions on a non-array resource (eg: no `[]int` nor `groups`)
 // and creates a function, whose reference is returned
-func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64, bindingName string) (blockRefs, error) {
+func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64) (blockRefs, error) {
 	blockCompiler := c.newBlockCompiler(nil)
 	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
 		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[binding])
@@ -612,7 +612,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 			blockCompiler.standalone = false
 		},
 	}
-	blockCompiler.vars.add(bindingName, v)
+	blockCompiler.vars.add("_", v)
 	blockCompiler.Binding = &v
 
 	err := blockCompiler.compileExpressions(expressions)
@@ -643,7 +643,7 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 				ref: blockCompiler.blockRef | 1,
 				typ: nuTyp,
 			}
-			blockCompiler.vars.add(bindingName, v)
+			blockCompiler.vars.add("_", v)
 			blockCompiler.Binding = &v
 			retryErr := blockCompiler.compileExpressions(expressions)
 			if retryErr != nil {
@@ -681,13 +681,13 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 
 // blockExpressions evaluates the given expressions as if called by a block and
 // returns the compiled function reference
-func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type, binding uint64, bindingName string) (blockRefs, error) {
+func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type, binding uint64) (blockRefs, error) {
 	if len(expressions) == 0 {
 		return blockRefs{}, nil
 	}
 
 	if typ.IsArray() {
-		return c.blockOnResource(expressions, typ.Child(), binding, bindingName)
+		return c.blockOnResource(expressions, typ.Child(), binding)
 	}
 
 	// when calling a block {} on an array resource, we expand it to all its list
@@ -708,7 +708,7 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 		}
 	}
 
-	return c.blockOnResource(expressions, typ, binding, bindingName)
+	return c.blockOnResource(expressions, typ, binding)
 }
 
 // Returns the singular return type of the given block.
@@ -1279,10 +1279,6 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 
 	variable, ok := c.vars.lookup(id)
 	if ok {
-		if variable.name == "" {
-			c.standalone = false
-		}
-
 		if variable.callback != nil {
 			variable.callback()
 		}
@@ -2016,7 +2012,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 		return false
 	}
 
-	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref, "_")
+	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to compile default for " + info.Name)
 	}

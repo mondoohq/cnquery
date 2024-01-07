@@ -134,22 +134,22 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
 	}
+	if len(call.Function) > 1 {
+		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
+	}
+
 	// if the where function is called without arguments, we don't have to do anything
 	// so we just return the caller type as no additional step in the compiler is necessary
 	if len(call.Function) == 0 {
 		return typ, nil
 	}
-	if len(call.Function) > 1 {
-		return types.Nil, errors.New("too many arguments when calling '" + id + "', only 1 is supported")
-	}
 
 	arg := call.Function[0]
-	bindingName := "_"
 	if arg.Name != "" {
-		bindingName = arg.Name
+		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref, bindingName)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -209,12 +209,11 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 	}
 
 	arg := call.Function[0]
-	bindingName := "_"
 	if arg.Name != "" {
-		bindingName = arg.Name
+		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref, bindingName)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref)
 	if err != nil {
 		return types.Nil, err
 	}

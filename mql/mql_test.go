@@ -220,24 +220,6 @@ func TestNullResources(t *testing.T) {
 	})
 }
 
-func TestNamedFunctions(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock())
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "muser.groups.where(group: group != empty).length",
-			ResultIndex: 0, Expectation: int64(1),
-		},
-		{
-			Code:        "muser.groups.where(_: _ != empty).length",
-			ResultIndex: 0, Expectation: int64(1),
-		},
-		{
-			Code:        "muser.dict.listInt.where(x: x == 2)",
-			ResultIndex: 0, Expectation: []any{int64(2)},
-		},
-	})
-}
-
 func TestNullString(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
