@@ -26,11 +26,12 @@ func compileArrayWhere(c *compiler, typ types.Type, ref uint64, id string, call 
 	}
 
 	arg := call.Function[0]
+	bindingName := "_"
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
+		bindingName = arg.Name
 	}
 
-	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref, bindingName)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -103,8 +104,12 @@ func compileArrayDuplicates(c *compiler, typ types.Type, ref uint64, id string, 
 		return types.Nil, errors.New("too many arguments when calling '" + id + "'")
 	} else if call != nil && len(call.Function) == 1 {
 		arg := call.Function[0]
+		bindingName := "_"
+		if arg.Name != "" {
+			bindingName = arg.Name
+		}
 
-		refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
+		refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref, bindingName)
 		if err != nil {
 			return types.Nil, err
 		}
@@ -457,11 +462,12 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 	}
 
 	arg := call.Function[0]
+	bindingName := "_"
 	if arg.Name != "" {
-		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
+		bindingName = arg.Name
 	}
 
-	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref, bindingName)
 	if err != nil {
 		return types.Nil, err
 	}
