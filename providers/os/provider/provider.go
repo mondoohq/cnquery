@@ -17,8 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v9/providers/os/id"
 	"go.mondoo.com/cnquery/v9/providers/os/resources"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/discovery/container_registry"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/discovery/docker_engine"
@@ -319,13 +321,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	switch conf.Type {
 	case LocalConnectionType:
 		s.lastConnectionID++
-		conn = connection.NewLocalConnection(s.lastConnectionID, conf, asset)
+		conn = local.NewLocalConnection(s.lastConnectionID, conf, asset)
 
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.activeIdDetectors
+			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
 	case SshConnectionType:
@@ -335,13 +337,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 		if err == nil {
 			if conn.Asset().Connections[0].Runtime != "vagrant" {
 				asset.Name = fingerprint.Name
 			}
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.activeIdDetectors
+			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
 	case TarConnectionType:
@@ -351,11 +353,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.activeIdDetectors
+			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
 	case DockerSnapshotConnectionType:
@@ -365,11 +367,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-		fingerprint, err := IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 		if err == nil {
 			asset.Name = fingerprint.Name
 			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.activeIdDetectors
+			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
 	case VagrantConnectionType:
@@ -410,11 +412,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		// This is a workaround to set Google COS platform IDs when scanned from inside k8s
 		pID, err := conn.(*connection.FileSystemConnection).Identifier()
 		if err != nil {
-			fingerprint, err := IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
-				asset.IdDetector = fingerprint.activeIdDetectors
+				asset.IdDetector = fingerprint.ActiveIdDetectors
 			}
 		} else {
 			// In this case asset.Name should already be set via the inventory

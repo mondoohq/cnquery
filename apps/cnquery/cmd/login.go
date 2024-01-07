@@ -15,8 +15,8 @@ import (
 	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
-	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	cnquery_providers "go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
@@ -61,7 +61,7 @@ func register(token string, annotations map[string]string) error {
 	var credential *upstream.ServiceAccountCredentials
 
 	// determine information about the client
-	sysInfo, err := sysinfo.GatherSystemInfo()
+	sysInfo, err := sysinfo.Get()
 	if err != nil {
 		return cli_errors.NewCommandError(errors.Wrap(err, "could not gather client information"), 1)
 	}

@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v9/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
-	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	cnquery_providers "go.mondoo.com/cnquery/v9/providers"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
 	"sigs.k8s.io/yaml"
 )
@@ -49,7 +49,7 @@ ensure the credentials cannot be used in the future.
 		config.DisplayUsedConfig()
 
 		// determine information about the client
-		sysInfo, err := sysinfo.GatherSystemInfo()
+		sysInfo, err := sysinfo.Get()
 		if err != nil {
 			return errors.Wrap(err, "could not gather client information")
 		}

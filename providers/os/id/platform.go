@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package provider
+package id
 
 import (
 	"errors"
@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/detector"
 	"go.mondoo.com/cnquery/v9/providers/os/id/awsec2"
@@ -27,7 +28,7 @@ type PlatformFingerprint struct {
 	Runtime           string
 	Kind              string
 	RelatedAssets     []PlatformFingerprint
-	activeIdDetectors []string
+	ActiveIdDetectors []string
 }
 
 type PlatformInfo struct {
@@ -52,7 +53,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 	if len(idDetectors) == 0 {
 		// fallback to default id detectors
 		switch conn.Type() {
-		case connection.Local:
+		case local.Local:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect}
 		case connection.SSH:
 			idDetectors = []string{ids.IdDetector_Hostname, ids.IdDetector_CloudDetect, ids.IdDetector_SshHostkey}
@@ -60,7 +61,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 			idDetectors = []string{ids.IdDetector_Hostname}
 		}
 	}
-	fingerprint.activeIdDetectors = idDetectors
+	fingerprint.ActiveIdDetectors = idDetectors
 
 	for i := range idDetectors {
 		idDetector := idDetectors[i]

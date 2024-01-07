@@ -18,9 +18,9 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v9/cli/errors"
 	"go.mondoo.com/cnquery/v9/cli/providers"
-	"go.mondoo.com/cnquery/v9/cli/sysinfo"
 	"go.mondoo.com/cnquery/v9/cli/theme"
 	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v9/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )

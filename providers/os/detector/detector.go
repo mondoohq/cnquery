@@ -7,12 +7,12 @@ import (
 	"runtime"
 
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 func DetectOS(conn shared.Connection) (*inventory.Platform, bool) {
-	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
+	if conn.Type() == local.Local && runtime.GOOS == "windows" {
 		return WindowsFamily.Resolve(conn)
 	}
 	return OperatingSystems.Resolve(conn)

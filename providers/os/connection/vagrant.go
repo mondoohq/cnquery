@@ -9,6 +9,7 @@ import (
 
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/vagrant"
 	"go.mondoo.com/cnquery/v9/providers/os/id/ids"
@@ -53,7 +54,7 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 	// For now, we do not provide the conf to the local connection
 	// conf might include sudo, which is only intended for the actual vagrant connection
 	// local currently does not need it. Quite the contrary, it cause issues.
-	localProvider := NewLocalConnection(id, nil, root)
+	localProvider := local.NewLocalConnection(id, nil, root)
 
 	// we run status first, since vagrant ssh-config does not return a proper state
 	// if in a multi-vm setup not all vms are running

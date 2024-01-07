@@ -8,14 +8,14 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/fs/fsutil"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 )
 
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := connection.NewLocalConnection(0, nil, nil)
+	conn := local.NewLocalConnection(0, nil, nil)
 	assert.NotNil(t, conn)
 
 	fs := conn.FileSystem()

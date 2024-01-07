@@ -9,14 +9,14 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v9/providers/os/fsutil"
 )
 
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := connection.NewLocalConnection(0, &inventory.Config{
+	conn := local.NewLocalConnection(0, &inventory.Config{
 		Path: path,
 	}, &inventory.Asset{})
 
