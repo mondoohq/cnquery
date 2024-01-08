@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.49.15
+	github.com/aws/aws-sdk-go v1.49.16
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.14
@@ -39,12 +39,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.28.7
-	github.com/aws/aws-sdk-go-v2/service/kms v1.27.8
+	github.com/aws/aws-sdk-go-v2/service/kms v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.66.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.39.8
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.8
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.8
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.124.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.1
