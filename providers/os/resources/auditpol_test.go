@@ -16,28 +16,28 @@ func TestResource_Auditpol(t *testing.T) {
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation').list[0].subcategory")
+		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation')[0].subcategory")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "Credential Validation", res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation').list.length")
+		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation').length")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, int64(1), res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation').list[0].inclusionsetting")
+		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Credential Validation')[0].inclusionsetting")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "Success", res[0].Data.Value)
 	})
 
 	t.Run("test a specific secpol systemaccess entry", func(t *testing.T) {
-		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Application Group Management').list { inclusionsetting == 'Success and Failure'}")
+		res := testWindowsQuery(t, "auditpol.where(subcategory == 'Application Group Management') { inclusionsetting == 'Success and Failure'}")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		r, found := res[0].Data.IsTruthy()
