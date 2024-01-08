@@ -201,7 +201,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		for i := range query.Props {
 			prop := query.Props[i]
 
-			override, name, _ := propsCache.Get(ctx, prop.Mrn)
+			override, name, _ := propsCache.Get(prop.Mrn)
 			if override != nil {
 				prop = override
 			}
