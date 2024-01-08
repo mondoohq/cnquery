@@ -9,14 +9,13 @@ package windows
 import (
 	"runtime"
 
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"golang.org/x/sys/windows/registry"
 )
 
 func GetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.QUERY_VALUE)
 		if err != nil {
 			return nil, err
