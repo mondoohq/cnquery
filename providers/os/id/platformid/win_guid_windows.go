@@ -11,13 +11,12 @@ import (
 	"runtime"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 )
 
 func windowsMachineId(conn shared.Connection) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		// we always get a list or entries
 		type win32ComputerSystemProduct struct {
 			UUID *string
