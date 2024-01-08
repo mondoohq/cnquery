@@ -116,12 +116,18 @@ func handleAzureComputeSubcommands(args []string, config *inventory.Config) erro
 	case "instance":
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
 		config.Discover = nil
-		config.Options["type"] = "instance"
+		config.Options["type"] = azureinstancesnapshot.InstanceTargetType
 		config.Options["target"] = args[2]
 		return nil
 	case "snapshot":
 		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
-		config.Options["type"] = "snapshot"
+		config.Options["type"] = azureinstancesnapshot.SnapshotTargetType
+		config.Options["target"] = args[2]
+		config.Discover = nil
+		return nil
+	case "disk":
+		config.Type = string(azureinstancesnapshot.SnapshotConnectionType)
+		config.Options["type"] = azureinstancesnapshot.DiskTargetType
 		config.Options["target"] = args[2]
 		config.Discover = nil
 		return nil
