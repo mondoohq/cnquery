@@ -368,6 +368,8 @@ func genericSearch(afs *afero.Afero) ([]python.PackageDetails, error) {
 func darwinSearch(afs *afero.Afero) ([]python.PackageDetails, error) {
 	allResults := []python.PackageDetails{}
 
+	// TODO: this does not work properly, we need to use the connection here to determine if we are running on a
+	// local connection
 	if runtime.GOOS != "darwin" {
 		return allResults, nil
 	}

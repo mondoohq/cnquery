@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
 	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -22,8 +23,9 @@ func (k *mqlRegistrykey) id() (string, error) {
 }
 
 func (k *mqlRegistrykey) exists() (bool, error) {
+	conn := k.MqlRuntime.Connection.(shared.Connection)
 	// if we are running locally on windows, we can use native api
-	if runtime.GOOS == "windows" {
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		items, err := windows.GetNativeRegistryKeyItems(k.Path.Data)
 		if err == nil && len(items) > 0 {
 			return true, nil
@@ -69,7 +71,8 @@ func (k *mqlRegistrykey) exists() (bool, error) {
 // GetEntries returns a list of registry key property resources
 func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 	// if we are running locally on windows, we can use native api
-	if runtime.GOOS == "windows" {
+	conn := k.MqlRuntime.Connection.(shared.Connection)
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		return windows.GetNativeRegistryKeyItems(k.Path.Data)
 	}
 
@@ -162,10 +165,10 @@ func (k *mqlRegistrykey) items() ([]interface{}, error) {
 }
 
 func (k *mqlRegistrykey) children() ([]interface{}, error) {
+	conn := k.MqlRuntime.Connection.(shared.Connection)
 	res := []interface{}{}
-
 	var children []windows.RegistryKeyChild
-	if runtime.GOOS == "windows" {
+	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		var err error
 		children, err = windows.GetNativeRegistryKeyChildren(k.Path.Data)
 		if err != nil {
