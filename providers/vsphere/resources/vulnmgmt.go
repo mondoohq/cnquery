@@ -32,7 +32,7 @@ func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 		mondooClient = v.gqlClient
 	} else {
 		// get new gql client
-		mondooClient, err = gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		mondooClient, err = gql.NewClient(&mcc.UpstreamConfig, mcc.HttpClient)
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +176,7 @@ func (v *mqlVulnmgmt) getReport() (*gql.VulnReport, error) {
 		mondooClient = v.gqlClient
 	} else {
 		// get new gql client
-		mondooClient, err = gql.NewClient(mcc.UpstreamConfig, mcc.HttpClient)
+		mondooClient, err = gql.NewClient(&mcc.UpstreamConfig, mcc.HttpClient)
 		if err != nil {
 			return nil, err
 		}
