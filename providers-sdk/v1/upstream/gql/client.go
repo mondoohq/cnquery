@@ -18,7 +18,7 @@ type MondooClient struct {
 
 // NewClient creates a new GraphQL client for the Mondoo API
 // provide the http client used for rpc, to also pass in the proxy settings
-func NewClient(upstream upstream.UpstreamConfig, httpClient *http.Client) (*MondooClient, error) {
+func NewClient(upstream *upstream.UpstreamConfig, httpClient *http.Client) (*MondooClient, error) {
 	gqlEndpoint := upstream.ApiEndpoint + "/query"
 	creds, err := json.Marshal(upstream.Creds)
 	if err != nil {
