@@ -743,6 +743,45 @@ func arrayDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	return &RawData{Type: bind.Type, Value: res}, 0, nil
 }
 
+func anyArrayInStringArray(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	anyArray := bind.Value.([]any)
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	for b := range anyArray {
+		binds, ok := anyArray[b].(string)
+		if !ok {
+			return BoolFalse, 0, nil
+		}
+
+		arr := arg.Value.([]any)
+		found := false
+		for i := range arr {
+			v := arr[i].(string)
+			if binds == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return BoolFalse, 0, nil
+		}
+	}
+
+	return BoolTrue, 0, nil
+}
+
 func arrayContainsAll(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil

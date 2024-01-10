@@ -532,7 +532,7 @@ func dictBlockCallV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 func dictCamelcaseV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	_, ok := bind.Value.(string)
 	if !ok {
-		return nil, 0, errors.New("dict value does not support field `downcase`")
+		return nil, 0, errors.New("dict value does not support field `camelcase`")
 	}
 
 	return stringCamelcaseV2(e, bind, chunk, ref)
@@ -1283,6 +1283,8 @@ func dictIn(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData
 	switch bind.Value.(type) {
 	case string:
 		return stringInArray(e, bind, chunk, ref)
+	case []any:
+		return anyArrayInStringArray(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `in`")
 	}

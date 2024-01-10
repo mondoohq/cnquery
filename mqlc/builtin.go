@@ -102,6 +102,7 @@ func init() {
 			"where":        {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"duplicates":   {compile: compileArrayDuplicates, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
+			"in":           {typ: boolType, compile: compileStringIn, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"contains":     {compile: compileArrayContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsOnly": {compile: compileArrayContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"containsAll":  {compile: compileArrayContainsAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},

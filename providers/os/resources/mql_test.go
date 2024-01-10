@@ -384,6 +384,14 @@ func TestDict_Methods_Map(t *testing.T) {
 			Expectation: []interface{}{"a"},
 		},
 		{
+			Code:        p + "params['string-array'].in(['a', 'b', 'c'])",
+			Expectation: true,
+		},
+		{
+			Code:        p + "params['string-array'].in(['z', 'b'])",
+			Expectation: false,
+		},
+		{
 			Code:        p + "params['string-array'].one(_ == 'a')",
 			ResultIndex: 1,
 			Expectation: true,
