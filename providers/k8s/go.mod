@@ -16,13 +16,13 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v9 v9.14.0
 	// pin v0.28.4
-	k8s.io/api v0.28.4
+	k8s.io/api v0.29.0
 	// pin v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.0
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.0
 	k8s.io/klog/v2 v2.110.1
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 )
