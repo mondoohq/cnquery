@@ -4,7 +4,6 @@
 package explorer
 
 import (
-	"context"
 	"errors"
 
 	"github.com/rs/zerolog/log"
@@ -26,9 +25,20 @@ func (p *Property) RefreshMRN(ownerMRN string) error {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
 		return multierr.Wrap(err, "failed to refresh mrn for query "+p.Title)
 	}
-
 	p.Mrn = nu
 	p.Uid = ""
+
+	for i := range p.For {
+		pfor := p.For[i]
+		pforNu, err := RefreshMRN(ownerMRN, pfor.Mrn, MRN_RESOURCE_QUERY, pfor.Uid)
+		if err != nil {
+			log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
+			return multierr.Wrap(err, "failed to refresh mrn for query "+p.Title)
+		}
+		pfor.Mrn = pforNu
+		pfor.Uid = ""
+	}
+
 	return nil
 }
 
@@ -125,18 +135,42 @@ func NewPropsCache() PropsCache {
 func (c PropsCache) Add(props ...*Property) {
 	for i := range props {
 		base := props[i]
+
 		if base.Uid != "" && base.Mrn == "" {
 			// keep track of properties that were specified by uid only.
 			// we will merge them in later if we find a matching mrn
 			c.uidOnlyProps[base.Uid] = base
 			continue
 		}
+
 		// All properties at this point should have a mrn
+		merged := base
+
 		if base.Mrn != "" {
+			name, _ := mrn.GetResource(base.Mrn, MRN_RESOURCE_QUERY)
+			if uidProp, ok := c.uidOnlyProps[name]; ok {
+				p := proto.Clone(uidProp).(*Property)
+				p.Merge(base)
+				base = p
+				merged = p
+			}
+
 			if existingProp, ok := c.cache[base.Mrn]; ok {
 				existingProp.Merge(base)
+				merged = existingProp
 			} else {
 				c.cache[base.Mrn] = base
+			}
+		}
+
+		for i := range base.For {
+			pfor := base.For[i]
+			if pfor.Mrn != "" {
+				if existingProp, ok := c.cache[pfor.Mrn]; ok {
+					existingProp.Merge(merged)
+				} else {
+					c.cache[pfor.Mrn] = merged
+				}
 			}
 		}
 	}
@@ -144,7 +178,7 @@ func (c PropsCache) Add(props ...*Property) {
 
 // try to Get the mrn, will also return uid-based
 // properties if they exist first
-func (c PropsCache) Get(ctx context.Context, propMrn string) (*Property, string, error) {
+func (c PropsCache) Get(propMrn string) (*Property, string, error) {
 	if res, ok := c.cache[propMrn]; ok {
 		name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
 		if err != nil {
