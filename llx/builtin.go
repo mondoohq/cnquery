@@ -596,6 +596,7 @@ func init() {
 			"fieldDuplicates":          {f: arrayFieldDuplicatesV2},
 			"unique":                   {f: arrayUniqueV2},
 			"difference":               {f: arrayDifferenceV2},
+			"in":                       {f: anyArrayInStringArray},
 			"containsAll":              {f: arrayContainsAll},
 			"containsNone":             {f: arrayContainsNone},
 			"==":                       {Compiler: compileArrayOpArray("=="), f: tarrayCmpTarrayV2, Label: "=="},

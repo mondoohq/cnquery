@@ -610,6 +610,14 @@ func TestArray(t *testing.T) {
 			Expectation: true,
 		},
 		{
+			Code:        "['hi'].in(['one','hi','five'])",
+			Expectation: true,
+		},
+		{
+			Code:        "['hi', 'bob'].in(['one','hi','five'])",
+			Expectation: false,
+		},
+		{
 			Code:        "[1,2,3].all(_ < 9)",
 			ResultIndex: 1,
 			Expectation: true,
