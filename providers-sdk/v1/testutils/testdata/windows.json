@@ -26,8 +26,8 @@
       ],
       "resources": [
         {
-          "Resource": "command",
-          "ID": "auditpol /get /category:* /r",
+          "Resource": "powershell",
+          "ID": "[Console]::OutputEncoding = [Text.Encoding]::UTF8;auditpol /get /category:* /r",
           "Fields": {
             "exitcode": {
               "type": "\u0005",

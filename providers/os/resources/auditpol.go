@@ -12,14 +12,14 @@ import (
 )
 
 func (p *mqlAuditpol) list() ([]interface{}, error) {
-	o, err := CreateResource(p.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("auditpol /get /category:* /r"),
+	o, err := CreateResource(p.MqlRuntime, "powershell", map[string]*llx.RawData{
+		"script": llx.StringData("[Console]::OutputEncoding = [Text.Encoding]::UTF8;auditpol /get /category:* /r"),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	cmd := o.(*mqlCommand)
+	cmd := o.(*mqlPowershell)
 	out := cmd.GetStdout()
 	if out.Error != nil {
 		return nil, fmt.Errorf("could not run auditpol: " + out.Error.Error())
