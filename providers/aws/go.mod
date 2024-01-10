@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.49.16
+	github.com/aws/aws-sdk-go v1.49.17
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.14
@@ -22,11 +22,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.26.6
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.142.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.143.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.36.0
@@ -59,7 +59,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.13.0
+	go.mondoo.com/cnquery/v9 v9.14.0
 	k8s.io/client-go v0.29.0
 )
 
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.6 // indirect
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20231213181459-b0fcec718dc6 // indirect
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240108175922-ee6f7ad882c7 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -180,10 +180,10 @@ require (
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/oauth2 v0.15.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
@@ -192,9 +192,9 @@ require (
 	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/api v0.155.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240102182953-50ed04b92917 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240102182953-50ed04b92917 // indirect
+	google.golang.org/genproto v0.0.0-20240108191215-35c7eff3a6b1 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240108191215-35c7eff3a6b1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
 	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
