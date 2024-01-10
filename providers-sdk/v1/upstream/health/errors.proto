@@ -1,0 +1,35 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+syntax = "proto3";
+
+package go.mondoo.health.v1;
+
+option go_package = "go.mondoo.com/mondoo/health";
+
+// Error Reporting Service
+service ErrorReporting {
+  // SendError sends an error to the Mondoo API
+  rpc SendError(SendErrorReq) returns (SendErrorResp);
+}
+
+message SendErrorReq {
+  string service_account_mrn = 1;
+  string agent_mrn = 2;
+  ProductInfo product = 3;
+  ErrorInfo error = 4;
+}
+
+message ProductInfo {
+  string name = 1;
+  string version = 2;
+  string build = 3;
+}
+
+message ErrorInfo {
+  string message = 1;
+  string stacktrace = 2;
+}
+
+message SendErrorResp {
+}
