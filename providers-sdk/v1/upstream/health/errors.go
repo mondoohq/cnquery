@@ -31,13 +31,13 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	// 1. read config
 	opts, err := config.Read()
 	if err != nil {
-		log.Info().Err(err).Msg("failed to read config")
+		log.Error().Err(err).Msg("failed to read config")
 		return
 	}
 
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount == nil {
-		log.Info().Msg("no service account configured")
+		log.Error().Msg("no service account configured")
 		return
 	}
 
@@ -59,7 +59,7 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 	// 3. send error to mondoo platform
 	proxy, err := config.GetAPIProxy()
 	if err != nil {
-		log.Info().Err(err).Msg("failed to parse proxy setting")
+		log.Error().Err(err).Msg("failed to parse proxy setting")
 		return
 	}
 	httpClient := ranger.NewHttpClient(ranger.WithProxy(proxy))
@@ -73,13 +73,13 @@ func sendPanic(product, version, build string, r any, stacktrace []byte) {
 
 	cl, err := NewErrorReportingClient(serviceAccount.ApiEndpoint, httpClient, plugins...)
 	if err != nil {
-		log.Info().Err(err).Msg("failed to create error reporting client")
+		log.Error().Err(err).Msg("failed to create error reporting client")
 		return
 	}
 
 	_, err = cl.SendError(context.Background(), event)
 	if err != nil {
-		log.Info().Err(err).Msg("failed to send error to mondoo platform")
+		log.Error().Err(err).Msg("failed to send error to mondoo platform")
 		return
 	}
 
