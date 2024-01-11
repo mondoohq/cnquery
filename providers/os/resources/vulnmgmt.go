@@ -102,13 +102,20 @@ func (v *mqlVulnmgmt) populateData() error {
 
 	mqlVulAdvisories := make([]interface{}, len(vulnReport.Advisories))
 	for i, a := range vulnReport.Advisories {
-		parsedPublished, err := time.Parse(time.RFC3339, a.PublishedAt)
+		var parsedPublished *time.Time
+		var parsedModifed *time.Time
+		var err error
+		published, err := time.Parse(time.RFC3339, a.PublishedAt)
 		if err != nil {
-			return err
+			log.Debug().Str("date", a.PublishedAt).Str("advisory", a.Id).Msg("could not parse published date")
+		} else {
+			parsedPublished = &published
 		}
-		parsedModifed, err := time.Parse(time.RFC3339, a.ModifiedAt)
+		modified, err := time.Parse(time.RFC3339, a.ModifiedAt)
 		if err != nil {
-			return err
+			log.Debug().Str("date", a.ModifiedAt).Str("advisory", a.Id).Msg("could not parse modified date")
+		} else {
+			parsedModifed = &modified
 		}
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
 			"score":  llx.FloatData(float64(a.CvssScore.Value) / 10),
@@ -121,8 +128,8 @@ func (v *mqlVulnmgmt) populateData() error {
 			"id":          llx.StringData(a.Id),
 			"title":       llx.StringData(a.Title),
 			"description": llx.StringData(a.Description),
-			"published":   llx.TimeData(parsedPublished),
-			"modified":    llx.TimeData(parsedModifed),
+			"published":   llx.TimeDataPtr(parsedPublished),
+			"modified":    llx.TimeDataPtr(parsedModifed),
 			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {
@@ -133,13 +140,20 @@ func (v *mqlVulnmgmt) populateData() error {
 
 	mqlVulnCves := make([]interface{}, len(vulnReport.Cves))
 	for i, c := range vulnReport.Cves {
-		parsedPublished, err := time.Parse(time.RFC3339, c.PublishedAt)
+		var parsedPublished *time.Time
+		var parsedModifed *time.Time
+		var err error
+		published, err := time.Parse(time.RFC3339, c.PublishedAt)
 		if err != nil {
-			return err
+			log.Debug().Str("date", c.PublishedAt).Str("cve", c.Id).Msg("could not parse published date")
+		} else {
+			parsedPublished = &published
 		}
-		parsedModifed, err := time.Parse(time.RFC3339, c.ModifiedAt)
+		modified, err := time.Parse(time.RFC3339, c.ModifiedAt)
 		if err != nil {
-			return err
+			log.Debug().Str("date", c.ModifiedAt).Str("cve", c.Id).Msg("could not parse modified date")
+		} else {
+			parsedModifed = &modified
 		}
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
 			"score":  llx.FloatData(float64(c.CvssScore.Value) / 10),
@@ -151,8 +165,8 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCve, err := CreateResource(v.MqlRuntime, "vuln.cve", map[string]*llx.RawData{
 			"id":         llx.StringData(c.Id),
 			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
-			"published":  llx.TimeData(parsedPublished),
-			"modified":   llx.TimeData(parsedModifed),
+			"published":  llx.TimeDataPtr(parsedPublished),
+			"modified":   llx.TimeDataPtr(parsedModifed),
 		})
 		if err != nil {
 			return err
