@@ -98,6 +98,10 @@ func init() {
 			// to override args, implement: initMs365ExchangeonlineExternalSender(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineExternalSender,
 		},
+		"ms365.exchangeonline.exoMailbox": {
+			// to override args, implement: initMs365ExchangeonlineExoMailbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineExoMailbox,
+		},
 		"ms365.sharepointonline": {
 			Init: initMs365Sharepointonline,
 			Create: createMs365Sharepointonline,
@@ -642,6 +646,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.externalInOutlook": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetExternalInOutlook()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.externalSender")))
 	},
+	"ms365.exchangeonline.sharedMailboxes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetSharedMailboxes()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.exoMailbox")))
+	},
 	"ms365.exchangeonline.externalSender.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineExternalSender).GetIdentity()).ToDataRes(types.String)
 	},
@@ -650,6 +657,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.externalSender.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineExternalSender).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.exoMailbox.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExoMailbox).GetIdentity()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.exoMailbox.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExoMailbox).GetUser()).ToDataRes(types.Resource("microsoft.user"))
+	},
+	"ms365.exchangeonline.exoMailbox.externalDirectoryObjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineExoMailbox).GetExternalDirectoryObjectId()).ToDataRes(types.String)
 	},
 	"ms365.sharepointonline.spoTenant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Sharepointonline).GetSpoTenant()).ToDataRes(types.Dict)
@@ -1422,6 +1438,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlMs365Exchangeonline).ExternalInOutlook, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.sharedMailboxes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).SharedMailboxes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonline.externalSender.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMs365ExchangeonlineExternalSender).__id, ok = v.Value.(string)
 			return
@@ -1436,6 +1456,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ms365.exchangeonline.externalSender.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineExternalSender).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.exoMailbox.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMs365ExchangeonlineExoMailbox).__id, ok = v.Value.(string)
+			return
+		},
+	"ms365.exchangeonline.exoMailbox.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExoMailbox).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.exoMailbox.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExoMailbox).User, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.exoMailbox.externalDirectoryObjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineExoMailbox).ExternalDirectoryObjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ms365.sharepointonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3236,6 +3272,7 @@ type mqlMs365Exchangeonline struct {
 	SharingPolicy plugin.TValue[[]interface{}]
 	RoleAssignmentPolicy plugin.TValue[[]interface{}]
 	ExternalInOutlook plugin.TValue[[]interface{}]
+	SharedMailboxes plugin.TValue[[]interface{}]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -3342,6 +3379,10 @@ func (c *mqlMs365Exchangeonline) GetExternalInOutlook() *plugin.TValue[[]interfa
 	return &c.ExternalInOutlook
 }
 
+func (c *mqlMs365Exchangeonline) GetSharedMailboxes() *plugin.TValue[[]interface{}] {
+	return &c.SharedMailboxes
+}
+
 // mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource
 type mqlMs365ExchangeonlineExternalSender struct {
 	MqlRuntime *plugin.Runtime
@@ -3399,6 +3440,77 @@ func (c *mqlMs365ExchangeonlineExternalSender) GetAllowList() *plugin.TValue[[]i
 
 func (c *mqlMs365ExchangeonlineExternalSender) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+// mqlMs365ExchangeonlineExoMailbox for the ms365.exchangeonline.exoMailbox resource
+type mqlMs365ExchangeonlineExoMailbox struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMs365ExchangeonlineExoMailboxInternal it will be used here
+	Identity plugin.TValue[string]
+	User plugin.TValue[*mqlMicrosoftUser]
+	ExternalDirectoryObjectId plugin.TValue[string]
+}
+
+// createMs365ExchangeonlineExoMailbox creates a new instance of this resource
+func createMs365ExchangeonlineExoMailbox(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineExoMailbox{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.exoMailbox", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineExoMailbox) MqlName() string {
+	return "ms365.exchangeonline.exoMailbox"
+}
+
+func (c *mqlMs365ExchangeonlineExoMailbox) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineExoMailbox) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMs365ExchangeonlineExoMailbox) GetUser() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.User, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline.exoMailbox", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlMs365ExchangeonlineExoMailbox) GetExternalDirectoryObjectId() *plugin.TValue[string] {
+	return &c.ExternalDirectoryObjectId
 }
 
 // mqlMs365Sharepointonline for the ms365.sharepointonline resource

@@ -21,8 +21,35 @@ func (m *mqlMs365ExchangeonlineExternalSender) id() (string, error) {
 	return m.Identity.Data, nil
 }
 
+func (m *mqlMs365ExchangeonlineExoMailbox) id() (string, error) {
+	return m.Identity.Data, nil
+}
+
 func (m *mqlMs365SharepointonlineSite) id() (string, error) {
 	return m.Url.Data, nil
+}
+
+func (m *mqlMs365ExchangeonlineExoMailbox) user() (*mqlMicrosoftUser, error) {
+	externalId := m.ExternalDirectoryObjectId.Data
+	if externalId == "" {
+		return nil, errors.New("no externalDirectoryObjectId provided, cannot find user for mailbox")
+	}
+	microsoft, err := m.MqlRuntime.CreateResource(m.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	mqlMicrosoft := microsoft.(*mqlMicrosoft)
+	users := mqlMicrosoft.GetUsers()
+	if users.Error != nil {
+		return nil, users.Error
+	}
+	for _, u := range users.Data {
+		mqlUser := u.(*mqlMicrosoftUser)
+		if mqlUser.Id.Data == externalId {
+			return mqlUser, nil
+		}
+	}
+	return nil, errors.New("cannot find user for exchange mailbox")
 }
 
 func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -83,6 +110,20 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 		externalInOutlook = append(externalInOutlook, mql)
 	}
+
+	sharedMailboxes := []interface{}{}
+	for _, m := range report.ExoMailbox {
+		mql, err := CreateResource(runtime, "ms365.exchangeonline.exoMailbox",
+			map[string]*llx.RawData{
+				"identity":                  llx.StringData(m.Identity),
+				"externalDirectoryObjectId": llx.StringData(m.ExternalDirectoryObjectId),
+			})
+		if err != nil {
+			return args, nil, err
+		}
+
+		sharedMailboxes = append(sharedMailboxes, mql)
+	}
 	args["malwareFilterPolicy"] = llx.ArrayData(malwareFilterPolicy, types.Any)
 	args["hostedOutboundSpamFilterPolicy"] = llx.ArrayData(hostedOutboundSpamFilterPolicy, types.Any)
 	args["transportRule"] = llx.ArrayData(transportRule, types.Any)
@@ -101,7 +142,7 @@ func initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["sharingPolicy"] = llx.ArrayData(sharingPolicy, types.Any)
 	args["roleAssignmentPolicy"] = llx.ArrayData(roleAssignmentPolicy, types.Any)
 	args["externalInOutlook"] = llx.ArrayData(externalInOutlook, types.ResourceLike)
-
+	args["sharedMailboxes"] = llx.ArrayData(sharedMailboxes, types.ResourceLike)
 	return args, nil, nil
 }
 
@@ -204,7 +245,7 @@ func initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 			"meetingChatEnabledType":                     llx.StringData(teamsPolicy.MeetingChatEnabledType),
 			"designatedPresenterRoleMode":                llx.StringData(teamsPolicy.DesignatedPresenterRoleMode),
 			"allowExternalParticipantGiveRequestControl": llx.BoolData(teamsPolicy.AllowExternalParticipantGiveRequestControl),
-			"allowSecurityEndUserReporting": 							llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
+			"allowSecurityEndUserReporting":              llx.BoolData(teamsPolicy.AllowSecurityEndUserReporting),
 		})
 	if err != nil {
 		return args, nil, err

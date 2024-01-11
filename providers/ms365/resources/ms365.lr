@@ -382,6 +382,8 @@ ms365.exchangeonline {
   roleAssignmentPolicy []dict
   // List of external sender configurations
   externalInOutlook []ms365.exchangeonline.externalSender
+  // List of shared mailboxes
+  sharedMailboxes []ms365.exchangeonline.exoMailbox
 }
 
 // Microsoft 365 ExchangeOnline ExternalSender
@@ -392,6 +394,16 @@ private ms365.exchangeonline.externalSender {
   allowList []string
   // Whether the feature is enabled
   enabled bool
+}
+
+// Microsoft 365 ExchangeOnline Mailbox
+private ms365.exchangeonline.exoMailbox {
+  // The identity of the mailbox
+  identity string
+  // The user linked to this mailbox.
+  user() microsoft.user
+  // The identity of the external object linked to this mailbox
+  externalDirectoryObjectId string
 }
 
 // Microsoft 365 SharePoint Online

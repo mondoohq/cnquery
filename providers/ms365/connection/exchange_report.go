@@ -42,7 +42,7 @@ $AtpPolicyForO365 = (Get-AtpPolicyForO365)
 $SharingPolicy = (Get-SharingPolicy)
 $RoleAssignmentPolicy = (Get-RoleAssignmentPolicy)
 $ExternalInOutlook = (Get-ExternalInOutlook)
-
+$ExoMailbox = (Get-EXOMailbox -RecipientTypeDetails SharedMailbox)
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -63,6 +63,7 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name AtpPolicy
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name SharingPolicy -Value @($SharingPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name RoleAssignmentPolicy -Value @($RoleAssignmentPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExternalInOutlook -Value @($ExternalInOutlook)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ExoMailbox -Value @($ExoMailbox)
 
 
 Disconnect-ExchangeOnline -Confirm:$false
@@ -145,10 +146,30 @@ type ExchangeOnlineReport struct {
 	SharingPolicy                  []interface{}     `json:"SharingPolicy"`
 	RoleAssignmentPolicy           []interface{}     `json:"RoleAssignmentPolicy"`
 	ExternalInOutlook              []*ExternalSender `json:"ExternalInOutlook"`
+	// note: this only contains shared mailboxes
+	ExoMailbox []*ExoMailbox `json:"ExoMailbox"`
 }
 
 type ExternalSender struct {
 	Identity  string   `json:"Identity"`
 	Enabled   bool     `json:"Enabled"`
 	AllowList []string `json:"AllowList"`
+}
+
+type ExoMailbox struct {
+	ExternalDirectoryObjectId string   `json:"ExternalDirectoryObjectId"`
+	UserPrincipalName         string   `json:"UserPrincipalName"`
+	Alias                     string   `json:"Alias"`
+	DisplayName               string   `json:"DisplayName"`
+	EmailAddresses            []string `json:"EmailAddresses"`
+	PrimarySmtpAddress        string   `json:"PrimarySmtpAddress"`
+	RecipientType             string   `json:"RecipientType"`
+	RecipientTypeDetails      string   `json:"RecipientTypeDetails"`
+	Identity                  string   `json:"Identity"`
+	Id                        string   `json:"Id"`
+	ExchangeVersion           string   `json:"ExchangeVersion"`
+	Name                      string   `json:"Name"`
+	DistinguishedName         string   `json:"DistinguishedName"`
+	OrganizationId            string   `json:"OrganizationId"`
+	Guid                      string   `json:"Guid"`
 }
