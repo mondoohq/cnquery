@@ -60,8 +60,9 @@ type RunningProvider struct {
 	// isShutdown is only used once during provider shutdown
 	isShutdown bool
 	// provider errors which are evaluated and printed during shutdown of the provider
-	err  error
-	lock sync.Mutex
+	err          error
+	lock         sync.Mutex
+	shutdownLock sync.Mutex
 }
 
 // initialize the heartbeat with the provider
@@ -104,8 +105,8 @@ func (p *RunningProvider) doOneHeartbeat(t time.Duration) error {
 }
 
 func (p *RunningProvider) isCloseOrShutdown() bool {
-	p.lock.Lock()
-	defer p.lock.Unlock()
+	p.shutdownLock.Lock()
+	defer p.shutdownLock.Unlock()
 	return p.isClosed || p.isShutdown
 }
 
@@ -136,10 +137,16 @@ func (p *RunningProvider) Shutdown() error {
 		if p.Client != nil {
 			p.Client.Kill()
 		}
+		p.shutdownLock.Lock()
 		p.isClosed = true
+		p.isShutdown = true
+		p.shutdownLock.Unlock()
+	} else {
+		p.shutdownLock.Lock()
+		p.isShutdown = true
+		p.shutdownLock.Unlock()
 	}
 
-	p.isShutdown = true
 	return err
 }
 
