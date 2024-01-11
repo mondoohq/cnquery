@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/pflag"
 	"go.mondoo.com/cnquery/v9/logger"
 )
 
@@ -45,7 +47,18 @@ type Connector struct {
 
 func Start(args []string, impl ProviderPlugin) {
 	logger.CliCompactLogger(logger.LogOutputWriter)
-	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
+	var logLevel string
+	pflag.StringVar(&logLevel, "log-level", "warn", "Log level")
+	pflag.Parse()
+
+	ll, err := zerolog.ParseLevel(logLevel)
+	if err != nil {
+		log.Warn().Msgf("Failed parsing log level: %s", logLevel)
+	} else {
+		zerolog.SetGlobalLevel(ll)
+	}
+	log.Debug().Msgf("Log level set to %s", ll)
 
 	// disable the plugin's logs
 	pluginLogger := hclog.New(&hclog.LoggerOptions{
