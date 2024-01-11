@@ -44,10 +44,14 @@ func (t *testPlugin) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 
 func TestProviderShutdown(t *testing.T) {
 	s := &RunningProvider{
-		Plugin: &testPlugin{},
+		Plugin:      &testPlugin{},
+		interval:    500 * time.Millisecond,
+		gracePeriod: 500 * time.Millisecond,
 	}
 	err := s.heartbeat()
 	require.NoError(t, err)
+	// the shutdown here takes 10 seconds, whereas the heartbeat interval is every second.
+	// this means that this provider gets multiple heartbeats while shutting down
 	err = s.Shutdown()
 	require.NoError(t, err)
 }

@@ -63,26 +63,25 @@ type RunningProvider struct {
 	err          error
 	lock         sync.Mutex
 	shutdownLock sync.Mutex
+	interval     time.Duration
+	gracePeriod  time.Duration
 }
 
 // initialize the heartbeat with the provider
 func (p *RunningProvider) heartbeat() error {
-	interval := 2 * time.Second
-	gracePeriod := 3 * time.Second
-
-	if err := p.doOneHeartbeat(interval + gracePeriod); err != nil {
+	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 		p.Shutdown()
 		return err
 	}
 
 	go func() {
 		for !p.isCloseOrShutdown() {
-			if err := p.doOneHeartbeat(interval + gracePeriod); err != nil {
+			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 				p.Shutdown()
 				break
 			}
 
-			time.Sleep(interval)
+			time.Sleep(p.interval)
 		}
 	}()
 
@@ -236,11 +235,13 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 	}
 
 	res := &RunningProvider{
-		Name:   provider.Name,
-		ID:     provider.ID,
-		Plugin: raw.(pp.ProviderPlugin),
-		Client: client,
-		Schema: provider.Schema,
+		Name:        provider.Name,
+		ID:          provider.ID,
+		Plugin:      raw.(pp.ProviderPlugin),
+		Client:      client,
+		Schema:      provider.Schema,
+		interval:    2 * time.Second,
+		gracePeriod: 3 * time.Second,
 	}
 
 	if err := res.heartbeat(); err != nil {
