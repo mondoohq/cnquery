@@ -36,6 +36,10 @@ enum Status {
   // are missing, preventing the BOM from being usable or reliable. A failed
   // status typically requires a thorough review and reprocessing of the BOM.
   STATUS_FAILED = 3;
+
+  // STARTED indicates that the SBOM scan was initialized. It is used 
+  // for tracking progress of a scan over time.
+  STATUS_STARTED = 4;
 }
 
 // Sbom (Software Bill of Materials) represents a comprehensive inventory of
@@ -71,6 +75,10 @@ message Sbom {
   // name, version, and other identifiers. This list forms the core of the BOM,
   // providing a detailed account of the software composition of the asset.
   repeated Package packages = 5;
+
+  // 'error_message' is and optional field that describes the error from a 
+  // failed scan
+  string error_message = 6;
 }
 
 // Source describes the provider of the BOM data, which in this case is the
