@@ -257,9 +257,21 @@ resources:
       roleAssignmentPolicy: {}
       safeAttachmentPolicy: {}
       safeLinksPolicy: {}
+      sharedMailboxes:
+        min_mondoo_version: 9.2.13
       sharingPolicy: {}
       transportRule: {}
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - microsoft365
+  ms365.exchangeonline.exoMailbox:
+    fields:
+      externalDirectoryObjectId: {}
+      identity: {}
+      user: {}
+    is_private: true
+    min_mondoo_version: 9.2.13
     platform:
       name:
       - microsoft365
