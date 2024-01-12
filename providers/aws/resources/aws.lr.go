@@ -1552,8 +1552,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
 	},
-	"aws.iam.loginProfile.createDate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamLoginProfile).GetCreateDate()).ToDataRes(types.Time)
+	"aws.iam.loginProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamLoginProfile).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.iam.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetArn()).ToDataRes(types.String)
@@ -4961,8 +4961,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlAwsIamLoginProfile).__id, ok = v.Value.(string)
 			return
 		},
-	"aws.iam.loginProfile.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamLoginProfile).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.iam.loginProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamLoginProfile).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12133,7 +12133,7 @@ type mqlAwsIamLoginProfile struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAwsIamLoginProfileInternal it will be used here
-	CreateDate plugin.TValue[*time.Time]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsIamLoginProfile creates a new instance of this resource
@@ -12168,8 +12168,8 @@ func (c *mqlAwsIamLoginProfile) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsIamLoginProfile) GetCreateDate() *plugin.TValue[*time.Time] {
-	return &c.CreateDate
+func (c *mqlAwsIamLoginProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsIamPolicy for the aws.iam.policy resource

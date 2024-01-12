@@ -1705,7 +1705,7 @@ resources:
       - aws
   aws.iam.loginProfile:
     fields:
-      createDate: {}
+      createdAt: {}
     is_private: true
     min_mondoo_version: latest
     platform:

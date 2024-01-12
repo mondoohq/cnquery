@@ -782,9 +782,9 @@ private aws.iam.user @defaults("arn name") {
 }
 
 // AWS IAM login profile for a user
-private aws.iam.loginProfile @defaults("createDate") {
+private aws.iam.loginProfile @defaults("createdAt") {
   // Time when the login profile was created
-  createDate time
+  createdAt time
 }
 
 // AWS IAM policy

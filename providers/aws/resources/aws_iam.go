@@ -1339,7 +1339,7 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 	}
 
 	o, err := CreateResource(a.MqlRuntime, "aws.iam.loginProfile", map[string]*llx.RawData{
-		"createDate": llx.TimeData(*date),
+		"createdAt": llx.TimeData(*date),
 	})
 	if err != nil {
 		return nil, err
@@ -1348,7 +1348,7 @@ func (a *mqlAwsIamUser) loginProfile() (*mqlAwsIamLoginProfile, error) {
 }
 
 func (a *mqlAwsIamLoginProfile) init() (string, error) {
-	date := a.CreateDate.Data
+	date := a.CreatedAt.Data
 	if date == nil {
 		return "", nil
 	}
