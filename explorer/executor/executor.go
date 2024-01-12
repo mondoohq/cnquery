@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v9/cli/progress"
 	"go.mondoo.com/cnquery/v9/explorer"
 	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
 )
 
@@ -36,9 +37,10 @@ func RunExecutionJob(
 func ExecuteFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
 	equeries := map[string]*explorer.ExecutionQuery{}
 	mqueries := map[string]*explorer.Mquery{}
+	conf := mqlc.NewConfig(runtime.Schema(), cnquery.DefaultFeatures)
 	for i := range queries {
 		query := queries[i]
-		code, err := query.Compile(nil, runtime.Schema())
+		code, err := query.Compile(nil, conf)
 		// Errors for filter queries are common when they reference resources for
 		// providers that are not found on the system.
 		if err != nil {

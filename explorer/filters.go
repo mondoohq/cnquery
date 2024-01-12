@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/v9/checksums"
-	llx "go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
 )
 
@@ -114,14 +114,17 @@ func (s *Filters) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*tmp)(s))
 }
 
-func (s *Filters) Compile(ownerMRN string, schema llx.Schema) error {
+func (s *Filters) Compile(ownerMRN string, conf mqlc.CompilerConfig) error {
 	if s == nil || len(s.Items) == 0 {
 		return nil
 	}
 
 	res := make(map[string]*Mquery, len(s.Items))
 	for _, query := range s.Items {
-		query.RefreshAsFilter(ownerMRN, schema)
+		_, err := query.RefreshAsFilter(ownerMRN, conf)
+		if err != nil {
+			return err
+		}
 
 		if _, ok := res[query.CodeId]; ok {
 			continue

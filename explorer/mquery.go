@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9"
 	"go.mondoo.com/cnquery/v9/checksums"
 	llx "go.mondoo.com/cnquery/v9/llx"
 	"go.mondoo.com/cnquery/v9/mqlc"
@@ -24,7 +23,7 @@ import (
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
 // Both versions will be given the same code id.
-func (m *Mquery) Compile(props map[string]*llx.Primitive, schema llx.Schema) (*llx.CodeBundle, error) {
+func (m *Mquery) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	if m.Mql == "" {
 		if m.Query == "" {
 			return nil, errors.New("query is not implemented '" + m.Mrn + "'")
@@ -33,7 +32,7 @@ func (m *Mquery) Compile(props map[string]*llx.Primitive, schema llx.Schema) (*l
 		m.Query = ""
 	}
 
-	v2Code, err := mqlc.Compile(m.Mql, props, mqlc.NewConfig(schema, cnquery.DefaultFeatures))
+	v2Code, err := mqlc.Compile(m.Mql, props, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +110,7 @@ func (m *ObjectRef) RefreshMRN(ownerMRN string) error {
 // since their internal checksum is not stored in this query.
 func (m *Mquery) RefreshChecksum(
 	ctx context.Context,
-	schema llx.Schema,
+	conf mqlc.CompilerConfig,
 	getQuery func(ctx context.Context, mrn string) (*Mquery, error),
 ) error {
 	c := checksums.New.
@@ -125,7 +124,7 @@ func (m *Mquery) RefreshChecksum(
 
 	for i := range m.Props {
 		prop := m.Props[i]
-		if _, err := prop.RefreshChecksumAndType(schema); err != nil {
+		if _, err := prop.RefreshChecksumAndType(conf); err != nil {
 			return err
 		}
 		if prop.Checksum == "" {
@@ -137,7 +136,7 @@ func (m *Mquery) RefreshChecksum(
 	for i := range m.Variants {
 		ref := m.Variants[i]
 		if q, err := getQuery(context.Background(), ref.Mrn); err == nil {
-			if err := q.RefreshChecksum(ctx, schema, getQuery); err != nil {
+			if err := q.RefreshChecksum(ctx, conf, getQuery); err != nil {
 				return err
 			}
 			if q.Checksum == "" {
@@ -160,7 +159,10 @@ func (m *Mquery) RefreshChecksum(
 					Str("mql", m.Mql).
 					Str("filter", query.Mql).
 					Msg("refresh checksum on filter of query , which should have been pre-compiled")
-				query.RefreshAsFilter(m.Mrn, schema)
+				_, err := query.RefreshAsFilter(m.Mrn, conf)
+				if err != nil {
+					return multierr.Wrap(err, "cannot refresh checksum for query, failed to compile")
+				}
 				if query.Checksum == "" {
 					return errors.New("cannot refresh checksum for query, its filters were not compiled")
 				}
@@ -200,8 +202,8 @@ func (m *Mquery) RefreshChecksum(
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, schema llx.Schema) (*llx.CodeBundle, error) {
-	return m.refreshChecksumAndType(queries, props, schema)
+func (m *Mquery) RefreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	return m.refreshChecksumAndType(queries, props, conf)
 }
 
 type QueryMap map[string]*Mquery
@@ -218,7 +220,7 @@ func (m QueryMap) GetQuery(ctx context.Context, mrn string) (*Mquery, error) {
 	return res, nil
 }
 
-func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, schema llx.Schema) (*llx.CodeBundle, error) {
+func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
 	localProps := map[string]*llx.Primitive{}
 	for i := range m.Props {
 		prop := m.Props[i]
@@ -246,10 +248,10 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 		if m.Mql != "" {
 			log.Warn().Str("msn", m.Mrn).Msg("a composed query is trying to define an mql snippet, which will be ignored")
 		}
-		return nil, m.RefreshChecksum(context.Background(), schema, QueryMap(queries).GetQuery)
+		return nil, m.RefreshChecksum(context.Background(), conf, QueryMap(queries).GetQuery)
 	}
 
-	bundle, err := m.Compile(localProps, schema)
+	bundle, err := m.Compile(localProps, conf)
 	if err != nil {
 		return bundle, multierr.Wrap(err, "failed to compile query '"+m.Mql+"'")
 	}
@@ -275,12 +277,12 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 		m.Type = string(types.Any)
 	}
 
-	return bundle, m.RefreshChecksum(context.Background(), schema, QueryMap(queries).GetQuery)
+	return bundle, m.RefreshChecksum(context.Background(), conf, QueryMap(queries).GetQuery)
 }
 
 // RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
-func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle, error) {
-	bundle, err := m.refreshChecksumAndType(nil, nil, schema)
+func (m *Mquery) RefreshAsFilter(mrn string, conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	bundle, err := m.refreshChecksumAndType(nil, nil, conf)
 	if err != nil {
 		return bundle, err
 	}
@@ -295,7 +297,7 @@ func (m *Mquery) RefreshAsFilter(mrn string, schema llx.Schema) (*llx.CodeBundle
 	}
 
 	if checksumInvalidated {
-		if err := m.RefreshChecksum(context.Background(), schema, nil); err != nil {
+		if err := m.RefreshChecksum(context.Background(), conf, nil); err != nil {
 			return nil, err
 		}
 	}
@@ -468,9 +470,9 @@ func (r *Remediation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Items)
 }
 
-func ChecksumFilters(queries []*Mquery, schema llx.Schema) (string, error) {
+func ChecksumFilters(queries []*Mquery, conf mqlc.CompilerConfig) (string, error) {
 	for i := range queries {
-		if _, err := queries[i].refreshChecksumAndType(nil, nil, schema); err != nil {
+		if _, err := queries[i].refreshChecksumAndType(nil, nil, conf); err != nil {
 			return "", multierr.Wrap(err, "failed to compile query")
 		}
 	}

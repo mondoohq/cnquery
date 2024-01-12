@@ -10,10 +10,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
 )
 
-var mock = testutils.LinuxMock()
+var (
+	mock = testutils.LinuxMock()
+	conf = mqlc.NewConfig(mock.Schema(), cnquery.DefaultFeatures)
+)
 
 func TestBundleLoad(t *testing.T) {
 	t.Run("load bundle from file", func(t *testing.T) {
@@ -56,8 +61,8 @@ func TestFilterQueriesWontCompile(t *testing.T) {
 	b2, err := BundleFromYAML([]byte(failingVariant))
 	require.NoError(t, err)
 	_, err2 := b2.CompileExt(context.Background(), BundleCompileConf{
-		Schema:        mock.Schema(),
-		RemoveFailing: false,
+		CompilerConfig: conf,
+		RemoveFailing:  false,
 	})
 	require.Error(t, err2)
 }
@@ -66,8 +71,8 @@ func TestFilterQueriesIgnoreError(t *testing.T) {
 	b, err := BundleFromYAML([]byte(failingVariant))
 	require.NoError(t, err)
 	bmap, err := b.CompileExt(context.Background(), BundleCompileConf{
-		Schema:        mock.Schema(),
-		RemoveFailing: true,
+		CompilerConfig: conf,
+		RemoveFailing:  true,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, bmap)

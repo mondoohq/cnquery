@@ -10,7 +10,9 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v9"
 	llx "go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/mrn"
 	"go.mondoo.com/cnquery/v9/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -92,7 +94,8 @@ func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, er
 	// validate that the queries compile and fill in checksums
 	for i := range req.Props {
 		prop := req.Props[i]
-		code, err := prop.RefreshChecksumAndType(s.runtime.Schema())
+		conf := mqlc.NewConfig(s.runtime.Schema(), cnquery.DefaultFeatures)
+		code, err := prop.RefreshChecksumAndType(conf)
 		if err != nil {
 			return nil, err
 		}
@@ -192,6 +195,8 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		return nil
 	}
 
+	compilerConfig := mqlc.NewConfig(s.runtime.Schema(), cnquery.DefaultFeatures)
+
 	var props map[string]*llx.Primitive
 	var propRefs map[string]string
 	if len(query.Props) != 0 {
@@ -220,7 +225,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 				continue
 			}
 
-			code, err := prop.Compile(nil, s.runtime.Schema())
+			code, err := prop.Compile(nil, compilerConfig)
 			if err != nil {
 				return multierr.Wrap(err, "failed to compile property for query "+query.Mrn)
 			}
@@ -243,7 +248,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		return nil
 	}
 
-	codeBundle, err := query.Compile(props, s.runtime.Schema())
+	codeBundle, err := query.Compile(props, compilerConfig)
 	if err != nil {
 		return err
 	}
@@ -303,7 +308,8 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schem
 		return "", NewAssetMatchError(entityMrn, "querypacks", "no-matching-packs", filters, &Filters{Items: supported})
 	}
 
-	sum, err := ChecksumFilters(matching, schema)
+	conf := mqlc.NewConfig(schema, cnquery.DefaultFeatures)
+	sum, err := ChecksumFilters(matching, conf)
 	if err != nil {
 		return "", err
 	}

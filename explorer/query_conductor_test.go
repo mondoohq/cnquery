@@ -8,18 +8,23 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v9"
+	"go.mondoo.com/cnquery/v9/mqlc"
 	"go.mondoo.com/cnquery/v9/providers"
 )
 
 func TestMatchFilters(t *testing.T) {
 	schema := providers.DefaultRuntime().Schema()
+	conf := mqlc.NewConfig(schema, cnquery.DefaultFeatures)
 
 	t.Run("one matching filter", func(t *testing.T) {
 		filters := NewFilters("true", "false")
-		filters.Compile("//owner", schema)
+		err := filters.Compile("//owner", conf)
+		require.NoError(t, err)
 
 		matching := []*Mquery{{Mql: "true"}}
-		ChecksumFilters(matching, schema)
+		_, err = ChecksumFilters(matching, conf)
+		require.NoError(t, err)
 
 		res, err := MatchFilters("assetMrn", matching, []*QueryPack{{ComputedFilters: filters}}, schema)
 		require.NoError(t, err)
@@ -28,12 +33,14 @@ func TestMatchFilters(t *testing.T) {
 
 	t.Run("no matching filter (matching is provided)", func(t *testing.T) {
 		filters := NewFilters("true", "false")
-		filters.Compile("//owner", schema)
+		err := filters.Compile("//owner", conf)
+		require.NoError(t, err)
 
 		matching := []*Mquery{{Mql: "0"}}
-		ChecksumFilters(matching, schema)
+		_, err = ChecksumFilters(matching, conf)
+		require.NoError(t, err)
 
-		_, err := MatchFilters("assetMrn", matching, []*QueryPack{{ComputedFilters: filters}}, schema)
+		_, err = MatchFilters("assetMrn", matching, []*QueryPack{{ComputedFilters: filters}}, schema)
 		assert.EqualError(t, err,
 			"rpc error: code = InvalidArgument desc = asset isn't supported by any querypacks\n"+
 				"querypacks support: false, true\n"+
@@ -42,9 +49,10 @@ func TestMatchFilters(t *testing.T) {
 
 	t.Run("no matching filter (matching is empty)", func(t *testing.T) {
 		filters := NewFilters("true", "false")
-		filters.Compile("//owner", schema)
+		err := filters.Compile("//owner", conf)
+		require.NoError(t, err)
 
-		_, err := MatchFilters("assetMrn", []*Mquery{}, []*QueryPack{{ComputedFilters: filters}}, schema)
+		_, err = MatchFilters("assetMrn", []*Mquery{}, []*QueryPack{{ComputedFilters: filters}}, schema)
 		assert.EqualError(t, err,
 			"rpc error: code = InvalidArgument desc = asset doesn't support any querypacks")
 	})

@@ -86,20 +86,22 @@ func (vm *varmap) len() int {
 	return len(vm.vars)
 }
 
-type compilerConfig struct {
+type CompilerConfig struct {
 	Schema          llx.Schema
 	UseAssetContext bool
 	Stats           CompilerStats
 }
 
-func (c *compilerConfig) EnableStats() {
-	c.Stats = &compilerStats{
-		ResourceFields: map[string]map[string]FieldStat{},
-	}
+func (c *CompilerConfig) EnableStats() {
+	c.Stats = newCompilerStats()
 }
 
-func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
-	return compilerConfig{
+func (c *CompilerConfig) EnableMultiStats() {
+	c.Stats = newCompilerMultiStats()
+}
+
+func NewConfig(schema llx.Schema, features cnquery.Features) CompilerConfig {
+	return CompilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
 		Stats:           compilerStatsNull{},
@@ -107,7 +109,7 @@ func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
 }
 
 type compiler struct {
-	compilerConfig
+	CompilerConfig
 
 	Result    *llx.CodeBundle
 	Binding   *variable
@@ -163,7 +165,7 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 	}
 
 	return compiler{
-		compilerConfig: c.compilerConfig,
+		CompilerConfig: c.CompilerConfig,
 		Result:         c.Result,
 		Binding:        binding,
 		blockDeps:      blockDeps,
@@ -984,7 +986,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 		fieldPath, fieldinfos, ok := c.findField(resource, id)
 		if ok {
 			fieldinfo := fieldinfos[len(fieldinfos)-1]
-			c.compilerConfig.Stats.CallField(resource.Name, fieldinfo)
+			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 && !fieldinfo.IsImplicitResource {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -1078,7 +1080,7 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		}
 
 		if fieldinfo != nil {
-			c.compilerConfig.Stats.CallField(resource.Name, fieldinfo)
+			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)
 
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
@@ -1148,7 +1150,7 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		calls = calls[1:]
 	}
 
-	c.compilerConfig.Stats.CallResource(resource.Name)
+	c.CompilerConfig.Stats.CallResource(resource.Name)
 
 	var call *parser.Call
 	if len(calls) > 0 && calls[0].Function != nil {
@@ -2195,7 +2197,7 @@ func getMinMondooVersion(schema llx.Schema, current string, resource string, fie
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
 	if conf.Schema == nil {
 		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
@@ -2221,7 +2223,7 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerC
 	}
 
 	c := compiler{
-		compilerConfig: conf,
+		CompilerConfig: conf,
 		Result:         codeBundle,
 		vars:           newvarmap(1<<32, nil),
 		parent:         nil,
@@ -2235,7 +2237,11 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerC
 }
 
 // Compile a code piece against a schema into chunky code
-func compile(input string, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
+func compile(input string, props map[string]*llx.Primitive, compilerConf CompilerConfig) (*llx.CodeBundle, error) {
+
+	conf := compilerConf
+	conf.Stats = compilerConf.Stats.CompileQuery(input)
+
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
@@ -2274,7 +2280,7 @@ func compile(input string, props map[string]*llx.Primitive, conf compilerConfig)
 	return res, nil
 }
 
-func Compile(input string, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
+func Compile(input string, props map[string]*llx.Primitive, conf CompilerConfig) (*llx.CodeBundle, error) {
 	// Note: we do not check the conf because it will get checked by the
 	// first CompileAST call. Do not use it earlier or add a check.
 
