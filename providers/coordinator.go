@@ -60,28 +60,28 @@ type RunningProvider struct {
 	// isShutdown is only used once during provider shutdown
 	isShutdown bool
 	// provider errors which are evaluated and printed during shutdown of the provider
-	err  error
-	lock sync.Mutex
+	err          error
+	lock         sync.Mutex
+	shutdownLock sync.Mutex
+	interval     time.Duration
+	gracePeriod  time.Duration
 }
 
 // initialize the heartbeat with the provider
 func (p *RunningProvider) heartbeat() error {
-	interval := 2 * time.Second
-	gracePeriod := 3 * time.Second
-
-	if err := p.doOneHeartbeat(interval + gracePeriod); err != nil {
+	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 		p.Shutdown()
 		return err
 	}
 
 	go func() {
 		for !p.isCloseOrShutdown() {
-			if err := p.doOneHeartbeat(interval + gracePeriod); err != nil {
+			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 				p.Shutdown()
 				break
 			}
 
-			time.Sleep(interval)
+			time.Sleep(p.interval)
 		}
 	}()
 
@@ -104,8 +104,8 @@ func (p *RunningProvider) doOneHeartbeat(t time.Duration) error {
 }
 
 func (p *RunningProvider) isCloseOrShutdown() bool {
-	p.lock.Lock()
-	defer p.lock.Unlock()
+	p.shutdownLock.Lock()
+	defer p.shutdownLock.Unlock()
 	return p.isClosed || p.isShutdown
 }
 
@@ -136,10 +136,16 @@ func (p *RunningProvider) Shutdown() error {
 		if p.Client != nil {
 			p.Client.Kill()
 		}
+		p.shutdownLock.Lock()
 		p.isClosed = true
+		p.isShutdown = true
+		p.shutdownLock.Unlock()
+	} else {
+		p.shutdownLock.Lock()
+		p.isShutdown = true
+		p.shutdownLock.Unlock()
 	}
 
-	p.isShutdown = true
 	return err
 }
 
@@ -229,11 +235,13 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 	}
 
 	res := &RunningProvider{
-		Name:   provider.Name,
-		ID:     provider.ID,
-		Plugin: raw.(pp.ProviderPlugin),
-		Client: client,
-		Schema: provider.Schema,
+		Name:        provider.Name,
+		ID:          provider.ID,
+		Plugin:      raw.(pp.ProviderPlugin),
+		Client:      client,
+		Schema:      provider.Schema,
+		interval:    2 * time.Second,
+		gracePeriod: 3 * time.Second,
 	}
 
 	if err := res.heartbeat(); err != nil {
