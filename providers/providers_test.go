@@ -50,8 +50,10 @@ func TestProviderShutdown(t *testing.T) {
 	}
 	err := s.heartbeat()
 	require.NoError(t, err)
+	require.False(t, s.isCloseOrShutdown())
 	// the shutdown here takes 10 seconds, whereas the heartbeat interval is every second.
 	// this means that this provider gets multiple heartbeats while shutting down
 	err = s.Shutdown()
 	require.NoError(t, err)
+	require.True(t, s.isCloseOrShutdown())
 }
