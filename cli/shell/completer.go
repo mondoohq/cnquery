@@ -5,9 +5,9 @@ package shell
 
 import (
 	"github.com/c-bata/go-prompt"
-	"go.mondoo.com/cnquery/v9"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/mqlc"
+	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/mqlc"
 )
 
 var completerSeparator = string([]byte{'.', ' '})

@@ -13,9 +13,9 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/reflow/ansi"
-	"go.mondoo.com/cnquery/v9/cli/components"
-	"go.mondoo.com/cnquery/v9/cli/theme"
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/cli/components"
+	"go.mondoo.com/cnquery/v10/cli/theme"
+	"go.mondoo.com/cnquery/v10/logger"
 )
 
 type ProgressOption = func(*modelMultiProgress)

@@ -7,7 +7,7 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)

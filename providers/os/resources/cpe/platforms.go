@@ -5,7 +5,7 @@ package cpe
 
 import (
 	"bytes"
-	"go.mondoo.com/cnquery/v9/utils/stringx"
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 	"regexp"
 	"strconv"
 	"text/template"

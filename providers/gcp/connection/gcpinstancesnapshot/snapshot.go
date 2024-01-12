@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers/os/id/gce"
+	"go.mondoo.com/cnquery/v10/providers/os/id/gce"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	googleoauth "golang.org/x/oauth2/google"

@@ -8,14 +8,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.com/cnquery/v9"
-	"go.mondoo.com/cnquery/v9/cli/execruntime"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v9/providers/os/detector"
-	"go.mondoo.com/cnquery/v9/providers/os/id"
-	"go.mondoo.com/cnquery/v9/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/networkinterface"
+	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/cli/execruntime"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v10/providers/os/detector"
+	"go.mondoo.com/cnquery/v10/providers/os/id"
+	"go.mondoo.com/cnquery/v10/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/networkinterface"
 )
 
 type SystemInfo struct {

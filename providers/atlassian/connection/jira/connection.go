@@ -9,8 +9,8 @@ import (
 	"os"
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
 const (

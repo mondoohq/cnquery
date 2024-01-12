@@ -6,11 +6,11 @@ package providers
 import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/cli/config"
-	"go.mondoo.com/cnquery/v9/logger"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/cli/config"
+	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 )
 
 func ProcessAssetCandidates(runtime *Runtime, connectRes *pp.ConnectRes, upstreamConfig *upstream.UpstreamConfig, platformID string) ([]*inventory.Asset, error) {

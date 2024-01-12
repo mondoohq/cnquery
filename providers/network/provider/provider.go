@@ -9,13 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/network/connection"
-	"go.mondoo.com/cnquery/v9/providers/network/resources"
-	"go.mondoo.com/cnquery/v9/providers/network/resources/domain"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/providers/network/connection"
+	"go.mondoo.com/cnquery/v10/providers/network/resources"
+	"go.mondoo.com/cnquery/v10/providers/network/resources/domain"
 )
 
 const (

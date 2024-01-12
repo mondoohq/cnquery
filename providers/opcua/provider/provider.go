@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/mozillazg/go-slugify"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/opcua/connection"
-	"go.mondoo.com/cnquery/v9/providers/opcua/resources"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/providers/opcua/connection"
+	"go.mondoo.com/cnquery/v10/providers/opcua/resources"
 )
 
 const ConnectionType = "opcua"

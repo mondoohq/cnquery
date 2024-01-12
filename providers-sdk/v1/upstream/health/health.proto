@@ -19,7 +19,7 @@ syntax = "proto3";
 
 package mondoo.cnquery.health.v1;
 
-option go_package = "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/health";
+option go_package = "go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/health";
 
 service Health { 
   rpc Check(HealthCheckRequest) returns (HealthCheckResponse);

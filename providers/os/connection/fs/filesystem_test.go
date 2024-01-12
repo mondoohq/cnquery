@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/fs"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/fs/fsutil"
-	"go.mondoo.com/cnquery/v9/providers/os/detector"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/fs/fsutil"
+	"go.mondoo.com/cnquery/v10/providers/os/detector"
 )
 
 func TestOsDetection(t *testing.T) {

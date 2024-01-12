@@ -10,8 +10,8 @@
 package inventory
 
 import (
-	upstream "go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	vault "go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	upstream "go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	vault "go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
 
-option go_package = "go.mondoo.com/cnquery/v9/explorer";
+option go_package = "go.mondoo.com/cnquery/v10/explorer";
 
 message Bundle {
   string owner_mrn = 1; 

@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v10/types"
 
 	functions "cloud.google.com/go/functions/apiv1"
 	"cloud.google.com/go/functions/apiv1/functionspb"
-	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v10/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )

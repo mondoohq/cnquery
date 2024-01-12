@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
 	"io"
 	"net/textproto"
 	"strings"

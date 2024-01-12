@@ -10,8 +10,8 @@
 package explorer
 
 import (
-	llx "go.mondoo.com/cnquery/v9/llx"
-	inventory "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	llx "go.mondoo.com/cnquery/v10/llx"
+	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"

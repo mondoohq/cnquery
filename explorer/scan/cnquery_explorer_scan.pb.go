@@ -10,8 +10,8 @@
 package scan
 
 import (
-	explorer "go.mondoo.com/cnquery/v9/explorer"
-	inventory "go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	explorer "go.mondoo.com/cnquery/v10/explorer"
+	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

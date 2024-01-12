@@ -11,7 +11,7 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/ssh/cat"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/cat"
 )
 
 type FS struct {

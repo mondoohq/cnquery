@@ -5,7 +5,7 @@ package llx
 
 import (
 	"github.com/Masterminds/semver"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/types"
 )
 
 func semverLT(left interface{}, right interface{}) *RawData {

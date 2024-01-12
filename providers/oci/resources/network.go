@@ -10,11 +10,11 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v9/providers/oci/connection"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v10/providers/oci/connection"
+	"go.mondoo.com/cnquery/v10/types"
 )
 
 func (o *mqlOciNetwork) id() (string, error) {

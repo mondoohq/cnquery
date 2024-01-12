@@ -15,11 +15,11 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	coreconf "go.mondoo.com/cnquery/v9/providers/core/config"
-	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/semver"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	coreconf "go.mondoo.com/cnquery/v10/providers/core/config"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 	"google.golang.org/grpc/status"
 )
 

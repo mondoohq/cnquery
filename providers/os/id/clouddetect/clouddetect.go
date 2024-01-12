@@ -7,11 +7,11 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/id/aws"
-	"go.mondoo.com/cnquery/v9/providers/os/id/azure"
-	"go.mondoo.com/cnquery/v9/providers/os/id/gcp"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/id/aws"
+	"go.mondoo.com/cnquery/v10/providers/os/id/azure"
+	"go.mondoo.com/cnquery/v10/providers/os/id/gcp"
 )
 
 type (

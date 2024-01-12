@@ -7,8 +7,8 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/providers/gitlab"
-option go_package = "go.mondoo.com/cnquery/v9/providers/gitlab/resources"
+option go_package = "go.mondoo.com/cnquery/v10/providers/gitlab/resources"
 
 // GitLab group
 gitlab.group @defaults("name visibility webURL") {

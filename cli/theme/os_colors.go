@@ -10,8 +10,8 @@ import (
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v9/cli/printer"
-	"go.mondoo.com/cnquery/v9/cli/theme/colors"
+	"go.mondoo.com/cnquery/v10/cli/printer"
+	"go.mondoo.com/cnquery/v10/cli/theme/colors"
 )
 
 // OperatingSystemTheme for unix shell

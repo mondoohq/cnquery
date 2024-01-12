@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/logger"
 )
 
 var teamsReport = `

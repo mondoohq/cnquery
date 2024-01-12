@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/oci/connection"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/oci/connection"
 )
 
 func (o *mqlOci) id() (string, error) {

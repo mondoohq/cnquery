@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/uptime"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/uptime"
 )
 
 func TestLinuxUptime(t *testing.T) {

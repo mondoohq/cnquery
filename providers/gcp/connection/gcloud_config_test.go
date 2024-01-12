@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"go.mondoo.com/cnquery/v9/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

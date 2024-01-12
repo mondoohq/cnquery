@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 // MacOSIdProvider read the operating system id by calling

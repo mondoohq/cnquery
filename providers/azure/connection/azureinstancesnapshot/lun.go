@@ -11,7 +11,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 )
 
 type deviceInfo struct {

@@ -13,12 +13,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
-	"go.mondoo.com/cnquery/v9"
-	"go.mondoo.com/cnquery/v9/checksums"
-	llx "go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/mqlc"
-	"go.mondoo.com/cnquery/v9/mrn"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/checksums"
+	llx "go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/mqlc"
+	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"sigs.k8s.io/yaml"
 )
 

@@ -8,14 +8,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/aws/connection"
-	"go.mondoo.com/cnquery/v9/providers/aws/connection/awsec2ebsconn"
-	"go.mondoo.com/cnquery/v9/providers/aws/resources"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/providers/aws/connection"
+	"go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn"
+	"go.mondoo.com/cnquery/v10/providers/aws/resources"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 const (

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/providers/network"
-option go_package = "go.mondoo.com/cnquery/v9/providers/network/resources"
+option go_package = "go.mondoo.com/cnquery/v10/providers/network/resources"
 
 // Socket
 socket @defaults("protocol port address") {

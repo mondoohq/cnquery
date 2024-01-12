@@ -8,14 +8,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils/mockprovider/resources"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils/mockprovider/resources"
 )
 
 var Config = plugin.Provider{
 	Name:       "mock",
-	ID:         "go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils/mockprovider",
+	ID:         "go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils/mockprovider",
 	Version:    "0.0.0",
 	Connectors: []plugin.Connector{},
 }

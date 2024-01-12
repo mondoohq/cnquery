@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
 type ConnectionType string

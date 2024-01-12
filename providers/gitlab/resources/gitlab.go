@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/xanzy/go-gitlab"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/gitlab/connection"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/gitlab/connection"
 )
 
 func (g *mqlGitlabGroup) id() (string, error) {

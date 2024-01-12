@@ -4,11 +4,11 @@
 package resources
 
 import (
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/windows"
 )
 
 func (w *mqlWindowsFirewallProfile) id() (string, error) {

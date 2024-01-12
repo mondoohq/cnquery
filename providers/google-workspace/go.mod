@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v9/providers/google-workspace
+module go.mondoo.com/cnquery/v10/providers/google-workspace
 
-replace go.mondoo.com/cnquery/v9 => ../..
+replace go.mondoo.com/cnquery/v10 => ../..
 
 go 1.21
 
@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v9 v9.14.0
+	go.mondoo.com/cnquery/v10 v10.0.0
 	golang.org/x/oauth2 v0.16.0
 	google.golang.org/api v0.156.0
 )

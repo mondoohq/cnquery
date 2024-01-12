@@ -21,7 +21,7 @@
       "connections": [
         {
           "url": "local://",
-          "provider": "go.mondoo.com/cnquery/v9/providers/os",
+          "provider": "go.mondoo.com/cnquery/v10/providers/os",
           "connector": "local",
           "version": ""
         },

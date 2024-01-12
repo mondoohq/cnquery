@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/explorer"
+	"go.mondoo.com/cnquery/v10/explorer"
 )
 
 type wrapAsset struct {

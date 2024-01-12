@@ -9,11 +9,11 @@ import (
 	"os"
 	"path"
 
-	"go.mondoo.com/cnquery/v9/mrn"
+	"go.mondoo.com/cnquery/v10/mrn"
 
 	"go.mondoo.com/ranger-rpc"
 
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
@@ -26,7 +26,7 @@ const (
 	CollectionIDQueryPacks = "querypacks"
 )
 
-var tracer = otel.Tracer("go.mondoo.com/cnquery/v9/explorer")
+var tracer = otel.Tracer("go.mondoo.com/cnquery/v10/explorer")
 
 func NewQueryPackMrn(namespace string, uid string) string {
 	m := &mrn.MRN{

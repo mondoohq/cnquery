@@ -11,8 +11,8 @@ import (
 
 	vrs "github.com/hashicorp/go-version"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9"
-	"go.mondoo.com/cnquery/v9/llx"
+	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/llx"
 )
 
 type query struct {

@@ -7,10 +7,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v9/providers/azure/connection/auth"
-	"go.mondoo.com/cnquery/v9/providers/azure/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v10/providers/azure/connection/auth"
+	"go.mondoo.com/cnquery/v10/providers/azure/connection/shared"
 )
 
 const (

@@ -9,7 +9,7 @@ package windows
 import (
 	"runtime"
 
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"golang.org/x/sys/windows/registry"
 )
 

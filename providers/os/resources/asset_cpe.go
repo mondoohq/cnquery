@@ -5,9 +5,9 @@ package resources
 
 import (
 	"github.com/facebookincubator/nvdtools/wfn"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
 	"strings"
 )
 

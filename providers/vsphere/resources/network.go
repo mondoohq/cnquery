@@ -7,8 +7,8 @@ import (
 	"errors"
 	"reflect"
 
-	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVswitchStandardInternal struct {

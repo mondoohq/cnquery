@@ -6,8 +6,8 @@ package mqlc
 import (
 	"fmt"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
 // An Invariant is a condition that we expect compiled code to hold.

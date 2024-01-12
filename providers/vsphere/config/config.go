@@ -4,9 +4,9 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/provider"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/provider"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/resources"
 )
 
 var Config = plugin.Provider{

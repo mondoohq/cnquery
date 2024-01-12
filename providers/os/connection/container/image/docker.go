@@ -12,7 +12,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/container/cache"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
 )
 
 type ShaReference struct {

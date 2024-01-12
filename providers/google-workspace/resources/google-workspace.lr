@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/providers/google-workspace"
-option go_package = "go.mondoo.com/cnquery/v9/providers/google-workspace/resources"
+option go_package = "go.mondoo.com/cnquery/v10/providers/google-workspace/resources"
 
 // Google Workspace
 googleworkspace {

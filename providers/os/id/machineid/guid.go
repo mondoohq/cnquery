@@ -5,9 +5,9 @@ package machineid
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/id/platformid"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/id/platformid"
 )
 
 func MachineId(conn shared.Connection, p *inventory.Platform) (string, error) {

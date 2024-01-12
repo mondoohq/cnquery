@@ -8,9 +8,9 @@ import (
 	"errors"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
 
 func (m *mqlMicrosoftGroup) id() (string, error) {

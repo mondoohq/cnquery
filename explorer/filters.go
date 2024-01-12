@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/checksums"
-	"go.mondoo.com/cnquery/v9/mqlc"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/checksums"
+	"go.mondoo.com/cnquery/v10/mqlc"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets

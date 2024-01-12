@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/connection/jira"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/jira"
 )
 
 func (a *mqlAtlassianJira) id() (string, error) {

@@ -6,7 +6,7 @@
 
 package platformid
 
-import "go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+import "go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 
 func windowsMachineId(conn shared.Connection) (string, error) {
 	return PowershellWindowsMachineId(conn)

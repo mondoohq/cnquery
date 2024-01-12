@@ -10,13 +10,13 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/logger"
 	"sigs.k8s.io/yaml"
 
-	"go.mondoo.com/cnquery/v9/cli/printer"
-	"go.mondoo.com/cnquery/v9/cli/theme/colors"
-	"go.mondoo.com/cnquery/v9/explorer"
-	"go.mondoo.com/cnquery/v9/shared"
+	"go.mondoo.com/cnquery/v10/cli/printer"
+	"go.mondoo.com/cnquery/v10/cli/theme/colors"
+	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v10/shared"
 )
 
 type Format byte

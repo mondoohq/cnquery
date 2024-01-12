@@ -11,9 +11,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"

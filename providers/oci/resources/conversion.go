@@ -6,7 +6,7 @@ package resources
 import (
 	"time"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
 )
 
 // parseTime parses RFC 3389 timestamps "2019-06-12T21:14:13.190Z"

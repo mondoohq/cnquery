@@ -5,7 +5,7 @@ import "../../os/resources/os.lr"
 import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/providers/k8s"
-option go_package = "go.mondoo.com/cnquery/v9/providers/k8s/resources"
+option go_package = "go.mondoo.com/cnquery/v10/providers/k8s/resources"
 
 // Kubernetes cluster
 k8s {

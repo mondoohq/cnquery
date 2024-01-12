@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/types"
 )
 
 // RawData is an internal track of raw data that can be cast to the appropriate types

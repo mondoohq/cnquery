@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/windows"
 )
 
 func (p *mqlAuditpol) list() ([]interface{}, error) {

@@ -4,8 +4,8 @@
 package main
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/cnquery/v9/providers/arista/config"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin/gen"
+	"go.mondoo.com/cnquery/v10/providers/arista/config"
 )
 
 func main() {

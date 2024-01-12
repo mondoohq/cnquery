@@ -8,7 +8,7 @@ package cnquery.explorer.scan;
 import "explorer/cnquery_explorer.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
 
-option go_package = "go.mondoo.com/cnquery/v9/explorer/scan";
+option go_package = "go.mondoo.com/cnquery/v10/explorer/scan";
 
 message Job {
   cnquery.providers.v1.Inventory inventory = 1;

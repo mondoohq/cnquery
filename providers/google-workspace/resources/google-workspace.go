@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/v9/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v10/providers/google-workspace/connection"
 	directory "google.golang.org/api/admin/directory/v1"
 	reports "google.golang.org/api/admin/reports/v1"
 	cloudidentity "google.golang.org/api/cloudidentity/v1"

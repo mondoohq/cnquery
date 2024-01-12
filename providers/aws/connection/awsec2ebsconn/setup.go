@@ -15,7 +15,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	awsec2ebstypes "go.mondoo.com/cnquery/v9/providers/aws/connection/awsec2ebsconn/types"
+	awsec2ebstypes "go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn/types"
 )
 
 func (c *AwsEbsConnection) Validate(ctx context.Context) (*types.Instance, *awsec2ebstypes.VolumeInfo, *awsec2ebstypes.SnapshotId, error) {

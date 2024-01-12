@@ -4,8 +4,8 @@
 package snapshot
 
 import (
-	"go.mondoo.com/cnquery/v9/providers/os/connection/local"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 type LocalCommandRunner struct {
