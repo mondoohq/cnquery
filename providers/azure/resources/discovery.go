@@ -19,7 +19,7 @@ import (
 
 const (
 	SubscriptionLabel = "azure.mondoo.com/subscription"
-	RegionLabel       = "mondoo.com/region"
+	LocationLabel     = "mondoo.com/location"
 	InstanceLabel     = "mondoo.com/instance"
 
 	DiscoveryAuto          = "auto"
@@ -41,7 +41,7 @@ const (
 type azureObject struct {
 	subscription string
 	id           string
-	region       string
+	location     string
 	service      string
 	objectType   string
 }
@@ -201,7 +201,7 @@ func discoverInstancesApi(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       vm.Location.Data,
+					location:     vm.Location.Data,
 					service:      "compute",
 					objectType:   "vm-api",
 				},
@@ -248,7 +248,7 @@ func discoverInstances(runtime *plugin.Runtime, subsWithConfigs []subWithConfig)
 				azureObject: azureObject{
 					id:           vm.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       vm.Location.Data,
+					location:     vm.Location.Data,
 					service:      "compute",
 					objectType:   "vm",
 				},
@@ -299,7 +299,7 @@ func discoverSqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConfig
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       s.Location.Data,
+					location:     s.Location.Data,
 					service:      "sql",
 					objectType:   "server",
 				},
@@ -332,7 +332,7 @@ func discoverMySqlServers(runtime *plugin.Runtime, subsWithConfigs []subWithConf
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       s.Location.Data,
+					location:     s.Location.Data,
 					service:      "mysql",
 					objectType:   "server",
 				},
@@ -365,7 +365,7 @@ func discoverPostgresqlServers(runtime *plugin.Runtime, subsWithConfigs []subWit
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       s.Location.Data,
+					location:     s.Location.Data,
 					service:      "postgresql",
 					objectType:   "server",
 				},
@@ -398,7 +398,7 @@ func discoverMariadbServers(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       s.Location.Data,
+					location:     s.Location.Data,
 					service:      "mariadb",
 					objectType:   "server",
 				},
@@ -431,7 +431,7 @@ func discoverStorageAccounts(runtime *plugin.Runtime, subsWithConfig []subWithCo
 				azureObject: azureObject{
 					id:           a.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       a.Location.Data,
+					location:     a.Location.Data,
 					service:      "storage",
 					objectType:   "account",
 				},
@@ -470,7 +470,7 @@ func discoverStorageAccountsContainers(runtime *plugin.Runtime, subsWithConfig [
 					azureObject: azureObject{
 						id:           c.Id.Data,
 						subscription: *subWithConfig.sub.SubscriptionID,
-						region:       a.Location.Data,
+						location:     a.Location.Data,
 						service:      "storage",
 						objectType:   "container",
 					},
@@ -504,7 +504,7 @@ func discoverSecurityGroups(runtime *plugin.Runtime, subsWithConfigs []subWithCo
 				azureObject: azureObject{
 					id:           s.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       s.Location.Data,
+					location:     s.Location.Data,
 					service:      "network",
 					objectType:   "security-group",
 				},
@@ -537,7 +537,7 @@ func discoverVaults(runtime *plugin.Runtime, subsWithConfigs []subWithConfig) ([
 				azureObject: azureObject{
 					id:           v.Id.Data,
 					subscription: *subWithConfig.sub.SubscriptionID,
-					region:       v.Location.Data,
+					location:     v.Location.Data,
 					service:      "keyvault",
 					objectType:   "vault",
 				},
@@ -725,7 +725,7 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	if l == nil {
 		l = make(map[string]string)
 	}
-	l[RegionLabel] = o.azureObject.region
+	l[LocationLabel] = o.azureObject.location
 	l[SubscriptionLabel] = o.azureObject.subscription
 	return l
 }
