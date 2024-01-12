@@ -344,7 +344,7 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   properties dict
 }
 
-// Microsoft 365 ExchangeOnline
+// Microsoft 365 Exchange Online
 ms365.exchangeonline {
   // List of malware filter policies
   malwareFilterPolicy []dict
@@ -386,7 +386,7 @@ ms365.exchangeonline {
   sharedMailboxes []ms365.exchangeonline.exoMailbox
 }
 
-// Microsoft 365 ExchangeOnline ExternalSender
+// Microsoft 365 Exchange Online External Sender
 private ms365.exchangeonline.externalSender {
   // The identity of the external sender
   identity string
@@ -396,11 +396,11 @@ private ms365.exchangeonline.externalSender {
   enabled bool
 }
 
-// Microsoft 365 ExchangeOnline Mailbox
+// Microsoft 365 Exchange Online Mailbox
 private ms365.exchangeonline.exoMailbox {
   // The identity of the mailbox
   identity string
-  // The user linked to this mailbox.
+  // The user linked to this mailbox
   user() microsoft.user
   // The identity of the external object linked to this mailbox
   externalDirectoryObjectId string
