@@ -190,7 +190,6 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 
 		log.Info().Msg("no provider specified, defaulting to local. Use --help to see all providers.")
 	}
-	cmd.Command.Short = cmd.Action + connector.Short
 
 	setConnector(provider, connector, cmd.Run, cmd.Command)
 }
