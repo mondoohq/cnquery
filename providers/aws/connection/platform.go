@@ -42,10 +42,10 @@ func getTitleForPlatformName(name string) string {
 		return "AWS VPC"
 	case "aws-security-group":
 		return "AWS Security Group"
-	case "aws-ec2-volume":
-		return "AWS EC2 Volume"
-	case "aws-ec2-snapshot":
-		return "AWS EC2 Snapshot"
+	case "aws-ebs-volume":
+		return "AWS EBS Volume"
+	case "aws-ebs-snapshot":
+		return "AWS EBS Snapshot"
 	case "aws-iam-user":
 		return "AWS IAM User"
 	case "aws-iam-group":
