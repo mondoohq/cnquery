@@ -209,7 +209,7 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 		},
-		Logger: &hclogger{},
+		Logger: &hclogger{Logger: log.Logger},
 		Stderr: os.Stderr,
 	})
 
