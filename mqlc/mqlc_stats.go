@@ -141,7 +141,18 @@ func newCompilerMultiStats() *compilerMultiStats {
 }
 
 func (c *compilerMultiStats) WalkSorted(f func(resource string, field string, info FieldStat)) {
-	panic("walking code on multi-stats not yet supported")
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	aggregate := newCompilerStats()
+	for _, v := range c.stats {
+		v.WalkSorted(func(resource, field string, info FieldStat) {
+			aggregate.CallResource(resource)
+			aggregate.ResourceFields[resource][field] = info
+		})
+	}
+
+	aggregate.WalkSorted(f)
 }
 
 func (c *compilerMultiStats) WalkCode(f func(code string, stats CompilerStats)) {
