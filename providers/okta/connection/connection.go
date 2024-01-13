@@ -6,12 +6,18 @@ package connection
 import (
 	"context"
 	"errors"
-
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
 )
+
+func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *OktaConnection {
+	return &OktaConnection{
+		id:    id,
+		asset: asset,
+	}
+}
 
 type OktaConnection struct {
 	id    uint32
