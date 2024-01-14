@@ -1707,7 +1707,7 @@ resources:
     fields:
       createdAt: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 10.0
     platform:
       name:
       - aws
@@ -1778,7 +1778,7 @@ resources:
       groups: {}
       id: {}
       loginProfile:
-        min_mondoo_version: latest
+        min_mondoo_version: 10.0
       name: {}
       passwordLastUsed: {}
       policies: {}
