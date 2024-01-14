@@ -17,6 +17,9 @@ var Config = plugin.Provider{
 		"go.mondoo.com/cnquery/providers/os",
 		"go.mondoo.com/cnquery/providers/k8s",
 		"go.mondoo.com/cnquery/providers/aws",
+		"go.mondoo.com/cnquery/v9/providers/os",
+		"go.mondoo.com/cnquery/v9/providers/k8s",
+		"go.mondoo.com/cnquery/v9/providers/aws",
 	},
 	Connectors: []plugin.Connector{
 		{
