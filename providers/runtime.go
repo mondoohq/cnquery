@@ -579,9 +579,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	providerConn := r.Provider.Instance.ID
 	crossProviderList := []string{
 		"go.mondoo.com/cnquery/providers/core",
-		"go.mondoo.com/cnquery/v9/providers/core", // for backwards compatibility
 		"go.mondoo.com/cnquery/providers/network",
-		"go.mondoo.com/cnquery/v9/providers/network", // for backwards compatibility
 	}
 
 	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
