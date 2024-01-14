@@ -256,7 +256,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 	if len(asset.Connections) > 0 && asset.Connections[0].Type == "ssh" {
-		// workaround to make sure we dont assign the aws platform to ec2 instances
+		// workaround to make sure we don't assign the aws platform to ec2 instances
 		return nil
 	}
 	if c, ok := conn.(*connection.AwsConnection); ok {

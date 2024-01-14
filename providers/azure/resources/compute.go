@@ -81,7 +81,7 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 
 func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	// id is a azure resource id
+	// id is a Azure resource ID
 	id := a.Id.Data
 	resourceID, err := ParseResourceID(id)
 	if err != nil {

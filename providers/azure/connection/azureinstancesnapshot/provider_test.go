@@ -74,7 +74,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, target, scanTarget.Target)
 		assert.Equal(t, DiskTargetType, scanTarget.TargetType)
 	})
-	t.Run("parse snapshot target with a fully qualifed Azure resource id", func(t *testing.T) {
+	t.Run("parse snapshot target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
 			instanceInfo: instanceInfo{
 				resourceGroup: "my-rg",
@@ -95,7 +95,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, "test-snp", scanTarget.Target)
 		assert.Equal(t, SnapshotTargetType, scanTarget.TargetType)
 	})
-	t.Run("parse instance target with a fully qualifed Azure resource id", func(t *testing.T) {
+	t.Run("parse instance target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
 			instanceInfo: instanceInfo{
 				resourceGroup: "my-rg",
@@ -116,7 +116,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, "debian", scanTarget.Target)
 		assert.Equal(t, InstanceTargetType, scanTarget.TargetType)
 	})
-	t.Run("parse disk target with a fully qualifed Azure resource id", func(t *testing.T) {
+	t.Run("parse disk target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
 			instanceInfo: instanceInfo{
 				resourceGroup: "my-rg",

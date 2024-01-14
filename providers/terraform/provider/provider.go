@@ -54,7 +54,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	// TODO: somewhere here, parse the args for the previous sub-commands
-	// perhaps set the conn.Type here dependeing on the args (like in the os provider)
+	// perhaps set the conn.Type here depending on the args (like in the os provider)
 	// and later on decide which thing to call based on the conn.Type
 	// below in this file we already have something similar:
 	// tc.Options["asset-type"] == "state"

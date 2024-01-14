@@ -103,7 +103,7 @@ func (v *mqlVulnmgmt) populateData() error {
 	mqlVulAdvisories := make([]interface{}, len(vulnReport.Advisories))
 	for i, a := range vulnReport.Advisories {
 		var parsedPublished *time.Time
-		var parsedModifed *time.Time
+		var parsedModified *time.Time
 		var err error
 		published, err := time.Parse(time.RFC3339, a.PublishedAt)
 		if err != nil {
@@ -115,7 +115,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			log.Debug().Str("date", a.ModifiedAt).Str("advisory", a.Id).Msg("could not parse modified date")
 		} else {
-			parsedModifed = &modified
+			parsedModified = &modified
 		}
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
 			"score":  llx.FloatData(float64(a.CvssScore.Value) / 10),
@@ -129,7 +129,7 @@ func (v *mqlVulnmgmt) populateData() error {
 			"title":       llx.StringData(a.Title),
 			"description": llx.StringData(a.Description),
 			"published":   llx.TimeDataPtr(parsedPublished),
-			"modified":    llx.TimeDataPtr(parsedModifed),
+			"modified":    llx.TimeDataPtr(parsedModified),
 			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {
@@ -141,7 +141,7 @@ func (v *mqlVulnmgmt) populateData() error {
 	mqlVulnCves := make([]interface{}, len(vulnReport.Cves))
 	for i, c := range vulnReport.Cves {
 		var parsedPublished *time.Time
-		var parsedModifed *time.Time
+		var parsedModified *time.Time
 		var err error
 		published, err := time.Parse(time.RFC3339, c.PublishedAt)
 		if err != nil {
@@ -153,7 +153,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			log.Debug().Str("date", c.ModifiedAt).Str("cve", c.Id).Msg("could not parse modified date")
 		} else {
-			parsedModifed = &modified
+			parsedModified = &modified
 		}
 		cvssScore, err := CreateResource(v.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
 			"score":  llx.FloatData(float64(c.CvssScore.Value) / 10),
@@ -166,7 +166,7 @@ func (v *mqlVulnmgmt) populateData() error {
 			"id":         llx.StringData(c.Id),
 			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
 			"published":  llx.TimeDataPtr(parsedPublished),
-			"modified":   llx.TimeDataPtr(parsedModifed),
+			"modified":   llx.TimeDataPtr(parsedModified),
 		})
 		if err != nil {
 			return err
