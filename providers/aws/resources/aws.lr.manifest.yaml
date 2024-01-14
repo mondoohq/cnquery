@@ -1703,6 +1703,14 @@ resources:
     platform:
       name:
       - aws
+  aws.iam.loginProfile:
+    fields:
+      createdAt: {}
+    is_private: true
+    min_mondoo_version: 10.0
+    platform:
+      name:
+      - aws
   aws.iam.policy:
     docs:
       desc: |
@@ -1769,6 +1777,8 @@ resources:
       createDate: {}
       groups: {}
       id: {}
+      loginProfile:
+        min_mondoo_version: 10.0
       name: {}
       passwordLastUsed: {}
       policies: {}
