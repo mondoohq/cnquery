@@ -1924,7 +1924,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	}
 
 	// This block holds all the data and function chunks used
-	// for the predicate(s) of the .all()/.none()/... fucntion
+	// for the predicate(s) of the .all()/.none()/... function
 	var assessmentBlock *llx.Block
 	// find the referenced block for the where function
 	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {

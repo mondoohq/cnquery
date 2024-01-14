@@ -259,7 +259,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		return []Package{}, nil
 	}
 
-	type pwershellUninstallEntry struct {
+	type plwershellUninstallEntry struct {
 		DisplayName     string `json:"DisplayName"`
 		DisplayVersion  string `json:"DisplayVersion"`
 		Publisher       string `json:"Publisher"`
@@ -268,7 +268,7 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		UninstallString string `json:"UninstallString"`
 	}
 
-	var entries []pwershellUninstallEntry
+	var entries []plwershellUninstallEntry
 	err = json.Unmarshal(data, &entries)
 	if err != nil {
 		return nil, err

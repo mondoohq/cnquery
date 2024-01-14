@@ -191,7 +191,7 @@ func pythonPackageDetailsWithDependenciesToResource(
 		}
 		res, err := pythonPackageDetailsWithDependenciesToResource(runtime, depPyPkgDetails, pythonPgkDetailsList, pythonPackageResourceMap)
 		if err != nil {
-			log.Warn().Err(err).Msg("failed to create python packag resource")
+			log.Warn().Err(err).Msg("failed to create python package resource")
 			continue
 		}
 		dependencies = append(dependencies, res)
@@ -219,7 +219,7 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		return
 	}
 	for _, dEntry := range fileList {
-		// only process files/directories that might acctually contain
+		// only process files/directories that might actually contain
 		// the data we're looking for
 		if !strings.HasSuffix(dEntry.Name(), ".dist-info") &&
 			!strings.HasSuffix(dEntry.Name(), ".egg-info") {

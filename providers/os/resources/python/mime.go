@@ -78,7 +78,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 }
 
 func newPythonPackageUrl(name string, version string, homepage string) string {
-	// ensure the name is accoring to the PURL spec
+	// ensure the name is according to the PURL spec
 	// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#pypi
 	name = strings.ReplaceAll(name, "_", "-")
 

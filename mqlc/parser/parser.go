@@ -246,7 +246,7 @@ func (p *parser) flushComments() string {
 	return res
 }
 
-// rewind pushes the current token back on the stack and replaces it iwth the given token
+// rewind pushes the current token back on the stack and replaces it with the given token
 func (p *parser) rewind(token lexer.Token) {
 	p.nextTokens = append(p.nextTokens, p.token)
 	p.token = token

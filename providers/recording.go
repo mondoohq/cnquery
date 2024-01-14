@@ -147,7 +147,7 @@ func (n *readOnlyRecording) Save() error {
 
 func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
-	// we are severly lacking connection IDs.
+	// we are severely lacking connection IDs.
 	found, _ := n.findAssetConnID(asset, conf)
 	if found != -1 {
 		n.assets[connectionID] = &n.Assets[found]

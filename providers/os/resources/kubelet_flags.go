@@ -67,7 +67,7 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 
 // mergeDeprecatedFlagsIntoConfig merges deprecated cli flags into the kubelet config
 // It only takes care of deprecated flags.
-// This is a seperate function in hope we can get rid of it in the future
+// This is a separate function in hope we can get rid of it in the future
 // The list of flags is taken from
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/cmd/kubelet/app/options/options.go
 func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {

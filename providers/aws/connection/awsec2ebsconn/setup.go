@@ -260,7 +260,7 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 					time.Sleep(30 * time.Second) // if it says it doesn't exist, even though we just created it, then it must still be busy creating
 					notFoundTimeout++
 					if notFoundTimeout > 10 {
-						return nil, errors.New("timed out wating for created snapshot to complete; snapshot not found")
+						return nil, errors.New("timed out waiting for created snapshot to complete; snapshot not found")
 					}
 					continue
 				}
@@ -273,7 +273,7 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 		snapProgress = *snaps.Snapshots[0].Progress
 		snapState = snaps.Snapshots[0].State
 		if timeout > 24 { // 4 minutes
-			return nil, errors.New("timed out wating for created snapshot to complete")
+			return nil, errors.New("timed out waiting for created snapshot to complete")
 		}
 	}
 	log.Info().Str("progress", snapProgress).Msg("snapshot complete")

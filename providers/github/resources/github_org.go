@@ -336,8 +336,8 @@ func (g *mqlGithubOrganization) webhooks() ([]interface{}, error) {
 }
 
 type mqlGithubPackageInternal struct {
-	pacakgeRepositry string
-	parentResource   *mqlGithubOrganization
+	packageRepository string
+	parentResource    *mqlGithubOrganization
 }
 
 func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
@@ -401,7 +401,7 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 			// NOTE: we need to fetch repo separately because the Github repo object is not complete, instead of
 			// call the repo fetching all the time, we make this lazy loading
 			if p.Repository != nil && p.Repository.Name != nil {
-				pkg.pacakgeRepositry = convert.ToString(p.Repository.Name)
+				pkg.packageRepository = convert.ToString(p.Repository.Name)
 			}
 			res = append(res, pkg)
 		}
@@ -413,11 +413,11 @@ func (g *mqlGithubOrganization) packages() ([]interface{}, error) {
 func (g *mqlGithubPackage) repository() (*mqlGithubRepository, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
-	if g.pacakgeRepositry == "" {
+	if g.packageRepository == "" {
 		return nil, errors.New("could not load the repository")
 	}
 
-	repoName := g.pacakgeRepositry
+	repoName := g.packageRepository
 
 	if g.Owner.Error != nil {
 		return nil, g.Owner.Error

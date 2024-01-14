@@ -406,7 +406,7 @@ func readSSHConfig(cc *inventory.Config) *inventory.Config {
 		entry, err := cfg.Get(host, "IdentityFile")
 
 		// TODO: the ssh_config uses os/home but instead should be use go-homedir, could become a compile issue
-		// TODO: the problem is that the lib returns defaults and we cannot properly distingush
+		// TODO: the problem is that the lib returns defaults and we cannot properly distinguish
 		if err == nil && ssh_config.Default("IdentityFile") != entry {
 			// commonly ssh config included paths like ~
 			expandedPath, err := homedir.Expand(entry)

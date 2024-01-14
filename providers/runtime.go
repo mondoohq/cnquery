@@ -385,7 +385,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		Field:      field,
 	})
 	if err != nil {
-		// Recoverable errors can continue with the exeuction,
+		// Recoverable errors can continue with the execution,
 		// they only store errors in the place of actual data.
 		// Every other error is thrown up the chain.
 		handled, err := r.handlePluginError(err, provider)

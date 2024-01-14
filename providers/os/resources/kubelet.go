@@ -99,7 +99,7 @@ func createConfiguration(kubeletFlags map[string]interface{}, configFileContent 
 		return nil, fmt.Errorf("error when converting KubeletConfig into dict: %v", err)
 	}
 
-	// JSON marhsalling of KubeletConfiguration does not include fields with zero/null values
+	// JSON marshalling of KubeletConfiguration does not include fields with zero/null values
 	// But "0" is an important value for the kubelet, so we need to add it manually
 	if kubeletConfig.ReadOnlyPort == 0 {
 		options["readOnlyPort"] = 0.0

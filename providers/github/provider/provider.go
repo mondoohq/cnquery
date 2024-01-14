@@ -177,7 +177,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 
 	repoOpt := conn.Conf.Options["repository"]
 	ownerOpt := conn.Conf.Options["owner"]
-	// try and parse the repo only if the owner isnt explicitly set
+	// try and parse the repo only if the owner isn't explicitly set
 	if repoOpt != "" && ownerOpt == "" {
 		repoParts := strings.Split(repoOpt, "/")
 		if len(repoParts) > 1 {

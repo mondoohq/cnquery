@@ -51,7 +51,7 @@ var rootCmd = &cobra.Command{
 
 		res, err := goGen(configs)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to generate go code for provideer defaults")
+			log.Fatal().Err(err).Msg("failed to generate go code for provider defaults")
 		}
 
 		if err = os.WriteFile(outPath, res, 0o644); err != nil {

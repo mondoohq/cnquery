@@ -33,7 +33,7 @@ ConvertTo-Json -Depth 3 -Compress $securityProducts
 `
 
 // powershellBitlockerVolumeStatus is the struct to parse the powershell result
-type powershelSecurityProducts struct {
+type powershellSecurityProducts struct {
 	Firewall    []powershellSecurityProduct
 	AntiVirus   []powershellSecurityProduct
 	AntiSpyware []powershellSecurityProduct
@@ -161,7 +161,7 @@ func GetSecurityProducts(p shared.Connection) ([]securityProduct, error) {
 }
 
 func ParseWindowsSecurityProducts(r io.Reader) ([]securityProduct, error) {
-	var psSecProducts powershelSecurityProducts
+	var psSecProducts powershellSecurityProducts
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err

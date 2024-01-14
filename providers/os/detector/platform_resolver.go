@@ -76,7 +76,7 @@ func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.C
 		for _, c := range r.Children {
 			detected, resolved := c.resolvePlatform(pf, conn)
 			if resolved {
-				// add family hieracy
+				// add family hierarchy
 				detected.Family = append(pf.Family, r.Name)
 				return detected, resolved
 			}
