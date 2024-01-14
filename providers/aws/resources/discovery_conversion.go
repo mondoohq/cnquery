@@ -128,9 +128,9 @@ func getPlatformName(awsObject awsObject) string {
 		case "securitygroup":
 			return "aws-security-group"
 		case "volume":
-			return "aws-ec2-volume"
+			return "aws-ebs-volume"
 		case "snapshot":
-			return "aws-ec2-snapshot"
+			return "aws-ebs-snapshot"
 		case "instance":
 			return "aws-ec2-instance"
 		}
