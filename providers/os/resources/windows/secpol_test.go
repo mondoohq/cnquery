@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
 )
 
 func TestParseSecpol(t *testing.T) {

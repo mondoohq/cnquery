@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/mqlc"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/sortx"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/mqlc"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/sortx"
 	"golang.org/x/exp/slices"
 )
 

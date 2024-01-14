@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v9/checksums"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/network/connection"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/sortx"
+	"go.mondoo.com/cnquery/v10/checksums"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/network/connection"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/sortx"
 )
 
 type mqlHttpGetInternal struct {

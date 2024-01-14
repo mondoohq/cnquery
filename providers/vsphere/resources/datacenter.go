@@ -5,10 +5,10 @@ package resources
 
 import (
 	"github.com/vmware/govmomi/object"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/resources/resourceclient"
 )
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]interface{}, error) {

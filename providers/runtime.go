@@ -10,13 +10,14 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 	"google.golang.org/grpc/status"
 )
 
@@ -576,8 +577,15 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	}
 
 	providerConn := r.Provider.Instance.ID
-	if info.Provider != providerConn && info.Provider != "go.mondoo.com/cnquery/v9/providers/core" && info.Provider != "go.mondoo.com/cnquery/v9/providers/network" {
-		return nil, nil, errors.New("incorrect provider for asset, not adding")
+	crossProviderList := []string{
+		"go.mondoo.com/cnquery/providers/core",
+		"go.mondoo.com/cnquery/v9/providers/core", // for backwards compatibility
+		"go.mondoo.com/cnquery/providers/network",
+		"go.mondoo.com/cnquery/v9/providers/network", // for backwards compatibility
+	}
+
+	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
+		return nil, nil, errors.New("incorrect provider for asset, not adding " + info.Provider)
 	}
 
 	res, err := r.addProvider(info.Provider, false)

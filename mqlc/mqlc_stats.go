@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v10/types"
 )
 
 type CompilerStats interface {

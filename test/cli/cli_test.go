@@ -6,7 +6,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v9/apps/cnquery/cmd"
+	"go.mondoo.com/cnquery/v10/apps/cnquery/cmd"
 	"os"
 	"sync"
 	"testing"

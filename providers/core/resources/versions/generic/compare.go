@@ -7,10 +7,10 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/apk"
-	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/deb"
-	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/rpm"
-	"go.mondoo.com/cnquery/v9/providers/core/resources/versions/semver"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/apk"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/deb"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/rpm"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 )
 
 func Compare(format, a, b string) (int, error) {

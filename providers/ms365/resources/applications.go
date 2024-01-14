@@ -7,10 +7,10 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v9/types"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v10/types"
 )
 
 func (m *mqlMicrosoftApplication) id() (string, error) {

@@ -10,14 +10,14 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v9/providers/oci/connection"
-	"go.mondoo.com/cnquery/v9/providers/oci/resources"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/providers/oci/connection"
+	"go.mondoo.com/cnquery/v10/providers/oci/resources"
 )
 
 const ConnectionType = "oci"

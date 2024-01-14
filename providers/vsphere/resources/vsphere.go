@@ -8,10 +8,10 @@ import (
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/connection"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/resources/resourceclient"
 )
 
 func getClientInstance(conn *connection.VsphereConnection) *resourceclient.Client {

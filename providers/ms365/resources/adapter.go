@@ -8,7 +8,7 @@ import (
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdkgo "github.com/microsoftgraph/msgraph-sdk-go"
-	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
 
 var DefaultMSGraphScopes = []string{connection.DefaultMSGraphScope}

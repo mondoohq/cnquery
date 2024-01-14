@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/slack"
-option go_package = "go.mondoo.com/cnquery/v9/providers/slack/resources"
+option provider = "go.mondoo.com/cnquery/providers/slack"
+option go_package = "go.mondoo.com/cnquery/v10/providers/slack/resources"
 
 // Slack
 slack {

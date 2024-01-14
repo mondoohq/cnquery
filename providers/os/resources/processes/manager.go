@@ -6,10 +6,10 @@ package processes
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 type OSProcess struct {

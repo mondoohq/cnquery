@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/logger"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/gql"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream/mvd/cvss"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/gql"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd/cvss"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 // TODO: generalize this kind of function

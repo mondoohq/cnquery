@@ -8,7 +8,7 @@ import (
 
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
-	"go.mondoo.com/cnquery/v9/providers/opcua/connection"
+	"go.mondoo.com/cnquery/v10/providers/opcua/connection"
 )
 
 func (o *mqlOpcua) id() (string, error) {

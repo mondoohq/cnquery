@@ -4,8 +4,8 @@
 import "../../core/resources/core.lr"
 import "../../network/resources/network.lr"
 
-option provider = "go.mondoo.com/cnquery/v9/providers/os"
-option go_package = "go.mondoo.com/cnquery/v9/providers/os/resources"
+option provider = "go.mondoo.com/cnquery/providers/os"
+option go_package = "go.mondoo.com/cnquery/v10/providers/os/resources"
 
 alias os.base.command = command
 alias os.base.user = user
@@ -15,7 +15,6 @@ alias os.base.packages = packages
 alias os.base.service = service
 alias os.base.services = services
 alias os.unix.sshd = sshd
-alias k8s.kubelet = kubelet
 
 extend asset {
   // Common Platform Enumeration (CPE) for the asset

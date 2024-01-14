@@ -5,8 +5,8 @@ package purl
 
 import (
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/detector"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/detector"
 	"sort"
 	"strings"
 )

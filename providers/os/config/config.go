@@ -4,14 +4,14 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/os/provider"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/os/provider"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 )
 
 var Config = plugin.Provider{
 	Name:    "os",
-	ID:      "go.mondoo.com/cnquery/v9/providers/os",
+	ID:      "go.mondoo.com/cnquery/providers/os",
 	Version: "9.1.20",
 	ConnectionTypes: []string{
 		provider.LocalConnectionType,

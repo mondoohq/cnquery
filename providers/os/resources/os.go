@@ -11,17 +11,17 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v9/providers/os/id/platformid"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/reboot"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/systemd"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/updates"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/uptime"
-	"go.mondoo.com/cnquery/v9/providers/os/resources/windows"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v10/providers/os/id/platformid"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/reboot"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/systemd"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/updates"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/uptime"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/windows"
 )
 
 func (p *mqlOs) rebootpending() (bool, error) {

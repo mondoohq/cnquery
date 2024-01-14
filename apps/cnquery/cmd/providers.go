@@ -14,9 +14,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v9/cli/theme"
-	"go.mondoo.com/cnquery/v9/providers"
-	"go.mondoo.com/cnquery/v9/utils/sortx"
+	"go.mondoo.com/cnquery/v10/cli/theme"
+	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v10/utils/sortx"
 )
 
 func init() {

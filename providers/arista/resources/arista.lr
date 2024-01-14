@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/arista"
-option go_package = "go.mondoo.com/cnquery/v9/providers/arista/resources"
+option provider = "go.mondoo.com/cnquery/providers/arista"
+option go_package = "go.mondoo.com/cnquery/v10/providers/arista/resources"
 
 // Arista EOS resource
 arista.eos {

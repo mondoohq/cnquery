@@ -16,14 +16,14 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/container/docker_engine"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/container/image"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/ssh/cat"
-	"go.mondoo.com/cnquery/v9/providers/os/id/containerid"
-	docker_discovery "go.mondoo.com/cnquery/v9/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/docker_engine"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/cat"
+	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
+	docker_discovery "go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 )
 
 const (

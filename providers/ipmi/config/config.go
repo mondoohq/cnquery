@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/ipmi/provider"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/ipmi/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "ipmi",
-	ID:              "go.mondoo.com/cnquery/v9/providers/ipmi",
+	ID:              "go.mondoo.com/cnquery/providers/ipmi",
 	Version:         "9.1.16",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

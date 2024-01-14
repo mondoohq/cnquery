@@ -10,10 +10,10 @@ import (
 	"strconv"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v9/explorer"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/mrn"
-	"go.mondoo.com/cnquery/v9/utils/stringx"
+	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 )
 
 type cliReporter struct {

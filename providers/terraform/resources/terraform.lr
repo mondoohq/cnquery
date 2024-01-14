@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/terraform"
-option go_package = "go.mondoo.com/cnquery/v9/providers/terraform/resources"
+option provider = "go.mondoo.com/cnquery/providers/terraform"
+option go_package = "go.mondoo.com/cnquery/v10/providers/terraform/resources"
 
 // Terraform configuration files
 terraform {

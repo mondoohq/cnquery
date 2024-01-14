@@ -7,11 +7,11 @@ import (
 	"errors"
 	"strconv"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/mqlc/parser"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/mqlc/parser"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
 func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

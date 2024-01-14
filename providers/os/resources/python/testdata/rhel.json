@@ -24,7 +24,7 @@
       "connections": [
         {
           "url": "docker-image://registry.access.redhat.com/ubi8/ubi",
-          "provider": "go.mondoo.com/cnquery/v9/providers/os",
+          "provider": "go.mondoo.com/cnquery/v10/providers/os",
           "connector": "docker-image",
           "version": ""
         }

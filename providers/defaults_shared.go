@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultOsID           = "go.mondoo.com/cnquery/v9/providers/os"
+	DefaultOsID           = "go.mondoo.com/cnquery/v10/providers/os"
 	DeprecatedDefaultOsID = "go.mondoo.com/cnquery/providers/os" // temp to migrate v9 beta users
 )
 

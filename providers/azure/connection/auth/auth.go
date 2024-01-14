@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 func GetTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {

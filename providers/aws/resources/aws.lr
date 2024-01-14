@@ -4,8 +4,8 @@
 import "../../network/resources/network.lr"
 
 
-option provider = "go.mondoo.com/cnquery/v9/providers/aws"
-option go_package = "go.mondoo.com/cnquery/v9/providers/aws/resources"
+option provider = "go.mondoo.com/cnquery/providers/aws"
+option go_package = "go.mondoo.com/cnquery/v10/providers/aws/resources"
 
 // AWS resource
 aws @defaults("account.id") {

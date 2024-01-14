@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/utils/multierr"
+	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"

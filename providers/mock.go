@@ -5,14 +5,14 @@ package providers
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 var mockProvider = Provider{
 	Provider: &plugin.Provider{
 		Name:    "mock",
-		ID:      "go.mondoo.com/cnquery/v9/providers/mock",
+		ID:      "go.mondoo.com/cnquery/v10/providers/mock",
 		Version: "9.0.0",
 		Connectors: []plugin.Connector{{
 			Name:  "mock",

@@ -11,7 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/logger"
 )
 
 var exchangeReport = `

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go.mondoo.com/cnquery/v9/utils/stringx"
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 	"go/format"
 	"os"
 	"os/exec"
@@ -25,9 +25,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v9/cli/components"
-	"go.mondoo.com/cnquery/v9/logger"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/cli/components"
+	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 )
 

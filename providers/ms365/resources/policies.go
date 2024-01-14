@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
 
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {

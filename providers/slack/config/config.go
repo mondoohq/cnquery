@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/slack/provider"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/slack/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "slack",
-	ID:              "go.mondoo.com/cnquery/v9/providers/slack",
+	ID:              "go.mondoo.com/cnquery/providers/slack",
 	Version:         "9.1.17",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

@@ -6,7 +6,7 @@ package resources
 import (
 	"sync"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 )
 
 type mqlK8sInternal struct {

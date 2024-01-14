@@ -3,7 +3,7 @@
 
 package explorer
 
-import llx "go.mondoo.com/cnquery/v9/llx"
+import llx "go.mondoo.com/cnquery/v10/llx"
 
 func (r *Report) RawResults() map[string]*llx.RawResult {
 	results := map[string]*llx.RawResult{}

@@ -7,12 +7,12 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/ms365/connection"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/stringx"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 )
 
 func (m *mqlMicrosoftServiceprincipal) id() (string, error) {

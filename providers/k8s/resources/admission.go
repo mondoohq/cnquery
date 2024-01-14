@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"sync"
 
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
 )
 

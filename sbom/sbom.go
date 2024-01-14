@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/mitchellh/hashstructure/v2"
-	"go.mondoo.com/cnquery/v9"
-	"go.mondoo.com/cnquery/v9/explorer"
-	"go.mondoo.com/cnquery/v9/mrn"
+	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v10/mrn"
 )
 
 // SBOMQueryPack is a protobuf message that contains the SBOM query pack

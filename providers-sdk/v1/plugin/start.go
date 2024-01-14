@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
-	"go.mondoo.com/cnquery/v9/logger"
+	"go.mondoo.com/cnquery/v10/logger"
 )
 
 type Provider struct {

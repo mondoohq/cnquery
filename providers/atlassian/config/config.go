@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/atlassian/provider"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/atlassian/provider"
 )
 
 var Config = plugin.Provider{
 	Name:    "atlassian",
-	ID:      "go.mondoo.com/cnquery/v9/providers/atlassian",
+	ID:      "go.mondoo.com/cnquery/providers/atlassian",
 	Version: "9.1.15",
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,

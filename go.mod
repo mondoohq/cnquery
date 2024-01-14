@@ -1,4 +1,4 @@
-module go.mondoo.com/cnquery/v9
+module go.mondoo.com/cnquery/v10
 
 go 1.21
 
@@ -90,7 +90,7 @@ require (
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.11
 	go.mondoo.com/ranger-rpc v0.5.3
-	go.opentelemetry.io/otel v1.21.0
+	go.opentelemetry.io/otel v1.21.0 // indirect
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	golang.org/x/sync v0.6.0

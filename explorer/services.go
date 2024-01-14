@@ -6,7 +6,7 @@ package explorer
 import (
 	"net/http"
 
-	llx "go.mondoo.com/cnquery/v9/llx"
+	llx "go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/sync/semaphore"
 )

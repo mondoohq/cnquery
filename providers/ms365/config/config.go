@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/ms365/provider"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/ms365/provider"
 )
 
 var Config = plugin.Provider{
 	Name:            "ms365",
-	ID:              "go.mondoo.com/cnquery/v9/providers/ms365",
+	ID:              "go.mondoo.com/cnquery/providers/ms365",
 	Version:         "9.2.14",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

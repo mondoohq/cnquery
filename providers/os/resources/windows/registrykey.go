@@ -3,7 +3,7 @@
 
 package windows
 
-import "go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
+import "go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 
 // derived from "golang.org/x/sys/windows/registry"
 // see https://github.com/golang/sys/blob/master/windows/registry/value.go#L17-L31

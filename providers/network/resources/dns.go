@@ -12,14 +12,14 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
-	"go.mondoo.com/cnquery/v9/llx"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v9/providers/network/connection"
-	"go.mondoo.com/cnquery/v9/providers/network/resources/dnsshake"
-	"go.mondoo.com/cnquery/v9/providers/network/resources/domain"
-	"go.mondoo.com/cnquery/v9/types"
-	"go.mondoo.com/cnquery/v9/utils/sortx"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v10/providers/network/connection"
+	"go.mondoo.com/cnquery/v10/providers/network/resources/dnsshake"
+	"go.mondoo.com/cnquery/v10/providers/network/resources/domain"
+	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v10/utils/sortx"
 )
 
 func (d *mqlDomainName) id() (string, error) {

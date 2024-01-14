@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	mondoogql "go.mondoo.com/mondoo-go"
 	"go.mondoo.com/mondoo-go/option"
 )

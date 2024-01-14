@@ -4,15 +4,15 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/aws/connection/awsec2ebsconn"
-	"go.mondoo.com/cnquery/v9/providers/aws/provider"
-	"go.mondoo.com/cnquery/v9/providers/aws/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn"
+	"go.mondoo.com/cnquery/v10/providers/aws/provider"
+	"go.mondoo.com/cnquery/v10/providers/aws/resources"
 )
 
 var Config = plugin.Provider{
 	Name:            "aws",
-	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
+	ID:              "go.mondoo.com/cnquery/providers/aws",
 	Version:         "9.1.25",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	Connectors: []plugin.Connector{

@@ -15,12 +15,12 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/container/cache"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
-	provider_tar "go.mondoo.com/cnquery/v9/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v9/providers/os/fsutil"
-	"go.mondoo.com/cnquery/v9/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	provider_tar "go.mondoo.com/cnquery/v10/providers/os/connection/tar"
+	"go.mondoo.com/cnquery/v10/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 )
 
 const (

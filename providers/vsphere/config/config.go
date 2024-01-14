@@ -4,14 +4,14 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/provider"
-	"go.mondoo.com/cnquery/v9/providers/vsphere/resources"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/provider"
+	"go.mondoo.com/cnquery/v10/providers/vsphere/resources"
 )
 
 var Config = plugin.Provider{
 	Name:            "vsphere",
-	ID:              "go.mondoo.com/cnquery/v9/providers/vsphere",
+	ID:              "go.mondoo.com/cnquery/providers/vsphere",
 	Version:         "9.1.18",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{

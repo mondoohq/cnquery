@@ -1,8 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/gcp"
-option go_package = "go.mondoo.com/cnquery/v9/providers/gcp/resources"
+option provider = "go.mondoo.com/cnquery/providers/gcp"
+option go_package = "go.mondoo.com/cnquery/v10/providers/gcp/resources"
 
 alias gcloud.organization = gcp.organization
 alias gcloud.project = gcp.project

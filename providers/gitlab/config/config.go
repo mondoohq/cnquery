@@ -4,13 +4,13 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v9/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v9/providers/gitlab/provider"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/gitlab/provider"
 )
 
 var Config = plugin.Provider{
 	Name:    "gitlab",
-	ID:      "go.mondoo.com/cnquery/v9/providers/gitlab",
+	ID:      "go.mondoo.com/cnquery/providers/gitlab",
 	Version: "9.1.16",
 	ConnectionTypes: []string{
 		provider.ConnectionType,

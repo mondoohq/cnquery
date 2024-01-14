@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v9/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 func NewOSReleaseDetector(conn shared.Connection) *OSReleaseDetector {

@@ -3,6 +3,6 @@
 
 package resources_test
 
-import "go.mondoo.com/cnquery/v9/providers-sdk/v1/testutils"
+import "go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
 
 var x = testutils.InitTester(testutils.LinuxMock())
