@@ -94,7 +94,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
-		parsedModifed, err := time.Parse(time.RFC3339, a.ModifiedAt)
+		parsedModified, err := time.Parse(time.RFC3339, a.ModifiedAt)
 		if err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ func (v *mqlVulnmgmt) populateData() error {
 			"title":       llx.StringData(a.Title),
 			"description": llx.StringData(a.Description),
 			"published":   llx.TimeData(parsedPublished),
-			"modified":    llx.TimeData(parsedModifed),
+			"modified":    llx.TimeData(parsedModified),
 			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
 		})
 		if err != nil {
@@ -125,7 +125,7 @@ func (v *mqlVulnmgmt) populateData() error {
 		if err != nil {
 			return err
 		}
-		parsedModifed, err := time.Parse(time.RFC3339, c.ModifiedAt)
+		parsedModified, err := time.Parse(time.RFC3339, c.ModifiedAt)
 		if err != nil {
 			return err
 		}
@@ -140,7 +140,7 @@ func (v *mqlVulnmgmt) populateData() error {
 			"id":         llx.StringData(c.Id),
 			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
 			"published":  llx.TimeData(parsedPublished),
-			"modified":   llx.TimeData(parsedModifed),
+			"modified":   llx.TimeData(parsedModified),
 		})
 		if err != nil {
 			return err

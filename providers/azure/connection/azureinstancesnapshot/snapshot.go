@@ -168,7 +168,7 @@ func (sc *snapshotCreator) createDisk(disk compute.Disk, resourceGroupName, disk
 }
 
 // createSnapshotDisk creates a new disk from a snapshot
-func (sc *snapshotCreator) createSnapshotDisk(sourceSnaphotId, resourceGroupName, diskName, location string, zones []*string) (compute.Disk, error) {
+func (sc *snapshotCreator) createSnapshotDisk(sourceSnapshotId, resourceGroupName, diskName, location string, zones []*string) (compute.Disk, error) {
 	// create a new disk from snapshot
 	createOpt := compute.DiskCreateOptionCopy
 	disk := compute.Disk{
@@ -177,7 +177,7 @@ func (sc *snapshotCreator) createSnapshotDisk(sourceSnaphotId, resourceGroupName
 		Name:     &diskName,
 		Properties: &compute.DiskProperties{
 			CreationData: &compute.CreationData{
-				SourceResourceID: &sourceSnaphotId,
+				SourceResourceID: &sourceSnapshotId,
 				CreateOption:     &createOpt,
 			},
 		},

@@ -26,7 +26,7 @@ func ParseResourceID(id string) (*ResourceID, error) {
 	// sanitize resource id
 	idURL, err := url.ParseRequestURI(id)
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse azure resource id: %s", err)
+		return nil, fmt.Errorf("cannot parse Azure resource ID: %s", err)
 	}
 	path := idURL.Path
 	path = strings.TrimPrefix(path, "/")

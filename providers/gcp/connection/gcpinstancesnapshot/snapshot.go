@@ -243,7 +243,7 @@ func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName strin
 	return sc.createDisk(disk, projectID, zone, diskName)
 }
 
-// attachDisk attaches a disk to an instanc
+// attachDisk attaches a disk to an instance
 func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskUrl, deviceName string) error {
 	ctx := context.Background()
 
