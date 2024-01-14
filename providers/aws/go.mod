@@ -7,7 +7,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/aws/aws-sdk-go v1.49.17
+	github.com/aws/aws-sdk-go v1.49.19
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.14
@@ -21,15 +21,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.143.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.144.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
@@ -37,7 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.8
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.124.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.7
@@ -64,7 +64,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.111.0 // indirect
+	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.5 // indirect
@@ -104,13 +104,13 @@ require (
 	github.com/docker/cli v24.0.7+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker v24.0.7+incompatible // indirect
-	github.com/docker/docker-credential-helpers v0.8.0 // indirect
+	github.com/docker/docker-credential-helpers v0.8.1 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/getsentry/sentry-go v0.25.0 // indirect
+	github.com/getsentry/sentry-go v0.26.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -190,8 +190,8 @@ require (
 	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.16.1 // indirect
-	google.golang.org/api v0.155.0 // indirect
+	golang.org/x/tools v0.17.0 // indirect
+	google.golang.org/api v0.156.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240108191215-35c7eff3a6b1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240108191215-35c7eff3a6b1 // indirect
