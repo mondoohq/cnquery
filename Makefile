@@ -56,7 +56,7 @@ prep/tools/windows:
 
 
 prep/tools/protolint:
-	# protobuf lintingng
+	# protobuf linting
 	go install github.com/yoheimuta/protolint/cmd/protolint@latest
 
 prep/tools: prep/tools/protolint
