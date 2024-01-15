@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/aristanetworks/goeapi v1.0.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v10 v10.0.0
+	go.mondoo.com/cnquery/v10 v10.0.0-00010101000000-000000000000
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.49.19 // indirect
+	github.com/aws/aws-sdk-go v1.49.21 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.14 // indirect

@@ -8,7 +8,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.95.2
-	go.mondoo.com/cnquery/v10 v10.0.0
+	go.mondoo.com/cnquery/v10 v10.0.0-00010101000000-000000000000
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
 	google.golang.org/protobuf v1.32.0
 )
@@ -25,7 +25,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.49.19 // indirect
+	github.com/aws/aws-sdk-go v1.49.21 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.3 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.14 // indirect
