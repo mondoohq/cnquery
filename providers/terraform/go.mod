@@ -9,7 +9,7 @@ toolchain go1.21.3
 require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/hashicorp/hcl/v2 v2.19.1
-	go.mondoo.com/cnquery/v10 v10.0.0
+	go.mondoo.com/cnquery/v10 v10.0.0-beta1
 )
 
 require (

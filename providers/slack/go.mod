@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/rs/zerolog v1.31.0
 	github.com/slack-go/slack v0.12.3
-	go.mondoo.com/cnquery/v10 v10.0.0
+	go.mondoo.com/cnquery/v10 v10.0.0-beta1
 )
 
 require (
