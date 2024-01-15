@@ -153,7 +153,7 @@ func TestResource_K8sKubeletAKS(t *testing.T) {
 }
 
 func TestResource_K8sKubeletEKS(t *testing.T) {
-	// EKS is differetn becasue it uses a JSON config file
+	// EKS is different because it uses a JSON config file
 	// and set's the read-only-port to 0
 	x := testutils.InitTester(testutils.KubeletEKSMock())
 

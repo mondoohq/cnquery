@@ -153,7 +153,7 @@ func MustLoadSchema(provider SchemaProvider) *resources.Schema {
 		panic("cannot load schema without provider name or path")
 	}
 	var path string
-	// path towards the .yaml manifest, containing metadata abou the resources
+	// path towards the .yaml manifest, containing metadata about the resources
 	var manifestPath string
 	if provider.Provider != "" {
 		switch provider.Provider {

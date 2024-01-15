@@ -31,7 +31,7 @@ func ParseRequiresTxtDependencies(r io.Reader) ([]string, error) {
 	fileScanner := bufio.NewScanner(r)
 	fileScanner.Split(bufio.ScanLines)
 
-	depdendencies := []string{}
+	dependencies := []string{}
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		if strings.HasPrefix(line, "[") {
@@ -43,8 +43,8 @@ func ParseRequiresTxtDependencies(r io.Reader) ([]string, error) {
 		if matched == "" {
 			continue
 		}
-		depdendencies = append(depdendencies, matched)
+		dependencies = append(dependencies, matched)
 	}
 
-	return depdendencies, nil
+	return dependencies, nil
 }

@@ -53,7 +53,7 @@ var macOS = &PlatformResolver{
 	},
 }
 
-// is part of the darwin platfrom and fallback for non-known darwin systems
+// is part of the darwin platform and fallback for non-known darwin systems
 var otherDarwin = &PlatformResolver{
 	Name:     "darwin",
 	IsFamily: false,

@@ -63,7 +63,7 @@ func (a *PolicyWrapper) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Since the original okta policy does not support settings, we need to handle that outselves
+	// Since the original okta policy does not support settings, we need to handle that ourselves
 	settings := struct {
 		Settings PolicySettings `json:"settings,omitempty"`
 	}{}

@@ -298,7 +298,7 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 	return "okta.policyRule/" + o.Id.Data, o.Id.Error
 }
 
-// see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesnt letch you fetch
+// see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesn't letch you fetch
 // type-specific rules which differ between the different policies. as such, we fetch those manually until the sdk allows us to
 func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]okta.AccessPolicyRule, error) {
 	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, policyid)
