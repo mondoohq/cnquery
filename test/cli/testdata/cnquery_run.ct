@@ -6,47 +6,16 @@ Usage:
   cnquery run [command]
 
 Available Commands:
-  arista           Run a query with an Arista EOS device
-  atlassian        Run a query with Atlassian
-  aws              Run a query with an AWS account
-  azure            Run a query with an Azure subscription
-  container        Run a query with a running container or container image
-  docker           Run a query with a running Docker container or Docker image
-  equinix          Run a query with an Equinix Metal organization
-  filesystem       Run a query with a mounted file system target
-  gcp              Run a query with a Google Cloud project
-  github           Run a query with a GitHub organization or repository
-  gitlab           Run a query with a GitLab group or project
-  google-workspace Run a query with a Google Workspace account
-  host             Run a query with a remote host
-  ipmi             Run a query with an IPMI interface
-  k8s              Run a query with a Kubernetes cluster or local manifest file(s)
-  local            Run a query with your local system
-  mock             Run a query with use a recording without an active connection
-  ms365            Run a query with a Microsoft 365 account
-  oci              Run a query with an Oracle Cloud Infrastructure tenancy
-  okta             Run a query with Okta
-  opcua            Run a query with an OPC UA device
-  slack            Run a query with a Slack team
-  ssh              Run a query with a remote system via SSH
-  terraform        Run a query with a Terraform HCL file or directory
-  vagrant          Run a query with a Vagrant host
-  vcd              Run a query with a VMware Cloud Director installation
-  vsphere          Run a query with a VMware vSphere installation
-  winrm            Run a query with a remote system via WinRM
+  mock        Run a query with use a recording without an active connection
 
 Flags:
-      --ast                    Parse the query and return the abstract syntax tree (AST).
-  -c, --command string         MQL query to executed in the shell.
-      --discover strings       Enable the discovery of nested assets. Supports: all,auto,container,container-images
-  -h, --help                   help for run
-      --info                   Parse the query and provide information about it.
-  -j, --json                   Run the query and return the object in a JSON structure.
-      --parse                  Parse the query and return the logical structure.
-      --platform-id string     Select a specific target asset by providing its platform ID.
-      --record string          Record all resource calls and use resources in the recording
-      --sudo                   Elevate privileges with sudo.
-      --use-recording string   Use a recording to inject resource data (read-only)
+      --ast                  Parse the query and return the abstract syntax tree (AST).
+  -c, --command string       MQL query to executed in the shell.
+  -h, --help                 help for run
+      --info                 Parse the query and provide information about it.
+  -j, --json                 Run the query and return the object in a JSON structure.
+      --parse                Parse the query and return the logical structure.
+      --platform-id string   Select a specific target asset by providing its platform ID.
 
 Global Flags:
       --api-proxy string   Set proxy for communications with Mondoo API
