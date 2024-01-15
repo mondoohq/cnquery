@@ -34,7 +34,7 @@ func init() {
 
 var RunCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Run an MQL query.",
+	Short: "Run an MQL query",
 	Long:  `Run an MQL query on the CLI and displays its results.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))

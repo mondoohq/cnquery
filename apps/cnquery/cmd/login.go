@@ -33,7 +33,7 @@ func init() {
 var LoginCmd = &cobra.Command{
 	Use:     "login",
 	Aliases: []string{"register"},
-	Short:   "Register with Mondoo Platform.",
+	Short:   "Register with Mondoo Platform",
 	Long: `
 Log in to Mondoo Platform using a registration token. To pass in the token, use 
 the '--token' flag.

@@ -30,7 +30,7 @@ func init() {
 
 var ProvidersCmd = &cobra.Command{
 	Use:    "providers",
-	Short:  "Providers add connectivity to all assets.",
+	Short:  "Providers add connectivity to all assets",
 	Long:   `Manage your providers. List and install new ones or update existing ones.`,
 	PreRun: func(cmd *cobra.Command, args []string) {},
 	Run: func(cmd *cobra.Command, args []string) {

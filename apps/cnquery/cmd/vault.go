@@ -38,13 +38,13 @@ func init() {
 // VaultCmd represents the vault command
 var VaultCmd = &cobra.Command{
 	Use:   "vault",
-	Short: "Manage vault environments.",
+	Short: "Manage vault environments",
 	Long:  ``,
 }
 
 var vaultListCmd = &cobra.Command{
 	Use:    "list",
-	Short:  "List vault environments.",
+	Short:  "List vault environments",
 	Long:   ``,
 	Hidden: true,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -58,7 +58,7 @@ var vaultListCmd = &cobra.Command{
 var vaultConfigureCmd = &cobra.Command{
 	Use:     "configure VAULTNAME",
 	Aliases: []string{"set"},
-	Short:   "Configure a vault environment.",
+	Short:   "Configure a vault environment",
 	Long: `
 
 cnquery vault configure mondoo-client-vault --type linux-kernel-keyring
@@ -122,7 +122,7 @@ cnquery vault configure mondoo-client-vault --type linux-kernel-keyring
 
 var vaultRemoveCmd = &cobra.Command{
 	Use:    "remove VAULTNAME",
-	Short:  "Remove a configured vault environment.",
+	Short:  "Remove a configured vault environment",
 	Long:   ``,
 	Args:   cobra.ExactArgs(1),
 	Hidden: true,
@@ -133,7 +133,7 @@ var vaultRemoveCmd = &cobra.Command{
 
 var vaultResetCmd = &cobra.Command{
 	Use:    "reset",
-	Short:  "Reset the vault configuration to defaults.",
+	Short:  "Reset the vault configuration to defaults",
 	Long:   ``,
 	Args:   cobra.ExactArgs(0),
 	Hidden: true,
@@ -144,7 +144,7 @@ var vaultResetCmd = &cobra.Command{
 
 var vaultAddSecretCmd = &cobra.Command{
 	Use:   "add-secret SECRETID SECRETVALUE",
-	Short: "Store a secret in a vault.",
+	Short: "Store a secret in a vault",
 	Args:  cobra.ExactArgs(2),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
