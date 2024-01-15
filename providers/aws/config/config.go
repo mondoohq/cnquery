@@ -38,6 +38,7 @@ var Config = plugin.Provider{
 				resources.DiscoveryS3Buckets,
 				resources.DiscoveryCloudtrailTrails,
 				resources.DiscoveryRdsDbInstances,
+				resources.DiscoveryRdsDbClusters,
 				resources.DiscoveryVPCs,
 				resources.DiscoverySecurityGroups,
 				resources.DiscoveryIAMUsers,
