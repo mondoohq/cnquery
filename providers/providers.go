@@ -29,8 +29,9 @@ import (
 )
 
 var (
-	SystemPath string
-	HomePath   string
+	SystemPath         string
+	HomePath           string
+	CustomProviderPath string
 	// this is the default path for providers, it's either system or home path, if the user is root the system path is used
 	DefaultPath string
 	// CachedProviders contains all providers that have been loaded the last time
@@ -48,6 +49,10 @@ func init() {
 	if os.Geteuid() != 0 {
 		HomePath, _ = config.HomePath("providers")
 		DefaultPath = HomePath
+	}
+	CustomProviderPath = os.Getenv("PROVIDERS_PATH")
+	if CustomProviderPath != "" {
+		DefaultPath = CustomProviderPath
 	}
 
 	LastProviderInstall = time.Now().Unix()
@@ -186,7 +191,7 @@ func ListAll() ([]*Provider, error) {
 	CachedProviders = all
 
 	// This really shouldn't happen, but just in case it does...
-	if SystemPath == "" && HomePath == "" {
+	if SystemPath == "" && HomePath == "" && CustomProviderPath == "" {
 		log.Warn().Msg("can't find any paths for providers, none are configured")
 		return nil, nil
 	}
@@ -204,7 +209,17 @@ func ListAll() ([]*Provider, error) {
 		msg.Msg("can't find any paths for providers, none are configured")
 	}
 
-	if sysOk {
+	// when the user provides a custom provider path, we always load it and we ignore the system and home path
+	// we do not check for its existence, and instead create it on the fly when needed
+	if CustomProviderPath != "" {
+		cur, err := findProviders(CustomProviderPath)
+		if err != nil {
+			log.Warn().Str("path", CustomProviderPath).Err(err).Msg("failed to get providers from custom provider path")
+		}
+		all = append(all, cur...)
+	}
+
+	if sysOk && CustomProviderPath == "" {
 		cur, err := findProviders(SystemPath)
 		if err != nil {
 			log.Warn().Str("path", SystemPath).Err(err).Msg("failed to get providers from system path")
@@ -212,7 +227,7 @@ func ListAll() ([]*Provider, error) {
 		all = append(all, cur...)
 	}
 
-	if homeOk {
+	if homeOk && CustomProviderPath == "" {
 		cur, err := findProviders(HomePath)
 		if err != nil {
 			log.Warn().Str("path", HomePath).Err(err).Msg("failed to get providers from home path")

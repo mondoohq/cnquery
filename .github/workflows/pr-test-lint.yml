@@ -84,15 +84,20 @@ jobs:
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v2'
 
+      - name: Set provider env
+        run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
+      - name: Display Provider PAth
+        run: echo $PROVIDERS_PATH
+
       - name: Test cnquery
         run: make test/go/plain-ci
-        
+
       - name: Test Providers
         run: make providers/test
 
       - uses: actions/upload-artifact@v4  # upload test results
         if: success() || failure()        # run this step even if previous step failed
-        with:                           
+        with:
           name: test-results
           path: report.xml
 

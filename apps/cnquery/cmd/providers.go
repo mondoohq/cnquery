@@ -160,11 +160,16 @@ func printProviders(p []*providers.Provider) {
 	}
 
 	printProviderPath("builtin", paths["builtin"], false)
-	printProviderPath(providers.HomePath, paths[providers.HomePath], true)
-	printProviderPath(providers.SystemPath, paths[providers.SystemPath], true)
+	if providers.CustomProviderPath == "" {
+		printProviderPath(providers.HomePath, paths[providers.HomePath], true)
+		printProviderPath(providers.SystemPath, paths[providers.SystemPath], true)
+	} else {
+		printProviderPath(providers.CustomProviderPath, paths[providers.CustomProviderPath], true)
+	}
 	delete(paths, "builtin")
 	delete(paths, providers.HomePath)
 	delete(paths, providers.SystemPath)
+	delete(paths, providers.CustomProviderPath)
 
 	keys := sortx.Keys(paths)
 	for _, path := range keys {
