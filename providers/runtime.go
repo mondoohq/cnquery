@@ -585,6 +585,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	}
 
 	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
+		log.Error().Str("infoProvider", info.Provider).Str("connectionProvider", providerConn).Msg("mismatch between expected and received provider, ignoring provider")
 		return nil, nil, errors.New("incorrect provider for asset, not adding " + info.Provider)
 	}
 
