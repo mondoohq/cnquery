@@ -541,7 +541,7 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		// We don't set a max retry, since we can indefinitely try to remove this
 		err := osRetry(func() error {
 			return os.RemoveAll(tmpdir)
-		}, -1)
+		}, maxInstallConfRetries)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to remove temporary folder for unpacked provider")
 		}
