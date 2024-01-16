@@ -988,7 +988,7 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   createdAt time
   // FQDN for the certificate
   domainName string
-  // Status of the certificate: issued, expired, revoked, and so on...
+  // Status of the certificate: issued, expired, revoked, and so on
   status string
   // Name of the entity associated with the public key in the certificate
   subject string
@@ -1588,7 +1588,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
   name string
   // List of allowed headers
   allowedHeaders []string
-  // List of allowed methods GET, POST, PUT, and so on...
+  // List of allowed methods GET, POST, PUT, and so on
   allowedMethods []string
   // List of origins from which the bucket can be accessed
   allowedOrigins []string
@@ -1666,7 +1666,7 @@ private aws.backup.vault @defaults("name region") {
 private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate status") {
   // ARN of the recovery point
   arn string
-  // Resource type for the recovery point: EFS, DynamoDB, and so on...
+  // Resource type for the recovery point: EFS, DynamoDB, and so on
   resourceType string
   // Information about who created the recovery point
   createdBy dict
@@ -2155,7 +2155,7 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   ipAddress string
   // Platform name for the SSM Instance, as described by AWS
   platformName string
-  // The type of for the SSM Instance, as described by AWS: Windows, Linux, and so on...
+  // The type of for the SSM Instance, as described by AWS: Windows, Linux, and so on
   platformType string
   // Platform version for the SSM Instance, as described by AWS
   platformVersion string
@@ -2297,7 +2297,7 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   attachments []dict
   // Whether the volume is encrypted
   encrypted bool
-  // State of the volume: creating, available, in-use, and so on...
+  // State of the volume: creating, available, in-use, and so on
   state string
   // A map of tags associated with the EBS volume
   tags map[string]string
