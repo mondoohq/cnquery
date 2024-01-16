@@ -9,6 +9,9 @@ resources:
       name:
       - azure
   azure.subscription:
+    docs:
+      desc: |
+        Use the `azure.subscription` resource to assess the configuration of Azure subscriptions. 
     fields:
       advisor: {}
       aks: {}
@@ -40,6 +43,9 @@ resources:
     platform:
       name:
       - azure
+    snippets:
+    - query: "azure.subscription {\n  subscriptionId \n  managedByTenants\n}\n"
+      title: Return the subscription ID and a list of tenants that manage the subscription
   azure.subscription.advisor:
     fields:
       recommendations: {}
@@ -57,6 +63,9 @@ resources:
       name:
       - azure
   azure.subscription.advisorService:
+    docs:
+      desc: |
+        Use the `azure.subscription.advisorService` resource to retrieve scoring and recommendations from Microsoft Azure Advisor. 
     fields:
       averageScore: {}
       recommendations: {}
@@ -67,6 +76,9 @@ resources:
     platform:
       name:
       - azure
+    snippets:
+    - query: "azure.subscription.advisorService {\n  averageScore > 90\n}\n"
+      title: Check if the average score that the Azure Advisor service gives the subscription is greater than 90
   azure.subscription.advisorService.recommendation:
     fields:
       category: {}

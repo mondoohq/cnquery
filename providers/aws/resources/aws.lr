@@ -29,7 +29,7 @@ aws.account @defaults("id") {
 aws.organization @defaults("arn masterAccountEmail") {
   // ARN of the organization
   arn string
-  // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
+  // Specifies the functionality available to org: ALL or CONSOLIDATED_BILLING
   featureSet string
   // ID of the organization's master account
   masterAccountId string
@@ -45,17 +45,17 @@ private aws.vpc @defaults("id isDefault cidrBlock region") {
   id string
   // IPv4 CIDR block of the VPC
   cidrBlock string
-  // State of the VPC (pending or available)
+  // State of the VPC: pending or available
   state string
-  // Whether the VPC is the default one
+  // Whether the VPC is the default VPC
   isDefault bool
   // How instance hardware tenancy settings are enforced on instances launched in this VPC
   instanceTenancy string
   // Region in which the VPC exists
   region string
-  // A list of endpoints for the VPC
+  // List of endpoints for the VPC
   endpoints() []aws.vpc.endpoint
-  // A list of flowlogs for the VPC
+  // List of flow logs for the VPC
   flowLogs() []aws.vpc.flowlog
   // List of route tables for the VPC
   routeTables() []aws.vpc.routetable
@@ -412,7 +412,7 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
   ruleName string
   // ID of the statement
   statementID string
-  // Whether to match the HTTP method (GET, POST)
+  // Whether to match the HTTP method: GET or POST
   method bool
   // Whether to match the URI path
   uriPath bool
@@ -988,7 +988,7 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   createdAt time
   // FQDN for the certificate
   domainName string
-  // Status of the certificate (issued, expired, revoked, etc.)
+  // Status of the certificate: issued, expired, revoked, and so on...
   status string
   // Name of the entity associated with the public key in the certificate
   subject string
@@ -1024,7 +1024,7 @@ private aws.autoscaling.group @defaults("name region") {
   name string
   // List of load balancer names associated with the group
   loadBalancerNames []string
-  // Health check type used by the group (ELB or EC2)
+  // Health check type used by the group: ELB or EC2
   healthCheckType string
   // Tags for the asg
   tags map[string]string
@@ -1062,7 +1062,7 @@ private aws.elb.loadbalancer @defaults("arn name") {
   listenerDescriptions() []dict
   // User specified name for the load balancer
   name string
-  // Scheme for the lb (internet-facing vs. internal)
+  // Scheme for the lb: internet-facing or internal
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
@@ -1108,7 +1108,7 @@ private aws.guardduty.detector @defaults("id region") {
   id string
   // Region for the detector
   region string
-  // Status of the detector (ENABLED or DISABLED)
+  // Status of the detector: ENABLED or DISABLED
   status string
   // Publishing frequency for the detector
   findingPublishingFrequency string
@@ -1588,7 +1588,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
   name string
   // List of allowed headers
   allowedHeaders []string
-  // List of allowed methods (GET, POST, PUT, etc.)
+  // List of allowed methods GET, POST, PUT, and so on...
   allowedMethods []string
   // List of origins from which the bucket can be accessed
   allowedOrigins []string
@@ -1616,7 +1616,7 @@ private aws.s3.bucket.policy @defaults("name version") {
 // AWS Application Auto Scaling
 aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
-  // Service namespace to query for application auto scaling. comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
+  // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, or elasticache
   namespace string
   // List of scalable targets belonging to the service namespace
   scalableTargets() []aws.applicationautoscaling.target
@@ -1666,7 +1666,7 @@ private aws.backup.vault @defaults("name region") {
 private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate status") {
   // ARN of the recovery point
   arn string
-  // Resource type for the recovery point, (e.g., EFS or DynamoDB)
+  // Resource type for the recovery point: EFS, DynamoDB, and so on...
   resourceType string
   // Information about who created the recovery point
   createdBy dict
@@ -1816,7 +1816,7 @@ private aws.rds.snapshot @defaults("id region type encrypted") {
   id string
   // Attribute values that describe permissions to restore the snapshot
   attributes() []dict
-  // Type of snapshot (manual or automated)
+  // Type of snapshot: manual or automated
   type string
   // Whether the snapshot is encrypted
   encrypted bool
@@ -1926,7 +1926,7 @@ private aws.elasticache.cluster @defaults("cacheClusterId region nodeType engine
   clientDownloadLandingPage string
   // The node type for the nodes in the cluster
   nodeType string
-  // The name of the cache engine (Memcached or Redis) used for this cluster
+  // The name of the cache engine used for this cluster: Memcached or Redis
   engine string
   // The version of the cache engine that is used in this cluster
   engineVersion string
@@ -2149,13 +2149,13 @@ aws.ssm @defaults("instances") {
 private aws.ssm.instance @defaults("instanceId region platformName platformVersion ipAddress") {
   // Instance ID for the SSM Instance
   instanceId string
-  // Ping status (e.g., online) for the SSM Instance
+  // Ping status (such as online) for the SSM Instance
   pingStatus string
   // IP Address for the SSM instance
   ipAddress string
   // Platform name for the SSM Instance, as described by AWS
   platformName string
-  // The type of for the SSM Instance, as described by AWS (Windows, Linux, etc)
+  // The type of for the SSM Instance, as described by AWS: Windows, Linux, and so on...
   platformType string
   // Platform version for the SSM Instance, as described by AWS
   platformVersion string
@@ -2277,7 +2277,7 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   startTime time
   // Tags for the snapshot
   tags map[string]string
-  // State of the snapshot (pending, completed, error, recoverable, or recovering)
+  // State of the snapshot: pending, completed, error, recoverable, or recovering
   state string
   // The size of the volume, in GiB
   volumeSize int
@@ -2297,13 +2297,13 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   attachments []dict
   // Whether the volume is encrypted
   encrypted bool
-  // State of the volume (creating, available, in-use, etc.)
+  // State of the volume: creating, available, in-use, and so on...
   state string
   // A map of tags associated with the EBS volume
   tags map[string]string
   // Availability Zone in which the volume was created
   availabilityZone string
-  // EBS volume type (gp2, gp3, io1, io2, st1, sc1, or standard)
+  // EBS volume type: gp2, gp3, io1, io2, st1, sc1, or standard
   volumeType string
   // Time the volume was created
   createTime time
@@ -2341,9 +2341,9 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   httpEndpoint string
   // Patch state information about the instance
   patchState() dict
-  // State of the instance (pending, running, stopping, stopped, rebooting, or terminated)
+  // State of the instance: pending, running, stopping, stopped, rebooting, or terminated
   state string
-  // List of devices attached to the instance (e.g., EBS volume)
+  // List of devices attached to the instance (such as EBS volume)
   deviceMappings []aws.ec2.instance.device
   // List of security groups (IDs) associated with the instance
   securityGroups []aws.ec2.securitygroup
@@ -2361,7 +2361,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   ebsOptimized bool
   // Whether enhanced networking with ENA is enabled
   enaSupported bool
-  // Instance type (e.g., t2.micro)
+  // Instance type, such as t2.micro
   instanceType string
   // Tags on the instance
   tags map[string]string
@@ -2385,7 +2385,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceLifecycle string
   // The root device type used by the AMI: ebs or instance-store
   rootDeviceType string
-  // The device name of the root device volume (for example, /dev/sda1)
+  // The device name of the root device volume, such as /dev/sda1
   rootDeviceName string
   // The architecture of the instance
   architecture string
@@ -2399,7 +2399,7 @@ private aws.ec2.keypair @defaults("name type region") {
   fingerprint string
   // Name of the key pair
   name string
-  // Type of key (e.g., RSA)
+  // Type of key, such as RSA
   type string
   // Tags for the key pair
   tags map[string]string
