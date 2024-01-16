@@ -80,6 +80,23 @@ func (s ProviderLookup) String() string {
 
 type Providers map[string]*Provider
 
+// FIXME: DEPRECATED, remove in v12.0 vv
+// Unlike lookup, which searches through providers by ID, connection type and
+// connection names, this function only cycles through the index of providers
+// (which is based on IDs) in order and returns the first found provider.
+// We introduced this function to help transition from versioned IDs in
+// providers to unversioned IDs in providers.
+func (p Providers) GetFirstID(ids ...string) (*Provider, bool) {
+	for _, id := range ids {
+		if found, ok := p[id]; ok {
+			return found, true
+		}
+	}
+	return nil, false
+}
+
+// ^^
+
 // Lookup a provider in this list. If you search via ProviderID we will
 // try to find the exact provider. Otherwise we will try to find a matching
 // connector type first and name second.

@@ -7,10 +7,15 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-const (
-	DefaultOsID           = "go.mondoo.com/cnquery/v10/providers/os"
-	DeprecatedDefaultOsID = "go.mondoo.com/cnquery/providers/os" // temp to migrate v9 beta users
-)
+var DefaultOsIDs = []string{
+	"go.mondoo.com/cnquery/providers/os",
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// We specify providers without versions now. Also remove the providers
+	// GetFirstID function, since it only exists for this use-case
+	"go.mondoo.com/cnquery/v9/providers/os",
+	"go.mondoo.com/cnquery/v10/providers/os",
+	// ^^
+}
 
 var defaultRuntime *Runtime
 

@@ -579,9 +579,14 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	providerConn := r.Provider.Instance.ID
 	crossProviderList := []string{
 		"go.mondoo.com/cnquery/providers/core",
-		"go.mondoo.com/cnquery/v9/providers/core", // for backwards compatibility
 		"go.mondoo.com/cnquery/providers/network",
+		// FIXME: DEPRECATED, remove in v12.0 vv
+		// Until v10 providers had a version indication in their ID. With v10
+		// this is no longer the case. Once we get far enough away from legacy
+		// version support, we can safely remove this.
+		"go.mondoo.com/cnquery/v9/providers/core",    // for backwards compatibility
 		"go.mondoo.com/cnquery/v9/providers/network", // for backwards compatibility
+		// ^^
 	}
 
 	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
