@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -453,6 +454,46 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 	return InstallIO(reader, conf)
 }
 
+// kept a tad bit higher to give I/O more time to complete
+const osRetryDuration = 100 * time.Millisecond
+
+// In the process of installing larger binaries, we will need time for
+// antivirus software to scan it. This is currently set to retry for:
+// 100ms (above) * 10 (=1sec) * 60 (=1min) * 3 (=3min)
+const maxInstallBinaryRetries = 10 * 60 * 3
+
+// The retries for config files (like JSON) are much shorter, since these
+// files are considerably smaller:
+// 100ms (above) * 10 (=1sec) * 20 (=20sec)
+const maxInstallConfRetries = 10 * 20
+
+// osRetry will try to re-run the given function as long as the resource is busy.
+// This is helpful in e.g. Windows systems, which may get an antivirus tool
+// check files while we create them (e.g. installing providers).
+// It will look for common OS signals that the I/O is busy right now or that
+// it asks the caller to run their call again later.
+// It is retried every osRetryDuration.
+// maxRetry has the maximum number of retries (or -1 for indefinite)
+func osRetry(f func() error, maxRetry int) error {
+	for maxRetry != 0 {
+		err := f()
+		if err == nil {
+			return nil
+		}
+
+		if errors.As(err, syscall.EBUSY) || errors.As(err, syscall.EAGAIN) {
+			time.Sleep(osRetryDuration)
+		} else {
+			return err
+		}
+
+		if maxRetry > 0 {
+			maxRetry--
+		}
+	}
+	return nil
+}
+
 func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if conf.Dst == "" {
 		conf.Dst = DefaultPath
@@ -497,7 +538,11 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	// so we don't spam the system with unnecessary data. Optionally we could
 	// keep them and re-use them, so they don't have to download again.
 	defer func() {
-		if err = os.RemoveAll(tmpdir); err != nil {
+		// We don't set a max retry, since we can indefinitely try to remove this
+		err := osRetry(func() error {
+			return os.RemoveAll(tmpdir)
+		}, maxInstallConfRetries)
+		if err != nil {
 			log.Error().Err(err).Msg("failed to remove temporary folder for unpacked provider")
 		}
 	}()
@@ -532,7 +577,9 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		srcBin := filepath.Join(tmpdir, name)
 		dstBin := filepath.Join(dstPath, name)
 		log.Debug().Str("src", srcBin).Str("dst", dstBin).Msg("move provider binary")
-		if err = os.Rename(srcBin, dstBin); err != nil {
+		if err = osRetry(func() error {
+			return os.Rename(srcBin, dstBin)
+		}, maxInstallBinaryRetries); err != nil {
 			return nil, err
 		}
 		if err = os.Chmod(dstBin, 0o755); err != nil {
@@ -541,10 +588,14 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 
 		srcMeta := filepath.Join(tmpdir, providerName)
 		dstMeta := filepath.Join(dstPath, providerName)
-		if err = os.Rename(srcMeta+".json", dstMeta+".json"); err != nil {
+		if err = osRetry(func() error {
+			return os.Rename(srcMeta+".json", dstMeta+".json")
+		}, maxInstallConfRetries); err != nil {
 			return nil, err
 		}
-		if err = os.Rename(srcMeta+".resources.json", dstMeta+".resources.json"); err != nil {
+		if err = osRetry(func() error {
+			return os.Rename(srcMeta+".resources.json", dstMeta+".resources.json")
+		}, maxInstallConfRetries); err != nil {
 			return nil, err
 		}
 
