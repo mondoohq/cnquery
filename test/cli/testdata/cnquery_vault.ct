@@ -1,12 +1,12 @@
 $ cnquery vault
-Manage vault environments.
+Manage vault environments
 
 Usage:
   cnquery vault [command]
 
 Available Commands:
-  add-secret  Store a secret in a vault.
-  configure   Configure a vault environment.
+  add-secret  Store a secret in a vault
+  configure   Configure a vault environment
 
 Flags:
   -h, --help   help for vault

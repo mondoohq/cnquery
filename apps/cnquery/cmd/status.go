@@ -35,7 +35,7 @@ func init() {
 // StatusCmd represents the version command
 var StatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Verify access to Mondoo Platform.",
+	Short: "Verify access to Mondoo Platform",
 	Long: `
 Status sends a ping to Mondoo Platform to verify the credentials.
 	`,

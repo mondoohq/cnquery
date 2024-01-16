@@ -59,7 +59,7 @@ func init() {
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "Scan assets with one or more query packs.",
+	Short: "Scan assets with one or more query packs",
 	Long: `
 This command scans an asset using a query pack. For example, you can scan
 the local system with its pre-configured query pack:

@@ -39,7 +39,7 @@ func init() {
 var packBundlesCmd = &cobra.Command{
 	Use:     "bundle",
 	Aliases: []string{"pack"},
-	Short:   "Create, upload, and validate query packs.",
+	Short:   "Create, upload, and validate query packs",
 }
 
 //go:embed bundle_querypack-example.mql.yaml
@@ -47,7 +47,8 @@ var embedQueryPackTemplate []byte
 
 var queryPackInitCmd = &cobra.Command{
 	Use:   "init [path]",
-	Short: "Create an example query pack that you can use as a starting point. If you don't provide a filename, cnquery uses `example-pack.mql.yaml`.",
+	Short: "Create an example query pack",
+	Long:  "Create an example query pack that you can use as a starting point. If you don't provide a filename, cnquery uses `example-pack.mql.yaml`.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := "example-pack.mql.yaml"
@@ -124,7 +125,7 @@ func ensureProviders() error {
 var queryPackLintCmd = &cobra.Command{
 	Use:     "lint [path]",
 	Aliases: []string{"validate"},
-	Short:   "Apply style formatting to a query pack.",
+	Short:   "Apply style formatting to a query pack",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info().Str("file", args[0]).Msg("lint query pack")
@@ -157,7 +158,7 @@ var queryPackLintCmd = &cobra.Command{
 var queryPackPublishCmd = &cobra.Command{
 	Use:     "publish [path]",
 	Aliases: []string{"upload"},
-	Short:   "Add a user-owned query pack to the Mondoo Security Registry.",
+	Short:   "Add a user-owned query pack to the Mondoo Security Registry",
 	Args:    cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))

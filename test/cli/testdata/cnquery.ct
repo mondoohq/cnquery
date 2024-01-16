@@ -11,19 +11,19 @@ Usage:
   cnquery [command]
 
 Available Commands:
-  bundle        Create, upload, and validate query packs.
+  bundle        Create, upload, and validate query packs
   completion    Generate the autocompletion script for the specified shell
   help          Help about any command
-  login         Register with Mondoo Platform.
-  logout        Log out from Mondoo Platform.
-  providers     Providers add connectivity to all assets.
-  run           Run an MQL query.
-  sbom          Experimental: Generate a software bill of materials (SBOM) for a given asset.
-  scan          Scan assets with one or more query packs.
-  shell         Interactive query shell for MQL.
-  status        Verify access to Mondoo Platform.
-  vault         Manage vault environments.
-  version       Display the cnquery version.
+  login         Register with Mondoo Platform
+  logout        Log out from Mondoo Platform
+  providers     Providers add connectivity to all assets
+  run           Run an MQL query
+  sbom          Experimental: Generate a software bill of materials (SBOM) for a given asset
+  scan          Scan assets with one or more query packs
+  shell         Interactive query shell for MQL
+  status        Verify access to Mondoo Platform
+  vault         Manage vault environments
+  version       Display the cnquery version
 
 Flags:
       --api-proxy string   Set proxy for communications with Mondoo API

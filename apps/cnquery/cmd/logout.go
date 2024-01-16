@@ -27,7 +27,7 @@ func init() {
 var LogoutCmd = &cobra.Command{
 	Use:     "logout",
 	Aliases: []string{"unregister"},
-	Short:   "Log out from Mondoo Platform.",
+	Short:   "Log out from Mondoo Platform",
 	Long: `
 This process also revokes the Mondoo Platform service account to 
 ensure the credentials cannot be used in the future.

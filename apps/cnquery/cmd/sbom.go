@@ -31,7 +31,7 @@ func init() {
 
 var sbomCmd = &cobra.Command{
 	Use:   "sbom",
-	Short: "Experimental: Generate a software bill of materials (SBOM) for a given asset.",
+	Short: "Experimental: Generate a software bill of materials (SBOM) for a given asset",
 	Long: `Generate a software bill of materials (SBOM) for a given asset. The SBOM
 is a representation of the asset's software components and their dependencies.
 

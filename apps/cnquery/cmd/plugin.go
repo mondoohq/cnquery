@@ -30,7 +30,7 @@ import (
 var pluginCmd = &cobra.Command{
 	Use:    "run_as_plugin",
 	Hidden: true,
-	Short:  "Run as a plugin.",
+	Short:  "Run as a plugin",
 	Run: func(cmd *cobra.Command, args []string) {
 		plugin.Serve(&plugin.ServeConfig{
 			HandshakeConfig: shared.Handshake,
