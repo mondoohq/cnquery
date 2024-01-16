@@ -158,18 +158,7 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 	}
 
 	// the default is always os.local if it exists
-	if p, ok := existing[providers.DefaultOsID]; ok {
-		for i := range p.Connectors {
-			c := p.Connectors[i]
-			if c.Name == "local" {
-				setDefaultConnector(p.Provider, &c, cmd)
-				break
-			}
-		}
-	}
-
-	// temp for migrating v9 beta users
-	if p, ok := existing[providers.DeprecatedDefaultOsID]; ok {
+	if p, ok := existing.GetFirstID(providers.DefaultOsIDs...); ok {
 		for i := range p.Connectors {
 			c := p.Connectors[i]
 			if c.Name == "local" {
