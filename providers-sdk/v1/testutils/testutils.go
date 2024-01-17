@@ -227,6 +227,13 @@ func Local() llx.Runtime {
 	}
 	runtime.AddConnectedProvider(&providers.ConnectedProvider{Instance: provider})
 
+	// Since the testutils runtime is meant to be used with in-memory
+	// providers only, we deactivate any type of discovery on the system.
+	// This prevents us from accidentally pulling locally installed providers
+	// which may not work with the current dependencies. The task of testing
+	// those falls to an integration environment, not to unit tests.
+	runtime.DeactivateProviderDiscovery()
+
 	return runtime
 }
 
