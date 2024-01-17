@@ -8,9 +8,9 @@ toolchain go1.21.3
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.1
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.4.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.5.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/microsoft/kiota-abstractions-go v1.5.3
+	github.com/microsoft/kiota-abstractions-go v1.5.4
 	github.com/microsoft/kiota-authentication-azure-go v1.0.1
 	github.com/microsoftgraph/msgraph-sdk-go v1.29.0
 	github.com/pkg/errors v0.9.1
