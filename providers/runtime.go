@@ -581,11 +581,13 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		"go.mondoo.com/cnquery/providers/core",
 		"go.mondoo.com/cnquery/providers/network",
 		// FIXME: DEPRECATED, remove in v12.0 vv
-		// Until v10 providers had a version indication in their ID. With v10
-		// this is no longer the case. Once we get far enough away from legacy
+		// Providers traditionally had a version indication in their ID. With v10
+		// this is no longer necessary (but still supported due to a bug,
+		// see https://github.com/mondoohq/cnquery/pull/3053).
+		// Once we get far enough away from legacy
 		// version support, we can safely remove this.
-		"go.mondoo.com/cnquery/v9/providers/core",    // for backwards compatibility
-		"go.mondoo.com/cnquery/v9/providers/network", // for backwards compatibility
+		"go.mondoo.com/cnquery/v9/providers/core",
+		"go.mondoo.com/cnquery/v9/providers/network",
 		// ^^
 	}
 

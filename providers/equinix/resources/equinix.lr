@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/providers/equinix"
+option provider = "go.mondoo.com/cnquery/v9/providers/equinix"
 option go_package = "go.mondoo.com/cnquery/v10/providers/equinix/resources"
 
 // Equinix Metal project

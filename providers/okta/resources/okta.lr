@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/providers/okta"
+option provider = "go.mondoo.com/cnquery/v9/providers/okta"
 option go_package = "go.mondoo.com/cnquery/v10/providers/okta/resources"
 
 // Okta

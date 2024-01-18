@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/providers/azure"
+option provider = "go.mondoo.com/cnquery/v9/providers/azure"
 option go_package = "go.mondoo.com/cnquery/v10/providers/azure/resources"
 
 // Azure resource

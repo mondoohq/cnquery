@@ -10,7 +10,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "vcd",
-	ID:              "go.mondoo.com/cnquery/providers/vcd",
+	ID:              "go.mondoo.com/cnquery/v9/providers/vcd",
 	Version:         "9.1.15",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
