@@ -376,6 +376,8 @@ private github.file @defaults("name type") {
   repoName string
   // File content
   content() string
+  // File Download URL
+  downloadUrl string
 }
 
 // GitHub release

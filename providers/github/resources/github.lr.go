@@ -672,6 +672,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.file.content": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubFile).GetContent()).ToDataRes(types.String)
 	},
+	"github.file.downloadUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubFile).GetDownloadUrl()).ToDataRes(types.String)
+	},
 	"github.release.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRelease).GetUrl()).ToDataRes(types.String)
 	},
@@ -1649,6 +1652,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.file.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubFile).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.file.downloadUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubFile).DownloadUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.release.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3765,6 +3772,7 @@ type mqlGithubFile struct {
 	OwnerName plugin.TValue[string]
 	RepoName plugin.TValue[string]
 	Content plugin.TValue[string]
+	DownloadUrl plugin.TValue[string]
 }
 
 // createGithubFile creates a new instance of this resource
@@ -3852,6 +3860,10 @@ func (c *mqlGithubFile) GetContent() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
 		return c.content()
 	})
+}
+
+func (c *mqlGithubFile) GetDownloadUrl() *plugin.TValue[string] {
+	return &c.DownloadUrl
 }
 
 // mqlGithubRelease for the github.release resource

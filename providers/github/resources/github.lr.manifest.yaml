@@ -97,6 +97,8 @@ resources:
   github.file:
     fields:
       content: {}
+      downloadUrl:
+        min_mondoo_version: 9.0.0
       files: {}
       isBinary: {}
       name:
