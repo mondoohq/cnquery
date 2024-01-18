@@ -33,6 +33,7 @@ func (m *mqlMondoo) jobEnvironment() (map[string]interface{}, error) {
 }
 
 func (m *mqlMondoo) capabilities() ([]interface{}, error) {
-	// This method should never be reached. These values are set during the `connect` call.
+	// This method should never be reached.
+	// These values are set during the `connect` call.
 	return []interface{}{}, nil
 }
