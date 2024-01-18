@@ -17,10 +17,10 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.49.21
+	github.com/aws/aws-sdk-go v1.49.23
 	github.com/aws/aws-sdk-go-v2 v1.24.1
-	github.com/aws/aws-sdk-go-v2/config v1.26.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.14
+	github.com/aws/aws-sdk-go-v2/config v1.26.4
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.15
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.144.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.6
@@ -48,7 +48,7 @@ require (
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/google/go-cmdtest v0.4.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.17.0
+	github.com/google/go-containerregistry v0.18.0
 	github.com/google/uuid v1.5.0
 	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-plugin v1.6.0
@@ -106,13 +106,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.1
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.1
 	// pin v0.28.4
-	k8s.io/component-base v0.28.4
+	k8s.io/component-base v0.29.1
 	// pin v0.28.4
-	k8s.io/kubelet v0.28.4
+	k8s.io/kubelet v0.29.1
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -193,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -395,7 +395,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.29.1 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	modernc.org/libc v1.40.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
