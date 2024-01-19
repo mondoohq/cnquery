@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-macos-inventory
     name: macOS Inventory Pack
-    version: 1.2.0
+    version: 1.3.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -75,13 +75,32 @@ packs:
         mql: packages
       - uid: mondoo-macos-running-services
         title: Running services
-        mql: services.where( running == true )
+        mql: services.where(running == true) { name running enabled masked type }
       - uid: mondoo-macos-ports-listening
         title: Listening ports
-        mql: ports.listening
+        mql: ports.where(state != "close") { user state port address protocol process remoteAddress remotePort }
       - uid: mondoo-macos-interface-configuration
         title: Network interface configuration
         mql: command("ifconfig").stdout
       - uid: mondoo-macos-recommended-software-updates
         title: Recommended software updates
-        mql: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates'] 
+        mql: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']
+      - uid: mondoo-macos-smbios-system
+        title: SMBIOS System information
+        mql: machine.system { sku serial family version product uuid manufacturer }
+      - uid: mondoo-macos-storage
+        title: Storage Data
+        mql: |
+          parse.json(content: command('system_profiler SPStorageDataType -json').stdout).params
+      - uid: mondoo-macos-power
+        title: Power Data
+        mql: |
+          parse.json(content: command('system_profiler SPPowerDataType -json').stdout).params
+      - uid: mondoo-macos-power
+        title: Network Data
+        mql: |
+          parse.json(content: command('system_profiler SPNetworkDataType -json').stdout).params
+      - uid: mondoo-macos-power
+        title: Configuration Profile Data
+        mql: |
+          parse.json(content: command('system_profiler SPConfigurationProfileDataType -json').stdout).params
