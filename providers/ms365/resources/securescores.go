@@ -74,31 +74,22 @@ func msSecureScoreToMql(runtime *plugin.Runtime, score models.SecureScoreable) (
 }
 
 func (a *mqlMicrosoftSecurity) latestSecureScores() (*mqlMicrosoftSecuritySecurityscore, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
-	if err != nil {
-		return nil, err
+	secureScores := a.GetSecureScores()
+	if secureScores.Error != nil {
+		return nil, secureScores.Error
 	}
-	ctx := context.Background()
-	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecureScoresRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-
-	scores := resp.GetValue()
-	if len(scores) == 0 {
+	if len(secureScores.Data) == 0 {
 		return nil, errors.New("could not retrieve any score")
 	}
 
-	latestScore := scores[0]
-	for i := range scores {
-		score := scores[i]
-		if score.GetCreatedDateTime() != nil && (latestScore.GetCreatedDateTime() == nil || score.GetCreatedDateTime().Before(*latestScore.GetCreatedDateTime())) {
-			latestScore = score
+	latest := secureScores.Data[0].(*mqlMicrosoftSecuritySecurityscore)
+	for _, s := range secureScores.Data {
+		mqlS := s.(*mqlMicrosoftSecuritySecurityscore)
+		if mqlS.CreatedDateTime.Data.After(*latest.CreatedDateTime.Data) {
+			latest = mqlS
 		}
 	}
-
-	return msSecureScoreToMql(a.MqlRuntime, latestScore)
+	return latest, nil
 }
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
