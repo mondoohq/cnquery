@@ -16,10 +16,10 @@ import (
 func GetTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
-	// fallback to CLI authorizer if no credentials are specified
+	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		log.Debug().Msg("using azure cli to get a token")
-		azCred, err = azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
+		log.Debug().Msg("using default azure token resolver")
+		azCred, err = azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating CLI credentials")
 		}
