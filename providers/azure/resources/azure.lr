@@ -131,6 +131,12 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   name string
   // VM location
   location string
+  // VM zones
+  zones []string
+  // VM state
+  state() string
+  // Indicates if the VM is running
+  isRunning() bool
   // VM tags
   tags map[string]string
   // VM type

@@ -22,6 +22,22 @@ func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
 	return "azure.subscription.compute/" + a.SubscriptionId.Data, nil
 }
 
+func getState(vm compute.VirtualMachineInstanceView) string {
+	if vm.Statuses == nil {
+		return "unknown"
+	}
+	state := "unknown"
+	for _, s := range vm.Statuses {
+		if s.Code != nil && *s.Code == "PowerState/running" {
+			state = "running"
+		}
+		if s.Code != nil && *s.Code == "PowerState/deallocated" {
+			state = "stopped"
+		}
+	}
+	return state
+}
+
 func initAzureSubscriptionComputeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -65,6 +81,7 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 					"id":         llx.StringData(convert.ToString(vm.ID)),
 					"name":       llx.StringData(convert.ToString(vm.Name)),
 					"location":   llx.StringData(convert.ToString(vm.Location)),
+					"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
 					"type":       llx.StringData(convert.ToString(vm.Type)),
 					"properties": llx.DictData(properties),
@@ -77,6 +94,48 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) state() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	// id is a Azure resource ID
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return "", err
+	}
+
+	vm, err := resourceID.Component("virtualMachines")
+	if err != nil {
+		return "", err
+	}
+
+	ctx := context.Background()
+	token := conn.Token()
+	if err != nil {
+		return "", err
+	}
+
+	client, err := compute.NewVirtualMachinesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	view, err := client.InstanceView(ctx, resourceID.ResourceGroup, vm, &compute.VirtualMachinesClientInstanceViewOptions{})
+	if err != nil {
+		return "", err
+	}
+	return getState(view.VirtualMachineInstanceView), nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) isRunning() (bool, error) {
+	state := a.GetState()
+	if state.Error != nil {
+		return false, state.Error
+	}
+	return state.Data == "running", nil
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]interface{}, error) {
@@ -274,7 +333,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]interface{}, error
 	}
 
 	if properties.StorageProfile == nil || properties.StorageProfile.DataDisks == nil {
-		return nil, errors.New("could not determine os disk from vm storage profile")
+		return nil, errors.New("could not determine data disks from vm storage profile")
 	}
 
 	dataDisks := properties.StorageProfile.DataDisks

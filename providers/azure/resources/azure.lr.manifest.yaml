@@ -10,8 +10,8 @@ resources:
       - azure
   azure.subscription:
     docs:
-      desc: |
-        Use the `azure.subscription` resource to assess the configuration of Azure subscriptions. 
+      desc: "Use the `azure.subscription` resource to assess the configuration of
+        Azure subscriptions. \n"
     fields:
       advisor: {}
       aks: {}
@@ -64,8 +64,8 @@ resources:
       - azure
   azure.subscription.advisorService:
     docs:
-      desc: |
-        Use the `azure.subscription.advisorService` resource to retrieve scoring and recommendations from Microsoft Azure Advisor. 
+      desc: "Use the `azure.subscription.advisorService` resource to retrieve scoring
+        and recommendations from Microsoft Azure Advisor. \n"
     fields:
       averageScore: {}
       recommendations: {}
@@ -77,8 +77,12 @@ resources:
       name:
       - azure
     snippets:
-    - query: "azure.subscription.advisorService {\n  averageScore > 90\n}\n"
-      title: Check if the average score that the Azure Advisor service gives the subscription is greater than 90
+    - query: |
+        azure.subscription.advisorService {
+          averageScore > 90
+        }
+      title: Check if the average score that the Azure Advisor service gives the subscription
+        is greater than 90
   azure.subscription.advisorService.recommendation:
     fields:
       category: {}
@@ -390,13 +394,16 @@ resources:
       dataDisks: {}
       extensions: {}
       id: {}
+      isRunning: {}
       location: {}
       name: {}
       osDisk: {}
       properties: {}
       publicIpAddresses: {}
+      state: {}
       tags: {}
       type: {}
+      zones: {}
     min_mondoo_version: latest
     platform:
       name:
