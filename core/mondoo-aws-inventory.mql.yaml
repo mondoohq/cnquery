@@ -64,7 +64,7 @@ packs:
           desc: |
             This query retrieves all AWS EC2 Security Groups
         mql: aws.ec2.securityGroups
-      - uid: mondoo-asset-inventory-aws-ec2-volumes
+      - uid: mondoo-asset-inventory-aws-ebs-volumes
         title: EBS volumes
         docs:
           desc: |
