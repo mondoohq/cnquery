@@ -508,6 +508,11 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProces
 			return nil, err
 		}
 
+		portObj := obj.(*mqlPort)
+		if process == nil {
+			portObj.Process.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+
 		res = append(res, obj)
 	}
 	return res, nil
@@ -595,6 +600,10 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			if err != nil {
 				log.Error().Err(err).Send()
 				return nil, err
+			}
+			portObj := obj.(*mqlPort)
+			if mqlProcess == nil {
+				portObj.Process.State = plugin.StateIsSet | plugin.StateIsNull
 			}
 
 			res = append(res, obj)
