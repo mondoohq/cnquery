@@ -33,6 +33,7 @@ const (
 	DiscoveryS3Buckets                  = "s3-buckets"
 	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
 	DiscoveryRdsDbInstances             = "rds-dbinstances"
+	DiscoveryRdsDbClusters              = "rds-dbclusters"
 	DiscoveryVPCs                       = "vpcs"
 	DiscoverySecurityGroups             = "security-groups"
 	DiscoveryIAMUsers                   = "iam-users"
@@ -71,6 +72,7 @@ var AllAPIResources = []string{
 	DiscoveryS3Buckets,
 	DiscoveryCloudtrailTrails,
 	DiscoveryRdsDbInstances,
+	DiscoveryRdsDbClusters,
 	DiscoveryVPCs,
 	DiscoverySecurityGroups,
 	DiscoveryIAMUsers,
@@ -521,6 +523,32 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 				awsObject: awsObject{
 					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
 					id: f.Id.Data, service: "rds", objectType: "dbinstance",
+				},
+			}
+			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
+		}
+	case DiscoveryRdsDbClusters:
+		res, err := NewResource(runtime, "aws.rds", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		r := res.(*mqlAwsRds)
+
+		clusters := r.GetDbClusters()
+		if clusters == nil {
+			return assetList, nil
+		}
+
+		for i := range clusters.Data {
+			f := clusters.Data[i].(*mqlAwsRdsDbcluster)
+
+			tags := mapStringInterfaceToStringString(f.Tags.Data)
+			m := mqlObject{
+				name: f.Id.Data, labels: tags,
+				awsObject: awsObject{
+					account: accountId, region: f.Region.Data, arn: f.Arn.Data,
+					id: f.Id.Data, service: "rds", objectType: "dbcluster",
 				},
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))

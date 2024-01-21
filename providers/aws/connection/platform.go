@@ -34,6 +34,8 @@ func getTitleForPlatformName(name string) string {
 		return "AWS CloudTrail Trail"
 	case "aws-rds-dbinstance":
 		return "AWS RDS DB Instance"
+	case "aws-rds-dbcluster":
+		return "AWS RDS DB Cluster"
 	case "aws-dynamodb-table":
 		return "AWS DynamoDB Table"
 	case "aws-redshift-cluster":
