@@ -5,6 +5,7 @@
 # show off some of the more advanced features. It is meant as a demo only.
 packs:
 - uid: mixed-os
+  name: Sample OS Query Pack for Linux and macOS
   filters:
   - asset.family.contains("unix")
 

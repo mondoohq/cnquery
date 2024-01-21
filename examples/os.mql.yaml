@@ -3,6 +3,7 @@
 
 packs:
 - uid: linux-mixed-queries
+  name: Linux Mixed Queries
   filters:
   - asset.family.contains("unix")
 
