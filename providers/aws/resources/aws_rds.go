@@ -318,16 +318,19 @@ func (a *mqlAwsRdsDbcluster) snapshots() ([]interface{}, error) {
 		for _, snapshot := range snapshots.DBClusterSnapshots {
 			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
-					"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
-					"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
-					"type":              llx.StringDataPtr(snapshot.SnapshotType),
-					"region":            llx.StringData(region),
-					"encrypted":         llx.BoolDataPtr(snapshot.StorageEncrypted),
-					"isClusterSnapshot": llx.BoolData(true),
-					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
-					"engine":            llx.StringDataPtr(snapshot.Engine),
-					"status":            llx.StringDataPtr(snapshot.Status),
 					"allocatedStorage":  llx.IntData(convert.ToInt64From32(snapshot.AllocatedStorage)),
+					"arn":               llx.StringDataPtr(snapshot.DBClusterSnapshotArn),
+					"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+					"encrypted":         llx.BoolDataPtr(snapshot.StorageEncrypted),
+					"engine":            llx.StringDataPtr(snapshot.Engine),
+					"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+					"id":                llx.StringDataPtr(snapshot.DBClusterSnapshotIdentifier),
+					"port":              llx.IntData(convert.ToInt64From32(snapshot.Port)),
+					"isClusterSnapshot": llx.BoolData(true),
+					"region":            llx.StringData(region),
+					"status":            llx.StringDataPtr(snapshot.Status),
+					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+					"type":              llx.StringDataPtr(snapshot.SnapshotType),
 				})
 			if err != nil {
 				return nil, err
@@ -360,16 +363,19 @@ func (a *mqlAwsRdsDbinstance) snapshots() ([]interface{}, error) {
 		for _, snapshot := range snapshots.DBSnapshots {
 			mqlDbSnapshot, err := CreateResource(a.MqlRuntime, "aws.rds.snapshot",
 				map[string]*llx.RawData{
-					"arn":               llx.StringDataPtr(snapshot.DBSnapshotArn),
-					"id":                llx.StringDataPtr(snapshot.DBSnapshotIdentifier),
-					"type":              llx.StringDataPtr(snapshot.SnapshotType),
-					"region":            llx.StringData(region),
-					"encrypted":         llx.BoolDataPtr(snapshot.Encrypted),
-					"isClusterSnapshot": llx.BoolData(false),
-					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
-					"engine":            llx.StringDataPtr(snapshot.Engine),
-					"status":            llx.StringDataPtr(snapshot.Status),
 					"allocatedStorage":  llx.IntData(convert.ToInt64From32(snapshot.AllocatedStorage)),
+					"arn":               llx.StringDataPtr(snapshot.DBSnapshotArn),
+					"createdAt":         llx.TimeDataPtr(snapshot.SnapshotCreateTime),
+					"encrypted":         llx.BoolDataPtr(snapshot.Encrypted),
+					"engine":            llx.StringDataPtr(snapshot.Engine),
+					"engineVersion":     llx.StringDataPtr(snapshot.EngineVersion),
+					"id":                llx.StringDataPtr(snapshot.DBSnapshotIdentifier),
+					"port":              llx.IntData(convert.ToInt64From32(snapshot.Port)),
+					"isClusterSnapshot": llx.BoolData(false),
+					"region":            llx.StringData(region),
+					"status":            llx.StringDataPtr(snapshot.Status),
+					"tags":              llx.MapData(rdsTagsToMap(snapshot.TagList), types.String),
+					"type":              llx.StringDataPtr(snapshot.SnapshotType),
 				})
 			if err != nil {
 				return nil, err

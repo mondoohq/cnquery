@@ -92,9 +92,9 @@ resources:
       title: Return the account ID (number) and any configured account aliases
   aws.acm:
     docs:
-      desc: Use the `aws.acm` resource to assess the configuration of the
-        AWS Certificates Manager service in the account. This resource returns
-        a list of ACM certificates found in the account.
+      desc: Use the `aws.acm` resource to assess the configuration of the AWS Certificates
+        Manager service in the account. This resource returns a list of ACM certificates
+        found in the account.
     fields:
       certificates: {}
     min_mondoo_version: 5.15.0
@@ -153,8 +153,8 @@ resources:
       - aws
   aws.apigateway:
     docs:
-      desc: Use the `aws.apigateway` resource to assess the configuration
-        of the AWS API Gateway service.
+      desc: Use the `aws.apigateway` resource to assess the configuration of the AWS
+        API Gateway service.
     fields:
       restApis: {}
     min_mondoo_version: 5.15.0
@@ -291,13 +291,12 @@ resources:
     snippets:
     - query: "aws.autoscaling.groups { \n  arn \n  healthCheckType \n  loadBalancerNames
         \n  name \n}\n"
-      title: Return a list of all auto-scaling groups configured across all 
-        enabled regions across the account and
-        the values for specified fields
+      title: Return a list of all auto-scaling groups configured across all enabled
+        regions across the account and the values for specified fields
     - query: "aws.autoscaling.groups.where(loadBalancerNames.length > 0) { \n  healthCheckType
         == \"ELB\" \n}\n"
-      title: Check that all autoscaling groups associated with a load balancer use health
-        checks
+      title: Check that all autoscaling groups associated with a load balancer use
+        health checks
   aws.autoscaling.group:
     docs:
       desc: |
@@ -342,12 +341,11 @@ resources:
     - title: What is AWS Backup?
       url: https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html
     - title: Compliance validation for AWS Backup
-      url: https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-compliance.html  
+      url: https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-compliance.html
     snippets:
-    - query: "aws.backup.vaults { \n  arn \n  region \n  recoveryPoints
-        \n  name \n}\n"
-      title: Return a list of all AWS Backup vaults configured across all 
-        enabled regions across the account and all their recovery points
+    - query: "aws.backup.vaults { \n  arn \n  region \n  recoveryPoints \n  name \n}\n"
+      title: Return a list of all AWS Backup vaults configured across all enabled
+        regions across the account and all their recovery points
   aws.backup.vault:
     docs:
       desc: |
@@ -624,8 +622,8 @@ resources:
       - aws
   aws.codebuild:
     docs:
-      desc: "Use the `aws.codebuild` resource to assess the configuration of the
-        AWS CodeBuild service and the projects within. \n"
+      desc: "Use the `aws.codebuild` resource to assess the configuration of the AWS
+        CodeBuild service and the projects within. \n"
     fields:
       projects: {}
     min_mondoo_version: 5.15.0
@@ -655,8 +653,7 @@ resources:
         AWS_SECRET_ACCESS_KEY are not in plaintext
     - query: "aws.codebuild.projects.where( source['Type'] == \"BITBUCKET\" || source['Type']
         == \"GITHUB\" ) { \n  source['Auth']['Type'] == \"OAUTH\"\n}\n"
-      title: Check that all projects using GitHub or Bitbucket as the source use
-        oauth
+      title: Check that all projects using GitHub or Bitbucket as the source use oauth
   aws.codebuild.project:
     docs:
       desc: |
@@ -1411,8 +1408,8 @@ resources:
       - aws
   aws.elasticache:
     docs:
-      desc: "Use the `aws.elasticache` resource to assess the configuration
-        of Amazon ElastiCache. \n"
+      desc: "Use the `aws.elasticache` resource to assess the configuration of Amazon
+        ElastiCache. \n"
     fields:
       cacheClusters: {}
       clusters: {}
@@ -1508,8 +1505,8 @@ resources:
         load balancer http listeners
     - query: "aws.elb.classicLoadBalancers.all( listenerDescriptions.any ( \n  _['Listener']['Protocol']
         == \"HTTPS\" || _['Listener']['Protocol'] == \"SSL\" ) \n)\n"
-      title: Check that all Classic Load Balancers use SSL certificates provided
-        by AWS Cert Mgr
+      title: Check that all Classic Load Balancers use SSL certificates provided by
+        AWS Cert Mgr
   aws.elb.loadbalancer:
     docs:
       desc: |
@@ -1850,8 +1847,8 @@ resources:
       - aws
   aws.kms:
     docs:
-      desc: "Use the `aws.kms` resource to assess the configuration of AWS
-        KMS keys. \n"
+      desc: "Use the `aws.kms` resource to assess the configuration of AWS KMS keys.
+        \n"
     fields:
       keys: {}
     min_mondoo_version: 5.15.0
@@ -1879,8 +1876,8 @@ resources:
       - aws
   aws.lambda:
     docs:
-      desc: "Use the `aws.lambda` resource to assess the configuration of
-        AWS Lambda. \n"
+      desc: "Use the `aws.lambda` resource to assess the configuration of AWS Lambda.
+        \n"
     fields:
       functions: {}
     min_mondoo_version: 5.15.0
@@ -2052,11 +2049,17 @@ resources:
         min_mondoo_version: 9.0.0
       arn: {}
       attributes: {}
+      createdAt:
+        min_mondoo_version: 10.0.0
       encrypted: {}
       engine:
         min_mondoo_version: 9.0.0
+      engineVersion:
+        min_mondoo_version: 10.0.0
       id: {}
       isClusterSnapshot: {}
+      port:
+        min_mondoo_version: 10.0.0
       region: {}
       status:
         min_mondoo_version: 9.0.0
