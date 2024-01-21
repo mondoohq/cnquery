@@ -384,6 +384,10 @@ func TestDict_Methods_Map(t *testing.T) {
 			Expectation: []interface{}{"a"},
 		},
 		{
+			Code:        p + "params.users.recurse(name != empty).map(name)",
+			Expectation: []any{"yor", "loid", "anya"},
+		},
+		{
 			Code:        p + "params['string-array'].in(['a', 'b', 'c'])",
 			Expectation: true,
 		},

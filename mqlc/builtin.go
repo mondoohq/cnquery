@@ -78,6 +78,7 @@ func init() {
 			"first":        {typ: dictType, signature: FunctionSignature{}},
 			"last":         {typ: dictType, signature: FunctionSignature{}},
 			"where":        {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"recurse":      {compile: compileDictRecurse, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"contains":     {compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"in":           {typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Array(types.String)}}},
 			"containsOnly": {compile: compileDictContainsOnly, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
