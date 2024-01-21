@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-asset-count
     name: Asset Count Query Pack
-    version: 1.1.0
+    version: 1.2.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -24,7 +24,25 @@ packs:
       - title: Azure asset counts
         filters: asset.platform == 'azure'
         queries:
-          - uid: mondoo-asset-count-on-azure
+          - uid: mondoo-asset-count-azure-reource-groups
+          - uid: mondoo-asset-count-azure-vms
+          - uid: mondoo-asset-count-azure-subscription-name
+          - uid: mondoo-asset-count-azure-cosmosdb-accounts
+          - uid: mondoo-asset-count-azure-vaults
+          - uid: mondoo-asset-count-azure-mariaDb-servers
+          - uid: mondoo-asset-count-azure-mySql-servers
+          - uid: mondoo-asset-count-azure-postgreSql-servers
+          - uid: mondoo-asset-count-azure-application-gateways
+          - uid: mondoo-asset-count-azure-bastion-hosts
+          - uid: mondoo-asset-count-azure-firewalls
+          - uid: mondoo-asset-count-azure-loadbalancers
+          - uid: mondoo-asset-count-azure-natgateways
+          - uid: mondoo-asset-count-azure-public-addresses
+          - uid: mondoo-asset-count-azure-security-groups
+          - uid: mondoo-asset-count-azure-virtual-network-gateways
+          - uid: mondoo-asset-count-azure-virtual-networks
+          - uid: mondoo-asset-count-azure-aks-clusters
+          - uid: mondoo-asset-count-azure-aks-agent-pools
       - title: Windows Active Directory asset counts
         filters: asset.platform == "windows"
         queries:
@@ -95,6 +113,16 @@ packs:
         filters: asset.platform == "gitlab-group"
         queries:
           - uid: mondoo-asset-count-gitlab-group-projects
+      - title: K8s Asset Counts
+        filters: asset.platform == "k8s-cluster"
+        queries:
+          - uid: mondoo-asset-count-k8s-nodes
+          - uid: mondoo-asset-count-k8s-daemonsets
+          - uid: mondoo-asset-count-k8s-cronjobs
+          - uid: mondoo-asset-count-k8s-jobs
+          - uid: mondoo-asset-count-k8s-deployments
+          - uid: mondoo-asset-count-k8s-replicasets
+          - uid: mondoo-asset-count-k8s-pods
 queries:
   - uid: mondoo-asset-count-on-vsphere-cluster-esxi
     title: ESXi hosts
@@ -106,10 +134,100 @@ queries:
     mql: |
      vsphere.datacenters { vms.length }
 
-  - uid: mondoo-asset-count-on-azure
+  - uid: mondoo-asset-count-azure-reource-groups
+    title: Azure Resource Groups count
+    mql: |
+      azure.subscription.resourceGroups.length
+
+  - uid: mondoo-asset-count-azure-vms
     title: Azure virtual machine count
     mql: |
-      azure.subscription.compute.vms.length
+      azure.subscription.computeService.vms.length
+
+  - uid: mondoo-asset-count-azure-subscription-name
+    title: Azure subscription name
+    mql: |
+      azure.subscription.name
+
+  - uid: mondoo-asset-count-azure-cosmosdb-accounts
+    title: Azure cosmosDB accounts
+    mql: |
+      azure.subscription.cosmosDb.accounts.length
+
+  - uid: mondoo-asset-count-azure-vaults
+    title: Azure key vaults
+    mql: |
+      azure.subscription.keyVault.vaults.length
+
+  - uid: mondoo-asset-count-azure-mariaDb-servers
+    title: Azure MariaDB servers
+    mql: |
+      azure.subscription.mariaDb.servers.length
+
+  - uid: mondoo-asset-count-azure-mySql-servers
+    title: Azure MySQL servers
+    mql: |
+      azure.subscription.mySql.servers.length
+
+  - uid: mondoo-asset-count-azure-postgreSql-servers
+    title: Azure PostgreSQL servers
+    mql: |
+      azure.subscription.postgreSql.servers.length
+
+  - uid: mondoo-asset-count-azure-application-gateways
+    title: Azure Application Gateways
+    mql: |
+      azure.subscription.network.applicationGateways.length
+
+  - uid: mondoo-asset-count-azure-bastion-hosts
+    title: Azure Bastion Hosts
+    mql: |
+      azure.subscription.network.bastionHosts.length
+
+  - uid: mondoo-asset-count-azure-firewalls
+    title: Azure Firewalls
+    mql: |
+      azure.subscription.network.firewalls.length
+
+  - uid: mondoo-asset-count-azure-loadbalancers
+    title: Azure Load Balancers
+    mql: |
+      azure.subscription.network.loadBalancers.length
+
+  - uid: mondoo-asset-count-azure-natgateways
+    title: Azure NAT Gateways
+    mql: |
+      azure.subscription.network.natGateways.length
+
+  - uid: mondoo-asset-count-azure-public-addresses
+    title: Azure Public Addresses
+    mql: |
+      azure.subscription.network.publicIpAddresses.length
+
+  - uid: mondoo-asset-count-azure-security-groups
+    title: Azure Security Groups
+    mql: |
+      azure.subscription.network.securityGroups.length
+
+  - uid: mondoo-asset-count-azure-virtual-network-gateways
+    title: Azure virtual Network Security Gateways
+    mql: |
+      azure.subscription.network.virtualNetworkGateways.length
+
+  - uid: mondoo-asset-count-azure-virtual-networks
+    title: Azure virtual Networks
+    mql: |
+      azure.subscription.network.virtualNetworks.length
+
+  - uid: mondoo-asset-count-azure-aks-clusters
+    title: Azure AKS Clusters
+    mql: |
+      azure.subscription.aks.clusters.length
+
+  - uid: mondoo-asset-count-azure-aks-agent-pools
+    title: Azure AKS Cluster Agent Pool Count
+    mql: |
+      azure.subscription.aks.clusters { agentPoolProfiles.length }
 
   - uid: mondoo-count-users-in-entra-id
     title: Entra ID user count
@@ -334,3 +452,31 @@ queries:
   - uid: mondoo-asset-count-gitlab-group-projects
     title: GitLab Group Projects
     mql: gitlab.group.projects.length
+
+  - uid: mondoo-asset-count-k8s-nodes
+    title: K8s Nodes count
+    mql: k8s.nodes.length
+
+  - uid: mondoo-asset-count-k8s-daemonsets
+    title: K8s Daemon Sets count
+    mql: k8s.daemonsets.length
+
+  - uid: mondoo-asset-count-k8s-cronjobs
+    title: K8s Cronjobs count
+    mql: k8s.cronjobs.length
+
+  - uid: mondoo-asset-count-k8s-jobs
+    title: K8s Jobs count
+    mql: k8s.jobs.length
+
+  - uid: mondoo-asset-count-k8s-deployments
+    title: K8s Deployments count
+    mql: k8s.deployments.length
+
+  - uid: mondoo-asset-count-k8s-replicasets
+    title: K8s Replicasets count
+    mql: k8s.replicasets.length
+
+  - uid: mondoo-asset-count-k8s-pods
+    title: K8s PODs count
+    mql: k8s.pods.length
