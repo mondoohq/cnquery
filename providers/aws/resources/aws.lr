@@ -1823,7 +1823,7 @@ private aws.rds.dbcluster @defaults("id region") {
 }
 
 // Amazon RDS snapshot
-private aws.rds.snapshot @defaults("id region type encrypted") {
+private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   // ARN of the snapshot
   arn string
   // ID of the snapshot
@@ -1842,10 +1842,16 @@ private aws.rds.snapshot @defaults("id region type encrypted") {
   tags map[string]string
   // The snapshot DB engine
   engine string
+  // The snapshot DB engine version
+  engineVersion string
   // The snapshot status
   status string
   // The amount of storage allocated to the snapshot
   allocatedStorage int
+  // The port that the DB instance or cluster listens on
+  port int
+  // The creation date of the snapshot
+  createdAt time
 }
 
 // Amazon RDS database instance
@@ -2279,7 +2285,7 @@ private aws.ec2.internetgateway @defaults("arn") {
   attachments []dict
 }
 
-// Amazon EC2 snapshot
+// Amazon EC2 (EBS) snapshot
 private aws.ec2.snapshot @defaults("id region volumeSize state") {
   // ARN for the snapshot
   arn string
@@ -2305,7 +2311,7 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   encrypted bool
 }
 
-// Amazon EC2 volume
+// Amazon EC2 (EBS) volume
 private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   // ARN for the EC2 volume
   arn string

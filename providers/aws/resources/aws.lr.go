@@ -2731,11 +2731,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.snapshot.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetEngine()).ToDataRes(types.String)
 	},
+	"aws.rds.snapshot.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetEngineVersion()).ToDataRes(types.String)
+	},
 	"aws.rds.snapshot.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetStatus()).ToDataRes(types.String)
 	},
 	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.rds.snapshot.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.rds.snapshot.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
@@ -6801,12 +6810,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsSnapshot).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.snapshot.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.rds.snapshot.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17737,8 +17758,11 @@ type mqlAwsRdsSnapshot struct {
 	IsClusterSnapshot plugin.TValue[bool]
 	Tags plugin.TValue[map[string]interface{}]
 	Engine plugin.TValue[string]
+	EngineVersion plugin.TValue[string]
 	Status plugin.TValue[string]
 	AllocatedStorage plugin.TValue[int64]
+	Port plugin.TValue[int64]
+	CreatedAt plugin.TValue[*time.Time]
 }
 
 // createAwsRdsSnapshot creates a new instance of this resource
@@ -17816,12 +17840,24 @@ func (c *mqlAwsRdsSnapshot) GetEngine() *plugin.TValue[string] {
 	return &c.Engine
 }
 
+func (c *mqlAwsRdsSnapshot) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
 func (c *mqlAwsRdsSnapshot) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
 func (c *mqlAwsRdsSnapshot) GetAllocatedStorage() *plugin.TValue[int64] {
 	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsRdsSnapshot) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsRdsSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsRdsDbinstance for the aws.rds.dbinstance resource
