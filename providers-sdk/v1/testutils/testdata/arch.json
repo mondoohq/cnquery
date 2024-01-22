@@ -133,7 +133,7 @@
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3]\n}\n"
+              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3],\n  \"users\": [\n    {\n      \"name\": \"yor\",\n      \"children\": [\n        {\"name\": \"anya\"}\n      ]\n    },\n    {\"name\": \"loid\"}\n  ],\n  \"zzzlast\": \"🌒\"}\n"
             },
             "path": {
               "type": "\u0007",

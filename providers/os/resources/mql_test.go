@@ -71,7 +71,7 @@ func TestOS_Vars(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			Code:        "p = file('/dummy.json'); parse.json(file: p).params.length",
-			Expectation: int64(11),
+			Expectation: int64(13),
 		},
 	})
 }
@@ -97,15 +97,15 @@ func TestMap(t *testing.T) {
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.length",
-			Expectation: int64(11),
+			Expectation: int64(13),
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.keys.length",
-			Expectation: int64(11),
+			Expectation: int64(13),
 		},
 		{
 			Code:        "parse.json('/dummy.json').params.values.length",
-			Expectation: int64(11),
+			Expectation: int64(13),
 		},
 		{
 			Code: "parse.json('/dummy.json').params { _['Protocol'] != 1 }",
@@ -384,6 +384,10 @@ func TestDict_Methods_Map(t *testing.T) {
 			Expectation: []interface{}{"a"},
 		},
 		{
+			Code:        p + "params.users.recurse(name != empty).map(name)",
+			Expectation: []any{"yor", "loid", "anya"},
+		},
+		{
 			Code:        p + "params['string-array'].in(['a', 'b', 'c'])",
 			Expectation: true,
 		},
@@ -457,7 +461,7 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			Code:        p + "params.last",
-			Expectation: true,
+			Expectation: "🌒",
 		},
 		{
 			Code:        p + "params['aoa'].flat",

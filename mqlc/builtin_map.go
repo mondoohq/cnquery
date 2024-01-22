@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v10/types"
 )
 
-func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileDictQuery(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
 	}
@@ -129,8 +129,16 @@ func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *
 	return typ, nil
 }
 
+func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	return compileDictQuery(c, typ, ref, id, call)
+}
+
+func compileDictRecurse(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	return compileDictQuery(c, typ, ref, "recurse", call)
+}
+
 func compileDictContains(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileDictWhere(c, typ, ref, "where", call)
+	_, err := compileDictQuery(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -326,7 +334,7 @@ func compileDictContainsNone(c *compiler, typ types.Type, ref uint64, id string,
 }
 
 func compileDictAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileDictWhere(c, typ, ref, "$whereNot", call)
+	_, err := compileDictQuery(c, typ, ref, "$whereNot", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -352,7 +360,7 @@ func compileDictAll(c *compiler, typ types.Type, ref uint64, id string, call *pa
 }
 
 func compileDictAny(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileDictWhere(c, typ, ref, "where", call)
+	_, err := compileDictQuery(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -378,7 +386,7 @@ func compileDictAny(c *compiler, typ types.Type, ref uint64, id string, call *pa
 }
 
 func compileDictOne(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileDictWhere(c, typ, ref, "where", call)
+	_, err := compileDictQuery(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -404,7 +412,7 @@ func compileDictOne(c *compiler, typ types.Type, ref uint64, id string, call *pa
 }
 
 func compileDictNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileDictWhere(c, typ, ref, "where", call)
+	_, err := compileDictQuery(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}

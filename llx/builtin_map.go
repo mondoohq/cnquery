@@ -722,7 +722,13 @@ func _dictArrayWhere(e *blockExecutor, list []interface{}, chunk *Chunk, ref uin
 	return nil, 0, nil
 }
 
-func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
+// Query a dict object, cycling over all child objects it contains with the given
+// query function. This only works in cases where q query function makes sense,
+// like:
+// - [a, b, c].query( F )    = [a, b]
+// - {a: b, c: d}.query( F ) = {a: b}
+// Note: Results get stored in cache for this ref
+func _dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	itemsRef := chunk.Function.Args[0]
 	items, rref, err := e.resolveValue(itemsRef, ref)
 	if err != nil || rref > 0 {
@@ -811,12 +817,132 @@ func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inv
 	return nil, 0, nil
 }
 
-func dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _dictWhereV2(e, bind, chunk, ref, false)
+func dictWhere(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _dictWhere(e, bind, chunk, ref, false)
 }
 
-func dictWhereNotV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	return _dictWhereV2(e, bind, chunk, ref, true)
+func dictWhereNot(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _dictWhere(e, bind, chunk, ref, true)
+}
+
+func filterList(e *blockExecutor, list []any, chunk *Chunk, ref uint64, invert bool) ([]any, uint64, error) {
+	arg1 := chunk.Function.Args[1]
+	fref, ok := arg1.RefV2()
+	if !ok {
+		return nil, 0, errors.New("failed to retrieve function reference (in dict list query)")
+	}
+
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
+	argsList := make([][]*RawData, len(list))
+	for i, value := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  types.Dict,
+				Value: i,
+			},
+			{
+				Type:  types.Dict,
+				Value: value,
+			},
+		}
+	}
+
+	var res []any
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		resList := []any{}
+		for i, res := range results {
+			if res.isTruthy() == !invert {
+				key := argsList[i][0].Value.(int)
+				resList = append(resList, list[key])
+			}
+		}
+		res = resList
+	})
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return res, 0, nil
+}
+
+// The recurse function only works on lists and maps. It traverses child structures
+// and finds any objects that match the given search function
+func _dictRecurse(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := e.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	remaining := []any{items.Value}
+	res := []any{}
+	var candidate any
+	for len(remaining) != 0 {
+		candidate = remaining[0]
+		remaining = remaining[1:]
+
+		if candidate == nil {
+			continue
+		}
+
+		var list []any
+		if x, ok := candidate.([]any); ok {
+			list = x
+		} else if x, ok := candidate.(map[string]any); ok {
+			list = make([]any, len(x))
+			i := 0
+			for _, v := range x {
+				list[i] = v
+				i++
+			}
+		}
+
+		if len(list) == 0 {
+			continue
+		}
+
+		partial, dref, err := filterList(e, list, chunk, ref, invert)
+		if dref != 0 || err != nil {
+			return nil, dref, err
+		}
+		res = append(res, partial...)
+
+		// we only add items to the remaining, that actually match our type requirements
+		// (this is trying to keep additional memory juggling to a minimum, instead
+		// of doing this one level deeper)
+		for i := range list {
+			li := list[i]
+			if x, ok := li.([]any); ok {
+				remaining = append(remaining, x)
+			} else if x, ok := li.(map[string]any); ok {
+				remaining = append(remaining, x)
+			}
+		}
+	}
+
+	data := &RawData{
+		Type:  types.Dict,
+		Value: res,
+	}
+	e.cache.Store(ref, &stepCache{
+		Result:   data,
+		IsStatic: false,
+	})
+
+	return data, 0, nil
+}
+
+func dictRecurse(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return _dictRecurse(e, bind, chunk, ref, false)
 }
 
 func dictAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
