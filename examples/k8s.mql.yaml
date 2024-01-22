@@ -3,6 +3,7 @@
 
 packs:
   - uid: kubernetes-pod-security-info
+    name: Kubernetes Pod Security Info
     filters:
       - asset.platform == "k8s-pod"
     queries:
