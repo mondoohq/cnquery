@@ -50,4 +50,5 @@ jobs:
           make prep
           make cnquery/generate
           git diff --exit-code *.go
-          git diff --exit-code resources/packs/**/*.lr.json
+          git diff --exit-code providers/**/*.lr.json
+          git diff --exit-code providers/**/*.resources.json
