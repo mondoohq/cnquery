@@ -41,6 +41,7 @@ const (
 	DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
 	DiscoveryLambdaFunctions            = "lambda-functions"
 	DiscoveryDynamoDBTables             = "dynamodb-tables"
+	DiscoveryDynamoDBGlobalTables       = "dynamodb-global-tables"
 	DiscoveryRedshiftClusters           = "redshift-clusters"
 	DiscoveryVolumes                    = "ec2-volumes"
 	DiscoverySnapshots                  = "ec2-snapshots"
@@ -80,6 +81,7 @@ var AllAPIResources = []string{
 	DiscoveryCloudwatchLoggroups,
 	DiscoveryLambdaFunctions,
 	DiscoveryDynamoDBTables,
+	DiscoveryDynamoDBGlobalTables,
 	DiscoveryRedshiftClusters,
 	DiscoveryVolumes,
 	DiscoverySnapshots,
@@ -709,6 +711,14 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 			}
 			assetList = append(assetList, MqlObjectToAsset(accountId, m, conn))
 		}
+	case DiscoveryDynamoDBGlobalTables:
+		res, err := NewResource(runtime, "aws.dynamodb", map[string]*llx.RawData{})
+		if err != nil {
+			return nil, err
+		}
+
+		d := res.(*mqlAwsDynamodb)
+
 		ts = d.GetGlobalTables()
 		if ts == nil {
 			return assetList, nil
