@@ -8,14 +8,22 @@ on:
 jobs:
   report:
     permissions:
-      actions: read  # Required to read the artifact
-      contents: read # Required to read the source
-      checks: write  # Required to write the results
+      actions: read        # Required to read the artifact
+      contents: read       # Required to read the source
+      checks: write        # Required to write the results
+      pull-requests: write # Required to write comments
     runs-on: ubuntu-latest
     steps:
-    - uses: dorny/test-reporter@v1
+    - name: Download and Extract Artifacts
+      uses: dawidd6/action-download-artifact@v3
       with:
-        artifact: test-results
-        name: Report test results
-        path: '*.xml'                     # Path to test results (inside artifact .zip)
-        reporter: java-junit              # Format of test results
+        run_id: ${{ github.event.workflow_run.id }}
+        path: artifacts
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        commit: ${{ github.event.workflow_run.head_sha }}
+        event_file: artifacts/Store event file/event.json
+        event_name: ${{ github.event.workflow_run.event }}
+        files: "artifacts/**/*.xml"
