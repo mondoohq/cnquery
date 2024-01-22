@@ -56,6 +56,10 @@ func (a *mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings) id
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionSqlServiceFirewallrule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
