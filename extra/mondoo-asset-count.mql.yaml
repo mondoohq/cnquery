@@ -24,7 +24,7 @@ packs:
       - title: Azure asset counts
         filters: asset.platform == 'azure'
         queries:
-          - uid: mondoo-asset-count-azure-reource-groups
+          - uid: mondoo-asset-count-azure-resource-groups
           - uid: mondoo-asset-count-azure-vms
           - uid: mondoo-asset-count-azure-subscription-name
           - uid: mondoo-asset-count-azure-cosmosdb-accounts
@@ -134,7 +134,7 @@ queries:
     mql: |
      vsphere.datacenters { vms.length }
 
-  - uid: mondoo-asset-count-azure-reource-groups
+  - uid: mondoo-asset-count-azure-resource-groups
     title: Azure Resource Groups count
     mql: |
       azure.subscription.resourceGroups.length

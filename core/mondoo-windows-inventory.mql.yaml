@@ -14,7 +14,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Windows Asset Inventory Pack by Mondoo retrieves data about Windows hosts for asset inventory. 
+        The Windows Asset Inventory Pack by Mondoo retrieves data about Windows hosts for asset inventory.
 
         ## Local scan
         To run this pack locally on a Windows host:
@@ -31,7 +31,7 @@ packs:
         ```
 
         ## Join the community!
-        Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
 
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
@@ -102,10 +102,10 @@ packs:
       - uid: mondoo-windows-windows-event-audit-policy
         title: Windows local Event Audit security policy
         mql: secpol.eventaudit
-      - uid: mondoo-windows-registery-values-policy
+      - uid: mondoo-windows-registry-values-policy
         title: Windows local Registry Values security policy
         mql: secpol.registryvalues
-      - uid: mondoo-windows-privilige-rights-policy
+      - uid: mondoo-windows-privilege-rights-policy
         title: Windows local Privilege Rights security policy
         mql: secpol.privilegerights
       - uid: mondoo-windows-smbios-baseboard
