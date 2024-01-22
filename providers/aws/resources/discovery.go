@@ -719,7 +719,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 
 		d := res.(*mqlAwsDynamodb)
 
-		ts = d.GetGlobalTables()
+		ts := d.GetGlobalTables()
 		if ts == nil {
 			return assetList, nil
 		}

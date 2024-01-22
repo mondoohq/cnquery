@@ -220,12 +220,7 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
 	ctx := context.Background()
 
 	if isV1LoadBalancerArn(arn) {
-		svc := conn.Elb(region)
-		listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancing.DescribeListenersInput{LoadBalancerArn: &arn})
-		if err != nil {
-			return nil, err
-		}
-		return convert.JsonToDictSlice(listeners.Listeners)
+		return a.ListenerDescriptions.Data, nil
 	}
 	svc := conn.Elbv2(region)
 	listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn})
@@ -238,6 +233,7 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
 func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arn := a.Arn.Data
+	name := a.Name.Data
 
 	region, err := GetRegionFromArn(arn)
 	if err != nil {
@@ -247,18 +243,22 @@ func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
 
 	if isV1LoadBalancerArn(arn) {
 		svc := conn.Elb(region)
-		attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancing.DescribeLoadBalancerAttributesInput{LoadBalancerName: &arn})
+		attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancing.DescribeLoadBalancerAttributesInput{LoadBalancerName: &name})
 		if err != nil {
 			return nil, err
 		}
-		return convert.JsonToDictSlice(attributes.Attributes)
+		j, err := convert.JsonToDict(attributes.LoadBalancerAttributes)
+		if err != nil {
+			return nil, err
+		}
+		return []interface{}{j}, nil
 	}
 	svc := conn.Elbv2(region)
 	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
 	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDictSlice(attributes.LoadBalancerAttributes)
+	return convert.JsonToDictSlice(attributes.Attributes)
 }
 
 func isV1LoadBalancerArn(a string) bool {
