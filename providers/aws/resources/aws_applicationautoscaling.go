@@ -31,6 +31,9 @@ func (a *mqlAwsApplicationautoscalingTarget) id() (string, error) {
 func (a *mqlAwsApplicationAutoscaling) scalableTargets() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	namespace := a.Namespace.Data
+	if namespace == "" {
+		return nil, errors.New("namespace required for application autoscaling query. please specify one of [comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache]")
+	}
 
 	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getTargets(conn, aatypes.ServiceNamespace(namespace)), 5)
