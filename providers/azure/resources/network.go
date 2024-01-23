@@ -2050,11 +2050,24 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		}
 	}
 
+	if secRule.Properties != nil && secRule.Properties.DestinationPortRanges != nil {
+		for _, r := range secRule.Properties.DestinationPortRanges {
+			dPortRange := parseAzureSecurityRulePortRange(*r)
+			for i := range dPortRange {
+				destinationPortRange = append(destinationPortRange, map[string]interface{}{
+					"fromPort": dPortRange[i].FromPort,
+					"toPort":   dPortRange[i].ToPort,
+				})
+			}
+		}
+	}
+
 	res, err := CreateResource(runtime, "azure.subscription.networkService.securityrule",
 		map[string]*llx.RawData{
 			"id":                   llx.StringData(convert.ToString(secRule.ID)),
 			"name":                 llx.StringData(convert.ToString(secRule.Name)),
 			"etag":                 llx.StringData(convert.ToString(secRule.Etag)),
+			"direction":            llx.StringDataPtr((*string)(secRule.Properties.Direction)),
 			"properties":           llx.DictData(properties),
 			"destinationPortRange": llx.ArrayData(destinationPortRange, types.String),
 		})

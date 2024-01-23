@@ -757,6 +757,8 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
   properties dict
   // Security rule destination port range
   destinationPortRange []dict
+  // Security rule direction (outbound or inbound)
+  direction string
 }
 
 // Azure Network Watcher

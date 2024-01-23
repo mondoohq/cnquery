@@ -1383,6 +1383,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityrule.destinationPortRange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetDestinationPortRange()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.networkService.securityrule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetDirection()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.watcher.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWatcher).GetId()).ToDataRes(types.String)
 	},
@@ -4040,6 +4043,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.networkService.securityrule.destinationPortRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).DestinationPortRange, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityrule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.watcher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9681,6 +9688,7 @@ type mqlAzureSubscriptionNetworkServiceSecurityrule struct {
 	Etag plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
 	DestinationPortRange plugin.TValue[[]interface{}]
+	Direction plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServiceSecurityrule creates a new instance of this resource
@@ -9738,6 +9746,10 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetProperties() *plugin
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetDestinationPortRange() *plugin.TValue[[]interface{}] {
 	return &c.DestinationPortRange
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
 }
 
 // mqlAzureSubscriptionNetworkServiceWatcher for the azure.subscription.networkService.watcher resource

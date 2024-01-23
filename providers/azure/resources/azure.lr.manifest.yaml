@@ -1433,6 +1433,7 @@ resources:
   azure.subscription.networkService.securityrule:
     fields:
       destinationPortRange: {}
+      direction: {}
       etag: {}
       id: {}
       name: {}
