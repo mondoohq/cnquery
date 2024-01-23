@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
@@ -215,8 +217,12 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	svc := conn.Elbv2(region)
 	ctx := context.Background()
+
+	if isV1LoadBalancerArn(arn) {
+		return a.ListenerDescriptions.Data, nil
+	}
+	svc := conn.Elbv2(region)
 	listeners, err := svc.DescribeListeners(ctx, &elasticloadbalancingv2.DescribeListenersInput{LoadBalancerArn: &arn})
 	if err != nil {
 		return nil, err
@@ -227,16 +233,41 @@ func (a *mqlAwsElbLoadbalancer) listenerDescriptions() ([]interface{}, error) {
 func (a *mqlAwsElbLoadbalancer) attributes() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arn := a.Arn.Data
+	name := a.Name.Data
 
 	region, err := GetRegionFromArn(arn)
 	if err != nil {
 		return nil, err
 	}
-	svc := conn.Elbv2(region)
 	ctx := context.Background()
+
+	if isV1LoadBalancerArn(arn) {
+		svc := conn.Elb(region)
+		attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancing.DescribeLoadBalancerAttributesInput{LoadBalancerName: &name})
+		if err != nil {
+			return nil, err
+		}
+		j, err := convert.JsonToDict(attributes.LoadBalancerAttributes)
+		if err != nil {
+			return nil, err
+		}
+		return []interface{}{j}, nil
+	}
+	svc := conn.Elbv2(region)
 	attributes, err := svc.DescribeLoadBalancerAttributes(ctx, &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{LoadBalancerArn: &arn})
 	if err != nil {
 		return nil, err
 	}
 	return convert.JsonToDictSlice(attributes.Attributes)
+}
+
+func isV1LoadBalancerArn(a string) bool {
+	arnVal, err := arn.Parse(a)
+	if err != nil {
+		return false
+	}
+	if strings.Contains(arnVal.Resource, "classic") {
+		return true
+	}
+	return false
 }
