@@ -361,7 +361,7 @@ func NewAssetMatchError(mrn string, objectType string, errorReason string, asset
 }
 
 func (s *LocalServices) StoreResults(ctx context.Context, req *StoreResultsReq) (*Empty, error) {
-	_, err := s.DataLake.UpdateData(ctx, req.AssetMrn, req.Data)
+	_, err := s.DataLake.UpdateData(ctx, req.AssetMrn, req.QueryData)
 	if err != nil {
 		return globalEmpty, err
 	}

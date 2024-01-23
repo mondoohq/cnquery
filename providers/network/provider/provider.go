@@ -101,7 +101,6 @@ func parseTarget(target string) (string, int, string, string, error) {
 	path := url.Path
 
 	return host, port, scheme, path, nil
-
 }
 
 // Shutdown is automatically called when the shell closes.

@@ -258,14 +258,14 @@ func (e *instance) snapshotResults() map[string]*llx.Result {
 	return results
 }
 
-func (e *instance) StoreData() error {
+func (e *instance) StoreQueryData() error {
 	if e.collector == nil {
 		return errors.New("cannot store data, no collector provided")
 	}
 
 	_, err := e.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
-		AssetMrn: e.assetMrn,
-		Data:     e.snapshotResults(),
+		AssetMrn:  e.assetMrn,
+		QueryData: e.snapshotResults(),
 	})
 
 	return err

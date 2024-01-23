@@ -28,10 +28,10 @@ const defaultShutdownTimeout = time.Duration(time.Second * 120)
 type Runtime struct {
 	Provider       *ConnectedProvider
 	UpstreamConfig *upstream.UpstreamConfig
-	Recording      Recording
 	AutoUpdate     UpdateProvidersConfig
 
-	features []byte
+	recording llx.Recording
+	features  []byte
 	// coordinator is used to grab providers
 	coordinator *coordinator
 	// providers for with open connections
@@ -75,7 +75,7 @@ func (r *Runtime) tryShutdown() shutdownResult {
 func (r *Runtime) Close() {
 	r.isClosed = true
 	r.close.Do(func() {
-		if err := r.Recording.Save(); err != nil {
+		if err := r.Recording().Save(); err != nil {
 			log.Error().Err(err).Msg("failed to save recording")
 		}
 
@@ -102,6 +102,10 @@ func (r *Runtime) DeactivateProviderDiscovery() {
 	// Setting this to the max int means this value will always be larger than
 	// any real timestamp for the last installation time of a provider.
 	r.schema.lastRefreshed = math.MaxInt64
+}
+
+func (r *Runtime) Recording() llx.Recording {
+	return r.recording
 }
 
 func (r *Runtime) AssetMRN() string {
@@ -251,7 +255,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
-	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
+	r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
 	r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
 	return nil
 }
@@ -284,8 +288,8 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, err
 	}
 
-	if _, ok := r.Recording.GetResource(provider.Connection.Id, name, string(res.Data.Value)); !ok {
-		r.Recording.AddData(provider.Connection.Id, name, string(res.Data.Value), "", nil)
+	if _, ok := r.Recording().GetResource(provider.Connection.Id, name, string(res.Data.Value)); !ok {
+		r.Recording().AddData(provider.Connection.Id, name, string(res.Data.Value), "", nil)
 	}
 
 	typ := types.Type(res.Data.Type)
@@ -374,7 +378,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		}
 	}
 
-	if cached, ok := r.Recording.GetData(provider.Connection.Id, resource, resourceID, field); ok {
+	if cached, ok := r.Recording().GetData(provider.Connection.Id, resource, resourceID, field); ok {
 		return cached, nil
 	}
 
@@ -402,7 +406,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 		raw = data.Data.RawData()
 	}
 
-	r.Recording.AddData(provider.Connection.Id, resource, resourceID, field, raw)
+	r.Recording().AddData(provider.Connection.Id, resource, resourceID, field, raw)
 	return raw, nil
 }
 
@@ -477,8 +481,8 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
 }
 
-func (r *Runtime) SetRecording(recording Recording) error {
-	r.Recording = recording
+func (r *Runtime) SetRecording(recording llx.Recording) error {
+	r.recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {
 		log.Warn().Msg("set recording while no provider is set on runtime")
 		return nil
@@ -495,7 +499,7 @@ func (r *Runtime) SetRecording(recording Recording) error {
 	return nil
 }
 
-func baseRecording(anyRecording Recording) *recording {
+func baseRecording(anyRecording llx.Recording) *recording {
 	var baseRecording *recording
 	switch x := anyRecording.(type) {
 	case *recording:
@@ -509,8 +513,8 @@ func baseRecording(anyRecording Recording) *recording {
 // SetMockRecording is only used for test utilities. Please do not use it!
 //
 // Deprecated: This function may not be necessary anymore, consider removing.
-func (r *Runtime) SetMockRecording(anyRecording Recording, providerID string, mockConnection bool) error {
-	r.Recording = anyRecording
+func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string, mockConnection bool) error {
+	r.recording = anyRecording
 
 	baseRecording := baseRecording(anyRecording)
 	if baseRecording == nil {

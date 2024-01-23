@@ -165,7 +165,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 		defer func() {
 			// prevent the recording from being closed multiple times
-			connectAssetRuntime.Recording = providers.NullRecording{}
+			connectAssetRuntime.SetRecording(providers.NullRecording{})
 			sh.Close()
 		}()
 
