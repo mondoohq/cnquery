@@ -580,6 +580,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	crossProviderList := []string{
 		"go.mondoo.com/cnquery/providers/core",
 		"go.mondoo.com/cnquery/providers/network",
+		"go.mondoo.com/cnquery/providers/os",
 		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Providers traditionally had a version indication in their ID. With v10
 		// this is no longer necessary (but still supported due to a bug,
@@ -588,11 +589,12 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		// version support, we can safely remove this.
 		"go.mondoo.com/cnquery/v9/providers/core",
 		"go.mondoo.com/cnquery/v9/providers/network",
+		"go.mondoo.com/cnquery/v9/providers/os",
 		// ^^
 	}
 
 	if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
-		log.Error().Str("infoProvider", info.Provider).Str("connectionProvider", providerConn).Msg("mismatch between expected and received provider, ignoring provider")
+		log.Debug().Str("infoProvider", info.Provider).Str("connectionProvider", providerConn).Msg("mismatch between expected and received provider, ignoring provider")
 		return nil, nil, errors.New("incorrect provider for asset, not adding " + info.Provider)
 	}
 
