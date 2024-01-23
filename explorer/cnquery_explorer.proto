@@ -355,7 +355,7 @@ message UpdateAssetJobsReq {
 // Store results for a given asset
 message StoreResultsReq {
   string asset_mrn = 1;
-  map<string, cnquery.llx.Result> queryData = 3;
+  map<string, cnquery.llx.Result> query_data = 3;
   map<string, cnquery.llx.ResourceRecording> resources = 4;
 }
 
