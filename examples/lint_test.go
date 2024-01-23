@@ -4,13 +4,14 @@
 package examples
 
 import (
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/explorer"
 	"go.mondoo.com/cnquery/v10/internal/bundle"
 	"go.mondoo.com/cnquery/v10/providers"
-	"os"
-	"testing"
 )
 
 func ensureProviders(ids []string) error {
@@ -29,8 +30,8 @@ func TestMain(m *testing.M) {
 	providers.DefaultPath = dir
 
 	err := ensureProviders([]string{
-		"go.mondoo.com/cnquery/providers/os",
-		"go.mondoo.com/cnquery/providers/k8s",
+		"go.mondoo.com/cnquery/v9/providers/os",
+		"go.mondoo.com/cnquery/v9/providers/k8s",
 	})
 	if err != nil {
 		panic(err)
@@ -48,7 +49,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestExampleLint(t *testing.T) {
-
 	queryPackBundle, err := explorer.BundleFromPaths(".")
 	require.NoError(t, err)
 
