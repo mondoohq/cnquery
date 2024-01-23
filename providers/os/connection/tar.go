@@ -73,7 +73,7 @@ func (c *TarConnection) Identifier() (string, error) {
 }
 
 func (c *TarConnection) Capabilities() shared.Capabilities {
-	return shared.Capability_File | shared.Capability_FileSearch
+	return shared.Capability_File | shared.Capability_FileSearch | shared.Capability_FindFile
 }
 
 func (p *TarConnection) RunCommand(command string) (*shared.Command, error) {

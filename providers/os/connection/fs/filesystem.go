@@ -92,7 +92,7 @@ func (c *FileSystemConnection) Close() {
 }
 
 func (c *FileSystemConnection) Capabilities() shared.Capabilities {
-	return shared.Capability_FileSearch | shared.Capability_File
+	return shared.Capability_FileSearch | shared.Capability_File | shared.Capability_FindFile
 }
 
 func (c *FileSystemConnection) Identifier() (string, error) {
