@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
@@ -208,6 +209,8 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 
 	addColorConfig(pluginCmd)
 
+	pluginLogger := &hclogger{Logger: log.Logger}
+	pluginLogger.SetLevel(hclog.Warn)
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: pp.Handshake,
 		Plugins:         pp.PluginMap,
@@ -215,7 +218,7 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 		},
-		Logger: &hclogger{Logger: log.Logger},
+		Logger: pluginLogger,
 		Stderr: os.Stderr,
 	})
 
