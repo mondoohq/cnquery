@@ -308,9 +308,7 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 	if config.runtime.UpstreamConfig != nil {
 		opts = append(opts, scan.WithUpstream(config.runtime.UpstreamConfig))
 	}
-	if config.runtime.Recording != nil {
-		opts = append(opts, scan.WithRecording(config.runtime.Recording()))
-	}
+	opts = append(opts, scan.WithRecording(config.runtime.Recording()))
 
 	scanner := scan.NewLocalScanner(opts...)
 	ctx := cnquery.SetFeatures(context.Background(), config.Features)
