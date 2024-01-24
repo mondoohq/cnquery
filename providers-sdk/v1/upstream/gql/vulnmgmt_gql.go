@@ -74,12 +74,7 @@ type ReportStats struct {
 }
 
 type Cve struct {
-	Id     string
-	Source struct {
-		Id   string
-		Name string
-		Url  string
-	}
+	Id          string
 	Title       string
 	Description string
 	Summary     string
@@ -105,12 +100,7 @@ type Cve struct {
 }
 
 type Advisory struct {
-	Id     string
-	Source struct {
-		Id   string
-		Name string
-		Url  string
-	}
+	Id          string
 	Title       string
 	Description string
 
