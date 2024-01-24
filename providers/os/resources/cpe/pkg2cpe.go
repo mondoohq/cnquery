@@ -6,8 +6,9 @@ package cpe
 import (
 	"errors"
 	"fmt"
-	"github.com/facebookincubator/nvdtools/wfn"
 	"strings"
+
+	"github.com/facebookincubator/nvdtools/wfn"
 )
 
 func NewPackage2Cpe(vendor, name, version, release, arch string) (string, error) {
