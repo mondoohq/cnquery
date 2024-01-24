@@ -462,6 +462,10 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	typ := bind.Type
 	for typ.IsArray() {
 		typ = typ.Child()
+		if typ.NotSet() {
+			typ = types.Any
+			break
+		}
 	}
 
 	return &RawData{Type: types.Array(typ), Value: res}, 0, nil
