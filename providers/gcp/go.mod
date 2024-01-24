@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/accessapproval v1.7.4
 	cloud.google.com/go/bigquery v1.58.0
 	cloud.google.com/go/compute v1.23.3
-	cloud.google.com/go/container v1.29.0
+	cloud.google.com/go/container v1.30.0
 	cloud.google.com/go/functions v1.15.4
 	cloud.google.com/go/iam v1.1.5
 	cloud.google.com/go/kms v1.15.5
@@ -179,8 +179,8 @@ require (
 	golang.org/x/tools v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240116215550-a9fa1716bcac // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240116215550-a9fa1716bcac // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240122161410-6c6643bf1457 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240122161410-6c6643bf1457 // indirect
 	google.golang.org/grpc v1.60.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
