@@ -165,7 +165,10 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 		defer func() {
 			// prevent the recording from being closed multiple times
-			connectAssetRuntime.Recording = providers.NullRecording{}
+			err = connectAssetRuntime.SetRecording(providers.NullRecording{})
+			if err != nil {
+				log.Error().Err(err).Msg("failed to set the recording layer to null")
+			}
 			sh.Close()
 		}()
 

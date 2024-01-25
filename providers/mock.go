@@ -44,7 +44,7 @@ func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCL
 
 func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	// initialize all other providers from all asset connections in the recording
-	recording := s.runtime.Recording
+	recording := s.runtime.Recording()
 	if recording == nil {
 		return nil, errors.New("cannot find recording for mock provider")
 	}

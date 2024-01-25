@@ -16,14 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
-type Recording interface {
-	Save() error
-	EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config)
-	AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData)
-	GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool)
-	GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool)
-}
-
 type recording struct {
 	Assets []assetRecording `json:"assets"`
 	Path   string           `json:"-"`
@@ -137,6 +129,10 @@ func (n NullRecording) GetResource(connectionID uint32, resource string, id stri
 	return nil, false
 }
 
+func (n NullRecording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
+	return nil, false
+}
+
 type readOnlyRecording struct {
 	*recording
 }
@@ -166,7 +162,7 @@ type RecordingOptions struct {
 // If no recording is available and users don't wish to record, it throws an error.
 // If users don't wish to record and no recording is available, it will return
 // the null-recording.
-func NewRecording(path string, opts RecordingOptions) (Recording, error) {
+func NewRecording(path string, opts RecordingOptions) (llx.Recording, error) {
 	if path == "" {
 		// we don't want to record and we don't want to load a recording path...
 		// so there is nothing to do, so return nil
@@ -375,29 +371,33 @@ func reconnectResource(v interface{}, resource *resourceRecording) (interface{},
 func (r *recording) finalize() {
 	for i := range r.Assets {
 		asset := &r.Assets[i]
-		asset.Resources = make([]resourceRecording, len(asset.resources))
-		asset.Connections = make([]connectionRecording, len(asset.connections))
+		asset.finalize()
+	}
+}
 
-		i := 0
-		for _, v := range asset.resources {
-			asset.Resources[i] = *v
-			i++
+func (asset *assetRecording) finalize() {
+	asset.Resources = make([]resourceRecording, len(asset.resources))
+	asset.Connections = make([]connectionRecording, len(asset.connections))
+
+	i := 0
+	for _, v := range asset.resources {
+		asset.Resources[i] = *v
+		i++
+	}
+
+	sort.Slice(asset.Resources, func(i, j int) bool {
+		a := asset.Resources[i]
+		b := asset.Resources[j]
+		if a.Resource == b.Resource {
+			return a.ID < b.ID
 		}
+		return a.Resource < b.Resource
+	})
 
-		sort.Slice(asset.Resources, func(i, j int) bool {
-			a := asset.Resources[i]
-			b := asset.Resources[j]
-			if a.Resource == b.Resource {
-				return a.ID < b.ID
-			}
-			return a.Resource < b.Resource
-		})
-
-		i = 0
-		for _, v := range asset.connections {
-			asset.Connections[i] = *v
-			i++
-		}
+	i = 0
+	for _, v := range asset.connections {
+		asset.Connections[i] = *v
+		i++
 	}
 }
 
@@ -538,6 +538,31 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 	}
 
 	return obj.Fields, true
+}
+
+func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
+	var cur *assetRecording
+	for i := range r.Assets {
+		cur = &r.Assets[i]
+		if cur.Asset.ID != assetMrn {
+			continue
+		}
+
+		res := make(map[string]*llx.ResourceRecording, len(cur.resources))
+		for k, v := range cur.resources {
+			fields := make(map[string]*llx.Result, len(v.Fields))
+			for fk, fv := range v.Fields {
+				fields[fk] = fv.Result()
+			}
+			res[k] = &llx.ResourceRecording{
+				Resource: v.Resource,
+				Id:       v.ID,
+				Fields:   fields,
+			}
+		}
+		return res, true
+	}
+	return nil, false
 }
 
 func (a assetInfo) ToInventory() *inventory.Asset {

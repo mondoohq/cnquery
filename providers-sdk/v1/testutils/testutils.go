@@ -241,7 +241,7 @@ func mockRuntime(testdata string) llx.Runtime {
 	return mockRuntimeAbs(filepath.Join(TestutilsDir, testdata))
 }
 
-func MockFromRecording(recording providers.Recording) llx.Runtime {
+func MockFromRecording(recording llx.Recording) llx.Runtime {
 	runtime := Local().(*providers.Runtime)
 
 	err := runtime.SetMockRecording(recording, runtime.Provider.Instance.ID, true)
@@ -271,7 +271,7 @@ func mockRuntimeAbs(testdata string) llx.Runtime {
 	return MockFromRecording(roRecording)
 }
 
-func RecordingFromAsset(a *inventory.Asset) providers.Recording {
+func RecordingFromAsset(a *inventory.Asset) llx.Recording {
 	recording, err := providers.FromAsset(a)
 	if err != nil {
 		panic("failed to create recording from an asset: " + err.Error())

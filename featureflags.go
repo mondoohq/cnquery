@@ -75,6 +75,12 @@ const (
 	// start: v8.x
 	// end:   v9.0
 	ErrorsAsFailures
+
+	// StoreResourcesData feature flag
+	// desc:  Stores recording-like data with upstream
+	// start: v10.x
+	// end:   tbd (candidate: v11.0)
+	StoreResourcesData
 )
 
 // FeaturesValue is a map from feature name to feature flag

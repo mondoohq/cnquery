@@ -47,7 +47,7 @@ type LocalScanner struct {
 	ctx       context.Context
 	fetcher   *fetcher
 	upstream  *upstream.UpstreamConfig
-	recording providers.Recording
+	recording llx.Recording
 }
 
 type ScannerOption func(*LocalScanner)
@@ -58,7 +58,7 @@ func WithUpstream(u *upstream.UpstreamConfig) func(s *LocalScanner) {
 	}
 }
 
-func WithRecording(r providers.Recording) func(s *LocalScanner) {
+func WithRecording(r llx.Recording) func(s *LocalScanner) {
 	return func(s *LocalScanner) {
 		s.recording = r
 	}
@@ -267,14 +267,18 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				return nil, false, err
 			}
 		}
-		runtime.SetRecording(candidate.runtime.Recording)
+		err = runtime.SetRecording(candidate.runtime.Recording())
+		if err != nil {
+			log.Error().Err(err).Msg("unable to set recording for asset (pre-connect)")
+			continue
+		}
+
 		err = runtime.Connect(&plugin.ConnectReq{
 			Features: config.Features,
 			Asset:    candidate.asset,
 			Upstream: upstream,
 		})
 		candidate.asset = runtime.Provider.Connection.Asset // to ensure we get all the information the connect call gave us
-
 		if err != nil {
 			log.Error().Err(err).Str("asset", candidate.asset.Name).Msg("unable to connect to asset")
 			continue
@@ -692,9 +696,25 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 		return nil, err
 	}
 
-	err = e.StoreData()
+	err = e.StoreQueryData()
 	if err != nil {
 		return nil, err
+	}
+
+	if cnquery.GetFeatures(s.job.Ctx).IsActive(cnquery.StoreResourcesData) {
+		recording := s.Runtime.Recording()
+		data, ok := recording.GetAssetData(s.job.Asset.Mrn)
+		if !ok {
+			log.Debug().Msg("not storing resource data for this asset, nothing available")
+		} else {
+			_, err = conductor.StoreResults(context.Background(), &explorer.StoreResultsReq{
+				AssetMrn:  s.job.Asset.Mrn,
+				Resources: data,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	ar := &AssetReport{

@@ -340,7 +340,7 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
 		schema:          newExtensibleSchema(),
-		Recording:       NullRecording{},
+		recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 		isEphemeral:     isEphemeral,
 	}
@@ -369,7 +369,7 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 
 func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res := c.NewRuntime()
-	res.Recording = parent.Recording
+	res.recording = parent.Recording()
 	for k, v := range parent.providers {
 		res.providers[k] = v
 	}
