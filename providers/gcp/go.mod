@@ -17,7 +17,7 @@ require (
 	cloud.google.com/go/logging v1.9.0
 	cloud.google.com/go/longrunning v0.5.4
 	cloud.google.com/go/monitoring v1.17.0
-	cloud.google.com/go/pubsub v1.34.0
+	cloud.google.com/go/pubsub v1.35.0
 	cloud.google.com/go/recommender v1.12.0
 	cloud.google.com/go/run v1.3.3
 	cloud.google.com/go/serviceusage v1.8.3
