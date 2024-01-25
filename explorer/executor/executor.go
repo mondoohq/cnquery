@@ -264,8 +264,8 @@ func (e *instance) StoreQueryData() error {
 	}
 
 	_, err := e.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
-		AssetMrn:  e.assetMrn,
-		QueryData: e.snapshotResults(),
+		AssetMrn: e.assetMrn,
+		Data:     e.snapshotResults(),
 	})
 
 	return err
