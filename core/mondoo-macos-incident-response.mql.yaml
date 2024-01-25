@@ -41,7 +41,7 @@ packs:
         mql: packages
       - uid: mondoo-macos-incident-response-running-services
         title: Running services
-        mql: services
+        mql: services.where(running == true) { name running enabled masked type }
       - uid: mondoo-macos-incident-response-alf-extensions
         title: Exceptions from the Application Layer Firewall
         mql: macos.alf.exceptions

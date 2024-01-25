@@ -46,4 +46,4 @@ packs:
         mql: packages { name version arch installed }
       - uid: mondoo-linux-running-services
         title: Running services
-        mql: services { name running enabled masked type }
+        mql: services.where(running == true) { name running enabled masked type }

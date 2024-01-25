@@ -29,4 +29,4 @@ packs:
         mql: windows.computerInfo
       - uid: mondoo-windows-incident-response-running-services
         title: Running services
-        mql: services
+        mql: services.where(running == true)
