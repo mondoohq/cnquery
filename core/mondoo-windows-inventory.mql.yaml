@@ -109,14 +109,14 @@ packs:
         title: Windows local Privilege Rights security policy
         mql: secpol.privilegerights
       - uid: mondoo-windows-smbios-baseboard
-        title: Retrieve SMBIOS baseboard (or module) information
+        title: SMBIOS baseboard (or module) information
         mql: machine.baseboard { manufacturer version serial assetTag product }
       - uid: mondoo-windows-smbios-bios
-        title: Retrieve SMBIOS BIOS information
+        title: SMBIOS BIOS information
         mql: machine.bios { vendor version releaseDate }
       - uid: mondoo-windows-smbios-system
-        title: Retrieve SMBIOS System information
+        title: SMBIOS System information
         mql: machine.system { sku serial family version product uuid manufacturer }
       - uid: mondoo-windows-smbios-chassis
-        title: Retrieve SMBIOS Chassis information
+        title: SMBIOS Chassis information
         mql: machine.chassis { manufacturer serial version assetTag }
