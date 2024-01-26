@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.5.0
+    version: 1.6.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -39,16 +39,24 @@ packs:
     queries:
       - uid: mondoo-windows-asset-info
         title: Asset information
-        mql: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime version }
       - uid: mondoo-windows-hostname
         title: Hostname
         mql: os.hostname
+      - uid: mondoo-windows-uptime
+        title: Operating system uptime
+        filters: mondoo.capabilities.contains("run-command")
+        mql: os.uptime
+      - uid: mondoo-windows-processes
+        title: Running processes
+        filters: mondoo.capabilities.contains("run-command")
+        mql: processes { pid executable }
       - uid: mondoo-windows-users
         title: Regular users
         mql: users
       - uid: mondoo-windows-packages
         title: Installed packages
-        mql: packages
+        mql: packages { name version arch installed }
       - uid: mondoo-windows-hotfixes
         title: All installed Windows hotfixes
         mql: windows.hotfixes { hotfixId installedOn }
@@ -57,7 +65,8 @@ packs:
         mql: windows.features.where(installed == true) { path name displayName }
       - uid: mondoo-windows-running-services
         title: Running services
-        mql: services.where(running == true)
+        filters: mondoo.capabilities.contains("run-command")
+        mql: services.where(running == true) { name running enabled masked type }
       - uid: mondoo-windows-ports-listening
         title: Listening ports
         filters: mondoo.capabilities.contains("run-command")
@@ -76,12 +85,12 @@ packs:
         title: Installed Security Products
         filters: |
           windows.computerInfo['OsProductType'] == 1
-        mql: windows.security.products { state type name productState signatureState timestamp }
+        mql: windows.security.products { guid state type name productState signatureState timestamp }
       - uid: mondoo-windows-bitlocker-volumes
         title: Bitlocker Volumes
         filters: |
           windows.computerInfo['OsProductType'] == 1
-        mql: windows.bitlocker.volumes { driveLetter encryptionMethod protectionStatus conversionStatus }
+        mql: windows.bitlocker.volumes { deviceID driveLetter encryptionMethod version persistentVolumeID protectionStatus lockStatus conversionStatus }
       - uid: mondoo-windows-security-center-health
         title: Windows Security Health Information
         filters: |
@@ -120,3 +129,7 @@ packs:
       - uid: mondoo-windows-smbios-chassis
         title: SMBIOS Chassis information
         mql: machine.chassis { manufacturer serial version assetTag }
+      - uid: mondoo-windows-scheduled-tasks
+        title: Scheduled tasks
+        mql: |
+          parse.json(content: powershell("Get-ScheduledTask | ConvertTo-Json").stdout).params

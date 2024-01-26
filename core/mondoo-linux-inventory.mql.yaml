@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack
-    version: 1.5.0
+    version: 1.6.0
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -39,7 +39,7 @@ packs:
     queries:
       - uid: mondoo-linux-asset-info
         title: Asset information
-        mql: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime version }
       - uid: mondoo-linux-hostname
         title: Hostname
         mql: os.hostname
@@ -62,6 +62,7 @@ packs:
         mql: kernel.info
       - uid: mondoo-linux-kernel-modules
         title: Kernel modules
+        filters: mondoo.capabilities.contains("run-command")
         mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
         title: Running processes
@@ -69,7 +70,7 @@ packs:
         mql: processes { pid command flags }
       - uid: mondoo-linux-mounts
         title: Mounted devices
-        mql: mount.list
+        mql: mount.list { path fstype device options }
       - uid: mondoo-linux-listening-ports
         title: Listening ports
         filters: mondoo.capabilities.contains("run-command")
@@ -84,9 +85,10 @@ packs:
         mql: os.uptime
       - uid: mondoo-linux-installed-packages
         title: Installed packages
-        mql: packages
+        mql: packages { name version arch installed }
       - uid: mondoo-linux-running-services
         title: Running services
+        filters: mondoo.capabilities.contains("run-command")
         mql: services.where(running == true) { name running enabled masked type }
       - uid: mondoo-linux-interface-configuration
         title: Network interface configuration
