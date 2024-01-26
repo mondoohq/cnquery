@@ -100,11 +100,8 @@ type zeroLogAdapter struct{}
 
 func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
 	var e *zerolog.Event
-	if msg == "performing request" {
-		e = log.Debug()
-	} else {
-		e = log.Info()
-	}
+	// retry messages should only go to debug
+	e = log.Debug()
 	for i := 0; i < len(keysAndValues); i += 2 {
 		e = e.Interface(keysAndValues[i].(string), keysAndValues[i+1])
 	}
