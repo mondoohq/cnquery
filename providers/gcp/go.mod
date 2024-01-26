@@ -17,7 +17,7 @@ require (
 	cloud.google.com/go/logging v1.9.0
 	cloud.google.com/go/longrunning v0.5.4
 	cloud.google.com/go/monitoring v1.17.0
-	cloud.google.com/go/pubsub v1.34.0
+	cloud.google.com/go/pubsub v1.35.0
 	cloud.google.com/go/recommender v1.12.0
 	cloud.google.com/go/run v1.3.3
 	cloud.google.com/go/serviceusage v1.8.3
@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v10 v10.0.1
 	go.mondoo.com/ranger-rpc v0.5.3
 	golang.org/x/oauth2 v0.16.0
-	google.golang.org/api v0.157.0
+	google.golang.org/api v0.158.0
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80
 	google.golang.org/protobuf v1.32.0
 )
