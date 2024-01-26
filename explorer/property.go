@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/v10/mrn"
 	"go.mondoo.com/cnquery/v10/types"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
-	"google.golang.org/protobuf/proto"
 )
 
 // RefreshMRN computes a MRN from the UID or validates the existing MRN.
@@ -118,6 +117,33 @@ func (p *Property) Merge(base *Property) {
 	}
 }
 
+func (p *Property) Clone() *Property {
+	res := &Property{
+		Mql:      p.Mql,
+		CodeId:   p.CodeId,
+		Checksum: p.Checksum,
+		Mrn:      p.Mrn,
+		Uid:      p.Uid,
+		Type:     p.Type,
+		Context:  p.Context,
+		Title:    p.Title,
+		Desc:     p.Desc,
+	}
+
+	if p.For != nil {
+		res.For = make([]*ObjectRef, len(p.For))
+		for i := range p.For {
+			fr := p.For[i]
+			res.For[i] = &ObjectRef{
+				Mrn: fr.Mrn,
+				Uid: fr.Uid,
+			}
+		}
+	}
+
+	return res
+}
+
 type PropsCache struct {
 	cache        map[string]*Property
 	uidOnlyProps map[string]*Property
@@ -148,7 +174,7 @@ func (c PropsCache) Add(props ...*Property) {
 		if base.Mrn != "" {
 			name, _ := mrn.GetResource(base.Mrn, MRN_RESOURCE_QUERY)
 			if uidProp, ok := c.uidOnlyProps[name]; ok {
-				p := proto.Clone(uidProp).(*Property)
+				p := uidProp.Clone()
 				p.Merge(base)
 				base = p
 				merged = p
@@ -186,7 +212,7 @@ func (c PropsCache) Get(propMrn string) (*Property, string, error) {
 		if uidProp, ok := c.uidOnlyProps[name]; ok {
 			// We have a property that was specified by uid only. We need to merge it in
 			// to get the full property.
-			p := proto.Clone(uidProp).(*Property)
+			p := uidProp.Clone()
 			p.Merge(res)
 			return p, name, nil
 		} else {
