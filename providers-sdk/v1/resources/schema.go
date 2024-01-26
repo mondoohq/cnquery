@@ -3,8 +3,6 @@
 
 package resources
 
-import "google.golang.org/protobuf/proto"
-
 // Add another schema and return yourself. other may be nil.
 // The other schema overrides specifications in this schema, unless
 // it is trying to extend a resource whose base is already defined.
@@ -55,7 +53,24 @@ func (s *Schema) Add(other *Schema) *Schema {
 				existing.Fields[fk] = fv
 			}
 		} else {
-			s.Resources[k] = proto.Clone(v).(*ResourceInfo)
+			ri := &ResourceInfo{
+				Id:               v.Id,
+				Name:             v.Name,
+				Fields:           make(map[string]*Field, len(v.Fields)),
+				Init:             v.Init,
+				ListType:         v.ListType,
+				Title:            v.Title,
+				Desc:             v.Desc,
+				Private:          v.Private,
+				IsExtension:      v.IsExtension,
+				MinMondooVersion: v.MinMondooVersion,
+				Defaults:         v.Defaults,
+				Provider:         v.Provider,
+			}
+			for k, v := range v.Fields {
+				ri.Fields[k] = v
+			}
+			s.Resources[k] = ri
 		}
 	}
 
