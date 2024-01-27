@@ -118,21 +118,9 @@ func newMqlSlackConversation(runtime *plugin.Runtime, conversation slack.Channel
 
 	created := conversation.Created.Time()
 
-	var creator plugin.Resource
-
-	if conversation.Creator != "" {
-		creator, err = NewResource(runtime, "slack.user", map[string]*llx.RawData{
-			"id": llx.StringData(conversation.Creator),
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return CreateResource(runtime, "slack.conversation", map[string]*llx.RawData{
+	r, err := CreateResource(runtime, "slack.conversation", map[string]*llx.RawData{
 		"id":                 llx.StringData(conversation.ID),
 		"name":               llx.StringData(conversation.Name),
-		"creator":            llx.ResourceData(creator, "slack.user"),
 		"created":            llx.TimeData(created),
 		"locale":             llx.StringData(conversation.Locale),
 		"topic":              llx.DictData(topic),
@@ -150,10 +138,35 @@ func newMqlSlackConversation(runtime *plugin.Runtime, conversation slack.Channel
 		"isOrgShared":        llx.BoolData(conversation.IsOrgShared),
 		"priority":           llx.FloatData(conversation.Priority),
 	})
+	if err != nil {
+		return nil, err
+	}
+	mqlConversation := r.(*mqlSlackConversation)
+	mqlConversation.creatorId = conversation.Creator
+	return mqlConversation, nil
+}
+
+type mqlSlackConversationInternal struct {
+	creatorId string
 }
 
 func (x *mqlSlackConversation) id() (string, error) {
 	return "slack.conversation/" + x.Id.Data, nil
+}
+
+func (s *mqlSlackConversation) creator() (*mqlSlackUser, error) {
+	if s.creatorId == "" {
+		s.Creator = plugin.TValue[*mqlSlackUser]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
+	}
+
+	r, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
+		"id": llx.StringData(s.creatorId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlSlackUser), nil
 }
 
 func (s *mqlSlackConversation) members() ([]interface{}, error) {
