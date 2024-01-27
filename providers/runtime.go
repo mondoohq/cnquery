@@ -421,7 +421,7 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 		// Error: Unavailable. Happens when the plugin crashes.
 		// TODO: try to restart the plugin and reset its connections
 		provider.Instance.isClosed = true
-		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed")
+		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed: " + err.Error())
 		return false, provider.Instance.err
 	}
 	return false, err
