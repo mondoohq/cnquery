@@ -18,17 +18,28 @@ import (
 
 type ConnectionType string
 
+func (ct ConnectionType) String() string {
+	return string(ct)
+}
+
 // Note: We generally prefer to have the types close with their connections,
 // however the detectors would then have to pull in every connection as a
 // dependency with all their code, just to check if the type is e.g. local
 // or ssh. Keeping them in shared is more annoying (coding-wise), but
 // keeps the dependency-graph very small.
 const (
-	Type_Local          ConnectionType = "local"
-	Type_SSH            ConnectionType = "ssh"
-	Type_Tar            ConnectionType = "tar"
-	Type_FileSystem     ConnectionType = "filesystem"
-	Type_DockerSnapshot ConnectionType = "docker-snapshot"
+	Type_Local             ConnectionType = "local"
+	Type_SSH               ConnectionType = "ssh"
+	Type_Tar               ConnectionType = "tar"
+	Type_FileSystem        ConnectionType = "filesystem"
+	Type_DockerSnapshot    ConnectionType = "docker-snapshot"
+	Type_Winrm             ConnectionType = "winrm"
+	Type_Vagrant           ConnectionType = "vagrant"
+	Type_DockerImage       ConnectionType = "docker-image"
+	Type_DockerContainer   ConnectionType = "docker-container"
+	Type_DockerRegistry    ConnectionType = "docker-registry"
+	Type_ContainerRegistry ConnectionType = "container-registry"
+	Type_RegistryImage     ConnectionType = "registry-image"
 )
 
 type Connection interface {

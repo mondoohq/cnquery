@@ -5,7 +5,7 @@ package config
 
 import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/provider"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 )
 
@@ -14,17 +14,17 @@ var Config = plugin.Provider{
 	ID:      "go.mondoo.com/cnquery/v9/providers/os",
 	Version: "10.0.1",
 	ConnectionTypes: []string{
-		provider.LocalConnectionType,
-		provider.SshConnectionType,
-		provider.TarConnectionType,
-		provider.DockerSnapshotConnectionType,
-		provider.VagrantConnectionType,
-		provider.DockerImageConnectionType,
-		provider.DockerContainerConnectionType,
-		provider.DockerRegistryConnectionType,
-		provider.ContainerRegistryConnectionType,
-		provider.RegistryImageConnectionType,
-		provider.FilesystemConnectionType,
+		shared.Type_Local.String(),
+		shared.Type_SSH.String(),
+		shared.Type_Tar.String(),
+		shared.Type_DockerSnapshot.String(),
+		shared.Type_Vagrant.String(),
+		shared.Type_DockerImage.String(),
+		shared.Type_DockerContainer.String(),
+		shared.Type_DockerRegistry.String(),
+		shared.Type_ContainerRegistry.String(),
+		shared.Type_RegistryImage.String(),
+		shared.Type_FileSystem.String(),
 	},
 	Connectors: []plugin.Connector{
 		{
