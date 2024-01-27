@@ -208,7 +208,7 @@ func (a *mqlAzureSubscriptionMySqlServiceServer) firewallRules() ([]interface{},
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.firewallrule",
+			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringData(convert.ToString(entry.ID)),
 					"name":           llx.StringData(convert.ToString(entry.Name)),
@@ -351,7 +351,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) firewallRules() ([]inte
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sql.firewallrule",
+			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
 					"id":             llx.StringData(convert.ToString(entry.ID)),
 					"name":           llx.StringData(convert.ToString(entry.Name)),
