@@ -4,14 +4,16 @@
 package cat
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/local/statutil"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
 )
 
 type CommandRunner interface {
@@ -26,50 +28,60 @@ func New(cmdRunner CommandRunner) *Fs {
 
 type Fs struct {
 	commandRunner CommandRunner
-	base64        *bool
 }
 
 func (cat *Fs) Name() string {
-	return "Cat FS"
-}
-
-func (cat *Fs) useBase64encoding() bool {
-	if cat.base64 != nil {
-		return *cat.base64
-	}
-
-	b := cat.base64available()
-	cat.base64 = &b
-	return b
-}
-
-func (cat *Fs) base64available() bool {
-	cmd, err := cat.commandRunner.RunCommand("command -v base64")
-	if err != nil {
-		log.Debug().Msg("base64 command not found on target system")
-		return false
-	}
-	log.Debug().Msg("use base64 encoding for data transfer")
-	return cmd.ExitStatus == 0
+	return "Winrm Cat FS"
 }
 
 func (cat *Fs) Open(name string) (afero.File, error) {
-	_, err := statutil.New(cat.commandRunner).Stat(name)
+	// NOTE: do not use type here since it does not work well with file names like 'C:\Program Files\New Text Document.txt'
+	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Content '%s'\"", name))
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFile(cat, name, cat.useBase64encoding()), nil
+	if cmd.ExitStatus != 0 {
+		return nil, os.ErrNotExist
+	}
+
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFile(name, bytes.NewBuffer(data)), nil
+}
+
+func (cat *Fs) Stat(name string) (os.FileInfo, error) {
+	cmd, err := cat.commandRunner.RunCommand(fmt.Sprintf("powershell -c \"Get-Item -LiteralPath '%s' | ConvertTo-JSON\"", name))
+	if err != nil {
+		return nil, err
+	}
+
+	if cmd.ExitStatus != 0 {
+		return nil, os.ErrNotExist
+	}
+
+	item, err := ParseGetItem(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &fileStat{
+		name:           item.BaseName,
+		FileSize:       item.Length,
+		FileAttributes: item.Attributes,
+		CreationTime:   powershell.PSJsonTimestamp(item.CreationTime),
+		LastAccessTime: powershell.PSJsonTimestamp(item.LastAccessTime),
+		LastWriteTime:  powershell.PSJsonTimestamp(item.LastWriteTime),
+	}, nil
 }
 
 var NotImplemented = errors.New("not implemented")
 
-func (cat *Fs) Stat(name string) (os.FileInfo, error) {
-	return statutil.New(cat.commandRunner).Stat(name)
-}
-
 func (cat *Fs) Create(name string) (afero.File, error) {
-	return nil, NotImplemented
+	return nil, errors.New("not implemented")
 }
 
 func (cat *Fs) Mkdir(name string, perm os.FileMode) error {

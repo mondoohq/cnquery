@@ -333,6 +333,20 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
+	case shared.Type_Winrm.String():
+		s.lastConnectionID++
+		conn, err = connection.NewWinrmConnection(s.lastConnectionID, conf, asset)
+		if err != nil {
+			return nil, err
+		}
+
+		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+		if err == nil {
+			asset.Name = fingerprint.Name
+			asset.PlatformIds = fingerprint.PlatformIDs
+			asset.IdDetector = fingerprint.ActiveIdDetectors
+		}
+
 	case shared.Type_Tar.String():
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
