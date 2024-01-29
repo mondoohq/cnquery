@@ -127,6 +127,10 @@ var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	}
 
 	printReports(report, conf, cmd)
+
+	if report != nil && len(report.Errors) > 0 {
+		os.Exit(1)
+	}
 }
 
 // helper method to retrieve the list of query packs for autocomplete
