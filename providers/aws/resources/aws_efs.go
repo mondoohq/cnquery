@@ -151,7 +151,7 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 			return args, fs, nil
 		}
 	}
-	return nil, nil, errors.New("rds db instance does not exist")
+	return nil, nil, errors.New("efs filesystem does not exist")
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {
