@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "equinix",
 	ID:              "go.mondoo.com/cnquery/v9/providers/equinix",
-	Version:         "10.0.1",
+	Version:         "10.0.2",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
