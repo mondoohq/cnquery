@@ -157,7 +157,7 @@ jobs:
     if: ${{ ! inputs.skip_publish }}
     steps:
       - name: Trigger Reindex of releases.mondoo.com
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.RELEASR_ACTION_TOKEN }}
           repository: "mondoohq/releasr"
