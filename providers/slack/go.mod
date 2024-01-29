@@ -10,6 +10,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/rs/zerolog v1.31.0
 	github.com/slack-go/slack v0.12.3
+	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v10 v10.0.3
 )
 
@@ -47,6 +48,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -93,6 +95,7 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
@@ -124,6 +127,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe // indirect
 	google.golang.org/grpc v1.61.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )

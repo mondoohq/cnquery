@@ -179,7 +179,7 @@ slack.conversation @defaults("id name") {
   // Name of the conversation
   name string
   // User that created this conversation
-  creator slack.user
+  creator() slack.user
   // Timestamp of when the conversation was created
   created time
   // IETF language code that represents chosen language

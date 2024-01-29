@@ -1662,7 +1662,7 @@ func (c *mqlSlackLogin) GetDateLast() *plugin.TValue[*time.Time] {
 type mqlSlackConversation struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlSlackConversationInternal it will be used here
+	mqlSlackConversationInternal
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Creator plugin.TValue[*mqlSlackUser]
@@ -1731,7 +1731,19 @@ func (c *mqlSlackConversation) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlSlackConversation) GetCreator() *plugin.TValue[*mqlSlackUser] {
-	return &c.Creator
+	return plugin.GetOrCompute[*mqlSlackUser](&c.Creator, func() (*mqlSlackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("slack.conversation", c.__id, "creator")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlSlackUser), nil
+			}
+		}
+
+		return c.creator()
+	})
 }
 
 func (c *mqlSlackConversation) GetCreated() *plugin.TValue[*time.Time] {
