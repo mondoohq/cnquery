@@ -15,9 +15,16 @@ import (
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. errors.proto
 
-func ReportPanic(product, version, build string) {
+type PanicReportFn func(product, version, build string, r any, stacktrace []byte)
+
+func ReportPanic(product, version, build string, reporters ...PanicReportFn) {
 	if r := recover(); r != nil {
 		sendPanic(product, version, build, r, debug.Stack())
+
+		// call additional reporters
+		for _, reporter := range reporters {
+			reporter(product, version, build, r, debug.Stack())
+		}
 
 		// output error to console
 		panic(r)
