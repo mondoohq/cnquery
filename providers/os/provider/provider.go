@@ -28,20 +28,6 @@ import (
 	"go.mondoo.com/cnquery/v10/utils/stringx"
 )
 
-const (
-	LocalConnectionType             = "local"
-	SshConnectionType               = "ssh"
-	TarConnectionType               = "tar"
-	DockerSnapshotConnectionType    = "docker-snapshot"
-	VagrantConnectionType           = "vagrant"
-	DockerImageConnectionType       = "docker-image"
-	DockerContainerConnectionType   = "docker-container"
-	DockerRegistryConnectionType    = "docker-registry"
-	ContainerRegistryConnectionType = "container-registry"
-	RegistryImageConnectionType     = "registry-image"
-	FilesystemConnectionType        = "filesystem"
-)
-
 type Service struct {
 	plugin.Service
 	runtimes         map[uint32]*plugin.Runtime
@@ -320,7 +306,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var err error
 
 	switch conf.Type {
-	case LocalConnectionType:
+	case shared.Type_Local.String():
 		s.lastConnectionID++
 		conn = local.NewConnection(s.lastConnectionID, conf, asset)
 
@@ -331,7 +317,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
-	case SshConnectionType:
+	case shared.Type_SSH.String():
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
@@ -347,7 +333,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
-	case TarConnectionType:
+	case shared.Type_Tar.String():
 		s.lastConnectionID++
 		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
@@ -361,7 +347,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
-	case DockerSnapshotConnectionType:
+	case shared.Type_DockerSnapshot.String():
 		s.lastConnectionID++
 		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
@@ -375,7 +361,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			asset.IdDetector = fingerprint.ActiveIdDetectors
 		}
 
-	case VagrantConnectionType:
+	case shared.Type_Vagrant.String():
 		s.lastConnectionID++
 		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
@@ -388,23 +374,23 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			return nil, err
 		}
 
-	case DockerImageConnectionType:
+	case shared.Type_DockerImage.String():
 		s.lastConnectionID++
 		conn, err = connection.NewDockerContainerImageConnection(s.lastConnectionID, conf, asset)
 
-	case DockerContainerConnectionType:
+	case shared.Type_DockerContainer.String():
 		s.lastConnectionID++
 		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
 
-	case DockerRegistryConnectionType, ContainerRegistryConnectionType:
+	case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
-	case RegistryImageConnectionType:
+	case shared.Type_RegistryImage.String():
 		s.lastConnectionID++
 		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
 
-	case FilesystemConnectionType:
+	case shared.Type_FileSystem.String():
 		s.lastConnectionID++
 		conn, err = fs.NewConnection(s.lastConnectionID, conf, asset)
 		if err != nil {
