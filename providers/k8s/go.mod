@@ -365,12 +365,12 @@ require (
 	k8s.io/component-base v0.28.4 // indirect
 	k8s.io/kube-openapi v0.0.0-20240126223410-2919ad4fcfec // indirect
 	k8s.io/kubelet v0.28.4 // indirect
-	modernc.org/libc v1.40.7 // indirect
+	modernc.org/libc v1.40.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.28.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
-	mvdan.cc/gofumpt v0.5.0 // indirect
+	mvdan.cc/gofumpt v0.6.0 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20240104100049-c549a3470d14 // indirect
