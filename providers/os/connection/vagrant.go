@@ -19,7 +19,7 @@ const (
 	Vagrant shared.ConnectionType = "vagrant"
 )
 
-var _ shared.Connection = &VagrantConnection{}
+var _ shared.Connection = (*VagrantConnection)(nil)
 
 type VagrantConnection struct {
 	SshConnection

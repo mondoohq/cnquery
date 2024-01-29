@@ -25,6 +25,7 @@ var Config = plugin.Provider{
 		shared.Type_ContainerRegistry.String(),
 		shared.Type_RegistryImage.String(),
 		shared.Type_FileSystem.String(),
+		shared.Type_Winrm.String(),
 	},
 	Connectors: []plugin.Connector{
 		{

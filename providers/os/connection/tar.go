@@ -29,6 +29,8 @@ const (
 	COMPRESSED_IMAGE = "compressed_path"
 )
 
+var _ shared.Connection = (*TarConnection)(nil)
+
 type TarConnection struct {
 	id    uint32
 	asset *inventory.Asset

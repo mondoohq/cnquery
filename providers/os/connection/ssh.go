@@ -36,6 +36,8 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
+var _ shared.Connection = (*SshConnection)(nil)
+
 type SshConnection struct {
 	id    uint32
 	conf  *inventory.Config
