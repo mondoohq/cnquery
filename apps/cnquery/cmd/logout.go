@@ -80,7 +80,7 @@ ensure the credentials cannot be used in the future.
 
 		if !viper.GetBool("force") {
 			log.Info().Msg("are you sure you want to revoke client access to Mondoo Platform? Use --force if you are sure")
-			return cli_errors.ExitCode1WithoutError
+			return cli_errors.NewCommandError(errors.New("--force is required to logout"), ConfigurationErrorCode)
 		}
 
 		// try to load config into credentials struct
