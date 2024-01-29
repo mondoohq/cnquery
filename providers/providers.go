@@ -285,6 +285,14 @@ func ListAll() ([]*Provider, error) {
 	return res, nil
 }
 
+type ProviderNotFoundError struct {
+	lookup ProviderLookup
+}
+
+func (e *ProviderNotFoundError) Error() string {
+	return "cannot find provider for " + e.lookup.String()
+}
+
 // EnsureProvider makes sure that a given provider exists and returns it.
 // You can supply providers either via:
 //  1. providerID, which universally identifies it, e.g. "go.mondoo.com/cnquery/v10/providers/os"
@@ -319,7 +327,7 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set
 		// FIXME: This causes a panic in the CLI, we should handle this better
-		return nil, nil
+		return nil, &ProviderNotFoundError{lookup: search}
 	}
 
 	if !autoUpdate {
