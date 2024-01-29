@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v10/providers/aws/connection"
@@ -113,6 +114,44 @@ func (a *mqlAwsEfs) getFilesystems(conn *connection.AwsConnection) []*jobpool.Jo
 
 func (a *mqlAwsEfsFilesystem) kmsKey() (*mqlAwsKmsKey, error) {
 	return a.GetKmsKey().Data, nil
+}
+
+func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch efs filesystem")
+	}
+
+	// load all efs filesystems
+	obj, err := CreateResource(runtime, "aws.efs", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	efs := obj.(*mqlAwsEfs)
+
+	rawResources := efs.GetFilesystems()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := args["arn"].Value.(string)
+	for i := range rawResources.Data {
+		fs := rawResources.Data[i].(*mqlAwsEfsFilesystem)
+		if fs.Arn.Data == arnVal {
+			return args, fs, nil
+		}
+	}
+	return nil, nil, errors.New("rds db instance does not exist")
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (interface{}, error) {
