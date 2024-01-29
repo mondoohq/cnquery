@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -19,7 +20,9 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 func init() {
@@ -116,7 +119,7 @@ func register(token string, annotations map[string]string) error {
 			name = sysInfo.Hostname
 		}
 
-		confirmation, err := client.RegisterAgent(context.Background(), &upstream.AgentRegistrationRequest{
+		confirmation, err := registerAgent(context.Background(), client, &upstream.AgentRegistrationRequest{
 			Token: token,
 			Name:  name,
 			AgentInfo: &upstream.AgentInfo{
@@ -193,7 +196,7 @@ func register(token string, annotations map[string]string) error {
 				name = sysInfo.Hostname
 			}
 
-			confirmation, err := client.RegisterAgent(context.Background(), &upstream.AgentRegistrationRequest{
+			confirmation, err := registerAgent(context.Background(), client, &upstream.AgentRegistrationRequest{
 				Name: name,
 				AgentInfo: &upstream.AgentInfo{
 					Mrn:              opts.AgentMrn,
@@ -246,4 +249,30 @@ func register(token string, annotations map[string]string) error {
 
 	log.Info().Msgf("client %s has logged in successfully", viper.Get("agent_mrn"))
 	return nil
+}
+
+func registerAgent(ctx context.Context, client *upstream.AgentManagerClient, req *upstream.AgentRegistrationRequest) (*upstream.AgentRegistrationConfirmation, error) {
+	const maxRetries = 3
+	try := 0
+	for {
+		confirmation, err := client.RegisterAgent(ctx, req)
+		if err != nil {
+			if status.Code(err) == codes.Aborted {
+				jitter := time.Duration(rand.Intn(5000)) * time.Millisecond
+				sleepTime := 5*(1<<try)*time.Second + jitter
+
+				try++
+				if try > maxRetries {
+					return nil, errors.Wrap(err, "failed to log in client due to concurrent IAM changes")
+				}
+
+				log.Warn().Err(err).Msgf("failed to log in client due to concurrent IAM changes, retrying (%d/%d) in %dms", try, maxRetries, sleepTime.Milliseconds())
+				time.Sleep(sleepTime)
+			} else {
+				return nil, errors.Wrap(err, "failed to log in client")
+			}
+		} else {
+			return confirmation, nil
+		}
+	}
 }
