@@ -1,0 +1,153 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+packs:
+  - uid: mondoo-kubernetes-inventory
+    name: Kubernetes Inventory Pack
+    version: 1.1.0
+    license: BUSL-1.1
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/category: best-practices
+    docs:
+      desc: |
+        The Kubernetes Inventory Pack by Mondoo pack retrieves data about a Kubernetes Cluster for asset inventory. 
+
+        To run this pack for a Kubernetes Cluster:
+
+        ```bash
+        cnquery scan k8s -f mondoo-kubernetes-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
+
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+    groups:
+      - title: Cluster inventory
+        filters:
+          - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
+        queries:
+          - uid: k8s-cluster-version
+            title: Kubernetes cluster version
+            mql: |
+              k8s.serverVersion
+          - uid: k8s-cluster-namespaces
+            title: Kubernetes cluster namespaces
+            mql: |
+              k8s.namespaces
+          - uid: k8s-cluster-nodes
+            title: Cluster modes
+            mql: |
+              k8s.nodes
+          - uid: k8s-cluster-clusterroles
+            title: Cluster RBAC ClusterRoles
+            mql: |
+              k8s.clusterroles
+          - uid: k8s-cluster-roles
+            title: RBAC Roles
+            mql: |
+              k8s.roles
+          - uid: k8s-cluster-clusterrolebindings
+            title: RBAC cluster-rolebindings
+            mql: |
+              k8s.clusterrolebindings
+          - uid: k8s-cluster-rolebindings
+            title: RBAC rolebindings
+            mql: |
+              k8s.rolebindings
+      - title: Pods inventory
+        filters:
+          - asset.platform == "k8s-pod"
+        queries:
+          - uid: k8s-pod
+            title: Pod information
+            mql: |
+              k8s.pod
+          - uid: k8s-pod-container
+            title: Container information
+            mql: |
+              k8s.pod.containers
+      - title: Deployments inventory
+        filters:
+          - asset.platform == "k8s-deployment"
+        queries:
+          - uid: k8s-deployment
+            title: Deployment information
+            mql: |
+              k8s.deployments
+          - uid: k8s-deployment-container
+            title: Container information
+            mql: |
+              k8s.deployment.containers { * }
+      - title: CronJobs inventory
+        filters:
+          - asset.platform == "k8s-cronjob"
+        queries:
+          - uid: k8s-cronjob
+            title: CronJob information
+            mql: |
+              k8s.cronjob { * }
+          - uid: k8s-cronjob-container
+            title: Container information
+            mql: |
+              k8s.cronjob.containers { * }
+      - title: Jobs inventory
+        filters:
+          - asset.platform == "k8s-job"
+        queries:
+          - uid: k8s-job
+            title: Job information
+            mql: |
+              k8s.job { * }
+          - uid: k8s-job-container
+            title: Container information
+            mql: |
+              k8s.job.containers { * }
+      - title: DaemonSets inventory
+        filters:
+          - asset.platform == "k8s-daemonset"
+        queries:
+          - uid: k8s-daemonset
+            title: DaemonSet information
+            mql: |
+              k8s.daemonset { * }
+          - uid: k8s-daemonset-container
+            title: Container information
+            mql: |
+              k8s.daemonset.containers { * }
+      - title: StatefulSets inventory
+        filters:
+          - asset.platform == "k8s-statefulset"
+        queries:
+          - uid: k8s-statefulset
+            title: StatefulSet information
+            mql: |
+              k8s.statefulset { * }
+          - uid: k8s-statefulset-container
+            title: Container information
+            mql: |
+              k8s.statefulset.containers { * }
+      - title: ReplicaSets inventory
+        filters:
+          - asset.platform == "k8s-replicaset"
+        queries:
+          - uid: k8s-replicaset
+            title: ReplicaSet information
+            mql: |
+              k8s.replicaset { * }
+          - uid: k8s-replicaset-container
+            title: Container information
+            mql: |
+              k8s.replicaset.containers { * }
+      - title: Ingresses inventory
+        filters:
+          - asset.platform == "k8s-ingress"
+        queries:
+          - uid: k8s-ingress
+            title: Ingress information
+            mql: |
+              k8s.ingress { * }

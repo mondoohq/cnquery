@@ -44,10 +44,10 @@ type assetWithRuntime struct {
 }
 
 type LocalScanner struct {
-	ctx       context.Context
-	fetcher   *fetcher
-	upstream  *upstream.UpstreamConfig
-	recording llx.Recording
+	fetcher            *fetcher
+	upstream           *upstream.UpstreamConfig
+	recording          llx.Recording
+	disableProgressBar bool
 }
 
 type ScannerOption func(*LocalScanner)
@@ -61,6 +61,12 @@ func WithUpstream(u *upstream.UpstreamConfig) func(s *LocalScanner) {
 func WithRecording(r llx.Recording) func(s *LocalScanner) {
 	return func(s *LocalScanner) {
 		s.recording = r
+	}
+}
+
+func DisableProgressBar() ScannerOption {
+	return func(s *LocalScanner) {
+		s.disableProgressBar = true
 	}
 }
 
@@ -382,7 +388,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		orderedKeys = append(orderedKeys, assets[i].asset.PlatformIds[0])
 	}
 	var multiprogress progress.MultiProgress
-	if isatty.IsTerminal(os.Stdout.Fd()) && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
+	if isatty.IsTerminal(os.Stdout.Fd()) && !s.disableProgressBar && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
 		var err error
 		multiprogress, err = progress.NewMultiProgressBars(progressBarElements, orderedKeys)
 		if err != nil {
