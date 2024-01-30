@@ -44,7 +44,6 @@ type assetWithRuntime struct {
 }
 
 type LocalScanner struct {
-	ctx                context.Context
 	fetcher            *fetcher
 	upstream           *upstream.UpstreamConfig
 	recording          llx.Recording
