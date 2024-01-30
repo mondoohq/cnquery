@@ -43,6 +43,11 @@ type assetWithRuntime struct {
 	runtime *providers.Runtime
 }
 
+type assetWithError struct {
+	asset *inventory.Asset
+	err   error
+}
+
 type LocalScanner struct {
 	fetcher            *fetcher
 	upstream           *upstream.UpstreamConfig
@@ -194,6 +199,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	var assets []*assetWithRuntime
 	// note: asset candidate runtimes are the runtime that discovered them
 	var assetCandidates []*assetWithRuntime
+	var assetErrors []*assetWithError
 
 	// we connect and perform discovery for each asset in the job inventory
 	for i := range assetList {
@@ -206,6 +212,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		runtime, err := providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
 		if err != nil {
 			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to create runtime for asset")
+			assetErrors = append(assetErrors, &assetWithError{
+				asset: resolvedAsset,
+				err:   err,
+			})
 			continue
 		}
 		runtime.SetRecording(s.recording)
@@ -216,6 +226,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			Upstream: upstream,
 		}); err != nil {
 			log.Error().Err(err).Msg("unable to connect to asset")
+			assetErrors = append(assetErrors, &assetWithError{
+				asset: resolvedAsset,
+				err:   err,
+			})
 			continue
 		}
 		asset = runtime.Provider.Connection.Asset // to ensure we get all the information the connect call gave us
@@ -227,7 +241,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 		processedAssets, err := providers.ProcessAssetCandidates(runtime, runtime.Provider.Connection, upstream, "")
 		if err != nil {
-			return nil, false, err
+			assetErrors = append(assetErrors, &assetWithError{
+				asset: resolvedAsset,
+				err:   err,
+			})
+			continue
 		}
 		for i := range processedAssets {
 			assetCandidates = append(assetCandidates, &assetWithRuntime{
@@ -300,10 +318,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		})
 	}
 
-	if len(assets) == 0 {
-		return nil, false, nil
-	}
-
 	// if there is exactly one asset, assure that the --asset-name is used
 	// TODO: make it so that the --asset-name is set for the root asset only even if multiple assets are there
 	// This is a temporary fix that only works if there is only one asset
@@ -316,6 +330,20 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	for _, asset := range assets {
 		asset.asset.KindString = asset.asset.GetPlatform().Kind
 		justAssets = append(justAssets, asset.asset)
+	}
+	for _, asset := range assetErrors {
+		justAssets = append(justAssets, asset.asset)
+	}
+
+	// plan scan jobs
+	reporter := NewAggregateReporter(justAssets)
+	// if we had asset errors we want to place them into the reporter
+	for i := range assetErrors {
+		reporter.AddScanError(assetErrors[i].asset, assetErrors[i].err)
+	}
+
+	if len(assets) == 0 {
+		return reporter.Reports(), false, nil
 	}
 
 	// sync assets
@@ -368,8 +396,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}
 
-	// plan scan jobs
-	reporter := NewAggregateReporter(justAssets)
 	// if a bundle was provided check that it matches the filter, bundles can also be downloaded
 	// later therefore we do not want to stop execution here
 	if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
@@ -382,7 +408,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		// this shouldn't happen, but might
 		// it normally indicates a bug in the provider
 		if presentAsset, present := progressBarElements[assets[i].asset.PlatformIds[0]]; present {
-			return nil, false, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, assets[i].asset.Name, assets[i].asset.PlatformIds[0])
+			return reporter.Reports(), false, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, assets[i].asset.Name, assets[i].asset.PlatformIds[0])
 		}
 		progressBarElements[assets[i].asset.PlatformIds[0]] = assets[i].asset.Name
 		orderedKeys = append(orderedKeys, assets[i].asset.PlatformIds[0])
