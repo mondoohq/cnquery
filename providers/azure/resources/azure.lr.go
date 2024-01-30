@@ -630,6 +630,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetLocation()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.vm.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.vm.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.isRunning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetIsRunning()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.computeService.vm.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -2915,6 +2924,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"azure.subscription.computeService.vm.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).Zones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.isRunning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).IsRunning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6725,6 +6746,9 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	Location plugin.TValue[string]
+	Zones plugin.TValue[[]interface{}]
+	State plugin.TValue[string]
+	IsRunning plugin.TValue[bool]
 	Tags plugin.TValue[map[string]interface{}]
 	Type plugin.TValue[string]
 	Properties plugin.TValue[interface{}]
@@ -6781,6 +6805,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetName() *plugin.TValue[string] 
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetLocation() *plugin.TValue[string] {
 	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetZones() *plugin.TValue[[]interface{}] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetIsRunning() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsRunning, func() (bool, error) {
+		return c.isRunning()
+	})
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetTags() *plugin.TValue[map[string]interface{}] {

@@ -394,13 +394,16 @@ resources:
       dataDisks: {}
       extensions: {}
       id: {}
+      isRunning: {}
       location: {}
       name: {}
       osDisk: {}
       properties: {}
       publicIpAddresses: {}
+      state: {}
       tags: {}
       type: {}
+      zones: {}
     min_mondoo_version: latest
     platform:
       name:
