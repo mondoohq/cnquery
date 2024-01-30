@@ -114,6 +114,10 @@ enum ExternalIDType {
   // ARNs are used in various AWS services to refer to specific resources like
   // IAM roles, S3 buckets, or EC2 instances.
   EXTERNAL_ID_TYPE_AWS_ARN = 2;
+
+  // EXTERNAL_ID_TYPE_AWS_ORG denotes the organization to which the AWS Account
+  // and all subresources belong.
+  EXTERNAL_ID_TYPE_AWS_ORG = 3;
 }
 
 // ExternalID encapsulates an external identifier and its type. This structure
