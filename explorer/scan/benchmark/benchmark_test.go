@@ -12,11 +12,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v10/explorer/scan"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnspec/v10/policy"
-	"go.mondoo.com/cnspec/v10/policy/scan"
 )
 
 func init() {
@@ -50,11 +50,10 @@ func BenchmarkScan_SingleAsset(b *testing.B) {
 		},
 	}
 
-	loader := policy.DefaultBundleLoader()
-	bundle, err := loader.BundleFromPaths("./testdata/mondoo-kubernetes-inventory.mql.yaml")
+	bundle, err := explorer.BundleFromPaths("./testdata/mondoo-kubernetes-inventory.mql.yaml")
 	require.NoError(b, err)
 
-	_, err = bundle.CompileExt(context.Background(), policy.BundleCompileConf{
+	_, err = bundle.CompileExt(context.Background(), explorer.BundleCompileConf{
 		CompilerConfig: conf,
 		RemoveFailing:  true,
 	})
@@ -98,11 +97,10 @@ func BenchmarkScan_MultipleAssets(b *testing.B) {
 		},
 	}
 
-	loader := policy.DefaultBundleLoader()
-	bundle, err := loader.BundleFromPaths("./testdata/mondoo-kubernetes-inventory.mql.yaml")
+	bundle, err := explorer.BundleFromPaths("./testdata/mondoo-kubernetes-inventory.mql.yaml")
 	require.NoError(b, err)
 
-	_, err = bundle.CompileExt(context.Background(), policy.BundleCompileConf{
+	_, err = bundle.CompileExt(context.Background(), explorer.BundleCompileConf{
 		CompilerConfig: conf,
 		RemoveFailing:  true,
 	})
