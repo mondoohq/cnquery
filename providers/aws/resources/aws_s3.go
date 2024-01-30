@@ -6,19 +6,17 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-
-	s3controltypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	s3controltypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/transport/http"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
@@ -74,6 +72,12 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 		location, err := svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 			Bucket: bucket.Name,
 		})
+		if err != nil {
+			return nil, errors.Wrap(err, "Could not get bucket location")
+		}
+		if location == nil {
+			return nil, errors.New("Could not get bucket location (returned null)")
+		}
 
 		region := string(location.LocationConstraint)
 		// us-east-1 returns "" therefore we set it explicitly
