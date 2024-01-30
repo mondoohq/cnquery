@@ -7,30 +7,30 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	cloud.google.com/go/accessapproval v1.7.4
+	cloud.google.com/go/accessapproval v1.7.5
 	cloud.google.com/go/bigquery v1.58.0
-	cloud.google.com/go/compute v1.23.3
-	cloud.google.com/go/container v1.30.0
-	cloud.google.com/go/functions v1.15.4
-	cloud.google.com/go/iam v1.1.5
-	cloud.google.com/go/kms v1.15.5
+	cloud.google.com/go/compute v1.23.4
+	cloud.google.com/go/container v1.30.1
+	cloud.google.com/go/functions v1.16.0
+	cloud.google.com/go/iam v1.1.6
+	cloud.google.com/go/kms v1.15.6
 	cloud.google.com/go/logging v1.9.0
-	cloud.google.com/go/longrunning v0.5.4
-	cloud.google.com/go/monitoring v1.17.0
-	cloud.google.com/go/pubsub v1.36.0
-	cloud.google.com/go/recommender v1.12.0
-	cloud.google.com/go/run v1.3.3
-	cloud.google.com/go/serviceusage v1.8.3
+	cloud.google.com/go/longrunning v0.5.5
+	cloud.google.com/go/monitoring v1.17.1
+	cloud.google.com/go/pubsub v1.36.1
+	cloud.google.com/go/recommender v1.12.1
+	cloud.google.com/go/run v1.3.4
+	cloud.google.com/go/serviceusage v1.8.4
 	github.com/aws/smithy-go v1.19.0
 	github.com/cockroachdb/errors v1.11.1
-	github.com/google/go-containerregistry v0.18.0
+	github.com/google/go-containerregistry v0.19.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
-	go.mondoo.com/cnquery/v10 v10.0.3
+	go.mondoo.com/cnquery/v10 v10.1.1
 	go.mondoo.com/ranger-rpc v0.5.3
 	golang.org/x/oauth2 v0.16.0
-	google.golang.org/api v0.159.0
+	google.golang.org/api v0.161.0
 	google.golang.org/genproto v0.0.0-20240125205218-1f4bbc51befe
 	google.golang.org/protobuf v1.32.0
 )
@@ -38,7 +38,7 @@ require (
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	cloud.google.com/go/secretmanager v1.11.4 // indirect
+	cloud.google.com/go/secretmanager v1.11.5 // indirect
 	cloud.google.com/go/storage v1.37.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -52,7 +52,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
-	github.com/aws/aws-sdk-go v1.50.5 // indirect
+	github.com/aws/aws-sdk-go v1.50.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.145.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.146.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7 // indirect
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240116161626-88cfadc80e8f // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/bodgit/ntlmssp v0.0.0-20231122144230-2b2bca29f22b // indirect
+	github.com/bodgit/ntlmssp v0.0.0-20240109233507-5712ac3c36d9 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
