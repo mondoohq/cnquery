@@ -37,6 +37,18 @@ func TestHostnameLinux(t *testing.T) {
 	assert.Equal(t, "abefed34cc9c", hostame)
 }
 
+func TestHostnameLinuxFqdn(t *testing.T) {
+	conn, err := mock.New("./testdata/hostname_fqdn.toml", nil)
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+
+	hostame, ok := hostname.Hostname(conn, platform)
+	require.True(t, ok)
+
+	assert.Equal(t, "myhost.example.com", hostame)
+}
+
 func TestHostnameWindows(t *testing.T) {
 	conn, err := mock.New("./testdata/hostname_windows.toml", nil)
 	require.NoError(t, err)
