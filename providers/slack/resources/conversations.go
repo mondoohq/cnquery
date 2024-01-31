@@ -176,6 +176,24 @@ func (s *mqlSlackConversation) members() ([]interface{}, error) {
 		return nil, errors.New("cannot retrieve new data while using a mock connection")
 	}
 
+	// before we fetch the members, we need to fetch all users so that we save the time for individual lookups
+	users, err := CreateResource(s.MqlRuntime, "slack.users", nil)
+	if err != nil {
+		return nil, err
+	}
+	mqlUsers := users.(*mqlSlackUsers)
+	userEntries := mqlUsers.GetList()
+
+	findUser := func(id string) *mqlSlackUser {
+		for i := range userEntries.Data {
+			user := userEntries.Data[i].(*mqlSlackUser)
+			if user.Id.Data == id {
+				return user
+			}
+		}
+		return nil
+	}
+
 	var list []interface{}
 	isChannel := s.IsChannel.Data
 	if !isChannel {
@@ -194,11 +212,10 @@ func (s *mqlSlackConversation) members() ([]interface{}, error) {
 		}
 
 		for i := range members {
-			user, err := NewResource(s.MqlRuntime, "slack.user", map[string]*llx.RawData{
-				"id": llx.StringData(members[i]),
-			})
-			if err != nil {
-				return nil, err
+
+			user := findUser(members[i])
+			if user == nil {
+				return nil, errors.New("could not find user " + members[i])
 			}
 			list = append(list, user)
 		}
