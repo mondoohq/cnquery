@@ -7,7 +7,9 @@ import (
 	"archive/tar"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	osfs "os"
 	"path/filepath"
@@ -25,7 +27,6 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/config"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/exp/slices"
 )
 
@@ -152,26 +153,40 @@ type Provider struct {
 	HasBinary bool
 }
 
-func httpClient() (*http.Client, error) {
-	proxy, err := config.GetAPIProxy()
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not parse proxy URL")
-	}
-	return ranger.NewHttpClient(ranger.WithProxy(proxy)), nil
-}
+var (
+	defaultHttpTimeout         = 30 * time.Second
+	defaultIdleConnTimeout     = 30 * time.Second
+	defaultTLSHandshakeTimeout = 10 * time.Second
+)
 
 func httpClientWithRetry() (*http.Client, error) {
+	var proxyFn func(*http.Request) (*url.URL, error)
+
 	proxy, err := config.GetAPIProxy()
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
+
+	if proxy != nil {
+		proxyFn = http.ProxyURL(proxy)
+	}
+
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
 	retryClient.Logger = &ZerologAdapter{logger: log.Logger}
 	retryClient.HTTPClient = &http.Client{
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxy),
+			Proxy: proxyFn,
+			DialContext: (&net.Dialer{
+				Timeout:   defaultHttpTimeout,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       defaultIdleConnTimeout,
+			TLSHandshakeTimeout:   defaultTLSHandshakeTimeout,
+			ExpectContinueTimeout: 1 * time.Second,
 		},
+		Timeout: defaultHttpTimeout,
 	}
 	return retryClient.StandardClient(), nil
 }
@@ -371,7 +386,7 @@ func installVersion(name string, version string) (*Provider, error) {
 	url = strings.ReplaceAll(url, "{ARCH}", runtime.GOARCH)
 
 	log.Debug().Str("url", url).Msg("installing provider from URL")
-	client, err := httpClient()
+	client, err := httpClientWithRetry()
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +431,6 @@ func LatestVersion(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	client.Timeout = time.Duration(5 * time.Second)
 
 	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
 	if err != nil {
