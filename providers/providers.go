@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	osfs "os"
 	"path/filepath"
@@ -159,16 +160,23 @@ var (
 )
 
 func httpClientWithRetry() (*http.Client, error) {
+	var proxyFn func(*http.Request) (*url.URL, error)
+
 	proxy, err := config.GetAPIProxy()
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
+
+	if proxy != nil {
+		proxyFn = http.ProxyURL(proxy)
+	}
+
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
 	retryClient.Logger = &ZerologAdapter{logger: log.Logger}
 	retryClient.HTTPClient = &http.Client{
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxy),
+			Proxy: proxyFn,
 			DialContext: (&net.Dialer{
 				Timeout:   defaultHttpTimeout,
 				KeepAlive: 30 * time.Second,
