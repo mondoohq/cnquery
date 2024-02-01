@@ -228,7 +228,7 @@ private gcp.project.computeService.address {
 }
 ```
 
-The simple wait to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this means we are going to be doing an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean we will do 10 separete API calls to get the network for each of them.
+The simple wait to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this means we are going to be doing an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean we will do 10 separate API calls to get the network for each of them.
 
 MQL has powerful caching capabilities that would allow to achieve the same end result with a single (or fewer) API calls.
 
