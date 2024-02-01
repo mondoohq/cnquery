@@ -520,7 +520,7 @@ func osRetry(f func() error, maxRetry int) error {
 			return nil
 		}
 
-		if errors.As(err, syscall.EBUSY) || errors.As(err, syscall.EAGAIN) {
+		if errno, ok := err.(syscall.Errno); ok && errno.Temporary() {
 			time.Sleep(osRetryDuration)
 		} else {
 			return err

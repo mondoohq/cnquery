@@ -4,9 +4,11 @@
 package providers
 
 import (
+	"syscall"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
@@ -56,4 +58,14 @@ func TestProviderShutdown(t *testing.T) {
 	err = s.Shutdown()
 	require.NoError(t, err)
 	require.True(t, s.isCloseOrShutdown())
+}
+
+func TestOsRetry_RetryableError(t *testing.T) {
+	funcCounter := 0
+	testFunc := func() error {
+		funcCounter++
+		return syscall.EAGAIN
+	}
+	assert.NoError(t, osRetry(testFunc, 2))
+	assert.Equal(t, 2, funcCounter)
 }
