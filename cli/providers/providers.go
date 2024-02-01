@@ -423,11 +423,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			}
 		}
 
-		coordinator := providers.NewCoordinator()
-		defer coordinator.Shutdown()
+		defer providers.GlobalCoordinator.Shutdown()
 
 		// TODO: add flag to set timeout and then use RuntimeWithShutdownTimeout
-		runtime := coordinator.NewRuntime()
+		runtime := providers.GlobalCoordinator.NewRuntime()
 		defer runtime.Close()
 		if err = providers.SetDefaultRuntime(runtime); err != nil {
 			log.Error().Msg(err.Error())
@@ -484,7 +483,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if cliRes.Asset == nil {
 			log.Warn().Err(err).Msg("failed to discover assets after processing CLI arguments")
 		} else {
-			assetRuntime, err := coordinator.RuntimeFor(cliRes.Asset, runtime)
+			assetRuntime, err := providers.GlobalCoordinator.RuntimeFor(cliRes.Asset, runtime)
 			if err != nil {
 				log.Warn().Err(err).Msg("failed to get runtime for an asset that was detected after parsing the CLI")
 			} else {

@@ -35,7 +35,7 @@ var builtinProviders = map[string]*builtinProvider{
 		Runtime: &RunningProvider{
 			Name:     mockProvider.Name,
 			ID:       mockProvider.ID,
-			Plugin:   &mockProviderService{coordinator: NewCoordinator()},
+			Plugin:   &mockProviderService{coordinator: &GlobalCoordinator},
 			isClosed: false,
 		},
 		Config: mockProvider.Provider,

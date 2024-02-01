@@ -26,18 +26,10 @@ import (
 
 var BuiltinCoreID = coreconf.Config.ID
 
-// var Coordinator = coordinator{
-// 	RunningByID:      map[string]*RunningProvider{},
-// 	RunningEphemeral: map[*RunningProvider]struct{}{},
-// 	runtimes:         map[string]*Runtime{},
-// }
-
-func NewCoordinator() *Coordinator {
-	return &Coordinator{
-		RunningByID:      map[string]*RunningProvider{},
-		RunningEphemeral: map[*RunningProvider]struct{}{},
-		runtimes:         map[string]*Runtime{},
-	}
+var GlobalCoordinator = Coordinator{
+	RunningByID:      map[string]*RunningProvider{},
+	RunningEphemeral: map[*RunningProvider]struct{}{},
+	runtimes:         map[string]*Runtime{},
 }
 
 var AvailableProviders Providers
@@ -49,6 +41,8 @@ type Coordinator struct {
 	unprocessedRuntimes []*Runtime
 	runtimes            map[string]*Runtime
 	runtimeCnt          int
+	children            []*Coordinator
+	isShutdown          bool
 	mutex               sync.Mutex
 }
 
@@ -164,6 +158,18 @@ type UpdateProvidersConfig struct {
 	Enabled bool
 	// seconds until we try to refresh the providers version again
 	RefreshInterval int
+}
+
+func (c *Coordinator) NewChild() *Coordinator {
+	child := &Coordinator{
+		RunningByID:      map[string]*RunningProvider{},
+		RunningEphemeral: map[*RunningProvider]struct{}{},
+		runtimes:         map[string]*Runtime{},
+	}
+	c.mutex.Lock()
+	c.children = append(c.children, child)
+	c.mutex.Unlock()
+	return child
 }
 
 func (c *Coordinator) Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error) {
@@ -479,8 +485,25 @@ func (c *Coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
 	return provider.Shutdown()
 }
 
+func (c *Coordinator) CleanupShutdownChildren() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	var remaining []*Coordinator
+	for _, child := range c.children {
+		if !child.isShutdown {
+			remaining = append(remaining, child)
+		}
+	}
+	c.children = remaining
+}
+
 func (c *Coordinator) Shutdown() {
 	c.mutex.Lock()
+	// First shutdown all children
+	for _, child := range c.children {
+		child.Shutdown()
+	}
 
 	for cur := range c.RunningEphemeral {
 		if err := cur.Shutdown(); err != nil {
@@ -502,6 +525,8 @@ func (c *Coordinator) Shutdown() {
 	c.runtimes = map[string]*Runtime{}
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
+	c.children = []*Coordinator{}
+	c.isShutdown = true
 
 	c.mutex.Unlock()
 }

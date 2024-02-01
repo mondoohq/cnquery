@@ -206,7 +206,7 @@ func ListActive() (Providers, error) {
 	}
 
 	// useful for caching; even if the structure gets updated with new providers
-	Coordinator.Providers = res
+	AvailableProviders = res
 	return res, nil
 }
 

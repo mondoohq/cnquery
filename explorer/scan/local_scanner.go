@@ -44,9 +44,10 @@ type assetWithRuntime struct {
 }
 
 type rootAsset struct {
-	asset       *inventory.Asset
-	runtime     *providers.Runtime
-	coordinator *providers.Coordinator
+	asset            *inventory.Asset
+	discoveredAssets []*assetWithRuntime
+	runtime          *providers.Runtime
+	coordinator      *providers.Coordinator
 }
 
 type assetWithError struct {
@@ -192,27 +193,28 @@ func preprocessQueryPackFilters(filters []string) []string {
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
+	defer providers.GlobalCoordinator.CleanupShutdownChildren()
 
 	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.DefaultRuntime()))
 	if err != nil {
 		return nil, false, errors.New("failed to resolve inventory for connection")
 	}
-	assetList := im.GetAssets()
 
-	var assets []*assetWithRuntime
 	// note: asset candidate runtimes are the runtime that discovered them
-	var assetCandidates []*rootAsset
+	totalDiscoveredAssets := 0
+	var rootAssets []*rootAsset
 	var assetErrors []*assetWithError
 
 	// we connect and perform discovery for each asset in the job inventory
-	for i := range assetList {
-		asset := assetList[i]
+	inventoryAssets := im.GetAssets()
+	for i := range inventoryAssets {
+		asset := inventoryAssets[i]
 		resolvedAsset, err := im.ResolveAsset(asset)
 		if err != nil {
 			return nil, false, err
 		}
 
-		coordinator := providers.NewCoordinator()
+		coordinator := providers.GlobalCoordinator.NewChild()
 		runtime, err := coordinator.RuntimeFor(asset, providers.DefaultRuntime())
 		if err != nil {
 			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to create runtime for asset")
@@ -251,13 +253,18 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			})
 			continue
 		}
+		rootAsset := &rootAsset{
+			asset:       asset,
+			coordinator: coordinator,
+			runtime:     runtime,
+		}
 		for i := range processedAssets {
-			assetCandidates = append(assetCandidates, &rootAsset{
-				asset:       processedAssets[i],
-				coordinator: coordinator,
-				runtime:     runtime,
+			rootAsset.discoveredAssets = append(rootAsset.discoveredAssets, &assetWithRuntime{
+				asset:   processedAssets[i],
+				runtime: runtime,
 			})
 		}
+		rootAssets = append(rootAssets, rootAsset)
 		// TODO: we want to keep better track of errors, since there may be
 		// multiple assets coming in. It's annoying to abort the scan if we get one
 		// error at this stage.
@@ -272,80 +279,83 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// down all runtimes, in case we exit early. The list of assets only gets
 	// set in the block below this deferred function.
 	defer func() {
-		for i := range assets {
-			asset := assets[i]
-			// we can call close multiple times and it will only execute once
-			if asset.runtime != nil {
-				asset.runtime.Close()
+		for i := range rootAssets {
+			root := rootAssets[i]
+			if root.runtime != nil {
+				root.runtime.Close()
 			}
-		}
-		for i := range assetCandidates {
-			candidate := assetCandidates[i]
-			if candidate.runtime != nil {
-				candidate.runtime.Close()
-			}
-			if candidate.coordinator != nil {
-				log.Info().Msgf("running providers %d", len(candidate.coordinator.RunningByID))
-				log.Info().Msgf("ephemeral providers %d", len(candidate.coordinator.RunningEphemeral))
-				candidate.coordinator.Shutdown()
+			if root.coordinator != nil {
+				root.coordinator.Shutdown()
 			}
 		}
 	}()
 
-	for i := range assetCandidates {
-		candidate := assetCandidates[i]
+	for i := range rootAssets {
+		rootAsset := rootAssets[i]
+		filteredAssets := []*assetWithRuntime{}
+		for j := range rootAsset.discoveredAssets {
+			asset := rootAsset.discoveredAssets[j]
 
-		var runtime *providers.Runtime
-		if candidate.asset.Connections[0].Type == "k8s" {
-			runtime, err = candidate.coordinator.RuntimeFor(candidate.asset, providers.DefaultRuntime())
-			if err != nil {
-				return nil, false, err
+			var runtime *providers.Runtime
+			if asset.asset.Connections[0].Type == "k8s" {
+				runtime, err = rootAsset.coordinator.RuntimeFor(asset.asset, providers.DefaultRuntime())
+				if err != nil {
+					return nil, false, err
+				}
+			} else {
+				runtime, err = rootAsset.coordinator.EphemeralRuntimeFor(asset.asset)
+				if err != nil {
+					return nil, false, err
+				}
 			}
-		} else {
-			runtime, err = candidate.coordinator.EphemeralRuntimeFor(candidate.asset)
+			err = runtime.SetRecording(rootAsset.runtime.Recording())
 			if err != nil {
-				return nil, false, err
+				log.Error().Err(err).Msg("unable to set recording for asset (pre-connect)")
+				asset.runtime.Close()
+				continue
 			}
-		}
-		err = runtime.SetRecording(candidate.runtime.Recording())
-		if err != nil {
-			log.Error().Err(err).Msg("unable to set recording for asset (pre-connect)")
-			continue
-		}
 
-		err = runtime.Connect(&plugin.ConnectReq{
-			Features: config.Features,
-			Asset:    candidate.asset,
-			Upstream: upstream,
-		})
-		candidate.asset = runtime.Provider.Connection.Asset // to ensure we get all the information the connect call gave us
-		if err != nil {
-			log.Error().Err(err).Str("asset", candidate.asset.Name).Msg("unable to connect to asset")
-			continue
-		}
+			err = runtime.Connect(&plugin.ConnectReq{
+				Features: config.Features,
+				Asset:    asset.asset,
+				Upstream: upstream,
+			})
+			asset.asset = runtime.Provider.Connection.Asset // to ensure we get all the information the connect call gave us
+			if err != nil {
+				log.Error().Err(err).Str("asset", asset.asset.Name).Msg("unable to connect to asset")
+				asset.runtime.Close()
+				continue
+			}
 
-		if candidate.asset.GetPlatform() == nil {
-			log.Error().Msgf("unable to detect platform for asset " + candidate.asset.Name)
-			continue
+			if asset.asset.GetPlatform() == nil {
+				log.Error().Msgf("unable to detect platform for asset " + asset.asset.Name)
+				asset.runtime.Close()
+				continue
+			}
+			filteredAssets = append(filteredAssets, &assetWithRuntime{
+				asset:   asset.asset,
+				runtime: runtime,
+			})
 		}
-		assets = append(assets, &assetWithRuntime{
-			asset:   candidate.asset,
-			runtime: runtime,
-		})
+		rootAsset.discoveredAssets = filteredAssets
+		totalDiscoveredAssets += len(rootAsset.discoveredAssets)
 	}
 
 	// if there is exactly one asset, assure that the --asset-name is used
 	// TODO: make it so that the --asset-name is set for the root asset only even if multiple assets are there
 	// This is a temporary fix that only works if there is only one asset
-	if len(assets) == 1 && assetList[0].Name != "" && assetList[0].Name != assets[0].asset.Name {
-		log.Debug().Str("asset", assets[0].asset.Name).Msg("Overriding asset name with --asset-name flag")
-		assets[0].asset.Name = assetList[0].Name
+	if len(rootAssets) == 1 && len(rootAssets[0].discoveredAssets) == 1 &&
+		inventoryAssets[0].Name != "" && inventoryAssets[0].Name != rootAssets[0].discoveredAssets[0].asset.Name {
+		log.Debug().Str("asset", rootAssets[0].discoveredAssets[0].asset.Name).Msg("Overriding asset name with --asset-name flag")
+		rootAssets[0].discoveredAssets[0].asset.Name = inventoryAssets[0].Name
 	}
 
 	justAssets := []*inventory.Asset{}
-	for _, asset := range assets {
-		asset.asset.KindString = asset.asset.GetPlatform().Kind
-		justAssets = append(justAssets, asset.asset)
+	for _, rootAsset := range rootAssets {
+		for _, asset := range rootAsset.discoveredAssets {
+			asset.asset.KindString = asset.asset.GetPlatform().Kind
+			justAssets = append(justAssets, asset.asset)
+		}
 	}
 	for _, asset := range assetErrors {
 		justAssets = append(justAssets, asset.asset)
@@ -358,7 +368,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		reporter.AddScanError(assetErrors[i].asset, assetErrors[i].err)
 	}
 
-	if len(assets) == 0 {
+	if totalDiscoveredAssets == 0 {
 		return reporter.Reports(), false, nil
 	}
 
@@ -375,7 +385,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, false, err
 		}
 
-		inventory.DeprecatedV8CompatAssets(justAssets)
 		resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 			SpaceMrn: client.SpaceMrn,
 			List:     justAssets,
@@ -390,24 +399,29 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			platformAssetMapping[resp.Details[i].PlatformMrn] = resp.Details[i]
 		}
 
-		// attach the asset details to the assets list
-		for i := range assets {
-			log.Debug().Str("asset", assets[i].asset.Name).Strs("platform-ids", assets[i].asset.PlatformIds).Msg("update asset")
-			platformMrn := assets[i].asset.PlatformIds[0]
-			assets[i].asset.Mrn = platformAssetMapping[platformMrn].AssetMrn
-			assets[i].asset.Url = platformAssetMapping[platformMrn].Url
+		// attach the asset details to the discovered assets list
+		for i := range rootAssets {
+			for j := range rootAssets[i].discoveredAssets {
+				discoveredAsset := rootAssets[i].discoveredAssets[j]
+				log.Debug().Str("asset", discoveredAsset.asset.Name).Strs("platform-ids", discoveredAsset.asset.PlatformIds).Msg("update asset")
+				platformMrn := discoveredAsset.asset.PlatformIds[0]
+				discoveredAsset.asset.Mrn = platformAssetMapping[platformMrn].AssetMrn
+				discoveredAsset.asset.Url = platformAssetMapping[platformMrn].Url
+			}
 		}
 	} else {
 		// ensure we have non-empty asset MRNs
-		for i := range assets {
-			cur := assets[i]
-			if cur.asset.Mrn == "" {
-				randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
-				x, err := mrn.NewMRN(randID)
-				if err != nil {
-					return nil, false, multierr.Wrap(err, "failed to generate a random asset MRN")
+		for i := range rootAssets {
+			for j := range rootAssets[i].discoveredAssets {
+				cur := rootAssets[i].discoveredAssets[j]
+				if cur.asset.Mrn == "" {
+					randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
+					x, err := mrn.NewMRN(randID)
+					if err != nil {
+						return nil, false, multierr.Wrap(err, "failed to generate a random asset MRN")
+					}
+					cur.asset.Mrn = x.String()
 				}
-				cur.asset.Mrn = x.String()
 			}
 		}
 	}
@@ -420,14 +434,17 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	progressBarElements := map[string]string{}
 	orderedKeys := []string{}
-	for i := range assets {
-		// this shouldn't happen, but might
-		// it normally indicates a bug in the provider
-		if presentAsset, present := progressBarElements[assets[i].asset.PlatformIds[0]]; present {
-			return reporter.Reports(), false, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, assets[i].asset.Name, assets[i].asset.PlatformIds[0])
+	for i := range rootAssets {
+		for j := range rootAssets[i].discoveredAssets {
+			asset := rootAssets[i].discoveredAssets[j]
+			// this shouldn't happen, but might
+			// it normally indicates a bug in the provider
+			if presentAsset, present := progressBarElements[asset.asset.PlatformIds[0]]; present {
+				return reporter.Reports(), false, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, asset.asset.Name, asset.asset.PlatformIds[0])
+			}
+			progressBarElements[asset.asset.PlatformIds[0]] = asset.asset.Name
+			orderedKeys = append(orderedKeys, asset.asset.PlatformIds[0])
 		}
-		progressBarElements[assets[i].asset.PlatformIds[0]] = assets[i].asset.Name
-		orderedKeys = append(orderedKeys, assets[i].asset.PlatformIds[0])
 	}
 	var multiprogress progress.MultiProgress
 	if isatty.IsTerminal(os.Stdout.Fd()) && !s.disableProgressBar && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
@@ -446,37 +463,42 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	finished := false
 	go func() {
 		defer scanGroup.Done()
-		for i := range assets {
-			asset := assets[i].asset
-			runtime := assets[i].runtime
+		for i := range rootAssets {
+			rootAsset := rootAssets[i]
+			for j := range rootAsset.discoveredAssets {
+				asset := rootAsset.discoveredAssets[j].asset
+				runtime := rootAsset.discoveredAssets[j].runtime
 
-			// Make sure the context has not been canceled in the meantime. Note that this approach works only for single threaded execution. If we have more than 1 thread calling this function,
-			// we need to solve this at a different level.
-			select {
-			case <-ctx.Done():
-				log.Warn().Msg("request context has been canceled")
-				// When we scan concurrently, we need to call Errored(asset.Mrn) status for this asset
-				multiprogress.Close()
-				return
-			default:
+				// Make sure the context has not been canceled in the meantime. Note that this approach works only for single threaded execution. If we have more than 1 thread calling this function,
+				// we need to solve this at a different level.
+				select {
+				case <-ctx.Done():
+					log.Warn().Msg("request context has been canceled")
+					// When we scan concurrently, we need to call Errored(asset.Mrn) status for this asset
+					multiprogress.Close()
+					return
+				default:
+				}
+
+				p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
+				s.RunAssetJob(&AssetJob{
+					DoRecord:         job.DoRecord,
+					UpstreamConfig:   upstream,
+					Asset:            asset,
+					Bundle:           job.Bundle,
+					Props:            job.Props,
+					QueryPackFilters: preprocessQueryPackFilters(job.QueryPackFilters),
+					Ctx:              ctx,
+					Reporter:         reporter,
+					ProgressReporter: p,
+					runtime:          runtime,
+				})
+
+				// runtimes are single-use only. Close them once they are done.
+				runtime.Close()
 			}
-
-			p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
-			s.RunAssetJob(&AssetJob{
-				DoRecord:         job.DoRecord,
-				UpstreamConfig:   upstream,
-				Asset:            asset,
-				Bundle:           job.Bundle,
-				Props:            job.Props,
-				QueryPackFilters: preprocessQueryPackFilters(job.QueryPackFilters),
-				Ctx:              ctx,
-				Reporter:         reporter,
-				ProgressReporter: p,
-				runtime:          runtime,
-			})
-
-			// runtimes are single-use only. Close them once they are done.
-			runtime.Close()
+			// Shutdown the coordinator since the scan for this root is done
+			rootAsset.coordinator.Shutdown()
 		}
 		finished = true
 	}()
