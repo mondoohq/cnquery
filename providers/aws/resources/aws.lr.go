@@ -199,7 +199,7 @@ func init() {
 			Create: createAwsEfs,
 		},
 		"aws.efs.filesystem": {
-			// to override args, implement: initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsEfsFilesystem,
 			Create: createAwsEfsFilesystem,
 		},
 		"aws.kms": {
