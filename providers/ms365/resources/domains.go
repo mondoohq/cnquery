@@ -24,7 +24,7 @@ func (m *mqlMicrosoftDomaindnsrecord) id() (string, error) {
 
 func (a *mqlMicrosoft) domains() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (a *mqlMicrosoft) domains() ([]interface{}, error) {
 
 func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

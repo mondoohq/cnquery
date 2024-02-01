@@ -19,7 +19,7 @@ func (m *mqlMicrosoftUser) id() (string, error) {
 
 func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 
 func (a *mqlMicrosoftUser) settings() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

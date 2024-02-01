@@ -12,7 +12,7 @@ import (
 
 func (a *mqlMicrosoft) tenantDomainName() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return "", err
 	}

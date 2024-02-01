@@ -13,7 +13,7 @@ import (
 
 func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (a *mqlMicrosoftPolicies) authorizationPolicy() (interface{}, error) {
 
 func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (a *mqlMicrosoftPolicies) identitySecurityDefaultsEnforcementPolicy() (inte
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
 func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (a *mqlMicrosoftPolicies) adminConsentRequestPolicy() (interface{}, error) 
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
 func (a *mqlMicrosoftPolicies) permissionGrantPolicies() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

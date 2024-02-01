@@ -95,7 +95,7 @@ func (a *mqlMicrosoftSecurity) latestSecureScores() (*mqlMicrosoftSecuritySecuri
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
 func (a *mqlMicrosoftSecurity) secureScores() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

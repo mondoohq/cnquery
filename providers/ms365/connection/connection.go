@@ -4,12 +4,14 @@
 package connection
 
 import (
+	"context"
 	"fmt"
+	"github.com/cockroachdb/errors"
 	"runtime"
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/pkg/errors"
+	msgrapgh_org "github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
@@ -59,6 +61,17 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
+
+	// test connection
+	client, err := graphClient(token)
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication failed")
+	}
+	_, err = client.Organization().Get(context.Background(), &msgrapgh_org.OrganizationRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication failed")
+	}
+
 	return &Ms365Connection{
 		Conf:          conf,
 		id:            id,
