@@ -21,7 +21,7 @@ var defaultRuntime *Runtime
 
 func DefaultRuntime() *Runtime {
 	if defaultRuntime == nil {
-		defaultRuntime = Coordinator.NewRuntime()
+		defaultRuntime = NewCoordinator().NewRuntime()
 	}
 	return defaultRuntime
 }

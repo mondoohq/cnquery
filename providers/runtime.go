@@ -33,7 +33,7 @@ type Runtime struct {
 	recording llx.Recording
 	features  []byte
 	// coordinator is used to grab providers
-	coordinator *coordinator
+	Coordinator *Coordinator
 	// providers for with open connections
 	providers map[string]*ConnectedProvider
 	// schema aggregates all resources executable on this asset
@@ -50,7 +50,7 @@ type ConnectedProvider struct {
 	ConnectionError error
 }
 
-func (c *coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime {
+func (c *Coordinator) RuntimeWithShutdownTimeout(timeout time.Duration) *Runtime {
 	runtime := c.NewRuntime()
 	runtime.shutdownTimeout = timeout
 	return runtime
@@ -65,7 +65,7 @@ func (r *Runtime) tryShutdown() shutdownResult {
 	// Ephemeral runtimes have their primary provider be ephemeral, i.e. non-shared.
 	// All other providers are shared and will not be shut down from within the provider.
 	if r.isEphemeral {
-		err := r.coordinator.Stop(r.Provider.Instance, true)
+		err := r.Coordinator.Stop(r.Provider.Instance, true)
 		return shutdownResult{Error: err}
 	}
 
@@ -142,17 +142,17 @@ func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, 
 	var running *RunningProvider
 	var err error
 	if isEphemeral {
-		running, err = r.coordinator.Start(id, true, r.AutoUpdate)
+		running, err = r.Coordinator.Start(id, true, r.AutoUpdate)
 		if err != nil {
 			return nil, err
 		}
 
 	} else {
 		// TODO: we need to detect only the shared running providers
-		running = r.coordinator.RunningByID[id]
+		running = r.Coordinator.RunningByID[id]
 		if running == nil {
 			var err error
-			running, err = r.coordinator.Start(id, false, r.AutoUpdate)
+			running, err = r.Coordinator.Start(id, false, r.AutoUpdate)
 			if err != nil {
 				return nil, err
 			}
@@ -193,7 +193,7 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
-		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.Providers)
+		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, AvailableProviders)
 		if err != nil {
 			errs.Add(err)
 			continue

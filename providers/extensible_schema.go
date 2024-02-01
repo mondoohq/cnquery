@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"runtime"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -74,6 +75,7 @@ func (x *extensibleSchema) Close() {
 		Resources: map[string]*resources.ResourceInfo{},
 	}
 	x.sync.Unlock()
+	runtime.GC()
 }
 
 func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
@@ -156,7 +158,7 @@ func (x *extensibleSchema) unsafeLoadAll() {
 	}
 
 	for name := range providers {
-		schema, err := x.runtime.coordinator.LoadSchema(name)
+		schema, err := x.runtime.Coordinator.LoadSchema(name)
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
 		} else {

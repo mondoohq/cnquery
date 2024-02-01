@@ -157,6 +157,7 @@ type scanConfig struct {
 }
 
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
+	runtime.Coordinator.Stop(runtime.Provider.Instance, false)
 	opts, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")

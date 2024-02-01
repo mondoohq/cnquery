@@ -423,8 +423,12 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			}
 		}
 
+		coordinator := providers.NewCoordinator()
+		defer coordinator.Shutdown()
+
 		// TODO: add flag to set timeout and then use RuntimeWithShutdownTimeout
-		runtime := providers.Coordinator.NewRuntime()
+		runtime := coordinator.NewRuntime()
+		defer runtime.Close()
 		if err = providers.SetDefaultRuntime(runtime); err != nil {
 			log.Error().Msg(err.Error())
 		}
@@ -440,12 +444,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 
 		if err := runtime.UseProvider(provider.ID); err != nil {
-			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
 
 		if record != "" && useRecording != "" {
-			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("please only use --record or --use-recording, but not both at the same time")
 		}
 		recordingPath := record
@@ -459,7 +461,6 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			PrettyPrintJSON: pretty,
 		})
 		if err != nil {
-			providers.Coordinator.Shutdown()
 			log.Fatal().Msg(err.Error())
 		}
 		runtime.SetRecording(recording)
@@ -471,13 +472,11 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		})
 		if err != nil {
 			runtime.Close()
-			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to parse cli arguments")
 		}
 
 		if cliRes == nil {
 			runtime.Close()
-			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
 			return // adding this here as a compiler hint to stop warning about nil-dereferences
 		}
@@ -485,7 +484,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if cliRes.Asset == nil {
 			log.Warn().Err(err).Msg("failed to discover assets after processing CLI arguments")
 		} else {
-			assetRuntime, err := providers.Coordinator.RuntimeFor(cliRes.Asset, runtime)
+			assetRuntime, err := coordinator.RuntimeFor(cliRes.Asset, runtime)
 			if err != nil {
 				log.Warn().Err(err).Msg("failed to get runtime for an asset that was detected after parsing the CLI")
 			} else {
@@ -494,8 +493,6 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 
 		run(cc, runtime, cliRes)
-		runtime.Close()
-		providers.Coordinator.Shutdown()
 	}
 
 	attachFlags(cmd.Flags(), allFlags)

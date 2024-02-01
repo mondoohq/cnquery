@@ -43,7 +43,6 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		defer providers.Coordinator.Shutdown()
 		opts, optsErr := config.Read()
 		if optsErr != nil {
 			return cli_errors.NewCommandError(errors.Wrap(optsErr, "could not load configuration"), 1)

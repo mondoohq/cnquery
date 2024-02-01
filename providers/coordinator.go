@@ -26,14 +26,23 @@ import (
 
 var BuiltinCoreID = coreconf.Config.ID
 
-var Coordinator = coordinator{
-	RunningByID:      map[string]*RunningProvider{},
-	RunningEphemeral: map[*RunningProvider]struct{}{},
-	runtimes:         map[string]*Runtime{},
+// var Coordinator = coordinator{
+// 	RunningByID:      map[string]*RunningProvider{},
+// 	RunningEphemeral: map[*RunningProvider]struct{}{},
+// 	runtimes:         map[string]*Runtime{},
+// }
+
+func NewCoordinator() *Coordinator {
+	return &Coordinator{
+		RunningByID:      map[string]*RunningProvider{},
+		RunningEphemeral: map[*RunningProvider]struct{}{},
+		runtimes:         map[string]*Runtime{},
+	}
 }
 
-type coordinator struct {
-	Providers        Providers
+var AvailableProviders Providers
+
+type Coordinator struct {
 	RunningByID      map[string]*RunningProvider
 	RunningEphemeral map[*RunningProvider]struct{}
 
@@ -157,7 +166,7 @@ type UpdateProvidersConfig struct {
 	RefreshInterval int
 }
 
-func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error) {
+func (c *Coordinator) Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error) {
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).
@@ -171,15 +180,15 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 		return x.Runtime, nil
 	}
 
-	if c.Providers == nil {
+	if AvailableProviders == nil {
 		var err error
-		c.Providers, err = ListActive()
+		AvailableProviders, err = ListActive()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	provider, ok := c.Providers[id]
+	provider, ok := AvailableProviders[id]
 	if !ok {
 		return nil, errors.New("cannot find provider " + id)
 	}
@@ -255,7 +264,11 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 	if isEphemeral {
 		c.RunningEphemeral[res] = struct{}{}
 	} else {
+		if c.RunningByID[res.ID] != nil {
+			log.Error().Msg("overriding a running provider")
+		}
 		c.RunningByID[res.ID] = res
+		log.Warn().Msgf("starting provider %s", res.Name)
 	}
 	c.mutex.Unlock()
 
@@ -271,7 +284,7 @@ type ProviderVersion struct {
 	Version string `json:"version"`
 }
 
-func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
+func (c *Coordinator) tryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
 	if provider.Path == "" {
 		return nil, errors.New("cannot determine installation path for provider")
 	}
@@ -331,13 +344,13 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 	return provider, nil
 }
 
-func (c *coordinator) NewRuntime() *Runtime {
+func (c *Coordinator) NewRuntime() *Runtime {
 	return c.newRuntime(false)
 }
 
-func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
+func (c *Coordinator) newRuntime(isEphemeral bool) *Runtime {
 	res := &Runtime{
-		coordinator:     c,
+		Coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
 		schema:          newExtensibleSchema(),
 		recording:       NullRecording{},
@@ -367,7 +380,7 @@ func (c *coordinator) newRuntime(isEphemeral bool) *Runtime {
 	return res
 }
 
-func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
+func (c *Coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res := c.NewRuntime()
 	res.recording = parent.Recording()
 	for k, v := range parent.providers {
@@ -380,7 +393,7 @@ func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 // If a runtime for this asset already exists, it will re-use it. If the runtime
 // is new, it will create it and detect the provider.
 // The asset and parent must be defined.
-func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error) {
+func (c *Coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error) {
 	c.mutex.Lock()
 	c.unsafeRefreshRuntimes()
 	res := c.unsafeGetAssetRuntime(asset)
@@ -401,13 +414,13 @@ func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runt
 // may be a shared provider. The majority of memory load should be on the
 // primary provider (eg X in this case) so that it can effectively clear
 // its memory at the end of its use.
-func (c *coordinator) EphemeralRuntimeFor(asset *inventory.Asset) (*Runtime, error) {
+func (c *Coordinator) EphemeralRuntimeFor(asset *inventory.Asset) (*Runtime, error) {
 	res := c.newRuntime(true)
 	return res, res.DetectProvider(asset)
 }
 
 // Only call this with a mutex lock around it!
-func (c *coordinator) unsafeRefreshRuntimes() {
+func (c *Coordinator) unsafeRefreshRuntimes() {
 	var remaining []*Runtime
 	for i := range c.unprocessedRuntimes {
 		rt := c.unprocessedRuntimes[i]
@@ -418,7 +431,7 @@ func (c *coordinator) unsafeRefreshRuntimes() {
 	c.unprocessedRuntimes = remaining
 }
 
-func (c *coordinator) unsafeGetAssetRuntime(asset *inventory.Asset) *Runtime {
+func (c *Coordinator) unsafeGetAssetRuntime(asset *inventory.Asset) *Runtime {
 	if asset.Mrn != "" {
 		if rt := c.runtimes[asset.Mrn]; rt != nil {
 			return rt
@@ -434,7 +447,7 @@ func (c *coordinator) unsafeGetAssetRuntime(asset *inventory.Asset) *Runtime {
 
 // Returns true if we were able to set the runtime index for this asset,
 // i.e. if either the MRN and/or its platform IDs were identified.
-func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Runtime) bool {
+func (c *Coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Runtime) bool {
 	found := false
 	if asset.Mrn != "" {
 		c.runtimes[asset.Mrn] = runtime
@@ -447,7 +460,7 @@ func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Run
 	return found
 }
 
-func (c *coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
+func (c *Coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
 	if provider == nil {
 		return nil
 	}
@@ -466,7 +479,7 @@ func (c *coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
 	return provider.Shutdown()
 }
 
-func (c *coordinator) Shutdown() {
+func (c *Coordinator) Shutdown() {
 	c.mutex.Lock()
 
 	for cur := range c.RunningEphemeral {
@@ -496,12 +509,12 @@ func (c *coordinator) Shutdown() {
 // LoadSchema for a given provider. Providers also cache their Schemas, so
 // calling this with the same provider multiple times will use the loaded
 // cached schema after the first call.
-func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
+func (c *Coordinator) LoadSchema(name string) (*resources.Schema, error) {
 	if x, ok := builtinProviders[name]; ok {
 		return x.Runtime.Schema, nil
 	}
 
-	provider, ok := c.Providers[name]
+	provider, ok := AvailableProviders[name]
 	if !ok {
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}

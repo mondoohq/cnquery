@@ -43,6 +43,12 @@ type assetWithRuntime struct {
 	runtime *providers.Runtime
 }
 
+type rootAsset struct {
+	asset       *inventory.Asset
+	runtime     *providers.Runtime
+	coordinator *providers.Coordinator
+}
+
 type assetWithError struct {
 	asset *inventory.Asset
 	err   error
@@ -119,7 +125,7 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		}
 		return nil, err
 	}
-
+	time.Sleep(20 * time.Second)
 	return reports, nil
 }
 
@@ -187,9 +193,6 @@ func preprocessQueryPackFilters(filters []string) []string {
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
-	// Always shut down the coordinator, to make sure providers are killed
-	defer providers.Coordinator.Shutdown()
-
 	im, err := manager.NewManager(manager.WithInventory(job.Inventory, providers.DefaultRuntime()))
 	if err != nil {
 		return nil, false, errors.New("failed to resolve inventory for connection")
@@ -198,7 +201,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	var assets []*assetWithRuntime
 	// note: asset candidate runtimes are the runtime that discovered them
-	var assetCandidates []*assetWithRuntime
+	var assetCandidates []*rootAsset
 	var assetErrors []*assetWithError
 
 	// we connect and perform discovery for each asset in the job inventory
@@ -209,7 +212,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, false, err
 		}
 
-		runtime, err := providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
+		coordinator := providers.NewCoordinator()
+		runtime, err := coordinator.RuntimeFor(asset, providers.DefaultRuntime())
 		if err != nil {
 			log.Error().Err(err).Str("asset", asset.Name).Msg("unable to create runtime for asset")
 			assetErrors = append(assetErrors, &assetWithError{
@@ -248,9 +252,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			continue
 		}
 		for i := range processedAssets {
-			assetCandidates = append(assetCandidates, &assetWithRuntime{
-				asset:   processedAssets[i],
-				runtime: runtime,
+			assetCandidates = append(assetCandidates, &rootAsset{
+				asset:       processedAssets[i],
+				coordinator: coordinator,
+				runtime:     runtime,
 			})
 		}
 		// TODO: we want to keep better track of errors, since there may be
@@ -274,6 +279,17 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				asset.runtime.Close()
 			}
 		}
+		for i := range assetCandidates {
+			candidate := assetCandidates[i]
+			if candidate.runtime != nil {
+				candidate.runtime.Close()
+			}
+			if candidate.coordinator != nil {
+				log.Info().Msgf("running providers %d", len(candidate.coordinator.RunningByID))
+				log.Info().Msgf("ephemeral providers %d", len(candidate.coordinator.RunningEphemeral))
+				candidate.coordinator.Shutdown()
+			}
+		}
 	}()
 
 	for i := range assetCandidates {
@@ -281,12 +297,12 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 		var runtime *providers.Runtime
 		if candidate.asset.Connections[0].Type == "k8s" {
-			runtime, err = providers.Coordinator.RuntimeFor(candidate.asset, providers.DefaultRuntime())
+			runtime, err = candidate.coordinator.RuntimeFor(candidate.asset, providers.DefaultRuntime())
 			if err != nil {
 				return nil, false, err
 			}
 		} else {
-			runtime, err = providers.Coordinator.EphemeralRuntimeFor(candidate.asset)
+			runtime, err = candidate.coordinator.EphemeralRuntimeFor(candidate.asset)
 			if err != nil {
 				return nil, false, err
 			}

@@ -130,7 +130,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range assets {
 		connectAsset := assets[i]
-		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(connectAsset, runtime)
+		connectAssetRuntime, err := runtime.Coordinator.RuntimeFor(connectAsset, runtime)
 		if err != nil {
 			return err
 		}
