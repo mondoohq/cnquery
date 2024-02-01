@@ -47,7 +47,7 @@ func (a *mqlMicrosoft) serviceprincipals() ([]interface{}, error) {
 }
 
 func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Connection, params *serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters) ([]interface{}, error) {
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	} // TODO: what if we have more than 1k SPs?

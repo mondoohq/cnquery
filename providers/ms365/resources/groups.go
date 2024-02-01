@@ -23,7 +23,7 @@ func (a *mqlMicrosoftGroup) members() ([]interface{}, error) {
 
 func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

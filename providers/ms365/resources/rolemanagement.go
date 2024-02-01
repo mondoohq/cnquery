@@ -23,7 +23,7 @@ func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
 
 func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 
 func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := graphClient(conn)
+	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}

@@ -1,17 +1,17 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package resources
+package connection
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdkgo "github.com/microsoftgraph/msgraph-sdk-go"
-	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
 
-var DefaultMSGraphScopes = []string{connection.DefaultMSGraphScope}
+var DefaultMSGraphScopes = []string{DefaultMSGraphScope}
 
 func newGraphRequestAdapterWithFn(providerFn func() (authentication.AuthenticationProvider, error)) (*msgraphsdkgo.GraphRequestAdapter, error) {
 	auth, err := providerFn()
@@ -22,9 +22,7 @@ func newGraphRequestAdapterWithFn(providerFn func() (authentication.Authenticati
 	return msgraphsdkgo.NewGraphRequestAdapter(auth)
 }
 
-func graphClient(conn *connection.Ms365Connection) (*msgraphsdkgo.GraphServiceClient, error) {
-	token := conn.Token()
-
+func graphClient(token azcore.TokenCredential) (*msgraphsdkgo.GraphServiceClient, error) {
 	providerFunc := func() (authentication.AuthenticationProvider, error) {
 		return a.NewAzureIdentityAuthenticationProviderWithScopes(token, DefaultMSGraphScopes)
 	}
@@ -34,4 +32,8 @@ func graphClient(conn *connection.Ms365Connection) (*msgraphsdkgo.GraphServiceCl
 	}
 	graphClient := msgraphsdkgo.NewGraphServiceClient(adapter)
 	return graphClient, nil
+}
+
+func (conn *Ms365Connection) GraphClient() (*msgraphsdkgo.GraphServiceClient, error) {
+	return graphClient(conn.Token())
 }
