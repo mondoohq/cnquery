@@ -17,7 +17,7 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.50.7
+	github.com/aws/aws-sdk-go v1.50.8
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16
@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.146.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.7
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.45.0
 	github.com/aws/smithy-go v1.19.0
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240116161626-88cfadc80e8f
 	// pin v0.2.6
@@ -35,8 +35,8 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-	github.com/docker/cli v25.0.1+incompatible
-	github.com/docker/docker v25.0.1+incompatible
+	github.com/docker/cli v25.0.2+incompatible
+	github.com/docker/docker v25.0.2+incompatible
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-git/go-git/v5 v5.11.0
@@ -107,13 +107,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.1
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.1
 	// pin v0.28.4
-	k8s.io/component-base v0.28.4
+	k8s.io/component-base v0.29.1
 	// pin v0.28.4
-	k8s.io/kubelet v0.28.4
+	k8s.io/kubelet v0.29.1
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -412,7 +412,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.29.1 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	modernc.org/libc v1.40.8 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
