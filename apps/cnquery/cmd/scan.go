@@ -157,7 +157,10 @@ type scanConfig struct {
 }
 
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
-	runtime.Coordinator.Stop(runtime.Provider.Instance, false)
+	// When starting a scan, we don't need the provider instance started by the root.
+	if err := runtime.Coordinator.Stop(runtime.Provider.Instance, false); err != nil {
+		return nil, err
+	}
 	opts, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")
