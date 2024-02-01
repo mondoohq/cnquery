@@ -254,7 +254,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			continue
 		}
 		rootAsset := &rootAsset{
-			asset:       asset,
+			asset:       resolvedAsset,
 			coordinator: coordinator,
 			runtime:     runtime,
 		}
