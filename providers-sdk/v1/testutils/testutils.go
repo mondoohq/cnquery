@@ -200,7 +200,7 @@ func Local() llx.Runtime {
 	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
 	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
-	runtime := providers.GlobalCoordinator.NewRuntime()
+	runtime := providers.Coordinator.NewRuntime()
 
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
