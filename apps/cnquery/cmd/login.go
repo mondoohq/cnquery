@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
+	cnquery_providers "go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
@@ -51,6 +52,7 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		viper.BindPFlag("name", cmd.Flags().Lookup("name"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		defer cnquery_providers.GlobalCoordinator.Shutdown()
 		token, _ := cmd.Flags().GetString("token")
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
 		return register(token, annotations)

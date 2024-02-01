@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v10/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
+	cnquery_providers "go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"sigs.k8s.io/yaml"
@@ -35,6 +36,7 @@ ensure the credentials cannot be used in the future.
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		defer cnquery_providers.GlobalCoordinator.Shutdown()
 		var err error
 
 		// its perfectly fine not to have a config here, therefore we ignore errors
