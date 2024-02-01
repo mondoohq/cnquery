@@ -21,7 +21,7 @@ import (
 
 func K8s() *providers.Runtime {
 	k8sSchema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "k8s"})
-	runtime := providers.Coordinator.NewRuntime()
+	runtime := providers.GlobalCoordinator.NewRuntime()
 	provider := &providers.RunningProvider{
 		Name:   k8s_conf.Config.Name,
 		ID:     k8s_conf.Config.ID,
