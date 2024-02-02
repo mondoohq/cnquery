@@ -12,9 +12,10 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/microsoft/kiota-abstractions-go v1.5.6
 	github.com/microsoft/kiota-authentication-azure-go v1.0.2
-	github.com/microsoftgraph/msgraph-sdk-go v1.31.0
+	github.com/microsoftgraph/msgraph-sdk-go v1.32.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
+	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v10 v10.1.1
 )
 
@@ -120,7 +121,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/std-uritemplate/std-uritemplate/go v0.0.50 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	go.mondoo.com/ranger-rpc v0.5.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.47.0 // indirect
