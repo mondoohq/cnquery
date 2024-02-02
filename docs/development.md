@@ -168,7 +168,7 @@ The final line of this message is the blueprint for the pull request.
 
 ## Use Go workspaces
 
-In case you want to develop cnquery, cnspec, and providers at the same time, you can use Go workspaces. This allows you
+If you want to develop cnquery, cnspec, and providers at the same time, you can use Go workspaces. This allows you
 to use the latest updates from the different repos without having to commit and push changes.
 
 Here is a sample config for `go.work` in the root folder of `cnquery` and `cnspec`:
@@ -203,7 +203,7 @@ use (
 
 ## Providers development best practices
 
-The more time we spend building providers, the more learn how to do better in the future. Here we describe learnings that will help you get started with providers development.
+The more time we spend building providers, the more we learn how to do better in the future. Here we describe learnings that will help you get started with providers development.
 
 ### Referencing MQL resources
 Often we have a top-level MQL resource, which we want to reference in another top-level resource. 
