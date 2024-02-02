@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
@@ -58,8 +59,7 @@ func (m *mqlMs365SharepointonlineSite) id() (string, error) {
 }
 
 type mqlMs365SharepointonlineInternal struct {
-	sharepointReport *SharepointOnlineReport
-	sharepointLock   sync.Mutex
+	sharepointLock sync.Mutex
 }
 
 func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
@@ -98,26 +98,24 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 	return tenant, nil
 }
 
-func (r *mqlMs365Sharepointonline) GetSharepointOnlineReport(ctx context.Context) (*SharepointOnlineReport, error) {
+func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
 
 	// for some reasons, tokens issued by a client secret do not work. only certificates do
 	// TODO: ^ we should try and investigate why, its unclear to me why it happens.
 	if !conn.IsCertProvided() {
-		return nil, fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report")
+		return fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report")
 	}
 
 	r.sharepointLock.Lock()
 	defer r.sharepointLock.Unlock()
-	if r.sharepointReport != nil {
-		return r.sharepointReport, nil
-	}
 
 	tenant, err := r.getTenant()
 	if tenant == "" || err != nil {
-		return nil, fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report")
+		return fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report")
 	}
 
+	ctx := context.Background()
 	token := conn.Token()
 	tokenScope := fmt.Sprintf("https://%s-admin.sharepoint.com/.default", tenant)
 	sharepointUrl := fmt.Sprintf("https://%s.sharepoint.com", tenant)
@@ -125,68 +123,45 @@ func (r *mqlMs365Sharepointonline) GetSharepointOnlineReport(ctx context.Context
 		Scopes: []string{tokenScope},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	fmtScript := fmt.Sprintf(sharepointReport, spToken.Token, sharepointUrl)
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	report := &SharepointOnlineReport{}
 	if res.ExitStatus == 0 {
 		data, err := io.ReadAll(res.Stdout)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		logger.DebugDumpJSON("sharepoint-online-report", string(data))
 
 		err = json.Unmarshal(data, report)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	} else {
 		data, err := io.ReadAll(res.Stderr)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		logger.DebugDumpJSON("sharepoint-online-report", string(data))
-		return nil, fmt.Errorf("failed to generate sharepoint online report (exit code %d): %s", res.ExitStatus, string(data))
+		return fmt.Errorf("failed to generate sharepoint online report (exit code %d): %s", res.ExitStatus, string(data))
 	}
 
-	r.sharepointReport = report
-	return report, nil
-}
+	spoTenant, spoTenantErr := convert.JsonToDict(report.SpoTenant)
+	r.SpoTenant = plugin.TValue[interface{}]{Data: spoTenant, State: plugin.StateIsSet, Error: spoTenantErr}
 
-func (r *mqlMs365Sharepointonline) spoTenant() (interface{}, error) {
-	ctx := context.Background()
-	report, err := r.GetSharepointOnlineReport(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return convert.JsonToDict(report.SpoTenant)
-}
-
-func (r *mqlMs365Sharepointonline) spoTenantSyncClientRestriction() (interface{}, error) {
-	ctx := context.Background()
-	report, err := r.GetSharepointOnlineReport(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(report.SpoTenantSyncClientRestriction)
-}
-
-func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
-	ctx := context.Background()
-	report, err := r.GetSharepointOnlineReport(ctx)
-	if err != nil {
-		return nil, err
-	}
+	spoTenantSyncClientRestriction, spoTenantSyncClientRestrictionErr := convert.JsonToDict(report.SpoTenantSyncClientRestriction)
+	r.SpoTenantSyncClientRestriction = plugin.TValue[interface{}]{Data: spoTenantSyncClientRestriction, State: plugin.StateIsSet, Error: spoTenantSyncClientRestrictionErr}
 
 	sites := []interface{}{}
+	var sitesErr error
 	for _, s := range report.SpoSite {
 		mqlSpoSite, err := CreateResource(r.MqlRuntime, "ms365.sharepointonline.site",
 			map[string]*llx.RawData{
@@ -194,9 +169,23 @@ func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
 				"url":                      llx.StringData(s.Url),
 			})
 		if err != nil {
-			return nil, err
+			sitesErr = err
+			break
 		}
 		sites = append(sites, mqlSpoSite)
 	}
-	return sites, nil
+	r.SpoSites = plugin.TValue[[]interface{}]{Data: sites, State: plugin.StateIsSet, Error: sitesErr}
+	return nil
+}
+
+func (r *mqlMs365Sharepointonline) spoTenant() (interface{}, error) {
+	return nil, r.getSharepointOnlineReport()
+}
+
+func (r *mqlMs365Sharepointonline) spoTenantSyncClientRestriction() (interface{}, error) {
+	return nil, r.getSharepointOnlineReport()
+}
+
+func (r *mqlMs365Sharepointonline) spoSites() ([]interface{}, error) {
+	return nil, r.getSharepointOnlineReport()
 }
