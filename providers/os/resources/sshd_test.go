@@ -70,4 +70,11 @@ func TestResource_SSHD(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{"/etc/ssh/ssh_host_rsa_key", "/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_ed25519_key"}, res[0].Data.Value)
 	})
+
+	t.Run("parse permitRootLogin", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.permitRootLogin")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []interface{}{"no", "no"}, res[0].Data.Value)
+	})
 }

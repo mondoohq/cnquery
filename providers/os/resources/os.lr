@@ -680,6 +680,8 @@ sshd.config {
   kexs(params) []string
   // Host keys configured for this SSH server
   hostkeys(params) []string
+  // PermitRootLogin setting in SSH server
+  permitRootLogin(params) []string
 }
 
 // Service on this system

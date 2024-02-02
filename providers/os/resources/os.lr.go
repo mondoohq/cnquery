@@ -1182,6 +1182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.hostkeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetHostkeys()).ToDataRes(types.Array(types.String))
 	},
+	"sshd.config.permitRootLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetPermitRootLogin()).ToDataRes(types.Array(types.String))
+	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
 	},
@@ -3133,6 +3136,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Hostkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.permitRootLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).PermitRootLogin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8359,6 +8366,7 @@ type mqlSshdConfig struct {
 	Macs plugin.TValue[[]interface{}]
 	Kexs plugin.TValue[[]interface{}]
 	Hostkeys plugin.TValue[[]interface{}]
+	PermitRootLogin plugin.TValue[[]interface{}]
 }
 
 // createSshdConfig creates a new instance of this resource
@@ -8498,6 +8506,17 @@ func (c *mqlSshdConfig) GetHostkeys() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.hostkeys(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetPermitRootLogin() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PermitRootLogin, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.permitRootLogin(vargParams.Data)
 	})
 }
 

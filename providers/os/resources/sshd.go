@@ -133,13 +133,13 @@ func (s *mqlSshdConfig) params(content string) (map[string]interface{}, error) {
 }
 
 func (s *mqlSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
-	strCipher, ok := raw.(string)
+	str, ok := raw.(string)
 	if !ok {
 		return nil, errors.New("value is not a valid string")
 	}
 
 	res := []interface{}{}
-	entries := strings.Split(strCipher, ",")
+	entries := strings.Split(str, ",")
 	for i := range entries {
 		val := strings.TrimSpace(entries[i])
 		res = append(res, val)
@@ -177,6 +177,15 @@ func (s *mqlSshdConfig) kexs(params map[string]interface{}) ([]interface{}, erro
 
 func (s *mqlSshdConfig) hostkeys(params map[string]interface{}) ([]interface{}, error) {
 	rawHostKeys, ok := params["HostKey"]
+	if !ok {
+		return nil, nil
+	}
+
+	return s.parseConfigEntrySlice(rawHostKeys)
+}
+
+func (s *mqlSshdConfig) permitRootLogin(params map[string]interface{}) ([]interface{}, error) {
+	rawHostKeys, ok := params["PermitRootLogin"]
 	if !ok {
 		return nil, nil
 	}

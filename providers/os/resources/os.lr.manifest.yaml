@@ -847,6 +847,8 @@ resources:
       kexs: {}
       macs: {}
       params: {}
+      permitRootLogin:
+        min_mondoo_version: latest
     min_mondoo_version: 5.15.0
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
