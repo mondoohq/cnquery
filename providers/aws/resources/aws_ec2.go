@@ -748,7 +748,7 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				if err == nil {
 					args["image"] = llx.ResourceData(mqlImage, mqlImage.MqlName())
 				} else {
-					log.Error().Err(err).Msg("cannot find image")
+					// this is a common case, logging the error here only creates confusion
 					args["image"] = llx.NilData
 				}
 			} else {

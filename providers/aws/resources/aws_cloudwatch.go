@@ -431,7 +431,7 @@ func (a *mqlAwsCloudwatchMetric) alarms() ([]interface{}, error) {
 	}
 	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
-		mqlAlarm, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
+		mqlAlarm, err := NewResource(a.MqlRuntime, "aws.cloudwatch.metricsalarm",
 			map[string]*llx.RawData{"arn": llx.StringData(convert.ToString(alarm.AlarmArn))})
 		if err != nil {
 			return nil, err

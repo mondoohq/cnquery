@@ -288,7 +288,9 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 
 	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
+		log.Error().Err(err).Msg("cannot gather virtual mfa devices info")
+		a.VirtualMfaDevices = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		return nil, nil
 	}
 
 	// note: adding pagination to this call results in Throttling: Rate exceeded error
@@ -721,23 +723,25 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	ctx := context.Background()
 
 	if args["name"] != nil {
-		username := args["name"].Value.(string)
-		resp, err := svc.GetUser(ctx, &iam.GetUserInput{
-			UserName: &username,
-		})
-		if err != nil {
-			return nil, nil, err
+		if usr, ok := args["name"].Value.(string); ok {
+			username := usr
+			resp, err := svc.GetUser(ctx, &iam.GetUserInput{
+				UserName: &username,
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+
+			usr := resp.User
+			args["arn"] = llx.StringDataPtr(usr.Arn)
+			args["id"] = llx.StringDataPtr(usr.UserId)
+			args["name"] = llx.StringDataPtr(usr.UserName)
+			args["createDate"] = llx.TimeDataPtr(usr.CreateDate)
+			args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
+			args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
+
+			return args, nil, nil
 		}
-
-		usr := resp.User
-		args["arn"] = llx.StringDataPtr(usr.Arn)
-		args["id"] = llx.StringDataPtr(usr.UserId)
-		args["name"] = llx.StringDataPtr(usr.UserName)
-		args["createDate"] = llx.TimeDataPtr(usr.CreateDate)
-		args["passwordLastUsed"] = llx.TimeDataPtr(usr.PasswordLastUsed)
-		args["tags"] = llx.MapData(iamTagsToMap(usr.Tags), types.String)
-
-		return args, nil, nil
 	}
 
 	return args, nil, nil
