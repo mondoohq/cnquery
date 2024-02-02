@@ -122,7 +122,7 @@ type CsTenantFederationConfiguration struct {
 }
 
 type CsTeamsMeetingPolicy struct {
-	AllowAnonymousUsersToJoinMeeting           bool   `json:"AllowFederatedUsers"`
+	AllowAnonymousUsersToJoinMeeting           bool   `json:"AllowAnonymousUsersToJoinMeeting"`
 	AllowAnonymousUsersToStartMeeting          bool   `json:"AllowAnonymousUsersToStartMeeting"`
 	AutoAdmittedUsers                          string `json:"AutoAdmittedUsers"`
 	AllowPSTNUsersToBypassLobby                bool   `json:"AllowPSTNUsersToBypassLobby"`
