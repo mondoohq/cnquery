@@ -178,6 +178,7 @@ go 1.21
 
 use (
    ./cnquery
+   ./cnquery/providers/atlassian
    ./cnquery/providers/arista
    ./cnquery/providers/aws
    ./cnquery/providers/azure
@@ -198,6 +199,118 @@ use (
    ./cnquery/providers/vsphere
    ./cnspec
 )
+```
+
+## Providers development best practices
+
+The more time we spend building providers, the more learn how to do better in the future. Here we describe learnings that will help you get started with providers development.
+
+### Referencing MQL resources
+Often we have a top-level MQL resource, which we want to reference in another top-level resource. 
+
+For example, GCP networks can be retrieved for a project. That is a top-level resource:
+```
+// GCP Compute Engine
+private gcp.project.computeService {
+   // Google Compute Engine VPC network in a project
+   networks() []gcp.project.computeService.network
+}
+```
+
+However, we have a reference to a GCP network in a GCP Compute address. This allows us to quickly navigate to the network in which an address is created:
+```
+private gcp.project.computeService.address {
+  // Static IP address
+  address string
+
+  // Network in which to reserve the address
+  network() gcp.project.computeService.network
+}
+```
+
+The simple way to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this would generate an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean 10 separate API calls to get the network, one for each of them.
+
+MQL has powerful caching capabilities that let us achieve the same end result with a single (or fewer) API calls. 
+
+First, create an init function for `gcp.project.computeService.network`, which is the resource we are cross-referencing:
+```go
+func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Here we check that the resource isn't fully initialized yet
+   if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	// If no args are set, try reading them from the platform ID
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["name"] = llx.StringData(ids.name)
+			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
+		}
+	}
+
+   // We create a gcp.project.computeService resource which would allow us to retrieve networks via MQL
+	obj, err := CreateResource(runtime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": args["projectId"],
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+   // Cast the resource to the appropriate type
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+   // List the networks: equivalent to gcp.project.computeService.networks MQL query. This retrieves all networks in the project and caches them in the MQL cache. Consecutive calls to this retrieve the data from the cache and do not execute any API calls.
+	networks := computeSvc.GetNetworks()
+	if networks.Error != nil {
+		return nil, nil, networks.Error
+	}
+
+   // Filter the networks in memory by comparing them with the input arguments
+	for _, n := range networks.Data {
+		network := n.(*mqlGcpProjectComputeServiceNetwork)
+		name := network.GetName()
+		if name.Error != nil {
+			return nil, nil, name.Error
+		}
+		projectId := network.GetProjectId()
+		if projectId.Error != nil {
+			return nil, nil, projectId.Error
+		}
+
+      // return the resource if found
+		if name.Data == args["name"].Value && projectId.Data == args["projectId"].Value {
+			return args, network, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("not found")
+}
+```
+
+Then, we implement the function for retrieving the network for a GCP compute address:
+```go
+func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.NetworkUrl.Error != nil {
+		return nil, g.NetworkUrl.Error
+	}
+	networkUrl := g.NetworkUrl.Data
+
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/global/networks/net-1
+	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
+
+   // Use the init function for the resource to find the one that we need
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.network", map[string]*llx.RawData{
+		"name":      llx.StringData(resId.Name),
+		"projectId": llx.StringData(resId.Project),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceNetwork), nil
+}
+
 ```
 
 ## Contribute changes

@@ -36,6 +36,7 @@ jobs:
             cspell:software-terms/src/software-tools.txt
             cspell:companies/src/companies.txt
             mondoo:mondoo_dictionary.txt
+            cspell:golang/dict/go.txt
 
   comment:
     name: Report
