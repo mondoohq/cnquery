@@ -203,7 +203,7 @@ use (
 
 ## Providers development best practices
 
-The more time we spent building providers, the more learn about how to do that better in the future. Here we described learnings that would help you get started with providers development.
+The more time we spend building providers, the more learn how to do better in the future. Here we describe learnings that will help you get started with providers development.
 
 ### Referencing MQL resources
 Often we have a top-level MQL resource, which we want to reference in another top-level resource. 
@@ -217,7 +217,7 @@ private gcp.project.computeService {
 }
 ```
 
-However, we have a reference to a GCP network in a GCP Compute Address. This allows us to quickly navigate to the network in which an address is created:
+However, we have a reference to a GCP network in a GCP Compute address. This allows us to quickly navigate to the network in which an address is created:
 ```
 private gcp.project.computeService.address {
   // Static IP address
@@ -228,9 +228,9 @@ private gcp.project.computeService.address {
 }
 ```
 
-The simple wait to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this means we are going to be doing an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean we will do 10 separate API calls to get the network for each of them.
+The simple way to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this would generate an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean 10 separate API calls to get the network, one for each of them.
 
-MQL has powerful caching capabilities that would allow to achieve the same end result with a single (or fewer) API calls. 
+MQL has powerful caching capabilities that let us achieve the same end result with a single (or fewer) API calls. 
 
 First, create an init function for `gcp.project.computeService.network`, which is the resource we are cross-referencing:
 ```go
@@ -260,7 +260,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 
    // Cast the resource to the appropriate type
 	computeSvc := obj.(*mqlGcpProjectComputeService)
-   // List the networks: equivalent to gcp.project.computeService.networks MQL query. This will retrieve all networks in the project and cache them in the MQL cache. Consecutive calls to this will retrieve the data from cache and will not execute any API calls.
+   // List the networks: equivalent to gcp.project.computeService.networks MQL query. This retrieves all networks in the project and caches them in the MQL cache. Consecutive calls to this retrieve the data from the cache and do not execute any API calls.
 	networks := computeSvc.GetNetworks()
 	if networks.Error != nil {
 		return nil, nil, networks.Error
@@ -287,7 +287,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 }
 ```
 
-Then, we implement the function for retrieving the network for a GCP compute address as follows:
+Then, we implement the function for retrieving the network for a GCP compute address:
 ```go
 func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeServiceNetwork, error) {
 	if g.NetworkUrl.Error != nil {
