@@ -289,7 +289,7 @@ func (a *mqlAwsIam) virtualMfaDevices() ([]interface{}, error) {
 	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 	if err != nil {
 		log.Error().Err(err).Msg("cannot gather virtual mfa devices info")
-		a.VirtualMfaDevices.State = plugin.StateIsSet | plugin.StateIsNull
+		a.VirtualMfaDevices = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
 		return nil, nil
 	}
 
