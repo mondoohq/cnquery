@@ -6,11 +6,10 @@ package connection
 import (
 	"context"
 	"fmt"
-	"github.com/cockroachdb/errors"
 	"runtime"
-	"sync"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	azcore "github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	errors "github.com/cockroachdb/errors"
 	msgrapgh_org "github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
@@ -35,13 +34,6 @@ type Ms365Connection struct {
 	clientId      string
 	organization  string
 	sharepointUrl string
-	// TODO: move those to MQL resources caching once it makes sense to do so
-	exchangeReport     *ExchangeOnlineReport
-	exchangeReportLock sync.Mutex
-	teamsReport        *MsTeamsReport
-	teamsReportLock    sync.Mutex
-	sharepointReport   *SharepointOnlineReport
-	sharepointLock     sync.Mutex
 }
 
 func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*Ms365Connection, error) {
@@ -104,6 +96,10 @@ func (p *Ms365Connection) TenantId() string {
 	return p.tenantId
 }
 
+func (p *Ms365Connection) ClientId() string {
+	return p.clientId
+}
+
 func (p *Ms365Connection) PlatformId() string {
 	return "//platformid.api.mondoo.app/runtime/ms365/tenant/" + p.tenantId
 }
@@ -121,18 +117,17 @@ func (p *Ms365Connection) IsCertProvided() bool {
 	return len(p.Conf.Credentials) > 0 && p.Conf.Credentials[0].Type == vault.CredentialType_pkcs12
 }
 
-// TODO: use LocalConnection here for running cmds?
-func (p *Ms365Connection) runPowershellScript(script string) (*shared.Command, error) {
+func (p *Ms365Connection) RunPowershellScript(script string) (*shared.Command, error) {
 	var encodedCmd string
 	if runtime.GOOS == "windows" {
 		encodedCmd = powershell.Encode(script)
 	} else {
 		encodedCmd = powershell.EncodeUnix(script)
 	}
-	return p.runCmd(encodedCmd)
+	return p.RunCmd(encodedCmd)
 }
 
-func (p *Ms365Connection) runCmd(cmd string) (*shared.Command, error) {
+func (p *Ms365Connection) RunCmd(cmd string) (*shared.Command, error) {
 	cmdR := local.CommandRunner{}
 	if runtime.GOOS == "windows" {
 		cmdR.Shell = []string{"powershell", "-c"}
@@ -142,14 +137,14 @@ func (p *Ms365Connection) runCmd(cmd string) (*shared.Command, error) {
 	return cmdR.Exec(cmd, []string{})
 }
 
-func (p *Ms365Connection) checkPowershellAvailable() (bool, error) {
+func (p *Ms365Connection) CheckPowershellAvailable() (bool, error) {
 	if runtime.GOOS == "windows" {
 		// assume powershell is always present on windows
 		return true, nil
 	}
 	// for unix, we need to check if pwsh is available
 	cmd := "which pwsh"
-	res, err := p.runCmd(cmd)
+	res, err := p.RunCmd(cmd)
 	if err != nil {
 		return false, err
 	}
@@ -157,13 +152,13 @@ func (p *Ms365Connection) checkPowershellAvailable() (bool, error) {
 	return res.ExitStatus == 0, nil
 }
 
-func (p *Ms365Connection) checkAndRunPowershellScript(script string) (*shared.Command, error) {
-	pwshAvailable, err := p.checkPowershellAvailable()
+func (p *Ms365Connection) CheckAndRunPowershellScript(script string) (*shared.Command, error) {
+	pwshAvailable, err := p.CheckPowershellAvailable()
 	if err != nil {
 		return nil, err
 	}
 	if !pwshAvailable {
 		return nil, fmt.Errorf("powershell is not available")
 	}
-	return p.runPowershellScript(script)
+	return p.RunPowershellScript(script)
 }

@@ -239,10 +239,8 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 			}
 
 			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
-		}
-
-		for k, v := range args {
-			if err := resources.SetData(resource, k, v); err != nil {
+		} else {
+			if err := resources.SetAllData(resource, args); err != nil {
 				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
 			}
 		}

@@ -347,43 +347,43 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
 // Microsoft 365 Exchange Online
 ms365.exchangeonline {
   // List of malware filter policies
-  malwareFilterPolicy []dict
+  malwareFilterPolicy() []dict
   // List of hosted outbound spam filter policies
-  hostedOutboundSpamFilterPolicy []dict
+  hostedOutboundSpamFilterPolicy() []dict
   // Transport rules
-  transportRule []dict
+  transportRule() []dict
   // List of remote domains
-  remoteDomain []dict
+  remoteDomain() []dict
   // List of safe links policies
-  safeLinksPolicy []dict
+  safeLinksPolicy() []dict
   // List of safe attachment policies
-  safeAttachmentPolicy []dict
+  safeAttachmentPolicy() []dict
   // Organization configurations
-  organizationConfig dict
+  organizationConfig() dict
   // List of authentication policies
-  authenticationPolicy []dict
+  authenticationPolicy() []dict
   // List of anti-phishing policies
-  antiPhishPolicy []dict
+  antiPhishPolicy() []dict
   // List of dkim signing configurations
-  dkimSigningConfig []dict
+  dkimSigningConfig() []dict
   // List of OWA mailbox policies
-  owaMailboxPolicy []dict
+  owaMailboxPolicy() []dict
   // Admin audit log configuration
-  adminAuditLogConfig dict
+  adminAuditLogConfig() dict
   // List of phishing filter policies
-  phishFilterPolicy []dict
+  phishFilterPolicy() []dict
   // List of mailboxes
-  mailbox []dict
+  mailbox() []dict
   // List of APT policies for Office 365
-  atpPolicyForO365 []dict
+  atpPolicyForO365() []dict
   // List of sharing policies
-  sharingPolicy []dict
+  sharingPolicy() []dict
   // List of role assignment policies
-  roleAssignmentPolicy []dict
+  roleAssignmentPolicy() []dict
   // List of external sender configurations
-  externalInOutlook []ms365.exchangeonline.externalSender
+  externalInOutlook() []ms365.exchangeonline.externalSender
   // List of shared mailboxes
-  sharedMailboxes []ms365.exchangeonline.exoMailbox
+  sharedMailboxes() []ms365.exchangeonline.exoMailbox
 }
 
 // Microsoft 365 Exchange Online External Sender
@@ -409,11 +409,11 @@ private ms365.exchangeonline.exoMailbox {
 // Microsoft 365 SharePoint Online
 ms365.sharepointonline {
   // SharePoint Online tenant
-  spoTenant dict
+  spoTenant() dict
   // SharePoint Online tenant sync client restriction
-  spoTenantSyncClientRestriction dict
+  spoTenantSyncClientRestriction() dict
   // SharePoint Online tenant sites
-  spoSites []ms365.sharepointonline.site
+  spoSites() []ms365.sharepointonline.site
 }
 
 // Microsoft 365 SharePoint Site
@@ -427,11 +427,11 @@ private ms365.sharepointonline.site {
 // Microsoft 365 Teams
 ms365.teams {
   // CS Teams client configuration
-  csTeamsClientConfiguration dict
+  csTeamsClientConfiguration() dict
   // CS Teams tenant federated configuration
-  csTenantFederationConfiguration ms365.teams.tenantFederationConfig
+  csTenantFederationConfiguration() ms365.teams.tenantFederationConfig
   // CS Teams meeting policy configuration
-  csTeamsMeetingPolicy ms365.teams.teamsMeetingPolicyConfig
+  csTeamsMeetingPolicy() ms365.teams.teamsMeetingPolicyConfig
 }
 
 // Microsoft 365 Teams tenant federation configuration
