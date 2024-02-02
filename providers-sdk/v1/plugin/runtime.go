@@ -242,6 +242,7 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 		res := &TValue[T]{Data: x, Error: err}
 		if err != NotReady {
 			res.State = StateIsSet | StateIsNull
+			(*cached) = *res
 		}
 		return res
 	}
