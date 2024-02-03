@@ -61,11 +61,13 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 		conf.Input = llx
 	}
 	conf.PlatformId, _ = cmd.Flags().GetString("platform-id")
-	conf.Inventory = &inventory.Inventory{
+	in := &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
 			Assets: []*inventory.Asset{cliRes.Asset},
 		},
 	}
+	in.PreProcess() // required to resolve secrets
+	conf.Inventory = in
 	conf.Incognito, _ = cmd.Flags().GetBool("incognito")
 
 	x := cnqueryPlugin{}
