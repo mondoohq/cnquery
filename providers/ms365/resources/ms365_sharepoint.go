@@ -60,6 +60,8 @@ func (m *mqlMs365SharepointonlineSite) id() (string, error) {
 
 type mqlMs365SharepointonlineInternal struct {
 	sharepointLock sync.Mutex
+	fetched        bool
+	fetchErr       error
 }
 
 func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
@@ -101,18 +103,28 @@ func (r *mqlMs365Sharepointonline) getTenant() (string, error) {
 func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
 
-	// for some reasons, tokens issued by a client secret do not work. only certificates do
-	// TODO: ^ we should try and investigate why, its unclear to me why it happens.
-	if !conn.IsCertProvided() {
-		return fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report")
-	}
-
 	r.sharepointLock.Lock()
 	defer r.sharepointLock.Unlock()
 
+	// only fetch once
+	if r.fetched {
+		return r.fetchErr
+	}
+
+	errHandler := func(err error) error {
+		r.fetchErr = err
+		return err
+	}
+
+	// for some reasons, tokens issued by a client secret do not work. only certificates do
+	// TODO: ^ we should try and investigate why, its unclear to me why it happens.
+	if !conn.IsCertProvided() {
+		return errHandler(fmt.Errorf("only certificate authentication is supported for fetching sharepoint onine report"))
+	}
+
 	tenant, err := r.getTenant()
 	if tenant == "" || err != nil {
-		return fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report")
+		return errHandler(fmt.Errorf("tenant cannot be empty, cannot fetch sharepoint online report"))
 	}
 
 	ctx := context.Background()
@@ -123,31 +135,36 @@ func (r *mqlMs365Sharepointonline) getSharepointOnlineReport() error {
 		Scopes: []string{tokenScope},
 	})
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 
 	fmtScript := fmt.Sprintf(sharepointReport, spToken.Token, sharepointUrl)
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 	report := &SharepointOnlineReport{}
 	if res.ExitStatus == 0 {
 		data, err := io.ReadAll(res.Stdout)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
 
 		logger.DebugDumpJSON("sharepoint-online-report", string(data))
 
 		err = json.Unmarshal(data, report)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
 	} else {
 		data, err := io.ReadAll(res.Stderr)
 		if err != nil {
-			return err
+			return errHandler(err)
+		}
+
+		str := string(data)
+		if strings.Contains(strings.ToLower(str), "unauthorized") {
+			return errHandler(errors.New("access denied, please ensure the credentials have the right permissions in Azure AD"))
 		}
 
 		logger.DebugDumpJSON("sharepoint-online-report", string(data))

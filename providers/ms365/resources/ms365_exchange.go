@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -128,6 +129,8 @@ type ExoMailbox struct {
 
 type mqlMs365ExchangeonlineInternal struct {
 	exchangeReportLock sync.Mutex
+	fetched            bool
+	fetchErr           error
 	org                string
 }
 
@@ -159,9 +162,19 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	r.exchangeReportLock.Lock()
 	defer r.exchangeReportLock.Unlock()
 
+	// only fetch once
+	if r.fetched {
+		return r.fetchErr
+	}
+
+	errHandler := func(err error) error {
+		r.fetchErr = err
+		return err
+	}
+
 	organization, err := r.getOrg()
 	if organization == "" || err != nil {
-		return errors.New("no organization provided, unable to fetch exchange online report")
+		return errHandler(errors.New("no organization provided, unable to fetch exchange online report"))
 	}
 
 	ctx := context.Background()
@@ -170,7 +183,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		Scopes: []string{outlookScope},
 	})
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 
 	fmtScript := fmt.Sprintf(exchangeReport, organization, conn.ClientId(), conn.TenantId(), outlookToken.Token)
@@ -182,23 +195,28 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	if res.ExitStatus == 0 {
 		data, err := io.ReadAll(res.Stdout)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
-
 		logger.DebugDumpJSON("exchange-online-report", data)
 
 		err = json.Unmarshal(data, report)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
 	} else {
 		data, err := io.ReadAll(res.Stderr)
 		if err != nil {
-			return err
+			return errHandler(err)
+		}
+
+		str := string(data)
+		if strings.Contains(strings.ToLower(str), "unauthorized") {
+			return errHandler(errors.New("access denied, please ensure the credentials have the right permissions in Azure AD"))
 		}
 
 		logger.DebugDumpJSON("exchange-online-report", data)
-		return fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
+		err = fmt.Errorf("failed to generate exchange online report (exit code %d): %s", res.ExitStatus, string(data))
+		return errHandler(err)
 	}
 
 	malwareFilterPolicy, malwareFilterPolicyErr := convert.JsonToDictSlice(report.MalwareFilterPolicy)

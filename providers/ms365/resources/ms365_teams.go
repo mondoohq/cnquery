@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -79,40 +80,49 @@ type CsTeamsMeetingPolicy struct {
 
 type mqlMs365TeamsInternal struct {
 	teamsReportLock sync.Mutex
+	fetched         bool
+	fetchErr        error
 }
 
 func (r *mqlMs365Teams) gatherTeamsReport() error {
-	ctx := context.Background()
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
+
 	r.teamsReportLock.Lock()
 	defer r.teamsReportLock.Unlock()
 
+	errHandler := func(err error) error {
+		r.fetchErr = err
+		return err
+	}
+
+	ctx := context.Background()
 	token := conn.Token()
 	teamsToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{teamsScope},
 	})
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 	graphToken, err := token.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{connection.DefaultMSGraphScope},
 	})
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 
 	fmtScript := fmt.Sprintf(teamsReport, graphToken.Token, teamsToken.Token)
 	res, err := conn.CheckAndRunPowershellScript(fmtScript)
 	if err != nil {
-		return err
+		return errHandler(err)
 	}
 	report := &MsTeamsReport{}
 	if res.ExitStatus == 0 {
 		data, err := io.ReadAll(res.Stdout)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
 		str := string(data)
+
 		// The Connect-MicrosoftTeams also displays a header for which there
 		// are no params to hide it. To allow the JSON unmarshal to work
 		// we strip away everything until the first '{' character.
@@ -123,16 +133,21 @@ func (r *mqlMs365Teams) gatherTeamsReport() error {
 		logger.DebugDumpJSON("ms-teams-report", string(newData))
 		err = json.Unmarshal(newData, report)
 		if err != nil {
-			return err
+			return errHandler(err)
 		}
 	} else {
 		data, err := io.ReadAll(res.Stderr)
 		if err != nil {
-			return err
+			return errHandler(err)
+		}
+
+		str := string(data)
+		if strings.Contains(strings.ToLower(str), "access denied") {
+			return errHandler(errors.New("access denied, please ensure the credentials have the right permissions in Azure AD"))
 		}
 
 		logger.DebugDumpJSON("ms-teams-report", string(data))
-		return fmt.Errorf("failed to generate ms teams report (exit code %d): %s", res.ExitStatus, string(data))
+		return errHandler(fmt.Errorf("failed to generate ms teams report (exit code %d): %s", res.ExitStatus, string(data)))
 	}
 
 	csTeamsConfiguration, csTeamsConfigurationErr := convert.JsonToDict(report.CsTeamsClientConfiguration)
