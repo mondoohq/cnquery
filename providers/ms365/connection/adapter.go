@@ -4,12 +4,14 @@
 package connection
 
 import (
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/cockroachdb/errors"
+	azcore "github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	errors "github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphsdkgo "github.com/microsoftgraph/msgraph-sdk-go"
 )
+
+const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
 
 var DefaultMSGraphScopes = []string{DefaultMSGraphScope}
 

@@ -91,7 +91,7 @@ func init() {
 			Create: createMicrosoftDevicemanagementDevicecompliancepolicy,
 		},
 		"ms365.exchangeonline": {
-			Init: initMs365Exchangeonline,
+			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Exchangeonline,
 		},
 		"ms365.exchangeonline.externalSender": {
@@ -103,7 +103,7 @@ func init() {
 			Create: createMs365ExchangeonlineExoMailbox,
 		},
 		"ms365.sharepointonline": {
-			Init: initMs365Sharepointonline,
+			// to override args, implement: initMs365Sharepointonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Sharepointonline,
 		},
 		"ms365.sharepointonline.site": {
@@ -111,7 +111,7 @@ func init() {
 			Create: createMs365SharepointonlineSite,
 		},
 		"ms365.teams": {
-			Init: initMs365Teams,
+			// to override args, implement: initMs365Teams(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Teams,
 		},
 		"ms365.teams.tenantFederationConfig": {
@@ -3253,7 +3253,7 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *pl
 type mqlMs365Exchangeonline struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMs365ExchangeonlineInternal it will be used here
+	mqlMs365ExchangeonlineInternal
 	MalwareFilterPolicy plugin.TValue[[]interface{}]
 	HostedOutboundSpamFilterPolicy plugin.TValue[[]interface{}]
 	TransportRule plugin.TValue[[]interface{}]
@@ -3308,79 +3308,137 @@ func (c *mqlMs365Exchangeonline) MqlID() string {
 }
 
 func (c *mqlMs365Exchangeonline) GetMalwareFilterPolicy() *plugin.TValue[[]interface{}] {
-	return &c.MalwareFilterPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.MalwareFilterPolicy, func() ([]interface{}, error) {
+		return c.malwareFilterPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetHostedOutboundSpamFilterPolicy() *plugin.TValue[[]interface{}] {
-	return &c.HostedOutboundSpamFilterPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.HostedOutboundSpamFilterPolicy, func() ([]interface{}, error) {
+		return c.hostedOutboundSpamFilterPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetTransportRule() *plugin.TValue[[]interface{}] {
-	return &c.TransportRule
+	return plugin.GetOrCompute[[]interface{}](&c.TransportRule, func() ([]interface{}, error) {
+		return c.transportRule()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetRemoteDomain() *plugin.TValue[[]interface{}] {
-	return &c.RemoteDomain
+	return plugin.GetOrCompute[[]interface{}](&c.RemoteDomain, func() ([]interface{}, error) {
+		return c.remoteDomain()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetSafeLinksPolicy() *plugin.TValue[[]interface{}] {
-	return &c.SafeLinksPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.SafeLinksPolicy, func() ([]interface{}, error) {
+		return c.safeLinksPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetSafeAttachmentPolicy() *plugin.TValue[[]interface{}] {
-	return &c.SafeAttachmentPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.SafeAttachmentPolicy, func() ([]interface{}, error) {
+		return c.safeAttachmentPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetOrganizationConfig() *plugin.TValue[interface{}] {
-	return &c.OrganizationConfig
+	return plugin.GetOrCompute[interface{}](&c.OrganizationConfig, func() (interface{}, error) {
+		return c.organizationConfig()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetAuthenticationPolicy() *plugin.TValue[[]interface{}] {
-	return &c.AuthenticationPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.AuthenticationPolicy, func() ([]interface{}, error) {
+		return c.authenticationPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetAntiPhishPolicy() *plugin.TValue[[]interface{}] {
-	return &c.AntiPhishPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.AntiPhishPolicy, func() ([]interface{}, error) {
+		return c.antiPhishPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetDkimSigningConfig() *plugin.TValue[[]interface{}] {
-	return &c.DkimSigningConfig
+	return plugin.GetOrCompute[[]interface{}](&c.DkimSigningConfig, func() ([]interface{}, error) {
+		return c.dkimSigningConfig()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetOwaMailboxPolicy() *plugin.TValue[[]interface{}] {
-	return &c.OwaMailboxPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.OwaMailboxPolicy, func() ([]interface{}, error) {
+		return c.owaMailboxPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetAdminAuditLogConfig() *plugin.TValue[interface{}] {
-	return &c.AdminAuditLogConfig
+	return plugin.GetOrCompute[interface{}](&c.AdminAuditLogConfig, func() (interface{}, error) {
+		return c.adminAuditLogConfig()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetPhishFilterPolicy() *plugin.TValue[[]interface{}] {
-	return &c.PhishFilterPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.PhishFilterPolicy, func() ([]interface{}, error) {
+		return c.phishFilterPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetMailbox() *plugin.TValue[[]interface{}] {
-	return &c.Mailbox
+	return plugin.GetOrCompute[[]interface{}](&c.Mailbox, func() ([]interface{}, error) {
+		return c.mailbox()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetAtpPolicyForO365() *plugin.TValue[[]interface{}] {
-	return &c.AtpPolicyForO365
+	return plugin.GetOrCompute[[]interface{}](&c.AtpPolicyForO365, func() ([]interface{}, error) {
+		return c.atpPolicyForO365()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetSharingPolicy() *plugin.TValue[[]interface{}] {
-	return &c.SharingPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.SharingPolicy, func() ([]interface{}, error) {
+		return c.sharingPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetRoleAssignmentPolicy() *plugin.TValue[[]interface{}] {
-	return &c.RoleAssignmentPolicy
+	return plugin.GetOrCompute[[]interface{}](&c.RoleAssignmentPolicy, func() ([]interface{}, error) {
+		return c.roleAssignmentPolicy()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetExternalInOutlook() *plugin.TValue[[]interface{}] {
-	return &c.ExternalInOutlook
+	return plugin.GetOrCompute[[]interface{}](&c.ExternalInOutlook, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "externalInOutlook")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.externalInOutlook()
+	})
 }
 
 func (c *mqlMs365Exchangeonline) GetSharedMailboxes() *plugin.TValue[[]interface{}] {
-	return &c.SharedMailboxes
+	return plugin.GetOrCompute[[]interface{}](&c.SharedMailboxes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "sharedMailboxes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.sharedMailboxes()
+	})
 }
 
 // mqlMs365ExchangeonlineExternalSender for the ms365.exchangeonline.externalSender resource
@@ -3517,7 +3575,7 @@ func (c *mqlMs365ExchangeonlineExoMailbox) GetExternalDirectoryObjectId() *plugi
 type mqlMs365Sharepointonline struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMs365SharepointonlineInternal it will be used here
+	mqlMs365SharepointonlineInternal
 	SpoTenant plugin.TValue[interface{}]
 	SpoTenantSyncClientRestriction plugin.TValue[interface{}]
 	SpoSites plugin.TValue[[]interface{}]
@@ -3556,15 +3614,31 @@ func (c *mqlMs365Sharepointonline) MqlID() string {
 }
 
 func (c *mqlMs365Sharepointonline) GetSpoTenant() *plugin.TValue[interface{}] {
-	return &c.SpoTenant
+	return plugin.GetOrCompute[interface{}](&c.SpoTenant, func() (interface{}, error) {
+		return c.spoTenant()
+	})
 }
 
 func (c *mqlMs365Sharepointonline) GetSpoTenantSyncClientRestriction() *plugin.TValue[interface{}] {
-	return &c.SpoTenantSyncClientRestriction
+	return plugin.GetOrCompute[interface{}](&c.SpoTenantSyncClientRestriction, func() (interface{}, error) {
+		return c.spoTenantSyncClientRestriction()
+	})
 }
 
 func (c *mqlMs365Sharepointonline) GetSpoSites() *plugin.TValue[[]interface{}] {
-	return &c.SpoSites
+	return plugin.GetOrCompute[[]interface{}](&c.SpoSites, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.sharepointonline", c.__id, "spoSites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.spoSites()
+	})
 }
 
 // mqlMs365SharepointonlineSite for the ms365.sharepointonline.site resource
@@ -3625,7 +3699,7 @@ func (c *mqlMs365SharepointonlineSite) GetDenyAddAndCustomizePages() *plugin.TVa
 type mqlMs365Teams struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlMs365TeamsInternal it will be used here
+	mqlMs365TeamsInternal
 	CsTeamsClientConfiguration plugin.TValue[interface{}]
 	CsTenantFederationConfiguration plugin.TValue[*mqlMs365TeamsTenantFederationConfig]
 	CsTeamsMeetingPolicy plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig]
@@ -3664,15 +3738,41 @@ func (c *mqlMs365Teams) MqlID() string {
 }
 
 func (c *mqlMs365Teams) GetCsTeamsClientConfiguration() *plugin.TValue[interface{}] {
-	return &c.CsTeamsClientConfiguration
+	return plugin.GetOrCompute[interface{}](&c.CsTeamsClientConfiguration, func() (interface{}, error) {
+		return c.csTeamsClientConfiguration()
+	})
 }
 
 func (c *mqlMs365Teams) GetCsTenantFederationConfiguration() *plugin.TValue[*mqlMs365TeamsTenantFederationConfig] {
-	return &c.CsTenantFederationConfiguration
+	return plugin.GetOrCompute[*mqlMs365TeamsTenantFederationConfig](&c.CsTenantFederationConfiguration, func() (*mqlMs365TeamsTenantFederationConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "csTenantFederationConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsTenantFederationConfig), nil
+			}
+		}
+
+		return c.csTenantFederationConfiguration()
+	})
 }
 
 func (c *mqlMs365Teams) GetCsTeamsMeetingPolicy() *plugin.TValue[*mqlMs365TeamsTeamsMeetingPolicyConfig] {
-	return &c.CsTeamsMeetingPolicy
+	return plugin.GetOrCompute[*mqlMs365TeamsTeamsMeetingPolicyConfig](&c.CsTeamsMeetingPolicy, func() (*mqlMs365TeamsTeamsMeetingPolicyConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.teams", c.__id, "csTeamsMeetingPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMs365TeamsTeamsMeetingPolicyConfig), nil
+			}
+		}
+
+		return c.csTeamsMeetingPolicy()
+	})
 }
 
 // mqlMs365TeamsTenantFederationConfig for the ms365.teams.tenantFederationConfig resource

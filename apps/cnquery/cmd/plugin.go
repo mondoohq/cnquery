@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/mqlc/parser"
 	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory/manager"
 	pp "go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/shared"
@@ -110,34 +111,32 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	err := runtime.Connect(&pp.ConnectReq{
-		Features: config.Features,
-		Asset:    conf.Inventory.Spec.Assets[0],
-		Upstream: upstreamConfig,
-	})
+	// resolve asset and secret
+	im, err := manager.NewManager(manager.WithInventory(conf.Inventory, providers.DefaultRuntime()))
 	if err != nil {
-		return err
+		return errors.New("failed to resolve inventory for connection")
 	}
+	assetList := im.GetAssets()
 
 	if conf.Format == "json" {
 		out.WriteString("[")
 	}
 
-	assets, err := providers.ProcessAssetCandidates(runtime, runtime.Provider.Connection, upstreamConfig, conf.PlatformId)
-	if err != nil {
-		return err
-	}
+	for i := range assetList {
+		asset := assetList[i]
+		resolvedAsset, err := im.ResolveAsset(asset)
+		if err != nil {
+			return err
+		}
 
-	for i := range assets {
-		connectAsset := assets[i]
-		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(connectAsset, runtime)
+		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(asset, runtime)
 		if err != nil {
 			return err
 		}
 
 		err = connectAssetRuntime.Connect(&pp.ConnectReq{
 			Features: config.Features,
-			Asset:    connectAsset,
+			Asset:    resolvedAsset,
 			Upstream: upstreamConfig,
 		})
 		if err != nil {
@@ -209,7 +208,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			sh.PrintResults(code, results)
 		} else {
 			reporter.BundleResultsToJSON(code, results, out)
-			if len(assets) != i+1 {
+			if len(assetList) != i+1 {
 				out.WriteString(",")
 			}
 		}
