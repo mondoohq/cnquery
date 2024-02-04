@@ -125,6 +125,9 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	for i := range assetList {
 		asset := assetList[i]
 		resolvedAsset, err := im.ResolveAsset(asset)
+		if err != nil {
+			return err
+		}
 
 		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(asset, runtime)
 		if err != nil {

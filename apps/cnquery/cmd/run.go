@@ -66,13 +66,17 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 			Assets: []*inventory.Asset{cliRes.Asset},
 		},
 	}
-	in.PreProcess() // required to resolve secrets
+	err := in.PreProcess() // required to resolve secrets
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to resolve inventory")
+	}
+
 	conf.Inventory = in
 	conf.Incognito, _ = cmd.Flags().GetBool("incognito")
 
 	x := cnqueryPlugin{}
 	w := shared.IOWriter{Writer: os.Stdout}
-	err := x.RunQuery(&conf, runtime, &w)
+	err = x.RunQuery(&conf, runtime, &w)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run query")
 	}
