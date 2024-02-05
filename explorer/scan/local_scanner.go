@@ -29,6 +29,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v10/utils/slicesx"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/protobuf/proto"
@@ -197,18 +198,6 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 	return multiprogress, nil
 }
 
-func Batch[T any](list []T, batchSize int) [][]T {
-	var res [][]T
-	for i := 0; i < len(list); i += batchSize {
-		end := i + batchSize
-		if end > len(list) {
-			end = len(list)
-		}
-		res = append(res, list[i:end])
-	}
-	return res
-}
-
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
@@ -257,7 +246,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}()
 
-	assetBatches := Batch(discoveredAssets.Assets, 100)
+	assetBatches := slicesx.Batch(discoveredAssets.Assets, 100)
 	for i := range assetBatches {
 		batch := assetBatches[i]
 
