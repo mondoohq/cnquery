@@ -175,8 +175,8 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 	if isatty.IsTerminal(os.Stdout.Fd()) && !disableProgressBar && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
 		progressBarElements := map[string]string{}
 		orderedKeys := []string{}
-		for i := range discoveredAssets.assets {
-			asset := discoveredAssets.assets[i].Asset
+		for i := range discoveredAssets.Assets {
+			asset := discoveredAssets.Assets[i].Asset
 			// this shouldn't happen, but might
 			// it normally indicates a bug in the provider
 			if presentAsset, present := progressBarElements[asset.PlatformIds[0]]; present {
@@ -224,7 +224,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// Within this process, we set up a catch-all deferred function, that shuts
 	// down all runtimes, in case we exit early.
 	defer func() {
-		for _, asset := range discoveredAssets.assets {
+		for _, asset := range discoveredAssets.Assets {
 			// we can call close multiple times and it will only execute once
 			if asset.Runtime != nil {
 				asset.Runtime.Close()
@@ -235,11 +235,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// plan scan jobs
 	reporter := NewAggregateReporter()
 	// if we had asset errors we want to place them into the reporter
-	for i := range discoveredAssets.errors {
-		reporter.AddScanError(discoveredAssets.errors[i].Asset, discoveredAssets.errors[i].Err)
+	for i := range discoveredAssets.Errors {
+		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
 	}
 
-	if len(discoveredAssets.assets) == 0 {
+	if len(discoveredAssets.Assets) == 0 {
 		return reporter.Reports(), nil
 	}
 
@@ -257,7 +257,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}()
 
-	assetBatches := Batch(discoveredAssets.assets, 100)
+	assetBatches := Batch(discoveredAssets.Assets, 100)
 	for i := range assetBatches {
 		batch := assetBatches[i]
 

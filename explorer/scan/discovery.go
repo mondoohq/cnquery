@@ -31,8 +31,8 @@ type AssetWithError struct {
 
 type DiscoveredAssets struct {
 	platformIds map[string]struct{}
-	assets      []*AssetWithRuntime
-	errors      []*AssetWithError
+	Assets      []*AssetWithRuntime
+	Errors      []*AssetWithError
 }
 
 // Add adds an asset and its runtime to the discovered assets list. It returns true if the
@@ -50,17 +50,17 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 		return false
 	}
 
-	d.assets = append(d.assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
+	d.Assets = append(d.Assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
 	return true
 }
 
 func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
-	d.errors = append(d.errors, &AssetWithError{Asset: asset, Err: err})
+	d.Errors = append(d.Errors, &AssetWithError{Asset: asset, Err: err})
 }
 
 func (d *DiscoveredAssets) GetAssets() []*inventory.Asset {
-	assets := make([]*inventory.Asset, 0, len(d.assets))
-	for _, a := range d.assets {
+	assets := make([]*inventory.Asset, 0, len(d.Assets))
+	for _, a := range d.Assets {
 		assets = append(assets, a.Asset)
 	}
 	return assets
@@ -68,7 +68,7 @@ func (d *DiscoveredAssets) GetAssets() []*inventory.Asset {
 
 func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*inventory.Asset {
 	var assets []*inventory.Asset
-	for _, a := range d.assets {
+	for _, a := range d.Assets {
 		for _, p := range a.Asset.PlatformIds {
 			if platformID == "" || p == platformID {
 				assets = append(assets, a.Asset)
@@ -168,9 +168,9 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 	// if there is exactly one asset, assure that the --asset-name is used
 	// TODO: make it so that the --asset-name is set for the root asset only even if multiple assets are there
 	// This is a temporary fix that only works if there is only one asset
-	if len(discoveredAssets.assets) == 1 && invAssets[0].Name != "" && invAssets[0].Name != discoveredAssets.assets[0].Asset.Name {
-		log.Debug().Str("asset", discoveredAssets.assets[0].Asset.Name).Msg("Overriding asset name with --asset-name flag")
-		discoveredAssets.assets[0].Asset.Name = invAssets[0].Name
+	if len(discoveredAssets.Assets) == 1 && invAssets[0].Name != "" && invAssets[0].Name != discoveredAssets.Assets[0].Asset.Name {
+		log.Debug().Str("asset", discoveredAssets.Assets[0].Asset.Name).Msg("Overriding asset name with --asset-name flag")
+		discoveredAssets.Assets[0].Asset.Name = invAssets[0].Name
 	}
 
 	return discoveredAssets, nil
