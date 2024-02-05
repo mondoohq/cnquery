@@ -28,7 +28,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.50.9 // indirect
+	github.com/aws/aws-sdk-go v1.50.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16 // indirect
@@ -151,7 +151,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.2
 	golang.org/x/text v0.14.0 // indirect

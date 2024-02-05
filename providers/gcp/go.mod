@@ -25,7 +25,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.19.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v10 v10.1.4
 	go.mondoo.com/ranger-rpc v0.5.3
@@ -52,7 +52,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
-	github.com/aws/aws-sdk-go v1.50.9 // indirect
+	github.com/aws/aws-sdk-go v1.50.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16 // indirect

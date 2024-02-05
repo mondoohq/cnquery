@@ -17,7 +17,7 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.50.9
+	github.com/aws/aws-sdk-go v1.50.10
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16
@@ -78,7 +78,7 @@ require (
 	github.com/pkg/sftp v1.13.6
 	// pin v1.2.0-beta.2
 	github.com/pkg/term v1.2.0-beta.2
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.2.0
@@ -158,6 +158,7 @@ require (
 	github.com/masterzen/simplexml v0.0.0-20190410153822-31eea3082786 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
+	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
@@ -394,7 +395,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240124101327-8c3a4faf5a4b
+	go.mondoo.com/mondoo-go v0.0.0-20240203120016-30f2eae8932a
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.tmz.dev/musttag v0.7.2 // indirect
@@ -414,7 +415,7 @@ require (
 	honnef.co/go/tools v0.4.6 // indirect
 	k8s.io/api v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	modernc.org/libc v1.40.10 // indirect
+	modernc.org/libc v1.41.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.28.0 // indirect
