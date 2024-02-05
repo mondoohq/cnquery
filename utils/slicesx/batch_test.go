@@ -25,3 +25,19 @@ func TestBatch(t *testing.T) {
 	}
 	assert.Equal(t, slice, flattenedBatches)
 }
+
+func TestBatch_Uneven(t *testing.T) {
+	slice := []string{}
+	for i := 0; i < 101; i++ {
+		slice = append(slice, fmt.Sprintf("item-%d", i))
+	}
+
+	batches := Batch(slice, 10)
+	assert.Len(t, batches, 11)
+
+	flattenedBatches := []string{}
+	for _, batch := range batches {
+		flattenedBatches = append(flattenedBatches, batch...)
+	}
+	assert.Equal(t, slice, flattenedBatches)
+}

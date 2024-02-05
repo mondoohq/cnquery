@@ -202,6 +202,15 @@ func TestDiscoverAssets(t *testing.T) {
 
 	t.Run("set ci/cd labels", func(t *testing.T) {
 		inv := getInventory()
+
+		val, isSet := os.LookupEnv("GITHUB_ACTION")
+		defer func() {
+			if isSet {
+				require.NoError(t, os.Setenv("GITHUB_ACTION", val))
+			} else {
+				require.NoError(t, os.Unsetenv("GITHUB_ACTION"))
+			}
+		}()
 		inv.Spec.Assets[0].Category = inventory.AssetCategory_CATEGORY_CICD
 		require.NoError(t, os.Setenv("GITHUB_ACTION", "go-test"))
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
