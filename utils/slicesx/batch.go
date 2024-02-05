@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package slicesx
 
 func Batch[T any](list []T, batchSize int) [][]T {
