@@ -672,6 +672,8 @@ sshd.config {
   content(files) string
   // Configuration values of this SSH server
   params(content) map[string]string
+  // Blocks with match conditions in this SSH server config
+  blocks(content) []sshd.config.matchBlock
   // Ciphers configured for this SSH server
   ciphers(params) []string
   // MACs configured for this SSH server
@@ -682,6 +684,13 @@ sshd.config {
   hostkeys(params) []string
   // PermitRootLogin setting in SSH server
   permitRootLogin(params) []string
+}
+
+private sshd.config.matchBlock @defaults("criteria") {
+  // The match criteria for this block
+  criteria string
+  // Configuration values in this block
+  params map[string]string
 }
 
 // Service on this system
