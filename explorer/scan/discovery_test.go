@@ -1,3 +1,6 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package scan
 
 import (
@@ -6,8 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 	"go.mondoo.com/cnquery/v10/providers"
 	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
