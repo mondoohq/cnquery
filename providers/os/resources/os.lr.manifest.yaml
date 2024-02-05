@@ -838,6 +838,8 @@ resources:
     min_mondoo_version: 5.15.0
   sshd.config:
     fields:
+      blocks:
+        min_mondoo_version: latest
       ciphers: {}
       content: {}
       file: {}
@@ -853,6 +855,13 @@ resources:
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
       title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
+  sshd.config.matchBlock:
+    fields:
+      condition: {}
+      criteria: {}
+      params: {}
+    is_private: true
+    min_mondoo_version: latest
   user:
     fields:
       authorizedkeys: {}

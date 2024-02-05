@@ -8,12 +8,18 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/sshd"
+	"go.mondoo.com/cnquery/v10/types"
 )
+
+type mqlSshdConfigInternal struct {
+	lock sync.Mutex
+}
 
 func initSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if x, ok := args["path"]; ok {
@@ -117,19 +123,49 @@ func (s *mqlSshdConfig) content(files []interface{}) (string, error) {
 	return fullContent, nil
 }
 
-func (s *mqlSshdConfig) params(content string) (map[string]interface{}, error) {
-	params, err := sshd.Params(content)
-	if err != nil {
-		return nil, err
+func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID string) ([]any, error) {
+	res := make([]any, len(m))
+	for i := range m {
+		cur := m[i]
+		obj, err := CreateResource(runtime, "sshd.config.matchBlock", map[string]*llx.RawData{
+			"__id":     llx.StringData(ownerID + "\x00" + cur.Criteria),
+			"criteria": llx.StringData(cur.Criteria),
+			"params":   llx.MapData(cur.Params, types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res[i] = obj
 	}
-
-	// convert  map
-	res := map[string]interface{}{}
-	for k, v := range params {
-		res[k] = v
-	}
-
 	return res, nil
+}
+
+func (s *mqlSshdConfig) parse(content string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	params, err := sshd.ParseBlocks(content)
+	if err != nil {
+		s.Params = plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		s.Blocks = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+	} else {
+		blocks, err := matchBlocks2Resources(params, s.MqlRuntime, s.__id)
+		if err != nil {
+			return err
+		}
+		s.Params = plugin.TValue[map[string]any]{Data: params.Flatten(), State: plugin.StateIsSet}
+		s.Blocks = plugin.TValue[[]any]{Data: blocks, State: plugin.StateIsSet}
+	}
+
+	return err
+}
+
+func (s *mqlSshdConfig) params(content string) (map[string]any, error) {
+	return nil, s.parse(content)
+}
+
+func (s *mqlSshdConfig) blocks(content string) ([]any, error) {
+	return nil, s.parse(content)
 }
 
 func (s *mqlSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {

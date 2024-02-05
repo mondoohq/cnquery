@@ -13,9 +13,9 @@ import (
 func TestResource_SSHD(t *testing.T) {
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
 		{
-			Code:        "sshd.config('1').params['2'] == '3'",
+			Code:        "sshd.config('nopath').params['2'] == '3'",
 			ResultIndex: 0,
-			Expectation: "sshd config does not exist in 1",
+			Expectation: "sshd config does not exist in nopath",
 		},
 	})
 
@@ -76,5 +76,23 @@ func TestResource_SSHD(t *testing.T) {
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, []interface{}{"no", "no"}, res[0].Data.Value)
+	})
+
+	t.Run("parse blocks", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.blocks.map(criteria)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []any{"", "Group sftp-users", "User myservice"}, res[0].Data.Value)
+
+		res = x.TestQuery(t, "sshd.config.blocks.map(params.AllowTcpForwarding)")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, []any{"no", "yes", nil}, res[0].Data.Value)
+	})
+	t.Run("expose block match criteria in params.Match", func(t *testing.T) {
+		res := x.TestQuery(t, "sshd.config.params.Match")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "Group sftp-users,User myservice", res[0].Data.Value)
 	})
 }

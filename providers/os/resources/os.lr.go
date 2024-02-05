@@ -218,6 +218,10 @@ func init() {
 			Init: initSshdConfig,
 			Create: createSshdConfig,
 		},
+		"sshd.config.matchBlock": {
+			// to override args, implement: initSshdConfigMatchBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSshdConfigMatchBlock,
+		},
 		"service": {
 			Init: initService,
 			Create: createService,
@@ -1170,6 +1174,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"sshd.config.blocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetBlocks()).ToDataRes(types.Array(types.Resource("sshd.config.matchBlock")))
+	},
 	"sshd.config.ciphers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetCiphers()).ToDataRes(types.Array(types.String))
 	},
@@ -1184,6 +1191,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.permitRootLogin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetPermitRootLogin()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.matchBlock.criteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetCriteria()).ToDataRes(types.String)
+	},
+	"sshd.config.matchBlock.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfigMatchBlock).GetParams()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"service.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlService).GetName()).ToDataRes(types.String)
@@ -3122,6 +3135,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlSshdConfig).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"sshd.config.blocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Blocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"sshd.config.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Ciphers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
@@ -3140,6 +3157,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.permitRootLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).PermitRootLogin, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlSshdConfigMatchBlock).__id, ok = v.Value.(string)
+			return
+		},
+	"sshd.config.matchBlock.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Criteria, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sshd.config.matchBlock.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfigMatchBlock).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8357,11 +8386,12 @@ func (c *mqlSshd) MqlID() string {
 type mqlSshdConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlSshdConfigInternal it will be used here
+	mqlSshdConfigInternal
 	File plugin.TValue[*mqlFile]
 	Files plugin.TValue[[]interface{}]
 	Content plugin.TValue[string]
 	Params plugin.TValue[map[string]interface{}]
+	Blocks plugin.TValue[[]interface{}]
 	Ciphers plugin.TValue[[]interface{}]
 	Macs plugin.TValue[[]interface{}]
 	Kexs plugin.TValue[[]interface{}]
@@ -8465,6 +8495,27 @@ func (c *mqlSshdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
 	})
 }
 
+func (c *mqlSshdConfig) GetBlocks() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Blocks, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config", c.__id, "blocks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.blocks(vargContent.Data)
+	})
+}
+
 func (c *mqlSshdConfig) GetCiphers() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Ciphers, func() ([]interface{}, error) {
 		vargParams := c.GetParams()
@@ -8518,6 +8569,55 @@ func (c *mqlSshdConfig) GetPermitRootLogin() *plugin.TValue[[]interface{}] {
 
 		return c.permitRootLogin(vargParams.Data)
 	})
+}
+
+// mqlSshdConfigMatchBlock for the sshd.config.matchBlock resource
+type mqlSshdConfigMatchBlock struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlSshdConfigMatchBlockInternal it will be used here
+	Criteria plugin.TValue[string]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createSshdConfigMatchBlock creates a new instance of this resource
+func createSshdConfigMatchBlock(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSshdConfigMatchBlock{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sshd.config.matchBlock", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSshdConfigMatchBlock) MqlName() string {
+	return "sshd.config.matchBlock"
+}
+
+func (c *mqlSshdConfigMatchBlock) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSshdConfigMatchBlock) GetCriteria() *plugin.TValue[string] {
+	return &c.Criteria
+}
+
+func (c *mqlSshdConfigMatchBlock) GetParams() *plugin.TValue[map[string]interface{}] {
+	return &c.Params
 }
 
 // mqlService for the service resource

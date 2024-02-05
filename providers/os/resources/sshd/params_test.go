@@ -15,7 +15,7 @@ func TestSSHParser(t *testing.T) {
 	raw, err := os.ReadFile("./testdata/sshd_config")
 	require.NoError(t, err)
 
-	sshParams, err := Params(string(raw))
+	sshParams, err := ParseBlocks(string(raw))
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
@@ -32,7 +32,7 @@ func TestSSHParseCaseInsensitive(t *testing.T) {
 	raw, err := os.ReadFile("./testdata/case_insensitive")
 	require.NoError(t, err)
 
-	sshParams, err := Params(string(raw))
+	sshParams, err := ParseBlocks(string(raw))
 	if err != nil {
 		t.Fatalf("cannot request file %v", err)
 	}
