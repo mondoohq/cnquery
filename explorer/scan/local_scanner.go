@@ -263,9 +263,14 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				return nil, err
 			}
 
+			assetsToSync := make([]*inventory.Asset, 0, len(batch))
+			for i := range batch {
+				assetsToSync = append(assetsToSync, batch[i].Asset)
+			}
+
 			resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 				SpaceMrn: client.SpaceMrn,
-				List:     discoveredAssets.GetAssets(),
+				List:     assetsToSync,
 			})
 			if err != nil {
 				return nil, err
