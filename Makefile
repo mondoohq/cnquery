@@ -600,10 +600,10 @@ benchmark/go:
 test/go: cnquery/generate test/go/plain
 
 test/go/plain:
-	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/cli/')
+	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/cli')
 
 test/go/plain-ci: prep/tools providers/build providers/test
-	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/')
+	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/cli')
 
 test/go-cli/plain:
 	go test -cover $(shell go list ./... | grep 'test/cli')
