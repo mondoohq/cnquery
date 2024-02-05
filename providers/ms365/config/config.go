@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "ms365",
 	ID:              "go.mondoo.com/cnquery/v9/providers/ms365",
-	Version:         "10.0.4",
+	Version:         "10.0.5",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
