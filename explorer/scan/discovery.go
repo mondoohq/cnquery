@@ -8,7 +8,6 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/cli/config"
 	"go.mondoo.com/cnquery/v10/cli/execruntime"
 	"go.mondoo.com/cnquery/v10/llx"
@@ -109,58 +108,32 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 			return nil, err
 		}
 
-		rootRuntime, err := providers.Coordinator.RuntimeFor(resolvedRootAsset, providers.DefaultRuntime())
+		// create runtime for root asset
+		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, upstream, recording)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
-			discoveredAssets.AddError(resolvedRootAsset, err)
-			continue
-		}
-		if err := rootRuntime.SetRecording(recording); err != nil {
-			discoveredAssets.AddError(resolvedRootAsset, err)
+			discoveredAssets.AddError(rootAssetWithRuntime.Asset, err)
 			continue
 		}
 
-		if err := rootRuntime.Connect(&plugin.ConnectReq{
-			Features: cnquery.GetFeatures(ctx),
-			Asset:    resolvedRootAsset,
-			Upstream: upstream,
-		}); err != nil {
-			log.Error().Err(err).Msg("unable to connect to asset")
-			discoveredAssets.AddError(resolvedRootAsset, err)
-			continue
-		}
-		resolvedRootAsset = rootRuntime.Provider.Connection.Asset // to ensure we get all the information the connect call gave us
+		resolvedRootAsset = rootAssetWithRuntime.Asset // to ensure we get all the information the connect call gave us
 
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
-		for _, a := range rootRuntime.Provider.Connection.Inventory.Spec.Assets {
-			runtime, err := providers.Coordinator.RuntimeFor(resolvedRootAsset, providers.DefaultRuntime())
+		for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
+			// create runtime for root asset
+			assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
 			if err != nil {
-				discoveredAssets.AddError(a, err)
-				continue
-			}
-			if err := runtime.SetRecording(recording); err != nil {
-				discoveredAssets.AddError(resolvedRootAsset, err)
-				runtime.Close()
+				log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
+				discoveredAssets.AddError(assetWithRuntime.Asset, err)
 				continue
 			}
 
-			err = runtime.Connect(&plugin.ConnectReq{
-				Features: config.Features,
-				Asset:    a,
-				Upstream: upstream,
-			})
-			if err != nil {
-				discoveredAssets.AddError(a, err)
-				runtime.Close()
-				continue
-			}
-
-			resolvedAsset := runtime.Provider.Connection.Asset
+			resolvedAsset := assetWithRuntime.Runtime.Provider.Connection.Asset
 			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
 
 			// If the asset has been already added, we should close its runtime
-			if !discoveredAssets.Add(resolvedAsset, runtime) {
-				runtime.Close()
+			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
+				assetWithRuntime.Runtime.Close()
 			}
 		}
 	}
@@ -174,6 +147,35 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 	}
 
 	return discoveredAssets, nil
+}
+
+func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
+	var runtime *providers.Runtime
+	var err error
+	// Close the runtime if an error occured
+	defer func() {
+		if err != nil && runtime != nil {
+			runtime.Close()
+		}
+	}()
+
+	runtime, err = providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
+	if err != nil {
+		return nil, err
+	}
+	if err = runtime.SetRecording(recording); err != nil {
+		return nil, err
+	}
+
+	err = runtime.Connect(&plugin.ConnectReq{
+		Features: config.Features,
+		Asset:    asset,
+		Upstream: upstream,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &AssetWithRuntime{Asset: runtime.Provider.Connection.Asset, Runtime: runtime}, nil
 }
 
 // prepareAsset prepares the asset for further processing by adding mondoo-specific labels and annotations
