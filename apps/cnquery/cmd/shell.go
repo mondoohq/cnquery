@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/config"
 	"go.mondoo.com/cnquery/v10/cli/shell"
 	"go.mondoo.com/cnquery/v10/cli/theme"
+	"go.mondoo.com/cnquery/v10/explorer/scan"
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory/manager"
@@ -113,21 +115,23 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
 
-	assets, err := providers.ProcessAssetCandidates(runtime, res, conf.UpstreamConfig, conf.PlatformID)
+	ctx := context.Background()
+	discoveredAssets, err := scan.DiscoverAssets(ctx, res.Inventory, conf.UpstreamConfig, providers.NullRecording{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not process assets")
 	}
-	if len(assets) == 0 {
+	filteredAssets := discoveredAssets.GetAssetsByPlatformID(conf.PlatformID)
+	if len(filteredAssets) == 0 {
 		log.Fatal().Msg("could not find an asset that we can connect to")
 	}
 
-	connectAsset := assets[0]
-	if len(assets) > 1 {
+	connectAsset := filteredAssets[0]
+	if len(filteredAssets) > 1 {
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 		if isTTY {
-			connectAsset = components.AssetSelect(assets)
+			connectAsset = components.AssetSelect(filteredAssets)
 		} else {
-			fmt.Println(components.AssetList(theme.OperatingSystemTheme, assets))
+			fmt.Println(components.AssetList(theme.OperatingSystemTheme, filteredAssets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}
