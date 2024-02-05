@@ -439,9 +439,9 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 					if code.Blocks[i].Datapoints[j] == listRef {
 						continue
 					}
-					chunk := code.Chunk(code.Blocks[i].Datapoints[j])
+					cc := code.Chunk(code.Blocks[i].Datapoints[j])
 					// this contains the default values
-					if chunk.Function.Binding == listRef {
+					if cc.Function != nil && cc.Function.Binding == listRef {
 						listRef = code.Blocks[i].Datapoints[j]
 						break OUTER
 					}
