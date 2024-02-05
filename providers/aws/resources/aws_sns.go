@@ -127,6 +127,14 @@ func (a *mqlAwsSnsTopic) attributes() (interface{}, error) {
 
 	topicAttributes, err := svc.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{TopicArn: &arn})
 	if err != nil {
+		var respErr *http.ResponseError
+		if errors.As(err, &respErr) {
+			if respErr.HTTPStatusCode() == 404 {
+				// setting the err here returns an err for the query
+				a.Attributes = plugin.TValue[interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+				return nil, nil
+			}
+		}
 		return nil, err
 	}
 	return convert.JsonToDict(topicAttributes.Attributes)
@@ -170,13 +178,20 @@ func (a *mqlAwsSnsTopic) subscriptions() ([]interface{}, error) {
 
 	svc := conn.Sns(regionVal)
 	ctx := context.Background()
-
 	mqlSubs := []interface{}{}
 	params := &sns.ListSubscriptionsByTopicInput{TopicArn: &arnValue}
 	nextToken := aws.String("no_token_to_start_with")
 	for nextToken != nil {
 		subsByTopic, err := svc.ListSubscriptionsByTopic(ctx, params)
 		if err != nil {
+			var respErr *http.ResponseError
+			if errors.As(err, &respErr) {
+				if respErr.HTTPStatusCode() == 404 {
+					// setting the err here returns an err for the query
+					a.Subscriptions = plugin.TValue[[]interface{}]{State: plugin.StateIsSet | plugin.StateIsNull}
+					return nil, nil
+				}
+			}
 			return nil, err
 		}
 		nextToken = subsByTopic.NextToken
