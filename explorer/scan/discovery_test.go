@@ -203,13 +203,13 @@ func TestDiscoverAssets(t *testing.T) {
 	t.Run("set ci/cd labels", func(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets[0].Category = inventory.AssetCategory_CATEGORY_CICD
-		require.NoError(t, os.Setenv("KUBERNETES_ADMISSION_CONTROLLER", "true"))
+		require.NoError(t, os.Setenv("GITHUB_ACTION", "go-test"))
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
 
 		for _, asset := range discoveredAssets.Assets {
 			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
-			assert.Equal(t, "k8s.mondoo.com", asset.Asset.Labels["mondoo.com/exec-environment"])
+			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
 		}
 	})
 }
