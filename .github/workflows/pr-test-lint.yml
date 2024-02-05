@@ -7,6 +7,7 @@ on:
       - '**.go'
       - '**.mod'
       - 'go.sum'
+      - 'Makefile'
 
 jobs:
   # Check if there is any dirty change for go mod tidy
