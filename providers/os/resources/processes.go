@@ -19,6 +19,7 @@ import (
 type mqlProcessInternal struct {
 	SocketInodesError error
 	SocketInodes      plugin.TValue[[]int64]
+	processInfoError  error
 	lock              sync.Mutex
 }
 
@@ -94,14 +95,20 @@ func (p *mqlProcess) gatherProcessInfo() error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
+	if p.processInfoError != nil {
+		return p.processInfoError
+	}
+
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	opm, err := processes.ResolveManager(conn)
 	if err != nil {
+		p.processInfoError = err
 		return errors.New("cannot find process manager")
 	}
 
 	process, err := opm.Process(p.Pid.Data)
 	if err != nil {
+		p.processInfoError = err
 		return errors.New("cannot gather process details")
 	}
 
