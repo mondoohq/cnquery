@@ -182,6 +182,26 @@ func TestPrinter(t *testing.T) {
 func TestPrinter_Assessment(t *testing.T) {
 	runAssessmentTests(t, []assessmentTest{
 		{
+			// [dom] This query caused a crash in the assessment generation
+			"parse.json(\"/dummy.json\").params.f.where(ff == 3) != empty\nparse.json(\"/dummy.json\").params.f.where(ff == 3).all(ff < 0)",
+			strings.Join([]string{
+				"[failed] parse.json(\"/dummy.json\").params.f.where(ff == 3) != empty",
+				"parse.json(\"/dummy.json\").params.f.where(ff == 3).all(ff < 0)",
+				"  [ok] value: [",
+				"    0: {",
+				"      ff: 3.000000",
+				"    }",
+				"  ]",
+				"  [failed] [].all()",
+				"    actual:   [",
+				"      0: {",
+				"        ff: 3.000000",
+				"      }",
+				"    ]",
+				"",
+			}, "\n"),
+		},
+		{
 			// mixed use: assertion and erroneous data field
 			"mondoo.build == 1; user(name: 'notthere').authorizedkeys.file",
 			strings.Join([]string{
