@@ -8,6 +8,7 @@ on:
       - '**.mod'
       - 'go.sum'
       - 'Makefile'
+      - '.github/workflows/pr-test-lint.yml'
 
 jobs:
   # Check if there is any dirty change for go mod tidy
