@@ -91,6 +91,39 @@ jobs:
           name: test-results
           path: report.xml
 
+  go-test-cli:
+    runs-on: self-hosted
+    timeout-minutes: 120
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: 'Set up gcloud CLI'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Set provider env
+        run: echo "PROVIDERS_PATH=${PWD}/.providers" >> $GITHUB_ENV
+      - name: Display Provider PAth
+        run: echo $PROVIDERS_PATH
+
+      - name: Test cnquery CLI
+        run: make test/go-cli/plain-ci
+
+      - uses: actions/upload-artifact@v4  # upload test results
+        if: success() || failure()        # run this step even if previous step failed
+        with:
+          name: test-results-cli
+          path: report.xml
+
   go-bench:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
