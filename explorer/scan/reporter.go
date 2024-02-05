@@ -29,18 +29,9 @@ type AggregateReporter struct {
 	resolved     map[string]*explorer.ResolvedPack
 }
 
-func NewAggregateReporter(assetList []*inventory.Asset) *AggregateReporter {
-	assets := make(map[string]*explorer.Asset, len(assetList))
-	for i := range assetList {
-		cur := assetList[i]
-		assets[cur.Mrn] = &explorer.Asset{
-			Mrn:  cur.Mrn,
-			Name: cur.Name,
-		}
-	}
-
+func NewAggregateReporter() *AggregateReporter {
 	return &AggregateReporter{
-		assets:       assets,
+		assets:       map[string]*explorer.Asset{},
 		assetReports: map[string]*explorer.Report{},
 		assetErrors:  map[string]error{},
 		resolved:     map[string]*explorer.ResolvedPack{},
@@ -48,12 +39,14 @@ func NewAggregateReporter(assetList []*inventory.Asset) *AggregateReporter {
 }
 
 func (r *AggregateReporter) AddReport(asset *inventory.Asset, results *AssetReport) {
+	r.assets[asset.Mrn] = &explorer.Asset{Name: asset.Name, Mrn: asset.Mrn}
 	r.assetReports[asset.Mrn] = results.Report
 	r.resolved[asset.Mrn] = results.Resolved
 	r.bundle = results.Bundle
 }
 
 func (r *AggregateReporter) AddScanError(asset *inventory.Asset, err error) {
+	r.assets[asset.Mrn] = &explorer.Asset{Name: asset.Name, Mrn: asset.Mrn}
 	r.assetErrors[asset.Mrn] = err
 }
 
