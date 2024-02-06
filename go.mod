@@ -1,5 +1,6 @@
 module go.mondoo.com/cnquery/v10
 
+replace go.mondoo.com/cnquery/v10/providers/aws => ./providers/aws
 
 go 1.21
 
