@@ -113,14 +113,18 @@ func (lc *localCoordinator) Shutdown() {
 	defer lc.mutex.Unlock()
 
 	for provider := range lc.runningEphemeral {
-		log.Debug().Str("provider", provider.Name).Msg("Shutting down ephemeral provider")
-		lc.parent.Stop(provider, true)
+		log.Debug().Str("provider", provider.Name).Msg("shutting down ephemeral provider")
+		if err := lc.parent.Stop(provider, true); err != nil {
+			log.Error().Err(err).Str("provider", provider.Name).Msg("error stopping ephemeral provider")
+		}
 	}
 	lc.runningEphemeral = map[*RunningProvider]struct{}{}
 
 	for _, provider := range lc.runningByID {
-		log.Debug().Str("provider", provider.Name).Msg("Shutting down provider")
-		lc.parent.Stop(provider, true)
+		log.Debug().Str("provider", provider.Name).Msg("shutting down provider")
+		if err := lc.parent.Stop(provider, true); err != nil {
+			log.Error().Err(err).Str("provider", provider.Name).Msg("error stopping provider")
+		}
 	}
 	lc.runningByID = map[string]*RunningProvider{}
 }
