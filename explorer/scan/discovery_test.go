@@ -221,4 +221,13 @@ func TestDiscoverAssets(t *testing.T) {
 			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
 		}
 	})
+
+	t.Run("scannable root asset", func(t *testing.T) {
+		inv := getInventory()
+		inv.Spec.Assets[0].Connections[0].Type = "local"
+
+		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
+		require.NoError(t, err)
+		assert.Len(t, discoveredAssets.Assets, 1)
+	})
 }
