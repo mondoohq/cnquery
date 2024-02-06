@@ -15,56 +15,85 @@ import (
 	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
+func TestDiscoveredAssets_AddRoot(t *testing.T) {
+	d := &DiscoveredAssets{
+		platformIds: map[string]struct{}{},
+		RootAssets:  map[*inventory.Asset]*RootAsset{},
+		Errors:      []*AssetWithError{},
+	}
+
+	root := &inventory.Asset{}
+	assert.True(t, d.AddRoot(root, nil, nil))
+	assert.Len(t, d.GetFlattenedChildren(), 0)
+	assert.Len(t, d.Errors, 0)
+
+	// Make sure adding duplicates is not possible
+	assert.False(t, d.AddRoot(root, nil, nil))
+	assert.Len(t, d.GetFlattenedChildren(), 0)
+	assert.Len(t, d.Errors, 0)
+}
+
 func TestDiscoveredAssets_Add(t *testing.T) {
 	d := &DiscoveredAssets{
 		platformIds: map[string]struct{}{},
-		Assets:      []*AssetWithRuntime{},
+		RootAssets:  map[*inventory.Asset]*RootAsset{},
 		Errors:      []*AssetWithError{},
 	}
+
+	root := &inventory.Asset{}
+	assert.True(t, d.AddRoot(root, nil, nil))
+
 	asset := &inventory.Asset{
 		PlatformIds: []string{"platform1"},
 	}
 	runtime := &providers.Runtime{}
 
-	assert.True(t, d.Add(asset, runtime))
-	assert.Len(t, d.Assets, 1)
+	assert.True(t, d.Add(root, asset, runtime))
+	assert.Len(t, d.GetFlattenedChildren(), 1)
 	assert.Len(t, d.Errors, 0)
 
 	// Make sure adding duplicates is not possible
-	assert.False(t, d.Add(asset, runtime))
-	assert.Len(t, d.Assets, 1)
+	assert.False(t, d.Add(root, asset, runtime))
+	assert.Len(t, d.GetFlattenedChildren(), 1)
 	assert.Len(t, d.Errors, 0)
 }
 
 func TestDiscoveredAssets_Add_MultiplePlatformIDs(t *testing.T) {
 	d := &DiscoveredAssets{
 		platformIds: map[string]struct{}{},
-		Assets:      []*AssetWithRuntime{},
+		RootAssets:  map[*inventory.Asset]*RootAsset{},
 		Errors:      []*AssetWithError{},
 	}
+
+	root := &inventory.Asset{}
+	assert.True(t, d.AddRoot(root, nil, nil))
+
 	asset := &inventory.Asset{
 		PlatformIds: []string{"platform1", "platform2"},
 	}
 	runtime := &providers.Runtime{}
 
-	assert.True(t, d.Add(asset, runtime))
-	assert.Len(t, d.Assets, 1)
+	assert.True(t, d.Add(root, asset, runtime))
+	assert.Len(t, d.GetFlattenedChildren(), 1)
 	assert.Len(t, d.Errors, 0)
 
 	// Make sure adding duplicates is not possible
-	assert.False(t, d.Add(&inventory.Asset{
+	assert.False(t, d.Add(root, &inventory.Asset{
 		PlatformIds: []string{"platform3", asset.PlatformIds[0]},
 	}, runtime))
-	assert.Len(t, d.Assets, 1)
+	assert.Len(t, d.GetFlattenedChildren(), 1)
 	assert.Len(t, d.Errors, 0)
 }
 
 func TestDiscoveredAssets_GetAssetsByPlatformID(t *testing.T) {
 	d := &DiscoveredAssets{
 		platformIds: map[string]struct{}{},
-		Assets:      []*AssetWithRuntime{},
+		RootAssets:  map[*inventory.Asset]*RootAsset{},
 		Errors:      []*AssetWithError{},
 	}
+
+	root := &inventory.Asset{}
+	assert.True(t, d.AddRoot(root, nil, nil))
 
 	allPlatformIds := []string{}
 	for i := 0; i < 10; i++ {
@@ -75,9 +104,9 @@ func TestDiscoveredAssets_GetAssetsByPlatformID(t *testing.T) {
 		}
 		runtime := &providers.Runtime{}
 
-		assert.True(t, d.Add(asset, runtime))
+		assert.True(t, d.Add(root, asset, runtime))
 	}
-	assert.Len(t, d.Assets, 10)
+	assert.Len(t, d.GetFlattenedChildren(), 10)
 
 	// Make sure adding duplicates is not possible
 	assets := d.GetAssetsByPlatformID(allPlatformIds[0])
@@ -88,9 +117,12 @@ func TestDiscoveredAssets_GetAssetsByPlatformID(t *testing.T) {
 func TestDiscoveredAssets_GetAssetsByPlatformID_Empty(t *testing.T) {
 	d := &DiscoveredAssets{
 		platformIds: map[string]struct{}{},
-		Assets:      []*AssetWithRuntime{},
+		RootAssets:  map[*inventory.Asset]*RootAsset{},
 		Errors:      []*AssetWithError{},
 	}
+
+	root := &inventory.Asset{}
+	assert.True(t, d.AddRoot(root, nil, nil))
 
 	allPlatformIds := []string{}
 	for i := 0; i < 10; i++ {
@@ -101,9 +133,9 @@ func TestDiscoveredAssets_GetAssetsByPlatformID_Empty(t *testing.T) {
 		}
 		runtime := &providers.Runtime{}
 
-		assert.True(t, d.Add(asset, runtime))
+		assert.True(t, d.Add(root, asset, runtime))
 	}
-	assert.Len(t, d.Assets, 10)
+	assert.Len(t, d.GetFlattenedChildren(), 10)
 
 	// Make sure adding duplicates is not possible
 	assets := d.GetAssetsByPlatformID("")
@@ -143,11 +175,12 @@ func TestDiscoverAssets(t *testing.T) {
 		inv := getInventory()
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assets := discoveredAssets.GetFlattenedChildren()
+		assert.Len(t, assets, 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
-		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[0].Asset.ManagedBy)
-		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[1].Asset.ManagedBy)
-		assert.Equal(t, "mondoo-operator-123", discoveredAssets.Assets[2].Asset.ManagedBy)
+		assert.Equal(t, "mondoo-operator-123", assets[0].Asset.ManagedBy)
+		assert.Equal(t, "mondoo-operator-123", assets[1].Asset.ManagedBy)
+		assert.Equal(t, "mondoo-operator-123", assets[2].Asset.ManagedBy)
 	})
 
 	t.Run("with duplicate root assets", func(t *testing.T) {
@@ -157,7 +190,7 @@ func TestDiscoverAssets(t *testing.T) {
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assert.Len(t, discoveredAssets.GetFlattenedChildren(), 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
 	})
 
@@ -168,7 +201,7 @@ func TestDiscoverAssets(t *testing.T) {
 		require.NoError(t, err)
 
 		// Make sure no duplicates are returned
-		assert.Len(t, discoveredAssets.Assets, 3)
+		assert.Len(t, discoveredAssets.GetFlattenedChildren(), 3)
 		assert.Len(t, discoveredAssets.Errors, 0)
 	})
 
@@ -181,7 +214,7 @@ func TestDiscoverAssets(t *testing.T) {
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
 
-		for _, asset := range discoveredAssets.Assets {
+		for _, asset := range discoveredAssets.GetFlattenedChildren() {
 			for k, v := range inv.Spec.Assets[0].Annotations {
 				require.Contains(t, asset.Asset.Annotations, k)
 				assert.Equal(t, v, asset.Asset.Annotations[k])
@@ -195,7 +228,7 @@ func TestDiscoverAssets(t *testing.T) {
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
 
-		for _, asset := range discoveredAssets.Assets {
+		for _, asset := range discoveredAssets.GetFlattenedChildren() {
 			assert.Equal(t, inv.Spec.Assets[0].ManagedBy, asset.Asset.ManagedBy)
 		}
 	})
@@ -216,7 +249,7 @@ func TestDiscoverAssets(t *testing.T) {
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
 
-		for _, asset := range discoveredAssets.Assets {
+		for _, asset := range discoveredAssets.GetFlattenedChildren() {
 			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
 			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
 		}
@@ -239,7 +272,7 @@ func TestDiscoverAssets(t *testing.T) {
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
 
-		for _, asset := range discoveredAssets.Assets {
+		for _, asset := range discoveredAssets.GetFlattenedChildren() {
 			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
 			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
 		}
@@ -251,6 +284,6 @@ func TestDiscoverAssets(t *testing.T) {
 
 		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
 		require.NoError(t, err)
-		assert.Len(t, discoveredAssets.Assets, 1)
+		assert.Len(t, discoveredAssets.GetFlattenedChildren(), 1)
 	})
 }

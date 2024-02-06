@@ -90,7 +90,7 @@ func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*inventory
 		for _, c := range a.Children {
 			for _, p := range c.Asset.PlatformIds {
 				if platformID == "" || p == platformID {
-					assets = append(assets, a.Asset)
+					assets = append(assets, c.Asset)
 					break
 				}
 			}
