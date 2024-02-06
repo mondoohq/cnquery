@@ -473,13 +473,11 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		for i := range bs.Data {
 			f := bs.Data[i].(*mqlAwsS3Bucket)
 
-			location := f.GetLocation()
-
 			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
 				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
-					account: accountId, region: location.Data, arn: f.Arn.Data,
+					account: accountId, region: f.Location.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "s3", objectType: "bucket",
 				},
 			}
