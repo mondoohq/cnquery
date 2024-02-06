@@ -24,9 +24,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type Coordinator interface {
+	Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error)
+	Stop(provider *RunningProvider, isEphemeral bool) error
+	NewRuntime() *Runtime
+	RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error)
+	GetRunningProviderById(id string) *RunningProvider
+	GetProviders() Providers
+	SetProviders(providers Providers)
+	LoadSchema(name string) (*resources.Schema, error)
+	Shutdown()
+}
+
 var BuiltinCoreID = coreconf.Config.ID
 
-var Coordinator = coordinator{
+var GlobalCoordinator Coordinator = &coordinator{
 	RunningByID:      map[string]*RunningProvider{},
 	RunningEphemeral: map[*RunningProvider]struct{}{},
 	runtimes:         map[string]*Runtime{},
@@ -262,6 +274,20 @@ func (c *coordinator) Start(id string, isEphemeral bool, update UpdateProvidersC
 	return res, nil
 }
 
+func (c *coordinator) GetRunningProviderById(id string) *RunningProvider {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	return c.RunningByID[id]
+}
+
+func (c *coordinator) GetProviders() Providers {
+	return c.Providers
+}
+
+func (c *coordinator) SetProviders(providers Providers) {
+	c.Providers = providers
+}
+
 type ProviderVersions struct {
 	Providers []ProviderVersion `json:"providers"`
 }
@@ -376,7 +402,7 @@ func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	return res
 }
 
-// RuntimFor an asset will return a new or existing runtime for a given asset.
+// RuntimeFor an asset will return a new or existing runtime for a given asset.
 // If a runtime for this asset already exists, it will re-use it. If the runtime
 // is new, it will create it and detect the provider.
 // The asset and parent must be defined.
@@ -468,6 +494,7 @@ func (c *coordinator) Stop(provider *RunningProvider, isEphemeral bool) error {
 
 func (c *coordinator) Shutdown() {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
 	for cur := range c.RunningEphemeral {
 		if err := cur.Shutdown(); err != nil {
@@ -489,8 +516,6 @@ func (c *coordinator) Shutdown() {
 	c.runtimes = map[string]*Runtime{}
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
-
-	c.mutex.Unlock()
 }
 
 // LoadSchema for a given provider. Providers also cache their Schemas, so

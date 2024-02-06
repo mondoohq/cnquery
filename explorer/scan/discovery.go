@@ -18,6 +18,12 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 )
 
+type RootAsset struct {
+	Coordinator providers.Coordinator
+	Asset       *inventory.Asset
+	Children    []*AssetWithRuntime
+}
+
 type AssetWithRuntime struct {
 	Asset   *inventory.Asset
 	Runtime *providers.Runtime
@@ -30,13 +36,26 @@ type AssetWithError struct {
 
 type DiscoveredAssets struct {
 	platformIds map[string]struct{}
-	Assets      []*AssetWithRuntime
-	Errors      []*AssetWithError
+	// Assets      []*AssetWithRuntime
+	Errors []*AssetWithError
+
+	RootAssets map[*inventory.Asset]*RootAsset
+}
+
+func (d *DiscoveredAssets) AddRoot(root *inventory.Asset, coordinator providers.Coordinator, runtime *providers.Runtime) bool {
+	if _, ok := d.RootAssets[root]; ok {
+		return false
+	}
+	d.RootAssets[root] = &RootAsset{
+		Coordinator: coordinator,
+		Asset:       root,
+	}
+	return true
 }
 
 // Add adds an asset and its runtime to the discovered assets list. It returns true if the
 // asset has been added, false if it is a duplicate
-func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtime) bool {
+func (d *DiscoveredAssets) Add(root, asset *inventory.Asset, runtime *providers.Runtime) bool {
 	isDuplicate := false
 	for _, platformId := range asset.PlatformIds {
 		if _, ok := d.platformIds[platformId]; ok {
@@ -49,7 +68,7 @@ func (d *DiscoveredAssets) Add(asset *inventory.Asset, runtime *providers.Runtim
 		return false
 	}
 
-	d.Assets = append(d.Assets, &AssetWithRuntime{Asset: asset, Runtime: runtime})
+	d.RootAssets[root].Children = append(d.RootAssets[root].Children, &AssetWithRuntime{Asset: asset, Runtime: runtime})
 	return true
 }
 
@@ -57,13 +76,23 @@ func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
 	d.Errors = append(d.Errors, &AssetWithError{Asset: asset, Err: err})
 }
 
+func (d *DiscoveredAssets) GetFlattenedChildren() []*AssetWithRuntime {
+	var assets []*AssetWithRuntime
+	for _, a := range d.RootAssets {
+		assets = append(assets, a.Children...)
+	}
+	return assets
+}
+
 func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*inventory.Asset {
 	var assets []*inventory.Asset
-	for _, a := range d.Assets {
-		for _, p := range a.Asset.PlatformIds {
-			if platformID == "" || p == platformID {
-				assets = append(assets, a.Asset)
-				break
+	for _, a := range d.RootAssets {
+		for _, c := range a.Children {
+			for _, p := range c.Asset.PlatformIds {
+				if platformID == "" || p == platformID {
+					assets = append(assets, a.Asset)
+					break
+				}
 			}
 		}
 	}
@@ -91,7 +120,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		runtimeLabels = runtimeEnv.Labels()
 	}
 
-	discoveredAssets := &DiscoveredAssets{platformIds: map[string]struct{}{}}
+	discoveredAssets := &DiscoveredAssets{platformIds: map[string]struct{}{}, RootAssets: map[*inventory.Asset]*RootAsset{}}
 
 	// we connect and perform discovery for each asset in the job inventory
 	for _, rootAsset := range invAssets {
@@ -100,20 +129,29 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 			return nil, err
 		}
 
+		coordinator := providers.NewLocalCoordinator(providers.GlobalCoordinator)
+
 		// create runtime for root asset
-		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, upstream, recording)
+		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, coordinator, upstream, recording)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
 			discoveredAssets.AddError(rootAssetWithRuntime.Asset, err)
+			coordinator.Shutdown()
 			continue
 		}
 
 		resolvedRootAsset = rootAssetWithRuntime.Asset // to ensure we get all the information the connect call gave us
 
+		if !discoveredAssets.AddRoot(resolvedRootAsset, coordinator, rootAssetWithRuntime.Runtime) {
+			rootAssetWithRuntime.Runtime.Close()
+			coordinator.Shutdown()
+			continue
+		}
+
 		// If the root asset has platform IDs, then it is a scannable asset, so we need to add it
 		if len(resolvedRootAsset.PlatformIds) > 0 {
 			prepareAsset(resolvedRootAsset, resolvedRootAsset, runtimeLabels)
-			if !discoveredAssets.Add(rootAssetWithRuntime.Asset, rootAssetWithRuntime.Runtime) {
+			if !discoveredAssets.Add(resolvedRootAsset, rootAssetWithRuntime.Asset, rootAssetWithRuntime.Runtime) {
 				rootAssetWithRuntime.Runtime.Close()
 			}
 		}
@@ -126,7 +164,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
 		for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
 			// create runtime for root asset
-			assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
+			assetWithRuntime, err := createRuntimeForAsset(a, coordinator, upstream, recording)
 			if err != nil {
 				log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
 				discoveredAssets.AddError(assetWithRuntime.Asset, err)
@@ -137,7 +175,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 			prepareAsset(resolvedAsset, resolvedRootAsset, runtimeLabels)
 
 			// If the asset has been already added, we should close its runtime
-			if !discoveredAssets.Add(resolvedAsset, assetWithRuntime.Runtime) {
+			if !discoveredAssets.Add(resolvedRootAsset, resolvedAsset, assetWithRuntime.Runtime) {
 				assetWithRuntime.Runtime.Close()
 			}
 		}
@@ -146,15 +184,15 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 	// if there is exactly one asset, assure that the --asset-name is used
 	// TODO: make it so that the --asset-name is set for the root asset only even if multiple assets are there
 	// This is a temporary fix that only works if there is only one asset
-	if len(discoveredAssets.Assets) == 1 && invAssets[0].Name != "" && invAssets[0].Name != discoveredAssets.Assets[0].Asset.Name {
-		log.Debug().Str("asset", discoveredAssets.Assets[0].Asset.Name).Msg("Overriding asset name with --asset-name flag")
-		discoveredAssets.Assets[0].Asset.Name = invAssets[0].Name
-	}
+	// if len(discoveredAssets.Assets) == 1 && invAssets[0].Name != "" && invAssets[0].Name != discoveredAssets.Assets[0].Asset.Name {
+	// 	log.Debug().Str("asset", discoveredAssets.Assets[0].Asset.Name).Msg("Overriding asset name with --asset-name flag")
+	// 	discoveredAssets.Assets[0].Asset.Name = invAssets[0].Name
+	// }
 
 	return discoveredAssets, nil
 }
 
-func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
+func createRuntimeForAsset(asset *inventory.Asset, coordinator providers.Coordinator, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
 	var runtime *providers.Runtime
 	var err error
 	// Close the runtime if an error occured
@@ -164,7 +202,7 @@ func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamCo
 		}
 	}()
 
-	runtime, err = providers.Coordinator.RuntimeFor(asset, providers.DefaultRuntime())
+	runtime, err = coordinator.RuntimeFor(asset, providers.DefaultRuntime())
 	if err != nil {
 		return nil, err
 	}

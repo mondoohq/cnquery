@@ -129,7 +129,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			return err
 		}
 
-		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(asset, runtime)
+		connectAssetRuntime, err := providers.GlobalCoordinator.RuntimeFor(asset, runtime)
 		if err != nil {
 			return err
 		}

@@ -153,7 +153,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
 		runtime.Close()
-		providers.Coordinator.Shutdown()
+		providers.GlobalCoordinator.Shutdown()
 	}
 
 	shellOptions := []shell.ShellOption{}

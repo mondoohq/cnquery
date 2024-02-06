@@ -176,8 +176,9 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 	if isatty.IsTerminal(os.Stdout.Fd()) && !disableProgressBar && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
 		progressBarElements := map[string]string{}
 		orderedKeys := []string{}
-		for i := range discoveredAssets.Assets {
-			asset := discoveredAssets.Assets[i].Asset
+		assets := discoveredAssets.GetFlattenedChildren()
+		for i := range assets {
+			asset := assets[i].Asset
 			// this shouldn't happen, but might
 			// it normally indicates a bug in the provider
 			if presentAsset, present := progressBarElements[asset.PlatformIds[0]]; present {
@@ -201,9 +202,6 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
-	// Always shut down the coordinator, to make sure providers are killed
-	defer providers.Coordinator.Shutdown()
-
 	discoveredAssets, err := DiscoverAssets(ctx, job.Inventory, upstream, s.recording)
 	if err != nil {
 		return nil, err
@@ -213,10 +211,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// Within this process, we set up a catch-all deferred function, that shuts
 	// down all runtimes, in case we exit early.
 	defer func() {
-		for _, asset := range discoveredAssets.Assets {
+		for _, asset := range discoveredAssets.RootAssets {
 			// we can call close multiple times and it will only execute once
-			if asset.Runtime != nil {
-				asset.Runtime.Close()
+			if asset.Coordinator != nil {
+				asset.Coordinator.Shutdown()
 			}
 		}
 	}()
@@ -228,7 +226,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
 	}
 
-	if len(discoveredAssets.Assets) == 0 {
+	assets := discoveredAssets.GetFlattenedChildren()
+	if len(assets) == 0 {
 		return reporter.Reports(), nil
 	}
 
@@ -246,7 +245,13 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}()
 
-	assetBatches := slicesx.Batch(discoveredAssets.Assets, 100)
+	// if a bundle was provided check that it matches the filter, bundles can also be downloaded
+	// later therefore we do not want to stop execution here
+	if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
+		return nil, errors.New("all available packs filtered out. nothing to do")
+	}
+
+	assetBatches := slicesx.Batch(assets, 100)
 	for i := range assetBatches {
 		batch := assetBatches[i]
 
@@ -304,20 +309,17 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				}
 			}
 		}
+	}
 
-		// if a bundle was provided check that it matches the filter, bundles can also be downloaded
-		// later therefore we do not want to stop execution here
-		if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
-			return nil, errors.New("all available packs filtered out. nothing to do")
-		}
-
+	for k := range discoveredAssets.RootAssets {
+		root := discoveredAssets.RootAssets[k]
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := range batch {
-				asset := batch[i].Asset
-				runtime := batch[i].Runtime
+			for i := range root.Children {
+				asset := root.Children[i].Asset
+				runtime := root.Children[i].Runtime
 
 				// Make sure the context has not been canceled in the meantime. Note that this approach works only for single threaded execution. If we have more than 1 thread calling this function,
 				// we need to solve this at a different level.

@@ -33,7 +33,7 @@ type Runtime struct {
 	recording llx.Recording
 	features  []byte
 	// coordinator is used to grab providers
-	coordinator *coordinator
+	coordinator Coordinator
 	// providers for with open connections
 	providers map[string]*ConnectedProvider
 	// schema aggregates all resources executable on this asset
@@ -149,7 +149,7 @@ func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, 
 
 	} else {
 		// TODO: we need to detect only the shared running providers
-		running = r.coordinator.RunningByID[id]
+		running = r.coordinator.GetRunningProviderById(id)
 		if running == nil {
 			var err error
 			running, err = r.coordinator.Start(id, false, r.AutoUpdate)
@@ -193,7 +193,7 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 			conn.Type = inventory.ConnBackendToType(conn.Backend)
 		}
 
-		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.Providers)
+		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, true, r.coordinator.GetProviders())
 		if err != nil {
 			errs.Add(err)
 			continue

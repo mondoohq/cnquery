@@ -36,7 +36,7 @@ ensure the credentials cannot be used in the future.
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		defer cnquery_providers.Coordinator.Shutdown()
+		defer cnquery_providers.GlobalCoordinator.Shutdown()
 		var err error
 
 		// its perfectly fine not to have a config here, therefore we ignore errors

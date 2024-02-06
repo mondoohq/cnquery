@@ -23,7 +23,7 @@ var mockProvider = Provider{
 }
 
 type mockProviderService struct {
-	coordinator *coordinator
+	coordinator Coordinator
 	initialized bool
 	runtime     *Runtime
 }
