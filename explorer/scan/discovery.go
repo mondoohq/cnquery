@@ -110,6 +110,18 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 
 		resolvedRootAsset = rootAssetWithRuntime.Asset // to ensure we get all the information the connect call gave us
 
+		// If the root asset has platform IDs, then it is a scannable asset, so we need to add it
+		if len(resolvedRootAsset.PlatformIds) > 0 {
+			if !discoveredAssets.Add(rootAssetWithRuntime.Asset, rootAssetWithRuntime.Runtime) {
+				rootAssetWithRuntime.Runtime.Close()
+			}
+		}
+
+		// If there is no inventory, no assets have been discovered under the root asset
+		if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
+			continue
+		}
+
 		// for all discovered assets, we apply mondoo-specific labels and annotations that come from the root asset
 		for _, a := range rootAssetWithRuntime.Runtime.Provider.Connection.Inventory.Spec.Assets {
 			// create runtime for root asset
