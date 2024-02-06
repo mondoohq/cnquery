@@ -1520,6 +1520,8 @@ private aws.cloudtrail.trail @defaults("name region") {
   logGroup() aws.cloudwatch.loggroup
   // Role for logs endpoint to assume when writing to log group
   cloudWatchLogsRoleArn string
+  // Group for logs endpoint to assume when writing to log group
+  cloudWatchLogsLogGroupArn string
   // Settings for the trail's configured event selectors
   eventSelectors() []dict
   // Region in which the trail was created (home region)

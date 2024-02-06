@@ -10,10 +10,15 @@ import (
 	_ "embed"
 	// osconf "go.mondoo.com/cnquery/v10/providers/os/config"
 	// os "go.mondoo.com/cnquery/v10/providers/os/provider"
+	awsconf "go.mondoo.com/cnquery/v10/providers/aws/config"
+	aws "go.mondoo.com/cnquery/v10/providers/aws/provider"
 )
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
+
+//go:embed aws.resources.json
+var awsInfo []byte
 
 func init() {
 	// builtinProviders[osconf.Config.ID] = &builtinProvider{
@@ -26,5 +31,16 @@ func init() {
 	// 	},
 	// 	Config: &osconf.Config,
 	// }
+
+	builtinProviders[awsconf.Config.ID] = &builtinProvider{
+		Runtime: &RunningProvider{
+			Name:     awsconf.Config.Name,
+			ID:       awsconf.Config.ID,
+			Plugin:   aws.Init(),
+			Schema:   MustLoadSchema("aws", awsInfo),
+			isClosed: false,
+		},
+		Config: &awsconf.Config,
+	}
 
 }

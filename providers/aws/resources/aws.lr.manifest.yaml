@@ -460,6 +460,7 @@ resources:
           status
           logGroup
           cloudWatchLogsRoleArn
+          cloudWatchLogsLogGroupArn
           eventSelectors
           region
         }
@@ -474,6 +475,7 @@ resources:
         The `aws.cloudtrail.trail` object represents an individual AWS CloudTrail configured within an account. For usage, read the `aws.cloudtrail` resource documentation.
     fields:
       arn: {}
+      cloudWatchLogsLogGroupArn: {}
       cloudWatchLogsRoleArn: {}
       eventSelectors: {}
       includeGlobalServiceEvents: {}

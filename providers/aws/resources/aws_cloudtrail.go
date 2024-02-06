@@ -126,6 +126,7 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					"includeGlobalServiceEvents": llx.BoolDataPtr(trail.IncludeGlobalServiceEvents),
 					"snsTopicARN":                llx.StringDataPtr(trail.SnsTopicARN),
 					"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
+					"cloudWatchLogsLogGroupArn":  llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn),
 					"region":                     llx.StringDataPtr(trail.HomeRegion),
 				}
 
