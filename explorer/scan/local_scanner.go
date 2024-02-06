@@ -351,6 +351,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			}
 		}()
 		wg.Wait()
+
+		// Shutdown the coordinator for the current root asset
+		root.Coordinator.Shutdown()
 	}
 	scanGroups.Wait()
 	return reporter.Reports(), nil

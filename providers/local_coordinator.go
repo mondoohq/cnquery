@@ -6,6 +6,7 @@ package providers
 import (
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 )
@@ -51,6 +52,10 @@ func (lc *localCoordinator) Stop(provider *RunningProvider, isEphemeral bool) er
 	lc.mutex.Lock()
 	defer lc.mutex.Unlock()
 
+	if err := lc.parent.Stop(provider, true); err != nil {
+		return err
+	}
+
 	if isEphemeral {
 		delete(lc.runningEphemeral, provider)
 	} else {
@@ -59,15 +64,30 @@ func (lc *localCoordinator) Stop(provider *RunningProvider, isEphemeral bool) er
 			delete(lc.runningByID, provider.ID)
 		}
 	}
-	return lc.parent.Stop(provider, true)
+	return nil
 }
 
 func (lc *localCoordinator) NewRuntime() *Runtime {
-	return lc.parent.NewRuntime()
+	runtime := lc.parent.NewRuntime()
+	// Override the coordinator with the local one, so providers are managed
+	// by the local coordinator
+	runtime.coordinator = lc
+	return runtime
+}
+
+func (lc *localCoordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
+	res := lc.NewRuntime()
+	res.recording = parent.Recording()
+	for k, v := range parent.providers {
+		res.providers[k] = v
+	}
+	return res
 }
 
 func (lc *localCoordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error) {
-	return lc.parent.RuntimeFor(asset, parent)
+	runtime := lc.parent.NewRuntimeFrom(parent)
+	runtime.coordinator = lc
+	return runtime, runtime.DetectProvider(asset)
 }
 
 func (lc *localCoordinator) GetRunningProviderById(id string) *RunningProvider {
@@ -92,13 +112,15 @@ func (lc *localCoordinator) Shutdown() {
 	lc.mutex.Lock()
 	defer lc.mutex.Unlock()
 
-	for cur := range lc.runningEphemeral {
-		lc.parent.Stop(cur, true)
+	for provider := range lc.runningEphemeral {
+		log.Debug().Str("provider", provider.Name).Msg("Shutting down ephemeral provider")
+		lc.parent.Stop(provider, true)
 	}
 	lc.runningEphemeral = map[*RunningProvider]struct{}{}
 
-	for _, runtime := range lc.runningByID {
-		lc.parent.Stop(runtime, true)
+	for _, provider := range lc.runningByID {
+		log.Debug().Str("provider", provider.Name).Msg("Shutting down provider")
+		lc.parent.Stop(provider, true)
 	}
 	lc.runningByID = map[string]*RunningProvider{}
 }

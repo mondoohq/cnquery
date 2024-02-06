@@ -28,6 +28,7 @@ type Coordinator interface {
 	Start(id string, isEphemeral bool, update UpdateProvidersConfig) (*RunningProvider, error)
 	Stop(provider *RunningProvider, isEphemeral bool) error
 	NewRuntime() *Runtime
+	NewRuntimeFrom(parent *Runtime) *Runtime
 	RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error)
 	GetRunningProviderById(id string) *RunningProvider
 	GetProviders() Providers
