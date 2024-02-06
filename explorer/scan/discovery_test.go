@@ -222,6 +222,29 @@ func TestDiscoverAssets(t *testing.T) {
 		}
 	})
 
+	t.Run("set ci/cd labels for scannable root assets", func(t *testing.T) {
+		inv := getInventory()
+		inv.Spec.Assets[0].Connections[0].Type = "local"
+
+		val, isSet := os.LookupEnv("GITHUB_ACTION")
+		defer func() {
+			if isSet {
+				require.NoError(t, os.Setenv("GITHUB_ACTION", val))
+			} else {
+				require.NoError(t, os.Unsetenv("GITHUB_ACTION"))
+			}
+		}()
+		inv.Spec.Assets[0].Category = inventory.AssetCategory_CATEGORY_CICD
+		require.NoError(t, os.Setenv("GITHUB_ACTION", "go-test"))
+		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
+		require.NoError(t, err)
+
+		for _, asset := range discoveredAssets.Assets {
+			require.Contains(t, asset.Asset.Labels, "mondoo.com/exec-environment")
+			assert.Equal(t, "actions.github.com", asset.Asset.Labels["mondoo.com/exec-environment"])
+		}
+	})
+
 	t.Run("scannable root asset", func(t *testing.T) {
 		inv := getInventory()
 		inv.Spec.Assets[0].Connections[0].Type = "local"

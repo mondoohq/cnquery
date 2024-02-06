@@ -112,6 +112,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 
 		// If the root asset has platform IDs, then it is a scannable asset, so we need to add it
 		if len(resolvedRootAsset.PlatformIds) > 0 {
+			prepareAsset(resolvedRootAsset, resolvedRootAsset, runtimeLabels)
 			if !discoveredAssets.Add(rootAssetWithRuntime.Asset, rootAssetWithRuntime.Runtime) {
 				rootAssetWithRuntime.Runtime.Close()
 			}
@@ -188,10 +189,10 @@ func prepareAsset(a *inventory.Asset, rootAsset *inventory.Asset, runtimeLabels 
 	a.AddAnnotations(rootAsset.GetAnnotations())
 	a.ManagedBy = rootAsset.ManagedBy
 	a.KindString = a.GetPlatform().Kind
+	if a.Labels == nil {
+		a.Labels = map[string]string{}
+	}
 	for k, v := range runtimeLabels {
-		if a.Labels == nil {
-			a.Labels = map[string]string{}
-		}
 		a.Labels[k] = v
 	}
 }
