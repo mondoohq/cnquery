@@ -186,6 +186,11 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 		Assets: []*inventory.Asset{},
 	}}
 
+	if (conn.Conf == nil || len(conn.Conf.Discover.Targets) == 0) && conn.Asset() != nil {
+		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
+		return in, nil
+	}
+
 	res, err := NewResource(runtime, "aws.account", map[string]*llx.RawData{"id": llx.StringData("aws.account/" + conn.AccountId())})
 	if err != nil {
 		return nil, err
@@ -468,11 +473,13 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 		for i := range bs.Data {
 			f := bs.Data[i].(*mqlAwsS3Bucket)
 
+			location := f.GetLocation()
+
 			tags := mapStringInterfaceToStringString(f.Tags.Data)
 			m := mqlObject{
 				name: f.Name.Data, labels: tags,
 				awsObject: awsObject{
-					account: accountId, region: f.Location.Data, arn: f.Arn.Data,
+					account: accountId, region: location.Data, arn: f.Arn.Data,
 					id: f.Name.Data, service: "s3", objectType: "bucket",
 				},
 			}
