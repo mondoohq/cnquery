@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v10 v10.1.4
 	go.mondoo.com/ranger-rpc v0.5.3
 	golang.org/x/oauth2 v0.16.0
-	google.golang.org/api v0.161.0
+	google.golang.org/api v0.162.0
 	google.golang.org/genproto v0.0.0-20240125205218-1f4bbc51befe
 	google.golang.org/protobuf v1.32.0
 )
