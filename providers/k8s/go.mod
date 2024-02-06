@@ -16,13 +16,13 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.mondoo.com/cnquery/v10 v10.1.4
 	// pin v0.28.4
-	k8s.io/api v0.28.4
+	k8s.io/api v0.29.1
 	// pin v0.28.4
-	k8s.io/apiextensions-apiserver v0.28.4
+	k8s.io/apiextensions-apiserver v0.29.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.1
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.1
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 )
@@ -378,7 +378,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
 	howett.net/plist v1.0.1 // indirect
-	k8s.io/component-base v0.28.4 // indirect
+	k8s.io/component-base v0.29.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240126223410-2919ad4fcfec // indirect
 	k8s.io/kubelet v0.28.4 // indirect
 	modernc.org/libc v1.41.0 // indirect
