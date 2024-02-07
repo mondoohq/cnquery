@@ -165,7 +165,8 @@ func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command,
 	// this happens, when we try to run /bin/sh in a container, which does not have it
 	if err == nil && res.ExitStatus == 126 {
 		output := ""
-		b, err := io.ReadAll(res.Stdout)
+		var b []byte
+		b, err = io.ReadAll(res.Stdout)
 		if err == nil {
 			output = string(b)
 		}
@@ -182,9 +183,7 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 
 		registryOpts := []image.Option{image.WithInsecure(conf.Insecure)}
 		remoteOpts := auth.AuthOption(conf.Credentials)
-		for i := range remoteOpts {
-			registryOpts = append(registryOpts, remoteOpts[i])
-		}
+		registryOpts = append(registryOpts, remoteOpts...)
 
 		var conn *TarConnection
 		var img v1.Image

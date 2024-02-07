@@ -276,7 +276,7 @@ func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCa
 		Id:    uint32(conn.ID()),
 		Name:  conn.Name(),
 		Asset: asset,
-	}, nild
+	}, nil
 }
 
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.Connection, error) {
