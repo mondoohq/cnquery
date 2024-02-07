@@ -165,6 +165,8 @@ func (v *mqlVulnmgmt) populateData() error {
 		mqlVulnCve, err := CreateResource(v.MqlRuntime, "vuln.cve", map[string]*llx.RawData{
 			"id":         llx.StringData(c.Id),
 			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
+			"state":      llx.StringData(c.State),
+			"summary":    llx.StringData(c.Summary),
 			"published":  llx.TimeDataPtr(parsedPublished),
 			"modified":   llx.TimeDataPtr(parsedModified),
 		})
