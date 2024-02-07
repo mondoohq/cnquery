@@ -192,7 +192,9 @@ func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inve
 				return "", err
 			}
 			log.Debug().Msg("tar> extracted image to temporary file")
-			f.Seek(0, io.SeekStart)
+			if _, err := f.Seek(0, io.SeekStart); err != nil {
+				return "", err
+			}
 			asset.Connections[0].Options[FLATTENED_IMAGE] = f.Name()
 			return f.Name(), nil
 		},
