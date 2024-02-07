@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -187,13 +186,19 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			registryOpts = append(registryOpts, remoteOpts[i])
 		}
 
+		var conn *TarConnection
 		var img v1.Image
-		var rc io.ReadCloser
 		loadedImage := false
 		if asset.Connections[0].Options != nil {
 			if _, ok := asset.Connections[0].Options[COMPRESSED_IMAGE]; ok {
+				var rc io.ReadCloser
 				// read image from disk
 				img, rc, err = image.LoadImageFromDisk(asset.Connections[0].Options[COMPRESSED_IMAGE])
+				if err != nil {
+					return nil, err
+				}
+
+				conn, err = NewWithReader(id, conf, asset, rc)
 				if err != nil {
 					return nil, err
 				}
@@ -201,16 +206,18 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			}
 		}
 		if !loadedImage {
-			img, rc, err = image.LoadImageFromRegistry(ref, registryOpts...)
+			img, err = image.LoadImageFromRegistry(ref, registryOpts...)
 			if err != nil {
 				return nil, err
 			}
 			if asset.Connections[0].Options == nil {
 				asset.Connections[0].Options = map[string]string{}
 			}
-			osFile := rc.(*os.File)
-			filename := osFile.Name()
-			asset.Connections[0].Options[COMPRESSED_IMAGE] = filename
+
+			conn, err = NewTarConnectionForContainer(id, conf, asset, img)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		var identifier string
@@ -219,10 +226,6 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 			identifier = containerid.MondooContainerImageID(hash.String())
 		}
 
-		conn, err := NewWithReader(id, conf, asset, rc)
-		if err != nil {
-			return nil, err
-		}
 		conn.PlatformIdentifier = identifier
 		conn.Metadata.Name = containerid.ShortContainerImageID(hash.String())
 

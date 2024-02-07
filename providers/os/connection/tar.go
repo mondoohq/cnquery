@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"sync"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -32,9 +33,11 @@ const (
 var _ shared.Connection = (*TarConnection)(nil)
 
 type TarConnection struct {
-	id    uint32
-	asset *inventory.Asset
-	conf  *inventory.Config
+	id        uint32
+	asset     *inventory.Asset
+	conf      *inventory.Config
+	fetchFn   func() (string, error)
+	fetchOnce sync.Once
 
 	Fs      *provider_tar.FS
 	CloseFN func()
@@ -83,7 +86,24 @@ func (p *TarConnection) RunCommand(command string) (*shared.Command, error) {
 	return &res, nil
 }
 
+func (p *TarConnection) EnsureLoaded() {
+	if p.fetchFn != nil {
+		p.fetchOnce.Do(func() {
+			f, err := p.fetchFn()
+			if err != nil {
+				log.Error().Err(err).Msg("tar> could not fetch tar file")
+				return
+			}
+			if err := p.LoadFile(f); err != nil {
+				log.Error().Err(err).Msg("tar> could not load tar file")
+				return
+			}
+		})
+	}
+}
+
 func (p *TarConnection) FileSystem() afero.Fs {
+	p.EnsureLoaded()
 	return p.Fs
 }
 
@@ -155,10 +175,43 @@ func (c *TarConnection) Runtime() string {
 	return c.PlatformRuntime
 }
 
+func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*TarConnection, error) {
+	f, err := cache.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+
+	return &TarConnection{
+		id:    id,
+		asset: asset,
+		Fs:    provider_tar.NewFs(""),
+		fetchFn: func() (string, error) {
+			err = cache.StreamToTmpFile(mutate.Extract(img), f)
+			if err != nil {
+				os.Remove(f.Name())
+				return "", err
+			}
+			log.Warn().Msg("tar> extracted image to temporary file")
+			f.Seek(0, io.SeekStart)
+			asset.Connections[0].Options[FLATTENED_IMAGE] = f.Name()
+			return f.Name(), nil
+		},
+		CloseFN: func() {
+			log.Warn().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
+			os.Remove(f.Name())
+		},
+		PlatformKind:    conf.Type,
+		PlatformRuntime: conf.Runtime,
+		conf:            conf,
+	}, nil
+}
+
+// TODO: this one is used by plain tar connection
 func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
 	return NewWithClose(id, conf, asset, nil)
 }
 
+// Used with docker snapshots
 // NewWithReader provides a tar provider from a container image stream
 func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser) (*TarConnection, error) {
 	filename := ""
