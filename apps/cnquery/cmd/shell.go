@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
@@ -21,7 +20,6 @@ import (
 	"go.mondoo.com/cnquery/v10/explorer/scan"
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 )
@@ -98,25 +96,8 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	// we go through inventory resolution to resolve credentials properly for the passed-in asset
-	im, err := manager.NewManager(manager.WithInventory(inventory.New(inventory.WithAssets(conf.Asset)), runtime))
-	if err != nil {
-		return errors.New("failed to resolve inventory for connection")
-	}
-	resolvedAsset, err := im.ResolveAsset(conf.Asset)
-	if err != nil {
-		return err
-	}
-	res, err := runtime.Provider.Instance.Plugin.Connect(&plugin.ConnectReq{
-		Features: conf.Features,
-		Asset:    resolvedAsset,
-		Upstream: conf.UpstreamConfig,
-	}, nil)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not load asset information")
-	}
-
 	ctx := context.Background()
-	discoveredAssets, err := scan.DiscoverAssets(ctx, res.Inventory, conf.UpstreamConfig, providers.NullRecording{})
+	discoveredAssets, err := scan.DiscoverAssets(ctx, inventory.New(inventory.WithAssets(conf.Asset)), conf.UpstreamConfig, providers.NullRecording{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not process assets")
 	}
