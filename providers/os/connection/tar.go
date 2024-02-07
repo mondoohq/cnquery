@@ -191,13 +191,13 @@ func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inve
 				os.Remove(f.Name())
 				return "", err
 			}
-			log.Warn().Msg("tar> extracted image to temporary file")
+			log.Debug().Msg("tar> extracted image to temporary file")
 			f.Seek(0, io.SeekStart)
 			asset.Connections[0].Options[FLATTENED_IMAGE] = f.Name()
 			return f.Name(), nil
 		},
 		CloseFN: func() {
-			log.Warn().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
+			log.Debug().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
 			os.Remove(f.Name())
 		},
 		PlatformKind:    conf.Type,
