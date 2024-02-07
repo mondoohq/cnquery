@@ -104,7 +104,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 		rootAssetWithRuntime, err := createRuntimeForAsset(resolvedRootAsset, upstream, recording)
 		if err != nil {
 			log.Error().Err(err).Str("asset", resolvedRootAsset.Name).Msg("unable to create runtime for asset")
-			discoveredAssets.AddError(rootAssetWithRuntime.Asset, err)
+			discoveredAssets.AddError(resolvedRootAsset, err)
 			continue
 		}
 
@@ -129,7 +129,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 			assetWithRuntime, err := createRuntimeForAsset(a, upstream, recording)
 			if err != nil {
 				log.Error().Err(err).Str("asset", a.Name).Msg("unable to create runtime for asset")
-				discoveredAssets.AddError(assetWithRuntime.Asset, err)
+				discoveredAssets.AddError(a, err)
 				continue
 			}
 
