@@ -36,7 +36,7 @@ type Connection struct {
 	currentClusterName string
 }
 
-func NewConnection(asset *inventory.Asset, discoveryCache *resources.DiscoveryCache) (shared.Connection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.DiscoveryCache) (shared.Connection, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -99,6 +99,7 @@ func NewConnection(asset *inventory.Asset, discoveryCache *resources.DiscoveryCa
 	}
 
 	res := Connection{
+		id:                 id,
 		asset:              asset,
 		d:                  d,
 		config:             config,

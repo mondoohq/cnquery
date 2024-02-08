@@ -25,7 +25,6 @@ type Runtime struct {
 }
 
 type Connection interface {
-	SetID(id uint32)
 	ID() uint32
 }
 

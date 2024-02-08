@@ -31,13 +31,19 @@ func NewService() *Service {
 
 var heartbeatRes HeartbeatRes
 
-func (s *Service) AddRuntime(runtime *Runtime) uint32 {
+func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)) (*Runtime, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
+
 	s.lastConnectionID++
-	runtime.Connection.SetID(s.lastConnectionID)
+	runtime, err := createRuntime(s.lastConnectionID)
+	if err != nil {
+		// If the runtime creation fails, revert the lastConnectionID
+		s.lastConnectionID--
+		return nil, err
+	}
 	s.runtimes[s.lastConnectionID] = runtime
-	return s.lastConnectionID
+	return runtime, nil
 }
 
 func (s *Service) GetRuntime(id uint32) (*Runtime, error) {

@@ -143,52 +143,57 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn shared.Connection
-	var err error
 
-	if manifestContent, ok := conf.Options[shared.OPTION_IMMEMORY_CONTENT]; ok {
-		conn, err = manifest.NewConnection(asset, manifest.WithManifestContent([]byte(manifestContent)))
-		if err != nil {
-			return nil, err
+	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+		var conn shared.Connection
+		var err error
+		if manifestContent, ok := conf.Options[shared.OPTION_IMMEMORY_CONTENT]; ok {
+			conn, err = manifest.NewConnection(connId, asset, manifest.WithManifestContent([]byte(manifestContent)))
+			if err != nil {
+				return nil, err
+			}
+		} else if manifestFile, ok := conf.Options[shared.OPTION_MANIFEST]; ok {
+			conn, err = manifest.NewConnection(connId, asset, manifest.WithManifestFile(manifestFile))
+			if err != nil {
+				return nil, err
+			}
+		} else if data, ok := conf.Options[shared.OPTION_ADMISSION]; ok {
+			conn, err = admission.NewConnection(connId, asset, data)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			conn, err = api.NewConnection(connId, asset, s.discoveryCache)
+			if err != nil {
+				return nil, err
+			}
 		}
-	} else if manifestFile, ok := conf.Options[shared.OPTION_MANIFEST]; ok {
-		conn, err = manifest.NewConnection(asset, manifest.WithManifestFile(manifestFile))
-		if err != nil {
-			return nil, err
+
+		var upstream *upstream.UpstreamClient
+		if req.Upstream != nil && !req.Upstream.Incognito {
+			upstream, err = req.Upstream.InitClient()
+			if err != nil {
+				return nil, err
+			}
 		}
-	} else if data, ok := conf.Options[shared.OPTION_ADMISSION]; ok {
-		conn, err = admission.NewConnection(asset, data)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		conn, err = api.NewConnection(asset, s.discoveryCache)
-		if err != nil {
-			return nil, err
-		}
+		asset.Connections[0].Id = connId
+
+		return &plugin.Runtime{
+			Connection:     conn,
+			Callback:       callback,
+			HasRecording:   req.HasRecording,
+			CreateResource: resources.CreateResource,
+			NewResource:    resources.NewResource,
+			GetData:        resources.GetData,
+			SetData:        resources.SetData,
+			Upstream:       upstream,
+		}, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	var upstream *upstream.UpstreamClient
-	if req.Upstream != nil && !req.Upstream.Incognito {
-		upstream, err = req.Upstream.InitClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	runtime := &plugin.Runtime{
-		Connection:     conn,
-		Callback:       callback,
-		HasRecording:   req.HasRecording,
-		CreateResource: resources.CreateResource,
-		NewResource:    resources.NewResource,
-		GetData:        resources.GetData,
-		SetData:        resources.SetData,
-		Upstream:       upstream,
-	}
-	asset.Connections[0].Id = s.AddRuntime(runtime)
-
-	return conn, err
+	return runtime.Connection.(shared.Connection), nil
 }
 
 func (s *Service) discover(conn shared.Connection, features cnquery.Features) (*inventory.Inventory, error) {

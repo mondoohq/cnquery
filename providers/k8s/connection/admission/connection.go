@@ -24,8 +24,9 @@ type Connection struct {
 }
 
 // func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
-func NewConnection(asset *inventory.Asset, data string) (shared.Connection, error) {
+func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Connection, error) {
 	c := &Connection{
+		id:        id,
 		asset:     asset,
 		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
@@ -64,10 +65,6 @@ func (c *Connection) ServerVersion() *version.Info {
 
 func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return c.ManifestParser.SupportedResourceTypes()
-}
-
-func (c *Connection) SetID(id uint32) {
-	c.id = id
 }
 
 func (c *Connection) ID() uint32 {
