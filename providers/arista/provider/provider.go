@@ -150,7 +150,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			Upstream:       upstream,
 		}, nil
 	})
-	return runtime.Connection.(*connection.AristaConnection), err
+	if err != nil {
+		return nil, err
+	}
+
+	return runtime.Connection.(*connection.AristaConnection), nil
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.AristaConnection) error {
