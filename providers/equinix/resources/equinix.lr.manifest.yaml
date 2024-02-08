@@ -21,6 +21,9 @@ resources:
     platform:
       name:
       - equinix
+    refs:
+    - title: Equinix Metal docs
+      url: https://deploy.equinix.com/developers/docs/metal/
   equinix.metal.organization:
     fields:
       address: {}
@@ -42,6 +45,9 @@ resources:
     platform:
       name:
       - equinix
+    refs:
+    - title: Organizations
+      url: https://deploy.equinix.com/developers/docs/metal/accounts/organizations/
   equinix.metal.project:
     fields:
       createdAt: {}
@@ -57,6 +63,9 @@ resources:
     platform:
       name:
       - equinix
+    refs:
+    - title: Creating a Project
+      url: https://deploy.equinix.com/developers/docs/metal/projects/creating-a-project/
   equinix.metal.sshkey:
     fields:
       createdAt: {}
@@ -71,6 +80,9 @@ resources:
     platform:
       name:
       - equinix
+    refs:
+    - title: Project SSH Keys
+      url: https://deploy.equinix.com/developers/docs/metal/projects/project-ssh-keys/
   equinix.metal.user:
     fields:
       avatarUrl: {}
@@ -94,3 +106,6 @@ resources:
     platform:
       name:
       - equinix
+    refs:
+    - title: User Accounts
+      url: https://deploy.equinix.com/developers/docs/metal/accounts/users/
