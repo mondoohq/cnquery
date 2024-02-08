@@ -44,6 +44,9 @@
 # s.b. on-premises
 \bon-premise\b
 
+# s.b. email
+\be-mail\b
+
 #
 # Product Names
 #
@@ -163,6 +166,21 @@
 \bGroup policy object\b
 \bgroup policy object\b
 \bGroup Policy object\b
+
+# s.b. Power BI
+\bPowerBI\b
+
+# s.b. SharePoint
+\bSharepoint\b
+\bShare Point\b
+
+# s.b. BitLocker
+\bBitlocker\b
+
+
+# s.b. VS Code
+\bVSCode\b
+\bVScode\b
 
 #
 # VMware Products
