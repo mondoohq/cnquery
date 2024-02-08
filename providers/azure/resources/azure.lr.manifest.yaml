@@ -11,7 +11,7 @@ resources:
   azure.subscription:
     docs:
       desc: "Use the `azure.subscription` resource to assess the configuration of
-        Azure subscriptions. \n"
+        Azure subscriptions."
     fields:
       advisor: {}
       aks: {}
@@ -49,7 +49,7 @@ resources:
   azure.subscription.advisor:
     docs:
       desc: "Use the `azure.subscription.advisor` resource to retrieve scoring
-        and recommendations from Microsoft Azure Advisor. \n"
+        and recommendations from Microsoft Azure Advisor."
     fields:
       recommendations: {}
       subscriptionId: {}
@@ -80,7 +80,7 @@ resources:
   azure.subscription.advisorService:
     docs:
       desc: "Use the `azure.subscription.advisorService` resource to retrieve scoring
-        and recommendations from Microsoft Azure Advisor. \n"
+        and recommendations from Microsoft Azure Advisor."
     fields:
       averageScore: {}
       recommendations: {}
@@ -160,7 +160,7 @@ resources:
       - azure
   azure.subscription.aks.cluster:
     docs:
-      desc: "Use the `azure.subscription.aks.cluster` resource to retrieve and check properties for an Azure Kubernetes Service cluster. \n"
+      desc: "Use the `azure.subscription.aks.cluster` resource to retrieve and check properties for an Azure Kubernetes Service cluster."
     fields:
       addonProfiles: {}
       agentPoolProfiles: {}
