@@ -71,9 +71,9 @@ func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 }
 
 func (s *Service) GetData(req *DataReq) (*DataRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
+	runtime, err := s.GetRuntime(req.Connection)
+	if err != nil {
+		return nil, err
 	}
 
 	args := PrimitiveArgsToRawDataArgs(req.Args, runtime)
@@ -118,9 +118,9 @@ func (s *Service) GetData(req *DataReq) (*DataRes, error) {
 }
 
 func (s *Service) StoreData(req *StoreReq) (*StoreRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
+	runtime, err := s.GetRuntime(req.Connection)
+	if err != nil {
+		return nil, err
 	}
 
 	var errs []string

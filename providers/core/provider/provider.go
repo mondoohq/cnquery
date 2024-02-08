@@ -34,7 +34,9 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("no connection data provided")
 	}
 
+	connectionId := defaultConnection
 	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+		connectionId = connId
 		var upstream *upstream.UpstreamClient
 		var err error
 		if req.Upstream != nil && !req.Upstream.Incognito {
@@ -87,7 +89,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return &plugin.ConnectRes{
-		Id:   runtime.Connection.ID(),
+		Id:   connectionId,
 		Name: "core",
 	}, nil
 }

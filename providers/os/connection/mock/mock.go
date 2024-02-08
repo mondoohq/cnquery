@@ -70,8 +70,9 @@ type Connection struct {
 	missing map[string]map[string]bool
 }
 
-func New(path string, asset *inventory.Asset) (*Connection, error) {
+func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 	res := &Connection{
+		uid:   id,
 		data:  &TomlData{},
 		asset: asset,
 		missing: map[string]map[string]bool{
