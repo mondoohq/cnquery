@@ -10,8 +10,7 @@ import (
 
 func newTestService(connType string, path string) (*Service, *plugin.ConnectRes) {
 	srv := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
 	if path == "" {
