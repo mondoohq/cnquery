@@ -11,7 +11,6 @@ import (
 	sync "sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/cnquery/v10/llx"
 )
 
@@ -59,15 +58,21 @@ func (s *Service) GetRuntime(id uint32) (*Runtime, error) {
 func (s *Service) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
-	if runtime, ok := s.runtimes[req.Connection]; ok {
+	s.doDisconnect(req.Connection)
+	return &DisconnectRes{}, nil
+}
+
+// doDisconnect is a helper function to disconnect a runtime by its ID. It MUST be called
+// with a lock on s.runtimesLock.
+func (s *Service) doDisconnect(id uint32) {
+	if runtime, ok := s.runtimes[id]; ok {
 		// If the runtime implements the Closer interface, we need to call the
 		// Close function
 		if closer, ok := runtime.Connection.(Closer); ok {
 			closer.Close()
 		}
-		delete(s.runtimes, req.Connection)
+		delete(s.runtimes, id)
 	}
-	return &DisconnectRes{}, nil
 }
 
 func (s *Service) GetData(req *DataReq) (*DataRes, error) {
@@ -187,10 +192,7 @@ func (s *Service) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
 	defer s.runtimesLock.Unlock()
 
 	for id := range s.runtimes {
-		_, err := s.Disconnect(&DisconnectReq{Connection: id})
-		if err != nil {
-			log.Error().Err(err).Msg("failed to disconnect runtime")
-		}
+		s.doDisconnect(id)
 	}
 	return &ShutdownRes{}, nil
 }
