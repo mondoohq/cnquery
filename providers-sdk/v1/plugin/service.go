@@ -11,6 +11,7 @@ import (
 	sync "sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/cnquery/v10/llx"
 )
 
@@ -182,5 +183,14 @@ func (s *Service) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
 }
 
 func (s *Service) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
+	s.runtimesLock.Lock()
+	defer s.runtimesLock.Unlock()
+
+	for id := range s.runtimes {
+		_, err := s.Disconnect(&DisconnectReq{Connection: id})
+		if err != nil {
+			log.Error().Err(err).Msg("failed to disconnect runtime")
+		}
+	}
 	return &ShutdownRes{}, nil
 }
