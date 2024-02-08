@@ -11,7 +11,7 @@ resources:
   azure.subscription:
     docs:
       desc: "Use the `azure.subscription` resource to assess the configuration of
-        Azure subscriptions. \n"
+        Azure subscriptions."
     fields:
       advisor: {}
       aks: {}
@@ -47,6 +47,9 @@ resources:
     - query: "azure.subscription {\n  subscriptionId \n  managedByTenants\n}\n"
       title: Return the subscription ID and a list of tenants that manage the subscription
   azure.subscription.advisor:
+    docs:
+      desc: "Use the `azure.subscription.advisor` resource to retrieve scoring
+        and recommendations from Microsoft Azure Advisor."
     fields:
       recommendations: {}
       subscriptionId: {}
@@ -54,6 +57,18 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: What are managed identities for Azure resources?
+      url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
+    snippets:
+    - query: "azure.subscription.advisor {\n  averageScore \n recommendations \n}\n"
+      title: Return the average score and all recommendations from Microsoft Azure Advisor
+    - query: |
+        azure.subscription.advisorService {
+          averageScore > 90
+        }
+      title: Check if the average score that the Azure Advisor service gives the subscription
+        is greater than 90
   azure.subscription.advisor.recommendation:
     fields:
       id: {}
@@ -65,7 +80,7 @@ resources:
   azure.subscription.advisorService:
     docs:
       desc: "Use the `azure.subscription.advisorService` resource to retrieve scoring
-        and recommendations from Microsoft Azure Advisor. \n"
+        and recommendations from Microsoft Azure Advisor."
     fields:
       averageScore: {}
       recommendations: {}
@@ -77,12 +92,6 @@ resources:
       name:
       - azure
     snippets:
-    - query: |
-        azure.subscription.advisorService {
-          averageScore > 90
-        }
-      title: Check if the average score that the Azure Advisor service gives the subscription
-        is greater than 90
   azure.subscription.advisorService.recommendation:
     fields:
       category: {}
@@ -150,6 +159,8 @@ resources:
       name:
       - azure
   azure.subscription.aks.cluster:
+    docs:
+      desc: "Use the `azure.subscription.aks.cluster` resource to retrieve and check properties for an Azure Kubernetes Service cluster."
     fields:
       addonProfiles: {}
       agentPoolProfiles: {}
@@ -175,6 +186,12 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: What is Azure Kubernetes Service?
+      url: https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes
+    snippets:
+    - query: "azure.subscription.aks.clusters {\n  id \n createdAt \n powerState \n}\n"
+      title: Return the ID, date and time created, and current power state of clusters
   azure.subscription.aksService:
     fields:
       clusters: {}
@@ -219,6 +236,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorization.roleDefinition:
     fields:
       description: {}
@@ -231,6 +251,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorization.roleDefinition.permission:
     fields:
       allowedActions: {}
@@ -242,6 +265,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorizationService:
     fields:
       roleDefinitions: {}
@@ -251,6 +277,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorizationService.roleDefinition:
     fields:
       description: {}
@@ -264,6 +293,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.authorizationService.roleDefinition.permission:
     fields:
       allowedActions: {}
@@ -276,6 +308,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure RBAC documentation
+      url: https://learn.microsoft.com/en-us/azure/role-based-access-control/
   azure.subscription.cloudDefender:
     fields:
       defenderForContainers: {}
@@ -287,6 +322,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Microsoft Defender for Cloud Apps overview
+      url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefender.securityContact:
     fields:
       alertNotifications: {}
@@ -298,6 +336,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Microsoft Defender for Cloud Apps overview
+      url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService:
     fields:
       defenderForContainers: {}
@@ -310,6 +351,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Microsoft Defender for Cloud Apps overview
+      url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
@@ -322,6 +366,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Microsoft Defender for Cloud Apps overview
+      url: https://learn.microsoft.com/en-us/defender-cloud-apps/what-is-defender-for-cloud-apps
   azure.subscription.compute:
     fields:
       disks: {}
@@ -363,6 +410,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual machines in Azure
+      url: https://learn.microsoft.com/en-us/azure/virtual-machines/
   azure.subscription.computeService:
     fields:
       disks: {}
@@ -408,6 +458,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual machines in Azure
+      url: https://learn.microsoft.com/en-us/azure/virtual-machines/
   azure.subscription.cosmosDb:
     fields:
       accounts: {}
@@ -416,6 +469,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Cosmos DB documentation
+      url: https://learn.microsoft.com/en-us/azure/cosmos-db/
   azure.subscription.cosmosDb.account:
     fields:
       id: {}
@@ -429,6 +485,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Cosmos DB documentation
+      url: https://learn.microsoft.com/en-us/azure/cosmos-db/
   azure.subscription.cosmosDbService:
     fields:
       accounts: {}
@@ -438,6 +497,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Cosmos DB documentation
+      url: https://learn.microsoft.com/en-us/azure/cosmos-db/
   azure.subscription.cosmosDbService.account:
     fields:
       id: {}
@@ -452,6 +514,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Cosmos DB documentation
+      url: https://learn.microsoft.com/en-us/azure/cosmos-db/
   azure.subscription.keyVault:
     fields:
       subscriptionId: {}
@@ -460,6 +525,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVault.certificate:
     fields:
       certName: {}
@@ -478,6 +546,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVault.key:
     fields:
       created: {}
@@ -496,6 +567,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVault.secret:
     fields:
       contentType: {}
@@ -514,6 +588,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVault.vault:
     fields:
       certificates: {}
@@ -531,6 +608,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService:
     fields:
       subscriptionId: {}
@@ -540,6 +620,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.certificate:
     fields:
       certName: {}
@@ -559,6 +642,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.key:
     fields:
       created: {}
@@ -578,6 +664,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.secret:
     fields:
       contentType: {}
@@ -597,6 +686,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.keyVaultService.vault:
     fields:
       certificates: {}
@@ -616,6 +708,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Key Vault
+      url: https://learn.microsoft.com/en-us/azure/key-vault/
   azure.subscription.managedIdentityService:
     fields:
       managedIdentities: {}
@@ -624,6 +719,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: What are managed identities for Azure resources?
+      url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
   azure.subscription.managedIdentityService.managedIdentity:
     fields:
       id: {}
@@ -631,6 +729,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: What are managed identities for Azure resources?
+      url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
   azure.subscription.mariaDb:
     fields:
       servers: {}
@@ -639,6 +740,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.mariaDb.database:
     fields:
       charset: {}
@@ -650,6 +754,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.mariaDb.server:
     fields:
       configuration: {}
@@ -665,6 +772,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.mariaDbService:
     fields:
       servers: {}
@@ -674,6 +784,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.mariaDbService.database:
     fields:
       charset: {}
@@ -686,6 +799,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.mariaDbService.server:
     fields:
       configuration: {}
@@ -702,6 +818,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/mariadb/
   azure.subscription.monitor:
     fields:
       applicationInsights: {}
@@ -712,6 +831,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.activityLog:
     fields:
       alerts: {}
@@ -720,6 +842,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.activityLog.alert:
     fields:
       actions: {}
@@ -735,6 +860,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.applicationInsight:
     fields:
       id: {}
@@ -748,6 +876,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.diagnosticsetting:
     fields:
       id: {}
@@ -760,6 +891,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.logprofile:
     fields:
       id: {}
@@ -786,6 +920,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.activityLog:
     fields:
       alerts: {}
@@ -795,6 +932,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.activityLog.alert:
     fields:
       actions: {}
@@ -811,6 +951,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.applicationInsight:
     fields:
       id: {}
@@ -825,6 +968,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.diagnosticsetting:
     fields:
       id: {}
@@ -838,6 +984,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.logprofile:
     fields:
       id: {}
@@ -853,6 +1002,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MariaDB documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.mySql:
     fields:
       flexibleServers: {}
@@ -862,6 +1014,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySql.database:
     fields:
       charset: {}
@@ -873,6 +1028,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySql.flexibleServer:
     fields:
       configuration: {}
@@ -888,6 +1046,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySql.server:
     fields:
       configuration: {}
@@ -903,6 +1064,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySqlService:
     fields:
       flexibleServers: {}
@@ -913,6 +1077,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySqlService.database:
     fields:
       charset: {}
@@ -925,6 +1092,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySqlService.flexibleServer:
     fields:
       configuration: {}
@@ -941,6 +1111,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.mySqlService.server:
     fields:
       configuration: {}
@@ -957,6 +1130,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Database for MySQL - Flexible Server documentation
+      url: https://learn.microsoft.com/en-us/azure/mysql/
   azure.subscription.network:
     fields:
       bastionHosts: {}
@@ -969,6 +1145,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.bastionHost:
     fields:
       id: {}
@@ -982,6 +1161,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.interface:
     fields:
       etag: {}
@@ -996,6 +1178,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.ipAddress:
     fields:
       id: {}
@@ -1008,6 +1193,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.securityGroup:
     fields:
       defaultSecurityRules: {}
@@ -1024,6 +1212,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.securityrule:
     fields:
       destinationPortRange: {}
@@ -1035,6 +1226,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.watcher:
     fields:
       etag: {}
@@ -1050,6 +1244,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.network.watcher.flowlog:
     fields:
       analytics: {}
@@ -1071,6 +1268,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService:
     fields:
       applicationFirewallPolicies: {}
@@ -1101,6 +1301,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.appSecurityGroup:
     fields:
       etag: {}
@@ -1114,6 +1317,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.applicationFirewallPolicy:
     fields:
       etag: {}
@@ -1128,6 +1334,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.applicationGateway:
     fields:
       etag: {}
@@ -1142,6 +1351,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.backendAddressPool:
     fields:
       etag: {}
@@ -1154,6 +1366,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.bastionHost:
     fields:
       id: {}
@@ -1168,6 +1383,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.bgpSettings:
     fields:
       asn: {}
@@ -1180,6 +1398,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress:
     fields:
       customBgpIpAddresses: {}
@@ -1192,6 +1413,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.firewall:
     fields:
       applicationRules: {}
@@ -1226,6 +1450,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.firewall.ipConfig:
     fields:
       etag: {}
@@ -1240,6 +1467,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.firewall.natRule:
     fields:
       etag: {}
@@ -1251,6 +1481,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.firewall.networkRule:
     fields:
       etag: {}
@@ -1262,6 +1495,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.firewallPolicy:
     fields:
       basePolicy: {}
@@ -1279,6 +1515,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.frontendIpConfig:
     fields:
       etag: {}
@@ -1292,6 +1531,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.inboundNatPool:
     fields:
       etag: {}
@@ -1304,6 +1546,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.inboundNatRule:
     fields:
       etag: {}
@@ -1316,6 +1561,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.interface:
     fields:
       etag: {}
@@ -1330,6 +1578,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.ipAddress:
     fields:
       id: {}
@@ -1343,6 +1594,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.loadBalancer:
     fields:
       backendPools: {}
@@ -1364,6 +1618,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.loadBalancerRule:
     fields:
       etag: {}
@@ -1376,6 +1633,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.natGateway:
     fields:
       etag: {}
@@ -1392,6 +1652,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.outboundRule:
     fields:
       etag: {}
@@ -1404,6 +1667,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.probe:
     fields:
       etag: {}
@@ -1416,6 +1682,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.securityGroup:
     fields:
       defaultSecurityRules: {}
@@ -1433,6 +1702,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.securityrule:
     fields:
       destinationPortRange: {}
@@ -1446,6 +1718,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.subnet:
     fields:
       addressPrefix: {}
@@ -1461,6 +1736,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.subnet.ipConfig:
     fields:
       etag: {}
@@ -1472,6 +1750,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.virtualNetwork:
     fields:
       dhcpOptions:
@@ -1492,6 +1773,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.virtualNetwork.dhcpOptions:
     fields:
       dnsServers: {}
@@ -1533,6 +1817,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.virtualNetworkGateway.connection:
     fields:
       etag: {}
@@ -1545,6 +1832,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.virtualNetworkGateway.ipConfig:
     fields:
       etag: {}
@@ -1559,6 +1849,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.watcher:
     fields:
       etag: {}
@@ -1575,6 +1868,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.networkService.watcher.flowlog:
     fields:
       analytics: {}
@@ -1597,6 +1893,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/virtual-network/
   azure.subscription.postgreSql:
     fields:
       servers: {}
@@ -1605,6 +1904,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSql.database:
     fields:
       charset: {}
@@ -1616,6 +1918,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSql.server:
     fields:
       configuration: {}
@@ -1631,6 +1936,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSqlService:
     fields:
       servers: {}
@@ -1652,6 +1960,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSqlService.server:
     fields:
       configuration: {}
@@ -1668,6 +1979,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual Network documentation
+      url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.resource:
     fields:
       changedTime: {}
@@ -1688,6 +2002,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Resource Manager documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/
   azure.subscription.resourcegroup:
     fields:
       id: {}
@@ -1702,6 +2019,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Resource Manager documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/
   azure.subscription.sql:
     fields:
       servers: {}
@@ -1710,6 +2030,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.configuration:
     fields:
       allowedValues: {}
@@ -1725,6 +2048,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.database:
     fields:
       advisor: {}
@@ -1760,6 +2086,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.databaseusage:
     fields:
       currentValue: {}
@@ -1773,6 +2102,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.firewallrule:
     fields:
       endIpAddress: {}
@@ -1784,6 +2116,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.server:
     fields:
       auditingPolicy: {}
@@ -1806,6 +2141,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.server.administrator:
     fields:
       administratorType: {}
@@ -1819,6 +2157,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.server.vulnerabilityassessmentsettings:
     fields:
       id: {}
@@ -1834,6 +2175,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sql.virtualNetworkRule:
     fields:
       id: {}
@@ -1845,6 +2189,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService:
     fields:
       servers: {}
@@ -1854,6 +2201,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.configuration:
     fields:
       allowedValues: {}
@@ -1870,6 +2220,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.database:
     fields:
       advisor: {}
@@ -1906,6 +2259,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.databaseusage:
     fields:
       currentValue: {}
@@ -1920,6 +2276,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.firewallrule:
     fields:
       endIpAddress: {}
@@ -1932,6 +2291,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.server:
     fields:
       auditingPolicy: {}
@@ -1955,6 +2317,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.server.administrator:
     fields:
       administratorType: {}
@@ -1969,6 +2334,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.server.vulnerabilityassessmentsettings:
     fields:
       id: {}
@@ -1985,6 +2353,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.sqlService.virtualNetworkRule:
     fields:
       id: {}
@@ -1997,6 +2368,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure SQL documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-sql/
   azure.subscription.storage:
     fields:
       accounts: {}
@@ -2005,6 +2379,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account:
     fields:
       blobProperties: {}
@@ -2025,6 +2402,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.container:
     fields:
       etag: {}
@@ -2036,6 +2416,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.dataProtection:
     fields:
       blobRetentionDays: {}
@@ -2047,6 +2430,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.service.properties:
     fields:
       hourMetrics: {}
@@ -2057,6 +2443,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.service.properties.logging:
     fields:
       delete: {}
@@ -2069,6 +2458,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.service.properties.metrics:
     fields:
       enabled: {}
@@ -2080,6 +2472,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storage.account.service.properties.retentionPolicy:
     fields:
       enabled: {}
@@ -2089,6 +2484,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService:
     fields:
       accounts: {}
@@ -2098,6 +2496,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account:
     fields:
       blobProperties: {}
@@ -2119,6 +2520,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account.container:
     fields:
       etag: {}
@@ -2131,6 +2535,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account.dataProtection:
     fields:
       blobRetentionDays: {}
@@ -2143,6 +2550,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account.service.properties:
     fields:
       hourMetrics: {}
@@ -2167,6 +2577,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account.service.properties.metrics:
     fields:
       enabled: {}
@@ -2179,6 +2592,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.storageService.account.service.properties.retentionPolicy:
     fields:
       enabled: {}
@@ -2189,6 +2605,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Storage documentation
+      url: https://learn.microsoft.com/en-us/azure/storage/
   azure.subscription.web:
     fields:
       apps: {}
@@ -2198,6 +2617,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.web.appsite:
     fields:
       applicationSettings: {}
@@ -2218,6 +2640,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.web.appsiteauthsettings:
     fields:
       id: {}
@@ -2229,6 +2654,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.web.appsiteconfig:
     fields:
       id: {}
@@ -2240,6 +2668,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService:
     fields:
       apps: {}
@@ -2250,6 +2681,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService.appsite:
     fields:
       applicationSettings: {}
@@ -2271,6 +2705,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService.appsiteauthsettings:
     fields:
       id: {}
@@ -2283,6 +2720,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
   azure.subscription.webService.appsiteconfig:
     fields:
       id: {}
@@ -2295,3 +2735,6 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Web documentation
+      url: https://learn.microsoft.com/en-us/azure/?product=web
