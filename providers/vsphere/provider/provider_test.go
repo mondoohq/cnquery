@@ -28,8 +28,7 @@ func newTestService() (*vsimulator.VsphereSimulator, *Service, *plugin.ConnectRe
 	}
 
 	srv := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
 	resp, err := srv.Connect(&plugin.ConnectReq{
@@ -138,8 +137,7 @@ func TestVsphereDiscovery(t *testing.T) {
 	}
 
 	srv := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
 	resp, err := srv.Connect(&plugin.ConnectReq{
