@@ -20,8 +20,7 @@ import (
 
 func TestLocalConnectionIdDetectors(t *testing.T) {
 	srv := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
 	connectResp, err := srv.Connect(&plugin.ConnectReq{
@@ -50,8 +49,7 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.NotNil(t, shutdownconnectResp)
 
 	srv = &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 	connectResp, err = srv.Connect(&plugin.ConnectReq{
 		Asset: connectResp.Asset,
@@ -99,8 +97,7 @@ func TestService_ParseCLI(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	s := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
 	req := &plugin.ParseCLIReq{
