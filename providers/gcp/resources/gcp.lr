@@ -917,7 +917,7 @@ private gcp.project.storageService.bucket @defaults("id") {
   // Bucket location type
   locationType string
   // Project number
-  projectNumber string 
+  projectNumber string
   // Default storage class
   storageClass string
   // Creation timestamp
@@ -979,7 +979,7 @@ private gcp.project.sqlService.instance @defaults("name") {
   // Instance name
   name string
   // This is deprecated; use projectId instead.
-  project string 
+  project string
   // Region
   region string
   // Replicas
@@ -1064,7 +1064,7 @@ private gcp.project.sqlService.instance.settings {
   maintenanceWindow gcp.project.sqlService.instance.settings.maintenanceWindow
   // Local user password validation policy
   passwordValidationPolicy gcp.project.sqlService.instance.settings.passwordValidationPolicy
-  // Pricing plan 
+  // Pricing plan
   pricingPlan string
   // Replication type
   replicationType string
@@ -1652,7 +1652,7 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   gcfsConfig gcp.project.gkeService.cluster.nodepool.config.gcfsConfig
   // Advanced features for the Compute Engine VM
   advancedMachineFeatures gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures
-  // GVNIC configuration
+  // gVNIC configuration
   gvnicConfig gcp.project.gkeService.cluster.nodepool.config.gvnicConfig
   // Spot flag for enabling Spot VM, which is a rebrand of the existing preemptible flag
   spot bool
@@ -1750,11 +1750,11 @@ private gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures @
   threadsPerCore int
 }
 
-// GCP GKE node pool GVNIC configuration
+// GCP GKE node pool gVNIC configuration
 private gcp.project.gkeService.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   // Internal ID
   id string
-  // Whether to use GVNIC
+  // Whether to use gVNIC
   enabled bool
 }
 

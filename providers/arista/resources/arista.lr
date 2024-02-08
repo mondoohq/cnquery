@@ -171,7 +171,7 @@ arista.eos.spt.mstInterface @defaults("name") {
   state string
   // Cost value for the interface
   cost int
-  // Rort role
+  // Port role
   role string
   // Interface inconsistent features
   inconsistentFeatures dict

@@ -1,4 +1,3 @@
-aks
 atlassian
 Auths
 autoaccept
@@ -39,7 +38,6 @@ ipsetreferencestatement
 jira
 jsonbody
 labelmatchstatement
-linux
 loggingservice
 managedrulegroupstatement
 managedzone
@@ -80,6 +78,7 @@ testutils
 toplevel
 tpu
 vdcs
+VNIC
 Vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
