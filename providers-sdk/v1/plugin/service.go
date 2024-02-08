@@ -180,3 +180,7 @@ func (s *Service) Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error) {
 
 	return &heartbeatRes, nil
 }
+
+func (s *Service) Shutdown(req *ShutdownReq) (*ShutdownRes, error) {
+	return &ShutdownRes{}, nil
+}

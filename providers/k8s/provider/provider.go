@@ -95,13 +95,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &res, nil
 }
 
-// Shutdown is automatically called when the shell closes.
-// It is not necessary to implement this method.
-// If you want to do some cleanup, you can do it here.
-func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
-	return &plugin.ShutdownRes{}, nil
-}
-
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
 }
