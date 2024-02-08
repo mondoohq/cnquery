@@ -4,8 +4,9 @@
 package packages_test
 
 import (
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"testing"
+
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestDpkgParser(t *testing.T) {
 		},
 	}
 
-	mock, err := mock.New("./testdata/packages_dpkg.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_dpkg.toml", nil)
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/var/lib/dpkg/status")
 	require.NoError(t, err)
@@ -86,7 +87,7 @@ func TestDpkgParserStatusD(t *testing.T) {
 		},
 	}
 
-	mock, err := mock.New("./testdata/packages_dpkg_statusd.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_dpkg_statusd.toml", nil)
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/var/lib/dpkg/status.d/base")
 	require.NoError(t, err)
@@ -114,7 +115,7 @@ and the text of several common licenses in use on Debian systems.`,
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
-	mock, err := mock.New("./testdata/updates_dpkg.toml", nil)
+	mock, err := mock.New(0, "./testdata/updates_dpkg.toml", nil)
 	require.NoError(t, err)
 	c, err := mock.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	require.NoError(t, err)

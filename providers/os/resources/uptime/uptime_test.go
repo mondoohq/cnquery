@@ -14,7 +14,7 @@ import (
 )
 
 func TestUptimeOnLinux(t *testing.T) {
-	mock, err := mock.New("./testdata/linux.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/linux.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
@@ -31,7 +31,7 @@ func TestUptimeOnLinux(t *testing.T) {
 
 func TestUptimeOnLinuxLcDecimalDe(t *testing.T) {
 	// LC_NUMERIC=de_DE.UTF-8 on Ubuntu 22.04
-	mock, err := mock.New("./testdata/linux_de.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/linux_de.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
@@ -47,7 +47,7 @@ func TestUptimeOnLinuxLcDecimalDe(t *testing.T) {
 }
 
 func TestUptimeOnFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
@@ -64,7 +64,7 @@ func TestUptimeOnFreebsd(t *testing.T) {
 }
 
 func TestUptimeOnWindows(t *testing.T) {
-	mock, err := mock.New("./testdata/windows.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"windows"},
 		},

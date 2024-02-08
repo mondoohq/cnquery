@@ -13,7 +13,7 @@ import (
 )
 
 func TestPreferences(t *testing.T) {
-	mock, err := mock.New("./testdata/user_preferences.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/user_preferences.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "macos",
 			Version: "13.0",

@@ -13,7 +13,7 @@ import (
 )
 
 func TestWindowsGroupsParserFromMock(t *testing.T) {
-	mock, err := mock.New("./testdata/windows.toml", nil)
+	mock, err := mock.New(0, "./testdata/windows.toml", nil)
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("powershell -c \"Get-LocalGroup | ConvertTo-Json\"")

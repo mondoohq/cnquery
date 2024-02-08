@@ -14,7 +14,7 @@ import (
 )
 
 func TestHostnameLinuxEtcHostname(t *testing.T) {
-	conn, err := mock.New("./testdata/hostname_arch.toml", nil)
+	conn, err := mock.New(0, "./testdata/hostname_arch.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -26,7 +26,7 @@ func TestHostnameLinuxEtcHostname(t *testing.T) {
 }
 
 func TestHostnameLinux(t *testing.T) {
-	conn, err := mock.New("./testdata/hostname_linux.toml", nil)
+	conn, err := mock.New(0, "./testdata/hostname_linux.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -38,7 +38,7 @@ func TestHostnameLinux(t *testing.T) {
 }
 
 func TestHostnameLinuxFqdn(t *testing.T) {
-	conn, err := mock.New("./testdata/hostname_fqdn.toml", nil)
+	conn, err := mock.New(0, "./testdata/hostname_fqdn.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -50,7 +50,7 @@ func TestHostnameLinuxFqdn(t *testing.T) {
 }
 
 func TestHostnameWindows(t *testing.T) {
-	conn, err := mock.New("./testdata/hostname_windows.toml", nil)
+	conn, err := mock.New(0, "./testdata/hostname_windows.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -62,7 +62,7 @@ func TestHostnameWindows(t *testing.T) {
 }
 
 func TestHostnameMacos(t *testing.T) {
-	conn, err := mock.New("./testdata/hostname_macos.toml", nil)
+	conn, err := mock.New(0, "./testdata/hostname_macos.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

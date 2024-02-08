@@ -15,7 +15,7 @@ import (
 )
 
 func TestWindowsRemoteInterface(t *testing.T) {
-	mock, err := mock.New("./testdata/windows.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "windows",
 		},
@@ -54,7 +54,7 @@ func TestMacOsRegex(t *testing.T) {
 }
 
 func TestMacOSRemoteInterface(t *testing.T) {
-	mock, err := mock.New("./testdata/macos.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/macos.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "macos",
 		},
@@ -85,7 +85,7 @@ func TestMacOSRemoteInterface(t *testing.T) {
 }
 
 func TestLinuxRemoteInterface(t *testing.T) {
-	mock, err := mock.New("./testdata/linux_remote.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/linux_remote.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "linux",
 			Family: []string{"linux"},
@@ -124,7 +124,7 @@ func TestLinuxRemoteInterface(t *testing.T) {
 }
 
 func TestLinuxRemoteInterfaceFlannel(t *testing.T) {
-	mock, err := mock.New("./testdata/linux_flannel.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/linux_flannel.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "linux",
 			Family: []string{"linux"},

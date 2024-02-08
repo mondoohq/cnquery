@@ -17,7 +17,7 @@ import (
 )
 
 func TestLinuxPSProcessParser(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"linux"},
 		},
@@ -49,7 +49,7 @@ func TestLinuxPSProcessParser(t *testing.T) {
 }
 
 func TestOSxPSProcessParser(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
@@ -77,7 +77,7 @@ func TestOSxPSProcessParser(t *testing.T) {
 }
 
 func TestUnixPSProcessParser(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix"},
 		},
@@ -105,7 +105,7 @@ func TestUnixPSProcessParser(t *testing.T) {
 }
 
 func TestAixPSProcessParser(t *testing.T) {
-	mock, err := mock.New("./testdata/aix72.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/aix72.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "aix",
 			Family: []string{"unix"},

@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseSysvServices(t *testing.T) {
-	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},
@@ -28,7 +28,7 @@ func TestParseSysvServices(t *testing.T) {
 }
 
 func TestParseSysvServicesRunlevel(t *testing.T) {
-	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},
@@ -44,7 +44,7 @@ func TestParseSysvServicesRunlevel(t *testing.T) {
 }
 
 func TestParseSysvServicesRunning(t *testing.T) {
-	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/amzn1.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "amazonlinux",
 			Family: []string{"linux"},

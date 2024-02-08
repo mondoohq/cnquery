@@ -88,7 +88,7 @@ pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
 
 func TestSolarisManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_solaris11.toml")
-	conn, err := mock.New(filepath, &inventory.Asset{
+	conn, err := mock.New(0, filepath, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "solaris",
 		},

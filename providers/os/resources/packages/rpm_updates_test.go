@@ -11,7 +11,7 @@ import (
 )
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.New("./testdata/updates_rpm.toml", nil)
+	mock, err := mock.New(0, "./testdata/updates_rpm.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +37,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.New("./testdata/updates_zypper.toml", nil)
+	mock, err := mock.New(0, "./testdata/updates_zypper.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

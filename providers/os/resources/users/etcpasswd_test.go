@@ -12,7 +12,7 @@ import (
 )
 
 func TestParseLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 }
 
 func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", nil)
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

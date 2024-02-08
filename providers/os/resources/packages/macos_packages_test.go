@@ -12,7 +12,7 @@ import (
 )
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.New("./testdata/packages_macos.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_macos.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

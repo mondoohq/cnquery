@@ -5,15 +5,16 @@ package detector
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"testing"
+
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 )
 
 func detectPlatformFromMock(filepath string) (*inventory.Platform, error) {
-	mockConn, err := mock.New(filepath, nil)
+	mockConn, err := mock.New(0, filepath, nil)
 	if err != nil {
 		return nil, err
 	}

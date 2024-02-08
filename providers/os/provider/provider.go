@@ -401,7 +401,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 		// Do not expose mock connection as a supported type
 		case "mock":
-			conn, err = mock.New("", asset)
+			conn, err = mock.New(connId, "", asset)
 
 		default:
 			return nil, errors.New("cannot find connection type " + conf.Type)

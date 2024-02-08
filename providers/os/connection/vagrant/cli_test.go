@@ -13,7 +13,7 @@ import (
 )
 
 func TestVagrantSshConfigParsing(t *testing.T) {
-	mock, err := mock.New("./testdata/vagrant.toml", nil)
+	mock, err := mock.New(0, "./testdata/vagrant.toml", nil)
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant ssh-config debian10")
@@ -30,7 +30,7 @@ func TestVagrantSshConfigParsing(t *testing.T) {
 }
 
 func TestVagrantStatusParsing(t *testing.T) {
-	mock, err := mock.New("./testdata/vagrant.toml", nil)
+	mock, err := mock.New(0, "./testdata/vagrant.toml", nil)
 	require.NoError(t, err)
 
 	cmd, err := mock.RunCommand("vagrant status")

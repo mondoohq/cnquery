@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseSecpol(t *testing.T) {
-	mock, err := mock.New("./testdata/secpol.toml", nil)
+	mock, err := mock.New(0, "./testdata/secpol.toml", nil)
 	require.NoError(t, err)
 
 	encoded := powershell.Encode(SecpolScript)

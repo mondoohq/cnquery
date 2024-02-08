@@ -13,7 +13,7 @@ import (
 )
 
 func TestManagerAlpineImage(t *testing.T) {
-	mock, err := mock.New("./testdata/alpine-image.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/alpine-image.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "alpine",
 		},
@@ -45,7 +45,7 @@ func TestManagerAlpineImage(t *testing.T) {
 }
 
 func TestManagerAlpineContainer(t *testing.T) {
-	mock, err := mock.New("./testdata/alpine-container.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/alpine-container.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "alpine",
 		},
