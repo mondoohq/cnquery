@@ -104,6 +104,10 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 	return m.Impl.Connect(req, a)
 }
 
+func (m *GRPCServer) Disconnect(ctx context.Context, req *DisconnectReq) (*DisconnectRes, error) {
+	return m.Impl.Disconnect(req)
+}
+
 func (m *GRPCServer) MockConnect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {

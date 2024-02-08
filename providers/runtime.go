@@ -63,6 +63,9 @@ type shutdownResult struct {
 
 func (r *Runtime) tryShutdown() shutdownResult {
 	for _, provider := range r.providers {
+		if provider.Connection == nil {
+			continue
+		}
 		_, err := provider.Instance.Plugin.Disconnect(&plugin.DisconnectReq{Connection: provider.Connection.Id})
 		if err != nil {
 			if status, ok := status.FromError(err); ok {
