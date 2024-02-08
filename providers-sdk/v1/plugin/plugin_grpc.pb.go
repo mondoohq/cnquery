@@ -25,6 +25,7 @@ const (
 	ProviderPlugin_Heartbeat_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/Heartbeat"
 	ProviderPlugin_ParseCLI_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/ParseCLI"
 	ProviderPlugin_Connect_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/Connect"
+	ProviderPlugin_Disconnect_FullMethodName  = "/cnquery.providers.v1.ProviderPlugin/Disconnect"
 	ProviderPlugin_MockConnect_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/MockConnect"
 	ProviderPlugin_Shutdown_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/Shutdown"
 	ProviderPlugin_GetData_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/GetData"
@@ -38,6 +39,7 @@ type ProviderPluginClient interface {
 	Heartbeat(ctx context.Context, in *HeartbeatReq, opts ...grpc.CallOption) (*HeartbeatRes, error)
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
+	Disconnect(ctx context.Context, in *DisconnectReq, opts ...grpc.CallOption) (*DisconnectRes, error)
 	MockConnect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
 	Shutdown(ctx context.Context, in *ShutdownReq, opts ...grpc.CallOption) (*ShutdownRes, error)
 	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
@@ -73,6 +75,15 @@ func (c *providerPluginClient) ParseCLI(ctx context.Context, in *ParseCLIReq, op
 func (c *providerPluginClient) Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error) {
 	out := new(ConnectRes)
 	err := c.cc.Invoke(ctx, ProviderPlugin_Connect_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *providerPluginClient) Disconnect(ctx context.Context, in *DisconnectReq, opts ...grpc.CallOption) (*DisconnectRes, error) {
+	out := new(DisconnectRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_Disconnect_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +133,7 @@ type ProviderPluginServer interface {
 	Heartbeat(context.Context, *HeartbeatReq) (*HeartbeatRes, error)
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*ConnectRes, error)
+	Disconnect(context.Context, *DisconnectReq) (*DisconnectRes, error)
 	MockConnect(context.Context, *ConnectReq) (*ConnectRes, error)
 	Shutdown(context.Context, *ShutdownReq) (*ShutdownRes, error)
 	GetData(context.Context, *DataReq) (*DataRes, error)
@@ -141,6 +153,9 @@ func (UnimplementedProviderPluginServer) ParseCLI(context.Context, *ParseCLIReq)
 }
 func (UnimplementedProviderPluginServer) Connect(context.Context, *ConnectReq) (*ConnectRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
+}
+func (UnimplementedProviderPluginServer) Disconnect(context.Context, *DisconnectReq) (*DisconnectRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Disconnect not implemented")
 }
 func (UnimplementedProviderPluginServer) MockConnect(context.Context, *ConnectReq) (*ConnectRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MockConnect not implemented")
@@ -217,6 +232,24 @@ func _ProviderPlugin_Connect_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProviderPluginServer).Connect(ctx, req.(*ConnectReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProviderPlugin_Disconnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DisconnectReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).Disconnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_Disconnect_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).Disconnect(ctx, req.(*DisconnectReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -311,6 +344,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Connect",
 			Handler:    _ProviderPlugin_Connect_Handler,
+		},
+		{
+			MethodName: "Disconnect",
+			Handler:    _ProviderPlugin_Disconnect_Handler,
 		},
 		{
 			MethodName: "MockConnect",

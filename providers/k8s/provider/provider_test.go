@@ -16,13 +16,10 @@ import (
 
 func newTestService(t *testing.T, path string) (*Service, *plugin.ConnectRes) {
 	srv := &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 
-	callbacks := &providerCallbacks{
-		runtime: srv.runtimes[0],
-	}
+	callbacks := &providerCallbacks{}
 
 	resp, err := srv.Connect(&plugin.ConnectReq{
 		Asset: &inventory.Asset{

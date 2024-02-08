@@ -49,7 +49,7 @@ type Connection struct {
 }
 
 // func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
-func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
+func NewConnection(asset *inventory.Asset, opts ...Option) (shared.Connection, error) {
 	c := &Connection{
 		asset:     asset,
 		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
@@ -87,6 +87,10 @@ func NewConnection(id uint32, asset *inventory.Asset, opts ...Option) (shared.Co
 	}
 
 	return c, nil
+}
+
+func (c *Connection) SetID(id uint32) {
+	c.id = id
 }
 
 func (c *Connection) ServerVersion() *version.Info {

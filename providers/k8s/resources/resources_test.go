@@ -38,7 +38,7 @@ func TestManifestFiles(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run("k8s "+testCase.kind, func(t *testing.T) {
 			manifestFile := "../connection/shared/resources/testdata/" + testCase.kind + ".yaml"
-			conn, err := manifest.NewConnection(0, &inventory.Asset{
+			conn, err := manifest.NewConnection(&inventory.Asset{
 				Connections: []*inventory.Config{
 					{
 						Options: map[string]string{
@@ -130,7 +130,7 @@ func TestManifestFiles(t *testing.T) {
 
 func TestManifestFile_CustomResource(t *testing.T) {
 	manifestFile := "../connection/shared/resources/testdata/cr/tekton.yaml"
-	conn, err := manifest.NewConnection(0, &inventory.Asset{
+	conn, err := manifest.NewConnection(&inventory.Asset{
 		Connections: []*inventory.Config{
 			{
 				Options: map[string]string{
@@ -171,7 +171,7 @@ func TestManifestContentProvider(t *testing.T) {
 		data, err := os.ReadFile(manifestFile)
 		require.NoError(t, err)
 
-		conn, err := manifest.NewConnection(0, &inventory.Asset{
+		conn, err := manifest.NewConnection(&inventory.Asset{
 			Connections: []*inventory.Config{
 				{
 					Options: map[string]string{

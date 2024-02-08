@@ -87,10 +87,19 @@ message HeartbeatRes {
   
 }
 
+message DisconnectReq {
+  uint32 connection = 1;
+}
+
+message DisconnectRes {
+
+}
+
 service ProviderPlugin {
   rpc Heartbeat(HeartbeatReq) returns (HeartbeatRes);
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (ConnectRes);
+  rpc Disconnect(DisconnectReq) returns (DisconnectRes);
   rpc MockConnect(ConnectReq) returns (ConnectRes);
   rpc Shutdown(ShutdownReq) returns (ShutdownRes);
   rpc GetData(DataReq) returns (DataRes);

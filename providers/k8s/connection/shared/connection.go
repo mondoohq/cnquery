@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
 	v1 "k8s.io/api/core/v1"
@@ -29,6 +30,7 @@ const (
 type ConnectionType string
 
 type Connection interface {
+	plugin.Connection
 	ID() uint32
 	Name() string
 	Runtime() string
