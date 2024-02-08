@@ -6,10 +6,8 @@ package provider
 import (
 	"errors"
 	"net/url"
-	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
@@ -19,19 +17,16 @@ import (
 )
 
 const (
-	defaultConnection  uint32 = 1
-	HostConnectionType        = "host"
+	HostConnectionType = "host"
 )
 
 type Service struct {
-	plugin.Service
-	runtimes         map[uint32]*plugin.Runtime
-	lastConnectionID uint32
+	*plugin.Service
 }
 
 func Init() *Service {
 	return &Service{
-		runtimes: map[uint32]*plugin.Runtime{},
+		Service: plugin.NewService(),
 	}
 }
 
@@ -103,13 +98,6 @@ func parseTarget(target string) (string, int, string, string, error) {
 	return host, port, scheme, path, nil
 }
 
-// Shutdown is automatically called when the shell closes.
-// It is not necessary to implement this method.
-// If you want to do some cleanup, you can do it here.
-func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
-	return &plugin.ShutdownRes{}, nil
-}
-
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
 }
@@ -148,57 +136,60 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.HostConnection
-	var err error
 
-	switch conf.Type {
-	case HostConnectionType:
-		s.lastConnectionID++
-		conn = connection.NewHostConnection(s.lastConnectionID, asset, conf)
+	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+		var conn *connection.HostConnection
 
-	default:
-		// generic host connection, without anything else
-		s.lastConnectionID++
-		conn = connection.NewHostConnection(s.lastConnectionID, asset, conf)
-	}
+		switch conf.Type {
+		case HostConnectionType:
+			conn = connection.NewHostConnection(connId, asset, conf)
 
-	if conn.Conf.Options != nil && conn.Conf.Options["host"] != "" {
-		target := conn.Conf.Options["host"]
-		host, port, scheme, path, err := parseTarget(target)
-		if err != nil {
-			return nil, err
+		default:
+			// generic host connection, without anything else
+			conn = connection.NewHostConnection(connId, asset, conf)
 		}
-		conn.Conf.Host = host
-		conn.Conf.Path = path
-		conn.Conf.Port = int32(port)
-		conn.Conf.Runtime = scheme
-	}
 
+		if conn.Conf.Options != nil && conn.Conf.Options["host"] != "" {
+			target := conn.Conf.Options["host"]
+			host, port, scheme, path, err := parseTarget(target)
+			if err != nil {
+				return nil, err
+			}
+			conn.Conf.Host = host
+			conn.Conf.Path = path
+			conn.Conf.Port = int32(port)
+			conn.Conf.Runtime = scheme
+		}
+
+		conf.Backend = inventory.ProviderType_HOST
+		conf.Kind = inventory.DeprecatedV8_Kind_KIND_NETWORK
+
+		var upstream *upstream.UpstreamClient
+		var err error
+		if req.Upstream != nil && !req.Upstream.Incognito {
+			upstream, err = req.Upstream.InitClient()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		asset.Connections[0].Id = connId
+		return &plugin.Runtime{
+			Connection:     conn,
+			Callback:       callback,
+			HasRecording:   req.HasRecording,
+			CreateResource: resources.CreateResource,
+			NewResource:    resources.NewResource,
+			GetData:        resources.GetData,
+			SetData:        resources.SetData,
+			Upstream:       upstream,
+		}, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	conf.Backend = inventory.ProviderType_HOST
-	conf.Kind = inventory.DeprecatedV8_Kind_KIND_NETWORK
-
-	var upstream *upstream.UpstreamClient
-	if req.Upstream != nil && !req.Upstream.Incognito {
-		upstream, err = req.Upstream.InitClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	asset.Connections[0].Id = conn.ID()
-	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection:     conn,
-		Callback:       callback,
-		HasRecording:   req.HasRecording,
-		CreateResource: resources.CreateResource,
-		Upstream:       upstream,
-	}
-
-	return conn, err
+	return runtime.Connection.(*connection.HostConnection), nil
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection) error {
@@ -219,91 +210,4 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.HostConnection
 	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/network/host/" + conn.Conf.Runtime + conn.Conf.Host}
 
 	return nil
-}
-
-func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	args := plugin.PrimitiveArgsToRawDataArgs(req.Args, runtime)
-
-	if req.ResourceId == "" && req.Field == "" {
-		res, err := resources.NewResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, err
-		}
-
-		rd := llx.ResourceData(res, res.MqlName()).Result()
-		return &plugin.DataRes{
-			Data: rd.Data,
-		}, nil
-	}
-
-	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
-	if !ok {
-		// Note: Since resources are internally always created, there are only very
-		// few cases where we arrive here:
-		// 1. The caller is wrong. Possibly a mixup with IDs
-		// 2. The resource was loaded from a recording, but the field is not
-		// in the recording. Thus the resource was never created inside the
-		// plugin. We will attempt to create the resource and see if the field
-		// can be computed.
-		if !runtime.HasRecording {
-			return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
-		}
-
-		args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
-		if err != nil {
-			return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-
-		resource, err = resources.CreateResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-	}
-
-	return resources.GetData(resource, req.Field, args), nil
-}
-
-func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	var errs []string
-	for i := range req.Resources {
-		info := req.Resources[i]
-
-		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
-		if err != nil {
-			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
-			continue
-		}
-
-		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
-		if !ok {
-			resource, err = resources.CreateResource(runtime, info.Name, args)
-			if err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), creation failed: "+err.Error())
-				continue
-			}
-
-			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
-		}
-
-		for k, v := range args {
-			if err := resources.SetData(resource, k, v); err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
-			}
-		}
-	}
-
-	if len(errs) != 0 {
-		return nil, errors.New(strings.Join(errs, ", "))
-	}
-	return &plugin.StoreRes{}, nil
 }
