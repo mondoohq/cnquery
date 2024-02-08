@@ -97,6 +97,11 @@ func (s *mockProviderService) MockConnect(req *plugin.ConnectReq, callback plugi
 	return nil, errors.New("the mock provider does not support the mock connect call, this is an internal error")
 }
 
+func (s *mockProviderService) Disconnect(req *plugin.DisconnectReq) (*plugin.DisconnectRes, error) {
+	// Nothing to do yet...
+	return nil, nil
+}
+
 func (s *mockProviderService) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
 	// Nothing to do yet...
 	return nil, nil
