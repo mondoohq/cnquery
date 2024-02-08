@@ -16,7 +16,7 @@ import (
 func TestManifestFile_OutdatedApi(t *testing.T) {
 	manifestFile := "./testdata/nginx-deployment.yaml"
 
-	conn, err := manifest.NewConnection(&inventory.Asset{
+	conn, err := manifest.NewConnection(0, &inventory.Asset{
 		Connections: []*inventory.Config{
 			{
 				Options: map[string]string{
