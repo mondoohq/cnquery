@@ -34,8 +34,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/aws/aws-sdk-go v1.50.11 h1:BxUqMbkzKzzQ6FXLlZFNFkFjHnv6utbc4PItVs5SvaE=
-github.com/aws/aws-sdk-go v1.50.11/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.50.14 h1:m1bxKtd1lJpNnl+Owah0+UPRuS9f3GFvxBPgc8RiodE=
+github.com/aws/aws-sdk-go v1.50.14/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.24.1 h1:xAojnj+ktS95YZlDf0zxWBkbFtymPeDP+rvUQIH3uAU=
 github.com/aws/aws-sdk-go-v2 v1.24.1/go.mod h1:LNh45Br1YAkEKaAqvmE1m8FUx6a5b/V0oAKV7of29b4=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 h1:OCs21ST2LrepDfD3lwlQiOqIGp6JiEUqG84GzTDoyJs=
@@ -72,8 +72,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.36.0 h1:tRzTDe5E/dgGwJRR1cltj
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.36.0/go.mod h1:ZyywmYcQbdJcIh8YMwqkw18mkA6nuQ+Uj1ouT2rXTYQ=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2 h1:vQfCIHSDouEvbE4EuDrlCGKcrtABEqF3cMt61nGEV4g=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2/go.mod h1:3ToKMEhVj+Q+HzZ8Hqin6LdAKtsi3zVXVNUPpQMd+Xk=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.31.0 h1:Rk+Ft0Mu/eiNt2iJ2oS8Gf1h5m6q5crwS8cmlTylnvM=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.31.0/go.mod h1:jZNaJEtn9TLi3pfxycLz79HVkKxP8ZdYm92iaNFgBsA=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.32.0 h1:VdKYfVPIDzmfSQk5gOQ5uueKiuKMkJuB/KOXmQ9Ytag=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.32.0/go.mod h1:jZNaJEtn9TLi3pfxycLz79HVkKxP8ZdYm92iaNFgBsA=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.28.0 h1:ueiaIwSz96QKCX+xfb4dWC681xycSLybAFOz3X11U7s=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.28.0/go.mod h1:kHgLQLdLEqmcxQxDuGjz1naXvaUvBMMKolAJECBwYtw=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.44.0 h1:xMScFSSjA+YjDU8xAy9OYyCYiJxHkVDaMib59DU84UY=
@@ -90,8 +90,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7 h1:3iaT/LnGV6jNtbBkvHZDlzz7Ky3w
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7/go.mod h1:mtzCLxk6M+KZbkJdq3cUH9GCrudw8qCy5C3EHO+5vLc=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6 h1:h+r5/diSwztgKgxUrntt6AOI5lBYY0ZJv+yzeulGZSU=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6/go.mod h1:7+5MHFC52LC85xKCjCuWDHmIncOOvWnll10OT9EAN/g=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.38.1 h1:hfIWClwFGAv6s6HSqqf5AxCToWDkgWe3gC7j4n4Iiew=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.38.1/go.mod h1:kt+L4lMA2nvv9evq9S6TOH1up95/2RsQG4GXfxoPRfM=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.38.2 h1:0zOHU7fsdZtXqH5z64a9pxnF5J1vdcwhSH+M5XY8HE4=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.38.2/go.mod h1:kt+L4lMA2nvv9evq9S6TOH1up95/2RsQG4GXfxoPRfM=
 github.com/aws/aws-sdk-go-v2/service/efs v1.26.6 h1:D6KmHr8JzqwEDDzkiliqquKNxPNtzc6u6azp7vBFMO4=
 github.com/aws/aws-sdk-go-v2/service/efs v1.26.6/go.mod h1:1Ss53wQLr0q6wL6X4hyJCvPNhnvWPdcRHW4c5PLSass=
 github.com/aws/aws-sdk-go-v2/service/eks v1.37.1 h1:5eFw5vlZI2KOChY0DOWxsnuC6N01WC3ZUo5+lco9mN8=
@@ -102,8 +102,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.21.7 h1:+NF5RN/TOIg
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.21.7/go.mod h1:sU6vkcUDN8ovGGJaJstS6VoPdMe+kwd8jQROPfzcWq4=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.27.0 h1:r9eCNAMs0C4gjkod/p4dsb+ZMOQAkdjPuin9QUUcjmY=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.27.0/go.mod h1:7iQ5nRkEdgQWWOmaA+BBbe1pKX8/sceSO6NSNqVx/vk=
-github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.25.0 h1:LPEsYRsC6r3edPHO8KlZJNW0xxyfLHMXJ466MdHuBbQ=
-github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.25.0/go.mod h1:CAXUsQvYQVzsXO36npqK3aUlxx2xMSM1Dun3O9jnaEE=
+github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.26.0 h1:i1nMSlxQ9iv8GsQswdpZgGm4H1u5Dh4LskOigXKfVuU=
+github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.26.0/go.mod h1:CAXUsQvYQVzsXO36npqK3aUlxx2xMSM1Dun3O9jnaEE=
 github.com/aws/aws-sdk-go-v2/service/emr v1.36.1 h1:BY0OVsImWvwBKA2hAXF0RIty3PJTVkf2MwNlRgW+/og=
 github.com/aws/aws-sdk-go-v2/service/emr v1.36.1/go.mod h1:8kM2oNVgOxSUEAY8YjHErdSE3wZE/ImVDKgimJjayMY=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.36.2 h1:k4l7fTMNB4FVlqC5ca3VWxTT0bg7AEXqj83qWycxEH8=
@@ -128,8 +128,8 @@ github.com/aws/aws-sdk-go-v2/service/organizations v1.23.7 h1:T0Z9cyigEnMH2Kh2Op
 github.com/aws/aws-sdk-go-v2/service/organizations v1.23.7/go.mod h1:zzSVlzK+VeF1LDOyehPish9VlrWlJkMxEn4d+UV7FRQ=
 github.com/aws/aws-sdk-go-v2/service/rds v1.69.0 h1:vnB7v2ZiKOYOXcu1xamRx9OyPJW9daWXUbysKrY3V/A=
 github.com/aws/aws-sdk-go-v2/service/rds v1.69.0/go.mod h1:N/ijzTwR4cOG2P8Kvos/QOCetpDTtconhvDOheqnrTw=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.39.8 h1:oXLgjBNdlrQkcz8n2m5XJzJLsLmyDadJ1GVJRMh+db4=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.39.8/go.mod h1:FjYkfyM8Zq2ddSX2y1hb1rOhEERLzCTidT0VBQOKFss=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.40.0 h1:KCQHVbttjzcilQLvf/t6DVZR2IEvjVZbLdZNN2QsYSg=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.40.0/go.mod h1:FjYkfyM8Zq2ddSX2y1hb1rOhEERLzCTidT0VBQOKFss=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.48.1 h1:5XNlsBsEvBZBMO6p82y+sqpWg8j5aBCe+5C2GBFgqBQ=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.48.1/go.mod h1:4qXHrG1Ne3VGIMZPCB8OjH/pLFO94sKABIusjh0KWPU=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.42.0 h1:XfB7Qow6MXyO+yqTGgo9Ycjc7/wySk+HIE6kZ5f8p+0=
@@ -150,8 +150,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7 h1:QPMJf+Jw8E1l7zqhZmMlFw6w
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7/go.mod h1:ykf3COxYI0UJmxcfcxcVuz7b6uADi1FkiUz6Eb7AgM8=
 github.com/aws/aws-sdk-go-v2/service/sts v1.26.7 h1:NzO4Vrau795RkUdSHKEwiR01FaGzGOH1EETJ+5QHnm0=
 github.com/aws/aws-sdk-go-v2/service/sts v1.26.7/go.mod h1:6h2YuIoxaMSCFf5fi1EgZAwdfkGMgDY+DVfa61uLe4U=
-github.com/aws/aws-sdk-go-v2/service/wafv2 v1.43.6 h1:H4QZ6s2Wbqdh2wQhJi+uYf7Do+KBwN72+he8GVFDSPE=
-github.com/aws/aws-sdk-go-v2/service/wafv2 v1.43.6/go.mod h1:/yTIop9H+Sv62Klgo5kcXJbTlPeXjTFnvqhEdXzoW20=
+github.com/aws/aws-sdk-go-v2/service/wafv2 v1.44.0 h1:mx3v6vcKUKlAYQitQwOj6fChHTViSa4jCnDLVHWOfbg=
+github.com/aws/aws-sdk-go-v2/service/wafv2 v1.44.0/go.mod h1:/yTIop9H+Sv62Klgo5kcXJbTlPeXjTFnvqhEdXzoW20=
 github.com/aws/smithy-go v1.19.0 h1:KWFKQV80DpP3vJrrA9sVAHQ5gc2z8i4EzrLhLlWXcBM=
 github.com/aws/smithy-go v1.19.0/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240116161626-88cfadc80e8f h1:mM9Ic3+hujxWGfpEf3E0fp12Lu7Xg2u2YsNb9WeliZQ=
