@@ -70,6 +70,7 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 	}
 
 	conn := &DockerContainerConnection{
+		id:        id,
 		asset:     asset,
 		Client:    dockerClient,
 		container: conf.Host,

@@ -101,6 +101,7 @@ func NewStateConnection(id uint32, asset *inventory.Asset) (*Connection, error) 
 	}
 
 	return &Connection{
+		id:        id,
 		asset:     asset,
 		assetType: assetType,
 
