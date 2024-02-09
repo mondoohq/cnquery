@@ -46,10 +46,10 @@ var MODULE_EXAMPLES = regexp.MustCompile(`^.*/modules/.+/examples/.+`)
 func NewHclConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 	cc := asset.Connections[0]
 	path := cc.Options["path"]
-	return newHclConnection(path, asset)
+	return newHclConnection(id, path, asset)
 }
 
-func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) {
+func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 	// NOTE: right now we are only supporting to load either state, plan or hcl files but not at the same time
 	if len(asset.Connections) != 1 {
 		return nil, errors.New("only one connection is supported")
@@ -133,6 +133,7 @@ func newHclConnection(path string, asset *inventory.Asset) (*Connection, error) 
 	}
 
 	return &Connection{
+		id:        id,
 		asset:     asset,
 		assetType: assetType,
 
@@ -190,7 +191,7 @@ func NewHclGitConnection(id uint32, asset *inventory.Asset) (*Connection, error)
 	if err != nil {
 		return nil, err
 	}
-	conn, err := newHclConnection(path, asset)
+	conn, err := newHclConnection(id, path, asset)
 	if err != nil {
 		return nil, err
 	}
