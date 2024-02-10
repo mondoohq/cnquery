@@ -103,6 +103,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Access Approval documentation
+      url: https://cloud.google.com/assured-workloads/access-approval/docs
   gcp.essentialContact:
     fields:
       email: {}
@@ -116,6 +119,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Managing contacts for notifications
+      url: https://cloud.google.com/resource-manager/docs/managing-notification-contacts
   gcp.folder:
     fields:
       created: {}
@@ -131,6 +137,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Creating and managing Folders 
+      url: https://cloud.google.com/resource-manager/docs/creating-managing-folders
   gcp.folders:
     fields:
       children: {}
@@ -141,6 +150,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Creating and managing Folders 
+      url: https://cloud.google.com/resource-manager/docs/creating-managing-folders
   gcp.organization:
     fields:
       accessApprovalSettings: {}
@@ -155,6 +167,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Resource hierarchy 
+      url: https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy
   gcp.project:
     fields:
       accessApprovalSettings: {}
@@ -190,6 +205,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Creating and managing projects 
+      url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.project.apiKey:
     fields:
       annotations: {}
@@ -207,6 +225,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: API Keys Overview 
+      url: https://cloud.google.com/api-keys/docs/overview
   gcp.project.apiKey.restrictions:
     fields:
       androidKeyRestrictions: {}
@@ -220,6 +241,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Adding restrictions to API keys 
+      url: https://cloud.google.com/api-keys/docs/add-restrictions-api-keys
   gcp.project.bigqueryService:
     fields:
       datasets: {}
@@ -229,6 +253,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: BigQuery documentation 
+      url: https://cloud.google.com/bigquery/docs
   gcp.project.bigqueryService.dataset:
     fields:
       access: {}
@@ -250,6 +277,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Introduction to datasets 
+      url: https://cloud.google.com/bigquery/docs/datasets-intro
   gcp.project.bigqueryService.dataset.accessEntry:
     fields:
       datasetId: {}
@@ -265,6 +295,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Control access to resources 
+      url: https://cloud.google.com/bigquery/docs/control-access-to-resources-iam
   gcp.project.bigqueryService.model:
     fields:
       created: {}
@@ -284,6 +317,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Introduction to BigQuery ML 
+      url: https://cloud.google.com/bigquery/docs/bqml-introduction
   gcp.project.bigqueryService.routine:
     fields:
       created: {}
@@ -299,6 +335,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Manage routines 
+      url: https://cloud.google.com/bigquery/docs/routines
   gcp.project.bigqueryService.table:
     fields:
       clusteringFields: {}
@@ -331,6 +370,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Introduction to tables 
+      url: https://cloud.google.com/bigquery/docs/tables-intro
   gcp.project.cloudFunction:
     fields:
       availableMemoryMb: {}
@@ -371,6 +413,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Functions 
+      url: https://cloud.google.com/functions
   gcp.project.cloudRunService:
     fields:
       jobs: {}
@@ -383,6 +428,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: What is Cloud Run 
+      url: https://cloud.google.com/run/docs/overview/what-is-cloud-run
   gcp.project.cloudRunService.condition:
     fields:
       id: {}
@@ -396,6 +444,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Condition 
+      url: https://cloud.google.com/run/docs/reference/rest/v1/Condition
   gcp.project.cloudRunService.container:
     fields:
       args: {}
@@ -415,6 +466,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Container 
+      url: https://cloud.google.com/run/docs/reference/rest/v1/Container
   gcp.project.cloudRunService.container.probe:
     fields:
       failureThreshold: {}
@@ -429,6 +483,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Container 
+      url: https://cloud.google.com/run/docs/reference/rest/v1/Container
   gcp.project.cloudRunService.job:
     fields:
       annotations: {}
@@ -458,6 +515,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Run Jobs 
+      url: https://cloud.google.com/run/docs/overview/what-is-cloud-run#jobs
   gcp.project.cloudRunService.job.executionTemplate:
     fields:
       annotations: {}
@@ -471,6 +531,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create jobs 
+      url: https://cloud.google.com/run/docs/create-jobs
   gcp.project.cloudRunService.job.executionTemplate.taskTemplate:
     fields:
       containers: {}
@@ -489,6 +552,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create jobs 
+      url: https://cloud.google.com/run/docs/create-jobs
   gcp.project.cloudRunService.operation:
     fields:
       done: {}
@@ -532,6 +598,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Run services 
+      url: https://cloud.google.com/run/docs/resource-model#services
   gcp.project.cloudRunService.service.revisionTemplate:
     fields:
       annotations: {}
@@ -554,6 +623,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Rollbacks, gradual rollouts, and traffic migration  
+      url: https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration
   gcp.project.computeService:
     fields:
       addresses: {}
@@ -576,6 +648,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Compute Engine documentation
+      url: https://cloud.google.com/compute/docs
   gcp.project.computeService.address:
     fields:
       address: {}
@@ -601,6 +676,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: IP addresses
+      url: https://cloud.google.com/compute/docs/ip-addresses
   gcp.project.computeService.attachedDisk:
     fields:
       architecture: {}
@@ -623,6 +701,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About Persistent Disk
+      url: https://cloud.google.com/compute/docs/disks/persistent-disks
   gcp.project.computeService.backendService:
     fields:
       affinityCookieTtlSec: {}
@@ -663,6 +744,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Backend services overview
+      url: https://cloud.google.com/load-balancing/docs/backend-service
   gcp.project.computeService.backendService.backend:
     fields:
       balancingMode: {}
@@ -683,6 +767,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Backend services overview
+      url: https://cloud.google.com/load-balancing/docs/backend-service
   gcp.project.computeService.backendService.cdnPolicy:
     fields:
       bypassCacheOnRequestHeaders: {}
@@ -703,6 +790,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Backend services overview
+      url: https://cloud.google.com/load-balancing/docs/backend-service
   gcp.project.computeService.disk:
     fields:
       architecture: {}
@@ -727,6 +817,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Storage options
+      url: https://cloud.google.com/compute/docs/disks
   gcp.project.computeService.firewall:
     fields:
       allowed: {}
@@ -749,6 +842,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: VPC firewall rules
+      url: https://cloud.google.com/firewall/docs/firewalls
   gcp.project.computeService.forwardingRule:
     fields:
       allPorts: {}
@@ -783,6 +879,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Forwarding rules overview
+      url: https://cloud.google.com/load-balancing/docs/forwarding-rule-concepts
   gcp.project.computeService.image:
     fields:
       architecture: {}
@@ -802,6 +901,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: OS images
+      url: https://cloud.google.com/compute/docs/images
   gcp.project.computeService.instance:
     fields:
       canIpForward: {}
@@ -848,6 +950,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Virtual machine instances
+      url: https://cloud.google.com/compute/docs/instances
   gcp.project.computeService.machineType:
     fields:
       created: {}
@@ -866,6 +971,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Machine families resource and comparison guide
+      url: https://cloud.google.com/compute/docs/machine-resource
   gcp.project.computeService.network:
     fields:
       autoCreateSubnetworks: {}
@@ -888,6 +996,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create and manage VPC networks
+      url: https://cloud.google.com/vpc/docs/create-modify-vpc-networks
   gcp.project.computeService.region:
     fields:
       created: {}
@@ -902,6 +1013,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Regions and zones
+      url: https://cloud.google.com/compute/docs/regions-zones
   gcp.project.computeService.router:
     fields:
       bgp: {}
@@ -917,6 +1031,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Router overview
+      url: https://cloud.google.com/network-connectivity/docs/router/concepts/overview
   gcp.project.computeService.serviceaccount:
     fields:
       email: {}
@@ -926,6 +1043,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Service accounts
+      url: https://cloud.google.com/compute/docs/access/service-accounts
   gcp.project.computeService.snapshot:
     fields:
       architecture: {}
@@ -949,6 +1069,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About archive and standard disk snapshots
+      url: https://cloud.google.com/compute/docs/disks/snapshots
   gcp.project.computeService.subnetwork:
     fields:
       created: {}
@@ -978,6 +1101,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create and manage VPC networks
+      url: https://cloud.google.com/vpc/docs/create-modify-vpc-networks
   gcp.project.computeService.subnetwork.logConfig:
     fields:
       aggregationInterval: {}
@@ -992,6 +1118,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create and manage VPC networks
+      url: https://cloud.google.com/vpc/docs/create-modify-vpc-networks
   gcp.project.computeService.zone:
     fields:
       created: {}
@@ -1004,6 +1133,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Regions and zones
+      url: https://cloud.google.com/compute/docs/regions-zones
   gcp.project.dataprocService:
     fields:
       clusters: {}
@@ -1015,6 +1147,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Dataproc documentation
+      url: https://cloud.google.com/dataproc/docs#docs
   gcp.project.dataprocService.cluster:
     fields:
       config: {}
@@ -1031,6 +1166,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config:
     fields:
       autoscaling: {}
@@ -1055,6 +1193,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config.gceCluster:
     fields:
       confidentialInstance: {}
@@ -1078,6 +1219,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity:
     fields:
       consumeReservationType: {}
@@ -1089,6 +1233,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig:
     fields:
       enableIntegrityMonitoring: {}
@@ -1100,6 +1247,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config.gkeCluster:
     fields:
       gkeClusterTarget: {}
@@ -1110,6 +1260,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: GKE cluster architecture
+      url: https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture
   gcp.project.dataprocService.cluster.config.instance:
     fields:
       accelerators: {}
@@ -1129,6 +1282,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.config.instance.diskConfig:
     fields:
       bootDiskSizeGb: {}
@@ -1153,6 +1309,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.status:
     fields:
       detail: {}
@@ -1165,6 +1324,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dataprocService.cluster.virtualClusterConfig:
     fields:
       auxiliaryServices: {}
@@ -1176,6 +1338,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a cluster
+      url: https://cloud.google.com/dataproc/docs/guides/create-cluster
   gcp.project.dnsService:
     fields:
       managedZones: {}
@@ -1186,6 +1351,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud DNS overview
+      url: https://cloud.google.com/dns/docs/overview/
   gcp.project.dnsService.managedzone:
     fields:
       created: {}
@@ -1204,6 +1372,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: DNS zones overview
+      url: https://cloud.google.com/dns/docs/zones
   gcp.project.dnsService.policy:
     fields:
       description: {}
@@ -1219,6 +1390,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: DNS policies overview
+      url: https://cloud.google.com/dns/docs/policies-overview
   gcp.project.dnsService.recordset:
     fields:
       name: {}
@@ -1232,6 +1406,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: DNS records overview
+      url: https://cloud.google.com/dns/docs/records-overview
   gcp.project.gkeService:
     fields:
       clusters: {}
@@ -1241,6 +1418,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: GKE overview
+      url: https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview
   gcp.project.gkeService.cluster:
     fields:
       addonsConfig: {}
@@ -1281,6 +1461,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About cluster configuration choices
+      url: https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters
   gcp.project.gkeService.cluster.addonsConfig:
     fields:
       cloudRunConfig: {}
@@ -1319,6 +1502,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Plan the required IP address allotment
+      url: https://cloud.google.com/kubernetes-engine/docs/best-practices/networking#plan-ip-allotment
   gcp.project.gkeService.cluster.networkConfig:
     fields:
       datapathProvider: {}
@@ -1338,6 +1524,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Best practices for GKE networking
+      url: https://cloud.google.com/kubernetes-engine/docs/best-practices/networking
   gcp.project.gkeService.cluster.nodepool:
     fields:
       config: {}
@@ -1355,6 +1544,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools
   gcp.project.gkeService.cluster.nodepool.config:
     fields:
       accelerators: {}
@@ -1390,6 +1582,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools
   gcp.project.gkeService.cluster.nodepool.config.accelerator:
     fields:
       count: {}
@@ -1402,6 +1597,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Run GPUs in GKE Standard node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
   gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig:
     fields:
       id: {}
@@ -1412,6 +1610,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Run GPUs in GKE Standard node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/gpus
   gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures:
     fields:
       id: {}
@@ -1421,6 +1622,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.confidentialNodes:
     fields:
       enabled: {}
@@ -1430,6 +1634,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.gcfsConfig:
     fields:
       enabled: {}
@@ -1439,6 +1646,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.gvnicConfig:
     fields:
       enabled: {}
@@ -1448,6 +1658,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.kubeletConfig:
     fields:
       cpuCfsQuotaPeriod: {}
@@ -1459,6 +1672,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig:
     fields:
       id: {}
@@ -1468,6 +1684,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.nodeTaint:
     fields:
       effect: {}
@@ -1488,6 +1707,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig:
     fields:
       enableIntegrityMonitoring: {}
@@ -1498,6 +1720,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.networkConfig:
     fields:
       id: {}
@@ -1509,6 +1734,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig:
     fields:
       id: {}
@@ -1518,6 +1746,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Add and manage node pools
+      url: https://cloud.google.com/kubernetes-engine/docs/how-to/node-pools
   gcp.project.iamService:
     fields:
       projectId: {}
@@ -1527,6 +1758,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: IAM overview
+      url: https://cloud.google.com/iam/docs/overview
   gcp.project.iamService.serviceAccount:
     fields:
       description: {}
@@ -1543,6 +1777,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Identities for workloads
+      url: https://cloud.google.com/iam/docs/workload-identities
   gcp.project.iamService.serviceAccount.key:
     fields:
       disabled: {}
@@ -1557,6 +1794,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create and delete service account keys
+      url: https://cloud.google.com/iam/docs/keys-create-delete
   gcp.project.kmsService:
     fields:
       keyrings: {}
@@ -1567,6 +1807,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud KMS resources
+      url: https://cloud.google.com/kms/docs/resource-hierarchy
   gcp.project.kmsService.keyring:
     fields:
       created: {}
@@ -1580,6 +1823,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.kmsService.keyring.cryptokey:
     fields:
       created: {}
@@ -1601,6 +1847,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.kmsService.keyring.cryptokey.version:
     fields:
       algorithm: {}
@@ -1623,6 +1872,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.kmsService.keyring.cryptokey.version.attestation:
     fields:
       certificateChains: {}
@@ -1633,6 +1885,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains:
     fields:
       caviumCerts: {}
@@ -1644,6 +1899,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions:
     fields:
       cryptoKeyVersionName: {}
@@ -1654,6 +1912,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Create a key ring
+      url: https://cloud.google.com/kms/docs/create-key-ring
   gcp.project.loggingservice:
     fields:
       buckets: {}
@@ -1665,6 +1926,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Logging overview
+      url: https://cloud.google.com/logging/docs/overview
   gcp.project.loggingservice.bucket:
     fields:
       cmekSettings: {}
@@ -1683,6 +1947,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Logging overview
+      url: https://cloud.google.com/logging/docs/overview
   gcp.project.loggingservice.bucket.indexConfig:
     fields:
       created: {}
@@ -1694,6 +1961,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Logging overview
+      url: https://cloud.google.com/logging/docs/overview
   gcp.project.loggingservice.metric:
     fields:
       alertPolicies: {}
@@ -1706,6 +1976,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Logging overview
+      url: https://cloud.google.com/logging/docs/overview
   gcp.project.loggingservice.sink:
     fields:
       destination: {}
@@ -1720,6 +1993,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Logging overview
+      url: https://cloud.google.com/logging/docs/overview
   gcp.project.monitoringService:
     fields:
       alertPolicies: {}
@@ -1729,6 +2005,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud Monitoring overview
+      url: https://cloud.google.com/monitoring/docs/monitoring-overview
   gcp.project.monitoringService.alertPolicy:
     fields:
       alertStrategy: {}
@@ -1751,6 +2030,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Alerting overview
+      url: https://cloud.google.com/monitoring/alerts
   gcp.project.pubsubService:
     fields:
       projectId: {}
@@ -1762,6 +2044,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Alerting overview
+      url: https://cloud.google.com/monitoring/alerts
   gcp.project.pubsubService.snapshot:
     fields:
       expiration: {}
@@ -1773,6 +2058,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Overview of the Pub/Sub service
+      url: https://cloud.google.com/pubsub/docs/pubsub-basics
   gcp.project.pubsubService.subscription:
     fields:
       config: {}
@@ -1783,6 +2071,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Overview of the Pub/Sub service
+      url: https://cloud.google.com/pubsub/docs/pubsub-basics
   gcp.project.pubsubService.subscription.config:
     fields:
       ackDeadline: {}
@@ -1799,6 +2090,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Subscription overview
+      url: https://cloud.google.com/pubsub/docs/subscription-overview
   gcp.project.pubsubService.subscription.config.pushconfig:
     fields:
       attributes: {}
@@ -1809,6 +2103,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Push subscriptions
+      url: https://cloud.google.com/pubsub/docs/push
   gcp.project.pubsubService.topic:
     fields:
       config: {}
@@ -1819,6 +2116,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Monitor topics within Pub/Sub
+      url: https://cloud.google.com/pubsub/docs/monitor-topic
   gcp.project.pubsubService.topic.config:
     fields:
       kmsKeyName: {}
@@ -1831,6 +2131,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Monitor topics within Pub/Sub
+      url: https://cloud.google.com/pubsub/docs/monitor-topic
   gcp.project.pubsubService.topic.config.messagestoragepolicy:
     fields:
       allowedPersistenceRegions: {}
@@ -1840,6 +2143,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Monitor topics within Pub/Sub
+      url: https://cloud.google.com/pubsub/docs/monitor-topic
   gcp.project.sqlService:
     fields:
       instances: {}
@@ -1849,6 +2155,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance:
     fields:
       availableMaintenanceVersions: {}
@@ -1881,6 +2190,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.database:
     fields:
       charset: {}
@@ -1894,6 +2206,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.ipMapping:
     fields:
       id: {}
@@ -1905,6 +2220,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.settings:
     fields:
       activationPolicy: {}
@@ -1941,6 +2259,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.settings.backupconfiguration:
     fields:
       backupRetentionSettings: {}
@@ -1956,6 +2277,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.settings.denyMaintenancePeriod:
     fields:
       endDate: {}
@@ -1967,6 +2291,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.settings.ipConfiguration:
     fields:
       allocatedIpRange: {}
@@ -1991,6 +2318,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.sqlService.instance.settings.passwordValidationPolicy:
     fields:
       complexity: {}
@@ -2005,6 +2335,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Cloud SQL overview
+      url: https://cloud.google.com/sql/docs/introduction
   gcp.project.storageService:
     fields:
       buckets: {}
@@ -2014,6 +2347,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Product overview of Cloud Storage
+      url: https://cloud.google.com/storage/docs/introduction
   gcp.project.storageService.bucket:
     fields:
       created: {}
@@ -2034,6 +2370,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: About Cloud Storage buckets
+      url: https://cloud.google.com/storage/docs/buckets
   gcp.projects:
     fields:
       children: {}
@@ -2044,6 +2383,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Creating and managing projects 
+      url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.recommendation:
     fields:
       additionalImpact: {}
@@ -2062,6 +2404,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Recommendations 
+      url: https://cloud.google.com/recommender/docs/key-concepts
   gcp.resourcemanager.binding:
     fields:
       id: {}
@@ -2072,6 +2417,9 @@ resources:
     platform:
       name:
       - gcp
+    refs:
+    - title: Creating and managing projects 
+      url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.service:
     fields:
       enabled: {}
