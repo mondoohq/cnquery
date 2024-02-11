@@ -93,6 +93,19 @@ func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Pri
 	return mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
 }
 
+func (ctx *tester) TestQueryPWithError(t *testing.T, query string, props map[string]*llx.Primitive) ([]*llx.RawResult, error) {
+	t.Helper()
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile code: %w", err)
+	}
+	err = mqlc.Invariants.Check(bundle)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check invariants: %w", err)
+	}
+	return ctx.TestMqlc(t, bundle, props), nil
+}
+
 func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
@@ -347,6 +360,18 @@ func (ctx *tester) TestNoErrorsNonEmpty(t *testing.T, tests []SimpleTest) {
 }
 
 func (ctx *tester) TestSimpleErrors(t *testing.T, tests []SimpleTest) {
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.Code, func(t *testing.T) {
+			res := ctx.TestQuery(t, cur.Code)
+			assert.NotEmpty(t, res)
+			assert.Equal(t, cur.Expectation, res[cur.ResultIndex].Result().Error)
+			assert.Nil(t, res[cur.ResultIndex].Data.Value)
+		})
+	}
+}
+
+func (ctx *tester) TestCompileErrors(t *testing.T, tests []SimpleTest) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.Code, func(t *testing.T) {

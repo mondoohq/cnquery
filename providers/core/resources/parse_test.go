@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
 )
@@ -44,6 +45,45 @@ func TestParse_Date(t *testing.T) {
 			Expectation: &simpleDate,
 		},
 	})
+}
+
+func TestParse_DateError(t *testing.T) {
+	tests := []testutils.SimpleTest{
+		{
+			Code:        "parse.date('2023-12-23T00:00:00Z', 1234)", // handle invalid format
+			ResultIndex: 0,
+			Expectation: "failed to compile code: Incorrect type on argument 1 in parse.date: expected string, got: int",
+		},
+		{
+			Code:        "parse.date(123456)", // handle invalid timestamp format
+			ResultIndex: 0,
+			Expectation: "failed to compile code: Incorrect type on argument 0 in parse.date: expected string, got: int",
+		},
+		{
+			Code:        "dict = { 'x': 'y'}; parse.date(dict)", // handle invalid input that is a dict
+			ResultIndex: 0,
+			Expectation: "failed to compile code: Incorrect type on argument 0 in parse.date: expected string, got: map[string]string",
+		},
+		{
+			Code:        "parse.date(mondoo.jobEnvironment)", // handle invalid input that is a dict and cannot be handled during compile time
+			ResultIndex: 0,
+			Expectation: "failed to parse time, timestamp needs to be a string",
+		},
+	}
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.Code, func(t *testing.T) {
+			res, err := x.TestQueryPWithError(t, cur.Code, nil)
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
+			if res != nil && res[0].Data.Error != nil {
+				errMsg = res[0].Data.Error.Error()
+			}
+			assert.Equal(t, cur.Expectation, errMsg)
+		})
+	}
 }
 
 func TestParse_Duration(t *testing.T) {
