@@ -256,16 +256,25 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		return nil, rref, err
 	}
 
+	timestamp, ok := args[0].(string)
+	if !ok {
+		return nil, 0, errors.New("failed to parse time, timestamp needs to be a string")
+	}
+
 	var format string
 	if len(args) >= 2 {
-		format = args[1].(string)
+		format, ok = args[1].(string)
+		if !ok {
+			return nil, 0, errors.New("provided time format is not provided as string")
+		}
+		format = strings.ToLower(format)
 		if f, ok := timeFormats[format]; ok {
 			format = f
 		}
 	}
 
 	if format != "" {
-		parsed, err := time.Parse(format, args[0].(string))
+		parsed, err := time.Parse(format, timestamp)
 		if err != nil {
 			return nil, 0, errors.New("failed to parse time: " + err.Error())
 		}
@@ -275,7 +284,7 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	// Note: Yes, this approach is much slower than giving us a hint
 	// about which time format is used.
 	for _, format := range defaultTimeFormatsOrder {
-		parsed, err := time.Parse(format, args[0].(string))
+		parsed, err := time.Parse(format, timestamp)
 		if err != nil {
 			continue
 		}
