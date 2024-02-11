@@ -7,14 +7,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
 	"go.mondoo.com/cnquery/v10/types"
-
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
@@ -82,56 +80,23 @@ func (g *mqlGcpProjectStorageService) buckets() ([]interface{}, error) {
 	}
 
 	res := make([]interface{}, 0, len(buckets.Items))
-	for _, bucket := range buckets.Items {
+	for i := range buckets.Items {
+		bucket := buckets.Items[i]
 		created := parseTime(bucket.TimeCreated)
 		updated := parseTime(bucket.Updated)
 
-		iamConfigurationDict := map[string]interface{}{}
-
-		if bucket.IamConfiguration != nil {
-			iamConfiguration := bucket.IamConfiguration
-
-			if iamConfiguration.BucketPolicyOnly != nil {
-				var parsedLockTime time.Time
-				if iamConfiguration.BucketPolicyOnly.LockedTime != "" {
-					parsedLockTime, err = time.Parse(time.RFC3339, iamConfiguration.BucketPolicyOnly.LockedTime)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				iamConfigurationDict["BucketPolicyOnly"] = map[string]interface{}{
-					"enabled":    iamConfiguration.BucketPolicyOnly.Enabled,
-					"lockedTime": parsedLockTime,
-				}
-			}
-
-			if iamConfiguration.UniformBucketLevelAccess != nil {
-				var parsedLockTime time.Time
-				if iamConfiguration.UniformBucketLevelAccess.LockedTime != "" {
-					parsedLockTime, err = time.Parse(time.RFC3339, iamConfiguration.UniformBucketLevelAccess.LockedTime)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				iamConfigurationDict["UniformBucketLevelAccess"] = map[string]interface{}{
-					"enabled":    iamConfiguration.UniformBucketLevelAccess.Enabled,
-					"lockedTime": parsedLockTime,
-				}
-			}
-
-			iamConfigurationDict["publicAccessPrevention"] = iamConfiguration.PublicAccessPrevention
+		var iamConfigurationDict map[string]interface{}
+		iamConfigurationDict, err = convert.JsonToDict(bucket.IamConfiguration)
+		if err != nil {
+			return nil, err
 		}
 
-		var retentionPolicy interface{}
-		if bucket.RetentionPolicy != nil {
-			retentionPolicy = map[string]interface{}{
-				"retentionPeriod": bucket.RetentionPolicy.RetentionPeriod,
-				"effectiveTime":   parseTime(bucket.RetentionPolicy.EffectiveTime),
-				"isLocked":        bucket.RetentionPolicy.IsLocked,
-			}
+		var retentionPolicy map[string]interface{}
+		retentionPolicy, err = convert.JsonToDict(bucket.RetentionPolicy)
+		if err != nil {
+			return nil, err
 		}
+
 		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
 			"id":               llx.StringData(bucket.Id),
 			"projectId":        llx.StringData(projectId),

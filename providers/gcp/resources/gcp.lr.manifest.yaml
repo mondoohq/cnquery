@@ -138,7 +138,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Creating and managing Folders 
+    - title: Creating and managing Folders
       url: https://cloud.google.com/resource-manager/docs/creating-managing-folders
   gcp.folders:
     fields:
@@ -151,7 +151,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Creating and managing Folders 
+    - title: Creating and managing Folders
       url: https://cloud.google.com/resource-manager/docs/creating-managing-folders
   gcp.organization:
     fields:
@@ -168,7 +168,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Resource hierarchy 
+    - title: Resource hierarchy
       url: https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy
   gcp.project:
     fields:
@@ -206,7 +206,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Creating and managing projects 
+    - title: Creating and managing projects
       url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.project.apiKey:
     fields:
@@ -226,7 +226,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: API Keys Overview 
+    - title: API Keys Overview
       url: https://cloud.google.com/api-keys/docs/overview
   gcp.project.apiKey.restrictions:
     fields:
@@ -242,7 +242,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Adding restrictions to API keys 
+    - title: Adding restrictions to API keys
       url: https://cloud.google.com/api-keys/docs/add-restrictions-api-keys
   gcp.project.bigqueryService:
     fields:
@@ -254,7 +254,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: BigQuery documentation 
+    - title: BigQuery documentation
       url: https://cloud.google.com/bigquery/docs
   gcp.project.bigqueryService.dataset:
     fields:
@@ -278,7 +278,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Introduction to datasets 
+    - title: Introduction to datasets
       url: https://cloud.google.com/bigquery/docs/datasets-intro
   gcp.project.bigqueryService.dataset.accessEntry:
     fields:
@@ -296,7 +296,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Control access to resources 
+    - title: Control access to resources
       url: https://cloud.google.com/bigquery/docs/control-access-to-resources-iam
   gcp.project.bigqueryService.model:
     fields:
@@ -318,7 +318,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Introduction to BigQuery ML 
+    - title: Introduction to BigQuery ML
       url: https://cloud.google.com/bigquery/docs/bqml-introduction
   gcp.project.bigqueryService.routine:
     fields:
@@ -336,7 +336,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Manage routines 
+    - title: Manage routines
       url: https://cloud.google.com/bigquery/docs/routines
   gcp.project.bigqueryService.table:
     fields:
@@ -371,7 +371,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Introduction to tables 
+    - title: Introduction to tables
       url: https://cloud.google.com/bigquery/docs/tables-intro
   gcp.project.cloudFunction:
     fields:
@@ -414,7 +414,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Cloud Functions 
+    - title: Cloud Functions
       url: https://cloud.google.com/functions
   gcp.project.cloudRunService:
     fields:
@@ -429,7 +429,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: What is Cloud Run 
+    - title: What is Cloud Run
       url: https://cloud.google.com/run/docs/overview/what-is-cloud-run
   gcp.project.cloudRunService.condition:
     fields:
@@ -445,7 +445,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Condition 
+    - title: Condition
       url: https://cloud.google.com/run/docs/reference/rest/v1/Condition
   gcp.project.cloudRunService.container:
     fields:
@@ -467,7 +467,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Container 
+    - title: Container
       url: https://cloud.google.com/run/docs/reference/rest/v1/Container
   gcp.project.cloudRunService.container.probe:
     fields:
@@ -484,7 +484,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Container 
+    - title: Container
       url: https://cloud.google.com/run/docs/reference/rest/v1/Container
   gcp.project.cloudRunService.job:
     fields:
@@ -516,7 +516,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Cloud Run Jobs 
+    - title: Cloud Run Jobs
       url: https://cloud.google.com/run/docs/overview/what-is-cloud-run#jobs
   gcp.project.cloudRunService.job.executionTemplate:
     fields:
@@ -532,7 +532,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Create jobs 
+    - title: Create jobs
       url: https://cloud.google.com/run/docs/create-jobs
   gcp.project.cloudRunService.job.executionTemplate.taskTemplate:
     fields:
@@ -553,7 +553,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Create jobs 
+    - title: Create jobs
       url: https://cloud.google.com/run/docs/create-jobs
   gcp.project.cloudRunService.operation:
     fields:
@@ -599,7 +599,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Cloud Run services 
+    - title: Cloud Run services
       url: https://cloud.google.com/run/docs/resource-model#services
   gcp.project.cloudRunService.service.revisionTemplate:
     fields:
@@ -624,7 +624,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Rollbacks, gradual rollouts, and traffic migration  
+    - title: Rollbacks, gradual rollouts, and traffic migration
       url: https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration
   gcp.project.computeService:
     fields:
@@ -2384,7 +2384,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Creating and managing projects 
+    - title: Creating and managing projects
       url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.recommendation:
     fields:
@@ -2405,7 +2405,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Recommendations 
+    - title: Recommendations
       url: https://cloud.google.com/recommender/docs/key-concepts
   gcp.resourcemanager.binding:
     fields:
@@ -2418,7 +2418,7 @@ resources:
       name:
       - gcp
     refs:
-    - title: Creating and managing projects 
+    - title: Creating and managing projects
       url: https://cloud.google.com/resource-manager/docs/creating-managing-projects
   gcp.service:
     fields:
