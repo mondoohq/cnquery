@@ -54,6 +54,10 @@ func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*Conne
 	return m.client.Connect(context.Background(), req)
 }
 
+func (m *GRPCClient) Disconnect(req *DisconnectReq) (*DisconnectRes, error) {
+	return m.client.Disconnect(context.Background(), req)
+}
+
 func (m *GRPCClient) MockConnect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error) {
 	m.connect(req, callback)
 	return m.client.MockConnect(context.Background(), req)
@@ -98,6 +102,10 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 
 	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
 	return m.Impl.Connect(req, a)
+}
+
+func (m *GRPCServer) Disconnect(ctx context.Context, req *DisconnectReq) (*DisconnectRes, error) {
+	return m.Impl.Disconnect(req)
 }
 
 func (m *GRPCServer) MockConnect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {

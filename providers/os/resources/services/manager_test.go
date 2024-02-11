@@ -13,7 +13,7 @@ import (
 )
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
@@ -30,7 +30,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},
@@ -47,7 +47,7 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerDragonflybsd5(t *testing.T) {
-	mock, err := mock.New("./testdata/dragonfly5.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/dragonfly5.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "dragonflybsd",
 			Family: []string{"unix"},
@@ -64,7 +64,7 @@ func TestManagerDragonflybsd5(t *testing.T) {
 }
 
 func TestManagerOpenBsd6(t *testing.T) {
-	mock, err := mock.New("./testdata/openbsd6.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/openbsd6.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "openbsd",
 			Family: []string{"unix"},
@@ -81,7 +81,7 @@ func TestManagerOpenBsd6(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.New("./testdata/windows2019.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/windows2019.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "windows",
 			Family: []string{"windows"},
@@ -98,7 +98,7 @@ func TestManagerWindows(t *testing.T) {
 }
 
 func TestManagerUbuntu2204(t *testing.T) {
-	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "ubuntu",
 			Version: "22.04",
@@ -116,7 +116,7 @@ func TestManagerUbuntu2204(t *testing.T) {
 }
 
 func TestManagerPhoton(t *testing.T) {
-	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/photon.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "photon",
 			Version: "8.1.10",

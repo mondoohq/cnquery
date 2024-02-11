@@ -4,8 +4,9 @@
 package packages_test
 
 import (
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"testing"
+
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
@@ -23,7 +24,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 		},
 	}
 
-	mock, err := mock.New("./testdata/packages_apk.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_apk.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +118,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.New("./testdata/updates_apk.toml", nil)
+	mock, err := mock.New(0, "./testdata/updates_apk.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -6,11 +6,12 @@ package packages_test
 import (
 	"bytes"
 	"fmt"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,7 @@ import (
 )
 
 func TestRedhat7Parser(t *testing.T) {
-	mock, err := mock.New("./testdata/packages_redhat7.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_redhat7.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +104,7 @@ func TestRedhat7Parser(t *testing.T) {
 }
 
 func TestRedhat6Parser(t *testing.T) {
-	mock, err := mock.New("./testdata/packages_redhat6.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_redhat6.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +178,7 @@ func TestRedhat6Parser(t *testing.T) {
 func TestPhoton4ImageParser(t *testing.T) {
 	// to create this test file, run the following command:
 	// mondoo scan docker image photon:4.0 --record
-	mock, err := mock.New("./testdata/packages_photon_image.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_photon_image.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

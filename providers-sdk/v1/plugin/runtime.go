@@ -18,12 +18,22 @@ type Runtime struct {
 	Callback       ProviderCallback
 	HasRecording   bool
 	CreateResource CreateNamedResource
+	NewResource    NewResource
+	GetData        GetData
+	SetData        SetData
 	Upstream       *upstream.UpstreamClient
 }
 
-type Connection interface{}
+type Connection interface {
+	ID() uint32
+}
 
-type CreateNamedResource func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)
+type (
+	CreateNamedResource func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)
+	NewResource         func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)
+	GetData             func(resource Resource, field string, args map[string]*llx.RawData) *DataRes
+	SetData             func(resource Resource, field string, val *llx.RawData) error
+)
 
 type Resource interface {
 	MqlID() string

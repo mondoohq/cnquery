@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseOpenbsdServicesRunning(t *testing.T) {
-	mock, err := mock.New("./testdata/openbsd6.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/openbsd6.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name: "openbsd",
 		},

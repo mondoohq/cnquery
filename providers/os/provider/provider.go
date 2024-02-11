@@ -29,15 +29,12 @@ import (
 )
 
 type Service struct {
-	plugin.Service
-	runtimes         map[uint32]*plugin.Runtime
-	lastConnectionID uint32
+	*plugin.Service
 }
 
 func Init() *Service {
 	return &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 }
 
@@ -282,19 +279,6 @@ func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCa
 	}, nil
 }
 
-// Shutdown is automatically called when the shell closes.
-// It is not necessary to implement this method.
-// If you want to do some cleanup, you can do it here.
-func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
-	for i := range s.runtimes {
-		runtime := s.runtimes[i]
-		if x, ok := runtime.Connection.(*connection.TarConnection); ok {
-			x.CloseFN()
-		}
-	}
-	return &plugin.ShutdownRes{}, nil
-}
-
 func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.Connection, error) {
 	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
@@ -302,246 +286,158 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn shared.Connection
-	var err error
 
-	switch conf.Type {
-	case shared.Type_Local.String():
-		s.lastConnectionID++
-		conn = local.NewConnection(s.lastConnectionID, conf, asset)
+	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+		var conn shared.Connection
+		var err error
 
-		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-		if err == nil {
-			asset.Name = fingerprint.Name
-			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-		}
+		switch conf.Type {
+		case shared.Type_Local.String():
+			conn = local.NewConnection(connId, conf, asset)
 
-	case shared.Type_SSH.String():
-		s.lastConnectionID++
-		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-
-		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-		if err == nil {
-			if conn.Asset().Connections[0].Runtime != "vagrant" {
-				asset.Name = fingerprint.Name
-			}
-			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-		}
-
-	case shared.Type_Winrm.String():
-		s.lastConnectionID++
-		conn, err = connection.NewWinrmConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-
-		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-		if err == nil {
-			asset.Name = fingerprint.Name
-			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-		}
-
-	case shared.Type_Tar.String():
-		s.lastConnectionID++
-		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-
-		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-		if err == nil {
-			asset.Name = fingerprint.Name
-			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-		}
-
-	case shared.Type_DockerSnapshot.String():
-		s.lastConnectionID++
-		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-
-		fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
-		if err == nil {
-			asset.Name = fingerprint.Name
-			asset.PlatformIds = fingerprint.PlatformIDs
-			asset.IdDetector = fingerprint.ActiveIdDetectors
-		}
-
-	case shared.Type_Vagrant.String():
-		s.lastConnectionID++
-		conn, err = connection.NewVagrantConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-		// We need to detect the platform for the connection asset here, because
-		// this platform information will be used to determine the package manager
-		err := s.detect(conn.Asset(), conn)
-		if err != nil {
-			return nil, err
-		}
-
-	case shared.Type_DockerImage.String():
-		s.lastConnectionID++
-		conn, err = connection.NewDockerContainerImageConnection(s.lastConnectionID, conf, asset)
-
-	case shared.Type_DockerContainer.String():
-		s.lastConnectionID++
-		conn, err = connection.NewDockerEngineContainer(s.lastConnectionID, conf, asset)
-
-	case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
-		s.lastConnectionID++
-		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
-
-	case shared.Type_RegistryImage.String():
-		s.lastConnectionID++
-		conn, err = connection.NewContainerRegistryImage(s.lastConnectionID, conf, asset)
-
-	case shared.Type_FileSystem.String():
-		s.lastConnectionID++
-		conn, err = fs.NewConnection(s.lastConnectionID, conf, asset)
-		if err != nil {
-			return nil, err
-		}
-		// This is a workaround to set Google COS platform IDs when scanned from inside k8s
-		pID, err := conn.(*fs.FileSystemConnection).Identifier()
-		if err != nil {
 			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
 			}
-		} else {
-			// In this case asset.Name should already be set via the inventory
-			asset.PlatformIds = []string{pID}
+
+		case shared.Type_SSH.String():
+			conn, err = connection.NewSshConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+
+			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			if err == nil {
+				if conn.Asset().Connections[0].Runtime != "vagrant" {
+					asset.Name = fingerprint.Name
+				}
+				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.IdDetector = fingerprint.ActiveIdDetectors
+			}
+
+		case shared.Type_Winrm.String():
+			conn, err = connection.NewWinrmConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+
+			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			if err == nil {
+				asset.Name = fingerprint.Name
+				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.IdDetector = fingerprint.ActiveIdDetectors
+			}
+
+		case shared.Type_Tar.String():
+			conn, err = connection.NewTarConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+
+			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			if err == nil {
+				asset.Name = fingerprint.Name
+				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.IdDetector = fingerprint.ActiveIdDetectors
+			}
+
+		case shared.Type_DockerSnapshot.String():
+			conn, err = connection.NewDockerSnapshotConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+
+			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			if err == nil {
+				asset.Name = fingerprint.Name
+				asset.PlatformIds = fingerprint.PlatformIDs
+				asset.IdDetector = fingerprint.ActiveIdDetectors
+			}
+
+		case shared.Type_Vagrant.String():
+			conn, err = connection.NewVagrantConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+			// We need to detect the platform for the connection asset here, because
+			// this platform information will be used to determine the package manager
+			err := s.detect(conn.Asset(), conn)
+			if err != nil {
+				return nil, err
+			}
+
+		case shared.Type_DockerImage.String():
+			conn, err = connection.NewDockerContainerImageConnection(connId, conf, asset)
+
+		case shared.Type_DockerContainer.String():
+			conn, err = connection.NewDockerEngineContainer(connId, conf, asset)
+
+		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
+			conn, err = connection.NewContainerRegistryImage(connId, conf, asset)
+
+		case shared.Type_RegistryImage.String():
+			conn, err = connection.NewContainerRegistryImage(connId, conf, asset)
+
+		case shared.Type_FileSystem.String():
+			conn, err = fs.NewConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+			// This is a workaround to set Google COS platform IDs when scanned from inside k8s
+			pID, err := conn.(*fs.FileSystemConnection).Identifier()
+			if err != nil {
+				fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+				if err == nil {
+					asset.Name = fingerprint.Name
+					asset.PlatformIds = fingerprint.PlatformIDs
+					asset.IdDetector = fingerprint.ActiveIdDetectors
+				}
+			} else {
+				// In this case asset.Name should already be set via the inventory
+				asset.PlatformIds = []string{pID}
+			}
+
+		// Do not expose mock connection as a supported type
+		case "mock":
+			conn, err = mock.New(connId, "", asset)
+
+		default:
+			return nil, errors.New("cannot find connection type " + conf.Type)
 		}
 
-	// Do not expose mock connection as a supported type
-	case "mock":
-		s.lastConnectionID++
-		conn, err = mock.New("", asset)
+		if err != nil {
+			return nil, err
+		}
 
-	default:
-		return nil, errors.New("cannot find connection type " + conf.Type)
-	}
+		var upstream *upstream.UpstreamClient
+		if req.Upstream != nil && !req.Upstream.Incognito {
+			upstream, err = req.Upstream.InitClient()
+			if err != nil {
+				return nil, err
+			}
+		}
 
+		conf.Id = connId
+		conf.Capabilities = conn.Capabilities().String()
+
+		return &plugin.Runtime{
+			Connection:     conn,
+			Callback:       callback,
+			HasRecording:   req.HasRecording,
+			CreateResource: resources.CreateResource,
+			NewResource:    resources.NewResource,
+			GetData:        resources.GetData,
+			SetData:        resources.SetData,
+			Upstream:       upstream,
+		}, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	var upstream *upstream.UpstreamClient
-	if req.Upstream != nil && !req.Upstream.Incognito {
-		upstream, err = req.Upstream.InitClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	conf.Id = conn.ID()
-	conf.Capabilities = conn.Capabilities().String()
-
-	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection:     conn,
-		Callback:       callback,
-		HasRecording:   req.HasRecording,
-		CreateResource: resources.CreateResource,
-		Upstream:       upstream,
-	}
-
-	return conn, err
-}
-
-func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	args := plugin.PrimitiveArgsToRawDataArgs(req.Args, runtime)
-
-	if req.ResourceId == "" && req.Field == "" {
-		res, err := resources.NewResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, err
-		}
-
-		rd := llx.ResourceData(res, res.MqlName()).Result()
-		return &plugin.DataRes{
-			Data: rd.Data,
-		}, nil
-	}
-
-	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
-	if !ok {
-		// Note: Since resources are internally always created, there are only very
-		// few cases where we arrive here:
-		// 1. The caller is wrong. Possibly a mixup with IDs
-		// 2. The resource was loaded from a recording, but the field is not
-		// in the recording. Thus the resource was never created inside the
-		// plugin. We will attempt to create the resource and see if the field
-		// can be computed.
-		if !runtime.HasRecording {
-			return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
-		}
-
-		args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
-		if err != nil {
-			return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-
-		resource, err = resources.CreateResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-	}
-
-	return resources.GetData(resource, req.Field, args), nil
-}
-
-func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	var errs []string
-	for i := range req.Resources {
-		info := req.Resources[i]
-
-		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
-		if err != nil {
-			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
-			continue
-		}
-
-		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
-		if !ok {
-			resource, err = resources.CreateResource(runtime, info.Name, args)
-			if err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), creation failed: "+err.Error())
-				continue
-			}
-
-			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
-		} else {
-			if err := resources.SetAllData(resource, args); err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
-			}
-		}
-	}
-
-	if len(errs) != 0 {
-		return nil, errors.New(strings.Join(errs, ", "))
-	}
-	return &plugin.StoreRes{}, nil
+	return runtime.Connection.(shared.Connection), nil
 }
 
 func (s *Service) discoverRegistry(conn *connection.TarConnection) (*inventory.Inventory, error) {

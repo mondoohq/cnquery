@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseUpstartServicesRunning(t *testing.T) {
-	mock, err := mock.New("./testdata/ubuntu1404.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/ubuntu1404.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"linux", "ubuntu"},

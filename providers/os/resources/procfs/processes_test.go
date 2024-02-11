@@ -12,7 +12,7 @@ import (
 )
 
 func TestParseProcessStatus(t *testing.T) {
-	trans, err := mock.New("./testdata/process-pid1.toml", nil)
+	trans, err := mock.New(0, "./testdata/process-pid1.toml", nil)
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/status")
@@ -27,7 +27,7 @@ func TestParseProcessStatus(t *testing.T) {
 }
 
 func TestParseProcessCmdline(t *testing.T) {
-	trans, err := mock.New("./testdata/process-pid1.toml", nil)
+	trans, err := mock.New(0, "./testdata/process-pid1.toml", nil)
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/cmdline")

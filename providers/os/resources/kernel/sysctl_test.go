@@ -12,7 +12,7 @@ import (
 )
 
 func TestSysctlDebian(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", nil)
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("/sbin/sysctl -a")
@@ -26,7 +26,7 @@ func TestSysctlDebian(t *testing.T) {
 }
 
 func TestSysctlMacos(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", nil)
+	mock, err := mock.New(0, "./testdata/osx.toml", nil)
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")
@@ -40,7 +40,7 @@ func TestSysctlMacos(t *testing.T) {
 }
 
 func TestSysctlFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", nil)
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", nil)
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")

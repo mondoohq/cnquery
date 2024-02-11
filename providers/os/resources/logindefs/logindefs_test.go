@@ -13,7 +13,7 @@ import (
 )
 
 func TestLoginDefsParser(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", nil)
 	require.NoError(t, err)
 
 	f, err := mock.FileSystem().Open("/etc/login.defs")

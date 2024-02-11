@@ -22,6 +22,10 @@ var PluginMap = map[string]plugin.Plugin{
 	"provider": &ProviderPluginImpl{},
 }
 
+type Closer interface {
+	Close()
+}
+
 type ProviderCallback interface {
 	Collect(req *DataRes) error
 	GetRecording(req *DataReq) (*ResourceData, error)
@@ -33,6 +37,7 @@ type ProviderPlugin interface {
 	Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error)
 	ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
+	Disconnect(req *DisconnectReq) (*DisconnectRes, error)
 	MockConnect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
 	Shutdown(req *ShutdownReq) (*ShutdownRes, error)
 	GetData(req *DataReq) (*DataRes, error)

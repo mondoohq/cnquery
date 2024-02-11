@@ -14,7 +14,7 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"linux", "unix"},
 		},
@@ -30,7 +30,7 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix", "darwin"},
 		},
@@ -46,7 +46,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Family: []string{"unix", "freebsd"},
 		},
@@ -62,7 +62,7 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 // func TestManagerWindows(t *testing.T) {
-//  mock, err := mock.New("./testdata/windows.toml")
+//  mock, err := mock.New(0, "./testdata/windows.toml")
 // 	require.NoError(t, err)
 // 	m, err := motor.New(mock)
 // 	require.NoError(t, err)

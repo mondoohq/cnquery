@@ -16,7 +16,7 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/winrm.toml")
-	p, err := mock.New(filepath, nil)
+	p, err := mock.New(0, filepath, nil)
 	require.NoError(t, err)
 
 	catfs := cat.New(p)

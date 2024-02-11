@@ -16,7 +16,7 @@ import (
 )
 
 func TestMountLinuxParser(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"linux"}},
 	})
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestMountLinuxParser(t *testing.T) {
 }
 
 func TestMountMacosParser(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"unix"}},
 	})
 	require.NoError(t, err)
@@ -71,7 +71,7 @@ func TestMountMacosParser(t *testing.T) {
 }
 
 func TestMountFreeBsdParser(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"unix"}},
 	})
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func TestMountFreeBsdParser(t *testing.T) {
 }
 
 func TestProcModulesParser(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{Family: []string{"linux"}},
 	})
 	require.NoError(t, err)

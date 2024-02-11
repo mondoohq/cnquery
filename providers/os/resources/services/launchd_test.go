@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},

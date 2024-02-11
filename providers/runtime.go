@@ -62,13 +62,28 @@ type shutdownResult struct {
 }
 
 func (r *Runtime) tryShutdown() shutdownResult {
+	for _, provider := range r.providers {
+		if provider.Connection == nil {
+			continue
+		}
+		_, err := provider.Instance.Plugin.Disconnect(&plugin.DisconnectReq{Connection: provider.Connection.Id})
+		if err != nil {
+			if status, ok := status.FromError(err); ok {
+				if status.Code() == 12 {
+					log.Warn().Msg("please update the provider plugin for " + provider.Instance.Name)
+					continue
+				}
+			}
+			log.Error().Msg("failed to disconnect from provider " + provider.Instance.Name)
+		}
+	}
+
 	// Ephemeral runtimes have their primary provider be ephemeral, i.e. non-shared.
 	// All other providers are shared and will not be shut down from within the provider.
 	if r.isEphemeral {
 		err := r.coordinator.Stop(r.Provider.Instance, true)
 		return shutdownResult{Error: err}
 	}
-
 	return shutdownResult{}
 }
 

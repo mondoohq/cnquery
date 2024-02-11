@@ -26,6 +26,7 @@ type Connection struct {
 // func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
 func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Connection, error) {
 	c := &Connection{
+		id:        id,
 		asset:     asset,
 		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}

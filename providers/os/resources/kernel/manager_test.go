@@ -13,7 +13,7 @@ import (
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "debian",
 			Version: "8.0",
@@ -31,7 +31,7 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerCentos(t *testing.T) {
-	mock, err := mock.New("./testdata/centos7.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/centos7.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "centos",
 			Version: "6.10",
@@ -57,7 +57,7 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerAmazonLinux1(t *testing.T) {
-	mock, err := mock.New("./testdata/amznlinux1.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/amznlinux1.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "amazonlinux",
 			Version: "2018.03",
@@ -83,7 +83,7 @@ func TestManagerAmazonLinux1(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "macos",
 			Family: []string{"unix", "darwin"},
@@ -108,7 +108,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},

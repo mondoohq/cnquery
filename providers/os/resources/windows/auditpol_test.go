@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseAuditpol(t *testing.T) {
-	mock, err := mock.New("./testdata/auditpol.toml", nil)
+	mock, err := mock.New(0, "./testdata/auditpol.toml", nil)
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("auditpol /get /category:* /r")

@@ -12,7 +12,7 @@ import (
 )
 
 func TestParseDsclListResult(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", nil)
+	mock, err := mock.New(0, "./testdata/osx.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,7 +15,7 @@ import (
 )
 
 func TestSystemSetup(t *testing.T) {
-	mock, err := mock.New("./testdata/systemsetup.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/systemsetup.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:    "macos",
 			Version: "13.0",

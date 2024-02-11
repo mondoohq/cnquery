@@ -13,7 +13,7 @@ import (
 )
 
 func TestParseBsdInit(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "freebsd",
 			Family: []string{"unix"},

@@ -5,9 +5,9 @@ package provider
 
 import (
 	"errors"
-	"github.com/rs/zerolog/log"
 	"strconv"
-	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
@@ -30,15 +30,12 @@ const (
 )
 
 type Service struct {
-	plugin.Service
-	runtimes         map[uint32]*plugin.Runtime
-	lastConnectionID uint32
+	*plugin.Service
 }
 
 func Init() *Service {
 	return &Service{
-		runtimes:         map[uint32]*plugin.Runtime{},
-		lastConnectionID: 0,
+		Service: plugin.NewService(),
 	}
 }
 
@@ -101,18 +98,6 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return &res, nil
 }
 
-// Shutdown is automatically called when the shell closes.
-// It is not necessary to implement this method.
-// If you want to do some cleanup, you can do it here.
-func (s *Service) Shutdown(req *plugin.ShutdownReq) (*plugin.ShutdownRes, error) {
-	for _, runtime := range s.runtimes {
-		if conn, ok := runtime.Connection.(*connection.Connection); ok {
-			conn.Close()
-		}
-	}
-	return &plugin.ShutdownRes{}, nil
-}
-
 func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	return nil, errors.New("mock connect not yet implemented")
 }
@@ -149,145 +134,63 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 	asset := req.Asset
 	conf := asset.Connections[0]
-	var conn *connection.Connection
-	var err error
 
-	switch conf.Type {
-	case HclConnectionType:
-		s.lastConnectionID++
-		conn, err = connection.NewHclConnection(s.lastConnectionID, asset)
-		if err != nil {
-			return nil, err
-		}
+	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+		var conn *connection.Connection
+		var err error
 
-	case StateConnectionType:
-		s.lastConnectionID++
-		conn, err = connection.NewStateConnection(s.lastConnectionID, asset)
-		if err != nil {
-			return nil, err
-		}
-
-	case PlanConnectionType:
-		s.lastConnectionID++
-		conn, err = connection.NewPlanConnection(s.lastConnectionID, asset)
-		if err != nil {
-			return nil, err
-		}
-
-	case HclGitConnectionType:
-		s.lastConnectionID++
-		conn, err = connection.NewHclGitConnection(s.lastConnectionID, asset)
-		if err != nil {
-			return nil, err
-		}
-
-	default:
-		return nil, errors.New("cannot find connection type " + conf.Type)
-	}
-
-	var upstream *upstream.UpstreamClient
-	if req.Upstream != nil && !req.Upstream.Incognito {
-		upstream, err = req.Upstream.InitClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	asset.Connections[0].Id = conn.ID()
-	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection:     conn,
-		Callback:       callback,
-		HasRecording:   req.HasRecording,
-		CreateResource: resources.CreateResource,
-		Upstream:       upstream,
-	}
-
-	return conn, err
-}
-
-func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	args := plugin.PrimitiveArgsToRawDataArgs(req.Args, runtime)
-
-	if req.ResourceId == "" && req.Field == "" {
-		res, err := resources.NewResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, err
-		}
-
-		rd := llx.ResourceData(res, res.MqlName()).Result()
-		return &plugin.DataRes{
-			Data: rd.Data,
-		}, nil
-	}
-
-	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
-	if !ok {
-		// Note: Since resources are internally always created, there are only very
-		// few cases where we arrive here:
-		// 1. The caller is wrong. Possibly a mixup with IDs
-		// 2. The resource was loaded from a recording, but the field is not
-		// in the recording. Thus the resource was never created inside the
-		// plugin. We will attempt to create the resource and see if the field
-		// can be computed.
-		if !runtime.HasRecording {
-			return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
-		}
-
-		args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
-		if err != nil {
-			return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-
-		resource, err = resources.CreateResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-	}
-
-	return resources.GetData(resource, req.Field, args), nil
-}
-
-func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	runtime, ok := s.runtimes[req.Connection]
-	if !ok {
-		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
-	}
-
-	var errs []string
-	for i := range req.Resources {
-		info := req.Resources[i]
-
-		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
-		if err != nil {
-			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
-			continue
-		}
-
-		resource, ok := runtime.Resources.Get(info.Name + "\x00" + info.Id)
-		if !ok {
-			resource, err = resources.CreateResource(runtime, info.Name, args)
+		switch conf.Type {
+		case HclConnectionType:
+			conn, err = connection.NewHclConnection(connId, asset)
 			if err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), creation failed: "+err.Error())
-				continue
+				return nil, err
 			}
 
-			runtime.Resources.Set(info.Name+"\x00"+info.Id, resource)
+		case StateConnectionType:
+			conn, err = connection.NewStateConnection(connId, asset)
+			if err != nil {
+				return nil, err
+			}
+
+		case PlanConnectionType:
+			conn, err = connection.NewPlanConnection(connId, asset)
+			if err != nil {
+				return nil, err
+			}
+
+		case HclGitConnectionType:
+			conn, err = connection.NewHclGitConnection(connId, asset)
+			if err != nil {
+				return nil, err
+			}
+
+		default:
+			return nil, errors.New("cannot find connection type " + conf.Type)
 		}
 
-		for k, v := range args {
-			if err := resources.SetData(resource, k, v); err != nil {
-				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
+		var upstream *upstream.UpstreamClient
+		if req.Upstream != nil && !req.Upstream.Incognito {
+			upstream, err = req.Upstream.InitClient()
+			if err != nil {
+				return nil, err
 			}
 		}
+
+		asset.Connections[0].Id = conn.ID()
+		return &plugin.Runtime{
+			Connection:     conn,
+			Callback:       callback,
+			HasRecording:   req.HasRecording,
+			CreateResource: resources.CreateResource,
+			NewResource:    resources.NewResource,
+			GetData:        resources.GetData,
+			SetData:        resources.SetData,
+			Upstream:       upstream,
+		}, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	if len(errs) != 0 {
-		return nil, errors.New(strings.Join(errs, ", "))
-	}
-	return &plugin.StoreRes{}, nil
+	return runtime.Connection.(*connection.Connection), nil
 }

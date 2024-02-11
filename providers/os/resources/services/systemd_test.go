@@ -45,7 +45,7 @@ Nov 03 06:51:44 mondoopad avahi-daemon[1219]: Registering new address record for
 }
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.New("./testdata/ubuntu2204.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/ubuntu2204.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"ubuntu", "linux"},
@@ -76,8 +76,9 @@ func TestParseServiceSystemDUnitFiles(t *testing.T) {
 	assert.Equal(t, "cryptdisks", m[30].Name, "service name detected")
 	assert.Equal(t, true, m[30].Masked, "service is masked")
 }
+
 func TestParseServiceSystemDUnitFilesPhoton(t *testing.T) {
-	mock, err := mock.New("./testdata/photon.toml", &inventory.Asset{
+	mock, err := mock.New(0, "./testdata/photon.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "photon",
 			Family: []string{"redhat", "linux"},

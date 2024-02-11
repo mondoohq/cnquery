@@ -15,7 +15,7 @@ import (
 
 func TestRebootLinux(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_reboot.toml")
-	provider, err := mock.New(filepath, &inventory.Asset{
+	provider, err := mock.New(0, filepath, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"linux", "debian", "ubuntu"},
@@ -31,7 +31,7 @@ func TestRebootLinux(t *testing.T) {
 
 func TestNoRebootLinux(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/ubuntu_noreboot.toml")
-	provider, err := mock.New(filepath, &inventory.Asset{
+	provider, err := mock.New(0, filepath, &inventory.Asset{
 		Platform: &inventory.Platform{
 			Name:   "ubuntu",
 			Family: []string{"linux", "debian", "ubuntu"},

@@ -12,7 +12,7 @@ import (
 )
 
 func TestGuidWindows(t *testing.T) {
-	provider, err := mock.New("./testdata/guid_windows.toml", nil)
+	provider, err := mock.New(0, "./testdata/guid_windows.toml", nil)
 	require.NoError(t, err)
 
 	lid := WinIdProvider{connection: provider}
