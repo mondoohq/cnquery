@@ -33,6 +33,16 @@ func TestParse_Date(t *testing.T) {
 			ResultIndex: 0,
 			Expectation: &simpleDate,
 		},
+		{
+			Code:        "parse.date('2023-12-23T00:00:00Z', 'rfc3339')",
+			ResultIndex: 0,
+			Expectation: &simpleDate,
+		},
+		{
+			Code:        "parse.date('2023-12-23T00:00:00Z', 'RFC3339')", // ensure the format finding is case-insensitive
+			ResultIndex: 0,
+			Expectation: &simpleDate,
+		},
 	})
 }
 

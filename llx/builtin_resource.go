@@ -259,6 +259,7 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	var format string
 	if len(args) >= 2 {
 		format = args[1].(string)
+		format = strings.ToLower(format)
 		if f, ok := timeFormats[format]; ok {
 			format = f
 		}
