@@ -183,7 +183,10 @@ func (s Status) RenderCliStatus() {
 		log.Warn().Err(err).Msg("failed to get provider info")
 	}
 	log.Info().Msg("Installed Providers:\t" + strings.Join(installed, " | "))
-	log.Info().Msg("Outdated Providers:\t" + strings.Join(outdated, " | "))
+
+	if len(outdated) > 0 {
+		log.Info().Msg("Outdated Providers:\t" + strings.Join(outdated, " | "))
+	}
 
 	log.Info().Msg("API ConnectionConfig:\t" + s.Upstream.API.Endpoint)
 	log.Info().Msg("API Status:\t\t" + s.Upstream.API.Status)
@@ -253,7 +256,7 @@ func getProviders() ([]string, []string, error) {
 		if err != nil {
 			continue
 		}
-		if latestVersion != provider.Version {
+		if latestVersion != provider.Version && provider.Name != "core" {
 			outdated = append(outdated, provider.Name)
 		}
 	}
