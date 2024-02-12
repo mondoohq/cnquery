@@ -12,7 +12,8 @@ import (
 )
 
 type TestConnection struct {
-	id uint32
+	id       uint32
+	parentId *uint32
 }
 
 func newTestConnection(id uint32) *TestConnection {
@@ -21,6 +22,10 @@ func newTestConnection(id uint32) *TestConnection {
 
 func (c *TestConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *TestConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 type TestConnectionWithClose struct {
