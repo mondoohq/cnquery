@@ -18,11 +18,12 @@ const (
 )
 
 type ConfluenceConnection struct {
-	id     uint32
-	Conf   *inventory.Config
-	asset  *inventory.Asset
-	client *confluence.Client
-	name   string
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	client   *confluence.Client
+	name     string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ConfluenceConnection, error) {
@@ -59,9 +60,12 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetUserAgent("curl/7.54.0")
 
 	_, response, err := client.Label.Get(context.Background(), "test", "page", 0, 50)
+	if err != nil {
+		return nil, err
+	}
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
@@ -71,6 +75,9 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		asset:  asset,
 		client: client,
 		name:   host,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	return conn, nil
@@ -82,6 +89,10 @@ func (c *ConfluenceConnection) Name() string {
 
 func (c *ConfluenceConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *ConfluenceConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *ConfluenceConnection) Asset() *inventory.Asset {

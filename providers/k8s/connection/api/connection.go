@@ -129,10 +129,6 @@ func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*re
 		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}, CurrentContext: context}).ClientConfig()
 }
 
-func (c *Connection) SetID(id uint32) {
-	c.id = id
-}
-
 func (c *Connection) ID() uint32 {
 	return c.id
 }

@@ -11,6 +11,7 @@ type ConnectionType string
 
 type Connection interface {
 	ID() uint32
+	ParentID() *uint32
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset

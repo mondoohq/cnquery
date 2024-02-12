@@ -18,11 +18,12 @@ const (
 )
 
 type AdminConnection struct {
-	id     uint32
-	Conf   *inventory.Config
-	asset  *inventory.Asset
-	client *admin.Client
-	name   string
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	client   *admin.Client
+	name     string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AdminConnection, error) {
@@ -56,6 +57,9 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		client: client,
 		name:   "admin.atlassian.com",
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	return conn, nil
 }
@@ -66,6 +70,10 @@ func (c *AdminConnection) Name() string {
 
 func (c *AdminConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *AdminConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *AdminConnection) Asset() *inventory.Asset {

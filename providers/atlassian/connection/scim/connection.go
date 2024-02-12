@@ -19,11 +19,12 @@ const (
 )
 
 type ScimConnection struct {
-	id     uint32
-	Conf   *inventory.Config
-	asset  *inventory.Asset
-	client *admin.Client
-	name   string
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	client   *admin.Client
+	name     string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
@@ -50,7 +51,7 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	_, response, _ := client.SCIM.Schema.User(context.Background(), conf.Options["directory-id"])
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
@@ -62,6 +63,9 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		client: client,
 		name:   name,
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	return conn, nil
 }
@@ -72,6 +76,10 @@ func (c *ScimConnection) Name() string {
 
 func (c *ScimConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *ScimConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *ScimConnection) Asset() *inventory.Asset {
