@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type Plan struct {
@@ -214,9 +215,9 @@ func NewPlanConnection(id uint32, asset *inventory.Asset) (*Connection, error) {
 	}
 
 	return &Connection{
-		id:        id,
-		asset:     asset,
-		assetType: assetType,
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		assetType:  assetType,
 
 		plan: &tfPlan,
 	}, nil

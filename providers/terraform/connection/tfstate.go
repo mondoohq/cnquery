@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 // This is designed around https://www.terraform.io/internals/json-format
@@ -101,9 +102,9 @@ func NewStateConnection(id uint32, asset *inventory.Asset) (*Connection, error) 
 	}
 
 	return &Connection{
-		id:        id,
-		asset:     asset,
-		assetType: assetType,
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		assetType:  assetType,
 
 		state: &tfState,
 	}, nil
