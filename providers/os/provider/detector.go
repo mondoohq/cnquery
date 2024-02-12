@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
@@ -111,6 +112,9 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		}
 	}
 
+	// First sort the platform IDs and then call Compact, because Compact removes only consecutive duplicates
+	slices.Sort(asset.PlatformIds)
+	asset.PlatformIds = slices.Compact(asset.PlatformIds)
 	return nil
 }
 
