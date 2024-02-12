@@ -7,7 +7,7 @@ option go_package = "go.mondoo.com/cnquery/v10/providers/vsphere/resources"
 // vSphere asset resource
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
-  cpes() []core.cpe
+  cpes() []cpe
   // Advisory & vulnerability report
   // Will be deprecated in version 10.0; Full advisory & vulnerability report  
   // use vulnmgmt instead
