@@ -29,8 +29,8 @@ func init() {
 	rootCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
 	rootCmd.Flags().StringP("output", "o", "providers/builtin_dev.go", "output go-file for builtin dev providers")
 
-	configureProvidersCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
-	rootCmd.AddCommand(configureProvidersCmd)
+	editProvidersCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
+	rootCmd.AddCommand(editProvidersCmd)
 }
 
 func main() {
@@ -85,8 +85,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var configureProvidersCmd = &cobra.Command{
-	Use:   "configure-providers NAME1 NAME2 [-f config]",
+var editProvidersCmd = &cobra.Command{
+	Use:   "edit-providers NAME1 NAME2 [-f config]",
 	Short: "adds a provider to the config",
 	Run: func(cmd *cobra.Command, args []string) {
 		confPath, err := cmd.Flags().GetString("file")
@@ -109,10 +109,8 @@ var configureProvidersCmd = &cobra.Command{
 			log.Warn().Strs("providers", conf.Builtin).Msg("overwrite existing providers in config")
 		}
 
-		for i := range args {
-			conf.Builtin = append(conf.Builtin, args[i])
-		}
-
+		// set new providers
+		conf.Builtin = args
 		slices.Sort(conf.Builtin)
 		conf.Builtin = slices.Compact(conf.Builtin)
 
