@@ -31,7 +31,6 @@ type ConnectionType string
 
 type Connection interface {
 	plugin.Connection
-	ID() uint32
 	Name() string
 	Runtime() string
 

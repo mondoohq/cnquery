@@ -5,13 +5,13 @@ package shared
 
 import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
 
 type Connection interface {
-	ID() uint32
-	ParentID() *uint32
+	plugin.Connection
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
