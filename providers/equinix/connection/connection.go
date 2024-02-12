@@ -23,9 +23,10 @@ const (
 )
 
 type EquinixConnection struct {
-	id    uint32
-	Conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
 	// custom connection fields
 	client       *packngo.Client
 	resourceType ResourceType
@@ -39,6 +40,9 @@ func NewEquinixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 		Conf:  conf,
 		id:    id,
 		asset: asset,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	// if a secret was provided, it always overrides the env variable since it has precedence
@@ -116,6 +120,10 @@ func (c *EquinixConnection) Name() string {
 
 func (c *EquinixConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *EquinixConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *EquinixConnection) Asset() *inventory.Asset {
