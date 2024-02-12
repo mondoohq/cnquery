@@ -28,6 +28,7 @@ import (
 
 type Connection struct {
 	id                 uint32
+	parentId           *uint32
 	asset              *inventory.Asset
 	d                  *resources.Discovery
 	config             *rest.Config
@@ -107,6 +108,9 @@ func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.
 		namespace:          asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 		currentClusterName: currentClusterName,
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		res.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	return &res, nil
 }
@@ -131,6 +135,10 @@ func (c *Connection) SetID(id uint32) {
 
 func (c *Connection) ID() uint32 {
 	return c.id
+}
+
+func (c *Connection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *Connection) Runtime() string {

@@ -19,16 +19,19 @@ import (
 type Connection struct {
 	shared.ManifestParser
 	id        uint32
+	parentId  *uint32
 	asset     *inventory.Asset
 	namespace string
 }
 
-// func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
 func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Connection, error) {
 	c := &Connection{
 		id:        id,
 		asset:     asset,
 		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		c.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	admission, err := base64.StdEncoding.DecodeString(data)
@@ -69,6 +72,10 @@ func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, erro
 
 func (c *Connection) ID() uint32 {
 	return c.id
+}
+
+func (c *Connection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *Connection) Runtime() string {

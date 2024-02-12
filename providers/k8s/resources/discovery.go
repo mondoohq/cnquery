@@ -304,6 +304,8 @@ func discoverPods(
 		if err != nil {
 			return nil, err
 		}
+		inv := invConfig.Clone(inventory.WithoutDiscovery())
+		inv.ParentConnectionId = invConfig.Id
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "pod", pod.Namespace.Data, pod.Name.Data, pod.Uid.Data),
@@ -311,7 +313,7 @@ func discoverPods(
 			Name:        pod.Namespace.Data + "/" + pod.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{inv}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(pod.obj)
