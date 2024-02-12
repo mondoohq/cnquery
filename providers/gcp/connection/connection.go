@@ -30,9 +30,10 @@ const (
 )
 
 type GcpConnection struct {
-	id    uint32
-	Conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
 	// custom connection fields
 	resourceType ResourceType
 	resourceID   string
@@ -47,6 +48,9 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		Conf:  conf,
 		id:    id,
 		asset: asset,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	// initialize connection
@@ -120,6 +124,10 @@ func (c *GcpConnection) Name() string {
 
 func (c *GcpConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *GcpConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *GcpConnection) Asset() *inventory.Asset {
