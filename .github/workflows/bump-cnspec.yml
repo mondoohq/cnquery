@@ -1,0 +1,19 @@
+name: Trigger cnquery bump in cnspec
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  trigger-cnspec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger cnquery bump in cnspec
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.RELEASR_ACTION_TOKEN }}
+          repository: "mondoohq/cnspec"
+          event-type: update-cnquery
+          client-payload: '{
+              "version": "${{  github.ref_name }}"
+            }'
