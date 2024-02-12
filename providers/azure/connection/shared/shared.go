@@ -11,6 +11,7 @@ type ConnectionType string
 
 type AzureConnection interface {
 	ID() uint32
+	ParentID() *uint32
 	Name() string
 	Type() ConnectionType
 	Config() *inventory.Config

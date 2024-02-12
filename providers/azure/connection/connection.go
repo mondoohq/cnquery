@@ -22,10 +22,11 @@ const (
 )
 
 type AzureConnection struct {
-	id    uint32
-	Conf  *inventory.Config
-	asset *inventory.Asset
-	token azcore.TokenCredential
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	token    azcore.TokenCredential
 	// note: in the future, we might make this optional if we have a tenant-level asset.
 	subscriptionId string
 	clientOptions  policy.ClientOptions
@@ -45,13 +46,17 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
-	return &AzureConnection{
+	conn := &AzureConnection{
 		Conf:           conf,
 		id:             id,
 		asset:          asset,
 		token:          token,
 		subscriptionId: subId,
-	}, nil
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
+	return conn, nil
 }
 
 func (h *AzureConnection) Name() string {
@@ -60,6 +65,10 @@ func (h *AzureConnection) Name() string {
 
 func (h *AzureConnection) ID() uint32 {
 	return h.id
+}
+
+func (p *AzureConnection) ParentID() *uint32 {
+	return p.parentId
 }
 
 func (p *AzureConnection) Asset() *inventory.Asset {
