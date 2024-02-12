@@ -42,7 +42,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	subscriptionsToExclude := flags["subscriptions-exclude"]
 	certificatePath := flags["certificate-path"]
 	certificateSecret := flags["certificate-secret"]
-
+	skipSnapshotCleanup := flags["skip-snapshot-cleanup"]
 	opts := map[string]string{}
 	creds := []*vault.Credential{}
 
@@ -57,7 +57,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	if len(subscriptionsToExclude.Value) > 0 {
 		opts["subscriptions-exclude"] = string(subscriptionsToExclude.Value)
 	}
-
+	// the presence of the flag indicates that we should skip cleanup
+	if len(skipSnapshotCleanup.Value) > 0 {
+		opts[azureinstancesnapshot.SkipCleanup] = "true"
+	}
 	if len(clientSecret.Value) > 0 {
 		creds = append(creds, &vault.Credential{
 			Type:   vault.CredentialType_password,

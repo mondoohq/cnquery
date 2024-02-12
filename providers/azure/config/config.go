@@ -97,6 +97,13 @@ var Config = plugin.Provider{
 					Desc:    "Comma-separated list of Azure subscriptions to exclude.",
 					Option:  plugin.FlagOption_Hidden,
 				},
+				{
+					Long:    "skip-snapshot-cleanup",
+					Type:    plugin.FlagType_Bool,
+					Default: "",
+					Desc:    "If set, no cleanup will be performed for the snapshot connection.",
+					Option:  plugin.FlagOption_Hidden,
+				},
 			},
 		},
 	},

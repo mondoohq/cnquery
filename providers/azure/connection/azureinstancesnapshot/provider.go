@@ -29,7 +29,7 @@ const (
 	DiskTargetType         string                = "disk"
 	SnapshotTargetType     string                = "snapshot"
 	InstanceTargetType     string                = "instance"
-	SkipCleanup            string                = "skip-cleanup"
+	SkipCleanup            string                = "skip-snapshot-cleanup"
 )
 
 // the instance from which we're performing the scan
@@ -308,8 +308,9 @@ func (c *AzureSnapshotConnection) Close() {
 			log.Error().Err(err).Msg("unable to unmount volume")
 		}
 	}
-
-	if c.snapshotCreator != nil && !c.skipCleanup() {
+	if c.skipCleanup() {
+		log.Debug().Msgf("skipping azure snapshot cleanup, %s flag is set to true", SkipCleanup)
+	} else if c.snapshotCreator != nil {
 		if c.mountInfo.diskName != "" {
 			err := c.snapshotCreator.detachDisk(c.mountInfo.diskName, c.scanner.instanceInfo)
 			if err != nil {
