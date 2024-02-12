@@ -97,7 +97,7 @@ var Config = plugin.Provider{
 					Long:    "filters",
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
-					Desc:    "Filter options e.g cnquery shell aws --filters region=us-east-2",
+					Desc:    "Filter options e.g --filters region=us-east-2",
 				},
 			},
 		},
