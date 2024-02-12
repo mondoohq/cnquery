@@ -124,16 +124,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		}
 
 		asset.Connections[0].Id = conn.ID()
-		return &plugin.Runtime{
-			Connection:     conn,
-			Callback:       callback,
-			HasRecording:   req.HasRecording,
-			CreateResource: resources.CreateResource,
-			NewResource:    resources.NewResource,
-			GetData:        resources.GetData,
-			SetData:        resources.SetData,
-			Upstream:       upstream,
-		}, nil
+		return plugin.NewRuntime(
+			conn,
+			callback,
+			req.HasRecording,
+			resources.CreateResource,
+			resources.NewResource,
+			resources.GetData,
+			resources.SetData,
+			upstream), nil
 	})
 	if err != nil {
 		return nil, err
