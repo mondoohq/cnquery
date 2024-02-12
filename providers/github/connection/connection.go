@@ -17,10 +17,11 @@ import (
 )
 
 type GithubConnection struct {
-	id     uint32
-	Conf   *inventory.Config
-	asset  *inventory.Asset
-	client *github.Client
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
+	client   *github.Client
 }
 
 func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*GithubConnection, error) {
@@ -71,6 +72,9 @@ func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		asset:  asset,
 		client: client,
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	return conn, nil
 }
@@ -81,6 +85,10 @@ func (c *GithubConnection) Name() string {
 
 func (c *GithubConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *GithubConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *GithubConnection) Asset() *inventory.Asset {
