@@ -66,16 +66,9 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 		Name:        mqlObject.name,
 		Platform:    connection.GetPlatformForObject(platformName),
 		Labels:      mqlObject.labels,
-		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+		Connections: []*inventory.Config{t.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(t.Id))},
 		Options:     conn.ConnectionOptions(),
 	}
-}
-
-func cloneInventoryConf(invConf *inventory.Config) *inventory.Config {
-	invConfClone := invConf.Clone()
-	// We do not want to run discovery again for the already discovered assets
-	invConfClone.Discover = &inventory.Discovery{}
-	return invConfClone
 }
 
 func validate(m mqlObject) error {

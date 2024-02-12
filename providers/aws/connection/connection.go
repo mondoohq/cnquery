@@ -21,6 +21,7 @@ import (
 
 type AwsConnection struct {
 	id                uint32
+	parentId          *uint32
 	Conf              *inventory.Config
 	asset             *inventory.Asset
 	cfg               aws.Config
@@ -102,6 +103,9 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 	c.Conf = conf
 	c.id = id
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		c.parentId = &asset.Connections[0].ParentConnectionId
+	}
 	c.asset = asset
 	c.cfg = cfg
 	c.accountId = *identity.Account
@@ -233,6 +237,10 @@ func (h *AwsConnection) Name() string {
 
 func (h *AwsConnection) ID() uint32 {
 	return h.id
+}
+
+func (c *AwsConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (p *AwsConnection) Asset() *inventory.Asset {

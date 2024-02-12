@@ -33,6 +33,7 @@ const (
 
 type AwsEbsConnection struct {
 	id                  uint32
+	parentId            *uint32
 	asset               *inventory.Asset
 	FsProvider          *fs.FileSystemConnection
 	scannerRegionEc2svc *ec2.Client
@@ -99,6 +100,9 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		asset:               asset,
 	}
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		c.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	ctx := context.Background()
 
@@ -371,6 +375,10 @@ func (c *AwsEbsConnection) Name() string {
 
 func (c *AwsEbsConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *AwsEbsConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *AwsEbsConnection) Asset() *inventory.Asset {
