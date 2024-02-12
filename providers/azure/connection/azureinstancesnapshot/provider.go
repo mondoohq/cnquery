@@ -29,6 +29,7 @@ const (
 	DiskTargetType         string                = "disk"
 	SnapshotTargetType     string                = "snapshot"
 	InstanceTargetType     string                = "instance"
+	SkipCleanup            string                = "skip-cleanup"
 )
 
 // the instance from which we're performing the scan
@@ -308,7 +309,7 @@ func (c *AzureSnapshotConnection) Close() {
 		}
 	}
 
-	if c.snapshotCreator != nil {
+	if c.snapshotCreator != nil && !c.skipCleanup() {
 		if c.mountInfo.diskName != "" {
 			err := c.snapshotCreator.detachDisk(c.mountInfo.diskName, c.scanner.instanceInfo)
 			if err != nil {
@@ -330,6 +331,10 @@ func (c *AzureSnapshotConnection) Close() {
 			log.Error().Err(err).Msg("unable to remove dir")
 		}
 	}
+}
+
+func (c *AzureSnapshotConnection) skipCleanup() bool {
+	return c.opts[SkipCleanup] == "true"
 }
 
 func (c *AzureSnapshotConnection) Kind() string {

@@ -214,12 +214,14 @@ func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, dis
 		return err
 	}
 	attachOpt := compute.DiskCreateOptionTypesAttach
+	deleteOpt := compute.DiskDeleteOptionTypesDelete
 	// the Azure API requires all disks to be specified, even the already attached ones.
 	// we simply attach the new disk to the end of the already present list of data disks
 	disks := targetInstance.vm.Properties.StorageProfile.DataDisks
 	disks = append(disks, &compute.DataDisk{
 		Name:         &diskName,
 		CreateOption: &attachOpt,
+		DeleteOption: &deleteOpt,
 		Lun:          &lun,
 		ManagedDisk: &compute.ManagedDiskParameters{
 			ID: &diskId,
