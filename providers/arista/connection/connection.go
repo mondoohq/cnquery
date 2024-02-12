@@ -12,9 +12,10 @@ import (
 )
 
 type AristaConnection struct {
-	id    uint32
-	Conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
 	// custom connection fields
 	node *goeapi.Node
 }
@@ -24,6 +25,9 @@ func NewAristaConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		Conf:  conf,
 		id:    id,
 		asset: asset,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	// initialize connection
@@ -61,6 +65,10 @@ func (c *AristaConnection) Name() string {
 
 func (c *AristaConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *AristaConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *AristaConnection) Asset() *inventory.Asset {
