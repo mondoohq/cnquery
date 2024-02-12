@@ -304,8 +304,6 @@ func discoverPods(
 		if err != nil {
 			return nil, err
 		}
-		inv := invConfig.Clone(inventory.WithoutDiscovery())
-		inv.ParentConnectionId = invConfig.Id
 		assetList = append(assetList, &inventory.Asset{
 			PlatformIds: []string{
 				shared.NewWorkloadPlatformId(clusterId, "pod", pod.Namespace.Data, pod.Name.Data, pod.Uid.Data),
@@ -313,7 +311,7 @@ func discoverPods(
 			Name:        pod.Namespace.Data + "/" + pod.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{inv}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(pod.obj)
@@ -368,7 +366,7 @@ func discoverJobs(
 			Name:        job.Namespace.Data + "/" + job.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(job.obj)
@@ -423,7 +421,7 @@ func discoverCronJobs(
 			Name:        cjob.Namespace.Data + "/" + cjob.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(cjob.obj)
@@ -478,7 +476,7 @@ func discoverStatefulSets(
 			Name:        statefulset.Namespace.Data + "/" + statefulset.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(statefulset.obj)
@@ -533,7 +531,7 @@ func discoverDeployments(
 			Name:        deployment.Namespace.Data + "/" + deployment.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(deployment.obj)
@@ -588,7 +586,7 @@ func discoverReplicaSets(
 			Name:        replicaset.Namespace.Data + "/" + replicaset.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(replicaset.obj)
@@ -643,7 +641,7 @@ func discoverDaemonSets(
 			Name:        daemonset.Namespace.Data + "/" + daemonset.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(daemonset.obj)
@@ -728,7 +726,7 @@ func discoverIngresses(
 			Name:        ingress.Namespace.Data + "/" + ingress.Name.Data,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		od.Add(ingress.obj)
@@ -781,7 +779,7 @@ func discoverNamespaces(
 			Name:        ns.Name,
 			Platform:    platform,
 			Labels:      labels,
-			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+			Connections: []*inventory.Config{invConfig.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(invConfig.Id))}, // pass-in the parent connection config
 			Category:    conn.Asset().Category,
 		})
 		if od != nil {
