@@ -56,6 +56,10 @@ func (p *TarConnection) ID() uint32 {
 	return p.id
 }
 
+func (p *TarConnection) ParentID() *uint32 {
+	return p.parentId
+}
+
 func (p *TarConnection) Name() string {
 	return string(shared.Type_Tar)
 }
@@ -284,6 +288,9 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 			PlatformKind:    conf.Type,
 			PlatformRuntime: conf.Runtime,
 		}
+		if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+			c.parentId = &asset.Connections[0].ParentConnectionId
+		}
 
 		err = c.LoadFile(filename)
 		if err != nil {
@@ -344,6 +351,9 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 			asset.Connections[0].Options = map[string]string{}
 		}
 		asset.Connections[0].Options[FLATTENED_IMAGE] = imageFilename
+		if asset.Connections[0].ParentConnectionId > 0 {
+			c.parentId = &asset.Connections[0].ParentConnectionId
+		}
 	}
 
 	err := c.LoadFile(imageFilename)

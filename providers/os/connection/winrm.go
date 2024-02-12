@@ -77,19 +77,24 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	}
 
 	log.Debug().Msg("winrm> connection established")
-	return &WinrmConnection{
+	conn := &WinrmConnection{
 		id:       id,
 		conf:     conf,
 		asset:    asset,
 		Endpoint: winrmEndpoint,
 		Client:   client,
-	}, nil
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
+	return conn, nil
 }
 
 type WinrmConnection struct {
-	id    uint32
-	conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	conf     *inventory.Config
+	asset    *inventory.Asset
 
 	fs afero.Fs
 
@@ -99,6 +104,10 @@ type WinrmConnection struct {
 
 func (c *WinrmConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *WinrmConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *WinrmConnection) Name() string {

@@ -39,9 +39,10 @@ import (
 var _ shared.Connection = (*SshConnection)(nil)
 
 type SshConnection struct {
-	id    uint32
-	conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	conf     *inventory.Config
+	asset    *inventory.Asset
 
 	fs   afero.Fs
 	Sudo *inventory.Sudo
@@ -57,6 +58,9 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 		id:    id,
 		conf:  conf,
 		asset: asset,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		res.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	host := conf.GetHost()
@@ -117,6 +121,10 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 
 func (c *SshConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *SshConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *SshConnection) Name() string {

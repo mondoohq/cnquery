@@ -29,7 +29,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 
 	log.Debug().Str("path", path).Msg("load filesystem")
 
-	return &FileSystemConnection{
+	conn := &FileSystemConnection{
 		id:           id,
 		Conf:         conf,
 		asset:        asset,
@@ -37,7 +37,11 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 		closeFN:      closeFN,
 		tcPlatformId: conf.PlatformId,
 		fs:           fs.NewMountedFs(path),
-	}, nil
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
+	return conn, nil
 }
 
 func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*FileSystemConnection, error) {
@@ -45,9 +49,10 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 }
 
 type FileSystemConnection struct {
-	id    uint32
-	Conf  *inventory.Config
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	Conf     *inventory.Config
+	asset    *inventory.Asset
 
 	MountedDir   string
 	fs           afero.Fs
@@ -104,6 +109,10 @@ func (c *FileSystemConnection) Identifier() (string, error) {
 
 func (c *FileSystemConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *FileSystemConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *FileSystemConnection) Name() string {

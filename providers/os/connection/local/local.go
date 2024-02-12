@@ -19,12 +19,12 @@ import (
 )
 
 type LocalConnection struct {
-	shell   []string
-	fs      afero.Fs
-	Sudo    *inventory.Sudo
-	runtime string
-	id      uint32
-	asset   *inventory.Asset
+	shell    []string
+	fs       afero.Fs
+	Sudo     *inventory.Sudo
+	id       uint32
+	parentId *uint32
+	asset    *inventory.Asset
 }
 
 func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
@@ -32,6 +32,9 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *L
 	res := LocalConnection{
 		id:    id,
 		asset: asset,
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		res.parentId = &asset.Connections[0].ParentConnectionId
 	}
 	if conf != nil {
 		res.Sudo = conf.Sudo
@@ -50,6 +53,10 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *L
 
 func (p *LocalConnection) ID() uint32 {
 	return p.id
+}
+
+func (p *LocalConnection) ParentID() *uint32 {
+	return p.parentId
 }
 
 func (p *LocalConnection) Name() string {

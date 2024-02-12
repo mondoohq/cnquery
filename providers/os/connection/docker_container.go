@@ -31,8 +31,9 @@ const (
 var _ shared.Connection = &DockerContainerConnection{}
 
 type DockerContainerConnection struct {
-	id    uint32
-	asset *inventory.Asset
+	id       uint32
+	parentId *uint32
+	asset    *inventory.Asset
 
 	Client    *client.Client
 	container string
@@ -75,6 +76,9 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 		kind:      "container",
 		runtime:   "docker",
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	// this can later be used for containers build from scratch
 	serverVersion, err := dockerClient.ServerVersion(context.Background())
@@ -105,6 +109,10 @@ func GetDockerClient() (*client.Client, error) {
 
 func (c *DockerContainerConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *DockerContainerConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *DockerContainerConnection) Name() string {

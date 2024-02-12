@@ -63,11 +63,12 @@ type MockFileData struct {
 }
 
 type Connection struct {
-	data    *TomlData
-	asset   *inventory.Asset
-	mutex   sync.Mutex
-	uid     uint32
-	missing map[string]map[string]bool
+	data     *TomlData
+	asset    *inventory.Asset
+	mutex    sync.Mutex
+	uid      uint32
+	parentId *uint32
+	missing  map[string]map[string]bool
 }
 
 func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
@@ -79,6 +80,9 @@ func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 			"file":    {},
 			"command": {},
 		},
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		res.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	if path == "" {
@@ -116,6 +120,10 @@ func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 
 func (c *Connection) ID() uint32 {
 	return c.uid
+}
+
+func (c *Connection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *Connection) Type() shared.ConnectionType {
