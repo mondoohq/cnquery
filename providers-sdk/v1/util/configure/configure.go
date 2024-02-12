@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -22,6 +23,24 @@ import (
 
 type ProvidersConf struct {
 	Builtin []string `json:"builtin"`
+}
+
+func init() {
+	rootCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
+	rootCmd.Flags().StringP("output", "o", "providers/builtin_dev.go", "output go-file for builtin dev providers")
+
+	configureProvidersCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
+	rootCmd.AddCommand(configureProvidersCmd)
+}
+
+func main() {
+	logger.CliCompactLogger(logger.LogOutputWriter)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 var rootCmd = &cobra.Command{
@@ -63,6 +82,51 @@ var rootCmd = &cobra.Command{
 
 		rewireDependencies(conf.Builtin)
 		log.Info().Str("path", outPath).Strs("providers", conf.Builtin).Msg("(3/3) rewired dependencies/files")
+	},
+}
+
+var configureProvidersCmd = &cobra.Command{
+	Use:   "configure-providers NAME1 NAME2 [-f config]",
+	Short: "adds a provider to the config",
+	Run: func(cmd *cobra.Command, args []string) {
+		confPath, err := cmd.Flags().GetString("file")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Can't get --file")
+		}
+
+		raw, err := os.ReadFile(confPath)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to read config file")
+		}
+
+		var conf ProvidersConf
+		err = yaml.Unmarshal(raw, &conf)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to parse config file")
+		}
+
+		if len(conf.Builtin) > 0 {
+			log.Warn().Strs("providers", conf.Builtin).Msg("overwrite existing providers in config")
+		}
+
+		for i := range args {
+			conf.Builtin = append(conf.Builtin, args[i])
+		}
+
+		slices.Sort(conf.Builtin)
+		conf.Builtin = slices.Compact(conf.Builtin)
+
+		log.Info().Strs("providers", conf.Builtin).Msg("configured providers")
+
+		raw, err = yaml.Marshal(conf)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to marshal updated config")
+		}
+
+		err = os.WriteFile(confPath, raw, 0700)
+		if err != nil {
+			log.Fatal().Err(err).Str("path", confPath).Msg("failed to write config file")
+		}
 	},
 }
 
@@ -200,20 +264,5 @@ func rewireDependencies(providers []string) {
 	log.Debug().Msg("go mod tidy")
 	if err := cmd.Run(); err != nil {
 		log.Fatal().Err(err).Msg("failed to go mod tidy")
-	}
-}
-
-func init() {
-	rootCmd.Flags().StringP("file", "f", "providers.yaml", "config file for providers")
-	rootCmd.Flags().StringP("output", "o", "providers/builtin_dev.go", "output go-file for builtin dev providers")
-}
-
-func main() {
-	logger.CliCompactLogger(logger.LogOutputWriter)
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
 	}
 }
