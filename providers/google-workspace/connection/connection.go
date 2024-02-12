@@ -8,14 +8,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 type GoogleWorkspaceConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
+	plugin.Connection
+	Conf  *inventory.Config
+	asset *inventory.Asset
 	// Add custom connection fields here
 	serviceAccountSubject string
 	customerId            string
@@ -24,12 +24,9 @@ type GoogleWorkspaceConnection struct {
 
 func NewGoogleWorkspaceConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*GoogleWorkspaceConnection, error) {
 	conn := &GoogleWorkspaceConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	if len(conf.Credentials) != 0 {
@@ -55,14 +52,6 @@ func NewGoogleWorkspaceConnection(id uint32, asset *inventory.Asset, conf *inven
 
 func (c *GoogleWorkspaceConnection) Name() string {
 	return "google-workspace"
-}
-
-func (c *GoogleWorkspaceConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *GoogleWorkspaceConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *GoogleWorkspaceConnection) Asset() *inventory.Asset {

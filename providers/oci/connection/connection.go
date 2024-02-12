@@ -8,11 +8,12 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 type OciConnection struct {
-	id          uint32
+	plugin.Connection
 	Conf        *inventory.Config
 	asset       *inventory.Asset
 	config      common.ConfigurationProvider
@@ -21,9 +22,9 @@ type OciConnection struct {
 
 func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OciConnection, error) {
 	conn := &OciConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize your connection here
@@ -68,10 +69,6 @@ func NewOciConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 func (s *OciConnection) Name() string {
 	return "oci"
-}
-
-func (s *OciConnection) ID() uint32 {
-	return s.id
 }
 
 func (s *OciConnection) Asset() *inventory.Asset {

@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/azure/connection/auth"
 	"go.mondoo.com/cnquery/v10/providers/azure/connection/shared"
@@ -22,11 +23,10 @@ const (
 )
 
 type AzureConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
-	token    azcore.TokenCredential
+	plugin.Connection
+	Conf  *inventory.Config
+	asset *inventory.Asset
+	token azcore.TokenCredential
 	// note: in the future, we might make this optional if we have a tenant-level asset.
 	subscriptionId string
 	clientOptions  policy.ClientOptions
@@ -46,29 +46,17 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
-	conn := &AzureConnection{
+	return &AzureConnection{
+		Connection:     plugin.NewConnection(id, asset),
 		Conf:           conf,
-		id:             id,
 		asset:          asset,
 		token:          token,
 		subscriptionId: subId,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-	return conn, nil
+	}, nil
 }
 
 func (h *AzureConnection) Name() string {
 	return "azure"
-}
-
-func (h *AzureConnection) ID() uint32 {
-	return h.id
-}
-
-func (p *AzureConnection) ParentID() *uint32 {
-	return p.parentId
 }
 
 func (p *AzureConnection) Asset() *inventory.Asset {

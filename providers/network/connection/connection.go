@@ -5,37 +5,25 @@ package connection
 
 import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type HostConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
+	plugin.Connection
+	Conf  *inventory.Config
+	asset *inventory.Asset
 }
 
 func NewHostConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *HostConnection {
-	conn := &HostConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+	return &HostConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-	return conn
 }
 
 func (h *HostConnection) Name() string {
 	return "host"
-}
-
-func (h *HostConnection) ID() uint32 {
-	return h.id
-}
-
-func (c *HostConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (p *HostConnection) Asset() *inventory.Asset {

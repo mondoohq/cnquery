@@ -11,6 +11,7 @@ import (
 
 	"github.com/ctreminiom/go-atlassian/admin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -19,12 +20,11 @@ const (
 )
 
 type ScimConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
-	client   *admin.Client
-	name     string
+	plugin.Connection
+	Conf   *inventory.Config
+	asset  *inventory.Asset
+	client *admin.Client
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ScimConnection, error) {
@@ -56,30 +56,18 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	}
 
 	name := fmt.Sprintf("Directory %s", conf.Options["directory-id"])
-	conn := &ScimConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   name,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
 
-	return conn, nil
+	return &ScimConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       name,
+	}, nil
 }
 
 func (c *ScimConnection) Name() string {
 	return c.name
-}
-
-func (c *ScimConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *ScimConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *ScimConnection) Asset() *inventory.Asset {

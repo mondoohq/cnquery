@@ -13,12 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/xanzy/go-gitlab"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 type GitLabConnection struct {
-	id          uint32
-	parentId    *uint32
+	plugin.Connection
 	Conf        *inventory.Config
 	asset       *inventory.Asset
 	group       *gitlab.Group
@@ -67,9 +67,9 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		return nil, err
 	}
 
-	conn := &GitLabConnection{
+	return &GitLabConnection{
+		Connection:  plugin.NewConnection(id, asset),
 		Conf:        conf,
-		id:          id,
 		asset:       asset,
 		groupName:   conf.Options["group"],
 		groupID:     conf.Options["group-id"],
@@ -77,24 +77,11 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		projectID:   conf.Options["project-id"],
 		url:         conf.Options["url"],
 		client:      client,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-
-	return conn, nil
+	}, nil
 }
 
 func (c *GitLabConnection) Name() string {
 	return "gitlab"
-}
-
-func (c *GitLabConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *GitLabConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *GitLabConnection) Asset() *inventory.Asset {

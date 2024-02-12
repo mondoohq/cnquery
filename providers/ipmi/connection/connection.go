@@ -8,15 +8,15 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	impi_client "go.mondoo.com/cnquery/v10/providers/ipmi/connection/client"
 )
 
 type IpmiConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
+	plugin.Connection
+	Conf  *inventory.Config
+	asset *inventory.Asset
 	//  custom connection fields
 	client *impi_client.IpmiClient
 	guid   string
@@ -24,12 +24,9 @@ type IpmiConnection struct {
 
 func NewIpmiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*IpmiConnection, error) {
 	conn := &IpmiConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize connection
@@ -70,14 +67,6 @@ func NewIpmiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 
 func (c *IpmiConnection) Name() string {
 	return "ipmi"
-}
-
-func (c *IpmiConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *IpmiConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *IpmiConnection) Asset() *inventory.Asset {

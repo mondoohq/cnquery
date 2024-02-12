@@ -47,14 +47,6 @@ func NewRuntime(
 	}
 }
 
-type Connection interface {
-	ID() uint32
-
-	// ParentID returns the ID of the parent connection. If this returns a value,
-	// the connection with that ID will be used to store and get data.
-	ParentID() *uint32
-}
-
 type (
 	CreateNamedResource func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)
 	NewResource         func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)

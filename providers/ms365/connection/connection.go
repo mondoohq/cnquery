@@ -12,6 +12,7 @@ import (
 	errors "github.com/cockroachdb/errors"
 	msgrapgh_org "github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
@@ -26,8 +27,7 @@ const (
 )
 
 type Ms365Connection struct {
-	id            uint32
-	parentId      *uint32
+	plugin.Connection
 	Conf          *inventory.Config
 	asset         *inventory.Asset
 	token         azcore.TokenCredential
@@ -64,34 +64,20 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication failed")
 	}
-
-	conn := &Ms365Connection{
+	return &Ms365Connection{
+		Connection:    plugin.NewConnection(id, asset),
 		Conf:          conf,
-		id:            id,
 		asset:         asset,
 		token:         token,
 		tenantId:      tenantId,
 		clientId:      clientId,
 		organization:  organization,
 		sharepointUrl: sharepointUrl,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-
-	return conn, nil
+	}, nil
 }
 
 func (h *Ms365Connection) Name() string {
 	return "ms365"
-}
-
-func (h *Ms365Connection) ID() uint32 {
-	return h.id
-}
-
-func (c *Ms365Connection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (p *Ms365Connection) Asset() *inventory.Asset {

@@ -10,6 +10,7 @@ import (
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -18,12 +19,11 @@ const (
 )
 
 type JiraConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
-	client   *v2.Client
-	name     string
+	plugin.Connection
+	Conf   *inventory.Config
+	asset  *inventory.Asset
+	client *v2.Client
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*JiraConnection, error) {
@@ -67,30 +67,17 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		}
 	}
 
-	conn := &JiraConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   host,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-
-	return conn, nil
+	return &JiraConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       host,
+	}, nil
 }
 
 func (c *JiraConnection) Name() string {
 	return c.name
-}
-
-func (c *JiraConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *JiraConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *JiraConnection) Asset() *inventory.Asset {

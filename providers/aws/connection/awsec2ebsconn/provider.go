@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	awsec2ebstypes "go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn/types"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/fs"
@@ -32,8 +33,7 @@ const (
 )
 
 type AwsEbsConnection struct {
-	id                  uint32
-	parentId            *uint32
+	plugin.Connection
 	asset               *inventory.Asset
 	FsProvider          *fs.FileSystemConnection
 	scannerRegionEc2svc *ec2.Client
@@ -81,8 +81,9 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 
 	// 2. create provider instance
 	c := &AwsEbsConnection{
-		config: cfg,
-		opts:   conf.Options,
+		Connection: plugin.NewConnection(id, asset),
+		config:     cfg,
+		opts:       conf.Options,
 		target: awsec2ebstypes.TargetInfo{
 			PlatformId: conf.PlatformId,
 			Region:     targetRegion,
@@ -100,9 +101,6 @@ func NewAwsEbsConnection(id uint32, conf *inventory.Config, asset *inventory.Ass
 		asset:               asset,
 	}
 	log.Debug().Interface("info", c.target).Str("type", c.targetType).Msg("target")
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		c.parentId = &asset.Connections[0].ParentConnectionId
-	}
 
 	ctx := context.Background()
 
@@ -371,14 +369,6 @@ func ParseEbsTransportUrl(path string) (*awsec2ebstypes.EbsTransportTarget, erro
 
 func (c *AwsEbsConnection) Name() string {
 	return "aws ebs"
-}
-
-func (c *AwsEbsConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *AwsEbsConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *AwsEbsConnection) Asset() *inventory.Asset {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
 	admission "k8s.io/api/admission/v1"
@@ -18,20 +19,16 @@ import (
 
 type Connection struct {
 	shared.ManifestParser
-	id        uint32
-	parentId  *uint32
+	plugin.Connection
 	asset     *inventory.Asset
 	namespace string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, data string) (shared.Connection, error) {
 	c := &Connection{
-		id:        id,
-		asset:     asset,
-		namespace: asset.Connections[0].Options[shared.OPTION_NAMESPACE],
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		c.parentId = &asset.Connections[0].ParentConnectionId
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		namespace:  asset.Connections[0].Options[shared.OPTION_NAMESPACE],
 	}
 
 	admission, err := base64.StdEncoding.DecodeString(data)
@@ -68,14 +65,6 @@ func (c *Connection) ServerVersion() *version.Info {
 
 func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, error) {
 	return c.ManifestParser.SupportedResourceTypes()
-}
-
-func (c *Connection) ID() uint32 {
-	return c.id
-}
-
-func (c *Connection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *Connection) Runtime() string {

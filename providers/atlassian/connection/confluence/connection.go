@@ -10,6 +10,7 @@ import (
 
 	"github.com/ctreminiom/go-atlassian/confluence"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -18,12 +19,11 @@ const (
 )
 
 type ConfluenceConnection struct {
-	id       uint32
-	parentId *uint32
-	Conf     *inventory.Config
-	asset    *inventory.Asset
-	client   *confluence.Client
-	name     string
+	plugin.Connection
+	Conf   *inventory.Config
+	asset  *inventory.Asset
+	client *confluence.Client
+	name   string
 }
 
 func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ConfluenceConnection, error) {
@@ -69,30 +69,17 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 		}
 	}
 
-	conn := &ConfluenceConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   host,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-
-	return conn, nil
+	return &ConfluenceConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       host,
+	}, nil
 }
 
 func (c *ConfluenceConnection) Name() string {
 	return c.name
-}
-
-func (c *ConfluenceConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *ConfluenceConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *ConfluenceConnection) Asset() *inventory.Asset {
