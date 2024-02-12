@@ -18,6 +18,7 @@ import (
 
 type GitLabConnection struct {
 	id          uint32
+	parentId    *uint32
 	Conf        *inventory.Config
 	asset       *inventory.Asset
 	group       *gitlab.Group
@@ -77,6 +78,9 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		url:         conf.Options["url"],
 		client:      client,
 	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
 
 	return conn, nil
 }
@@ -87,6 +91,10 @@ func (c *GitLabConnection) Name() string {
 
 func (c *GitLabConnection) ID() uint32 {
 	return c.id
+}
+
+func (c *GitLabConnection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (c *GitLabConnection) Asset() *inventory.Asset {
