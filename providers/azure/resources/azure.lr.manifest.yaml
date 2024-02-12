@@ -10,8 +10,8 @@ resources:
       - azure
   azure.subscription:
     docs:
-      desc: "Use the `azure.subscription` resource to assess the configuration of
-        Azure subscriptions."
+      desc: Use the `azure.subscription` resource to assess the configuration of Azure
+        subscriptions.
     fields:
       advisor: {}
       aks: {}
@@ -48,8 +48,8 @@ resources:
       title: Return the subscription ID and a list of tenants that manage the subscription
   azure.subscription.advisor:
     docs:
-      desc: "Use the `azure.subscription.advisor` resource to retrieve scoring
-        and recommendations from Microsoft Azure Advisor."
+      desc: Use the `azure.subscription.advisor` resource to retrieve scoring and
+        recommendations from Microsoft Azure Advisor.
     fields:
       recommendations: {}
       subscriptionId: {}
@@ -62,7 +62,8 @@ resources:
       url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
     snippets:
     - query: "azure.subscription.advisor {\n  averageScore \n recommendations \n}\n"
-      title: Return the average score and all recommendations from Microsoft Azure Advisor
+      title: Return the average score and all recommendations from Microsoft Azure
+        Advisor
     - query: |
         azure.subscription.advisorService {
           averageScore > 90
@@ -79,8 +80,8 @@ resources:
       - azure
   azure.subscription.advisorService:
     docs:
-      desc: "Use the `azure.subscription.advisorService` resource to retrieve scoring
-        and recommendations from Microsoft Azure Advisor."
+      desc: Use the `azure.subscription.advisorService` resource to retrieve scoring
+        and recommendations from Microsoft Azure Advisor.
     fields:
       averageScore: {}
       recommendations: {}
@@ -91,7 +92,6 @@ resources:
     platform:
       name:
       - azure
-    snippets:
   azure.subscription.advisorService.recommendation:
     fields:
       category: {}
@@ -160,7 +160,8 @@ resources:
       - azure
   azure.subscription.aks.cluster:
     docs:
-      desc: "Use the `azure.subscription.aks.cluster` resource to retrieve and check properties for an Azure Kubernetes Service cluster."
+      desc: Use the `azure.subscription.aks.cluster` resource to retrieve and check
+        properties for an Azure Kubernetes Service cluster.
     fields:
       addonProfiles: {}
       agentPoolProfiles: {}
