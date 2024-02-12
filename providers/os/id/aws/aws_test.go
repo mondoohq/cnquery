@@ -8,12 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/detector"
 )
 
 func TestDetectInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instance.toml", nil)
+	conn, err := mock.New(0, "./testdata/instance.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -27,7 +28,7 @@ func TestDetectInstance(t *testing.T) {
 }
 
 func TestDetectInstanceArm(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/instancearm.toml", nil)
+	conn, err := mock.New(0, "./testdata/instancearm.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -41,7 +42,7 @@ func TestDetectInstanceArm(t *testing.T) {
 }
 
 func TestDetectNotInstance(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/notinstance.toml", nil)
+	conn, err := mock.New(0, "./testdata/notinstance.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -55,7 +56,7 @@ func TestDetectNotInstance(t *testing.T) {
 }
 
 func TestDetectConainer(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/container.toml", nil)
+	conn, err := mock.New(0, "./testdata/container.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

@@ -10,13 +10,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/winrm/cat"
 )
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/winrm.toml")
-	p, err := mock.New(0, filepath, nil)
+	p, err := mock.New(0, filepath, &inventory.Asset{})
 	require.NoError(t, err)
 
 	catfs := cat.New(p)

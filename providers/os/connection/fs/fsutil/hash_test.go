@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/fs/fsutil"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 )
@@ -15,7 +16,7 @@ import (
 func TestFileResource(t *testing.T) {
 	path := "/tmp/test_hash"
 
-	conn := local.NewConnection(0, nil, nil)
+	conn := local.NewConnection(0, nil, &inventory.Asset{})
 	assert.NotNil(t, conn)
 
 	fs := conn.FileSystem()

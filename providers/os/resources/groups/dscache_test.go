@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/groups"
 )
 
 func TestParseDscacheutilResult(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", nil)
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{})
 	if err != nil {
 		t.Fatal(err)
 	}

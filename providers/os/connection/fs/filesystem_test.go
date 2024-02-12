@@ -18,7 +18,7 @@ import (
 func TestOsDetection(t *testing.T) {
 	conn, err := fs.NewConnection(0, &inventory.Config{
 		Path: "./testdata/centos8",
-	}, nil)
+	}, &inventory.Asset{})
 	require.NoError(t, err)
 
 	pf, detected := detector.DetectOS(conn)
@@ -31,7 +31,7 @@ func TestOsDetection(t *testing.T) {
 func TestMountedDirectoryFile(t *testing.T) {
 	conn, err := fs.NewConnection(0, &inventory.Config{
 		Path: "./testdata/centos8",
-	}, nil)
+	}, &inventory.Asset{})
 	require.NoError(t, err)
 
 	f, err := conn.FileSystem().Open("/etc/os-release")
@@ -69,7 +69,7 @@ func TestMountedDirectoryFile(t *testing.T) {
 func TestRunCommandReturnsErr(t *testing.T) {
 	conn, err := fs.NewConnection(0, &inventory.Config{
 		Path: "./testdata/centos8",
-	}, nil)
+	}, &inventory.Asset{})
 	require.NoError(t, err)
 
 	_, err = conn.RunCommand("aa-status")

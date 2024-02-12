@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/users"
 )
 
 func TestParseLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +37,7 @@ func TestParseLinuxEtcPasswd(t *testing.T) {
 }
 
 func TestParseFreebsdLinuxEtcPasswd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", nil)
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,12 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/detector"
 )
 
 func TestManagerCentos(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/centos.toml", nil)
+	conn, err := mock.New(0, "./testdata/centos.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -56,7 +57,7 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/macos.toml", nil)
+	conn, err := mock.New(0, "./testdata/macos.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -99,7 +100,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/windows.toml", nil)
+	conn, err := mock.New(0, "./testdata/windows.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

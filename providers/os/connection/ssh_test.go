@@ -25,12 +25,12 @@ func TestSSHDefaultSettings(t *testing.T) {
 }
 
 func TestSSHProviderError(t *testing.T) {
-	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_Local.String(), Host: "example.local"}, nil)
+	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_Local.String(), Host: "example.local"}, &inventory.Asset{})
 	assert.Equal(t, "provider type does not match", err.Error())
 }
 
 func TestSSHAuthError(t *testing.T) {
-	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_SSH.String(), Host: "example.local"}, nil)
+	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_SSH.String(), Host: "example.local"}, &inventory.Asset{})
 	assert.True(t,
 		// local testing if ssh agent is available
 		err.Error() == "dial tcp: lookup example.local: no such host" ||

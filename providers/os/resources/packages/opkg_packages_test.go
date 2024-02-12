@@ -49,7 +49,7 @@ firewall - 2016-11-29-1`
 }
 
 func TestOpkgStatusParser(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/packages_opkg_statusfile.toml", nil)
+	mock, err := mock.New(0, "./testdata/packages_opkg_statusfile.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	f, err := mock.FileSystem().Open("/usr/lib/opkg/status")
 	require.NoError(t, err)

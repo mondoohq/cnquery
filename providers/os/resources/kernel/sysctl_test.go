@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 )
 
 func TestSysctlDebian(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("/sbin/sysctl -a")
@@ -26,7 +27,7 @@ func TestSysctlDebian(t *testing.T) {
 }
 
 func TestSysctlMacos(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/osx.toml", nil)
+	mock, err := mock.New(0, "./testdata/osx.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")
@@ -40,7 +41,7 @@ func TestSysctlMacos(t *testing.T) {
 }
 
 func TestSysctlFreebsd(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/freebsd12.toml", nil)
+	mock, err := mock.New(0, "./testdata/freebsd12.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	c, err := mock.RunCommand("sysctl -a")

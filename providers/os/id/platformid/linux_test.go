@@ -9,12 +9,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 )
 
 func TestLinuxMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux_test.toml")
-	provider, err := mock.New(0, filepath, nil)
+	provider, err := mock.New(0, filepath, &inventory.Asset{})
 	require.NoError(t, err)
 
 	lid := LinuxIdProvider{connection: provider}
