@@ -110,7 +110,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c.connectionOptions = asset.Options
 	if conf.Discover != nil {
 		c.Filters = parseOptsToFilters(conf.Discover.Filter)
-		c.RegionLimits = firstNonEmptyRegion(c.Filters.GeneralDiscoveryFilters.Regions, c.Filters.Ec2DiscoveryFilters.Regions)
+		c.RegionLimits = c.Filters.GeneralDiscoveryFilters.Regions
 	}
 	return c, nil
 }
@@ -283,14 +283,6 @@ func CheckRegion(cfg aws.Config) error {
 		return errors.New(MISSING_REGION_MSG)
 	}
 	return nil
-}
-
-// firstNonEmptyRegion determines and return the first non-empty region.
-func firstNonEmptyRegion(generalRegion, ec2Region []string) []string {
-	if len(ec2Region) > 0 {
-		return ec2Region
-	}
-	return generalRegion
 }
 
 func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {
