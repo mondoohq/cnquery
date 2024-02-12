@@ -61,6 +61,11 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		nameVal := args["name"].Value.(string)
 		arn = fmt.Sprintf(s3ArnPattern, nameVal)
 	}
+
+	if arn == "" {
+		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
+	}
+
 	log.Debug().Str("arn", arn).Msg("init cloudtrail trail with arn")
 
 	// load all s3 buckets
