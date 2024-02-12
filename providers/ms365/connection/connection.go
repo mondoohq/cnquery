@@ -27,6 +27,7 @@ const (
 
 type Ms365Connection struct {
 	id            uint32
+	parentId      *uint32
 	Conf          *inventory.Config
 	asset         *inventory.Asset
 	token         azcore.TokenCredential
@@ -64,7 +65,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		return nil, errors.Wrap(err, "authentication failed")
 	}
 
-	return &Ms365Connection{
+	conn := &Ms365Connection{
 		Conf:          conf,
 		id:            id,
 		asset:         asset,
@@ -73,7 +74,12 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		clientId:      clientId,
 		organization:  organization,
 		sharepointUrl: sharepointUrl,
-	}, nil
+	}
+	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
+		conn.parentId = &asset.Connections[0].ParentConnectionId
+	}
+
+	return conn, nil
 }
 
 func (h *Ms365Connection) Name() string {
@@ -82,6 +88,10 @@ func (h *Ms365Connection) Name() string {
 
 func (h *Ms365Connection) ID() uint32 {
 	return h.id
+}
+
+func (c *Ms365Connection) ParentID() *uint32 {
+	return c.parentId
 }
 
 func (p *Ms365Connection) Asset() *inventory.Asset {
