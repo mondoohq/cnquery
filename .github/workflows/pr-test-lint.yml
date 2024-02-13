@@ -91,7 +91,7 @@ jobs:
         if: success() || failure()        # run this step even if previous step failed
         with:
           name: test-results
-          path: report.xml
+          path: '*.xml'
 
   go-test-cli:
     runs-on: self-hosted
