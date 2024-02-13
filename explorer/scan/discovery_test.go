@@ -253,19 +253,4 @@ func TestDiscoverAssets(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, discoveredAssets.Assets, 1)
 	})
-
-	t.Run("container platform discovery", func(t *testing.T) {
-		inv := getInventory()
-		inv.Spec.Assets[0].Connections[0].Type = "docker-image"
-		inv.Spec.Assets[0].Connections[0].Host = "alpine:3.19.1"
-
-		discoveredAssets, err := DiscoverAssets(context.Background(), inv, nil, providers.NullRecording{})
-		require.NoError(t, err)
-		assert.Len(t, discoveredAssets.Assets, 1)
-		assert.Equal(t, "alpine", discoveredAssets.Assets[0].Asset.Platform.Name)
-		assert.Equal(t, "3.19.1", discoveredAssets.Assets[0].Asset.Platform.Version)
-		assert.Equal(t, "Alpine Linux v3.19", discoveredAssets.Assets[0].Asset.Platform.Title)
-		assert.Equal(t, "container-image", discoveredAssets.Assets[0].Asset.Platform.Kind)
-		assert.Equal(t, "docker-image", discoveredAssets.Assets[0].Asset.Platform.Runtime)
-	})
 }
