@@ -110,16 +110,29 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 
 		resolvedRootAsset = rootAssetWithRuntime.Asset // to ensure we get all the information the connect call gave us
 
+		// Make sure the root runtime is closed at the end of the loop if needed. This will close the runtimes for all
+		// root assets when the entire loop is done. It is NOT running the close after the current iteration of the loop.
+		// This behaviour is fine for now. If we want to close the runtime after each iteration, we need to revisit
+		closeRootRuntime := false
+		defer func() {
+			if closeRootRuntime {
+				rootAssetWithRuntime.Runtime.Close()
+			}
+		}()
+
 		// If the root asset has platform IDs, then it is a scannable asset, so we need to add it
 		if len(resolvedRootAsset.PlatformIds) > 0 {
 			prepareAsset(resolvedRootAsset, resolvedRootAsset, runtimeLabels)
 			if !discoveredAssets.Add(rootAssetWithRuntime.Asset, rootAssetWithRuntime.Runtime) {
-				rootAssetWithRuntime.Runtime.Close()
+				closeRootRuntime = true
 			}
+		} else {
+			closeRootRuntime = true
 		}
 
 		// If there is no inventory, no assets have been discovered under the root asset
 		if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
+			closeRootRuntime = true
 			continue
 		}
 
