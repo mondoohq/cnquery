@@ -25,14 +25,19 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	pi, resolved := r.resolvePlatform(di, conn)
+	pi := &inventory.Platform{}
+	resolved := conn.Type() == shared.Type_RegistryImage
+	if conn.Type() != shared.Type_RegistryImage {
+		pi, resolved = r.resolvePlatform(di, conn)
+	}
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
-	tarConn, ok := conn.(*connection.TarConnection)
+	tarConn, ok := conn.(*connection.DockerRegistryImageConnection)
 	if resolved && ok {
 		pi.Arch = tarConn.PlatformArchitecture
 		di.Runtime = "docker-image"
+		di.Title = "Docker Image"
 		di.Kind = "container-image"
 
 		// if the platform name is not set, we should fallback to the scratch operating system

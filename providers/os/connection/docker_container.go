@@ -174,8 +174,16 @@ func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command,
 	return res, err
 }
 
+type DockerRegistryImageConnection struct {
+	*TarConnection
+}
+
+func (c *DockerRegistryImageConnection) Type() shared.ConnectionType {
+	return shared.Type_RegistryImage
+}
+
 // NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
+func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerRegistryImageConnection, error) {
 	ref, err := name.ParseReference(conf.Host, name.WeakValidation)
 	if err == nil {
 		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
@@ -235,7 +243,7 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 		conn.Metadata.Labels = labels
 		asset.Labels = labels
 
-		return conn, err
+		return &DockerRegistryImageConnection{TarConnection: conn}, err
 	}
 	log.Debug().Str("image", conf.Host).Msg("Could not detect a valid repository url")
 	return nil, err
@@ -285,7 +293,15 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 	}
 }
 
-func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
+type DockerImageConnection struct {
+	*TarConnection
+}
+
+func (c *DockerImageConnection) Type() shared.ConnectionType {
+	return shared.Type_DockerImage
+}
+
+func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (shared.Connection, error) {
 	disableInmemoryCache := false
 	if _, ok := conf.Options["disable-cache"]; ok {
 		var err error
@@ -310,7 +326,11 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 		asset.Name = resolvedAssets[0].Name
 		asset.PlatformIds = resolvedAssets[0].PlatformIds
 		asset.Labels = resolvedAssets[0].Labels
-		return NewContainerRegistryImage(id, conf, asset)
+		conn, err := NewContainerRegistryImage(id, conf, asset)
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
 	}
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
@@ -357,7 +377,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	tarConn.PlatformIdentifier = identifier
 	tarConn.Metadata.Name = ii.Name
 	tarConn.Metadata.Labels = ii.Labels
-	return tarConn, nil
+	return &DockerImageConnection{TarConnection: tarConn}, nil
 }
 
 // based on the target, try and find out what kind of connection we are dealing with, this can be either a
