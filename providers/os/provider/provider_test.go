@@ -140,3 +140,28 @@ func TestService_ParseCLI(t *testing.T) {
 	require.Len(t, res.Asset.Connections[0].Credentials, 1)
 	require.Equal(t, vault.CredentialType_private_key, res.Asset.Connections[0].Credentials[0].Type)
 }
+
+func TestConnect_ContainerImage(t *testing.T) {
+	srv := &Service{
+		Service: plugin.NewService(),
+	}
+
+	connectResp, err := srv.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type: "docker-image",
+					Host: "alpine:3.19.1",
+				},
+			},
+		},
+	}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, connectResp)
+
+	assert.Equal(t, "alpine", connectResp.Asset.Platform.Name)
+	assert.Equal(t, "3.19.1", connectResp.Asset.Platform.Version)
+	assert.Equal(t, "Alpine Linux v3.19", connectResp.Asset.Platform.Title)
+	assert.Equal(t, "container-image", connectResp.Asset.Platform.Kind)
+	assert.Equal(t, "docker-image", connectResp.Asset.Platform.Runtime)
+}

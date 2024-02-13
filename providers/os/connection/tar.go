@@ -183,7 +183,7 @@ func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inve
 	return &TarConnection{
 		id:    id,
 		asset: asset,
-		Fs:    provider_tar.NewFs(""),
+		Fs:    provider_tar.NewFs(f.Name()),
 		fetchFn: func() (string, error) {
 			err = cache.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
