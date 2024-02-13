@@ -38,10 +38,6 @@ func NewVagrantConnection(id uint32, conf *inventory.Config, asset *inventory.As
 	return &res, nil
 }
 
-func (p *VagrantConnection) ID() uint32 {
-	return p.id
-}
-
 func (p *VagrantConnection) Name() string {
 	return string(Vagrant)
 }

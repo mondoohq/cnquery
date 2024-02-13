@@ -73,10 +73,6 @@ func ExportSnapshot(containerid string, f *os.File) error {
 	return cache.StreamToTmpFile(rc, f)
 }
 
-func (p *DockerSnapshotConnection) ID() uint32 {
-	return p.id
-}
-
 func (p *DockerSnapshotConnection) Name() string {
 	return string(shared.Type_DockerSnapshot)
 }

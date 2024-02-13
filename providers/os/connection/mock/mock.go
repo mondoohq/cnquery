@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
@@ -63,26 +64,22 @@ type MockFileData struct {
 }
 
 type Connection struct {
-	data     *TomlData
-	asset    *inventory.Asset
-	mutex    sync.Mutex
-	uid      uint32
-	parentId *uint32
-	missing  map[string]map[string]bool
+	plugin.Connection
+	data    *TomlData
+	asset   *inventory.Asset
+	mutex   sync.Mutex
+	missing map[string]map[string]bool
 }
 
 func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 	res := &Connection{
-		uid:   id,
-		data:  &TomlData{},
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		data:       &TomlData{},
+		asset:      asset,
 		missing: map[string]map[string]bool{
 			"file":    {},
 			"command": {},
 		},
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		res.parentId = &asset.Connections[0].ParentConnectionId
 	}
 
 	if path == "" {
@@ -116,14 +113,6 @@ func New(id uint32, path string, asset *inventory.Asset) (*Connection, error) {
 	}
 
 	return res, nil
-}
-
-func (c *Connection) ID() uint32 {
-	return c.uid
-}
-
-func (c *Connection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *Connection) Type() shared.ConnectionType {

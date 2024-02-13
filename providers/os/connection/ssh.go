@@ -22,6 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/awsinstanceconnect"
@@ -39,10 +40,9 @@ import (
 var _ shared.Connection = (*SshConnection)(nil)
 
 type SshConnection struct {
-	id       uint32
-	parentId *uint32
-	conf     *inventory.Config
-	asset    *inventory.Asset
+	plugin.Connection
+	conf  *inventory.Config
+	asset *inventory.Asset
 
 	fs   afero.Fs
 	Sudo *inventory.Sudo
@@ -55,12 +55,9 @@ type SshConnection struct {
 
 func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*SshConnection, error) {
 	res := SshConnection{
-		id:    id,
-		conf:  conf,
-		asset: asset,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		res.parentId = &asset.Connections[0].ParentConnectionId
+		Connection: plugin.NewConnection(id, asset),
+		conf:       conf,
+		asset:      asset,
 	}
 
 	host := conf.GetHost()
@@ -117,14 +114,6 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	}
 
 	return &res, nil
-}
-
-func (c *SshConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *SshConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *SshConnection) Name() string {

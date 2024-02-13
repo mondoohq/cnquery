@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	provider_tar "go.mondoo.com/cnquery/v10/providers/os/connection/tar"
@@ -32,7 +33,7 @@ const (
 var _ shared.Connection = (*TarConnection)(nil)
 
 type TarConnection struct {
-	id        uint32
+	plugin.Connection
 	asset     *inventory.Asset
 	conf      *inventory.Config
 	fetchFn   func() (string, error)
@@ -50,14 +51,6 @@ type TarConnection struct {
 		Name   string
 		Labels map[string]string
 	}
-}
-
-func (p *TarConnection) ID() uint32 {
-	return p.id
-}
-
-func (p *TarConnection) ParentID() *uint32 {
-	return p.parentId
 }
 
 func (p *TarConnection) Name() string {
@@ -185,9 +178,9 @@ func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inve
 	}
 
 	return &TarConnection{
-		id:    id,
-		asset: asset,
-		Fs:    provider_tar.NewFs(f.Name()),
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		Fs:         provider_tar.NewFs(f.Name()),
 		fetchFn: func() (string, error) {
 			err = cache.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
@@ -281,15 +274,12 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 		identifier = "//platformid.api.mondoo.app/runtime/tar/hash/" + hash
 
 		c := &TarConnection{
-			id:              id,
+			Connection:      plugin.NewConnection(id, asset),
 			asset:           asset,
 			Fs:              provider_tar.NewFs(filename),
 			CloseFN:         closeFn,
 			PlatformKind:    conf.Type,
 			PlatformRuntime: conf.Runtime,
-		}
-		if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-			c.parentId = &asset.Connections[0].ParentConnectionId
 		}
 
 		err = c.LoadFile(filename)
@@ -327,9 +317,9 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 	}
 
 	c := &TarConnection{
-		id:    id,
-		asset: asset,
-		Fs:    provider_tar.NewFs(imageFilename),
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		Fs:         provider_tar.NewFs(imageFilename),
 		CloseFN: func() {
 			if closeFn != nil {
 				closeFn()
@@ -351,9 +341,6 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 			asset.Connections[0].Options = map[string]string{}
 		}
 		asset.Connections[0].Options[FLATTENED_IMAGE] = imageFilename
-		if asset.Connections[0].ParentConnectionId > 0 {
-			c.parentId = &asset.Connections[0].ParentConnectionId
-		}
 	}
 
 	err := c.LoadFile(imageFilename)
