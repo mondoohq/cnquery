@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.50.15
+	github.com/aws/aws-sdk-go v1.50.16
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16
@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.44.0
