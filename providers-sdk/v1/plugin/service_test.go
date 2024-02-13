@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 type TestConnection struct {
@@ -41,6 +42,16 @@ func (c *TestConnectionWithClose) Close() {
 	c.closed = true
 }
 
+type TestResource struct{}
+
+func (r *TestResource) MqlID() string {
+	return "test.resource"
+}
+
+func (r *TestResource) MqlName() string {
+	return "Test Resource"
+}
+
 func TestAddRuntime(t *testing.T) {
 	s := NewService()
 	wg := sync.WaitGroup{}
@@ -66,6 +77,52 @@ func TestAddRuntime(t *testing.T) {
 	// Vertify that all runtimes are added and the last connectiod ID is correct
 	assert.Len(t, s.runtimes, 200)
 	assert.Equal(t, s.lastConnectionID, uint32(200))
+}
+
+func TestAddRuntime_ParentNotExist(t *testing.T) {
+	s := NewService()
+	parentId := uint32(10)
+	_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		c := newTestConnection(connId)
+		c.parentId = &parentId
+		return &Runtime{
+			Connection: c,
+		}, nil
+	})
+	require.Error(t, err)
+	assert.Equal(t, "parent connection 10 not found", err.Error())
+}
+
+func TestAddRuntime_Parent(t *testing.T) {
+	s := NewService()
+
+	parent, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		resMap := &syncx.Map[Resource]{}
+		resMap.Set("test.resource", &TestResource{})
+
+		return &Runtime{
+			Resources:  resMap,
+			Connection: newTestConnection(connId),
+		}, nil
+	})
+	require.NoError(t, err)
+
+	parentId := parent.Connection.ID()
+	child, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		c := newTestConnection(connId)
+		c.parentId = &parentId
+		return &Runtime{
+			Connection: c,
+		}, nil
+	})
+	require.NoError(t, err)
+
+	// Check that the resources for the parent and the child are the same
+	assert.Equal(t, parent.Resources, child.Resources)
+
+	// Add another resource and check that it appears in the child runtime
+	parent.Resources.Set("test.resource2", &TestResource{})
+	assert.Equal(t, parent.Resources, child.Resources)
 }
 
 func TestGetRuntime(t *testing.T) {
