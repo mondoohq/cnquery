@@ -4,14 +4,14 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/apps/cnquery/cmd"
 	"os"
 	"sync"
 	"testing"
 
 	cmdtest "github.com/google/go-cmdtest"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/apps/cnquery/cmd"
 )
 
 var once sync.Once
