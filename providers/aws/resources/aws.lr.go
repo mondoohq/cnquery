@@ -2359,6 +2359,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetCloudWatchLogsRoleArn()).ToDataRes(types.String)
 	},
+	"aws.cloudtrail.trail.cloudWatchLogsLogGroupArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudtrailTrail).GetCloudWatchLogsLogGroupArn()).ToDataRes(types.String)
+	},
 	"aws.cloudtrail.trail.eventSelectors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrailTrail).GetEventSelectors()).ToDataRes(types.Array(types.Dict))
 	},
@@ -6240,6 +6243,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.cloudtrail.trail.cloudWatchLogsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudtrailTrail).CloudWatchLogsRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudtrail.trail.cloudWatchLogsLogGroupArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudtrailTrail).CloudWatchLogsLogGroupArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.trail.eventSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16100,6 +16107,7 @@ type mqlAwsCloudtrailTrail struct {
 	Status plugin.TValue[interface{}]
 	LogGroup plugin.TValue[*mqlAwsCloudwatchLoggroup]
 	CloudWatchLogsRoleArn plugin.TValue[string]
+	CloudWatchLogsLogGroupArn plugin.TValue[string]
 	EventSelectors plugin.TValue[[]interface{}]
 	Region plugin.TValue[string]
 }
@@ -16225,6 +16233,10 @@ func (c *mqlAwsCloudtrailTrail) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLo
 
 func (c *mqlAwsCloudtrailTrail) GetCloudWatchLogsRoleArn() *plugin.TValue[string] {
 	return &c.CloudWatchLogsRoleArn
+}
+
+func (c *mqlAwsCloudtrailTrail) GetCloudWatchLogsLogGroupArn() *plugin.TValue[string] {
+	return &c.CloudWatchLogsLogGroupArn
 }
 
 func (c *mqlAwsCloudtrailTrail) GetEventSelectors() *plugin.TValue[[]interface{}] {
