@@ -2,7 +2,7 @@ module go.mondoo.com/cnquery/v10/providers/gitlab
 
 replace go.mondoo.com/cnquery/v10 => ../..
 
-go 1.21
+go 1.22
 
 require (
 	github.com/rs/zerolog v1.32.0

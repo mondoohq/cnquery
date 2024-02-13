@@ -2,9 +2,9 @@ module go.mondoo.com/cnquery/v10/providers/slack
 
 replace go.mondoo.com/cnquery/v10 => ../..
 
-go 1.21
+go 1.22
 
-toolchain go1.21.3
+toolchain go1.22.0
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.5

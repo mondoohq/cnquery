@@ -2,7 +2,7 @@ module go.mondoo.com/cnquery/v10/providers/google-workspace
 
 replace go.mondoo.com/cnquery/v10 => ../..
 
-go 1.21
+go 1.22
 
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
