@@ -6,7 +6,6 @@ package image
 import (
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -74,14 +73,14 @@ func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor,
 	return remote.Get(ref, remote.WithAuth(o.auth))
 }
 
-func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.ReadCloser, error) {
+func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, error) {
 	o := &options{
 		insecure: false,
 	}
 
 	for _, option := range opts {
 		if err := option(o); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
@@ -98,7 +97,7 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
-			return nil, nil, err
+			return nil, err
 		}
 		o.auth = auth
 	}
@@ -126,15 +125,7 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 
 	img, err := remote.Image(ref, remote.WithAuth(o.auth), remote.WithTransport(tr))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	// write image to disk (conmpressed, unflattened)
-	// Otherwise we can not later recognize it as a valid image
-	f, err := writeCompressedTarImage(img, ref.String())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return img, f, nil
+	return img, nil
 }

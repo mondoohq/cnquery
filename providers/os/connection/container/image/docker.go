@@ -67,20 +67,27 @@ func writeCompressedTarImage(img v1.Image, digest string) (*os.File, error) {
 	}
 	filename := f.Name()
 
-	ref, err := name.ParseReference(digest, name.WeakValidation)
-	if err != nil {
+	if err := WriteCompressedTarImageToFile(img, digest, f); err != nil {
 		os.Remove(filename)
 		return nil, err
+
+	}
+	return f, nil
+}
+
+func WriteCompressedTarImageToFile(img v1.Image, digest string, f *os.File) error {
+	ref, err := name.ParseReference(digest, name.WeakValidation)
+	if err != nil {
+		return err
 	}
 
 	err = tarball.Write(ref, img, f)
 	if err != nil {
-		os.Remove(filename)
-		return nil, err
+		return err
 	}
 
 	// Rewind, to later read the complete file for uncompress
 	f.Seek(0, io.SeekStart)
 
-	return f, nil
+	return nil
 }
