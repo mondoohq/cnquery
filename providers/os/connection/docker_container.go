@@ -12,7 +12,6 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
-	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
@@ -185,38 +184,17 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 		remoteOpts := auth.AuthOption(conf.Credentials)
 		registryOpts = append(registryOpts, remoteOpts...)
 
-		var conn *TarConnection
-		var img v1.Image
-		loadedImage := false
-		if asset.Connections[0].Options != nil {
-			if _, ok := asset.Connections[0].Options[COMPRESSED_IMAGE]; ok {
-				var rc io.ReadCloser
-				// read image from disk
-				img, rc, err = image.LoadImageFromDisk(asset.Connections[0].Options[COMPRESSED_IMAGE])
-				if err != nil {
-					return nil, err
-				}
-
-				conn, err = NewWithReader(id, conf, asset, rc)
-				if err != nil {
-					return nil, err
-				}
-				loadedImage = true
-			}
+		img, err := image.LoadImageFromRegistry(ref, registryOpts...)
+		if err != nil {
+			return nil, err
 		}
-		if !loadedImage {
-			img, err = image.LoadImageFromRegistry(ref, registryOpts...)
-			if err != nil {
-				return nil, err
-			}
-			if asset.Connections[0].Options == nil {
-				asset.Connections[0].Options = map[string]string{}
-			}
+		if asset.Connections[0].Options == nil {
+			asset.Connections[0].Options = map[string]string{}
+		}
 
-			conn, err = NewTarConnectionForContainer(id, conf, asset, img)
-			if err != nil {
-				return nil, err
-			}
+		conn, err := NewTarConnectionForContainer(id, conf, asset, img)
+		if err != nil {
+			return nil, err
 		}
 
 		var identifier string

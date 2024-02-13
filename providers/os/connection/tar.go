@@ -25,9 +25,8 @@ import (
 )
 
 const (
-	OPTION_FILE      = "path"
-	FLATTENED_IMAGE  = "flattened_path"
-	COMPRESSED_IMAGE = "compressed_path"
+	OPTION_FILE     = "path"
+	FLATTENED_IMAGE = "flattened_path"
 )
 
 var _ shared.Connection = (*TarConnection)(nil)
