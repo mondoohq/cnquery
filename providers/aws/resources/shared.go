@@ -16,8 +16,8 @@ import (
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/network/resources/certificates"
 	"go.mondoo.com/cnquery/v10/providers/aws/connection"
+	"go.mondoo.com/cnquery/v10/providers/network/resources/certificates"
 	"go.mondoo.com/cnquery/v10/types"
 	"k8s.io/client-go/util/cert"
 )
@@ -58,7 +58,7 @@ func (a *mqlAws) regions() ([]interface{}, error) {
 func Is400AccessDeniedError(err error) bool {
 	var respErr *http.ResponseError
 	if errors.As(err, &respErr) {
-		if respErr.HTTPStatusCode() == 400 && strings.Contains(respErr.Error(), "AccessDeniedException") {
+		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 403) && (strings.Contains(respErr.Error(), "AccessDenied") || strings.Contains(respErr.Error(), "UnauthorizedOperation") || strings.Contains(respErr.Error(), "AuthorizationError")) {
 			return true
 		}
 	}

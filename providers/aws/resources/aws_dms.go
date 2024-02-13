@@ -5,9 +5,9 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
-	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
@@ -21,7 +21,7 @@ func (a *mqlAwsDms) id() (string, error) {
 func (a *mqlAwsDms) replicationInstances() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	res := []types.ReplicationInstance{}
+	res := []interface{}{}
 	poolOfJobs := jobpool.CreatePool(a.getReplicationInstances(conn), 5)
 	poolOfJobs.Run()
 
@@ -29,11 +29,21 @@ func (a *mqlAwsDms) replicationInstances() ([]interface{}, error) {
 	if poolOfJobs.HasErrors() {
 		return nil, poolOfJobs.GetErrors()
 	}
+	var errs []error
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		res = append(res, poolOfJobs.Jobs[i].Result.([]types.ReplicationInstance)...)
+		if poolOfJobs.Jobs[i].Err != nil {
+			errs = append(errs, poolOfJobs.Jobs[i].Err)
+		}
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+		}
 	}
-	return convert.JsonToDictSlice(res)
+	converted, err := convert.JsonToDictSlice(res)
+	if err != nil {
+		return nil, err
+	}
+	return converted, errors.Join(errs...)
 }
 
 func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*jobpool.Job {
@@ -50,7 +60,7 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 
 			svc := conn.Dms(regionVal)
 			ctx := context.Background()
-			replicationInstancesAggregated := []types.ReplicationInstance{}
+			res := []interface{}{}
 
 			var marker *string
 			for {
@@ -58,18 +68,23 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-						return tasks, nil
+						return nil, nil
 					}
 					return nil, err
 				}
-				replicationInstancesAggregated = append(replicationInstancesAggregated, replicationInstances.ReplicationInstances...)
+
+				mqlRep, err := convert.JsonToDictSlice(replicationInstances.ReplicationInstances)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlRep...)
 
 				if replicationInstances.Marker == nil {
 					break
 				}
 				marker = replicationInstances.Marker
 			}
-			return jobpool.JobResult(replicationInstancesAggregated), nil
+			return jobpool.JobResult(res), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}

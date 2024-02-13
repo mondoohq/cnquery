@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
-	ecstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
@@ -36,7 +35,7 @@ func (a *mqlAwsElasticache) clusters() ([]interface{}, error) {
 	// get all the results
 	for i := range poolOfJobs.Jobs {
 		if poolOfJobs.Jobs[i].Result != nil {
-			res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+			res = append(res, poolOfJobs.Jobs[i].Result.(interface{}))
 		}
 	}
 
@@ -57,7 +56,7 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 
 			svc := conn.Elasticache(regionVal)
 			ctx := context.Background()
-			res := []ecstypes.CacheCluster{}
+			var res interface{}
 
 			var marker *string
 			for {
@@ -72,7 +71,6 @@ func (a *mqlAwsElasticache) getClusters(conn *connection.AwsConnection) []*jobpo
 				if len(clusters.CacheClusters) == 0 {
 					return nil, nil
 				}
-				res = append(res, clusters.CacheClusters...)
 				if clusters.Marker == nil {
 					break
 				}
