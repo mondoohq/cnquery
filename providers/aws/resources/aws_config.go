@@ -79,6 +79,7 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 						"roleArn":                    llx.StringDataPtr(r.RoleARN),
 						"allSupported":               llx.BoolData(r.RecordingGroup.AllSupported),
 						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
+						"resourceTypes": 							llx.ArrayData(stringSliceInterface, types.String),
 						"recording":                  llx.BoolData(recording),
 						"region":                     llx.StringData(regionVal),
 						"lastStatus":                 llx.StringData(lastStatus),
