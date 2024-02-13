@@ -695,7 +695,7 @@ resources:
       title: Return a list of `aws.config.rule` resources representing AWS Config
         rules configured across all enabled regions and the values for specified fields
     - query: "aws.config.recorders {\n  name \n  roleArn \n  allSupported \n  includeGlobalResourceTypes
-        \n  recording \n  lastStatus \n  region \n}\n"
+        \n resourceTypes \n  recording \n  lastStatus \n  region \n}\n"
       title: Return a list of AWS Config recorders configured across all enabled regions
         and the values for specified fields
     - query: |
@@ -716,6 +716,7 @@ resources:
       name: {}
       recording: {}
       region: {}
+      resourceTypes: {}
       roleArn: {}
     is_private: true
     min_mondoo_version: 5.15.0
