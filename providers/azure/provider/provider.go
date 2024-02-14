@@ -58,7 +58,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		opts["subscriptions-exclude"] = string(subscriptionsToExclude.Value)
 	}
 	// the presence of the flag indicates that we should skip cleanup
-	if len(skipSnapshotCleanup.Value) > 0 {
+	if present := skipSnapshotCleanup.RawData().Value.(bool); present {
 		opts[azureinstancesnapshot.SkipCleanup] = "true"
 	}
 	if len(clientSecret.Value) > 0 {
