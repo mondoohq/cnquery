@@ -39,7 +39,6 @@ type Runtime struct {
 	// schema aggregates all resources executable on this asset
 	schema          extensibleSchema
 	isClosed        bool
-	isEphemeral     bool
 	close           sync.Once
 	shutdownTimeout time.Duration
 }
@@ -76,13 +75,6 @@ func (r *Runtime) tryShutdown() shutdownResult {
 			}
 			log.Error().Msg("failed to disconnect from provider " + provider.Instance.Name)
 		}
-	}
-
-	// Ephemeral runtimes have their primary provider be ephemeral, i.e. non-shared.
-	// All other providers are shared and will not be shut down from within the provider.
-	if r.isEphemeral {
-		err := r.coordinator.Stop(r.Provider.Instance, true)
-		return shutdownResult{Error: err}
 	}
 	return shutdownResult{}
 }
@@ -132,14 +124,7 @@ func (r *Runtime) AssetMRN() string {
 
 // UseProvider sets the main provider for this runtime.
 func (r *Runtime) UseProvider(id string) error {
-	// We transfer isEphemeral here because:
-	// 1. If the runtime is not ephemeral, it behaves as a shared provider by
-	// default.
-	// 2. If the runtime is ephemeral, we only want the main provider to be
-	// ephemeral. All other providers by default are shared.
-	// (Note: In the future we plan to have an isolated runtime mode,
-	// where even other providers are ephemeral, ie not shared)
-	res, err := r.addProvider(id, r.isEphemeral)
+	res, err := r.addProvider(id)
 	if err != nil {
 		return err
 	}
@@ -153,24 +138,16 @@ func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.schema.Add(c.Instance.Name, c.Instance.Schema)
 }
 
-func (r *Runtime) addProvider(id string, isEphemeral bool) (*ConnectedProvider, error) {
+func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	var running *RunningProvider
-	var err error
-	if isEphemeral {
-		running, err = r.coordinator.Start(id, true, r.AutoUpdate)
+
+	// TODO: we need to detect only the shared running providers
+	running = r.coordinator.RunningByID[id]
+	if running == nil {
+		var err error
+		running, err = r.coordinator.Start(id, r.AutoUpdate)
 		if err != nil {
 			return nil, err
-		}
-
-	} else {
-		// TODO: we need to detect only the shared running providers
-		running = r.coordinator.RunningByID[id]
-		if running == nil {
-			var err error
-			running, err = r.coordinator.Start(id, false, r.AutoUpdate)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 
@@ -617,7 +594,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return nil, nil, errors.New("incorrect provider for asset, not adding " + info.Provider)
 	}
 
-	res, err := r.addProvider(info.Provider, false)
+	res, err := r.addProvider(info.Provider)
 	if err != nil {
 		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
 	}
@@ -647,7 +624,7 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 		return provider, resourceInfo, fieldInfo, provider.ConnectionError
 	}
 
-	res, err := r.addProvider(fieldInfo.Provider, false)
+	res, err := r.addProvider(fieldInfo.Provider)
 	if err != nil {
 		return nil, nil, nil, multierr.Wrap(err, "failed to start provider '"+fieldInfo.Provider+"'")
 	}
