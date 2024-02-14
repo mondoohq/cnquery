@@ -117,6 +117,8 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
+require go.uber.org/mock v0.4.0
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Antonboom/testifylint v1.1.2 // indirect
@@ -179,7 +181,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0 // indirect
 	go.opentelemetry.io/otel/metric v1.23.1 // indirect
 	go.opentelemetry.io/otel/sdk v1.22.0 // indirect
-	go.uber.org/mock v0.4.0
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
