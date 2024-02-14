@@ -98,6 +98,7 @@ func (r *Runtime) Close() {
 				log.Error().Err(result.Error).Msg("failed to shutdown the provider")
 			}
 		}
+		r.coordinator.RemoveRuntime(r)
 
 		// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
 		// r.coordinator.Close(r.Provider.Instance)

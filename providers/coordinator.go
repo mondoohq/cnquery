@@ -368,7 +368,7 @@ func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	return res
 }
 
-// RuntimFor an asset will return a new or existing runtime for a given asset.
+// RuntimeFor an asset will return a new or existing runtime for a given asset.
 // If a runtime for this asset already exists, it will re-use it. If the runtime
 // is new, it will create it and detect the provider.
 // The asset and parent must be defined.
@@ -377,7 +377,6 @@ func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runt
 	c.unsafeRefreshRuntimes()
 	res := c.unsafeGetAssetRuntime(asset)
 	c.mutex.Unlock()
-
 	if res != nil {
 		return res, nil
 	}
@@ -427,18 +426,55 @@ func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Run
 	return found
 }
 
+// RemoveRuntime will remove a runtime from the coordinator. This can potentially
+// shutdown a running provider if it's not referenced by another runtime.
+func (c *coordinator) RemoveRuntime(runtime *Runtime) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.unsafeRefreshRuntimes()
+
+	if runtime.asset() != nil {
+		delete(c.runtimes, runtime.asset().Mrn)
+		for _, id := range runtime.asset().PlatformIds {
+			delete(c.runtimes, id)
+		}
+	}
+
+	// Analyze the providers that are still being used by active runtimes
+	usedProviders := map[string]struct{}{}
+	for _, r := range c.runtimes {
+		for _, p := range r.providers {
+			usedProviders[p.Instance.ID] = struct{}{}
+		}
+	}
+
+	// Shutdown any providers that are not being used anymore
+	for id, p := range c.RunningByID {
+		if _, ok := usedProviders[id]; !ok {
+			log.Debug().Msg("shutting down unused provider " + p.Name)
+			if err := c.doStop(p); err != nil {
+				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
+			}
+		}
+	}
+}
+
 func (c *coordinator) Stop(provider *RunningProvider) error {
 	if provider == nil {
 		return nil
 	}
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	return c.doStop(provider)
+}
 
+// doStop will stop a provider and remove it from the list of running providers. Must be called
+// with a mutex lock around it.
+func (c *coordinator) doStop(provider *RunningProvider) error {
 	found := c.RunningByID[provider.ID]
 	if found != nil {
 		delete(c.RunningByID, provider.ID)
 	}
-
 	return provider.Shutdown()
 }
 
