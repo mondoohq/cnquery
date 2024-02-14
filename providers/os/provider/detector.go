@@ -62,7 +62,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	}
 
 	var detectors map[string]struct{}
-	if asset.Platform.Kind != "container-image" {
+	if !slices.Contains([]string{"container-image", "container"}, asset.Platform.Kind) {
 		detectors = mapDetectors(asset.IdDetector)
 	}
 
