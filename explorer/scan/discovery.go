@@ -132,7 +132,6 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 
 		// If there is no inventory, no assets have been discovered under the root asset
 		if rootAssetWithRuntime.Runtime.Provider.Connection.Inventory == nil {
-			closeRootRuntime = true
 			continue
 		}
 
