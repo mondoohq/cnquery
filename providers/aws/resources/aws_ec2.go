@@ -508,8 +508,10 @@ func (a *mqlAwsEc2) ebsEncryptionByDefault() (map[string]interface{}, error) {
 	}
 	// get all the results
 	for i := range poolOfJobs.Jobs {
-		jobResult := poolOfJobs.Jobs[i].Result.(ebsEncryption)
-		res[jobResult.region] = jobResult.ebsEncryptionByDefault
+		if poolOfJobs.Jobs[i].Result != nil {
+			jobResult := poolOfJobs.Jobs[i].Result.(ebsEncryption)
+			res[jobResult.region] = jobResult.ebsEncryptionByDefault
+		}
 	}
 	return res, nil
 }
@@ -528,13 +530,12 @@ func (a *mqlAwsEc2) getEbsEncryptionPerRegion(conn *connection.AwsConnection) []
 
 			svc := conn.Ec2(regionVal)
 			ctx := context.Background()
-			res := []interface{}{}
 
 			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 			if err != nil {
 				if Is400AccessDeniedError(err) {
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
-					return res, nil
+					return nil, nil
 				}
 				return nil, err
 			}
