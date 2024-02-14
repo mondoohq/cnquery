@@ -37,7 +37,10 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-var _ shared.Connection = (*SshConnection)(nil)
+var (
+	_ shared.Connection = (*SshConnection)(nil)
+	_ plugin.Closer     = (*SshConnection)(nil)
+)
 
 type SshConnection struct {
 	plugin.Connection

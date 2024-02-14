@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/mrn"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/gcp/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
@@ -251,6 +252,8 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 
 	return c, nil
 }
+
+var _ plugin.Closer = (*GcpSnapshotConnection)(nil)
 
 type GcpSnapshotConnection struct {
 	*fs.FileSystemConnection

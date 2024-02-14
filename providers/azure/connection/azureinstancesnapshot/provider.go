@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/mrn"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/azure/connection/auth"
 	"go.mondoo.com/cnquery/v10/providers/azure/connection/shared"
@@ -279,6 +280,8 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	asset.Platform.Runtime = c.Runtime()
 	return c, nil
 }
+
+var _ plugin.Closer = (*AzureSnapshotConnection)(nil)
 
 type AzureSnapshotConnection struct {
 	*fs.FileSystemConnection
