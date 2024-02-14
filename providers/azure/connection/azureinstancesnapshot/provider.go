@@ -36,7 +36,11 @@ const (
 
 // the instance from which we're performing the scan
 type azureScannerInstance struct {
-	instanceInfo
+	subscriptionId string
+	resourceGroup  string
+	name           string
+	// holds extra information about the instance, fetched via the Azure API
+	instanceInfo *instanceInfo
 }
 
 type assetInfo struct {
@@ -94,12 +98,10 @@ func determineScannerInstanceInfo(localConn *local.LocalConnection, token azcore
 		return nil, err
 	}
 
-	instanceInfo, err := InstanceInfo(resourceGrp, instanceName, subId, token)
-	if err != nil {
-		return nil, err
-	}
 	return &azureScannerInstance{
-		instanceInfo: instanceInfo,
+		subscriptionId: subId,
+		resourceGroup:  resourceGrp,
+		name:           instanceName,
 	}, nil
 }
 
@@ -167,6 +169,11 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	// 3. we either clone the target disk/snapshot and mount it
 	// or we skip the setup and expect the disk to be already attached
 	if !c.skipSetup() {
+		instanceInfo, err := InstanceInfo(scanner.resourceGroup, scanner.name, scanner.subscriptionId, token)
+		if err != nil {
+			return nil, err
+		}
+		c.scanner.instanceInfo = &instanceInfo
 		scsiDevices, err := c.listScsiDevices()
 		if err != nil {
 			c.Close()

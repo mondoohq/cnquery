@@ -55,6 +55,9 @@ func (c *AzureSnapshotConnection) setupDiskAndMount(target scanTarget, lun int32
 }
 
 func (c *AzureSnapshotConnection) setupDisk(target scanTarget) (mountedDiskInfo, assetInfo, error) {
+	if c.scanner.instanceInfo == nil {
+		return mountedDiskInfo{}, assetInfo{}, errors.New("cannot setup disk, instance info not found")
+	}
 	mi := mountedDiskInfo{}
 	ai := assetInfo{}
 	h := sha256.New()
@@ -79,7 +82,7 @@ func (c *AzureSnapshotConnection) setupDisk(target scanTarget) (mountedDiskInfo,
 		}
 
 		log.Debug().Str("boot disk", instanceInfo.bootDiskId).Msg("found boot disk for instance, cloning")
-		disk, err := c.snapshotCreator.cloneDisk(instanceInfo.bootDiskId, c.scanner.resourceGroup, diskName, c.scanner.location, c.scanner.vm.Zones)
+		disk, err := c.snapshotCreator.cloneDisk(instanceInfo.bootDiskId, c.scanner.resourceGroup, diskName, c.scanner.instanceInfo.location, c.scanner.instanceInfo.vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete disk cloning")
 			return mountedDiskInfo{}, assetInfo{}, errors.Wrap(err, "could not complete disk cloning")
@@ -95,7 +98,7 @@ func (c *AzureSnapshotConnection) setupDisk(target scanTarget) (mountedDiskInfo,
 			return mountedDiskInfo{}, assetInfo{}, err
 		}
 
-		disk, err := c.snapshotCreator.createSnapshotDisk(snapshotInfo.snapshotId, c.scanner.resourceGroup, diskName, c.scanner.location, c.scanner.vm.Zones)
+		disk, err := c.snapshotCreator.createSnapshotDisk(snapshotInfo.snapshotId, c.scanner.resourceGroup, diskName, c.scanner.instanceInfo.location, c.scanner.instanceInfo.vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete snapshot disk creation")
 			return mountedDiskInfo{}, assetInfo{}, errors.Wrap(err, "could not create disk from snapshot")
@@ -111,7 +114,7 @@ func (c *AzureSnapshotConnection) setupDisk(target scanTarget) (mountedDiskInfo,
 			return mountedDiskInfo{}, assetInfo{}, err
 		}
 
-		disk, err := c.snapshotCreator.cloneDisk(diskInfo.diskId, c.scanner.resourceGroup, diskName, c.scanner.location, c.scanner.vm.Zones)
+		disk, err := c.snapshotCreator.cloneDisk(diskInfo.diskId, c.scanner.resourceGroup, diskName, c.scanner.instanceInfo.location, c.scanner.instanceInfo.vm.Zones)
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete disk cloning")
 			return mountedDiskInfo{}, assetInfo{}, errors.Wrap(err, "could not complete disk cloning")
