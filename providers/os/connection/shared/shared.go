@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
@@ -43,10 +44,10 @@ const (
 )
 
 type Connection interface {
+	plugin.Connection
 	RunCommand(command string) (*Command, error)
 	FileInfo(path string) (FileInfoDetails, error)
 	FileSystem() afero.Fs
-	ID() uint32
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
@@ -54,7 +55,7 @@ type Connection interface {
 }
 
 type SimpleConnection interface {
-	ID() uint32
+	plugin.Connection
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset

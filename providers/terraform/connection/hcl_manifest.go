@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
@@ -133,9 +134,9 @@ func newHclConnection(id uint32, path string, asset *inventory.Asset) (*Connecti
 	}
 
 	return &Connection{
-		id:        id,
-		asset:     asset,
-		assetType: assetType,
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		assetType:  assetType,
 
 		parsed:          loader.GetParser(),
 		tfVars:          tfVars,

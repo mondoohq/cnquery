@@ -78,7 +78,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}
 
@@ -126,7 +126,7 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 		for i := range projectList.Data {
 			project := projectList.Data[i].(*mqlGcpProject)
 
-			projectConf := conn.Conf.Clone()
+			projectConf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))
 			if projectConf.Options == nil {
 				projectConf.Options = map[string]string{}
 			}
@@ -198,7 +198,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 				},
 				Labels: labels,
 				// TODO: the current connection handling does not work well for instances
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -231,7 +231,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      labels,
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -259,7 +259,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -291,7 +291,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -319,7 +319,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -347,7 +347,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -375,7 +375,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}
@@ -403,7 +403,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 					Family:  []string{"google"},
 				},
 				Labels:      map[string]string{},
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery())}, // pass-in the parent connection config
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))}, // pass-in the parent connection config
 			})
 		}
 	}

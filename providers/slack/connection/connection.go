@@ -12,11 +12,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 type SlackConnection struct {
-	id       uint32
+	plugin.Connection
 	Conf     *inventory.Config
 	asset    *inventory.Asset
 	client   *slack.Client
@@ -25,17 +26,17 @@ type SlackConnection struct {
 
 func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *SlackConnection {
 	return &SlackConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 }
 
 func NewSlackConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*SlackConnection, error) {
 	sc := &SlackConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// if a secret was provided, it always overrides the env variable since it has precedence
@@ -75,10 +76,6 @@ func (s *SlackConnection) Name() string {
 	return "slack"
 }
 
-func (s *SlackConnection) ID() uint32 {
-	return s.id
-}
-
 func (s *SlackConnection) Asset() *inventory.Asset {
 	return s.asset
 }
@@ -111,12 +108,15 @@ func (l *zeroLogAdapter) Msg(msg string, keysAndValues ...interface{}) {
 func (l *zeroLogAdapter) Error(msg string, keysAndValues ...interface{}) {
 	l.Msg(msg, keysAndValues...)
 }
+
 func (l *zeroLogAdapter) Info(msg string, keysAndValues ...interface{}) {
 	l.Msg(msg, keysAndValues...)
 }
+
 func (l *zeroLogAdapter) Debug(msg string, keysAndValues ...interface{}) {
 	l.Msg(msg, keysAndValues...)
 }
+
 func (l *zeroLogAdapter) Warn(msg string, keysAndValues ...interface{}) {
 	l.Msg(msg, keysAndValues...)
 }

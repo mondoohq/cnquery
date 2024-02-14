@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 )
 
 func TestParseProcessStatus(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/process-pid1.toml", nil)
+	trans, err := mock.New(0, "./testdata/process-pid1.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/status")
@@ -27,7 +28,7 @@ func TestParseProcessStatus(t *testing.T) {
 }
 
 func TestParseProcessCmdline(t *testing.T) {
-	trans, err := mock.New(0, "./testdata/process-pid1.toml", nil)
+	trans, err := mock.New(0, "./testdata/process-pid1.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	f, err := trans.FileSystem().Open("/proc/1/cmdline")

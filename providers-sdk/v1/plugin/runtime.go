@@ -14,7 +14,7 @@ import (
 
 type Runtime struct {
 	Connection     Connection
-	Resources      syncx.Map[Resource]
+	Resources      *syncx.Map[Resource]
 	Callback       ProviderCallback
 	HasRecording   bool
 	CreateResource CreateNamedResource
@@ -24,8 +24,27 @@ type Runtime struct {
 	Upstream       *upstream.UpstreamClient
 }
 
-type Connection interface {
-	ID() uint32
+func NewRuntime(
+	conn Connection,
+	callback ProviderCallback,
+	hasRecording bool,
+	createResource CreateNamedResource,
+	newResource NewResource,
+	getData GetData,
+	setData SetData,
+	upstream *upstream.UpstreamClient,
+) *Runtime {
+	return &Runtime{
+		Connection:     conn,
+		Resources:      &syncx.Map[Resource]{},
+		Callback:       callback,
+		HasRecording:   hasRecording,
+		CreateResource: createResource,
+		NewResource:    newResource,
+		GetData:        getData,
+		SetData:        setData,
+		Upstream:       upstream,
+	}
 }
 
 type (

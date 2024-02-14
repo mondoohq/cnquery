@@ -11,6 +11,7 @@ import (
 
 	"github.com/ctreminiom/go-atlassian/admin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -19,7 +20,7 @@ const (
 )
 
 type ScimConnection struct {
-	id     uint32
+	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
@@ -50,28 +51,23 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	_, response, _ := client.SCIM.Schema.User(context.Background(), conf.Options["directory-id"])
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
 	name := fmt.Sprintf("Directory %s", conf.Options["directory-id"])
-	conn := &ScimConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   name,
-	}
 
-	return conn, nil
+	return &ScimConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       name,
+	}, nil
 }
 
 func (c *ScimConnection) Name() string {
 	return c.name
-}
-
-func (c *ScimConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *ScimConnection) Asset() *inventory.Asset {

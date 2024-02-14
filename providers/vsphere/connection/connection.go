@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 
 	"github.com/vmware/govmomi"
@@ -16,7 +17,7 @@ import (
 )
 
 type VsphereConnection struct {
-	id                 uint32
+	plugin.Connection
 	Conf               *inventory.Config
 	asset              *inventory.Asset
 	client             *govmomi.Client
@@ -39,9 +40,9 @@ func vSphereConnectionURL(hostname string, port int32, user string, password str
 
 func NewVsphereConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*VsphereConnection, error) {
 	conn := &VsphereConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize vSphere connection
@@ -74,10 +75,6 @@ func NewVsphereConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 
 func (c *VsphereConnection) Name() string {
 	return "vsphere"
-}
-
-func (c *VsphereConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *VsphereConnection) Asset() *inventory.Asset {

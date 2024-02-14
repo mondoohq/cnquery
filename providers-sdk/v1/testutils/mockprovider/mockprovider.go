@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils/mockprovider/resources"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 var Config = plugin.Provider{
@@ -44,6 +45,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	s.lastConnectionID++
 	connID := s.lastConnectionID
 	runtime := &plugin.Runtime{
+		Resources:    &syncx.Map[plugin.Resource]{},
 		Callback:     callback,
 		HasRecording: req.HasRecording,
 	}

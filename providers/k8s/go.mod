@@ -10,7 +10,6 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-containerregistry v0.19.0
-	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
@@ -273,7 +272,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/package-url/packageurl-go v0.1.2 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/sftp v1.13.6 // indirect

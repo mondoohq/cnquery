@@ -10,6 +10,7 @@ import (
 
 	"github.com/ctreminiom/go-atlassian/confluence"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -18,7 +19,7 @@ const (
 )
 
 type ConfluenceConnection struct {
-	id     uint32
+	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *confluence.Client
@@ -59,29 +60,26 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	client.Auth.SetUserAgent("curl/7.54.0")
 
 	_, response, err := client.Label.Get(context.Background(), "test", "page", 0, 50)
+	if err != nil {
+		return nil, err
+	}
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
-	conn := &ConfluenceConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   host,
-	}
-
-	return conn, nil
+	return &ConfluenceConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       host,
+	}, nil
 }
 
 func (c *ConfluenceConnection) Name() string {
 	return c.name
-}
-
-func (c *ConfluenceConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *ConfluenceConnection) Asset() *inventory.Asset {

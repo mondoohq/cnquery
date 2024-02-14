@@ -10,6 +10,7 @@ import (
 
 	v2 "github.com/ctreminiom/go-atlassian/jira/v2"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -18,7 +19,7 @@ const (
 )
 
 type JiraConnection struct {
-	id     uint32
+	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *v2.Client
@@ -62,27 +63,21 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	_, response, _ := client.MySelf.Details(context.Background(), expand)
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
-	conn := &JiraConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   host,
-	}
-
-	return conn, nil
+	return &JiraConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       host,
+	}, nil
 }
 
 func (c *JiraConnection) Name() string {
 	return c.name
-}
-
-func (c *JiraConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *JiraConnection) Asset() *inventory.Asset {

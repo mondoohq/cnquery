@@ -42,6 +42,17 @@ func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)
 		s.lastConnectionID--
 		return nil, err
 	}
+
+	if runtime.Connection != nil {
+		if parentId := runtime.Connection.ParentID(); parentId > 0 {
+			parentRuntime, err := s.doGetRuntime(parentId)
+			if err != nil {
+				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+			}
+			runtime.Resources = parentRuntime.Resources
+
+		}
+	}
 	s.runtimes[s.lastConnectionID] = runtime
 	return runtime, nil
 }
@@ -49,6 +60,12 @@ func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)
 func (s *Service) GetRuntime(id uint32) (*Runtime, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
+	return s.doGetRuntime(id)
+}
+
+// doGetRuntime is a helper function to get a runtime by its ID. It MUST be called
+// with a lock on s.runtimesLock.
+func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 	if runtime, ok := s.runtimes[id]; ok {
 		return runtime, nil
 	}

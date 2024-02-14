@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
@@ -15,7 +16,7 @@ type ConnectionType string
 // - https://www.terraform.io/docs/language/syntax/configuration.html
 // - https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 type Connection struct {
-	id              uint32
+	plugin.Connection
 	name            string
 	asset           *inventory.Asset
 	platformID      string
@@ -44,10 +45,6 @@ func (c *Connection) Runtime() string {
 
 func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
-}
-
-func (c *Connection) ID() uint32 {
-	return c.id
 }
 
 func (c *Connection) Name() string {

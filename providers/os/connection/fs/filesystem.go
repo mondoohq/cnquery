@@ -30,7 +30,7 @@ func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *
 	log.Debug().Str("path", path).Msg("load filesystem")
 
 	return &FileSystemConnection{
-		id:           id,
+		Connection:   plugin.NewConnection(id, asset),
 		Conf:         conf,
 		asset:        asset,
 		MountedDir:   path,
@@ -45,7 +45,7 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 }
 
 type FileSystemConnection struct {
-	id    uint32
+	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
@@ -100,10 +100,6 @@ func (c *FileSystemConnection) Identifier() (string, error) {
 		return "", errors.New("no platform id provided")
 	}
 	return c.tcPlatformId, nil
-}
-
-func (c *FileSystemConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *FileSystemConnection) Name() string {

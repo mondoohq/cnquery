@@ -378,7 +378,8 @@ func (p *Platform) PrettyTitle() string {
 }
 
 type cloneSettings struct {
-	noDiscovery bool
+	noDiscovery        bool
+	parentConnectionId *uint32
 }
 
 type CloneOption interface {
@@ -394,6 +395,17 @@ type withoutDiscovery struct{}
 
 func (w withoutDiscovery) Apply(o *cloneSettings) { o.noDiscovery = true }
 
+// WithoutDiscovery removes the discovery flags in the opts to ensure the same discovery does not run again
+func WithParentConnectionId(parentId uint32) CloneOption {
+	return withParentConnectionId{parentId: parentId}
+}
+
+type withParentConnectionId struct {
+	parentId uint32
+}
+
+func (w withParentConnectionId) Apply(o *cloneSettings) { o.parentConnectionId = &w.parentId }
+
 func (cfg *Config) Clone(opts ...CloneOption) *Config {
 	if cfg == nil {
 		return nil
@@ -408,6 +420,9 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 
 	if cloneSettings.noDiscovery {
 		clonedObject.Discover = &Discovery{}
+	}
+	if cloneSettings.parentConnectionId != nil {
+		clonedObject.ParentConnectionId = *cloneSettings.parentConnectionId
 	}
 
 	return clonedObject

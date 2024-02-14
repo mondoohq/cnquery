@@ -12,6 +12,7 @@ import (
 	errors "github.com/cockroachdb/errors"
 	msgrapgh_org "github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
@@ -26,7 +27,7 @@ const (
 )
 
 type Ms365Connection struct {
-	id            uint32
+	plugin.Connection
 	Conf          *inventory.Config
 	asset         *inventory.Asset
 	token         azcore.TokenCredential
@@ -63,10 +64,9 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if err != nil {
 		return nil, errors.Wrap(err, "authentication failed")
 	}
-
 	return &Ms365Connection{
+		Connection:    plugin.NewConnection(id, asset),
 		Conf:          conf,
-		id:            id,
 		asset:         asset,
 		token:         token,
 		tenantId:      tenantId,
@@ -78,10 +78,6 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 
 func (h *Ms365Connection) Name() string {
 	return "ms365"
-}
-
-func (h *Ms365Connection) ID() uint32 {
-	return h.id
 }
 
 func (p *Ms365Connection) Asset() *inventory.Asset {

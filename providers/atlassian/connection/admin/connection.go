@@ -10,6 +10,7 @@ import (
 
 	"github.com/ctreminiom/go-atlassian/admin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
 )
 
@@ -18,7 +19,7 @@ const (
 )
 
 type AdminConnection struct {
-	id     uint32
+	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *admin.Client
@@ -45,27 +46,21 @@ func NewConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*
 	_, response, _ := client.Organization.Gets(context.Background(), "")
 	if response != nil {
 		if response.StatusCode == 401 {
-			return nil, errors.New("Failed to authenticate")
+			return nil, errors.New("failed to authenticate")
 		}
 	}
 
-	conn := &AdminConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-		name:   "admin.atlassian.com",
-	}
-
-	return conn, nil
+	return &AdminConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+		name:       "admin.atlassian.com",
+	}, nil
 }
 
 func (c *AdminConnection) Name() string {
 	return c.name
-}
-
-func (c *AdminConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *AdminConnection) Asset() *inventory.Asset {

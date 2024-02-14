@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/network/connection"
 	"go.mondoo.com/cnquery/v10/providers/network/resources"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 func TestResource_DNS(t *testing.T) {
@@ -50,13 +51,13 @@ func TestResource_DnsFqdn(t *testing.T) {
 		},
 	}
 
-	runtime := &plugin.Runtime{}
+	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 
 	for _, tc := range testCases {
 		conf := &inventory.Config{
 			Host: tc.hostName,
 		}
-		runtime.Connection = connection.NewHostConnection(1, nil, conf)
+		runtime.Connection = connection.NewHostConnection(1, &inventory.Asset{}, conf)
 
 		dns, err := resources.NewResource(
 			runtime,

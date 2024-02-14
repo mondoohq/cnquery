@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/detector"
 )
@@ -22,7 +23,7 @@ func TestParseECSContainerId(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	conn, err := mock.New(0, "./testdata/container-identity.toml", nil)
+	conn, err := mock.New(0, "./testdata/container-identity.toml", &inventory.Asset{})
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

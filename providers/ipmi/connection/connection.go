@@ -8,12 +8,13 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	impi_client "go.mondoo.com/cnquery/v10/providers/ipmi/connection/client"
 )
 
 type IpmiConnection struct {
-	id    uint32
+	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	//  custom connection fields
@@ -23,9 +24,9 @@ type IpmiConnection struct {
 
 func NewIpmiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*IpmiConnection, error) {
 	conn := &IpmiConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize connection
@@ -66,10 +67,6 @@ func NewIpmiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 
 func (c *IpmiConnection) Name() string {
 	return "ipmi"
-}
-
-func (c *IpmiConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *IpmiConnection) Asset() *inventory.Asset {

@@ -14,7 +14,7 @@ import (
 )
 
 type OpcuaConnection struct {
-	id       uint32
+	plugin.Connection
 	Conf     *inventory.Config
 	asset    *inventory.Asset
 	client   *opcua.Client
@@ -23,9 +23,9 @@ type OpcuaConnection struct {
 
 func NewOpcuaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OpcuaConnection, error) {
 	conn := &OpcuaConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize connection
@@ -80,10 +80,6 @@ func NewOpcuaConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 
 func (c *OpcuaConnection) Name() string {
 	return "opcua"
-}
-
-func (c *OpcuaConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *OpcuaConnection) Asset() *inventory.Asset {

@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	winrmConn "go.mondoo.com/cnquery/v10/providers/os/connection/winrm"
@@ -78,16 +79,16 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 
 	log.Debug().Msg("winrm> connection established")
 	return &WinrmConnection{
-		id:       id,
-		conf:     conf,
-		asset:    asset,
-		Endpoint: winrmEndpoint,
-		Client:   client,
+		Connection: plugin.NewConnection(id, asset),
+		conf:       conf,
+		asset:      asset,
+		Endpoint:   winrmEndpoint,
+		Client:     client,
 	}, nil
 }
 
 type WinrmConnection struct {
-	id    uint32
+	plugin.Connection
 	conf  *inventory.Config
 	asset *inventory.Asset
 
@@ -95,10 +96,6 @@ type WinrmConnection struct {
 
 	Endpoint *winrm.Endpoint
 	Client   *winrm.Client
-}
-
-func (c *WinrmConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *WinrmConnection) Name() string {

@@ -5,12 +5,13 @@ package shared
 
 import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 )
 
 type ConnectionType string
 
 type GcpConnection interface {
-	ID() uint32
+	plugin.Connection
 	Name() string
 	Type() ConnectionType
 	Config() *inventory.Config

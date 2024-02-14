@@ -9,12 +9,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/shadow"
 )
 
 func TestParseShadow(t *testing.T) {
-	mock, err := mock.New(0, "./testdata/debian.toml", nil)
+	mock, err := mock.New(0, "./testdata/debian.toml", &inventory.Asset{})
 	require.NoError(t, err)
 
 	f, err := mock.FileSystem().Open("/etc/shadow")

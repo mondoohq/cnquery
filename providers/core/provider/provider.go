@@ -46,15 +46,15 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 		}
 
-		return &plugin.Runtime{
-			Callback:       callback,
-			Upstream:       upstream,
-			HasRecording:   req.HasRecording,
-			CreateResource: resources.CreateResource,
-			NewResource:    resources.NewResource,
-			GetData:        resources.GetData,
-			SetData:        resources.SetData,
-		}, nil
+		return plugin.NewRuntime(
+			nil,
+			callback,
+			req.HasRecording,
+			resources.CreateResource,
+			resources.NewResource,
+			resources.GetData,
+			resources.SetData,
+			upstream), nil
 	})
 	if err != nil {
 		return nil, err

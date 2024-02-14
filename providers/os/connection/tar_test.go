@@ -38,7 +38,7 @@ func TestTarCommand(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	cmd, err := c.RunCommand("ls /")
@@ -62,7 +62,7 @@ func TestPlatformIdentifier(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	require.NoError(t, err)
 	platformId, err := conn.Identifier()
 	require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestTarSymlinkFile(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := c.FileSystem().Open("/bin/cat")
@@ -110,7 +110,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: centosContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := c.FileSystem().Open("/etc/redhat-release")
@@ -141,7 +141,7 @@ func TestTarFile(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	f, err := c.FileSystem().Open("/etc/alpine-release")
@@ -171,7 +171,7 @@ func TestFilePermissions(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	require.NoError(t, err)
 
 	path := "/etc/alpine-release"
@@ -228,7 +228,7 @@ func TestTarFileFind(t *testing.T) {
 		Options: map[string]string{
 			connection.OPTION_FILE: alpineContainerPath,
 		},
-	}, nil)
+	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
 
 	fs := c.FileSystem()

@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/manifest"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
 	sharedres "go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 type K8sObjectKindTest struct {
@@ -50,7 +51,7 @@ func TestManifestFiles(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, conn)
 
-			runtime := &plugin.Runtime{}
+			runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 			runtime.Connection = conn
 
 			obj, err := NewResource(
@@ -145,7 +146,7 @@ func TestManifestFile_CustomResource(t *testing.T) {
 	name := "demo-pipeline"
 	namespace := "default"
 	kind := "pipeline.tekton.dev"
-	runtime := &plugin.Runtime{}
+	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 	runtime.Connection = conn
 
 	parser := conn.(*manifest.Connection).ManifestParser
@@ -159,6 +160,7 @@ func TestManifestFile_CustomResource(t *testing.T) {
 	assert.Equal(t, 1, len(res.Resources))
 
 	rr, err := conn.Resources(kind, name, namespace)
+	require.NoError(t, err)
 
 	assert.Equal(t, name, rr.Name)
 	assert.Equal(t, namespace, rr.Namespace)

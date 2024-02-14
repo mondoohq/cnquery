@@ -16,11 +16,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 type AwsConnection struct {
-	id                uint32
+	plugin.Connection
 	Conf              *inventory.Config
 	asset             *inventory.Asset
 	cfg               aws.Config
@@ -63,8 +64,8 @@ type EcsDiscoveryFilters struct {
 
 func NewMockConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) *AwsConnection {
 	return &AwsConnection{
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
 	}
 }
 
@@ -100,8 +101,8 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		}
 	}
 
+	c.Connection = plugin.NewConnection(id, asset)
 	c.Conf = conf
-	c.id = id
 	c.asset = asset
 	c.cfg = cfg
 	c.accountId = *identity.Account
@@ -229,10 +230,6 @@ func WithAssumeRole(defaultCfg aws.Config, roleArn string, externalId string) Co
 
 func (h *AwsConnection) Name() string {
 	return "aws"
-}
-
-func (h *AwsConnection) ID() uint32 {
-	return h.id
 }
 
 func (p *AwsConnection) Asset() *inventory.Asset {

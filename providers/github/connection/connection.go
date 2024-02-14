@@ -12,12 +12,13 @@ import (
 	"github.com/google/go-github/v57/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 )
 
 type GithubConnection struct {
-	id     uint32
+	plugin.Connection
 	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *github.Client
@@ -65,22 +66,16 @@ func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		}
 		return nil, err
 	}
-	conn := &GithubConnection{
-		Conf:   conf,
-		id:     id,
-		asset:  asset,
-		client: client,
-	}
-
-	return conn, nil
+	return &GithubConnection{
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
+		client:     client,
+	}, nil
 }
 
 func (c *GithubConnection) Name() string {
 	return "github"
-}
-
-func (c *GithubConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *GithubConnection) Asset() *inventory.Asset {

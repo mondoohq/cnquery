@@ -30,7 +30,7 @@ const (
 )
 
 type GcpConnection struct {
-	id    uint32
+	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	// custom connection fields
@@ -44,9 +44,9 @@ type GcpConnection struct {
 
 func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*GcpConnection, error) {
 	conn := &GcpConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize connection
@@ -116,10 +116,6 @@ func NewGcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 
 func (c *GcpConnection) Name() string {
 	return "gcp"
-}
-
-func (c *GcpConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *GcpConnection) Asset() *inventory.Asset {

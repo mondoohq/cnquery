@@ -8,11 +8,12 @@ import (
 
 	"github.com/aristanetworks/goeapi"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
 type AristaConnection struct {
-	id    uint32
+	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	// custom connection fields
@@ -21,9 +22,9 @@ type AristaConnection struct {
 
 func NewAristaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AristaConnection, error) {
 	conn := &AristaConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// initialize connection
@@ -57,10 +58,6 @@ func NewAristaConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 
 func (c *AristaConnection) Name() string {
 	return "arista"
-}
-
-func (c *AristaConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *AristaConnection) Asset() *inventory.Asset {

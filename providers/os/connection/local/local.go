@@ -14,24 +14,24 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/cat"
 )
 
 type LocalConnection struct {
-	shell   []string
-	fs      afero.Fs
-	Sudo    *inventory.Sudo
-	runtime string
-	id      uint32
-	asset   *inventory.Asset
+	plugin.Connection
+	shell []string
+	fs    afero.Fs
+	Sudo  *inventory.Sudo
+	asset *inventory.Asset
 }
 
 func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *LocalConnection {
 	// expect unix shell by default
 	res := LocalConnection{
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
 	}
 	if conf != nil {
 		res.Sudo = conf.Sudo
@@ -46,10 +46,6 @@ func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) *L
 	}
 
 	return &res
-}
-
-func (p *LocalConnection) ID() uint32 {
-	return p.id
 }
 
 func (p *LocalConnection) Name() string {

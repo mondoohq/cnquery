@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -27,7 +28,7 @@ import (
 )
 
 type Connection struct {
-	id                 uint32
+	plugin.Connection
 	asset              *inventory.Asset
 	d                  *resources.Discovery
 	config             *rest.Config
@@ -99,7 +100,7 @@ func NewConnection(id uint32, asset *inventory.Asset, discoveryCache *resources.
 	}
 
 	res := Connection{
-		id:                 id,
+		Connection:         plugin.NewConnection(id, asset),
 		asset:              asset,
 		d:                  d,
 		config:             config,
@@ -123,14 +124,6 @@ func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*re
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
 		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}, CurrentContext: context}).ClientConfig()
-}
-
-func (c *Connection) SetID(id uint32) {
-	c.id = id
-}
-
-func (c *Connection) ID() uint32 {
-	return c.id
 }
 
 func (c *Connection) Runtime() string {

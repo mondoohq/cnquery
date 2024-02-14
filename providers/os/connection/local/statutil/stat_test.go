@@ -12,13 +12,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	p, err := mock.New(0, filepath, nil)
+	p, err := mock.New(0, filepath, &inventory.Asset{})
 	require.NoError(t, err)
 
 	statHelper := New(p)
@@ -45,7 +46,7 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	p, err := mock.New(0, filepath, nil)
+	p, err := mock.New(0, filepath, &inventory.Asset{})
 	require.NoError(t, err)
 
 	statHelper := New(p)
@@ -65,7 +66,7 @@ func TestOpenbsdStatCmd(t *testing.T) {
 
 func TestAixStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/aix.toml")
-	p, err := mock.New(0, filepath, nil)
+	p, err := mock.New(0, filepath, &inventory.Asset{})
 	require.NoError(t, err)
 
 	statHelper := New(p)

@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/v10/providers/os/resources"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
@@ -201,7 +202,7 @@ func TestResource_File_Permissions(t *testing.T) {
 		},
 	}
 
-	runtime := &plugin.Runtime{}
+	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 
 	for _, tc := range testCases {
 		if !tc.focus {

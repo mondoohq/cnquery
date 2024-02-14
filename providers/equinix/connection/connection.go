@@ -23,7 +23,7 @@ const (
 )
 
 type EquinixConnection struct {
-	id    uint32
+	plugin.Connection
 	Conf  *inventory.Config
 	asset *inventory.Asset
 	// custom connection fields
@@ -36,9 +36,9 @@ type EquinixConnection struct {
 
 func NewEquinixConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*EquinixConnection, error) {
 	conn := &EquinixConnection{
-		Conf:  conf,
-		id:    id,
-		asset: asset,
+		Connection: plugin.NewConnection(id, asset),
+		Conf:       conf,
+		asset:      asset,
 	}
 
 	// if a secret was provided, it always overrides the env variable since it has precedence
@@ -112,10 +112,6 @@ func NewEquinixConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 
 func (c *EquinixConnection) Name() string {
 	return "equinix"
-}
-
-func (c *EquinixConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *EquinixConnection) Asset() *inventory.Asset {

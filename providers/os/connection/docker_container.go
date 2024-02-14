@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/docker_engine"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
@@ -31,7 +32,7 @@ const (
 var _ shared.Connection = &DockerContainerConnection{}
 
 type DockerContainerConnection struct {
-	id    uint32
+	plugin.Connection
 	asset *inventory.Asset
 
 	Client    *client.Client
@@ -68,12 +69,12 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 	}
 
 	conn := &DockerContainerConnection{
-		id:        id,
-		asset:     asset,
-		Client:    dockerClient,
-		container: conf.Host,
-		kind:      "container",
-		runtime:   "docker",
+		Connection: plugin.NewConnection(id, asset),
+		asset:      asset,
+		Client:     dockerClient,
+		container:  conf.Host,
+		kind:       "container",
+		runtime:    "docker",
 	}
 
 	// this can later be used for containers build from scratch
@@ -101,10 +102,6 @@ func GetDockerClient() (*client.Client, error) {
 	}
 	cli.NegotiateAPIVersion(context.Background())
 	return cli, nil
-}
-
-func (c *DockerContainerConnection) ID() uint32 {
-	return c.id
 }
 
 func (c *DockerContainerConnection) Name() string {
