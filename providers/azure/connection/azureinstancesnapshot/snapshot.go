@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 )
 
@@ -213,42 +214,40 @@ func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, dis
 	if err != nil {
 		return err
 	}
-	attachOpt := compute.DiskCreateOptionTypesAttach
-	deleteOpt := compute.DiskDeleteOptionTypesDelete
 	// the Azure API requires all disks to be specified, even the already attached ones.
 	// we simply attach the new disk to the end of the already present list of data disks
 	disks := targetInstance.vm.Properties.StorageProfile.DataDisks
 	disks = append(disks, &compute.DataDisk{
 		Name:         &diskName,
-		CreateOption: &attachOpt,
-		DeleteOption: &deleteOpt,
+		CreateOption: to.Ptr(compute.DiskCreateOptionTypesAttach),
+		DeleteOption: to.Ptr(compute.DiskDeleteOptionTypesDelete),
+		Caching:      to.Ptr(compute.CachingTypesNone),
 		Lun:          &lun,
 		ManagedDisk: &compute.ManagedDiskParameters{
 			ID: &diskId,
 		},
 	})
-	vm := compute.VirtualMachine{
-		Location: &targetInstance.location,
+	props := targetInstance.vm.Properties
+	props.StorageProfile.DataDisks = disks
+	vm := compute.VirtualMachineUpdate{
 		Properties: &compute.VirtualMachineProperties{
-			StorageProfile: &compute.StorageProfile{
-				DataDisks: disks,
-			},
+			StorageProfile: props.StorageProfile,
 		},
 	}
 
-	poller, err := computeSvc.BeginCreateOrUpdate(ctx, targetInstance.resourceGroup, targetInstance.instanceName, vm, &compute.VirtualMachinesClientBeginCreateOrUpdateOptions{})
+	poller, err := computeSvc.BeginUpdate(ctx, targetInstance.resourceGroup, targetInstance.instanceName, vm, &compute.VirtualMachinesClientBeginUpdateOptions{})
 	if err != nil {
 		return err
 	}
 	start := time.Now()
 	for {
 		log.Debug().Str("disk-name", diskName).Str("elapsed", time.Duration(time.Since(start)).String()).Msg("polling for disk attach")
-		_, err := poller.Poll(ctx)
+		_, err = poller.Poll(ctx)
 		if err != nil {
 			return err
 		}
-
 		if poller.Done() {
+			log.Debug().Str("disk-name", diskName).Msg("poller done")
 			break
 		}
 		time.Sleep(5 * time.Second)
@@ -268,8 +267,7 @@ func (sc *snapshotCreator) detachDisk(diskName string, targetInstance instanceIn
 
 	// we stored the disks as they were before attaching the new one in the targetInstance.
 	// we simply use that list which will result in the new disk being detached
-	vm := compute.VirtualMachine{
-		Location: &targetInstance.location,
+	vm := compute.VirtualMachineUpdate{
 		Properties: &compute.VirtualMachineProperties{
 			StorageProfile: &compute.StorageProfile{
 				DataDisks: targetInstance.vm.Properties.StorageProfile.DataDisks,
@@ -277,7 +275,7 @@ func (sc *snapshotCreator) detachDisk(diskName string, targetInstance instanceIn
 		},
 	}
 
-	poller, err := computeSvc.BeginCreateOrUpdate(ctx, targetInstance.resourceGroup, targetInstance.instanceName, vm, &compute.VirtualMachinesClientBeginCreateOrUpdateOptions{})
+	poller, err := computeSvc.BeginUpdate(ctx, targetInstance.resourceGroup, targetInstance.instanceName, vm, &compute.VirtualMachinesClientBeginUpdateOptions{})
 	if err != nil {
 		return err
 	}
