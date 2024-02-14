@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-
 type RunningProvider struct {
 	Name   string
 	ID     string
@@ -39,14 +38,18 @@ type RunningProvider struct {
 // initialize the heartbeat with the provider
 func (p *RunningProvider) heartbeat() error {
 	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
-		p.Shutdown()
+		if err := p.Shutdown(); err != nil {
+			log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
+		}
 		return err
 	}
 
 	go func() {
 		for !p.isCloseOrShutdown() {
 			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
-				p.Shutdown()
+				if err := p.Shutdown(); err != nil {
+					log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
+				}
 				break
 			}
 

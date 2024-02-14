@@ -153,7 +153,7 @@ func (c *coordinator) newRuntime() *Runtime {
 	// Once these calls are removed, please remember to update mock.go to explicitly
 	// load all schemas on startup.
 	res.schema.unsafeLoadAll()
-	// TODO: this step too shouild be optional only, even when loading all.
+	// TODO: this step too should be optional only, even when loading all.
 	// It is executed when the we connect via a provider, so doing it here is
 	// overkill.
 	res.schema.unsafeRefresh()
@@ -271,8 +271,8 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	running := c.runningByID[id]
+	c.mutex.Unlock()
 	if running == nil {
 		var err error
 		running, err = c.startProvider(id, update)
