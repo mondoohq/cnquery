@@ -20,7 +20,7 @@ func TestConnection_ID(t *testing.T) {
 func TestConnection_ParentID_Nil(t *testing.T) {
 	c := NewConnection(1, &inventory.Asset{})
 	require.NotNil(t, c)
-	assert.Nil(t, c.ParentID())
+	assert.Equal(t, 0, c.ParentID())
 }
 
 func TestConnection_ParentID(t *testing.T) {
@@ -32,7 +32,7 @@ func TestConnection_ParentID(t *testing.T) {
 		},
 	})
 	require.NotNil(t, c)
-	assert.Equal(t, uint32(2), *c.ParentID())
+	assert.Equal(t, uint32(2), c.ParentID())
 }
 
 func TestConnection_ParentID_0(t *testing.T) {

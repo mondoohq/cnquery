@@ -14,7 +14,7 @@ import (
 
 type TestConnection struct {
 	id       uint32
-	parentId *uint32
+	parentId uint32
 }
 
 func newTestConnection(id uint32) *TestConnection {
@@ -25,7 +25,7 @@ func (c *TestConnection) ID() uint32 {
 	return c.id
 }
 
-func (c *TestConnection) ParentID() *uint32 {
+func (c *TestConnection) ParentID() uint32 {
 	return c.parentId
 }
 
@@ -84,7 +84,7 @@ func TestAddRuntime_ParentNotExist(t *testing.T) {
 	parentId := uint32(10)
 	_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
-		c.parentId = &parentId
+		c.parentId = parentId
 		return &Runtime{
 			Connection: c,
 		}, nil
@@ -110,7 +110,7 @@ func TestAddRuntime_Parent(t *testing.T) {
 	parentId := parent.Connection.ID()
 	child, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
-		c.parentId = &parentId
+		c.parentId = parentId
 		return &Runtime{
 			Connection: c,
 		}, nil

@@ -44,10 +44,10 @@ func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)
 	}
 
 	if runtime.Connection != nil {
-		if parentId := runtime.Connection.ParentID(); parentId != nil {
-			parentRuntime, err := s.doGetRuntime(*parentId)
+		if parentId := runtime.Connection.ParentID(); parentId > 0 {
+			parentRuntime, err := s.doGetRuntime(parentId)
 			if err != nil {
-				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(*parentId), 10) + " not found")
+				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
 			}
 			runtime.Resources = parentRuntime.Resources
 
