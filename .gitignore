@@ -15,6 +15,6 @@ providers/*/dist
 providers/*/resources/*.resources.json
 providers/*/resources/*.manifest.json
 providers/mock_coordinator.go
+providers/mock_plugin_interface.go
 providers-sdk/*/testutils/mockprovider/resources/*.resources.json
-providers-sdk/*/plugin/mock_interface.go
 !providers/core/resources/*.resources.json

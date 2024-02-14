@@ -24,6 +24,7 @@ import (
 )
 
 //go:generate mockgen -source=./coordinator.go -destination=./mock_coordinator.go -package=providers
+//go:generate mockgen -source=../providers-sdk/v1/plugin/interface.go -destination=./mock_plugin_interface.go -package=providers
 
 type ProvidersCoordinator interface {
 	NewRuntime() *Runtime
