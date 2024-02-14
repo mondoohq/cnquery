@@ -23,13 +23,17 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 )
 
+//go:generate mockgen -source=./coordinator.go -destination=./coordinator_generated.go -package=providers
+
 type ProvidersCoordinator interface {
-	Start(id string, update UpdateProvidersConfig) (*RunningProvider, error)
 	NewRuntime() *Runtime
 	NewRuntimeFrom(parent *Runtime) *Runtime
 	RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error)
 	RemoveRuntime(runtime *Runtime)
+	GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error)
 	SetProviders(providers Providers)
+	Providers() Providers
+	LoadSchema(name string) (*resources.Schema, error)
 	Stop(provider *RunningProvider) error
 	Shutdown()
 }
@@ -37,13 +41,13 @@ type ProvidersCoordinator interface {
 var BuiltinCoreID = coreconf.Config.ID
 
 var Coordinator ProvidersCoordinator = &coordinator{
-	RunningByID: map[string]*RunningProvider{},
+	runningByID: map[string]*RunningProvider{},
 	runtimes:    map[string]*Runtime{},
 }
 
 type coordinator struct {
-	Providers   Providers
-	RunningByID map[string]*RunningProvider
+	providers   Providers
+	runningByID map[string]*RunningProvider
 
 	unprocessedRuntimes []*Runtime
 	runtimes            map[string]*Runtime
@@ -61,107 +65,6 @@ type UpdateProvidersConfig struct {
 	Enabled bool
 	// seconds until we try to refresh the providers version again
 	RefreshInterval int
-}
-
-func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
-	if x, ok := builtinProviders[id]; ok {
-		// We don't warn for core providers, which are the only providers
-		// built into the binary (for now).
-		if id != BuiltinCoreID && id != mockProvider.ID {
-			log.Warn().Msg("using builtin provider for " + x.Config.Name)
-		}
-		if id == mockProvider.ID {
-			mp := x.Runtime.Plugin.(*mockProviderService)
-			mp.Init(x.Runtime)
-		}
-		return x.Runtime, nil
-	}
-
-	if c.Providers == nil {
-		var err error
-		c.Providers, err = ListActive()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	provider, ok := c.Providers[id]
-	if !ok {
-		return nil, errors.New("cannot find provider " + id)
-	}
-
-	if update.Enabled {
-		// We do not stop on failed updates. Up until some other errors happens,
-		// things are still functional. We want to consider failure, possibly
-		// with a config entry in the future.
-		updated, err := c.tryProviderUpdate(provider, update)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("provider", provider.Name).
-				Msg("failed to update provider")
-		} else {
-			provider = updated
-		}
-	}
-
-	if provider.Schema == nil {
-		if err := provider.LoadResources(); err != nil {
-			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
-		}
-	}
-
-	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
-
-	addColorConfig(pluginCmd)
-
-	pluginLogger := &hclogger{Logger: log.Logger}
-	pluginLogger.SetLevel(hclog.Warn)
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: pp.Handshake,
-		Plugins:         pp.PluginMap,
-		Cmd:             pluginCmd,
-		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
-		},
-		Logger: pluginLogger,
-		Stderr: os.Stderr,
-	})
-
-	// Connect via RPC
-	rpcClient, err := client.Client()
-	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to initialize plugin client")
-	}
-
-	// Request the plugin
-	pluginName := "provider"
-	raw, err := rpcClient.Dispense(pluginName)
-	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
-	}
-
-	res := &RunningProvider{
-		Name:        provider.Name,
-		ID:          provider.ID,
-		Plugin:      raw.(pp.ProviderPlugin),
-		Client:      client,
-		Schema:      provider.Schema,
-		interval:    2 * time.Second,
-		gracePeriod: 3 * time.Second,
-	}
-
-	if err := res.heartbeat(); err != nil {
-		return nil, err
-	}
-
-	c.mutex.Lock()
-	c.RunningByID[res.ID] = res
-	c.mutex.Unlock()
-
-	return res, nil
 }
 
 type ProviderVersions struct {
@@ -357,7 +260,7 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 	}
 
 	// Shutdown any providers that are not being used anymore
-	for id, p := range c.RunningByID {
+	for id, p := range c.runningByID {
 		if _, ok := usedProviders[id]; !ok {
 			log.Debug().Msg("shutting down unused provider " + p.Name)
 			if err := c.doStop(p); err != nil {
@@ -367,8 +270,127 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 	}
 }
 
+func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	running := c.runningByID[id]
+	if running == nil {
+		var err error
+		running, err = c.startProvider(id, update)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return running, nil
+}
+
+func (c *coordinator) startProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	if x, ok := builtinProviders[id]; ok {
+		// We don't warn for core providers, which are the only providers
+		// built into the binary (for now).
+		if id != BuiltinCoreID && id != mockProvider.ID {
+			log.Warn().Msg("using builtin provider for " + x.Config.Name)
+		}
+		if id == mockProvider.ID {
+			mp := x.Runtime.Plugin.(*mockProviderService)
+			mp.Init(x.Runtime)
+		}
+		return x.Runtime, nil
+	}
+
+	if c.providers == nil {
+		var err error
+		c.providers, err = ListActive()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	provider, ok := c.providers[id]
+	if !ok {
+		return nil, errors.New("cannot find provider " + id)
+	}
+
+	if update.Enabled {
+		// We do not stop on failed updates. Up until some other errors happens,
+		// things are still functional. We want to consider failure, possibly
+		// with a config entry in the future.
+		updated, err := c.tryProviderUpdate(provider, update)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("provider", provider.Name).
+				Msg("failed to update provider")
+		} else {
+			provider = updated
+		}
+	}
+
+	if provider.Schema == nil {
+		if err := provider.LoadResources(); err != nil {
+			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
+		}
+	}
+
+	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
+
+	addColorConfig(pluginCmd)
+
+	pluginLogger := &hclogger{Logger: log.Logger}
+	pluginLogger.SetLevel(hclog.Warn)
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig: pp.Handshake,
+		Plugins:         pp.PluginMap,
+		Cmd:             pluginCmd,
+		AllowedProtocols: []plugin.Protocol{
+			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
+		},
+		Logger: pluginLogger,
+		Stderr: os.Stderr,
+	})
+
+	// Connect via RPC
+	rpcClient, err := client.Client()
+	if err != nil {
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to initialize plugin client")
+	}
+
+	// Request the plugin
+	pluginName := "provider"
+	raw, err := rpcClient.Dispense(pluginName)
+	if err != nil {
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
+	}
+
+	res := &RunningProvider{
+		Name:        provider.Name,
+		ID:          provider.ID,
+		Plugin:      raw.(pp.ProviderPlugin),
+		Client:      client,
+		Schema:      provider.Schema,
+		interval:    2 * time.Second,
+		gracePeriod: 3 * time.Second,
+	}
+
+	if err := res.heartbeat(); err != nil {
+		return nil, err
+	}
+
+	c.mutex.Lock()
+	c.runningByID[res.ID] = res
+	c.mutex.Unlock()
+
+	return res, nil
+}
+
 func (c *coordinator) SetProviders(providers Providers) {
-	c.Providers = providers
+	c.providers = providers
+}
+
+func (c *coordinator) Providers() Providers {
+	return c.providers
 }
 
 func (c *coordinator) Stop(provider *RunningProvider) error {
@@ -383,40 +405,41 @@ func (c *coordinator) Stop(provider *RunningProvider) error {
 // doStop will stop a provider and remove it from the list of running providers. Must be called
 // with a mutex lock around it.
 func (c *coordinator) doStop(provider *RunningProvider) error {
-	found := c.RunningByID[provider.ID]
+	found := c.runningByID[provider.ID]
 	if found != nil {
-		delete(c.RunningByID, provider.ID)
+		delete(c.runningByID, provider.ID)
 	}
 	return provider.Shutdown()
 }
 
 func (c *coordinator) Shutdown() {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	for _, runtime := range c.RunningByID {
+	for _, runtime := range c.runningByID {
 		if err := runtime.Shutdown(); err != nil {
 			log.Warn().Err(err).Str("provider", runtime.Name).Msg("failed to shut down provider")
 		}
 		runtime.isClosed = true
 		runtime.Client.Kill()
 	}
-	c.RunningByID = map[string]*RunningProvider{}
+	c.runningByID = map[string]*RunningProvider{}
 	c.runtimes = map[string]*Runtime{}
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
-
-	c.mutex.Unlock()
 }
 
 // LoadSchema for a given provider. Providers also cache their Schemas, so
 // calling this with the same provider multiple times will use the loaded
 // cached schema after the first call.
 func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if x, ok := builtinProviders[name]; ok {
 		return x.Runtime.Schema, nil
 	}
 
-	provider, ok := c.Providers[name]
+	provider, ok := c.providers[name]
 	if !ok {
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}
