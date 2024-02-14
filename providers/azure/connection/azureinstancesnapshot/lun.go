@@ -4,6 +4,7 @@
 package azureinstancesnapshot
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -11,19 +12,34 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 )
 
-type deviceInfo struct {
-	// the LUN number, e.g. 3
+type scsiDeviceInfo struct {
+	// the LUN, e.g. 3
 	Lun int32
 	// where the disk is mounted, e.g. /dev/sda
 	VolumePath string
 }
 
-func (a *azureScannerInstance) getAvailableLun(mountedDevices []deviceInfo) (int32, error) {
+type scsiDevices = []scsiDeviceInfo
+
+// TODO: we should combine this with the OS-connection blockDevices struct
+type blockDevices struct {
+	BlockDevices []blockDevice `json:"blockDevices,omitempty"`
+}
+
+type blockDevice struct {
+	Name       string        `json:"name,omitempty"`
+	FsType     string        `json:"fstype,omitempty"`
+	Label      string        `json:"label,omitempty"`
+	Uuid       string        `json:"uuid,omitempty"`
+	Mountpoint []string      `json:"mountpoints,omitempty"`
+	Children   []blockDevice `json:"children,omitempty"`
+}
+
+func getAvailableLun(scsiDevices scsiDevices) (int32, error) {
 	takenLuns := []int32{}
-	for _, d := range mountedDevices {
+	for _, d := range scsiDevices {
 		takenLuns = append(takenLuns, d.Lun)
 	}
 
@@ -52,8 +68,8 @@ func (a *azureScannerInstance) getAvailableLun(mountedDevices []deviceInfo) (int
 
 // https://learn.microsoft.com/en-us/azure/virtual-machines/linux/azure-to-guest-disk-mapping
 // for more information. we want to find the LUNs of the data disks and their mount location
-func getMountedDevices(localConn *local.LocalConnection) ([]deviceInfo, error) {
-	cmd, err := localConn.RunCommand("lsscsi --brief")
+func (c *AzureSnapshotConnection) listScsiDevices() ([]scsiDeviceInfo, error) {
+	cmd, err := c.localConn.RunCommand("lsscsi --brief")
 	if err != nil {
 		return nil, err
 	}
@@ -72,21 +88,84 @@ func getMountedDevices(localConn *local.LocalConnection) ([]deviceInfo, error) {
 	return parseLsscsiOutput(output)
 }
 
-func getMatchingDevice(mountedDevices []deviceInfo, lun int32) (deviceInfo, error) {
-	for _, d := range mountedDevices {
+// https://learn.microsoft.com/en-us/azure/virtual-machines/linux/azure-to-guest-disk-mapping
+// for more information. we want to find the LUNs of the data disks and their mount location
+func (c *AzureSnapshotConnection) listBlockDevices() (*blockDevices, error) {
+	cmd, err := c.localConn.RunCommand("lsblk -f --json")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		outErr, err := io.ReadAll(cmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to list logical unit numbers: %s", outErr)
+	}
+	data, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+	blockEntries := &blockDevices{}
+	if err := json.Unmarshal(data, blockEntries); err != nil {
+		return nil, err
+	}
+	return blockEntries, nil
+}
+
+func filterScsiDevices(scsiDevices scsiDevices, lun int32) []scsiDeviceInfo {
+	matching := []scsiDeviceInfo{}
+	for _, d := range scsiDevices {
 		if d.Lun == lun {
-			return d, nil
+			matching = append(matching, d)
 		}
 	}
-	return deviceInfo{}, errors.New("could not find matching device")
+
+	return matching
+}
+
+// there can be multiple devices mounted at the same LUN. the Azure API only provides
+// the LUN so we need to find all the blocks, mounted at that LUN. then we find the first one
+// that has no mounted partitions and use that as the target device. this is a best-effort approach
+func findMatchingDeviceByBlock(scsiDevices scsiDevices, blockDevices *blockDevices) (string, error) {
+	matchingBlocks := []blockDevice{}
+	for _, device := range scsiDevices {
+		for _, block := range blockDevices.BlockDevices {
+			devName := "/dev/" + block.Name
+			if devName == device.VolumePath {
+				matchingBlocks = append(matchingBlocks, block)
+			}
+		}
+	}
+
+	if len(matchingBlocks) == 0 {
+		return "", errors.New("no matching blocks found")
+	}
+
+	var target string
+	for _, b := range matchingBlocks {
+		log.Debug().Str("name", b.Name).Msg("azure snapshot> checking block")
+		mounted := false
+		for _, ch := range b.Children {
+			if len(ch.Mountpoint) > 0 && ch.Mountpoint[0] != "" {
+				log.Debug().Str("name", ch.Name).Msg("azure snapshot> has mounted partitons, skipping")
+				mounted = true
+			}
+			if !mounted {
+				target = "/dev/" + b.Name
+			}
+		}
+	}
+
+	return target, nil
 }
 
 // parses the output from running 'lsscsi --brief' and gets the device info, the output looks like this:
 // [0:0:0:0]    /dev/sda
 // [1:0:0:0]    /dev/sdb
-func parseLsscsiOutput(output string) ([]deviceInfo, error) {
+func parseLsscsiOutput(output string) (scsiDevices, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
-	mountedDevices := []deviceInfo{}
+	mountedDevices := []scsiDeviceInfo{}
 	for _, line := range lines {
 		log.Debug().Str("line", line).Msg("azure snapshot> parsing lsscsi output")
 		if line == "" {
@@ -107,7 +186,7 @@ func parseLsscsiOutput(output string) ([]deviceInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		mountedDevices = append(mountedDevices, deviceInfo{Lun: int32(lunInt), VolumePath: path})
+		mountedDevices = append(mountedDevices, scsiDeviceInfo{Lun: int32(lunInt), VolumePath: path})
 	}
 
 	return mountedDevices, nil
