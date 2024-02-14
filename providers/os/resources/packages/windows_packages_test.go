@@ -29,6 +29,7 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 		Version: "14.28.29913.0",
 		Arch:    "",
 		Format:  "windows/app",
+		CPE:     "cpe:2.3:a:microsoft corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
 	}
 	assert.Contains(t, m, p)
 
@@ -62,6 +63,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
 		Format:  "windows/appx",
+		CPE:     "cpe:2.3:a:cn=microsoft corporation, o=microsoft corporation, l=redmond, s=washington, c=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
 	}
 	assert.Contains(t, m, p)
 

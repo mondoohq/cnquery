@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/detector/windows"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
 )
 
@@ -82,7 +83,7 @@ const (
 
 var (
 	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
-	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
+	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher  | ConvertTo-Json`
 )
 
 type powershellWinAppxPackages struct {
@@ -90,6 +91,7 @@ type powershellWinAppxPackages struct {
 	FullName     string `json:"PackageFullName"`
 	Architecture int    `json:"Architecture"`
 	Version      string `json:"Version"`
+	Publisher    string `json:"Publisher"`
 }
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
@@ -119,11 +121,22 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 			arch = "unknown"
 		}
 
+		cpeWfn := ""
+		if appxPackages[i].Name != "" && appxPackages[i].Version != "" {
+			cpeWfn, err = cpe.NewPackage2Cpe(appxPackages[i].Publisher, appxPackages[i].Name, appxPackages[i].Version, "", "")
+			if err != nil {
+				log.Debug().Err(err).Str("name", appxPackages[i].Name).Str("version", appxPackages[i].Version).Msg("could not create cpe for windows appx package")
+			}
+		} else {
+			log.Debug().Msg("ignored package since information is missing")
+		}
+
 		pkgs[i] = Package{
 			Name:    appxPackages[i].Name,
 			Version: appxPackages[i].Version,
 			Arch:    arch,
 			Format:  "windows/appx",
+			CPE:     cpeWfn,
 		}
 	}
 	return pkgs, nil
@@ -280,10 +293,20 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 		if entry.UninstallString == "" {
 			continue
 		}
+		cpeWfn := ""
+		if entry.DisplayName != "" && entry.DisplayVersion != "" {
+			cpeWfn, err = cpe.NewPackage2Cpe(entry.Publisher, entry.DisplayName, entry.DisplayVersion, "", "")
+			if err != nil {
+				log.Debug().Err(err).Str("name", entry.DisplayName).Str("version", entry.DisplayVersion).Msg("could not create cpe for windows app package")
+			}
+		} else {
+			log.Debug().Msg("ignored package since information is missing")
+		}
 		pkgs = append(pkgs, Package{
 			Name:    entry.DisplayName,
 			Version: entry.DisplayVersion,
 			Format:  "windows/app",
+			CPE:     cpeWfn,
 		})
 	}
 

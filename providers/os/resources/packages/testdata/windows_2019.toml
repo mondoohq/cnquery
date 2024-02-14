@@ -1,174 +1,202 @@
 # Packages
-[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json\""]
+[commands."powershell -c \"Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version, Publisher  | ConvertTo-Json\""]
 stdout="""
 [
     {
         "Name":  "1527c705-839a-4832-9118-54d4Bd6a0c89",
         "PackageFullName":  "1527c705-839a-4832-9118-54d4Bd6a0c89_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "c5e2524a-ea46-4f67-841f-6a9465d9d515",
         "PackageFullName":  "c5e2524a-ea46-4f67-841f-6a9465d9d515_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "E2A4F912-2574-4A75-9BB0-0D023378592B",
         "PackageFullName":  "E2A4F912-2574-4A75-9BB0-0D023378592B_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "F46D4000-FD22-4DB4-AC8E-4E1DDDE828FE",
         "PackageFullName":  "F46D4000-FD22-4DB4-AC8E-4E1DDDE828FE_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "InputApp",
         "PackageFullName":  "InputApp_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "1000.17763.1.0"
+        "Version":  "1000.17763.1.0",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.AAD.BrokerPlugin",
         "PackageFullName":  "Microsoft.AAD.BrokerPlugin_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "1000.17763.1.0"
+        "Version":  "1000.17763.1.0",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.AccountsControl",
         "PackageFullName":  "Microsoft.AccountsControl_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.AsyncTextService",
         "PackageFullName":  "Microsoft.AsyncTextService_10.0.17763.1_neutral__8wekyb3d8bbwe",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.BioEnrollment",
         "PackageFullName":  "Microsoft.BioEnrollment_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.CredDialogHost",
         "PackageFullName":  "Microsoft.CredDialogHost_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.ECApp",
         "PackageFullName":  "Microsoft.ECApp_10.0.17763.1_neutral__8wekyb3d8bbwe",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.LockApp",
         "PackageFullName":  "Microsoft.LockApp_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Win32WebViewHost",
         "PackageFullName":  "Microsoft.Win32WebViewHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.Apprep.ChxApp",
         "PackageFullName":  "Microsoft.Windows.Apprep.ChxApp_1000.17763.1.0_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "1000.17763.1.0"
+        "Version":  "1000.17763.1.0",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.CapturePicker",
         "PackageFullName":  "Microsoft.Windows.CapturePicker_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.CloudExperienceHost",
         "PackageFullName":  "Microsoft.Windows.CloudExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.Cortana",
         "PackageFullName":  "Microsoft.Windows.Cortana_1.11.5.17763_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "1.11.5.17763"
+        "Version":  "1.11.5.17763",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.NarratorQuickStart",
         "PackageFullName":  "Microsoft.Windows.NarratorQuickStart_10.0.17763.1_neutral_neutral_8wekyb3d8bbwe",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.OOBENetworkCaptivePortal",
         "PackageFullName":  "Microsoft.Windows.OOBENetworkCaptivePortal_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.OOBENetworkConnectionFlow",
         "PackageFullName":  "Microsoft.Windows.OOBENetworkConnectionFlow_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.PeopleExperienceHost",
         "PackageFullName":  "Microsoft.Windows.PeopleExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.PinningConfirmationDialog",
         "PackageFullName":  "Microsoft.Windows.PinningConfirmationDialog_1000.17763.1.0_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "1000.17763.1.0"
+        "Version":  "1000.17763.1.0",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.SecHealthUI",
         "PackageFullName":  "Microsoft.Windows.SecHealthUI_10.0.17763.1_neutral__cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.ShellExperienceHost",
         "PackageFullName":  "Microsoft.Windows.ShellExperienceHost_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Microsoft.Windows.XGpuEjectDialog",
         "PackageFullName":  "Microsoft.Windows.XGpuEjectDialog_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Windows.CBSPreview",
         "PackageFullName":  "Windows.CBSPreview_10.0.17763.1_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.17763.1"
+        "Version":  "10.0.17763.1",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "windows.immersivecontrolpanel",
         "PackageFullName":  "windows.immersivecontrolpanel_10.0.2.1000_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "10.0.2.1000"
+        "Version":  "10.0.2.1000",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     },
     {
         "Name":  "Windows.PrintDialog",
         "PackageFullName":  "Windows.PrintDialog_6.2.1.0_neutral_neutral_cw5n1h2txyewy",
         "Architecture":  11,
-        "Version":  "6.2.1.0"
+        "Version":  "6.2.1.0",
+        "Publisher":  "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
     }
 ]
 """
