@@ -49,6 +49,8 @@ jobs:
 
       - run: make providers/build/core
 
+      - run: make test/generate
+
       - name: Run protolint
         run: make test/lint/proto
 
