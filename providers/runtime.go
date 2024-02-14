@@ -140,8 +140,6 @@ func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
-	var running *RunningProvider
-
 	// TODO: we need to detect only the shared running providers
 	running, err := r.coordinator.GetRunningProvider(id, r.AutoUpdate)
 	if err != nil {
