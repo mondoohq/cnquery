@@ -69,6 +69,7 @@ prep/tools: prep/tools/protolint
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/hashicorp/copywrite@latest
+	go install go.uber.org/mock/mockgen@latest
 
 #   🌙 MQL/MOTOR   #
 

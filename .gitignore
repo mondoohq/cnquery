@@ -14,5 +14,6 @@ providers/*.resources.json
 providers/*/dist
 providers/*/resources/*.resources.json
 providers/*/resources/*.manifest.json
+providers/coordinator_generated.go
 providers-sdk/*/testutils/mockprovider/resources/*.resources.json
 !providers/core/resources/*.resources.json
