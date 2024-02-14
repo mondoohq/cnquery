@@ -90,24 +90,111 @@ func TestRemoveRuntime_PlatformId(t *testing.T) {
 }
 
 func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
-	pId := "platformId1"
-	r := &Runtime{
+	ctrl := gomock.NewController(t)
+
+	// Setup 1 provider with 1 runtime
+	mockPlugin1 := NewMockProviderPlugin(ctrl)
+	mockPlugin1.EXPECT().Shutdown(gomock.Any()).Times(1).Return(nil, nil)
+	p1 := &RunningProvider{
+		ID:     "provider1",
+		Plugin: mockPlugin1,
+	}
+	r1 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider1": {Instance: p1},
+		},
 		Provider: &ConnectedProvider{
+			Instance: p1,
 			Connection: &pp.ConnectRes{
-				Asset: &inventory.Asset{PlatformIds: []string{pId}},
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId1"}},
+			},
+		},
+	}
+
+	// Setup another provider with another runtime
+	mockPlugin2 := NewMockProviderPlugin(ctrl)
+	p2 := &RunningProvider{
+		ID:     "provider2",
+		Plugin: mockPlugin2,
+	}
+	r2 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider2": {Instance: p2},
+		},
+		Provider: &ConnectedProvider{
+			Instance: p2,
+			Connection: &pp.ConnectRes{
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId2"}},
 			},
 		},
 	}
 
 	c := &coordinator{
-		runningByID: map[string]*RunningProvider{},
+		runningByID: map[string]*RunningProvider{
+			"provider1": p1,
+			"provider2": p2,
+		},
 		runtimes: map[string]*Runtime{
-			pId:           r,
-			"platformId2": r,
+			"platformId1": r1,
+			"platformId2": r2,
 		},
 	}
 
-	c.RemoveRuntime(r)
-	assert.NotContains(t, c.runtimes, pId)
-	assert.Contains(t, c.runtimes, "platformId2")
+	// Remove the first runtime
+	c.RemoveRuntime(r1)
+
+	// Verify that the first provider is stopped
+	assert.NotContains(t, c.runningByID, "provider1")
+	assert.Contains(t, c.runningByID, "provider2")
+}
+
+func TestRemoveRuntime_UsedProvider(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// Setup 1 provider with 1 runtime
+	mockPlugin1 := NewMockProviderPlugin(ctrl)
+	p1 := &RunningProvider{
+		ID:     "provider1",
+		Plugin: mockPlugin1,
+	}
+	r1 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider1": {Instance: p1},
+		},
+		Provider: &ConnectedProvider{
+			Instance: p1,
+			Connection: &pp.ConnectRes{
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId1"}},
+			},
+		},
+	}
+
+	// Setup another provider with the same runtime
+	r2 := &Runtime{
+		providers: map[string]*ConnectedProvider{
+			"provider2": {Instance: p1},
+		},
+		Provider: &ConnectedProvider{
+			Instance: p1,
+			Connection: &pp.ConnectRes{
+				Asset: &inventory.Asset{PlatformIds: []string{"platformId2"}},
+			},
+		},
+	}
+
+	c := &coordinator{
+		runningByID: map[string]*RunningProvider{
+			"provider1": p1,
+		},
+		runtimes: map[string]*Runtime{
+			"platformId1": r1,
+			"platformId2": r2,
+		},
+	}
+
+	// Remove the first runtime
+	c.RemoveRuntime(r1)
+
+	// Verify that the first provider is stopped
+	assert.Contains(t, c.runningByID, "provider1")
 }
