@@ -5,6 +5,7 @@ package azureinstancesnapshot
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -207,7 +208,10 @@ func (sc *snapshotCreator) cloneDisk(sourceDiskId, resourceGroupName, diskName s
 }
 
 // attachDisk attaches a disk to an instance
-func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, diskId string, lun int32) error {
+func (sc *snapshotCreator) attachDisk(targetInstance *instanceInfo, diskName, diskId string, lun int32) error {
+	if targetInstance == nil {
+		return errors.New("targetInstance is nil, cannot attach disk")
+	}
 	ctx := context.Background()
 	log.Debug().Str("disk-name", diskName).Int32("LUN", lun).Msg("attach disk")
 	computeSvc, err := sc.computeClient()
@@ -257,7 +261,10 @@ func (sc *snapshotCreator) attachDisk(targetInstance instanceInfo, diskName, dis
 	return err
 }
 
-func (sc *snapshotCreator) detachDisk(diskName string, targetInstance instanceInfo) error {
+func (sc *snapshotCreator) detachDisk(diskName string, targetInstance *instanceInfo) error {
+	if targetInstance == nil {
+		return errors.New("targetInstance is nil, cannot detach disk")
+	}
 	ctx := context.Background()
 	log.Debug().Str("instance-name", targetInstance.instanceName).Msg("detach disk from instance")
 	computeSvc, err := sc.computeClient()
