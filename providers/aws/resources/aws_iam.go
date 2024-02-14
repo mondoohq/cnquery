@@ -754,37 +754,55 @@ func (a *mqlAwsIamUser) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
+type AccessKeyDetails struct {
+	AccessKeyId string    `json:"AccessKeyId"`
+	CreateDate  *time.Time `json:"CreateDate"`
+	Status      string    `json:"Status"`
+	UserName    string    `json:"UserName"`
+}
+
+func (a *mqlAwsIamUser) accessKeys() ([]*AccessKeyDetails, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
-	svc := conn.Iam("")
+	svc := conn.Iam("") 
 	ctx := context.Background()
 
-	username := a.Name.Data
+	username := a.Name.Data 
 
 	var marker *string
-	res := []interface{}{}
+	var resources []*AccessKeyDetails
 	for {
-		keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
-			UserName: &username,
-			Marker:   marker,
-		})
-		if err != nil {
-			return nil, err
-		}
-		metadata, err := convert.JsonToDictSlice(keysResp.AccessKeyMetadata)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, metadata)
-		if !keysResp.IsTruncated {
-			break
-		}
-		marker = keysResp.Marker
+			keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
+					UserName: &username,
+					Marker:   marker,
+			})
+			if err != nil {
+					return nil, err
+			}
+
+			for _, metadata := range keysResp.AccessKeyMetadata {
+					o, err := CreateResource(a.MqlRuntime, "aws.iam.accesskey", map[string]*llx.RawData{
+							"accessKeyId": llx.StringDataPtr(metadata.AccessKeyId),
+							"createDate":  llx.TimeDataPtr(metadata.CreateDate),
+							"status":      llx.StringDataPtr(metadata.Status),
+							"userName":    llx.StringDataPtr(metadata.username),
+					})
+					if err != nil {
+							return nil, err
+					}
+					resource := o.(*AccessKeyDetails)
+					resources = append(resources, resource)
+			}
+
+			if !keysResp.IsTruncated {
+					break
+			}
+			marker = keysResp.Marker
 	}
 
-	return res, nil
+	return resources, nil
 }
+
 
 func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)

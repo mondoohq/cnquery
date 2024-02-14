@@ -776,7 +776,7 @@ private aws.iam.user @defaults("arn name") {
   // List of group ARNs that the user belongs to
   groups() []string
   // List of access keys metadata associated with the user
-  accessKeys() []dict
+  accessKeys() aws.iam.accesskey
   // Login profile for the user
   loginProfile() aws.iam.loginProfile
 }

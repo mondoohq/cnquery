@@ -1547,7 +1547,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsIamUser).GetGroups()).ToDataRes(types.Array(types.String))
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Resource("aws.iam.accesskey"))
 	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
@@ -4962,7 +4962,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		return
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		r.(*mqlAwsIamUser).AccessKeys, ok = plugin.RawToTValue[*mqlAwsIamAccesskey](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12041,7 +12041,7 @@ type mqlAwsIamUser struct {
 	Policies plugin.TValue[[]interface{}]
 	AttachedPolicies plugin.TValue[[]interface{}]
 	Groups plugin.TValue[[]interface{}]
-	AccessKeys plugin.TValue[[]interface{}]
+	AccessKeys plugin.TValue[*mqlAwsIamAccesskey]
 	LoginProfile plugin.TValue[*mqlAwsIamLoginProfile]
 }
 
@@ -12134,8 +12134,18 @@ func (c *mqlAwsIamUser) GetGroups() *plugin.TValue[[]interface{}] {
 	})
 }
 
-func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]interface{}] {
-	return plugin.GetOrCompute[[]interface{}](&c.AccessKeys, func() ([]interface{}, error) {
+func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[*mqlAwsIamAccesskey] {
+	return plugin.GetOrCompute[*mqlAwsIamAccesskey](&c.AccessKeys, func() (*mqlAwsIamAccesskey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "accessKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamAccesskey), nil
+			}
+		}
+
 		return c.accessKeys()
 	})
 }
