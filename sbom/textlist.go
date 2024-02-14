@@ -11,10 +11,30 @@ import (
 	"strings"
 )
 
-type CliList struct {
+type cliOption func(*cLiOpts)
+
+type cLiOpts struct {
+	RenderWithEvidences bool
 }
 
-func (s *CliList) Render(w io.Writer, bom *Sbom) error {
+func WithEvidences() cliOption {
+	return func(opts *cLiOpts) {
+		opts.RenderWithEvidences = true
+	}
+}
+
+type TextList struct {
+	opts cLiOpts
+}
+
+func (s *TextList) ApplyOptions(opts ...cliOption) {
+	for _, opt := range opts {
+		opt(&s.opts)
+	}
+}
+
+func (s *TextList) Render(w io.Writer, bom *Sbom) error {
+
 	sort.SliceStable(bom.Packages, func(i, j int) bool {
 		if bom.Packages[i].Name != bom.Packages[j].Name {
 			return bom.Packages[i].Name < bom.Packages[j].Name
@@ -42,9 +62,19 @@ func (s *CliList) Render(w io.Writer, bom *Sbom) error {
 			sb.WriteString(pkg.Architecture)
 		}
 
+		// we only print the location if it is not empty
 		if pkg.Location != "" {
 			sb.WriteString(" ")
 			sb.WriteString(termenv.String(pkg.Location).Foreground(colors.DefaultColorTheme.Disabled).String())
+		}
+
+		if s.opts.RenderWithEvidences {
+			for i := range pkg.Evidences {
+				evidence := pkg.Evidences[i]
+				sb.WriteString("\n")
+				sb.WriteString(termenv.String("  ").Foreground(colors.DefaultColorTheme.Disabled).String())
+				sb.WriteString(termenv.String(evidence.Value).Foreground(colors.DefaultColorTheme.Disabled).String())
+			}
 		}
 
 		sb.WriteString("\n")

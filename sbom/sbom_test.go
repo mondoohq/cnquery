@@ -19,11 +19,26 @@ func TestSbomParsing(t *testing.T) {
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	assert.Equal(t, "alpine:3.18", selectedBom.Asset.Name)
-	assert.Equal(t, "amd64", selectedBom.Asset.Platform.Arch)
+	assert.Equal(t, "alpine:latest", selectedBom.Asset.Name)
+	assert.Equal(t, "aarch64", selectedBom.Asset.Platform.Arch)
 	assert.Equal(t, "alpine", selectedBom.Asset.Platform.Name)
-	assert.Equal(t, "3.18.4", selectedBom.Asset.Platform.Version)
-	assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/e6b39dab7a69cfea9941378c0dbcc21b314c34eb22f5b9032c2023f6398e97b1"}, selectedBom.Asset.PlatformIds)
+	assert.Equal(t, "3.19.0", selectedBom.Asset.Platform.Version)
+	assert.Equal(t, []string{"//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"}, selectedBom.Asset.PlatformIds)
+
+	var pkg *Package
+	for i := range selectedBom.Packages {
+		if selectedBom.Packages[i].Name == "alpine-baselayout" {
+			pkg = selectedBom.Packages[i]
+			break
+		}
+	}
+	require.NotNil(t, pkg)
+	assert.Equal(t, "alpine-baselayout", pkg.Name)
+	assert.Contains(t, pkg.Evidences, &Evidence{
+		Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+		Value: "etc/profile.d/color_prompt.sh.disabled",
+	})
+
 }
 
 func TestArnGeneration(t *testing.T) {

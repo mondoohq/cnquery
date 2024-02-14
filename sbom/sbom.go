@@ -80,25 +80,51 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 			}
 			if rb.Packages != nil {
 				for _, pkg := range rb.Packages {
-					bom.Packages = append(bom.Packages, &Package{
+					bomPkg := &Package{
 						Name:    pkg.Name,
 						Version: pkg.Version,
 						Purl:    pkg.Purl,
 						Cpes:    pkg.CPEs,
 						Type:    pkg.Format,
-					})
+					}
+
+					for _, filepath := range pkg.FilePaths {
+						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+							Value: filepath,
+						})
+					}
+
+					bom.Packages = append(bom.Packages, bomPkg)
 				}
 			}
 			if rb.PythonPackages != nil {
 				for _, pkg := range rb.PythonPackages {
-					bom.Packages = append(bom.Packages, &Package{
-						Name:     pkg.Name,
-						Version:  pkg.Version,
-						Purl:     pkg.Purl,
-						Cpes:     pkg.CPEs,
-						Location: pkg.FilePath,
-						Type:     "pypi",
-					})
+					bomPkg := &Package{
+						Name:    pkg.Name,
+						Version: pkg.Version,
+						Purl:    pkg.Purl,
+						Cpes:    pkg.CPEs,
+						Type:    "pypi",
+					}
+
+					// deprecated path, all files are now in the FilePaths field
+					// TODO: update once the pythong resource returns multiple results
+					if pkg.FilePath != "" {
+						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+							Value: pkg.FilePath,
+						})
+					}
+
+					for _, filepath := range pkg.FilePaths {
+						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+							Value: filepath,
+						})
+					}
+
+					bom.Packages = append(bom.Packages, bomPkg)
 				}
 			}
 		}

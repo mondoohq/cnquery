@@ -60,14 +60,41 @@ func (ccx *CycloneDX) convert(bom *Sbom) (*cyclonedx.BOM, error) {
 		if len(pkg.Cpes) > 0 {
 			cpe = pkg.Cpes[0]
 		}
+
+		fileLocations := []cyclonedx.EvidenceOccurrence{}
+
+		// pkg.Location is deprecated, use pkg.Evidences instead
+		if pkg.Location != "" {
+			fileLocations = append(fileLocations, cyclonedx.EvidenceOccurrence{
+				Location: pkg.Location,
+			})
+		}
+
+		if pkg.Evidences != nil {
+			for i := range pkg.Evidences {
+				e := pkg.Evidences[i]
+				if e.Type == EvidenceType_EVIDENCE_TYPE_FILE {
+					fileLocations = append(fileLocations, cyclonedx.EvidenceOccurrence{
+						Location: e.Value,
+					})
+				}
+			}
+		}
+
+		var evidence *cyclonedx.Evidence
+		if len(fileLocations) > 0 {
+			evidence = &cyclonedx.Evidence{
+				Occurrences: &fileLocations,
+			}
+		}
+
 		bomPkg := cyclonedx.Component{
 			Type:       cyclonedx.ComponentTypeLibrary,
 			Name:       pkg.Name,
 			Version:    pkg.Version,
 			PackageURL: pkg.Purl,
 			CPE:        cpe,
-			// TODO: use evidence location in 1.5 once available
-			Description: pkg.Location,
+			Evidence:   evidence,
 		}
 
 		components = append(components, bomPkg)

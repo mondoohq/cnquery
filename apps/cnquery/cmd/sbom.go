@@ -27,6 +27,7 @@ func init() {
 	sbomCmd.Flags().String("asset-name", "", "User-override for the asset name")
 	sbomCmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset.") // user-added, editable
 	sbomCmd.Flags().StringP("output", "o", "list", "Set output format: "+sbom.AllFormats())
+	sbomCmd.Flags().Bool("with-evidences", false, "Display evidence for each component")
 }
 
 var sbomCmd = &cobra.Command{
@@ -49,6 +50,11 @@ Note this command is experimental and may change in the future.
 		err := viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to bind output flag")
+		}
+
+		err = viper.BindPFlag("with-evidences", cmd.Flags().Lookup("with-evidences"))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to bind with-evidences flag")
 		}
 	},
 	// we have to initialize an empty run so it shows up as a runnable command in --help
@@ -98,6 +104,13 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	exporter = sbom.NewExporter(output)
 	if exporter == nil {
 		log.Fatal().Err(err).Msg("failed to get exporter for output format: " + output)
+	}
+
+	if viper.GetBool("with-evidences") {
+		x, ok := exporter.(*sbom.TextList)
+		if ok {
+			x.ApplyOptions(sbom.WithEvidences())
+		}
 	}
 
 	for _, bom := range boms {

@@ -50,6 +50,6 @@ func NewExporter(fomat string) Exporter {
 	case FormatList:
 		fallthrough
 	default:
-		return &CliList{}
+		return &TextList{}
 	}
 }

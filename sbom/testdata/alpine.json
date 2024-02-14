@@ -1,43 +1,304 @@
 {
   "assets": {
-    "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q": {
-      "mrn": "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q",
-      "name": "alpine:3.18"
+    "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
+      "mrn": "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw",
+      "name": "alpine:latest"
     }
   },
   "data": {
-    "//explorer.api.mondoo.com/assets/2YchtfothFBnHwN5M6amkNa5r2Q": {
+    "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
       "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-asset": {
         "asset": {
-          "version": "3.18.4",
-          "arch": "amd64",
+          "version": "3.19.0",
+          "arch": "aarch64",
           "labels": {
             "distro-id": "alpine"
           },
-          "cpes.map":  [],
           "platform": "alpine",
           "ids": [
-            "//platformid.api.mondoo.app/runtime/docker/images/e6b39dab7a69cfea9941378c0dbcc21b314c34eb22f5b9032c2023f6398e97b1"
+            "//platformid.api.mondoo.app/runtime/docker/images/1dc785547989b0db1c3cd9949c57574393e69bea98bfe044b0588e24721aa402"
           ],
-          "name": "alpine:3.18"
+          "name": "alpine:latest",
+          "cpes.map": [
+            "cpe:2.3:o:alpinelinux:alpine_linux:3.19.0:*:*:*:*:*:*:*"
+          ]
         }
       },
       "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-packages": {
         "packages.list": [
           {
-            "purl": "pkg:apk/alpine/alpine-baselayout@1683642107%3A3.4.3-r1?arch=x86_64\u0026distro=alpine-3.18.4\u0026epoch=1683642107",
-            "version": "1683642107:3.4.3-r1",
+            "purl": "pkg:apk/alpine/alpine-baselayout@1695795276%3A3.4.3-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1695795276",
+            "version": "1695795276:3.4.3-r2",
             "name": "alpine-baselayout",
+            "format": "apk",
             "cpes.map": [
-              "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1683642107:x86_64:*:*:*:*:amd64:*"
+              "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "etc/motd",
+              "etc/crontabs/root",
+              "etc/modprobe.d/aliases.conf",
+              "etc/modprobe.d/blacklist.conf",
+              "etc/modprobe.d/i386.conf",
+              "etc/modprobe.d/kms.conf",
+              "etc/profile.d/20locale.sh",
+              "etc/profile.d/README",
+              "etc/profile.d/color_prompt.sh.disabled",
+              "lib/sysctl.d/00-alpine.conf",
+              "var/run",
+              "var/spool/mail",
+              "var/spool/cron/crontabs"
             ]
           },
           {
-            "purl": "pkg:apk/alpine/zlib@1681228881%3A1.2.13-r1?arch=x86_64\u0026distro=alpine-3.18.4\u0026epoch=1681228881",
-            "version": "1681228881:1.2.13-r1",
-            "name": "zlib",
+            "purl": "pkg:apk/alpine/alpine-baselayout-data@1695795276%3A3.4.3-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1695795276",
+            "version": "1695795276:3.4.3-r2",
+            "name": "alpine-baselayout-data",
+            "format": "apk",
             "cpes.map": [
-              "cpe:2.3:a:zlib:zlib:1681228881:x86_64:*:*:*:*:amd64:*"
+              "cpe:2.3:a:alpine-baselayout-data:alpine-baselayout-data:1695795276:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "etc/fstab",
+              "etc/group",
+              "etc/hostname",
+              "etc/hosts",
+              "etc/inittab",
+              "etc/modules",
+              "etc/mtab",
+              "etc/nsswitch.conf",
+              "etc/passwd",
+              "etc/profile",
+              "etc/protocols",
+              "etc/services",
+              "etc/shadow",
+              "etc/shells",
+              "etc/sysctl.conf"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/alpine-keys@1634579657%3A2.4-r1?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1634579657",
+            "version": "1634579657:2.4-r1",
+            "name": "alpine-keys",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:alpine-keys:alpine-keys:1634579657:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "etc/apk/keys/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+              "etc/apk/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+              "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+              "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+              "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5243ef4b.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5261cecb.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-58e4f17d.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-5e69ca50.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-60ac2099.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616abc23.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+              "usr/share/apk/keys/alpine-devel@lists.alpinelinux.org-616db30d.rsa.pub",
+              "usr/share/apk/keys/aarch64/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+              "usr/share/apk/keys/aarch64/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+              "usr/share/apk/keys/armhf/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+              "usr/share/apk/keys/armhf/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+              "usr/share/apk/keys/armv7/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+              "usr/share/apk/keys/armv7/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+              "usr/share/apk/keys/mips64/alpine-devel@lists.alpinelinux.org-5e69ca50.rsa.pub",
+              "usr/share/apk/keys/ppc64le/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub",
+              "usr/share/apk/keys/ppc64le/alpine-devel@lists.alpinelinux.org-616abc23.rsa.pub",
+              "usr/share/apk/keys/riscv64/alpine-devel@lists.alpinelinux.org-60ac2099.rsa.pub",
+              "usr/share/apk/keys/riscv64/alpine-devel@lists.alpinelinux.org-616db30d.rsa.pub",
+              "usr/share/apk/keys/s390x/alpine-devel@lists.alpinelinux.org-58e4f17d.rsa.pub",
+              "usr/share/apk/keys/s390x/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub",
+              "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+              "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-5243ef4b.rsa.pub",
+              "usr/share/apk/keys/x86/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub",
+              "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub",
+              "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-5261cecb.rsa.pub",
+              "usr/share/apk/keys/x86_64/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1684120357",
+            "version": "1684120357:2.14.0-r5",
+            "name": "apk-tools",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "lib/libapk.so.2.14.0",
+              "sbin/apk"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/busybox@1699383189%3A1.36.1-r15?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1699383189",
+            "version": "1699383189:1.36.1-r15",
+            "name": "busybox",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:busybox:busybox:1699383189:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "bin/busybox",
+              "etc/securetty",
+              "etc/udhcpd.conf",
+              "etc/busybox-paths.d/busybox",
+              "etc/logrotate.d/acpid",
+              "etc/network/if-up.d/dad",
+              "etc/udhcpc/udhcpc.conf",
+              "usr/share/udhcpc/default.script"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/busybox-binsh@1699383189%3A1.36.1-r15?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1699383189",
+            "version": "1699383189:1.36.1-r15",
+            "name": "busybox-binsh",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:busybox-binsh:busybox-binsh:1699383189:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "bin/sh"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/ca-certificates-bundle@1683374901%3A20230506-r0?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1683374901",
+            "version": "1683374901:20230506-r0",
+            "name": "ca-certificates-bundle",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:ca-certificates-bundle:ca-certificates-bundle:1683374901:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "etc/ssl/cert.pem",
+              "etc/ssl/certs/ca-certificates.crt",
+              "etc/ssl1.1/cert.pem",
+              "etc/ssl1.1/certs"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/libc-utils@1682166293%3A0.7.2-r5?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1682166293",
+            "version": "1682166293:0.7.2-r5",
+            "name": "libc-utils",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:libc-utils:libc-utils:1682166293:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": []
+          },
+          {
+            "purl": "pkg:apk/alpine/libcrypto3@1701101689%3A3.1.4-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1701101689",
+            "version": "1701101689:3.1.4-r2",
+            "name": "libcrypto3",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:libcrypto3:libcrypto3:1701101689:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "etc/ssl/ct_log_list.cnf",
+              "etc/ssl/ct_log_list.cnf.dist",
+              "etc/ssl/openssl.cnf",
+              "etc/ssl/openssl.cnf.dist",
+              "etc/ssl/misc/CA.pl",
+              "etc/ssl/misc/tsget",
+              "etc/ssl/misc/tsget.pl",
+              "lib/libcrypto.so.3",
+              "usr/lib/libcrypto.so.3",
+              "usr/lib/engines-3/afalg.so",
+              "usr/lib/engines-3/capi.so",
+              "usr/lib/engines-3/loader_attic.so",
+              "usr/lib/engines-3/padlock.so",
+              "usr/lib/ossl-modules/legacy.so"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/libssl3@1701101689%3A3.1.4-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1701101689",
+            "version": "1701101689:3.1.4-r2",
+            "name": "libssl3",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:libssl3:libssl3:1701101689:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "lib/libssl.so.3",
+              "usr/lib/libssl.so.3"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/musl@1699271358%3A1.2.4_git20230717-r4?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1699271358",
+            "version": "1699271358:1.2.4_git20230717-r4",
+            "name": "musl",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:musl:musl:1699271358:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "lib/ld-musl-aarch64.so.1",
+              "lib/libc.musl-aarch64.so.1"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/musl-utils@1699271358%3A1.2.4_git20230717-r4?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1699271358",
+            "version": "1699271358:1.2.4_git20230717-r4",
+            "name": "musl-utils",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:musl-utils:musl-utils:1699271358:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "sbin/ldconfig",
+              "usr/bin/getconf",
+              "usr/bin/getent",
+              "usr/bin/iconv",
+              "usr/bin/ldd"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/scanelf@1687178519%3A1.3.7-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1687178519",
+            "version": "1687178519:1.3.7-r2",
+            "name": "scanelf",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:scanelf:scanelf:1687178519:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "usr/bin/scanelf"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/ssl_client@1699383189%3A1.36.1-r15?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1699383189",
+            "version": "1699383189:1.36.1-r15",
+            "name": "ssl_client",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:ssl_client:ssl_client:1699383189:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "usr/bin/ssl_client"
+            ]
+          },
+          {
+            "purl": "pkg:apk/alpine/zlib@1698371416%3A1.3-r2?arch=aarch64\u0026distro=alpine-3.19.0\u0026epoch=1698371416",
+            "version": "1698371416:1.3-r2",
+            "name": "zlib",
+            "format": "apk",
+            "cpes.map": [
+              "cpe:2.3:a:zlib:zlib:1698371416:aarch64:*:*:*:*:*:*"
+            ],
+            "files.map": [
+              "lib/libz.so.1",
+              "lib/libz.so.1.3"
             ]
           }
         ]
