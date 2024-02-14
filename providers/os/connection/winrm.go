@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	winrmConn "go.mondoo.com/cnquery/v10/providers/os/connection/winrm"
@@ -77,37 +78,24 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	}
 
 	log.Debug().Msg("winrm> connection established")
-	conn := &WinrmConnection{
-		id:       id,
-		conf:     conf,
-		asset:    asset,
-		Endpoint: winrmEndpoint,
-		Client:   client,
-	}
-	if len(asset.Connections) > 0 && asset.Connections[0].ParentConnectionId > 0 {
-		conn.parentId = &asset.Connections[0].ParentConnectionId
-	}
-	return conn, nil
+	return &WinrmConnection{
+		Connection: plugin.NewConnection(id, asset),
+		conf:       conf,
+		asset:      asset,
+		Endpoint:   winrmEndpoint,
+		Client:     client,
+	}, nil
 }
 
 type WinrmConnection struct {
-	id       uint32
-	parentId *uint32
-	conf     *inventory.Config
-	asset    *inventory.Asset
+	plugin.Connection
+	conf  *inventory.Config
+	asset *inventory.Asset
 
 	fs afero.Fs
 
 	Endpoint *winrm.Endpoint
 	Client   *winrm.Client
-}
-
-func (c *WinrmConnection) ID() uint32 {
-	return c.id
-}
-
-func (c *WinrmConnection) ParentID() *uint32 {
-	return c.parentId
 }
 
 func (c *WinrmConnection) Name() string {
