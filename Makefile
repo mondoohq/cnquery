@@ -59,16 +59,17 @@ prep/tools/protolint:
 	# protobuf linting
 	go install github.com/yoheimuta/protolint/cmd/protolint@latest
 
-prep/tools: prep/tools/protolint prep/tools/mockgen
-	# protobuf tooling
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+prep/tools: prep/tools/protolint prep/tools/mockgen prep/tools/protoc
 	# additional helper
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/hashicorp/copywrite@latest
+
+prep/tools/protoc:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
 
 prep/tools/mockgen:
 	go install go.uber.org/mock/mockgen@latest
@@ -600,7 +601,7 @@ test: test/go test/lint
 benchmark/go:
 	go test -bench=. -benchmem go.mondoo.com/cnquery/v10/explorer/scan/benchmark
 
-test/generate: prep/tools/mockgen
+test/generate: prep/tools/mockgen prep/tools/protoc
 	go generate ./providers
 	go generate ./providers-sdk/v1/plugin
 
