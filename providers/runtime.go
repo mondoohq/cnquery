@@ -330,10 +330,6 @@ func (r *Runtime) Unregister(watcherUID string) error {
 	return nil
 }
 
-func fieldUID(resource string, id string, field string) string {
-	return resource + "\x00" + id + "\x00" + field
-}
-
 // WatchAndUpdate a resource field and call the function if it changes with its current value
 func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res interface{}, err error)) error {
 	raw, err := r.watchAndUpdate(resource.MqlName(), resource.MqlID(), field, watcherUID)

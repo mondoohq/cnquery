@@ -602,6 +602,7 @@ benchmark/go:
 
 test/generate: prep/tools/mockgen
 	go generate ./providers
+	go generate ./providers-sdk/v1/plugin
 
 test/go: cnquery/generate test/generate test/go/plain
 

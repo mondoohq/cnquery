@@ -23,7 +23,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 )
 
-//go:generate mockgen -source=./coordinator.go -destination=./coordinator_generated.go -package=providers
+//go:generate mockgen -source=./coordinator.go -destination=./mock_coordinator.go -package=providers
 
 type ProvidersCoordinator interface {
 	NewRuntime() *Runtime
@@ -406,12 +406,11 @@ func (c *coordinator) Shutdown() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for _, runtime := range c.runningByID {
-		if err := runtime.Shutdown(); err != nil {
-			log.Warn().Err(err).Str("provider", runtime.Name).Msg("failed to shut down provider")
+	for _, provider := range c.runningByID {
+		if err := provider.Shutdown(); err != nil {
+			log.Warn().Err(err).Str("provider", provider.Name).Msg("failed to shut down provider")
 		}
-		runtime.isClosed = true
-		runtime.Client.Kill()
+		provider.Client.Kill()
 	}
 	c.runningByID = map[string]*RunningProvider{}
 	c.runtimes = map[string]*Runtime{}

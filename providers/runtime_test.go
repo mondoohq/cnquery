@@ -13,7 +13,24 @@ import (
 func TestRuntimeClose(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockC := NewMockProvidersCoordinator(ctrl)
+	r := &Runtime{
+		coordinator: mockC,
+		recording:   NullRecording{},
+		Provider: &ConnectedProvider{
+			Instance: &RunningProvider{
+				Name: "test",
+			},
+		},
+	}
 
-	r := &Runtime{coordinator: mockC}
-	assert.NotNil(t, r)
+	// Make sure the runtime was removed from the coordinator
+	mockC.EXPECT().RemoveRuntime(r).Times(1)
+
+	// Close the runtime
+	r.Close()
+
+	// Make sure the runtime is closed and the schema is empty
+	assert.True(t, r.isClosed)
+	assert.Empty(t, r.schema.loaded)
+	assert.Empty(t, r.schema.roAggregate.Resources)
 }
