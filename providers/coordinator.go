@@ -34,7 +34,6 @@ type ProvidersCoordinator interface {
 	SetProviders(providers Providers)
 	Providers() Providers
 	LoadSchema(name string) (*resources.Schema, error)
-	Stop(provider *RunningProvider) error
 	Shutdown()
 }
 
@@ -263,7 +262,7 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 	for id, p := range c.runningByID {
 		if _, ok := usedProviders[id]; !ok {
 			log.Debug().Msg("shutting down unused provider " + p.Name)
-			if err := c.doStop(p); err != nil {
+			if err := c.stop(p); err != nil {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
 			}
 		}
@@ -393,18 +392,9 @@ func (c *coordinator) Providers() Providers {
 	return c.providers
 }
 
-func (c *coordinator) Stop(provider *RunningProvider) error {
-	if provider == nil {
-		return nil
-	}
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	return c.doStop(provider)
-}
-
-// doStop will stop a provider and remove it from the list of running providers. Must be called
+// stop will stop a provider and remove it from the list of running providers. Must be called
 // with a mutex lock around it.
-func (c *coordinator) doStop(provider *RunningProvider) error {
+func (c *coordinator) stop(provider *RunningProvider) error {
 	found := c.runningByID[provider.ID]
 	if found != nil {
 		delete(c.runningByID, provider.ID)
