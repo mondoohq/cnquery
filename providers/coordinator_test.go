@@ -27,7 +27,7 @@ func TestShutdown(t *testing.T) {
 		id := fmt.Sprintf("test-%d", i)
 
 		// Make sure Shutdown is called for all running providers
-		mockPlugin := pp.NewMockProviderPlugin(ctrl)
+		mockPlugin := NewMockProviderPlugin(ctrl)
 		mockPlugin.EXPECT().Shutdown(gomock.Any()).Times(1).Return(nil, nil)
 		c.runningByID[id] = &RunningProvider{
 			ID:     id,
