@@ -561,6 +561,8 @@ resources:
         min_mondoo_version: latest
       description: {}
       epoch: {}
+      files:
+        min_mondoo_version: latest
       format: {}
       installed: {}
       name: {}
@@ -647,6 +649,11 @@ resources:
       file: {}
       params: {}
     min_mondoo_version: 5.15.0
+  pkgFileInfo:
+    fields:
+      path: {}
+    is_private: true
+    min_mondoo_version: latest
   platform:
     fields:
       vulnerabilityReport: {}

@@ -34,6 +34,7 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 	type sysProfilerItems struct {
 		Name    string `plist:"_name"`
 		Version string `plist:"version"`
+		Path    string `plist:"path"`
 	}
 
 	type sysProfiler struct {
@@ -56,6 +57,14 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 		pkgs[i].Name = entry.Name
 		pkgs[i].Version = entry.Version
 		pkgs[i].Format = MacosPkgFormat
+		pkgs[i].FilesAvailable = PkgFilesIncluded
+		if entry.Path != "" {
+			pkgs[i].Files = []FileRecord{
+				{
+					Path: entry.Path,
+				},
+			}
+		}
 	}
 
 	return pkgs, nil
@@ -85,4 +94,9 @@ func (mpm *MacOSPkgManager) List() ([]Package, error) {
 
 func (mpm *MacOSPkgManager) Available() (map[string]PackageUpdate, error) {
 	return nil, errors.New("cannot determine available packages for macOS")
+}
+
+func (mpm *MacOSPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// nothing extra to be done here since the list is already included in the package list
+	return nil, nil
 }

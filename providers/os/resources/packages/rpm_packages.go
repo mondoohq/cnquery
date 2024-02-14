@@ -5,7 +5,6 @@ package packages
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"github.com/package-url/packageurl-go"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
@@ -58,24 +57,30 @@ func ParseRpmPackages(pf *inventory.Platform, input io.Reader) []Package {
 			if arch == "(none)" {
 				arch = ""
 			}
+			pkg := newRpmPackage(pf, name, version, arch, epoch, m[5])
+			pkg.FilesAvailable = PkgFilesAsync // when we use commands we need to fetch the files async
+			pkgs = append(pkgs, pkg)
 
-			// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
-			// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
-			// increase the binary.
-			cpe, _ := cpe.NewPackage2Cpe(name, name, version, arch, epoch)
-			pkgs = append(pkgs, Package{
-				Name:        name,
-				Version:     version,
-				Epoch:       epoch,
-				Arch:        arch,
-				Description: m[5],
-				Format:      RpmPkgFormat,
-				PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
-				CPE:         cpe,
-			})
 		}
 	}
 	return pkgs
+}
+
+func newRpmPackage(pf *inventory.Platform, name, version, arch, epoch, description string) Package {
+	// NOTE that we do not have the vendor of the package itself, we could try to parse it from the vendor
+	// but that will also not be reliable. We may incorporate the cpe dictionary in the future but that would
+	// increase the binary.
+	cpe, _ := cpe.NewPackage2Cpe(name, name, version, arch, epoch)
+	return Package{
+		Name:        name,
+		Version:     version,
+		Epoch:       epoch,
+		Arch:        arch,
+		Description: description,
+		Format:      RpmPkgFormat,
+		PUrl:        purl.NewPackageUrl(pf, name, version, arch, epoch, packageurl.TypeRPM),
+		CPE:         cpe,
+	}
 }
 
 // RpmPkgManager is the package manager for Redhat, CentOS, Oracle, Photon and Suse
@@ -240,8 +245,6 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	}
 
 	log.Debug().Str("rpmdb", rpmTmpDir).Msg("mql[packages]> cached rpm database locally")
-
-	packages := bytes.Buffer{}
 	db, err := rpmdb.Open(tmpRpmDBFile)
 	if err != nil {
 		return nil, err
@@ -250,17 +253,67 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	resultList := []Package{}
 	for _, pkg := range pkgList {
-		packages.WriteString(fmt.Sprintf("%s %d:%s-%s %s %s\n", pkg.Name, pkg.EpochNum(), pkg.Version, pkg.Release, pkg.Arch, pkg.Summary))
+		rpmPkg := newRpmPackage(rpm.platform, pkg.Name, pkg.Version, pkg.Arch, strconv.Itoa(pkg.EpochNum()), pkg.Summary)
+
+		// determine all files attached
+		records := []FileRecord{}
+		files, err := pkg.InstalledFiles()
+		if err == nil {
+			for _, record := range files {
+				records = append(records, FileRecord{
+					Path: record.Path,
+					Digest: PkgDigest{
+						Value:     record.Digest,
+						Algorithm: pkg.DigestAlgorithm.String(),
+					},
+					FileInfo: PkgFileInfo{
+						Mode:  record.Mode,
+						Flags: int32(record.Flags),
+						Owner: record.Username,
+						Group: record.Groupname,
+						Size:  int64(record.Size),
+					},
+				})
+			}
+		}
+
+		rpmPkg.FilesAvailable = PkgFilesIncluded
+		rpmPkg.Files = records
+		resultList = append(resultList, rpmPkg)
 	}
 
-	return ParseRpmPackages(rpm.platform, &packages), nil
+	return resultList, nil
 }
 
 // TODO: Available() not implemented for RpmFileSystemManager
 // for now this is not an error since we can easily determine available packages
 func (rpm *RpmPkgManager) staticAvailable() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
+}
+
+func (rpm *RpmPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	if rpm.isStaticAnalysis() {
+		// nothing to do since the data is already attached to the package
+		return nil, nil
+	} else {
+		// we need to fetch the files from the running system
+		cmd, err := rpm.conn.RunCommand("rpm -ql " + name)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not read package files")
+		}
+		fileRecords := []FileRecord{}
+		scanner := bufio.NewScanner(cmd.Stdout)
+		for scanner.Scan() {
+			line := scanner.Text()
+			fileRecords = append(fileRecords, FileRecord{
+				Path: line,
+			})
+		}
+		return fileRecords, nil
+	}
 }
 
 // SusePkgManager overwrites the normal RPM handler

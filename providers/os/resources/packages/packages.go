@@ -8,6 +8,20 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 )
 
+type PkgFilesAvailable int
+
+const (
+	// PkgFilesNotAvailable means that the package manager does not provide any file information about the packages.
+	// This is the default value.
+	PkgFilesNotAvailable PkgFilesAvailable = 0
+	// PkgFilesIncluded means that the package manager includes the files in the package metadata and can be queried
+	// via the List function.
+	PkgFilesIncluded PkgFilesAvailable = 1
+	// PkgFilesAsync means that the package manager does not include the files in the package metadata and needs to be
+	// queried asynchronously via the Files function.
+	PkgFilesAsync PkgFilesAvailable = 2
+)
+
 type Package struct {
 	Name        string `json:"name"`
 	Version     string `json:"version"`
@@ -27,6 +41,29 @@ type Package struct {
 
 	// Package CPE
 	CPE string `json:"cpe,omitempty"`
+
+	// Package files (optional, only for some package managers)
+	FilesAvailable PkgFilesAvailable `json:"files_available,omitempty"`
+	Files          []FileRecord      `json:"files,omitempty"`
+}
+
+type FileRecord struct {
+	Path     string      `json:"path"`
+	Digest   PkgDigest   `json:"digest"`
+	FileInfo PkgFileInfo `json:"permission"`
+}
+
+type PkgDigest struct {
+	Value     string `json:"value"`
+	Algorithm string `json:"type"`
+}
+
+type PkgFileInfo struct {
+	Size  int64  `json:"size"`
+	Mode  uint16 `json:"mode"`
+	Flags int32  `json:"flags"`
+	Owner string `json:"owner"`
+	Group string `json:"group"`
 }
 
 // extends Package to store available version
@@ -40,8 +77,12 @@ type PackageUpdate struct {
 
 type OperatingSystemPkgManager interface {
 	Name() string
+	// List returns a list of Packages
 	List() ([]Package, error)
+	// Available returns a map of available package updates from the perspective of the package manager
 	Available() (map[string]PackageUpdate, error)
+	// Files returns a list of files on disk for a given package
+	Files(name string, version string, arch string) ([]FileRecord, error)
 }
 
 // this will find the right package manager for the operating system

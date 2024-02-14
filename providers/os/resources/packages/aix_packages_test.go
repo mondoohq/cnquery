@@ -26,8 +26,7 @@ func TestParseAixPackages(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, 16, len(m), "detected the right amount of packages")
 
-	var p Package
-	p = Package{
+	p := Package{
 		Name:        "X11.apps.msmit",
 		Version:     "7.3.0.0",
 		Description: "AIXwindows msmit Application",

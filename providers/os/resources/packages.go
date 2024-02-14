@@ -29,6 +29,16 @@ func (x *mqlPackage) id() (string, error) {
 	return x.Format.Data + "://" + x.Name.Data + "/" + x.Version.Data + "/" + x.Arch.Data, nil
 }
 
+type mqlPackageInternal struct {
+	filesState   packages.PkgFilesAvailable
+	filesOnDisks []packages.FileRecord
+}
+
+// TODO: this is not accurate enough, we need to tie it to the package
+func (x *mqlPkgFileInfo) id() (string, error) {
+	return x.Path.Data, nil
+}
+
 func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// we only look up the package, if we have been supplied by its name and nothing else
 	raw, ok := args["name"]
@@ -65,6 +75,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
+	res.Files.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, res, nil
 }
 
@@ -81,6 +92,42 @@ func (p *mqlPackage) outdated() (bool, error) {
 
 func (p *mqlPackage) origin() (string, error) {
 	return "", nil
+}
+
+func (p *mqlPackage) files() ([]interface{}, error) {
+	if p.filesState == packages.PkgFilesNotAvailable {
+		return nil, nil
+	}
+
+	var filesOnDisk []packages.FileRecord
+
+	if p.filesState == packages.PkgFilesIncluded {
+		// we already have the data
+		filesOnDisk = p.filesOnDisks
+	} else {
+		// we need to retrieve the data on-demand
+		conn := p.MqlRuntime.Connection.(shared.Connection)
+		pm, err := packages.ResolveSystemPkgManager(conn)
+		if pm == nil || err != nil {
+			return nil, errors.New("could not detect suitable package manager for platform")
+		}
+		filesOnDisk, err = pm.Files(p.Name.Data, p.Version.Data, p.Arch.Data)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var pkgFiles []interface{}
+	for _, file := range filesOnDisk {
+		pkgFile, err := CreateResource(p.MqlRuntime, "pkgFileInfo", map[string]*llx.RawData{
+			"path": llx.StringData(file.Path),
+		})
+		if err != nil {
+			return nil, err
+		}
+		pkgFiles = append(pkgFiles, pkgFile)
+	}
+	return pkgFiles, nil
 }
 
 type mqlPackagesInternal struct {
@@ -159,7 +206,10 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			return nil, err
 		}
 
-		pkgs[i] = pkg
+		s := pkg.(*mqlPackage)
+		s.filesState = osPkg.FilesAvailable
+		s.filesOnDisks = osPkg.Files
+		pkgs[i] = s
 	}
 
 	return pkgs, x.refreshCache(pkgs)

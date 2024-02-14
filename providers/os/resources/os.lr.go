@@ -198,6 +198,10 @@ func init() {
 			Init: initPackage,
 			Create: createPackage,
 		},
+		"pkgFileInfo": {
+			// to override args, implement: initPkgFileInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPkgFileInfo,
+		},
 		"packages": {
 			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPackages,
@@ -1128,6 +1132,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"package.outdated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetOutdated()).ToDataRes(types.Bool)
+	},
+	"package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"pkgFileInfo.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPkgFileInfo).GetPath()).ToDataRes(types.String)
 	},
 	"packages.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackages).GetList()).ToDataRes(types.Array(types.Resource("package")))
@@ -3053,6 +3063,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"package.outdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackage).Outdated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pkgFileInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPkgFileInfo).__id, ok = v.Value.(string)
+			return
+		},
+	"pkgFileInfo.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPkgFileInfo).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7995,7 +8017,7 @@ func (c *mqlGroups) GetList() *plugin.TValue[[]interface{}] {
 type mqlPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlPackageInternal it will be used here
+	mqlPackageInternal
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Version plugin.TValue[string]
@@ -8009,6 +8031,7 @@ type mqlPackage struct {
 	Available plugin.TValue[string]
 	Installed plugin.TValue[bool]
 	Outdated plugin.TValue[bool]
+	Files plugin.TValue[[]interface{}]
 }
 
 // createPackage creates a new instance of this resource
@@ -8104,6 +8127,71 @@ func (c *mqlPackage) GetOutdated() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Outdated, func() (bool, error) {
 		return c.outdated()
 	})
+}
+
+func (c *mqlPackage) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlPkgFileInfo for the pkgFileInfo resource
+type mqlPkgFileInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPkgFileInfoInternal it will be used here
+	Path plugin.TValue[string]
+}
+
+// createPkgFileInfo creates a new instance of this resource
+func createPkgFileInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPkgFileInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("pkgFileInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPkgFileInfo) MqlName() string {
+	return "pkgFileInfo"
+}
+
+func (c *mqlPkgFileInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPkgFileInfo) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 // mqlPackages for the packages resource

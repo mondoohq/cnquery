@@ -51,7 +51,7 @@ func (cpm *CosPkgManager) List() ([]Package, error) {
 	return ParseCosPackages(fr)
 }
 
-func (mpm *CosPkgManager) Available() (map[string]PackageUpdate, error) {
+func (cpm *CosPkgManager) Available() (map[string]PackageUpdate, error) {
 	return nil, errors.New("cannot determine available packages for cos")
 }
 
@@ -80,4 +80,9 @@ func ParseCosPackages(input io.Reader) ([]Package, error) {
 	}
 
 	return pkgs, nil
+}
+
+func (cpm *CosPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
 }

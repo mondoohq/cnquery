@@ -68,3 +68,8 @@ func (ppm *PacmanPkgManager) List() ([]Package, error) {
 func (ppm *PacmanPkgManager) Available() (map[string]PackageUpdate, error) {
 	return nil, errors.New("Available() not implemented for pacman")
 }
+
+func (ppm *PacmanPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

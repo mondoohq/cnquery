@@ -316,3 +316,8 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 func (win *WinPkgManager) Available() (map[string]PackageUpdate, error) {
 	return map[string]PackageUpdate{}, nil
 }
+
+func (win *WinPkgManager) Files(name string, version string, arch string) ([]FileRecord, error) {
+	// not yet implemented
+	return nil, nil
+}

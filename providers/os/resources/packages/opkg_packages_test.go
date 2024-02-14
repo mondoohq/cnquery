@@ -25,8 +25,7 @@ firewall - 2016-11-29-1`
 	m := packages.ParseOpkgListPackagesCommand(strings.NewReader(pkgList))
 
 	assert.Equal(t, 5, len(m), "detected the right amount of packages")
-	var p packages.Package
-	p = packages.Package{
+	p := packages.Package{
 		Name:    "busybox",
 		Version: "1.24.2-1",
 		Format:  packages.OpkgPkgFormat,

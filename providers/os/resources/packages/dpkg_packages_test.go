@@ -1,17 +1,15 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package packages_test
+package packages
 
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/packages"
 )
 
 func TestDpkgParser(t *testing.T) {
@@ -31,12 +29,11 @@ func TestDpkgParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, err := packages.ParseDpkgPackages(pf, f)
+	m, err := ParseDpkgPackages(pf, f)
 	require.NoError(t, err)
 	assert.Equal(t, 10, len(m), "detected the right amount of packages")
 
-	var p packages.Package
-	p = packages.Package{
+	p := Package{
 		Name:    "fdisk",
 		Version: "2.31.1-0.4ubuntu3.1",
 		Arch:    "amd64",
@@ -57,9 +54,9 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 		CPE:    "cpe:2.3:a:fdisk:fdisk:2.31.1-0.4ubuntu3.1:amd64:*:*:*:*:*:*",
 		Format: "deb",
 	}
-	assert.Contains(t, m, p, "fdisk detected")
+	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
 
-	p = packages.Package{
+	p = Package{
 		Name:    "libaudit1",
 		Version: "1:2.4-1+b1",
 		Arch:    "amd64",
@@ -69,11 +66,42 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 The audit-libs package contains the dynamic libraries needed for
 applications to use the audit framework. It is used to monitor systems for
 security related events.`,
-		PUrl:   "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
-		CPE:    "cpe:2.3:a:libaudit1:libaudit1:1:amd64:*:*:*:*:*:*",
-		Format: "deb",
+		PUrl:           "pkg:deb/ubuntu/libaudit1@1%3A2.4-1%2Bb1?arch=amd64&distro=ubuntu-18.04",
+		CPE:            "cpe:2.3:a:libaudit1:libaudit1:1:amd64:*:*:*:*:*:*",
+		Format:         "deb",
+		FilesAvailable: PkgFilesAsync,
 	}
-	assert.Contains(t, m, p, "libaudit1 detected")
+	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+
+	p = Package{
+		Name:    "libss2",
+		Version: "1.44.1-1",
+		Arch:    "amd64",
+		Status:  "install ok installed",
+		Origin:  "e2fsprogs",
+		Description: `command-line interface parsing library
+libss provides a simple command-line interface parser which will
+accept input from the user, parse the command into an argv argument
+vector, and then dispatch it to a handler function.
+.
+It was originally inspired by the Multics SubSystem library.`,
+		PUrl:           "pkg:deb/ubuntu/libss2@1.44.1-1?arch=amd64&distro=ubuntu-18.04",
+		CPE:            "cpe:2.3:a:libss2:libss2:1.44.1-1:amd64:*:*:*:*:*:*",
+		Format:         "deb",
+		FilesAvailable: PkgFilesAsync,
+	}
+	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
+
+	// fetch package files
+	mgr := &DebPkgManager{
+		conn:     mock,
+		platform: pf,
+	}
+	pkgFiles, err := mgr.Files(p.Name, p.Version, p.Arch)
+	require.NoError(t, err)
+	assert.Equal(t, 11, len(pkgFiles), "detected the right amount of package files")
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/lib/aarch64-linux-gnu/libss.so.2.0"})
+	assert.Contains(t, pkgFiles, FileRecord{Path: "/lib/aarch64-linux-gnu/libss.so.2"})
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
@@ -93,12 +121,11 @@ func TestDpkgParserStatusD(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, err := packages.ParseDpkgPackages(pf, f)
+	m, err := ParseDpkgPackages(pf, f)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(m), "detected the right amount of packages")
 
-	var p packages.Package
-	p = packages.Package{
+	p := Package{
 		Name:    "base-files",
 		Version: "9.9+deb9u11",
 		Arch:    "amd64",
@@ -121,7 +148,7 @@ func TestDpkgUpdateParser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, err)
 
-	m, err := packages.ParseDpkgUpdates(c.Stdout)
+	m, err := ParseDpkgUpdates(c.Stdout)
 	assert.Nil(t, err)
 	assert.Equal(t, 13, len(m), "detected the right amount of package updates")
 
