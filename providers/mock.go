@@ -67,7 +67,7 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 	for i := range asset.Connections {
 		conf := asset.Connections[i]
 
-		provider, err := s.runtime.addProvider(conf.ProviderID, false)
+		provider, err := s.runtime.addProvider(conf.ProviderID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init provider for connection in recording")
 		}
