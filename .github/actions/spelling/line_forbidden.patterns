@@ -2,6 +2,26 @@
 # Useful for brand capitalizations
 
 #
+# Terms to avoid
+#
+
+# s.b. Allow list
+\swhitelist\b
+\swhitelisting\b
+\swhitelisted\b
+\swhite list\b
+\swhite listing\b
+\swhite listed\b
+
+# s.b. Block list
+\sblacklist\b
+\sblacklisting\b
+\sblacklisted\b
+\sblack list\b
+\sblack listing\b
+\sblack listed\b
+
+#
 # Our Terms
 #
 
@@ -150,6 +170,9 @@
 
 # s.b. CloudBees
 \bCloudbees\b
+
+# s.b. System76
+\bSystem 76\b
 
 #
 # Microsoft Products
