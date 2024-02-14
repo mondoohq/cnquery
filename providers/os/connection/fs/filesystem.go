@@ -14,7 +14,10 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/fs"
 )
 
-var _ shared.Connection = &FileSystemConnection{}
+var (
+	_ shared.Connection = (*FileSystemConnection)(nil)
+	_ plugin.Closer     = (*FileSystemConnection)(nil)
+)
 
 func NewFileSystemConnectionWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, closeFN func()) (*FileSystemConnection, error) {
 	path, ok := conf.Options["path"]

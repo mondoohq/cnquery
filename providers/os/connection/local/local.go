@@ -109,10 +109,6 @@ func (p *LocalConnection) FileInfo(path string) (shared.FileInfoDetails, error) 
 	}, nil
 }
 
-func (p *LocalConnection) Close() {
-	// TODO: we need to close all commands and file handles
-}
-
 type CommandRunner struct {
 	shared.Command
 	cmdExecutor *exec.Cmd

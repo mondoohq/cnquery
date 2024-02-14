@@ -30,7 +30,10 @@ const (
 	FLATTENED_IMAGE = "flattened_path"
 )
 
-var _ shared.Connection = (*TarConnection)(nil)
+var (
+	_ shared.Connection = (*TarConnection)(nil)
+	_ plugin.Closer     = (*TarConnection)(nil)
+)
 
 type TarConnection struct {
 	plugin.Connection

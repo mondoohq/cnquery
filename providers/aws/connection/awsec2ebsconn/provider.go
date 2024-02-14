@@ -32,6 +32,8 @@ const (
 	EBSConnectionType shared.ConnectionType = "ebs"
 )
 
+var _ plugin.Closer = (*AwsEbsConnection)(nil)
+
 type AwsEbsConnection struct {
 	plugin.Connection
 	asset               *inventory.Asset

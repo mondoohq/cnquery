@@ -169,7 +169,3 @@ func (p *WinrmConnection) FileSystem() afero.Fs {
 	}
 	return p.fs
 }
-
-func (p *WinrmConnection) Close() {
-	// nothing to do yet
-}
