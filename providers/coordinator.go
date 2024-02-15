@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -34,6 +35,7 @@ type ProvidersCoordinator interface {
 	GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error)
 	SetProviders(providers Providers)
 	Providers() Providers
+	DeactivateProviderDiscovery()
 	LoadSchema(name string) (resources.ResourcesSchema, error)
 	Schema() resources.ResourcesSchema
 	Shutdown()
@@ -428,6 +430,12 @@ func (c *coordinator) Shutdown() {
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
 	c.schema.Close()
+}
+
+func (c *coordinator) DeactivateProviderDiscovery() {
+	// Setting this to the max int means this value will always be larger than
+	// any real timestamp for the last installation time of a provider.
+	c.schema.lastRefreshed = math.MaxInt64
 }
 
 func (c *coordinator) Schema() resources.ResourcesSchema {

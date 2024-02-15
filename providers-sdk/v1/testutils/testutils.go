@@ -245,7 +245,7 @@ func Local() llx.Runtime {
 	// This prevents us from accidentally pulling locally installed providers
 	// which may not work with the current dependencies. The task of testing
 	// those falls to an integration environment, not to unit tests.
-	runtime.DeactivateProviderDiscovery()
+	providers.Coordinator.DeactivateProviderDiscovery()
 
 	return runtime
 }
