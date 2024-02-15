@@ -12,7 +12,7 @@ import (
 
 func MustCompile(code string) *llx.CodeBundle {
 	codeBundle, err := mqlc.Compile(code, nil,
-		mqlc.NewConfig(providers.DefaultRuntime().Schema(), cnquery.DefaultFeatures))
+		mqlc.NewConfig(providers.Coordinator.Schema(), cnquery.DefaultFeatures))
 	if err != nil {
 		panic(err)
 	}

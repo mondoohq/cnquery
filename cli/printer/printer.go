@@ -10,7 +10,7 @@ import (
 
 	"github.com/muesli/termenv"
 	"go.mondoo.com/cnquery/v10/cli/theme/colors"
-	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 )
 
 // Printer turns code into human-readable strings
@@ -23,7 +23,7 @@ type Printer struct {
 	Disabled  func(...interface{}) string
 	Failed    func(...interface{}) string
 	Success   func(...interface{}) string
-	schema    llx.Schema
+	schema    resources.ResourcesSchema
 }
 
 // DefaultPrinter that can be used without additional configuration
@@ -54,7 +54,7 @@ var DefaultPrinter = Printer{
 	},
 }
 
-func (p *Printer) SetSchema(schema llx.Schema) {
+func (p *Printer) SetSchema(schema resources.ResourcesSchema) {
 	p.schema = schema
 }
 

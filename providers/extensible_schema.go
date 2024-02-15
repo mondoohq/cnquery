@@ -17,11 +17,11 @@ type extensibleSchema struct {
 	// Thus, its contents are read-only and may only be replaced entirely.
 	roAggregate resources.Schema
 	// These are all individual schemas that have been added (not their aggregate)
-	loaded map[string]*resources.Schema
+	loaded map[string]resources.ResourcesSchema
 	// Optional prioritization order of select schemas in aggregation.
 	prioritization []string
-	runtime        *Runtime
 	lastRefreshed  int64
+	coordinator    ProvidersCoordinator
 	sync           sync.Mutex
 }
 
@@ -30,7 +30,7 @@ func newExtensibleSchema() extensibleSchema {
 		roAggregate: resources.Schema{
 			Resources: map[string]*resources.ResourceInfo{},
 		},
-		loaded:         map[string]*resources.Schema{},
+		loaded:         map[string]resources.ResourcesSchema{},
 		prioritization: []string{BuiltinCoreID},
 	}
 }
@@ -69,7 +69,7 @@ func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
 
 func (x *extensibleSchema) Close() {
 	x.sync.Lock()
-	x.loaded = map[string]*resources.Schema{}
+	x.loaded = map[string]resources.ResourcesSchema{}
 	x.roAggregate = resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
@@ -156,7 +156,7 @@ func (x *extensibleSchema) unsafeLoadAll() {
 	}
 
 	for name := range providers {
-		schema, err := x.runtime.coordinator.LoadSchema(name)
+		schema, err := x.coordinator.LoadSchema(name)
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
 		} else {
@@ -165,7 +165,7 @@ func (x *extensibleSchema) unsafeLoadAll() {
 	}
 }
 
-func (x *extensibleSchema) unsafeAdd(name string, schema *resources.Schema) {
+func (x *extensibleSchema) unsafeAdd(name string, schema resources.ResourcesSchema) {
 	if schema == nil {
 		return
 	}

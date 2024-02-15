@@ -87,7 +87,7 @@ func (vm *varmap) len() int {
 }
 
 type CompilerConfig struct {
-	Schema          llx.Schema
+	Schema          resources.ResourcesSchema
 	UseAssetContext bool
 	Stats           CompilerStats
 }
@@ -100,7 +100,7 @@ func (c *CompilerConfig) EnableMultiStats() {
 	c.Stats = newCompilerMultiStats()
 }
 
-func NewConfig(schema llx.Schema, features cnquery.Features) CompilerConfig {
+func NewConfig(schema resources.ResourcesSchema, features cnquery.Features) CompilerConfig {
 	return CompilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
@@ -203,7 +203,7 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 	return suggested
 }
 
-func addResourceSuggestions(schema llx.Schema, name string, res *llx.CodeBundle) {
+func addResourceSuggestions(schema resources.ResourcesSchema, name string, res *llx.CodeBundle) {
 	resourceInfos := schema.AllResources()
 	names := make([]string, len(resourceInfos))
 	i := 0
@@ -290,7 +290,7 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 // 	return typ
 // }
 
-func blockCallType(typ types.Type, schema llx.Schema) types.Type {
+func blockCallType(typ types.Type, schema resources.ResourcesSchema) types.Type {
 	if typ.IsArray() {
 		return types.Array(types.Block)
 	}
@@ -2171,7 +2171,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	return nil
 }
 
-func getMinMondooVersion(schema llx.Schema, current string, resource string, field string) string {
+func getMinMondooVersion(schema resources.ResourcesSchema, current string, resource string, field string) string {
 	info := schema.Lookup(resource)
 	if info == nil {
 		return current
@@ -2242,7 +2242,6 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf CompilerC
 
 // Compile a code piece against a schema into chunky code
 func compile(input string, props map[string]*llx.Primitive, compilerConf CompilerConfig) (*llx.CodeBundle, error) {
-
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 

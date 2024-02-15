@@ -20,7 +20,7 @@ type RunningProvider struct {
 	ID     string
 	Plugin pp.ProviderPlugin
 	Client *plugin.Client
-	Schema *resources.Schema
+	Schema resources.ResourcesSchema
 
 	// isClosed is true for any provider that is not running anymore,
 	// either via shutdown or via crash

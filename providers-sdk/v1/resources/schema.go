@@ -3,15 +3,21 @@
 
 package resources
 
+type ResourcesSchema interface {
+	Lookup(resource string) *ResourceInfo
+	LookupField(resource string, field string) (*ResourceInfo, *Field)
+	AllResources() map[string]*ResourceInfo
+}
+
 // Add another schema and return yourself. other may be nil.
 // The other schema overrides specifications in this schema, unless
 // it is trying to extend a resource whose base is already defined.
-func (s *Schema) Add(other *Schema) *Schema {
+func (s *Schema) Add(other ResourcesSchema) *Schema {
 	if other == nil {
 		return s
 	}
 
-	for k, v := range other.Resources {
+	for k, v := range other.AllResources() {
 		if existing, ok := s.Resources[k]; ok {
 			// We will merge resources into it until we find one that is not extending.
 			// Technically, this should only happen with one resource and one only,
