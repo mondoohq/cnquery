@@ -186,6 +186,11 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 		Assets: []*inventory.Asset{},
 	}}
 
+	if (conn.Conf == nil || len(conn.Conf.Discover.Targets) == 0) && conn.Asset() != nil {
+		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
+		return in, nil
+	}
+
 	res, err := NewResource(runtime, "aws.account", map[string]*llx.RawData{"id": llx.StringData("aws.account/" + conn.AccountId())})
 	if err != nil {
 		return nil, err
