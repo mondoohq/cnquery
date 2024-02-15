@@ -1,0 +1,13 @@
+{
+  "name": "tea-latte",
+  "version": "1.3.5",
+  "peerDependencies": {
+    "tea": "2.x",
+    "soy-milk": "1.2"
+  },
+  "peerDependenciesMeta": {
+    "soy-milk": {
+      "optional": true
+    }
+  }
+}
