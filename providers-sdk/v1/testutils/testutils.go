@@ -213,6 +213,12 @@ func Local() llx.Runtime {
 	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
 	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
+	schema := providers.Coordinator.Schema().(providers.ExtensibleSchema)
+	schema.Add(osconf.Config.Name, osSchema)
+	schema.Add("core", coreSchema)
+	schema.Add(networkconf.Config.Name, networkSchema)
+	schema.Add(mockprovider.Config.Name, mockSchema)
+
 	runtime := providers.Coordinator.NewRuntime()
 
 	provider := &providers.RunningProvider{

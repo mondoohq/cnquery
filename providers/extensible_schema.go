@@ -11,6 +11,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type ExtensibleSchema interface {
+	Add(name string, schema *resources.Schema)
+}
+
 type extensibleSchema struct {
 	// Note: this object is re-created every time we refresh. It is treated
 	// as unsafe and may be returned to concurrent processes for reading.
