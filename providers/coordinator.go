@@ -272,11 +272,11 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 
 func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	running := c.runningByID[id]
-	c.mutex.Unlock()
 	if running == nil {
 		var err error
-		running, err = c.startProvider(id, update)
+		running, err = c.unsafeStartProvider(id, update)
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +284,9 @@ func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig
 	return running, nil
 }
 
-func (c *coordinator) startProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+// unsafeStartProvider will start a provider and add it to the list of running providers. Must be called
+// with a mutex lock around it.
+func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for core providers, which are the only providers
 		// built into the binary (for now).
@@ -378,10 +380,7 @@ func (c *coordinator) startProvider(id string, update UpdateProvidersConfig) (*R
 		return nil, err
 	}
 
-	c.mutex.Lock()
 	c.runningByID[res.ID] = res
-	c.mutex.Unlock()
-
 	return res, nil
 }
 
