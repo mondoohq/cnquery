@@ -1,0 +1,5 @@
+{
+  "name": "awesome-web-framework",
+  "version": "1.0.0",
+  "bundleDependencies": ["renderized", "super-streams"]
+}

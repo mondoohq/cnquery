@@ -1,0 +1,12 @@
+{
+  "name": "ethopia-waza",
+  "description": "a delightfully fruity coffee varietal",
+  "version": "1.2.3",
+  "devDependencies": {
+    "coffee-script": "~1.6.3"
+  },
+  "scripts": {
+    "prepare": "coffee -o lib/ -c src/waza.coffee"
+  },
+  "main": "lib/waza.js"
+}

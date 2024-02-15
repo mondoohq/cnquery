@@ -22,7 +22,9 @@ type YarnLockEntry struct {
 	Dependencies map[string]string
 }
 
-func ParseYarnLock(r io.Reader) ([]*mvd.Package, error) {
+type YarnLockParser struct{}
+
+func (p *YarnLockParser) Parse(r io.Reader) ([]*mvd.Package, error) {
 	var b bytes.Buffer
 
 	// iterate and convert the format to yaml on the fly
@@ -52,7 +54,7 @@ func ParseYarnLock(r io.Reader) ([]*mvd.Package, error) {
 
 	// add all dependencies
 	for k, v := range yarnLock {
-		name, _, err := ParseYarnPackageName(k)
+		name, _, err := parseYarnPackageName(k)
 		if err != nil {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
@@ -68,7 +70,7 @@ func ParseYarnLock(r io.Reader) ([]*mvd.Package, error) {
 	return entries, nil
 }
 
-func ParseYarnPackageName(name string) (string, string, error) {
+func parseYarnPackageName(name string) (string, string, error) {
 	// a yarn package line may include may items
 	pkgNames := strings.Split(name, ",")
 
