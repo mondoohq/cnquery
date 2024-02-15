@@ -4,6 +4,7 @@
 package sshhostkey
 
 import (
+	"io"
 	"os"
 
 	"github.com/cockroachdb/errors"
@@ -26,12 +27,12 @@ func Detect(t shared.Connection, p *inventory.Platform) ([]string, error) {
 
 	// if we are not at the remote system, we try to load the ssh host key from local system
 	identifiers := []string{}
-
+	fs := t.FileSystem()
 	paths := []string{"/etc/ssh/ssh_host_ecdsa_key.pub", "/etc/ssh/ssh_host_ed25519_key.pub", "/etc/ssh/ssh_host_rsa_key.pub"}
 	// iterate over paths and read identifier
 	for i := range paths {
 		hostKeyFilePath := paths[i]
-		data, err := os.ReadFile(hostKeyFilePath)
+		data, err := fs.Open(hostKeyFilePath)
 		if os.IsPermission(err) {
 			log.Warn().Err(err).Str("hostkey", hostKeyFilePath).Msg("no permission to access ssh hostkey")
 			continue
@@ -40,13 +41,19 @@ func Detect(t shared.Connection, p *inventory.Platform) ([]string, error) {
 		} else if err != nil {
 			return nil, errors.Wrap(err, "could not read file:"+hostKeyFilePath)
 		}
-		publicKey, _, _, _, err := ssh.ParseAuthorizedKey(data)
+		defer data.Close()
+
+		bytes, err := io.ReadAll(data)
+		if err != nil {
+			log.Error().Err(err).Msg("could not read ssh hostkey file")
+			return nil, err
+		}
+		publicKey, _, _, _, err := ssh.ParseAuthorizedKey(bytes)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not parse public key file:"+hostKeyFilePath)
 		}
 
 		identifiers = append(identifiers, connection.PlatformIdentifier(publicKey))
 	}
-
 	return identifiers, nil
 }
