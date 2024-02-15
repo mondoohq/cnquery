@@ -183,7 +183,7 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.cpes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("core.cpe")))
+		return (r.(*mqlAsset).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
