@@ -40,7 +40,7 @@ type packageJsonPeople struct {
 	URL   string `json:"url"`
 }
 
-// Explanation:
+// authorPattern parses the single-string author string:
 //
 //	^: Asserts the start of the string.
 //	([^<]+): Captures one or more characters that are not <. This is for the author's name.
@@ -49,7 +49,7 @@ type packageJsonPeople struct {
 //	\s+: Matches one or more whitespace characters again.
 //	\(([^)]+)\): Captures the URL within parentheses.
 //	$: Asserts the end of the string.
-var authorPatter = regexp.MustCompile(`^([^<]+)\s+<([^>]+)>(?:\s+\(([^)]+)\))?$`)
+var authorPattern = regexp.MustCompile(`^([^<]+)\s+<([^>]+)>(?:\s+\(([^)]+)\))?$`)
 
 // UnmarshalJSON implements the json.Unmarshaler interface
 // package.json author can be a string or a structured object
@@ -70,7 +70,7 @@ func (a *packageJsonPeople) UnmarshalJSON(b []byte) error {
 	// try to unmarshal as string
 	err = json.Unmarshal(b, &authorStr)
 	if err == nil {
-		matches := authorPatter.FindStringSubmatch(authorStr)
+		matches := authorPattern.FindStringSubmatch(authorStr)
 		if len(matches) == 4 {
 			a.Name = matches[1]
 			a.Email = matches[2]
