@@ -1170,6 +1170,40 @@ python.package @defaults("name version") {
   dependencies() []python.package
 }
 
+// npm packages
+npm.packages {
+  []npm.package
+
+  init(path? string)
+
+  // optional path to search for packages
+  path string
+
+  // Root Package (may not exist)
+  root() npm.package
+
+  // List of direct dependencies
+  directDependencies() []npm.package
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+npm.package  @defaults("name version") {
+  // ID is the npm.package unique identifier
+  id string
+  // Name of the package
+  name() string
+  // Version of the package
+  version() string
+  // Package URL
+  purl() string
+  // Common Platform Enumeration (CPE) for the package
+  cpes() []core.cpe
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS user defaults
