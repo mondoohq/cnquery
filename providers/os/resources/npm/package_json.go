@@ -10,8 +10,10 @@ import (
 	"io"
 	"regexp"
 	"strings"
+)
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
+var (
+	_ Parser = (*PackageJsonParser)(nil)
 )
 
 // packageJson allows parsing the package json file
@@ -158,38 +160,32 @@ func (a *packageJsonLicense) UnmarshalJSON(b []byte) error {
 
 type PackageJsonParser struct{}
 
-func (p *PackageJsonParser) Parse(r io.Reader) ([]*mvd.Package, error) {
+func (p *PackageJsonParser) Parse(r io.Reader) (*Package, []*Package, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var packageJson packageJson
 	err = json.Unmarshal(data, &packageJson)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	entries := []*mvd.Package{}
-
 	// add own package
-	entries = append(entries, &mvd.Package{
-		Name:      packageJson.Name,
-		Version:   packageJson.Version,
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	root := &Package{
+		Name:    packageJson.Name,
+		Version: packageJson.Version,
+	}
 
 	// add all dependencies
-
+	entries := []*Package{}
 	for k, v := range packageJson.Dependencies {
-		entries = append(entries, &mvd.Package{
-			Name:      k,
-			Version:   v,
-			Format:    "npm",
-			Namespace: "nodejs",
+		entries = append(entries, &Package{
+			Name:    k,
+			Version: v,
 		})
 	}
 
-	return entries, nil
+	return root, entries, nil
 }

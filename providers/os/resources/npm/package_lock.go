@@ -7,7 +7,10 @@ import (
 	"io"
 
 	"encoding/json"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
+)
+
+var (
+	_ Parser = (*PackageLockParser)(nil)
 )
 
 // packageLock is the struct to represent the package.lock file
@@ -66,32 +69,41 @@ func (l *packageLockLicense) UnmarshalJSON(data []byte) (err error) {
 // see https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json
 type PackageLockParser struct{}
 
-func (p *PackageLockParser) Parse(r io.Reader) ([]*mvd.Package, error) {
+func (p *PackageLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 	var packageJsonLock packageLock
 	err := json.NewDecoder(r).Decode(&packageJsonLock)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	entries := []*mvd.Package{}
 
 	// add own package
-	entries = append(entries, &mvd.Package{
-		Name:      packageJsonLock.Name,
-		Version:   packageJsonLock.Version,
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
-
-	// add all dependencies
-	for k, v := range packageJsonLock.Dependencies {
-		entries = append(entries, &mvd.Package{
-			Name:      k,
-			Version:   v.Version,
-			Format:    "npm",
-			Namespace: "nodejs",
-		})
+	root := &Package{
+		Name:    packageJsonLock.Name,
+		Version: packageJsonLock.Version,
 	}
 
-	return entries, nil
+	// add all dependencies
+	entries := []*Package{}
+	if packageJsonLock.Packages != nil {
+		for k, v := range packageJsonLock.Packages {
+			name := k
+			if name == "" {
+				name = v.Name
+			}
+			entries = append(entries, &Package{
+				Name:        name,
+				Version:     v.Version,
+				Description: v.Name,
+			})
+		}
+	} else if packageJsonLock.Dependencies != nil {
+		for k, v := range packageJsonLock.Dependencies {
+			entries = append(entries, &Package{
+				Name:    k,
+				Version: v.Version,
+			})
+		}
+	}
+
+	return root, entries, nil
 }

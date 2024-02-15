@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 )
 
 func TestPackageJson(t *testing.T) {
@@ -275,21 +274,24 @@ func TestPackageJsonParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	pkgs, err := (&PackageJsonParser{}).Parse(f)
+	root, pkgs, err := (&PackageJsonParser{}).Parse(f)
 	assert.Nil(t, err)
-	assert.Equal(t, 31, len(pkgs))
+	assert.Equal(t, 30, len(pkgs))
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "path-to-regexp",
-		Version:   "0.1.7",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	assert.Equal(t, &Package{
+		Name:    "express",
+		Version: "4.16.4",
+	}, root)
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "range-parser",
-		Version:   "~1.2.0",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	p := findPkg(pkgs, "path-to-regexp")
+	assert.Equal(t, &Package{
+		Name:    "path-to-regexp",
+		Version: "0.1.7",
+	}, p)
+
+	p = findPkg(pkgs, "range-parser")
+	assert.Equal(t, &Package{
+		Name:    "range-parser",
+		Version: "~1.2.0",
+	}, p)
 }

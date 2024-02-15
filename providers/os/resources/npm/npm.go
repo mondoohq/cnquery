@@ -5,10 +5,18 @@ package npm
 
 import (
 	"io"
-
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 )
 
 type Parser interface {
-	Parse(r io.Reader) ([]*mvd.Package, error)
+	Parse(r io.Reader) (*Package, []*Package, error)
+}
+
+type Package struct {
+	Name        string
+	File        string
+	License     string
+	Description string
+	Version     string
+	Purl        string
+	Cpes        []string
 }

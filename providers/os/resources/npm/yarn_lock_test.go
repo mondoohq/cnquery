@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 )
 
 func TestYarnParser(t *testing.T) {
@@ -17,23 +16,21 @@ func TestYarnParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	pkgs, err := (&YarnLockParser{}).Parse(f)
+	_, pkgs, err := (&YarnLockParser{}).Parse(f)
 	assert.Nil(t, err)
 	assert.Equal(t, 99, len(pkgs))
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "has",
-		Version:   "1.0.3",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	p := findPkg(pkgs, "has")
+	assert.Equal(t, &Package{
+		Name:    "has",
+		Version: "1.0.3",
+	}, p)
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "iconv-lite",
-		Version:   "0.4.24",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	p = findPkg(pkgs, "iconv-lite")
+	assert.Equal(t, &Package{
+		Name:    "iconv-lite",
+		Version: "0.4.24",
+	}, p)
 }
 
 func TestParsePackagename(t *testing.T) {

@@ -12,8 +12,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 	"sigs.k8s.io/yaml"
+)
+
+var (
+	_ Parser = (*YarnLockParser)(nil)
 )
 
 type YarnLockEntry struct {
@@ -24,7 +27,7 @@ type YarnLockEntry struct {
 
 type YarnLockParser struct{}
 
-func (p *YarnLockParser) Parse(r io.Reader) ([]*mvd.Package, error) {
+func (p *YarnLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 	var b bytes.Buffer
 
 	// iterate and convert the format to yaml on the fly
@@ -40,17 +43,17 @@ func (p *YarnLockParser) Parse(r io.Reader) ([]*mvd.Package, error) {
 		b.Write([]byte("\n"))
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var yarnLock map[string]YarnLockEntry
 
 	err := yaml.Unmarshal(b.Bytes(), &yarnLock)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	entries := []*mvd.Package{}
+	entries := []*Package{}
 
 	// add all dependencies
 	for k, v := range yarnLock {
@@ -59,15 +62,13 @@ func (p *YarnLockParser) Parse(r io.Reader) ([]*mvd.Package, error) {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
-		entries = append(entries, &mvd.Package{
-			Name:      name,
-			Version:   v.Version,
-			Format:    "npm",
-			Namespace: "nodejs",
+		entries = append(entries, &Package{
+			Name:    name,
+			Version: v.Version,
 		})
 	}
 
-	return entries, nil
+	return nil, entries, nil
 }
 
 func parseYarnPackageName(name string) (string, string, error) {
