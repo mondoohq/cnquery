@@ -32,5 +32,5 @@ func TestSpdx(t *testing.T) {
 	res := output.String()
 	assert.Contains(t, res, "SPDX-2.3")
 	assert.Contains(t, res, "\"name\": \"alpine-baselayout\",")
-	assert.Contains(t, res, "\"cpe:2.3:a:alpine-baselayout:alpine-baselayout:1683642107:x86_64:*:*:*:*:amd64:*\"")
+	assert.Contains(t, res, "\"cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*\"")
 }

@@ -20,6 +20,7 @@ Flags:
       --asset-name string           User-override for the asset name
   -h, --help                        help for sbom
   -o, --output string               Set output format: json, cyclonedx-json, cyclonedx-xml, spdx-json, spdx-tag-value, table (default "list")
+      --with-evidence               Display evidence for each component
 
 Global Flags:
       --api-proxy string   Set proxy for communications with Mondoo API

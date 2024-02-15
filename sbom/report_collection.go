@@ -39,13 +39,18 @@ type BomAsset struct {
 }
 
 type BomPackage struct {
-	Name     string   `json:"name,omitempty"`
-	Version  string   `json:"version,omitempty"`
-	Purl     string   `json:"purl,omitempty"`
-	CPEs     []string `json:"cpes.map,omitempty"`
-	FilePath string   `json:"file.path,omitempty"`
-	Format   string   `json:"format,omitempty"`
+	Name    string   `json:"name,omitempty"`
+	Version string   `json:"version,omitempty"`
+	Purl    string   `json:"purl,omitempty"`
+	CPEs    []string `json:"cpes.map,omitempty"`
+	// used by python packages
+	// deprecated: remove once python.packages uses files
+	FilePath string `json:"file.path,omitempty"`
+	// used by os packages
+	FilePaths []string `json:"files.map,omitempty"`
+	Format    string   `json:"format,omitempty"`
 }
+
 type BomReport struct {
 	Asset          *BomAsset    `json:"asset,omitempty"`
 	Packages       []BomPackage `json:"packages.list,omitempty"`

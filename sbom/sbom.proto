@@ -207,9 +207,27 @@ message Package {
   // software package metadata.
   string purl = 5;
   // location on disk
+  // Deprecated: use evidence instead
   string location = 6;
   // 'type' indicates the type of package, such as a rpm, dpkg, or gem.
   string type = 7;
   // description of the package
   string description = 20;
+  // 'evidence_list' is a collection of evidence that supports the presence of
+  // the package in the asset. This evidence could include eg. file paths
+  repeated Evidence evidence_list = 21;
+}
+
+enum EvidenceType {
+  EVIDENCE_TYPE_UNSPECIFIED = 0;
+  EVIDENCE_TYPE_FILE = 1;
+}
+
+message Evidence {
+  // 'type' indicates the type of evidence, such as a file path.
+  EvidenceType type = 1;
+  // 'value' is the actual evidence that supports the presence of the package in
+  // the asset. The format and interpretation of this value depend on the
+  // 'type'. For example, it could be a file path for file evidence.
+  string value = 2;
 }

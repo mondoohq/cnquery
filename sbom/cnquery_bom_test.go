@@ -30,5 +30,7 @@ func TestSimpleBom(t *testing.T) {
 
 	data := output.String()
 	assert.Contains(t, data, "alpine-baselayout")
-	assert.Contains(t, data, "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1683642107:x86_64:*:*:*:*:amd64:*")
+	assert.Contains(t, data, "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*")
+	// check that package files are included
+	assert.Contains(t, data, "etc/profile.d/color_prompt.sh.disabled")
 }

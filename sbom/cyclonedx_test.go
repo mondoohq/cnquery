@@ -33,5 +33,7 @@ func TestCycloneDX(t *testing.T) {
 	// os.WriteFile("./testdata/bom_cyclone.json", output.Bytes(), 0700)
 	assert.Contains(t, data, "cyclonedx")
 	assert.Contains(t, data, "alpine-baselayout")
-	assert.Contains(t, data, "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1683642107:x86_64:*:*:*:*:amd64:*")
+	assert.Contains(t, data, "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*")
+	// check that package files are included
+	assert.Contains(t, data, "etc/profile.d/color_prompt.sh.disabled")
 }
