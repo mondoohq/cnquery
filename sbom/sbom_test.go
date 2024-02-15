@@ -34,7 +34,7 @@ func TestSbomParsing(t *testing.T) {
 	}
 	require.NotNil(t, pkg)
 	assert.Equal(t, "alpine-baselayout", pkg.Name)
-	assert.Contains(t, pkg.Evidences, &Evidence{
+	assert.Contains(t, pkg.EvidenceList, &Evidence{
 		Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 		Value: "etc/profile.d/color_prompt.sh.disabled",
 	})

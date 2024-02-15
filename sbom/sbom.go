@@ -89,7 +89,7 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 					}
 
 					for _, filepath := range pkg.FilePaths {
-						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
 							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 							Value: filepath,
 						})
@@ -109,16 +109,16 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 					}
 
 					// deprecated path, all files are now in the FilePaths field
-					// TODO: update once the pythong resource returns multiple results
+					// TODO: update once the python resource returns multiple results
 					if pkg.FilePath != "" {
-						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
 							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 							Value: pkg.FilePath,
 						})
 					}
 
 					for _, filepath := range pkg.FilePaths {
-						bomPkg.Evidences = append(bomPkg.Evidences, &Evidence{
+						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
 							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
 							Value: filepath,
 						})

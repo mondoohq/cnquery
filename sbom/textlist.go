@@ -14,12 +14,12 @@ import (
 type cliOption func(*cLiOpts)
 
 type cLiOpts struct {
-	RenderWithEvidences bool
+	RenderWithEvidence bool
 }
 
-func WithEvidences() cliOption {
+func WithEvidence() cliOption {
 	return func(opts *cLiOpts) {
-		opts.RenderWithEvidences = true
+		opts.RenderWithEvidence = true
 	}
 }
 
@@ -50,7 +50,7 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 
 		// rpm/libxxhash0/0.8.0-2 arm64
 		if pkg.Type != "" {
-			sb.WriteString(termenv.String(pkg.Type).Foreground(colors.DefaultColorTheme.Disabled).String())
+			sb.WriteString(termenv.String(pkg.Type).Foreground(colors.DefaultColorTheme.Secondary).String())
 			sb.WriteString(termenv.String("/").Foreground(colors.DefaultColorTheme.Disabled).String())
 		}
 		sb.WriteString(termenv.String(pkg.Name).Foreground(colors.DefaultColorTheme.Primary).String())
@@ -63,14 +63,15 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 		}
 
 		// we only print the location if it is not empty
+		// this approach is deprecated and we should remove that once everything moved to evidence
 		if pkg.Location != "" {
 			sb.WriteString(" ")
 			sb.WriteString(termenv.String(pkg.Location).Foreground(colors.DefaultColorTheme.Disabled).String())
 		}
 
-		if s.opts.RenderWithEvidences {
-			for i := range pkg.Evidences {
-				evidence := pkg.Evidences[i]
+		if s.opts.RenderWithEvidence {
+			for i := range pkg.EvidenceList {
+				evidence := pkg.EvidenceList[i]
 				sb.WriteString("\n")
 				sb.WriteString(termenv.String("  ").Foreground(colors.DefaultColorTheme.Disabled).String())
 				sb.WriteString(termenv.String(evidence.Value).Foreground(colors.DefaultColorTheme.Disabled).String())

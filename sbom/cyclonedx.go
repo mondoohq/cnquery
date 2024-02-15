@@ -70,9 +70,9 @@ func (ccx *CycloneDX) convert(bom *Sbom) (*cyclonedx.BOM, error) {
 			})
 		}
 
-		if pkg.Evidences != nil {
-			for i := range pkg.Evidences {
-				e := pkg.Evidences[i]
+		if pkg.EvidenceList != nil {
+			for i := range pkg.EvidenceList {
+				e := pkg.EvidenceList[i]
 				if e.Type == EvidenceType_EVIDENCE_TYPE_FILE {
 					fileLocations = append(fileLocations, cyclonedx.EvidenceOccurrence{
 						Location: e.Value,

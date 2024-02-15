@@ -213,9 +213,9 @@ message Package {
   string type = 7;
   // description of the package
   string description = 20;
-  // 'evidence' is a collection of evidence that supports the presence of the
-  // package in the asset. This evidence could include eg. file paths
-  repeated Evidence evidences = 21;
+  // 'evidence_list' is a collection of evidence that supports the presence of
+  // the package in the asset. This evidence could include eg. file paths
+  repeated Evidence evidence_list = 21;
 }
 
 enum EvidenceType {

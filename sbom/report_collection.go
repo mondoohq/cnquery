@@ -44,6 +44,7 @@ type BomPackage struct {
 	Purl    string   `json:"purl,omitempty"`
 	CPEs    []string `json:"cpes.map,omitempty"`
 	// used by python packages
+	// deprecated: remove once python.packages uses files
 	FilePath string `json:"file.path,omitempty"`
 	// used by os packages
 	FilePaths []string `json:"files.map,omitempty"`
