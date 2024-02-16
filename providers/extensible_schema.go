@@ -176,13 +176,6 @@ func (x *extensibleSchema) unsafeRefresh() {
 		res.Add(schema)
 	}
 
-	// for i := len(x.prioritization) - 1; i >= 0; i-- {
-	// 	id := x.prioritization[i]
-	// 	if s := x.loaded[id]; s != nil {
-	// 		res.Add(s)
-	// 	}
-	// }
-
 	// Note: This object is read-only and thus must be re-created to
 	// prevent concurrency issues with access outside this struct
 	x.roAggregate = resources.Schema{
