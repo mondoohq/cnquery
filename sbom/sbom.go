@@ -98,54 +98,52 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 					bom.Packages = append(bom.Packages, bomPkg)
 				}
 			}
-			if rb.PythonPackages != nil {
-				for _, pkg := range rb.PythonPackages {
-					bomPkg := &Package{
-						Name:    pkg.Name,
-						Version: pkg.Version,
-						Purl:    pkg.Purl,
-						Cpes:    pkg.CPEs,
-						Type:    "pypi",
-					}
 
-					// deprecated path, all files are now in the FilePaths field
-					// TODO: update once the python resource returns multiple results
-					if pkg.FilePath != "" {
-						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
-							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
-							Value: pkg.FilePath,
-						})
-					}
-
-					for _, filepath := range pkg.FilePaths {
-						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
-							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
-							Value: filepath,
-						})
-					}
-
-					bom.Packages = append(bom.Packages, bomPkg)
+			for _, pkg := range rb.PythonPackages {
+				bomPkg := &Package{
+					Name:    pkg.Name,
+					Version: pkg.Version,
+					Purl:    pkg.Purl,
+					Cpes:    pkg.CPEs,
+					Type:    "pypi",
 				}
+
+				// deprecated path, all files are now in the FilePaths field
+				// TODO: update once the python resource returns multiple results
+				if pkg.FilePath != "" {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
+						Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: pkg.FilePath,
+					})
+				}
+
+				for _, filepath := range pkg.FilePaths {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
+						Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: filepath,
+					})
+				}
+
+				bom.Packages = append(bom.Packages, bomPkg)
 			}
-			if rb.NpmPackages != nil {
-				for _, pkg := range rb.NpmPackages {
-					bomPkg := &Package{
-						Name:    pkg.Name,
-						Version: pkg.Version,
-						Purl:    pkg.Purl,
-						Cpes:    pkg.CPEs,
-						Type:    "npm",
-					}
 
-					for _, filepath := range pkg.FilePaths {
-						bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
-							Type:  EvidenceType_EVIDENCE_TYPE_FILE,
-							Value: filepath,
-						})
-					}
-
-					bom.Packages = append(bom.Packages, bomPkg)
+			for _, pkg := range rb.NpmPackages {
+				bomPkg := &Package{
+					Name:    pkg.Name,
+					Version: pkg.Version,
+					Purl:    pkg.Purl,
+					Cpes:    pkg.CPEs,
+					Type:    "npm",
 				}
+
+				for _, filepath := range pkg.FilePaths {
+					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
+						Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+						Value: filepath,
+					})
+				}
+
+				bom.Packages = append(bom.Packages, bomPkg)
 			}
 		}
 		boms = append(boms, bom)
