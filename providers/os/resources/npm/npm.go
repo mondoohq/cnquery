@@ -13,17 +13,24 @@ import (
 )
 
 type Parser interface {
-	Parse(r io.Reader) (*Package, []*Package, error)
+	Parse(r io.Reader, filename string) (NpmPackageInfo, error)
+}
+
+type NpmPackageInfo interface {
+	Root() *Package
+	Direct() []*Package
+	Transitive() []*Package
 }
 
 type Package struct {
-	Name        string
-	File        string
-	License     string
-	Description string
-	Version     string
-	Purl        string
-	Cpes        []string
+	Name              string
+	File              string
+	License           string
+	Description       string
+	Version           string
+	Purl              string
+	Cpes              []string
+	EvidenceLocations []string
 }
 
 // NewPackageUrl creates a npm package url for a given package name and version

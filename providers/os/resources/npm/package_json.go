@@ -32,6 +32,9 @@ type packageJson struct {
 	Engines         map[string]string     `jsonn:"engines"`
 	CPU             []string              `json:"cpu"`
 	OS              []string              `json:"os"`
+
+	// evidence is a list of file paths where the package.json was found
+	evidence []string `json:"-"`
 }
 
 // packageJsonPeople represents the author of the package
@@ -160,36 +163,55 @@ func (a *packageJsonLicense) UnmarshalJSON(b []byte) error {
 
 type PackageJsonParser struct{}
 
-func (p *PackageJsonParser) Parse(r io.Reader) (*Package, []*Package, error) {
+func (p *PackageJsonParser) Parse(r io.Reader, filename string) (NpmPackageInfo, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var packageJson packageJson
 	err = json.Unmarshal(data, &packageJson)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// add own package
+	if filename != "" {
+		packageJson.evidence = append(packageJson.evidence, filename)
+	}
+
+	return &packageJson, nil
+}
+
+func (p *packageJson) Root() *Package {
+
+	// root package
 	root := &Package{
-		Name:    packageJson.Name,
-		Version: packageJson.Version,
-		Purl:    NewPackageUrl(packageJson.Name, packageJson.Version),
-		Cpes:    NewCpes(packageJson.Name, packageJson.Version),
+		Name:              p.Name,
+		Version:           p.Version,
+		Purl:              NewPackageUrl(p.Name, p.Version),
+		Cpes:              NewCpes(p.Name, p.Version),
+		EvidenceLocations: p.evidence,
 	}
 
-	// add all dependencies
-	entries := []*Package{}
-	for k, v := range packageJson.Dependencies {
-		entries = append(entries, &Package{
-			Name:    k,
-			Version: v,
-			Purl:    NewPackageUrl(k, v),
-			Cpes:    NewCpes(k, v),
+	return root
+}
+
+func (p *packageJson) Direct() []*Package {
+	return nil
+}
+
+func (p *packageJson) Transitive() []*Package {
+	// transitive dependencies, includes the root package
+	transitive := []*Package{}
+	for k, v := range p.Dependencies {
+		transitive = append(transitive, &Package{
+			Name:              k,
+			Version:           v,
+			Purl:              NewPackageUrl(k, v),
+			Cpes:              NewCpes(k, v),
+			EvidenceLocations: p.evidence,
 		})
 	}
 
-	return root, entries, nil
+	return transitive
 }

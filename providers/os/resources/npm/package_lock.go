@@ -5,6 +5,7 @@ package npm
 
 import (
 	"io"
+	"strings"
 
 	"encoding/json"
 )
@@ -26,6 +27,9 @@ type packageLock struct {
 	// Dependencies contains legacy data for supporting versions of npm that use lockfileVersion: 1 or lower.
 	// We can ignore that for lockfileVersion: 2+
 	Dependencies map[string]packageLockDependency `jsonn:"dependencies"`
+
+	// evidence is a list of file paths where the package-lock was found
+	evidence []string `json:"-"`
 }
 
 type packageLockDependency struct {
@@ -36,11 +40,12 @@ type packageLockDependency struct {
 }
 
 type packageLockPackage struct {
-	Name      string             `json:"name"`
-	Version   string             `json:"version"`
-	Resolved  string             `json:"resolved"`
-	Integrity string             `json:"integrity"`
-	License   packageLockLicense `json:"license"`
+	Name         string             `json:"name"`
+	Version      string             `json:"version"`
+	Resolved     string             `json:"resolved"`
+	Integrity    string             `json:"integrity"`
+	License      packageLockLicense `json:"license"`
+	Dependencies map[string]string  `json:"dependencies"`
 }
 
 type packageLockLicense []string
@@ -67,48 +72,98 @@ func (l *packageLockLicense) UnmarshalJSON(data []byte) (err error) {
 
 // PackageLockParser is the parser for the package.lock file npm format.
 // see https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json
-type PackageLockParser struct{}
+type PackageLockParser struct {
+}
 
-func (p *PackageLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
+func (p *PackageLockParser) Parse(r io.Reader, filename string) (NpmPackageInfo, error) {
 	var packageJsonLock packageLock
 	err := json.NewDecoder(r).Decode(&packageJsonLock)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// add own package
+	if filename != "" {
+		packageJsonLock.evidence = append(packageJsonLock.evidence, filename)
+	}
+
+	return &packageJsonLock, nil
+}
+
+func (p *packageLock) Root() *Package {
 	root := &Package{
-		Name:    packageJsonLock.Name,
-		Version: packageJsonLock.Version,
-		Purl:    NewPackageUrl(packageJsonLock.Name, packageJsonLock.Version),
-		Cpes:    NewCpes(packageJsonLock.Name, packageJsonLock.Version),
+		Name:              p.Name,
+		Version:           p.Version,
+		Purl:              NewPackageUrl(p.Name, p.Version),
+		Cpes:              NewCpes(p.Name, p.Version),
+		EvidenceLocations: p.evidence,
+	}
+	return root
+}
+
+func (p *packageLock) Direct() []*Package {
+	// search for root package, read the packages field
+
+	// at this point we only support lockfileVersion: 2 with direct dependencies
+	if p.Packages == nil {
+		return nil
 	}
 
-	// add all dependencies
-	entries := []*Package{}
-	if packageJsonLock.Packages != nil {
-		for k, v := range packageJsonLock.Packages {
+	rootPkg, ok := p.Packages[""]
+	if !ok {
+		return nil
+	}
+
+	filteredList := []*Package{}
+	for k := range rootPkg.Dependencies {
+		pkg, ok := p.Packages[k]
+		if !ok {
+			continue
+		}
+
+		filteredList = append(filteredList, &Package{
+			Name:              packageLockPackageName(k),
+			Version:           pkg.Version,
+			Purl:              NewPackageUrl(k, pkg.Version),
+			Cpes:              NewCpes(k, pkg.Version),
+			EvidenceLocations: p.evidence,
+		})
+	}
+
+	return filteredList
+}
+
+func (p *packageLock) Transitive() []*Package {
+	transitive := []*Package{}
+	if p.Packages != nil {
+		for k, v := range p.Packages {
 			name := k
+			// skip root package since we have that already
 			if name == "" {
 				name = v.Name
 			}
-			entries = append(entries, &Package{
-				Name:    name,
-				Version: v.Version,
-				Purl:    NewPackageUrl(name, v.Version),
-				Cpes:    NewCpes(name, v.Version),
+
+			transitive = append(transitive, &Package{
+				Name:              packageLockPackageName(name),
+				Version:           v.Version,
+				Purl:              NewPackageUrl(k, v.Version),
+				Cpes:              NewCpes(k, v.Version),
+				EvidenceLocations: p.evidence,
 			})
 		}
-	} else if packageJsonLock.Dependencies != nil {
-		for k, v := range packageJsonLock.Dependencies {
-			entries = append(entries, &Package{
-				Name:    k,
-				Version: v.Version,
-				Purl:    NewPackageUrl(k, v.Version),
-				Cpes:    NewCpes(k, v.Version),
+	} else if p.Dependencies != nil {
+		for k, v := range p.Dependencies {
+			transitive = append(transitive, &Package{
+				Name:              k,
+				Version:           v.Version,
+				Purl:              NewPackageUrl(k, v.Version),
+				Cpes:              NewCpes(k, v.Version),
+				EvidenceLocations: p.evidence,
 			})
 		}
 	}
+	return transitive
+}
 
-	return root, entries, nil
+func packageLockPackageName(path string) string {
+	return strings.TrimPrefix(path, "node_modules/")
 }
