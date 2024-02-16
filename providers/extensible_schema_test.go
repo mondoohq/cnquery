@@ -12,6 +12,7 @@ import (
 
 func TestExtensibleSchema(t *testing.T) {
 	s := newExtensibleSchema()
+	s.coordinator = newCoordinator()
 
 	s.Add("first", &resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{
