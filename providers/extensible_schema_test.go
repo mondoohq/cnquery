@@ -53,10 +53,4 @@ func TestExtensibleSchema(t *testing.T) {
 	_, finfo = s.LookupField("eternity", "v")
 	require.NotNil(t, info)
 	assert.Equal(t, "first", finfo.Provider)
-
-	// s.prioritizeIDs("first")
-
-	_, finfo = s.LookupField("eternity", "iii")
-	require.NotNil(t, info)
-	assert.Equal(t, "first", finfo.Provider)
 }

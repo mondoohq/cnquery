@@ -62,7 +62,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				existing.Fields = map[string]*Field{}
 			}
 			for fk, fv := range v.Fields {
-				if fExisting, ok := existing.Fields[fk]; ok {
+				// If the field exists in the current resource, but is from a different provider,
+				// we store it as an "other"
+				if fExisting, ok := existing.Fields[fk]; ok && fv.Provider != fExisting.Provider {
 					fExisting.Others = append(fExisting.Others, fv)
 				} else {
 					existing.Fields[fk] = fv

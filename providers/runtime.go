@@ -614,10 +614,23 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	}
 
 	// Make sure we grab the field that matches the provider of this runtime (if possible).
-	for _, f := range fieldInfo.Others {
-		if f.Provider == r.Provider.Instance.ID {
-			fieldInfo = f
-			break
+	if fieldInfo.Provider != r.Provider.Instance.ID {
+		for _, rI := range resourceInfo.Others {
+			// Check if the same field exists in another provider's resource
+			for _, f := range rI.Fields {
+				if f.Provider == r.Provider.Instance.ID {
+					fieldInfo = f
+					break
+				}
+
+				// Check if the same field is extended by another provider
+				for _, otherF := range f.Others {
+					if otherF.Provider == r.Provider.Instance.ID {
+						fieldInfo = f
+						break
+					}
+				}
+			}
 		}
 	}
 
