@@ -20,6 +20,7 @@ func NewPackage2Cpe(vendor, name, version, release, arch string) (string, error)
 
 	var err error
 	for n, addr := range map[string]*string{
+		"vendor":  &vendor,
 		"name":    &name,
 		"version": &version,
 		"release": &release,

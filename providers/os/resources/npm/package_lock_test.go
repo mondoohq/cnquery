@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 )
 
 func TestPackageLock(t *testing.T) {
@@ -157,21 +156,30 @@ func TestPackageJsonLockParser(t *testing.T) {
 
 	defer f.Close()
 
-	pkgs, err := (&PackageLockParser{}).Parse(f)
+	root, pkgs, err := (&PackageLockParser{}).Parse(f)
 	assert.Nil(t, err)
-	assert.Equal(t, 1300, len(pkgs))
+	assert.Equal(t, 1299, len(pkgs))
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "@babel/generator",
-		Version:   "7.0.0",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	assert.Equal(t, &Package{
+		Name:    "workbox",
+		Version: "0.0.0",
+		Purl:    "pkg:npm/workbox@0.0.0",
+		Cpes:    []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
+	}, root)
 
-	assert.Contains(t, pkgs, &mvd.Package{
-		Name:      "@lerna/changed",
-		Version:   "3.3.2",
-		Format:    "npm",
-		Namespace: "nodejs",
-	})
+	p := findPkg(pkgs, "@babel/generator")
+	assert.Equal(t, &Package{
+		Name:    "@babel/generator",
+		Version: "7.0.0",
+		Purl:    "pkg:npm/%40babel/generator@7.0.0",
+		Cpes:    []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
+	}, p)
+
+	p = findPkg(pkgs, "@lerna/changed")
+	assert.Equal(t, &Package{
+		Name:    "@lerna/changed",
+		Version: "3.3.2",
+		Purl:    "pkg:npm/%40lerna/changed@3.3.2",
+		Cpes:    []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
+	}, p)
 }

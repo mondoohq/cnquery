@@ -20,23 +20,23 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	m, err := ParseWindowsAppPackages(f)
+	pkgs, err := ParseWindowsAppPackages(f)
 	assert.Nil(t, err)
-	assert.Equal(t, 19, len(m), "detected the right amount of packages")
+	assert.Equal(t, 19, len(pkgs), "detected the right amount of packages")
 
-	p := Package{
+	p := findPkg(pkgs, "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913")
+	assert.Equal(t, Package{
 		Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 		Version: "14.28.29913.0",
 		Arch:    "",
 		Format:  "windows/app",
-		CPE:     "cpe:2.3:a:microsoft corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
-	}
-	assert.Contains(t, m, p)
+		CPE:     "cpe:2.3:a:microsoft_corporation:microsoft_visual_c\\+\\+_2015-2019_redistributable_\\(x86\\)_-_14.28.29913:14.28.29913.0:*:*:*:*:*:*:*",
+	}, p)
 
 	// check empty return
-	m, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(m), "detected the right amount of packages")
+	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
@@ -54,23 +54,24 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m, err := ParseWindowsAppxPackages(c.Stdout)
+	pkgs, err := ParseWindowsAppxPackages(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 28, len(m), "detected the right amount of packages")
+	assert.Equal(t, 28, len(pkgs), "detected the right amount of packages")
 
-	p := Package{
+	p := findPkg(pkgs, "Microsoft.Windows.Cortana")
+	assert.Equal(t, Package{
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
 		Format:  "windows/appx",
-		CPE:     "cpe:2.3:a:cn=microsoft corporation, o=microsoft corporation, l=redmond, s=washington, c=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
-	}
-	assert.Contains(t, m, p)
+		// TODO: this is a bug in the CPE generation, we need to extract the publisher from the package
+		CPE: "cpe:2.3:a:cn\\=microsoft_corporation\\,_o\\=microsoft_corporation\\,_l\\=redmond\\,_s\\=washington\\,_c\\=us:microsoft.windows.cortana:1.11.5.17763:*:*:*:*:*:*:*",
+	}, p)
 
 	// check empty return
-	m, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	pkgs, err = ParseWindowsAppxPackages(strings.NewReader(""))
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(m), "detected the right amount of packages")
+	assert.Equal(t, 0, len(pkgs), "detected the right amount of packages")
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
@@ -96,12 +97,12 @@ func TestWindowsHotFixParser(t *testing.T) {
 	assert.NotNil(t, timestamp)
 
 	pkgs := HotFixesToPackages(hotfixes)
-	p := Package{
+	p := findPkg(pkgs, "KB4486553")
+	assert.Equal(t, Package{
 		Name:        "KB4486553",
 		Description: "Update",
 		Format:      "windows/hotfix",
-	}
-	assert.Contains(t, pkgs, p)
+	}, p)
 
 	// check empty return
 	hotfixes, err = ParseWindowsHotfixes(strings.NewReader(""))
