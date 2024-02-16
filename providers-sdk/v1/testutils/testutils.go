@@ -215,7 +215,7 @@ func Local() llx.Runtime {
 
 	schema := providers.Coordinator.Schema().(providers.ExtensibleSchema)
 	schema.Add(osconf.Config.Name, osSchema)
-	schema.Add("core", coreSchema)
+	schema.Add(providers.BuiltinCoreID, coreSchema)
 	schema.Add(networkconf.Config.Name, networkSchema)
 	schema.Add(mockprovider.Config.Name, mockSchema)
 
