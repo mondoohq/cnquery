@@ -20,7 +20,7 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 	for k, v := range other.AllResources() {
 		if existing, ok := s.Resources[k]; ok {
 			// If neither resource is an extension, we can't merge them. We store both references.
-			if !v.IsExtension && !existing.IsExtension {
+			if !v.IsExtension && !existing.IsExtension && v.Provider != existing.Provider {
 				existing.Others = append(existing.Others, v)
 				continue
 			}

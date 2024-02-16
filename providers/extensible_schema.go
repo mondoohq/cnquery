@@ -106,7 +106,7 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	}
 
 	if x.lastRefreshed >= LastProviderInstall {
-		return nil, nil
+		return res, f
 	}
 
 	x.unsafeLoadAll()
