@@ -6,6 +6,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,9 +27,10 @@ import (
 
 func init() {
 	rootCmd.AddCommand(sbomCmd)
-	sbomCmd.Flags().String("asset-name", "", "User-override for the asset name")
+	sbomCmd.Flags().String("asset-name", "", "User-override for the asset name.")
 	sbomCmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset.") // user-added, editable
 	sbomCmd.Flags().StringP("output", "o", "list", "Set output format: "+sbom.AllFormats())
+	sbomCmd.Flags().String("output-target", "", "Set output target to which the sbom report will be written.")
 	sbomCmd.Flags().Bool("with-evidence", false, "Display evidence for each component")
 }
 
@@ -50,6 +54,11 @@ Note this command is experimental and may change in the future.
 		err := viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to bind output flag")
+		}
+
+		err = viper.BindPFlag("output-target", cmd.Flags().Lookup("output-target"))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to bind output-target flag")
 		}
 
 		err = viper.BindPFlag("with-evidence", cmd.Flags().Lookup("with-evidence"))
@@ -113,13 +122,27 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		}
 	}
 
-	for _, bom := range boms {
+	outputTarget := viper.GetString("output-target")
+	for i := range boms {
+		bom := boms[i]
 		output := bytes.Buffer{}
 		err := exporter.Render(&output, &bom)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to render SBOM")
 		}
-		fmt.Println(output.String())
+
+		if outputTarget != "" {
+			filename := outputTarget
+			if len(boms) > 1 {
+				filename = fmt.Sprintf("%s-%d.%s", path.Base(outputTarget), i, path.Ext(outputTarget))
+			}
+			err := os.WriteFile(filename, output.Bytes(), 0600)
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to write SBOM to file")
+			}
+		} else {
+			fmt.Println(output.String())
+		}
 	}
 }
 
