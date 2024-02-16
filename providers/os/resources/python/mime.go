@@ -6,8 +6,6 @@ package python
 import (
 	"bufio"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
 	"io"
 	"net/textproto"
 	"strings"
@@ -54,15 +52,6 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 
 	deps := extractMimeDeps(mimeData.Values("Requires-Dist"))
 
-	cpes := []string{}
-
-	// what we see in the cpe dictionary is that the vendor is the name of the package itself + "_project"
-	vendor := mimeData.Get("Name") + "_project"
-	cpeEntry, err := cpe.NewPackage2Cpe(vendor, mimeData.Get("Name"), mimeData.Get("Version"), "", "")
-	if err == nil && cpeEntry != "" {
-		cpes = append(cpes, cpeEntry)
-	}
-
 	return &PackageDetails{
 		Name:         mimeData.Get("Name"),
 		Summary:      mimeData.Get("Summary"),
@@ -72,21 +61,7 @@ func ParseMIME(r io.Reader, pythonMIMEFilepath string) (*PackageDetails, error) 
 		Version:      mimeData.Get("Version"),
 		Dependencies: deps,
 		File:         pythonMIMEFilepath,
-		Purl:         newPythonPackageUrl(mimeData.Get("Name"), mimeData.Get("Version"), mimeData.Get("Home-page")),
-		Cpes:         cpes,
+		Purl:         NewPackageUrl(mimeData.Get("Name"), mimeData.Get("Version")),
+		Cpes:         NewCpes(mimeData.Get("Name"), mimeData.Get("Version")),
 	}, nil
-}
-
-func newPythonPackageUrl(name string, version string, homepage string) string {
-	// ensure the name is according to the PURL spec
-	// see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#pypi
-	name = strings.ReplaceAll(name, "_", "-")
-
-	return packageurl.NewPackageURL(
-		packageurl.TypePyPi,
-		"",
-		name,
-		version,
-		nil,
-		"").String()
 }
