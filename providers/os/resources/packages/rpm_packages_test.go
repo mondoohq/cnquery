@@ -60,7 +60,7 @@ func TestRedhat7Parser(t *testing.T) {
 		Arch:           "x86_64",
 		Description:    "GNU Standard C++ Library",
 		PUrl:           "pkg:rpm/rhel/libstdc%2B%2B@4.8.5-28.el7_5.1?arch=x86_64&distro=rhel-7.4",
-		CPE:            "cpe:2.3:a:libstdc++:libstdc\\+\\+:4.8.5-28.el7_5.1:x86_64:*:*:*:*:*:*",
+		CPE:            "cpe:2.3:a:libstdc\\+\\+:libstdc\\+\\+:4.8.5-28.el7_5.1:x86_64:*:*:*:*:*:*",
 		Format:         RpmPkgFormat,
 		FilesAvailable: PkgFilesAsync,
 	}
