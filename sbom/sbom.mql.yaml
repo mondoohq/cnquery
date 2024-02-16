@@ -16,3 +16,6 @@ packs:
       - uid: mondoo-sbom-python-packages
         title: Retrieve list of installed Python packages
         mql: python.packages { name version purl cpes.map(uri) file.path }
+      - uid: mondoo-sbom-npm-packages
+        title: Retrieve list of installed npm packages
+        mql: npm.packages { name version purl cpes.map(uri) files.map(path) }

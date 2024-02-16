@@ -304,7 +304,32 @@
         ]
       },
       "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-python-packages": {
-        "python.packages": []
+        "python.packages": [
+          {
+            "name": "pip",
+            "version": "21.2.4",
+            "cpes.map": [
+              "cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*"
+            ],
+            "purl": "pkg:pypi/pip@21.2.4",
+            "file.path": "/opt/lib/python3.9/site-packages/pip-21.2.4.dist-info/METADATA"
+          }
+        ]
+      },
+      "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-npm-packages": {
+        "npm.packages.list": [
+          {
+            "name": "npm",
+            "files.map": [
+              "/opt/lib/node_modules/npm/package.json"
+            ],
+            "cpes.map": [
+              "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*"
+            ],
+            "purl": "pkg:npm/npm@10.2.4",
+            "version": "10.2.4"
+          }
+        ]
       }
     }
   },
