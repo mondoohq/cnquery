@@ -176,6 +176,8 @@ func (p *PackageJsonParser) Parse(r io.Reader) (*Package, []*Package, error) {
 	root := &Package{
 		Name:    packageJson.Name,
 		Version: packageJson.Version,
+		Purl:    NewPackageUrl(packageJson.Name, packageJson.Version),
+		Cpes:    NewCpes(packageJson.Name, packageJson.Version),
 	}
 
 	// add all dependencies
@@ -184,6 +186,8 @@ func (p *PackageJsonParser) Parse(r io.Reader) (*Package, []*Package, error) {
 		entries = append(entries, &Package{
 			Name:    k,
 			Version: v,
+			Purl:    NewPackageUrl(k, v),
+			Cpes:    NewCpes(k, v),
 		})
 	}
 

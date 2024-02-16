@@ -281,17 +281,24 @@ func TestPackageJsonParser(t *testing.T) {
 	assert.Equal(t, &Package{
 		Name:    "express",
 		Version: "4.16.4",
+		Purl:    "pkg:npm/express@4.16.4",
+		Cpes:    []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
 	}, root)
 
 	p := findPkg(pkgs, "path-to-regexp")
 	assert.Equal(t, &Package{
 		Name:    "path-to-regexp",
 		Version: "0.1.7",
+		Purl:    "pkg:npm/path-to-regexp@0.1.7",
+		Cpes:    []string{"cpe:2.3:a:path-to-regexp:path-to-regexp:0.1.7:*:*:*:*:*:*:*"},
 	}, p)
 
 	p = findPkg(pkgs, "range-parser")
 	assert.Equal(t, &Package{
 		Name:    "range-parser",
 		Version: "~1.2.0",
+		// TODO: we need to handle the range properly
+		Purl: "pkg:npm/range-parser@~1.2.0",
+		Cpes: []string{"cpe:2.3:a:range-parser:range-parser:\\~1.2.0:*:*:*:*:*:*:*"},
 	}, p)
 }

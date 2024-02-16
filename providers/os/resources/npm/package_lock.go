@@ -80,6 +80,8 @@ func (p *PackageLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 	root := &Package{
 		Name:    packageJsonLock.Name,
 		Version: packageJsonLock.Version,
+		Purl:    NewPackageUrl(packageJsonLock.Name, packageJsonLock.Version),
+		Cpes:    NewCpes(packageJsonLock.Name, packageJsonLock.Version),
 	}
 
 	// add all dependencies
@@ -91,9 +93,10 @@ func (p *PackageLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 				name = v.Name
 			}
 			entries = append(entries, &Package{
-				Name:        name,
-				Version:     v.Version,
-				Description: v.Name,
+				Name:    name,
+				Version: v.Version,
+				Purl:    NewPackageUrl(name, v.Version),
+				Cpes:    NewCpes(name, v.Version),
 			})
 		}
 	} else if packageJsonLock.Dependencies != nil {
@@ -101,6 +104,8 @@ func (p *PackageLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 			entries = append(entries, &Package{
 				Name:    k,
 				Version: v.Version,
+				Purl:    NewPackageUrl(k, v.Version),
+				Cpes:    NewCpes(k, v.Version),
 			})
 		}
 	}

@@ -163,17 +163,23 @@ func TestPackageJsonLockParser(t *testing.T) {
 	assert.Equal(t, &Package{
 		Name:    "workbox",
 		Version: "0.0.0",
+		Purl:    "pkg:npm/workbox@0.0.0",
+		Cpes:    []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
 	}, root)
 
 	p := findPkg(pkgs, "@babel/generator")
 	assert.Equal(t, &Package{
 		Name:    "@babel/generator",
 		Version: "7.0.0",
+		Purl:    "pkg:npm/%40babel/generator@7.0.0",
+		Cpes:    []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
 	}, p)
 
 	p = findPkg(pkgs, "@lerna/changed")
 	assert.Equal(t, &Package{
 		Name:    "@lerna/changed",
 		Version: "3.3.2",
+		Purl:    "pkg:npm/%40lerna/changed@3.3.2",
+		Cpes:    []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
 	}, p)
 }

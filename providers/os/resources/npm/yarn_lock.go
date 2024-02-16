@@ -65,6 +65,8 @@ func (p *YarnLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 		entries = append(entries, &Package{
 			Name:    name,
 			Version: v.Version,
+			Purl:    NewPackageUrl(name, v.Version),
+			Cpes:    NewCpes(name, v.Version),
 		})
 	}
 
