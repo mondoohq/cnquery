@@ -165,7 +165,7 @@ func TestPackageJsonLockWithPackages(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	info, err := (&PackageLockParser{}).Parse(f, "/path/to/package-lock.json")
+	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
 	assert.Nil(t, err)
 
 	root := info.Root()
@@ -174,7 +174,7 @@ func TestPackageJsonLockWithPackages(t *testing.T) {
 		Version:           "7.0.0",
 		Purl:              "pkg:npm/npm@7.0.0",
 		Cpes:              []string{"cpe:2.3:a:npm:npm:7.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/to/package-lock.json"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, root)
 
 	transitive := info.Transitive()
@@ -186,7 +186,7 @@ func TestPackageJsonLockWithPackages(t *testing.T) {
 		Version:           "7.10.4",
 		Purl:              "pkg:npm/node-modules/%40babel@7.10.4",
 		Cpes:              []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/to/package-lock.json"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, p)
 
 }
@@ -196,7 +196,7 @@ func TestPackageJsonLockWithDependencies(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	info, err := (&PackageLockParser{}).Parse(f, "/path/to/package-lock.json")
+	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
 	assert.Nil(t, err)
 
 	root := info.Root()
@@ -205,7 +205,7 @@ func TestPackageJsonLockWithDependencies(t *testing.T) {
 		Version:           "0.0.0",
 		Purl:              "pkg:npm/workbox@0.0.0",
 		Cpes:              []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/to/package-lock.json"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, root)
 
 	transitive := info.Transitive()
@@ -217,7 +217,7 @@ func TestPackageJsonLockWithDependencies(t *testing.T) {
 		Version:           "7.0.0",
 		Purl:              "pkg:npm/%40babel/generator@7.0.0",
 		Cpes:              []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/to/package-lock.json"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, p)
 
 	p = findPkg(transitive, "@lerna/changed")
@@ -226,6 +226,6 @@ func TestPackageJsonLockWithDependencies(t *testing.T) {
 		Version:           "3.3.2",
 		Purl:              "pkg:npm/%40lerna/changed@3.3.2",
 		Cpes:              []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/to/package-lock.json"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, p)
 }

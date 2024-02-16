@@ -274,7 +274,7 @@ func TestPackageJsonParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	info, err := (&PackageJsonParser{}).Parse(f, "/path/package.json")
+	info, err := (&PackageJsonParser{}).Parse(f, "path/package.json")
 	assert.Nil(t, err)
 
 	root := info.Root()
@@ -283,7 +283,7 @@ func TestPackageJsonParser(t *testing.T) {
 		Version:           "4.16.4",
 		Purl:              "pkg:npm/express@4.16.4",
 		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/package.json"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, root)
 
 	transitive := info.Transitive()
@@ -294,7 +294,7 @@ func TestPackageJsonParser(t *testing.T) {
 		Version:           "0.1.7",
 		Purl:              "pkg:npm/path-to-regexp@0.1.7",
 		Cpes:              []string{"cpe:2.3:a:path-to-regexp:path-to-regexp:0.1.7:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/package.json"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, p)
 
 	p = findPkg(transitive, "range-parser")
@@ -303,6 +303,6 @@ func TestPackageJsonParser(t *testing.T) {
 		Version:           "~1.2.0",
 		Purl:              "pkg:npm/range-parser@1.2.0",
 		Cpes:              []string{"cpe:2.3:a:range-parser:range-parser:1.2.0:*:*:*:*:*:*:*"},
-		EvidenceLocations: []string{"/path/package.json"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, p)
 }
