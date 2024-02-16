@@ -489,6 +489,26 @@ resources:
       options: {}
       path: {}
     min_mondoo_version: 5.15.0
+  npm.package:
+    fields:
+      cpes: {}
+      dependencies: {}
+      files: {}
+      id: {}
+      name: {}
+      purl: {}
+      version: {}
+    min_mondoo_version: latest
+  npm.packages:
+    fields:
+      "": {}
+      directDependencies: {}
+      files: {}
+      list: {}
+      path: {}
+      root: {}
+      transitive: {}
+    min_mondoo_version: latest
   ntp.conf:
     fields:
       content: {}

@@ -67,11 +67,18 @@ func TestPackageLock(t *testing.T) {
 						License: packageLockLicense(
 							[]string{"Artistic-2.0"},
 						),
+						Dependencies: map[string]string{
+							"@npmcli/arborist":  "^1.0.0",
+							"@npmcli/ci-detect": "^1.2.0",
+						},
 					},
 					"node_modules/@babel/code-frame": {
 						Version:   "7.10.4",
 						Resolved:  "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.10.4.tgz",
 						Integrity: "sha512-vG6SvB6oYEhvgisZNFRmRCUkLz11c7rp+tbNTynGqc6mS1d5ATd/sGyV6W0KZZnXRKMTzZDRgQT3Ou9jhpAfUg==",
+						Dependencies: map[string]string{
+							"@babel/highlight": "^7.10.4",
+						},
 					},
 				},
 				Dependencies: map[string]packageLockDependency{
@@ -116,6 +123,9 @@ func TestPackageLock(t *testing.T) {
 						License: packageLockLicense(
 							[]string{"Artistic-2.0"},
 						),
+						Dependencies: map[string]string{
+							"@isaacs/string-locale-compare": "^1.1.0",
+						},
 					},
 					"node_modules/@isaacs/string-locale-compare": {
 						Version:   "1.1.0",
@@ -150,36 +160,72 @@ func TestPackageLock(t *testing.T) {
 	}
 }
 
-func TestPackageJsonLockParser(t *testing.T) {
-	f, err := os.Open("./testdata/package-lock/workbox-package-lock.json")
+func TestPackageJsonLockWithPackages(t *testing.T) {
+	f, err := os.Open("./testdata/package-lock/lockfile-v2.json")
 	require.NoError(t, err)
-
 	defer f.Close()
 
-	root, pkgs, err := (&PackageLockParser{}).Parse(f)
+	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
 	assert.Nil(t, err)
-	assert.Equal(t, 1299, len(pkgs))
 
+	root := info.Root()
 	assert.Equal(t, &Package{
-		Name:    "workbox",
-		Version: "0.0.0",
-		Purl:    "pkg:npm/workbox@0.0.0",
-		Cpes:    []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
+		Name:              "npm",
+		Version:           "7.0.0",
+		Purl:              "pkg:npm/npm@7.0.0",
+		Cpes:              []string{"cpe:2.3:a:npm:npm:7.0.0:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, root)
 
-	p := findPkg(pkgs, "@babel/generator")
+	transitive := info.Transitive()
+	assert.Equal(t, 2, len(transitive))
+
+	p := findPkg(transitive, "@babel/code-frame")
 	assert.Equal(t, &Package{
-		Name:    "@babel/generator",
-		Version: "7.0.0",
-		Purl:    "pkg:npm/%40babel/generator@7.0.0",
-		Cpes:    []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
+		Name:              "@babel/code-frame",
+		Version:           "7.10.4",
+		Purl:              "pkg:npm/node-modules/%40babel@7.10.4",
+		Cpes:              []string{"cpe:2.3:a:node_modules\\/\\@babel\\/code-frame:node_modules\\/\\@babel\\/code-frame:7.10.4:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, p)
 
-	p = findPkg(pkgs, "@lerna/changed")
+}
+
+func TestPackageJsonLockWithDependencies(t *testing.T) {
+	f, err := os.Open("./testdata/package-lock/workbox-package-lock.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	info, err := (&PackageLockParser{}).Parse(f, "path/to/package-lock.json")
+	assert.Nil(t, err)
+
+	root := info.Root()
 	assert.Equal(t, &Package{
-		Name:    "@lerna/changed",
-		Version: "3.3.2",
-		Purl:    "pkg:npm/%40lerna/changed@3.3.2",
-		Cpes:    []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
+		Name:              "workbox",
+		Version:           "0.0.0",
+		Purl:              "pkg:npm/workbox@0.0.0",
+		Cpes:              []string{"cpe:2.3:a:workbox:workbox:0.0.0:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
+	}, root)
+
+	transitive := info.Transitive()
+	assert.Equal(t, 1299, len(transitive))
+
+	p := findPkg(transitive, "@babel/generator")
+	assert.Equal(t, &Package{
+		Name:              "@babel/generator",
+		Version:           "7.0.0",
+		Purl:              "pkg:npm/%40babel/generator@7.0.0",
+		Cpes:              []string{"cpe:2.3:a:\\@babel\\/generator:\\@babel\\/generator:7.0.0:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
+	}, p)
+
+	p = findPkg(transitive, "@lerna/changed")
+	assert.Equal(t, &Package{
+		Name:              "@lerna/changed",
+		Version:           "3.3.2",
+		Purl:              "pkg:npm/%40lerna/changed@3.3.2",
+		Cpes:              []string{"cpe:2.3:a:\\@lerna\\/changed:\\@lerna\\/changed:3.3.2:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/to/package-lock.json"},
 	}, p)
 }

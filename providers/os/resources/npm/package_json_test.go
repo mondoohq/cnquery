@@ -274,31 +274,46 @@ func TestPackageJsonParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	root, pkgs, err := (&PackageJsonParser{}).Parse(f)
+	info, err := (&PackageJsonParser{}).Parse(f, "path/package.json")
 	assert.Nil(t, err)
-	assert.Equal(t, 30, len(pkgs))
 
+	root := info.Root()
 	assert.Equal(t, &Package{
-		Name:    "express",
-		Version: "4.16.4",
-		Purl:    "pkg:npm/express@4.16.4",
-		Cpes:    []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
+		Name:              "express",
+		Version:           "4.16.4",
+		Purl:              "pkg:npm/express@4.16.4",
+		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, root)
 
-	p := findPkg(pkgs, "path-to-regexp")
+	transitive := info.Transitive()
+	assert.Equal(t, 31, len(transitive))
+
+	// ensure the package is in the transitive list
+	p := findPkg(transitive, "express")
 	assert.Equal(t, &Package{
-		Name:    "path-to-regexp",
-		Version: "0.1.7",
-		Purl:    "pkg:npm/path-to-regexp@0.1.7",
-		Cpes:    []string{"cpe:2.3:a:path-to-regexp:path-to-regexp:0.1.7:*:*:*:*:*:*:*"},
+		Name:              "express",
+		Version:           "4.16.4",
+		Purl:              "pkg:npm/express@4.16.4",
+		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, p)
 
-	p = findPkg(pkgs, "range-parser")
+	p = findPkg(transitive, "path-to-regexp")
 	assert.Equal(t, &Package{
-		Name:    "range-parser",
-		Version: "~1.2.0",
-		// TODO: we need to handle the range properly
-		Purl: "pkg:npm/range-parser@~1.2.0",
-		Cpes: []string{"cpe:2.3:a:range-parser:range-parser:\\~1.2.0:*:*:*:*:*:*:*"},
+		Name:              "path-to-regexp",
+		Version:           "0.1.7",
+		Purl:              "pkg:npm/path-to-regexp@0.1.7",
+		Cpes:              []string{"cpe:2.3:a:path-to-regexp:path-to-regexp:0.1.7:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/package.json"},
+	}, p)
+
+	p = findPkg(transitive, "range-parser")
+	assert.Equal(t, &Package{
+		Name:              "range-parser",
+		Version:           "~1.2.0",
+		Purl:              "pkg:npm/range-parser@1.2.0",
+		Cpes:              []string{"cpe:2.3:a:range-parser:range-parser:1.2.0:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/package.json"},
 	}, p)
 }

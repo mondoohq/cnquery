@@ -16,11 +16,13 @@ func TestYarnParser(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	_, pkgs, err := (&YarnLockParser{}).Parse(f)
+	info, err := (&YarnLockParser{}).Parse(f, "/path/to/yarn.lock")
 	assert.Nil(t, err)
-	assert.Equal(t, 99, len(pkgs))
 
-	p := findPkg(pkgs, "has")
+	transitive := info.Transitive()
+	assert.Equal(t, 99, len(transitive))
+
+	p := findPkg(transitive, "has")
 	assert.Equal(t, &Package{
 		Name:    "has",
 		Version: "1.0.3",
@@ -28,7 +30,7 @@ func TestYarnParser(t *testing.T) {
 		Cpes:    []string{"cpe:2.3:a:has:has:1.0.3:*:*:*:*:*:*:*"},
 	}, p)
 
-	p = findPkg(pkgs, "iconv-lite")
+	p = findPkg(transitive, "iconv-lite")
 	assert.Equal(t, &Package{
 		Name:    "iconv-lite",
 		Version: "0.4.24",

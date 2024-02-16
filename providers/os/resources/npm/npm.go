@@ -13,17 +13,24 @@ import (
 )
 
 type Parser interface {
-	Parse(r io.Reader) (*Package, []*Package, error)
+	Parse(r io.Reader, filename string) (NpmPackageInfo, error)
+}
+
+type NpmPackageInfo interface {
+	Root() *Package
+	Direct() []*Package
+	Transitive() []*Package
 }
 
 type Package struct {
-	Name        string
-	File        string
-	License     string
-	Description string
-	Version     string
-	Purl        string
-	Cpes        []string
+	Name              string
+	File              string
+	License           string
+	Description       string
+	Version           string
+	Purl              string
+	Cpes              []string
+	EvidenceLocations []string
 }
 
 // NewPackageUrl creates a npm package url for a given package name and version
@@ -43,14 +50,14 @@ func NewPackageUrl(name string, version string) string {
 		packageurl.TypeNPM,
 		namespace,
 		name,
-		version,
+		cleanVersion(version),
 		nil,
 		"").String()
 }
 
 func NewCpes(name string, version string) []string {
 	cpes := []string{}
-	cpeEntry, err := cpe.NewPackage2Cpe(name, name, version, "", "")
+	cpeEntry, err := cpe.NewPackage2Cpe(name, name, cleanVersion(version), "", "")
 	// we only add the cpe if it could be created
 	// if the cpe could not be created, we log the error and continue to ensure the package is still added to the list
 	if err != nil {
@@ -59,4 +66,14 @@ func NewCpes(name string, version string) []string {
 		cpes = append(cpes, cpeEntry)
 	}
 	return cpes
+}
+
+func cleanVersion(version string) string {
+	v := strings.ReplaceAll(version, "^", "")
+	v = strings.ReplaceAll(v, "~", "")
+	v = strings.ReplaceAll(v, ">", "")
+	v = strings.ReplaceAll(v, "<", "")
+	v = strings.ReplaceAll(v, "=", "")
+	v = strings.ReplaceAll(v, " ", "")
+	return v
 }

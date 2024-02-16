@@ -366,6 +366,14 @@ func init() {
 			Init: initPythonPackage,
 			Create: createPythonPackage,
 		},
+		"npm.packages": {
+			Init: initNpmPackages,
+			Create: createNpmPackages,
+		},
+		"npm.package": {
+			// to override args, implement: initNpmPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNpmPackage,
+		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMacos,
@@ -1690,6 +1698,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"python.package.dependencies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPythonPackage).GetDependencies()).ToDataRes(types.Array(types.Resource("python.package")))
+	},
+	"npm.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetPath()).ToDataRes(types.String)
+	},
+	"npm.packages.root": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetRoot()).ToDataRes(types.Resource("npm.package"))
+	},
+	"npm.packages.directDependencies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetDirectDependencies()).ToDataRes(types.Array(types.Resource("npm.package")))
+	},
+	"npm.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"npm.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackages).GetList()).ToDataRes(types.Array(types.Resource("npm.package")))
+	},
+	"npm.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetId()).ToDataRes(types.String)
+	},
+	"npm.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetName()).ToDataRes(types.String)
+	},
+	"npm.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"npm.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"npm.package.cpes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
+	},
+	"npm.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.userPreferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetUserPreferences()).ToDataRes(types.Map(types.String, types.Dict))
@@ -3975,6 +4016,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"python.package.dependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPythonPackage).Dependencies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"npm.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNpmPackages).__id, ok = v.Value.(string)
+			return
+		},
+	"npm.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.packages.root": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).Root, ok = plugin.RawToTValue[*mqlNpmPackage](v.Value, v.Error)
+		return
+	},
+	"npm.packages.directDependencies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).DirectDependencies, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"npm.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"npm.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"npm.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNpmPackage).__id, ok = v.Value.(string)
+			return
+		},
+	"npm.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Cpes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"npm.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11477,6 +11570,227 @@ func (c *mqlPythonPackage) GetDependencies() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.dependencies()
+	})
+}
+
+// mqlNpmPackages for the npm.packages resource
+type mqlNpmPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlNpmPackagesInternal
+	Path plugin.TValue[string]
+	Root plugin.TValue[*mqlNpmPackage]
+	DirectDependencies plugin.TValue[[]interface{}]
+	Files plugin.TValue[[]interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createNpmPackages creates a new instance of this resource
+func createNpmPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNpmPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("npm.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNpmPackages) MqlName() string {
+	return "npm.packages"
+}
+
+func (c *mqlNpmPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNpmPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNpmPackages) GetRoot() *plugin.TValue[*mqlNpmPackage] {
+	return plugin.GetOrCompute[*mqlNpmPackage](&c.Root, func() (*mqlNpmPackage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.packages", c.__id, "root")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNpmPackage), nil
+			}
+		}
+
+		return c.root()
+	})
+}
+
+func (c *mqlNpmPackages) GetDirectDependencies() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DirectDependencies, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.packages", c.__id, "directDependencies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.directDependencies()
+	})
+}
+
+func (c *mqlNpmPackages) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlNpmPackages) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlNpmPackage for the npm.package resource
+type mqlNpmPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlNpmPackageInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl plugin.TValue[string]
+	Cpes plugin.TValue[[]interface{}]
+	Files plugin.TValue[[]interface{}]
+}
+
+// createNpmPackage creates a new instance of this resource
+func createNpmPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNpmPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("npm.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNpmPackage) MqlName() string {
+	return "npm.package"
+}
+
+func (c *mqlNpmPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNpmPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNpmPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlNpmPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlNpmPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlNpmPackage) GetCpes() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Cpes, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.package", c.__id, "cpes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.cpes()
+	})
+}
+
+func (c *mqlNpmPackage) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("npm.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.files()
 	})
 }
 

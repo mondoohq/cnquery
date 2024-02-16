@@ -19,7 +19,9 @@ var (
 	_ Parser = (*YarnLockParser)(nil)
 )
 
-type YarnLockEntry struct {
+type yarnLock map[string]yarnLockEntry
+
+type yarnLockEntry struct {
 	Version      string
 	Resolved     string
 	Dependencies map[string]string
@@ -27,7 +29,7 @@ type YarnLockEntry struct {
 
 type YarnLockParser struct{}
 
-func (p *YarnLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
+func (p *YarnLockParser) Parse(r io.Reader, filename string) (NpmPackageInfo, error) {
 	var b bytes.Buffer
 
 	// iterate and convert the format to yaml on the fly
@@ -43,26 +45,39 @@ func (p *YarnLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 		b.Write([]byte("\n"))
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	var yarnLock map[string]YarnLockEntry
+	var yarnLock yarnLock
 
 	err := yaml.Unmarshal(b.Bytes(), &yarnLock)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	entries := []*Package{}
+	return &yarnLock, nil
+}
+
+func (p *yarnLock) Root() *Package {
+	// we don't have a root package in yarn.lock
+	return nil
+}
+
+func (p *yarnLock) Direct() []*Package {
+	return nil
+}
+
+func (p *yarnLock) Transitive() []*Package {
+	transitive := []*Package{}
 
 	// add all dependencies
-	for k, v := range yarnLock {
+	for k, v := range *p {
 		name, _, err := parseYarnPackageName(k)
 		if err != nil {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
-		entries = append(entries, &Package{
+		transitive = append(transitive, &Package{
 			Name:    name,
 			Version: v.Version,
 			Purl:    NewPackageUrl(name, v.Version),
@@ -70,7 +85,7 @@ func (p *YarnLockParser) Parse(r io.Reader) (*Package, []*Package, error) {
 		})
 	}
 
-	return nil, entries, nil
+	return transitive
 }
 
 func parseYarnPackageName(name string) (string, string, error) {
