@@ -11,7 +11,7 @@ import (
 )
 
 type ExtensibleSchema interface {
-	Add(name string, schema *resources.Schema)
+	Add(name string, schema resources.ResourcesSchema)
 }
 
 type extensibleSchema struct {
