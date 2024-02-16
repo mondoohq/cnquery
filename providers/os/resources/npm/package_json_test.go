@@ -287,8 +287,19 @@ func TestPackageJsonParser(t *testing.T) {
 	}, root)
 
 	transitive := info.Transitive()
-	assert.Equal(t, 30, len(transitive))
-	p := findPkg(transitive, "path-to-regexp")
+	assert.Equal(t, 31, len(transitive))
+
+	// ensure the package is in the transitive list
+	p := findPkg(transitive, "express")
+	assert.Equal(t, &Package{
+		Name:              "express",
+		Version:           "4.16.4",
+		Purl:              "pkg:npm/express@4.16.4",
+		Cpes:              []string{"cpe:2.3:a:express:express:4.16.4:*:*:*:*:*:*:*"},
+		EvidenceLocations: []string{"path/package.json"},
+	}, p)
+
+	p = findPkg(transitive, "path-to-regexp")
 	assert.Equal(t, &Package{
 		Name:              "path-to-regexp",
 		Version:           "0.1.7",

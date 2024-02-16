@@ -203,6 +203,12 @@ func (p *packageJson) Direct() []*Package {
 func (p *packageJson) Transitive() []*Package {
 	// transitive dependencies, includes the root package
 	transitive := []*Package{}
+
+	r := p.Root()
+	if r != nil {
+		transitive = append(transitive, r)
+	}
+
 	for k, v := range p.Dependencies {
 		transitive = append(transitive, &Package{
 			Name:              k,
