@@ -43,9 +43,9 @@ type ProvidersCoordinator interface {
 
 var BuiltinCoreID = coreconf.Config.ID
 
-var Coordinator ProvidersCoordinator = newCoordinator()
+var Coordinator ProvidersCoordinator
 
-func newCoordinator() ProvidersCoordinator {
+func newCoordinator() *coordinator {
 	c := &coordinator{
 		runningByID: map[string]*RunningProvider{},
 		runtimes:    map[string]*Runtime{},
@@ -307,6 +307,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			mp := x.Runtime.Plugin.(*mockProviderService)
 			mp.Init(x.Runtime)
 		}
+		c.schema.Add(id, x.Runtime.Schema)
 		return x.Runtime, nil
 	}
 
@@ -386,8 +387,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		gracePeriod: 3 * time.Second,
 	}
 
-	c.schema.Add(provider.Name, provider.Schema)
-	c.schema.prioritizeIDs(BuiltinCoreID)
+	c.schema.Add(provider.ID, provider.Schema)
 
 	if err := res.heartbeat(); err != nil {
 		return nil, err

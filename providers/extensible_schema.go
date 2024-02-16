@@ -8,7 +8,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"golang.org/x/exp/slices"
 )
 
 type ExtensibleSchema interface {
@@ -39,7 +38,7 @@ func newExtensibleSchema() extensibleSchema {
 	}
 }
 
-func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
+func (x *extensibleSchema) Add(name string, schema resources.ResourcesSchema) {
 	x.sync.Lock()
 	x.unsafeAdd(name, schema)
 	x.unsafeRefresh()
@@ -101,31 +100,19 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	x.sync.Lock()
 	defer x.sync.Unlock()
 
-	found, ok := x.roAggregate.Resources[resource]
-	if !ok {
-		if x.lastRefreshed >= LastProviderInstall {
-			return nil, nil
-		}
-
-		found, ok = x.roAggregate.Resources[resource]
-		if !ok {
-			return nil, nil
-		}
-		return found, found.Fields[field]
+	res, f := x.roAggregate.LookupField(resource, field)
+	if res != nil && f != nil {
+		return res, f
 	}
 
-	fieldObj, ok := found.Fields[field]
-	if ok {
-		return found, fieldObj
-	}
 	if x.lastRefreshed >= LastProviderInstall {
-		return found, nil
+		return nil, nil
 	}
 
 	x.unsafeLoadAll()
 	x.unsafeRefresh()
 
-	return found, found.Fields[field]
+	return x.roAggregate.LookupField(resource, field)
 }
 
 // Prioritize the provider IDs in the order that is provided. Any other
@@ -185,18 +172,16 @@ func (x *extensibleSchema) unsafeRefresh() {
 	res := resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
-	for id, schema := range x.loaded {
-		if !slices.Contains(x.prioritization, id) {
-			res.Add(schema)
-		}
+	for _, schema := range x.loaded {
+		res.Add(schema)
 	}
 
-	for i := len(x.prioritization) - 1; i >= 0; i-- {
-		id := x.prioritization[i]
-		if s := x.loaded[id]; s != nil {
-			res.Add(s)
-		}
-	}
+	// for i := len(x.prioritization) - 1; i >= 0; i-- {
+	// 	id := x.prioritization[i]
+	// 	if s := x.loaded[id]; s != nil {
+	// 		res.Add(s)
+	// 	}
+	// }
 
 	// Note: This object is read-only and thus must be re-created to
 	// prevent concurrency issues with access outside this struct

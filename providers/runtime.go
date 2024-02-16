@@ -536,6 +536,22 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
 	}
 
+	// prioritize ids
+	resourcesPerProvider := map[string]*resources.ResourceInfo{
+		info.Provider: info,
+	}
+	for _, other := range info.Others {
+		resourcesPerProvider[other.Provider] = other
+	}
+
+	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
+	for i := len(priority) - 1; i >= 0; i-- {
+		id := priority[i]
+		if s := resourcesPerProvider[id]; s != nil {
+			info = s
+		}
+	}
+
 	if info.Provider == "" {
 		// This case happens when the resource is only bridging a resource chain,
 		// i.e. it is extending in nature (which we only test for the warning).
@@ -595,6 +611,14 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	}
 	if fieldInfo == nil {
 		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
+	}
+
+	// Make sure we grab the field that matches the provider of this runtime (if possible).
+	for _, f := range fieldInfo.Others {
+		if f.Provider == r.Provider.Instance.ID {
+			fieldInfo = f
+			break
+		}
 	}
 
 	if provider := r.providers[fieldInfo.Provider]; provider != nil {

@@ -40,6 +40,7 @@ message ResourceInfo {
   string min_mondoo_version = 25;
   string defaults = 26;
   string provider = 27;
+  repeated ResourceInfo others = 29;
 }
 
 message Field {
@@ -54,4 +55,5 @@ message Field {
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
   string provider = 27;
+  repeated Field others = 29;
 }

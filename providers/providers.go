@@ -58,6 +58,26 @@ func init() {
 	}
 
 	LastProviderInstall = time.Now().Unix()
+
+	// Initialize the global coordinator instance
+	coordinator := newCoordinator()
+	Coordinator = coordinator
+
+	// Load the schema for all the active providers
+	providers, err := ListActive()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to list active providers")
+		return
+	}
+
+	for name := range providers {
+		schema, err := Coordinator.LoadSchema(name)
+		if err != nil {
+			log.Error().Err(err).Str("provider", name).Msg("failed to load schema")
+			continue
+		}
+		coordinator.schema.Add(name, schema)
+	}
 }
 
 type ProviderLookup struct {
