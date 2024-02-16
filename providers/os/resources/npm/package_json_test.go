@@ -299,11 +299,10 @@ func TestPackageJsonParser(t *testing.T) {
 
 	p = findPkg(transitive, "range-parser")
 	assert.Equal(t, &Package{
-		Name:    "range-parser",
-		Version: "~1.2.0",
-		// TODO: we need to handle the range properly
-		Purl:              "pkg:npm/range-parser@~1.2.0",
-		Cpes:              []string{"cpe:2.3:a:range-parser:range-parser:\\~1.2.0:*:*:*:*:*:*:*"},
+		Name:              "range-parser",
+		Version:           "~1.2.0",
+		Purl:              "pkg:npm/range-parser@1.2.0",
+		Cpes:              []string{"cpe:2.3:a:range-parser:range-parser:1.2.0:*:*:*:*:*:*:*"},
 		EvidenceLocations: []string{"/path/package.json"},
 	}, p)
 }
