@@ -80,7 +80,7 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 		log.Debug().Str("path", pattern).Msg("searching for npm packages")
 		m, err := afero.Glob(conn.FileSystem(), pattern)
 		if err != nil {
-			log.Info().Err(err).Str("path", pattern).Msg("could not search for npm packages")
+			log.Debug().Err(err).Str("path", pattern).Msg("could not search for npm packages")
 			// nothing to do, we just ignore it
 		}
 		for _, walkPath := range m {
@@ -94,11 +94,12 @@ func (r *mqlNpmPackages) gatherPackagesFromSystemDefaults(conn shared.Connection
 			for i := range files {
 				f := files[i]
 				p := f.Name()
-				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
 
 				if !f.IsDir() {
 					continue
 				}
+
+				log.Debug().Str("path", p).Msg("checking for package-lock.json or package.json file")
 
 				// check if there is a package-lock.json or package.json file
 				packageLockPath := filepath.Join(nodeModulesPath, p, "/package-lock.json")
@@ -267,6 +268,7 @@ type mqlNpmPackagesInternal struct {
 }
 
 func (r *mqlNpmPackages) gatherData() error {
+	// ensure we only gather data once, happens when multiple fields are called by MQL
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
