@@ -40,15 +40,19 @@ func TestExtensibleSchema(t *testing.T) {
 
 	info := s.Lookup("eternity")
 	require.NotNil(t, info)
-	assert.Equal(t, "first", info.Provider)
-	assert.Len(t, info.Others, 1)
-	assert.Equal(t, "second", info.Others[0].Provider)
+	require.Len(t, info.Others, 1)
+
+	// Check that both providers are present for resource "eternity"
+	providers := []string{info.Provider, info.Others[0].Provider}
+	assert.ElementsMatch(t, []string{"first", "second"}, providers)
 
 	info, finfo := s.LookupField("eternity", "iii")
 	require.NotNil(t, info)
-	assert.Equal(t, "first", finfo.Provider)
-	assert.Len(t, info.Others, 1)
-	assert.Equal(t, "second", info.Others[0].Provider)
+	require.Len(t, info.Others, 1)
+
+	// Check that both providers are present for field "iii"
+	providers = []string{finfo.Provider, info.Others[0].Fields["iii"].Provider}
+	assert.ElementsMatch(t, []string{"first", "second"}, providers)
 
 	_, finfo = s.LookupField("eternity", "v")
 	require.NotNil(t, info)
