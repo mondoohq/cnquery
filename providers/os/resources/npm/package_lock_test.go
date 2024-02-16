@@ -86,6 +86,24 @@ func TestPackageLock(t *testing.T) {
 			},
 		},
 		{
+			Fixture: "testdata/package-lock/lockfile-v2-licenses.json",
+			Expected: packageLock{
+				Name:            "my-package",
+				Version:         "1.0.0",
+				LockfileVersion: 2,
+				Requires:        true,
+				Packages: map[string]packageLockPackage{
+					"": {
+						Name:    "my-package",
+						Version: "1.0.0",
+						License: packageLockLicense(
+							[]string{"MIT", "Apache2"},
+						),
+					},
+				},
+			},
+		},
+		{
 			Fixture: "testdata/package-lock/lockfile-v3.json",
 			Expected: packageLock{
 				Name:            "npm",
