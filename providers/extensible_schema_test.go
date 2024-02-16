@@ -6,6 +6,7 @@ package providers
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 )
@@ -37,23 +38,25 @@ func TestExtensibleSchema(t *testing.T) {
 		},
 	})
 
-	s.prioritizeIDs("second")
-
 	info := s.Lookup("eternity")
 	require.NotNil(t, info)
-	require.Equal(t, "second", info.Provider)
+	assert.Equal(t, "first", info.Provider)
+	assert.Len(t, info.Others, 1)
+	assert.Equal(t, "second", info.Others[0].Provider)
 
-	_, finfo := s.LookupField("eternity", "iii")
+	info, finfo := s.LookupField("eternity", "iii")
 	require.NotNil(t, info)
-	require.Equal(t, "second", finfo.Provider)
+	assert.Equal(t, "first", finfo.Provider)
+	assert.Len(t, info.Others, 1)
+	assert.Equal(t, "second", info.Others[0].Provider)
 
 	_, finfo = s.LookupField("eternity", "v")
 	require.NotNil(t, info)
-	require.Equal(t, "first", finfo.Provider)
+	assert.Equal(t, "first", finfo.Provider)
 
-	s.prioritizeIDs("first")
+	// s.prioritizeIDs("first")
 
 	_, finfo = s.LookupField("eternity", "iii")
 	require.NotNil(t, info)
-	require.Equal(t, "first", finfo.Provider)
+	assert.Equal(t, "first", finfo.Provider)
 }
