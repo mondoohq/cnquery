@@ -29,8 +29,20 @@ func TestSimpleBom(t *testing.T) {
 	require.NoError(t, err)
 
 	data := output.String()
+
+	// ensure os package is included
 	assert.Contains(t, data, "alpine-baselayout")
 	assert.Contains(t, data, "cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*")
 	// check that package files are included
 	assert.Contains(t, data, "etc/profile.d/color_prompt.sh.disabled")
+
+	// ensure python package is included
+	assert.Contains(t, data, "pip")
+	assert.Contains(t, data, "cpe:2.3:a:pip_project:pip:21.2.4:*:*:*:*:*:*:*")
+	assert.Contains(t, data, "pkg:pypi/pip@21.2.4")
+
+	// ensure npm package is included
+	assert.Contains(t, data, "npm")
+	assert.Contains(t, data, "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*")
+	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
 }

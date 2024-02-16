@@ -55,6 +55,7 @@ type BomReport struct {
 	Asset          *BomAsset    `json:"asset,omitempty"`
 	Packages       []BomPackage `json:"packages.list,omitempty"`
 	PythonPackages []BomPackage `json:"python.packages,omitempty"`
+	NpmPackages    []BomPackage `json:"npm.packages.list,omitempty"`
 }
 
 func (b *BomReport) ToJSON() ([]byte, error) {
