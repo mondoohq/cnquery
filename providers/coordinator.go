@@ -360,6 +360,7 @@ func (c *coordinator) newRuntime() *Runtime {
 
 func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	res := c.NewRuntime()
+	res.UpstreamConfig = parent.UpstreamConfig
 	res.recording = parent.Recording()
 	for k, v := range parent.providers {
 		res.providers[k] = v

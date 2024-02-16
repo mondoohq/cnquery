@@ -257,6 +257,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 				Incognito:   conf.IsIncognito,
 				Creds:       serviceAccount,
 			}
+			providers.DefaultRuntime().UpstreamConfig = conf.runtime.UpstreamConfig
 		} else {
 			log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
 			conf.IsIncognito = true
