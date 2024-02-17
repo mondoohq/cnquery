@@ -350,7 +350,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
-					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
+					"kid":           llx.StringDataPtr((*string)(entry.KID)),
 					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),

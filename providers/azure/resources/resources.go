@@ -69,8 +69,8 @@ func (a *mqlAzureSubscription) resources() ([]interface{}, error) {
 					"plan":              llx.DictData(plan),
 					"identity":          llx.DictData(identity),
 					"provisioningState": llx.StringDataPtr(resource.ProvisioningState),
-					"createdTime":       llx.TimeData(*resource.CreatedTime),
-					"changedTime":       llx.TimeData(*resource.ChangedTime),
+					"createdTime":       llx.TimeDataPtr(resource.CreatedTime),
+					"changedTime":       llx.TimeDataPtr(resource.ChangedTime),
 				})
 			if err != nil {
 				return nil, err

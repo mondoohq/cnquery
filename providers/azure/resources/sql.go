@@ -136,7 +136,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 				"name":             llx.StringDataPtr(entry.Name),
 				"type":             llx.StringDataPtr(entry.Type),
 				"collation":        llx.StringDataPtr(entry.Properties.Collation),
-				"creationDate":     llx.TimeData(*entry.Properties.CreationDate),
+				"creationDate":     llx.TimeDataPtr(entry.Properties.CreationDate),
 				"databaseId":       llx.StringDataPtr(entry.Properties.DatabaseID),
 				"createMode":       llx.StringData(convert.ToString((*string)(entry.Properties.CreateMode))),
 				"sourceDatabaseId": llx.StringDataPtr(entry.Properties.SourceDatabaseID),
