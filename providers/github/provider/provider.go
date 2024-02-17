@@ -143,7 +143,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 		}
 
-		asset.Connections[0].Id = conn.ID()
+		asset.Connections[0].Id = connId
 		return plugin.NewRuntime(
 			conn,
 			callback,
@@ -181,12 +181,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 	}
 
 	asset.Platform = platform
-
-	id, err := conn.Identifier()
-	if err != nil {
-		return err
-	}
-	asset.PlatformIds = []string{id}
 	return nil
 }
 

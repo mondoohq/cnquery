@@ -81,13 +81,6 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 	return assetList, nil
 }
 
-func cloneInventoryConf(invConf *inventory.Config) *inventory.Config {
-	invConfClone := invConf.Clone()
-	// We do not want to run discovery again for the already discovered assets
-	invConfClone.Discover = &inventory.Discovery{}
-	return invConfClone
-}
-
 func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
 	org, err := getMqlGithubOrg(runtime, orgName)
@@ -99,7 +92,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Name:        org.Name.Data,
 		Platform:    connection.GithubOrgPlatform,
 		Labels:      map[string]string{},
-		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 	})
 	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) || stringx.Contains(targets, connection.DiscoveryAll) || stringx.Contains(targets, connection.DiscoveryAuto) {
 		if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
@@ -112,7 +105,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				Name:        org.Login.Data + "/" + repo.Name.Data,
 				Platform:    connection.GithubRepoPlatform,
 				Labels:      make(map[string]string),
-				Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
 			})
 		}
 	}
@@ -128,7 +121,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 				Name:        user.Name.Data,
 				Platform:    connection.GithubUserPlatform,
 				Labels:      make(map[string]string),
-				Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
 			})
 		}
 	}
@@ -156,7 +149,7 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 		Name:        owner + "/" + repo.Name.Data,
 		Platform:    connection.GithubRepoPlatform,
 		Labels:      make(map[string]string),
-		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
 	})
 
 	return assetList, nil
@@ -183,7 +176,7 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 		Name:        user.Name.Data,
 		Platform:    connection.GithubUserPlatform,
 		Labels:      make(map[string]string),
-		Connections: []*inventory.Config{cloneInventoryConf(conn.Conf)},
+		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
 	})
 	return assetList, nil
 }
