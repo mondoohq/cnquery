@@ -124,7 +124,8 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	}
 
 	if connectAsset == nil {
-		log.Fatal().Msg("no asset selected")
+		log.Error().Msg("no asset selected")
+		os.Exit(1)
 	}
 
 	log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
