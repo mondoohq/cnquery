@@ -110,7 +110,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]interface{}, error) {
 					"provisioningState":         llx.StringDataPtr(entry.Properties.ProvisioningState),
 					"createdAt":                 llx.TimeDataPtr(createdAt),
 					"nodeResourceGroup":         llx.StringDataPtr(entry.Properties.NodeResourceGroup),
-					"powerState":                llx.StringData(convert.ToString((*string)(entry.Properties.PowerState.Code))),
+					"powerState":                llx.StringDataPtr((*string)(entry.Properties.PowerState.Code)),
 					"tags":                      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"rbacEnabled":               llx.BoolDataPtr(entry.Properties.EnableRBAC),
 					"dnsPrefix":                 llx.StringDataPtr(entry.Properties.DNSPrefix),

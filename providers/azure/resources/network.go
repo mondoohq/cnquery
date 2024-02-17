@@ -136,7 +136,7 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 					"type":              llx.StringDataPtr(watcher.Type),
 					"etag":              llx.StringDataPtr(watcher.Etag),
 					"properties":        llx.DictData(properties),
-					"provisioningState": llx.StringData(convert.ToString((*string)(watcher.Properties.ProvisioningState))),
+					"provisioningState": llx.StringDataPtr((*string)(watcher.Properties.ProvisioningState)),
 				})
 			if err != nil {
 				return nil, err
@@ -296,13 +296,13 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 					"type":               llx.StringDataPtr(flowLog.Type),
 					"etag":               llx.StringDataPtr(flowLog.Etag),
 					"retentionPolicy":    llx.DictData(retentionPolicyDict),
-					"format":             llx.StringData(convert.ToString((*string)(flowLog.Properties.Format.Type))),
+					"format":             llx.StringDataPtr((*string)(flowLog.Properties.Format.Type)),
 					"version":            llx.IntData(convert.ToInt64From32(flowLog.Properties.Format.Version)),
 					"enabled":            llx.BoolDataPtr(flowLog.Properties.Enabled),
 					"storageAccountId":   llx.StringDataPtr(flowLog.Properties.StorageID),
 					"targetResourceId":   llx.StringDataPtr(flowLog.Properties.TargetResourceID),
 					"targetResourceGuid": llx.StringDataPtr(flowLog.Properties.TargetResourceGUID),
-					"provisioningState":  llx.StringData(convert.ToString((*string)(flowLog.Properties.ProvisioningState))),
+					"provisioningState":  llx.StringDataPtr((*string)(flowLog.Properties.ProvisioningState)),
 					"analytics":          llx.DictData(flowLogAnalyticsDict),
 				})
 			if err != nil {
@@ -486,7 +486,7 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 					"name":              llx.StringDataPtr(lb.Name),
 					"location":          llx.StringDataPtr(lb.Location),
 					"etag":              llx.StringDataPtr(lb.Etag),
-					"sku":               llx.StringData(convert.ToString((*string)(lb.SKU.Name))),
+					"sku":               llx.StringDataPtr((*string)(lb.SKU.Name)),
 					"tags":              llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
 					"type":              llx.StringDataPtr(lb.Type),
 					"probes":            llx.ArrayData(probes, types.ResourceLike),

@@ -408,7 +408,7 @@ func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) configuration() ([]inte
 					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
 					"dataType":      llx.StringDataPtr(entry.Properties.DataType),
 					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
-					"source":        llx.StringData(convert.ToString((*string)(entry.Properties.Source))),
+					"source":        llx.StringDataPtr((*string)(entry.Properties.Source)),
 				})
 			if err != nil {
 				return nil, err

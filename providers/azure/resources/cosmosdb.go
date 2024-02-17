@@ -66,7 +66,7 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 					"name":       llx.StringDataPtr(account.Name),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 					"location":   llx.StringDataPtr(account.Location),
-					"kind":       llx.StringData(convert.ToString((*string)(account.Kind))),
+					"kind":       llx.StringDataPtr((*string)(account.Kind)),
 					"type":       llx.StringDataPtr(account.Type),
 					"properties": llx.DictData(properties),
 				})
