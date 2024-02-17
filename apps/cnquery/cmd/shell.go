@@ -108,11 +108,17 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 
 	connectAsset := filteredAssets[0]
 	if len(filteredAssets) > 1 {
+		invAssets := make([]*inventory.Asset, 0, len(filteredAssets))
+		for _, a := range filteredAssets {
+			invAssets = append(invAssets, a.Asset)
+		}
+
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 		if isTTY {
-			connectAsset = components.AssetSelect(filteredAssets)
+			selectedAsset := components.AssetSelect(invAssets)
+			connectAsset = filteredAssets[selectedAsset]
 		} else {
-			fmt.Println(components.AssetList(theme.OperatingSystemTheme, filteredAssets))
+			fmt.Println(components.AssetList(theme.OperatingSystemTheme, invAssets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}
@@ -121,19 +127,12 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	err = runtime.Connect(&plugin.ConnectReq{
-		Features: conf.Features,
-		Asset:    connectAsset,
-		Upstream: conf.UpstreamConfig,
-	})
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect to asset")
-	}
-	log.Info().Msgf("connected to %s", runtime.Provider.Connection.Asset.Platform.Title)
+	log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
 
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
 		runtime.Close()
+		connectAsset.Runtime.Close()
 		providers.Coordinator.Shutdown()
 	}
 
@@ -142,7 +141,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
 	shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
 
-	sh, err := shell.New(runtime, shellOptions...)
+	sh, err := shell.New(connectAsset.Runtime, shellOptions...)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to initialize interactive shell")
 	}

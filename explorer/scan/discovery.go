@@ -57,12 +57,12 @@ func (d *DiscoveredAssets) AddError(asset *inventory.Asset, err error) {
 	d.Errors = append(d.Errors, &AssetWithError{Asset: asset, Err: err})
 }
 
-func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*inventory.Asset {
-	var assets []*inventory.Asset
+func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*AssetWithRuntime {
+	var assets []*AssetWithRuntime
 	for _, a := range d.Assets {
 		for _, p := range a.Asset.PlatformIds {
 			if platformID == "" || p == platformID {
-				assets = append(assets, a.Asset)
+				assets = append(assets, a)
 				break
 			}
 		}
