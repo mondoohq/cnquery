@@ -204,8 +204,8 @@ func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]interfa
 		mailsArr := strings.Split(mails, ";")
 		mqlSecurityContact, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.securityContact",
 			map[string]*llx.RawData{
-				"id":                  llx.StringData(convert.ToString(contact.ID)),
-				"name":                llx.StringData(convert.ToString(contact.Name)),
+				"id":                  llx.StringDataPtr(contact.ID),
+				"name":                llx.StringDataPtr(contact.Name),
 				"emails":              llx.ArrayData(convert.SliceAnyToInterface(mailsArr), types.String),
 				"notificationsByRole": llx.DictData(notificationsByRole),
 				"alertNotifications":  llx.DictData(alertNotifications),

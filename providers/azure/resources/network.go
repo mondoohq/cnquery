@@ -129,12 +129,12 @@ func (a *mqlAzureSubscriptionNetworkService) watchers() ([]interface{}, error) {
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher",
 				map[string]*llx.RawData{
-					"id":                llx.StringData(convert.ToString(watcher.ID)),
-					"name":              llx.StringData(convert.ToString(watcher.Name)),
-					"location":          llx.StringData(convert.ToString(watcher.Location)),
+					"id":                llx.StringDataPtr(watcher.ID),
+					"name":              llx.StringDataPtr(watcher.Name),
+					"location":          llx.StringDataPtr(watcher.Location),
 					"tags":              llx.MapData(convert.PtrMapStrToInterface(watcher.Tags), types.String),
-					"type":              llx.StringData(convert.ToString(watcher.Type)),
-					"etag":              llx.StringData(convert.ToString(watcher.Etag)),
+					"type":              llx.StringDataPtr(watcher.Type),
+					"etag":              llx.StringDataPtr(watcher.Etag),
 					"properties":        llx.DictData(properties),
 					"provisioningState": llx.StringData(convert.ToString((*string)(watcher.Properties.ProvisioningState))),
 				})
@@ -211,11 +211,11 @@ func (a *mqlAzureSubscriptionNetworkService) bastionHosts() ([]interface{}, erro
 			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bastionHost",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(bh.ID)),
-					"name":       llx.StringData(convert.ToString(bh.Name)),
-					"location":   llx.StringData(convert.ToString(bh.Location)),
+					"id":         llx.StringDataPtr(bh.ID),
+					"name":       llx.StringDataPtr(bh.Name),
+					"location":   llx.StringDataPtr(bh.Location),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(bh.Tags), types.String),
-					"type":       llx.StringData(convert.ToString(bh.Type)),
+					"type":       llx.StringDataPtr(bh.Type),
 					"properties": llx.DictData(properties),
 					"sku":        llx.DictData(sku),
 				})
@@ -289,19 +289,19 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 			}
 			mqlFlowLog, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.watcher.flowlog",
 				map[string]*llx.RawData{
-					"id":                 llx.StringData(convert.ToString(flowLog.ID)),
-					"name":               llx.StringData(convert.ToString(flowLog.Name)),
-					"location":           llx.StringData(convert.ToString(flowLog.Location)),
+					"id":                 llx.StringDataPtr(flowLog.ID),
+					"name":               llx.StringDataPtr(flowLog.Name),
+					"location":           llx.StringDataPtr(flowLog.Location),
 					"tags":               llx.MapData(convert.PtrMapStrToInterface(flowLog.Tags), types.String),
-					"type":               llx.StringData(convert.ToString(flowLog.Type)),
-					"etag":               llx.StringData(convert.ToString(flowLog.Etag)),
+					"type":               llx.StringDataPtr(flowLog.Type),
+					"etag":               llx.StringDataPtr(flowLog.Etag),
 					"retentionPolicy":    llx.DictData(retentionPolicyDict),
 					"format":             llx.StringData(convert.ToString((*string)(flowLog.Properties.Format.Type))),
 					"version":            llx.IntData(convert.ToInt64From32(flowLog.Properties.Format.Version)),
-					"enabled":            llx.BoolData(convert.ToBool(flowLog.Properties.Enabled)),
-					"storageAccountId":   llx.StringData(convert.ToString(flowLog.Properties.StorageID)),
-					"targetResourceId":   llx.StringData(convert.ToString(flowLog.Properties.TargetResourceID)),
-					"targetResourceGuid": llx.StringData(convert.ToString(flowLog.Properties.TargetResourceGUID)),
+					"enabled":            llx.BoolDataPtr(flowLog.Properties.Enabled),
+					"storageAccountId":   llx.StringDataPtr(flowLog.Properties.StorageID),
+					"targetResourceId":   llx.StringDataPtr(flowLog.Properties.TargetResourceID),
+					"targetResourceGuid": llx.StringDataPtr(flowLog.Properties.TargetResourceGUID),
 					"provisioningState":  llx.StringData(convert.ToString((*string)(flowLog.Properties.ProvisioningState))),
 					"analytics":          llx.DictData(flowLogAnalyticsDict),
 				})
@@ -350,10 +350,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlProbe, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.probe",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(p.ID)),
-						"type":       llx.StringData(convert.ToString(p.Type)),
-						"name":       llx.StringData(convert.ToString(p.Name)),
-						"etag":       llx.StringData(convert.ToString(p.Etag)),
+						"id":         llx.StringDataPtr(p.ID),
+						"type":       llx.StringDataPtr(p.Type),
+						"name":       llx.StringDataPtr(p.Name),
+						"etag":       llx.StringDataPtr(p.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -368,10 +368,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlBap, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.backendAddressPool",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(bap.ID)),
-						"type":       llx.StringData(convert.ToString(bap.Type)),
-						"name":       llx.StringData(convert.ToString(bap.Name)),
-						"etag":       llx.StringData(convert.ToString(bap.Etag)),
+						"id":         llx.StringDataPtr(bap.ID),
+						"type":       llx.StringDataPtr(bap.Type),
+						"name":       llx.StringDataPtr(bap.Name),
+						"etag":       llx.StringDataPtr(bap.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -387,10 +387,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlIpConfig, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.frontendIpConfig",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(ipConfig.ID)),
-						"type":       llx.StringData(convert.ToString(ipConfig.Type)),
-						"name":       llx.StringData(convert.ToString(ipConfig.Name)),
-						"etag":       llx.StringData(convert.ToString(ipConfig.Etag)),
+						"id":         llx.StringDataPtr(ipConfig.ID),
+						"type":       llx.StringDataPtr(ipConfig.Type),
+						"name":       llx.StringDataPtr(ipConfig.Name),
+						"etag":       llx.StringDataPtr(ipConfig.Etag),
 						"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ipConfig.Zones), types.String),
 						"properties": llx.DictData(props),
 					})
@@ -407,10 +407,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlNatPool, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatPool",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(natPool.ID)),
-						"type":       llx.StringData(convert.ToString(natPool.Type)),
-						"name":       llx.StringData(convert.ToString(natPool.Name)),
-						"etag":       llx.StringData(convert.ToString(natPool.Etag)),
+						"id":         llx.StringDataPtr(natPool.ID),
+						"type":       llx.StringDataPtr(natPool.Type),
+						"name":       llx.StringDataPtr(natPool.Name),
+						"etag":       llx.StringDataPtr(natPool.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -426,10 +426,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatRule",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(natRule.ID)),
-						"type":       llx.StringData(convert.ToString(natRule.Type)),
-						"name":       llx.StringData(convert.ToString(natRule.Name)),
-						"etag":       llx.StringData(convert.ToString(natRule.Etag)),
+						"id":         llx.StringDataPtr(natRule.ID),
+						"type":       llx.StringDataPtr(natRule.Type),
+						"name":       llx.StringDataPtr(natRule.Name),
+						"etag":       llx.StringDataPtr(natRule.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -445,10 +445,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outbundRule",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(outboundRule.ID)),
-						"type":       llx.StringData(convert.ToString(outboundRule.Type)),
-						"name":       llx.StringData(convert.ToString(outboundRule.Name)),
-						"etag":       llx.StringData(convert.ToString(outboundRule.Etag)),
+						"id":         llx.StringDataPtr(outboundRule.ID),
+						"type":       llx.StringDataPtr(outboundRule.Type),
+						"name":       llx.StringDataPtr(outboundRule.Name),
+						"etag":       llx.StringDataPtr(outboundRule.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -464,10 +464,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 				}
 				mqlLbRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancerRule",
 					map[string]*llx.RawData{
-						"id":         llx.StringData(convert.ToString(lbRule.ID)),
-						"type":       llx.StringData(convert.ToString(lbRule.Type)),
-						"name":       llx.StringData(convert.ToString(lbRule.Name)),
-						"etag":       llx.StringData(convert.ToString(lbRule.Etag)),
+						"id":         llx.StringDataPtr(lbRule.ID),
+						"type":       llx.StringDataPtr(lbRule.Type),
+						"name":       llx.StringDataPtr(lbRule.Name),
+						"etag":       llx.StringDataPtr(lbRule.Etag),
 						"properties": llx.DictData(props),
 					})
 				if err != nil {
@@ -482,13 +482,13 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]interface{}, err
 			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancer",
 				map[string]*llx.RawData{
-					"id":                llx.StringData(convert.ToString(lb.ID)),
-					"name":              llx.StringData(convert.ToString(lb.Name)),
-					"location":          llx.StringData(convert.ToString(lb.Location)),
-					"etag":              llx.StringData(convert.ToString(lb.Etag)),
+					"id":                llx.StringDataPtr(lb.ID),
+					"name":              llx.StringDataPtr(lb.Name),
+					"location":          llx.StringDataPtr(lb.Location),
+					"etag":              llx.StringDataPtr(lb.Etag),
 					"sku":               llx.StringData(convert.ToString((*string)(lb.SKU.Name))),
 					"tags":              llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
-					"type":              llx.StringData(convert.ToString(lb.Type)),
+					"type":              llx.StringDataPtr(lb.Type),
 					"probes":            llx.ArrayData(probes, types.ResourceLike),
 					"backendPools":      llx.ArrayData(backendPools, types.ResourceLike),
 					"frontendIpConfigs": llx.ArrayData(frontendIConfigs, types.ResourceLike),
@@ -796,12 +796,12 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworks() ([]interface{}, e
 				}
 			}
 			args := map[string]*llx.RawData{
-				"id":                   llx.StringData(convert.ToString(vn.ID)),
-				"name":                 llx.StringData(convert.ToString(vn.Name)),
-				"type":                 llx.StringData(convert.ToString(vn.Type)),
-				"location":             llx.StringData(convert.ToString(vn.Location)),
+				"id":                   llx.StringDataPtr(vn.ID),
+				"name":                 llx.StringDataPtr(vn.Name),
+				"type":                 llx.StringDataPtr(vn.Type),
+				"location":             llx.StringDataPtr(vn.Location),
 				"tags":                 llx.MapData(convert.PtrMapStrToInterface(vn.Tags), types.String),
-				"etag":                 llx.StringData(convert.ToString(vn.Etag)),
+				"etag":                 llx.StringDataPtr(vn.Etag),
 				"properties":           llx.DictData(props),
 				"enableDdosProtection": llx.BoolDataPtr(vn.Properties.EnableDdosProtection),
 				"enableVmProtection":   llx.BoolDataPtr(vn.Properties.EnableVMProtection),
@@ -859,12 +859,12 @@ func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]inte
 			}
 			mqlAppSecGroup, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.appSecurityGroup",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(asg.ID)),
-					"name":       llx.StringData(convert.ToString(asg.Name)),
-					"type":       llx.StringData(convert.ToString(asg.Type)),
-					"location":   llx.StringData(convert.ToString(asg.Location)),
+					"id":         llx.StringDataPtr(asg.ID),
+					"name":       llx.StringDataPtr(asg.Name),
+					"type":       llx.StringDataPtr(asg.Type),
+					"location":   llx.StringDataPtr(asg.Location),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(asg.Tags), types.String),
-					"etag":       llx.StringData(convert.ToString(asg.Etag)),
+					"etag":       llx.StringDataPtr(asg.Etag),
 					"properties": llx.DictData(props),
 				})
 			if err != nil {
@@ -1273,10 +1273,10 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			}
 			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(c.ID)),
-					"type":       llx.StringData(convert.ToString(c.Type)),
-					"name":       llx.StringData(convert.ToString(c.Name)),
-					"etag":       llx.StringData(convert.ToString(c.Etag)),
+					"id":         llx.StringDataPtr(c.ID),
+					"type":       llx.StringDataPtr(c.Type),
+					"name":       llx.StringDataPtr(c.Name),
+					"etag":       llx.StringDataPtr(c.Etag),
 					"properties": llx.DictData(props),
 				})
 			if err != nil {
@@ -1744,9 +1744,9 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 		mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
 			map[string]*llx.RawData{
-				"id":               llx.StringData(convert.ToString(ipConfig.ID)),
-				"name":             llx.StringData(convert.ToString(ipConfig.Name)),
-				"etag":             llx.StringData(convert.ToString(ipConfig.Etag)),
+				"id":               llx.StringDataPtr(ipConfig.ID),
+				"name":             llx.StringDataPtr(ipConfig.Name),
+				"etag":             llx.StringDataPtr(ipConfig.Etag),
 				"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
 				"properties":       llx.DictData(props),
 			})
@@ -1762,9 +1762,9 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 		mqlNatRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.natRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(convert.ToString(natRule.ID)),
-				"name":       llx.StringData(convert.ToString(natRule.Name)),
-				"etag":       llx.StringData(convert.ToString(natRule.Etag)),
+				"id":         llx.StringDataPtr(natRule.ID),
+				"name":       llx.StringDataPtr(natRule.Name),
+				"etag":       llx.StringDataPtr(natRule.Etag),
 				"properties": llx.DictData(props),
 			})
 		if err != nil {
@@ -1779,9 +1779,9 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 		mqlNetworkRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.networkRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(convert.ToString(networkRule.ID)),
-				"name":       llx.StringData(convert.ToString(networkRule.Name)),
-				"etag":       llx.StringData(convert.ToString(networkRule.Etag)),
+				"id":         llx.StringDataPtr(networkRule.ID),
+				"name":       llx.StringDataPtr(networkRule.Name),
+				"etag":       llx.StringDataPtr(networkRule.Etag),
 				"properties": llx.DictData(props),
 			})
 		if err != nil {
@@ -1796,9 +1796,9 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 		mqlAppRule, err := CreateResource(runtime, "azure.subscription.networkService.firewall.applicationRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringData(convert.ToString(appRule.ID)),
-				"name":       llx.StringData(convert.ToString(appRule.Name)),
-				"etag":       llx.StringData(convert.ToString(appRule.Etag)),
+				"id":         llx.StringDataPtr(appRule.ID),
+				"name":       llx.StringDataPtr(appRule.Name),
+				"etag":       llx.StringDataPtr(appRule.Etag),
 				"properties": llx.DictData(props),
 			})
 		if err != nil {
@@ -1807,12 +1807,12 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		applicationRules = append(applicationRules, mqlAppRule)
 	}
 	args := map[string]*llx.RawData{
-		"id":                llx.StringData(convert.ToString(fw.ID)),
-		"name":              llx.StringData(convert.ToString(fw.Name)),
-		"type":              llx.StringData(convert.ToString(fw.Type)),
-		"location":          llx.StringData(convert.ToString(fw.Location)),
+		"id":                llx.StringDataPtr(fw.ID),
+		"name":              llx.StringDataPtr(fw.Name),
+		"type":              llx.StringDataPtr(fw.Type),
+		"location":          llx.StringDataPtr(fw.Location),
 		"tags":              llx.MapData(convert.PtrMapStrToInterface(fw.Tags), types.String),
-		"etag":              llx.StringData(convert.ToString(fw.Etag)),
+		"etag":              llx.StringDataPtr(fw.Etag),
 		"properties":        llx.DictData(props),
 		"skuTier":           llx.StringDataPtr((*string)(fw.Properties.SKU.Tier)),
 		"skuName":           llx.StringDataPtr((*string)(fw.Properties.SKU.Name)),
@@ -1831,9 +1831,9 @@ func azureFirewallToMql(runtime *plugin.Runtime, fw network.AzureFirewall) (*mql
 		}
 		mqlIpConfig, err := CreateResource(runtime, "azure.subscription.networkService.firewall.ipConfig",
 			map[string]*llx.RawData{
-				"id":               llx.StringData(convert.ToString(ipConfig.ID)),
-				"name":             llx.StringData(convert.ToString(ipConfig.Name)),
-				"etag":             llx.StringData(convert.ToString(ipConfig.Etag)),
+				"id":               llx.StringDataPtr(ipConfig.ID),
+				"name":             llx.StringDataPtr(ipConfig.Name),
+				"etag":             llx.StringDataPtr(ipConfig.Etag),
 				"privateIpAddress": llx.StringDataPtr(ipConfig.Properties.PrivateIPAddress),
 				"properties":       llx.DictData(props),
 			})
@@ -1858,12 +1858,12 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 	}
 	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewallPolicy",
 		map[string]*llx.RawData{
-			"id":                llx.StringData(convert.ToString(fwp.ID)),
-			"name":              llx.StringData(convert.ToString(fwp.Name)),
-			"type":              llx.StringData(convert.ToString(fwp.Type)),
-			"location":          llx.StringData(convert.ToString(fwp.Location)),
+			"id":                llx.StringDataPtr(fwp.ID),
+			"name":              llx.StringDataPtr(fwp.Name),
+			"type":              llx.StringDataPtr(fwp.Type),
+			"location":          llx.StringDataPtr(fwp.Location),
 			"tags":              llx.MapData(convert.PtrMapStrToInterface(fwp.Tags), types.String),
-			"etag":              llx.StringData(convert.ToString(fwp.Etag)),
+			"etag":              llx.StringDataPtr(fwp.Etag),
 			"properties":        llx.DictData(props),
 			"provisioningState": llx.StringDataPtr((*string)(fwp.Properties.ProvisioningState)),
 		})
@@ -1877,12 +1877,12 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.ipAddress",
 		map[string]*llx.RawData{
-			"id":        llx.StringData(convert.ToString(ip.ID)),
-			"name":      llx.StringData(convert.ToString(ip.Name)),
-			"location":  llx.StringData(convert.ToString(ip.Location)),
+			"id":        llx.StringDataPtr(ip.ID),
+			"name":      llx.StringDataPtr(ip.Name),
+			"location":  llx.StringDataPtr(ip.Location),
 			"tags":      llx.MapData(convert.PtrMapStrToInterface(ip.Tags), types.String),
-			"type":      llx.StringData(convert.ToString(ip.Type)),
-			"ipAddress": llx.StringData(convert.ToString(ip.Properties.IPAddress)),
+			"type":      llx.StringDataPtr(ip.Type),
+			"ipAddress": llx.StringDataPtr(ip.Properties.IPAddress),
 		})
 	if err != nil {
 		return nil, err
@@ -1897,12 +1897,12 @@ func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlA
 	}
 	mqlNg, err := CreateResource(runtime, "azure.subscription.networkService.natGateway",
 		map[string]*llx.RawData{
-			"id":         llx.StringData(convert.ToString(ng.ID)),
-			"name":       llx.StringData(convert.ToString(ng.Name)),
-			"type":       llx.StringData(convert.ToString(ng.Type)),
-			"location":   llx.StringData(convert.ToString(ng.Location)),
+			"id":         llx.StringDataPtr(ng.ID),
+			"name":       llx.StringDataPtr(ng.Name),
+			"type":       llx.StringDataPtr(ng.Type),
+			"location":   llx.StringDataPtr(ng.Location),
 			"tags":       llx.MapData(convert.PtrMapStrToInterface(ng.Tags), types.String),
-			"etag":       llx.StringData(convert.ToString(ng.Etag)),
+			"etag":       llx.StringDataPtr(ng.Etag),
 			"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(ng.Zones), types.String),
 			"properties": llx.DictData(props),
 		})
@@ -1920,11 +1920,11 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.subnet",
 		map[string]*llx.RawData{
-			"id":            llx.StringData(convert.ToString(subnet.ID)),
-			"name":          llx.StringData(convert.ToString(subnet.Name)),
-			"type":          llx.StringData(convert.ToString(subnet.Type)),
-			"etag":          llx.StringData(convert.ToString(subnet.Etag)),
-			"addressPrefix": llx.StringData(convert.ToString(subnet.Properties.AddressPrefix)),
+			"id":            llx.StringDataPtr(subnet.ID),
+			"name":          llx.StringDataPtr(subnet.Name),
+			"type":          llx.StringDataPtr(subnet.Type),
+			"etag":          llx.StringDataPtr(subnet.Etag),
+			"addressPrefix": llx.StringDataPtr(subnet.Properties.AddressPrefix),
 			"properties":    llx.DictData(props),
 		})
 	if err != nil {
@@ -1940,12 +1940,12 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	}
 	res, err := CreateResource(runtime, "azure.subscription.networkService.interface",
 		map[string]*llx.RawData{
-			"id":         llx.StringData(convert.ToString(iface.ID)),
-			"name":       llx.StringData(convert.ToString(iface.Name)),
-			"location":   llx.StringData(convert.ToString(iface.Location)),
+			"id":         llx.StringDataPtr(iface.ID),
+			"name":       llx.StringDataPtr(iface.Name),
+			"location":   llx.StringDataPtr(iface.Location),
 			"tags":       llx.MapData(convert.PtrMapStrToInterface(iface.Tags), types.String),
-			"type":       llx.StringData(convert.ToString(iface.Type)),
-			"etag":       llx.StringData(convert.ToString(iface.Etag)),
+			"type":       llx.StringDataPtr(iface.Type),
+			"etag":       llx.StringDataPtr(iface.Etag),
 			"properties": llx.DictData(properties),
 		})
 	if err != nil {
@@ -2015,12 +2015,12 @@ func azureSecGroupToMql(runtime *plugin.Runtime, secGroup network.SecurityGroup)
 	}
 	res, err := CreateResource(runtime, "azure.subscription.networkService.securityGroup",
 		map[string]*llx.RawData{
-			"id":                   llx.StringData(convert.ToString(secGroup.ID)),
-			"name":                 llx.StringData(convert.ToString(secGroup.Name)),
-			"location":             llx.StringData(convert.ToString(secGroup.Location)),
+			"id":                   llx.StringDataPtr(secGroup.ID),
+			"name":                 llx.StringDataPtr(secGroup.Name),
+			"location":             llx.StringDataPtr(secGroup.Location),
 			"tags":                 llx.MapData(convert.PtrMapStrToInterface(secGroup.Tags), types.String),
-			"type":                 llx.StringData(convert.ToString(secGroup.Type)),
-			"etag":                 llx.StringData(convert.ToString(secGroup.Etag)),
+			"type":                 llx.StringDataPtr(secGroup.Type),
+			"etag":                 llx.StringDataPtr(secGroup.Etag),
 			"properties":           llx.DictData(properties),
 			"interfaces":           llx.ArrayData(ifaces, types.ResourceLike),
 			"securityRules":        llx.ArrayData(securityRules, types.ResourceLike),
@@ -2064,9 +2064,9 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.securityrule",
 		map[string]*llx.RawData{
-			"id":                   llx.StringData(convert.ToString(secRule.ID)),
-			"name":                 llx.StringData(convert.ToString(secRule.Name)),
-			"etag":                 llx.StringData(convert.ToString(secRule.Etag)),
+			"id":                   llx.StringDataPtr(secRule.ID),
+			"name":                 llx.StringDataPtr(secRule.Name),
+			"etag":                 llx.StringDataPtr(secRule.Etag),
 			"direction":            llx.StringDataPtr((*string)(secRule.Properties.Direction)),
 			"properties":           llx.DictData(properties),
 			"destinationPortRange": llx.ArrayData(destinationPortRange, types.String),

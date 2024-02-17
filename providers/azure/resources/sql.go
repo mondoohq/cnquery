@@ -86,11 +86,11 @@ func (a *mqlAzureSubscriptionSqlService) servers() ([]interface{}, error) {
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(dbServer.ID)),
-					"name":       llx.StringData(convert.ToString(dbServer.Name)),
-					"location":   llx.StringData(convert.ToString(dbServer.Location)),
+					"id":         llx.StringDataPtr(dbServer.ID),
+					"name":       llx.StringDataPtr(dbServer.Name),
+					"location":   llx.StringDataPtr(dbServer.Location),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringData(convert.ToString(dbServer.Type)),
+					"type":       llx.StringDataPtr(dbServer.Type),
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
@@ -132,26 +132,26 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 		}
 		for _, entry := range page.Value {
 			args := map[string]*llx.RawData{
-				"id":               llx.StringData(convert.ToString(entry.ID)),
-				"name":             llx.StringData(convert.ToString(entry.Name)),
-				"type":             llx.StringData(convert.ToString(entry.Type)),
-				"collation":        llx.StringData(convert.ToString(entry.Properties.Collation)),
+				"id":               llx.StringDataPtr(entry.ID),
+				"name":             llx.StringDataPtr(entry.Name),
+				"type":             llx.StringDataPtr(entry.Type),
+				"collation":        llx.StringDataPtr(entry.Properties.Collation),
 				"creationDate":     llx.TimeData(*entry.Properties.CreationDate),
-				"databaseId":       llx.StringData(convert.ToString(entry.Properties.DatabaseID)),
+				"databaseId":       llx.StringDataPtr(entry.Properties.DatabaseID),
 				"createMode":       llx.StringData(convert.ToString((*string)(entry.Properties.CreateMode))),
-				"sourceDatabaseId": llx.StringData(convert.ToString(entry.Properties.SourceDatabaseID)),
-				"recoveryServicesRecoveryPointResourceId": llx.StringData(convert.ToString(entry.Properties.RecoveryServicesRecoveryPointID)),
-				"edition":                       llx.StringData(convert.ToString(entry.SKU.Tier)),
+				"sourceDatabaseId": llx.StringDataPtr(entry.Properties.SourceDatabaseID),
+				"recoveryServicesRecoveryPointResourceId": llx.StringDataPtr(entry.Properties.RecoveryServicesRecoveryPointID),
+				"edition":                       llx.StringDataPtr(entry.SKU.Tier),
 				"maxSizeBytes":                  llx.IntData(convert.ToInt64(entry.Properties.MaxSizeBytes)),
-				"requestedServiceObjectiveName": llx.StringData(convert.ToString(entry.Properties.RequestedServiceObjectiveName)),
-				"serviceLevelObjective":         llx.StringData(convert.ToString(entry.Properties.CurrentServiceObjectiveName)),
+				"requestedServiceObjectiveName": llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName),
+				"serviceLevelObjective":         llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName),
 				"status":                        llx.StringData(convert.ToString((*string)(entry.Properties.Status))),
-				"elasticPoolName":               llx.StringData(convert.ToString(entry.Properties.ElasticPoolID)),
-				"defaultSecondaryLocation":      llx.StringData(convert.ToString(entry.Properties.DefaultSecondaryLocation)),
-				"failoverGroupId":               llx.StringData(convert.ToString(entry.Properties.FailoverGroupID)),
+				"elasticPoolName":               llx.StringDataPtr(entry.Properties.ElasticPoolID),
+				"defaultSecondaryLocation":      llx.StringDataPtr(entry.Properties.DefaultSecondaryLocation),
+				"failoverGroupId":               llx.StringDataPtr(entry.Properties.FailoverGroupID),
 				"readScale":                     llx.StringData(convert.ToString((*string)(entry.Properties.ReadScale))),
 				"sampleName":                    llx.StringData(convert.ToString((*string)(entry.Properties.SampleName))),
-				"zoneRedundant":                 llx.BoolData(convert.ToBool(entry.Properties.ZoneRedundant)),
+				"zoneRedundant":                 llx.BoolDataPtr(entry.Properties.ZoneRedundant),
 				"earliestRestoreDate":           llx.TimeDataPtr(entry.Properties.EarliestRestoreDate),
 				"sourceDatabaseDeletionDate":    llx.TimeDataPtr(entry.Properties.SourceDatabaseDeletionDate),
 				"restorePointInTime":            llx.TimeDataPtr(entry.Properties.RestorePointInTime),
@@ -199,11 +199,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]interface{}, e
 		for _, entry := range page.Value {
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
-					"id":             llx.StringData(convert.ToString(entry.ID)),
-					"name":           llx.StringData(convert.ToString(entry.Name)),
-					"type":           llx.StringData(convert.ToString(entry.Type)),
-					"startIpAddress": llx.StringData(convert.ToString(entry.Properties.StartIPAddress)),
-					"endIpAddress":   llx.StringData(convert.ToString(entry.Properties.EndIPAddress)),
+					"id":             llx.StringDataPtr(entry.ID),
+					"name":           llx.StringDataPtr(entry.Name),
+					"type":           llx.StringDataPtr(entry.Type),
+					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -251,11 +251,11 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]interfac
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.virtualNetworkRule",
 				map[string]*llx.RawData{
-					"id":                     llx.StringData(convert.ToString(entry.ID)),
-					"name":                   llx.StringData(convert.ToString(entry.Name)),
-					"type":                   llx.StringData(convert.ToString(entry.Type)),
+					"id":                     llx.StringDataPtr(entry.ID),
+					"name":                   llx.StringDataPtr(entry.Name),
+					"type":                   llx.StringDataPtr(entry.Type),
 					"properties":             llx.DictData(properties),
-					"virtualNetworkSubnetId": llx.StringData(convert.ToString(entry.Properties.VirtualNetworkSubnetID)),
+					"virtualNetworkSubnetId": llx.StringDataPtr(entry.Properties.VirtualNetworkSubnetID),
 				})
 			if err != nil {
 				return nil, err
@@ -296,13 +296,13 @@ func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]interf
 		for _, entry := range page.Value {
 			mqlAzureSqlAdministrator, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.administrator",
 				map[string]*llx.RawData{
-					"id":                llx.StringData(convert.ToString(entry.ID)),
-					"name":              llx.StringData(convert.ToString(entry.Name)),
-					"type":              llx.StringData(convert.ToString(entry.Type)),
+					"id":                llx.StringDataPtr(entry.ID),
+					"name":              llx.StringDataPtr(entry.Name),
+					"type":              llx.StringDataPtr(entry.Type),
 					"administratorType": llx.StringData(convert.ToString((*string)(entry.Properties.AdministratorType))),
-					"login":             llx.StringData(convert.ToString(entry.Properties.Login)),
-					"sid":               llx.StringData(convert.ToString(entry.Properties.Sid)),
-					"tenantId":          llx.StringData(convert.ToString(entry.Properties.TenantID)),
+					"login":             llx.StringDataPtr(entry.Properties.Login),
+					"sid":               llx.StringDataPtr(entry.Properties.Sid),
+					"tenantId":          llx.StringDataPtr(entry.Properties.TenantID),
 				})
 			if err != nil {
 				return nil, err
@@ -484,15 +484,15 @@ func (a *mqlAzureSubscriptionSqlServiceServer) vulnerabilityAssessmentSettings()
 	}
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
 		map[string]*llx.RawData{
-			"id":                      llx.StringData(convert.ToString(vaSettings.ID)),
-			"name":                    llx.StringData(convert.ToString(vaSettings.Name)),
-			"type":                    llx.StringData(convert.ToString(vaSettings.Type)),
-			"storageContainerPath":    llx.StringData(convert.ToString(vaSettings.Properties.StorageContainerPath)),
-			"storageAccountAccessKey": llx.StringData(convert.ToString(vaSettings.Properties.StorageAccountAccessKey)),
-			"storageContainerSasKey":  llx.StringData(convert.ToString(vaSettings.Properties.StorageContainerSasKey)),
-			"recurringScanEnabled":    llx.BoolData(convert.ToBool(vaSettings.Properties.RecurringScans.IsEnabled)),
+			"id":                      llx.StringDataPtr(vaSettings.ID),
+			"name":                    llx.StringDataPtr(vaSettings.Name),
+			"type":                    llx.StringDataPtr(vaSettings.Type),
+			"storageContainerPath":    llx.StringDataPtr(vaSettings.Properties.StorageContainerPath),
+			"storageAccountAccessKey": llx.StringDataPtr(vaSettings.Properties.StorageAccountAccessKey),
+			"storageContainerSasKey":  llx.StringDataPtr(vaSettings.Properties.StorageContainerSasKey),
+			"recurringScanEnabled":    llx.BoolDataPtr(vaSettings.Properties.RecurringScans.IsEnabled),
 			"recurringScanEmails":     llx.ArrayData(llx.TArr2Raw(convert.ToListFromPtrs(vaSettings.Properties.RecurringScans.Emails)), types.String),
-			"mailSubscriptionAdmins":  llx.BoolData(convert.ToBool(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins)),
+			"mailSubscriptionAdmins":  llx.BoolDataPtr(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins),
 		})
 	if err != nil {
 		return nil, err
@@ -715,13 +715,13 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) usage() ([]interface{}, error) 
 		for _, entry := range page.Value {
 			mqlAzureSqlUsage, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.databaseusage",
 				map[string]*llx.RawData{
-					"id":           llx.StringData(convert.ToString(entry.ID)),
-					"name":         llx.StringData(convert.ToString(entry.Name)),
-					"resourceName": llx.StringData(convert.ToString(entry.Name)),
-					"displayName":  llx.StringData(convert.ToString(entry.Properties.DisplayName)),
+					"id":           llx.StringDataPtr(entry.ID),
+					"name":         llx.StringDataPtr(entry.Name),
+					"resourceName": llx.StringDataPtr(entry.Name),
+					"displayName":  llx.StringDataPtr(entry.Properties.DisplayName),
 					"currentValue": llx.FloatData(convert.ToFloat64(entry.Properties.CurrentValue)),
 					"limit":        llx.FloatData(convert.ToFloat64(entry.Properties.Limit)),
-					"unit":         llx.StringData(convert.ToString(entry.Properties.Unit)),
+					"unit":         llx.StringDataPtr(entry.Properties.Unit),
 				})
 			if err != nil {
 				return nil, err

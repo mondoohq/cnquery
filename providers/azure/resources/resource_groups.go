@@ -39,13 +39,13 @@ func (a *mqlAzureSubscription) resourceGroups() ([]interface{}, error) {
 		for _, rg := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.resourcegroup",
 				map[string]*llx.RawData{
-					"id":                llx.StringData(convert.ToString(rg.ID)),
-					"name":              llx.StringData(convert.ToString(rg.Name)),
-					"location":          llx.StringData(convert.ToString(rg.Location)),
+					"id":                llx.StringDataPtr(rg.ID),
+					"name":              llx.StringDataPtr(rg.Name),
+					"location":          llx.StringDataPtr(rg.Location),
 					"tags":              llx.MapData(convert.PtrMapStrToInterface(rg.Tags), types.String),
-					"type":              llx.StringData(convert.ToString(rg.Type)),
-					"provisioningState": llx.StringData(convert.ToString(rg.Properties.ProvisioningState)),
-					"managedBy":         llx.StringData(convert.ToString(rg.ManagedBy)),
+					"type":              llx.StringDataPtr(rg.Type),
+					"provisioningState": llx.StringDataPtr(rg.Properties.ProvisioningState),
+					"managedBy":         llx.StringDataPtr(rg.ManagedBy),
 				},
 			)
 			if err != nil {

@@ -103,10 +103,10 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
 				map[string]*llx.RawData{
-					"id":        llx.StringData(convert.ToString(entry.ID)),
-					"vaultName": llx.StringData(convert.ToString(entry.Name)),
-					"location":  llx.StringData(convert.ToString(entry.Location)),
-					"type":      llx.StringData(convert.ToString(entry.Type)),
+					"id":        llx.StringDataPtr(entry.ID),
+					"vaultName": llx.StringDataPtr(entry.Name),
+					"location":  llx.StringDataPtr(entry.Location),
+					"type":      llx.StringDataPtr(entry.Type),
 					"tags":      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 				})
 			if err != nil {
@@ -189,9 +189,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
-					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
@@ -232,9 +232,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"contentType": llx.StringData(convert.ToString(entry.ContentType)),
-					"managed":     llx.BoolData(convert.ToBool(entry.Managed)),
-					"enabled":     llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"contentType": llx.StringDataPtr(entry.ContentType),
+					"managed":     llx.BoolDataPtr(entry.Managed),
+					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":     llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),
@@ -274,7 +274,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
@@ -351,9 +351,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
 					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
-					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
@@ -426,7 +426,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface
 				map[string]*llx.RawData{
 					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
@@ -502,9 +502,9 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, e
 				map[string]*llx.RawData{
 					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"contentType": llx.StringData(convert.ToString(entry.ContentType)),
-					"managed":     llx.BoolData(convert.ToBool(entry.Managed)),
-					"enabled":     llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"contentType": llx.StringDataPtr(entry.ContentType),
+					"managed":     llx.BoolDataPtr(entry.Managed),
+					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":     llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),

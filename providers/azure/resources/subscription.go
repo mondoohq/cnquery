@@ -46,12 +46,12 @@ func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
-	args["id"] = llx.StringData(convert.ToString(resp.ID))
-	args["name"] = llx.StringData(convert.ToString(resp.DisplayName))
-	args["tenantId"] = llx.StringData(convert.ToString(resp.TenantID))
+	args["id"] = llx.StringDataPtr(resp.ID)
+	args["name"] = llx.StringDataPtr(resp.DisplayName)
+	args["tenantId"] = llx.StringDataPtr(resp.TenantID)
 	args["tags"] = llx.MapData(convert.PtrMapStrToInterface(resp.Tags), types.String)
 	args["state"] = llx.StringData(convert.ToString((*string)(resp.State)))
-	args["subscriptionId"] = llx.StringData(convert.ToString(resp.SubscriptionID))
+	args["subscriptionId"] = llx.StringDataPtr(resp.SubscriptionID)
 	args["authorizationSource"] = llx.StringData(convert.ToString((*string)(resp.AuthorizationSource)))
 	args["managedByTenants"] = llx.ArrayData(managedByTenants, types.String)
 	args["subscriptionsPolicies"] = llx.DictData(subPolicies)

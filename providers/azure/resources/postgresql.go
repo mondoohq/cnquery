@@ -76,11 +76,11 @@ func (a *mqlAzureSubscriptionPostgreSqlService) servers() ([]interface{}, error)
 
 			mqlAzurePostgresServer, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.server",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(dbServer.ID)),
-					"name":       llx.StringData(convert.ToString(dbServer.Name)),
-					"location":   llx.StringData(convert.ToString(dbServer.Location)),
+					"id":         llx.StringDataPtr(dbServer.ID),
+					"name":       llx.StringDataPtr(dbServer.Name),
+					"location":   llx.StringDataPtr(dbServer.Location),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(dbServer.Tags), types.String),
-					"type":       llx.StringData(convert.ToString(dbServer.Type)),
+					"type":       llx.StringDataPtr(dbServer.Type),
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
@@ -124,11 +124,11 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) databases() ([]interface{}
 		for _, entry := range page.Value {
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.postgreSqlService.database",
 				map[string]*llx.RawData{
-					"id":        llx.StringData(convert.ToString(entry.ID)),
-					"name":      llx.StringData(convert.ToString(entry.Name)),
-					"type":      llx.StringData(convert.ToString(entry.Type)),
-					"charset":   llx.StringData(convert.ToString(entry.Properties.Charset)),
-					"collation": llx.StringData(convert.ToString(entry.Properties.Collation)),
+					"id":        llx.StringDataPtr(entry.ID),
+					"name":      llx.StringDataPtr(entry.Name),
+					"type":      llx.StringDataPtr(entry.Type),
+					"charset":   llx.StringDataPtr(entry.Properties.Charset),
+					"collation": llx.StringDataPtr(entry.Properties.Collation),
 				})
 			if err != nil {
 				return nil, err
@@ -171,11 +171,11 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) firewallRules() ([]interfa
 		for _, entry := range page.Value {
 			mqlFireWallRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.firewallrule",
 				map[string]*llx.RawData{
-					"id":             llx.StringData(convert.ToString(entry.ID)),
-					"name":           llx.StringData(convert.ToString(entry.Name)),
-					"type":           llx.StringData(convert.ToString(entry.Type)),
-					"startIpAddress": llx.StringData(convert.ToString(entry.Properties.StartIPAddress)),
-					"endIpAddress":   llx.StringData(convert.ToString(entry.Properties.EndIPAddress)),
+					"id":             llx.StringDataPtr(entry.ID),
+					"name":           llx.StringDataPtr(entry.Name),
+					"type":           llx.StringDataPtr(entry.Type),
+					"startIpAddress": llx.StringDataPtr(entry.Properties.StartIPAddress),
+					"endIpAddress":   llx.StringDataPtr(entry.Properties.EndIPAddress),
 				})
 			if err != nil {
 				return nil, err
@@ -218,15 +218,15 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceServer) configuration() ([]interfa
 		for _, entry := range page.Value {
 			mqlAzureConfiguration, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.configuration",
 				map[string]*llx.RawData{
-					"id":            llx.StringData(convert.ToString(entry.ID)),
-					"name":          llx.StringData(convert.ToString(entry.Name)),
-					"type":          llx.StringData(convert.ToString(entry.Type)),
-					"value":         llx.StringData(convert.ToString(entry.Properties.Value)),
-					"description":   llx.StringData(convert.ToString(entry.Properties.Description)),
-					"defaultValue":  llx.StringData(convert.ToString(entry.Properties.DefaultValue)),
-					"dataType":      llx.StringData(convert.ToString(entry.Properties.DataType)),
-					"allowedValues": llx.StringData(convert.ToString(entry.Properties.AllowedValues)),
-					"source":        llx.StringData(convert.ToString(entry.Properties.Source)),
+					"id":            llx.StringDataPtr(entry.ID),
+					"name":          llx.StringDataPtr(entry.Name),
+					"type":          llx.StringDataPtr(entry.Type),
+					"value":         llx.StringDataPtr(entry.Properties.Value),
+					"description":   llx.StringDataPtr(entry.Properties.Description),
+					"defaultValue":  llx.StringDataPtr(entry.Properties.DefaultValue),
+					"dataType":      llx.StringDataPtr(entry.Properties.DataType),
+					"allowedValues": llx.StringDataPtr(entry.Properties.AllowedValues),
+					"source":        llx.StringDataPtr(entry.Properties.Source),
 				})
 			if err != nil {
 				return nil, err

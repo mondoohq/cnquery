@@ -111,12 +111,12 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]interface{}, error) {
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsite",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(entry.ID)),
-					"name":       llx.StringData(convert.ToString(entry.Name)),
-					"location":   llx.StringData(convert.ToString(entry.Location)),
+					"id":         llx.StringDataPtr(entry.ID),
+					"name":       llx.StringDataPtr(entry.Name),
+					"location":   llx.StringDataPtr(entry.Location),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"type":       llx.StringData(convert.ToString(entry.Type)),
-					"kind":       llx.StringData(convert.ToString(entry.Kind)),
+					"type":       llx.StringDataPtr(entry.Type),
+					"kind":       llx.StringDataPtr(entry.Kind),
 					"properties": llx.DictData(properties),
 					"identity":   llx.DictData(identity),
 				})
@@ -289,10 +289,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteconfig",
 		map[string]*llx.RawData{
-			"id":         llx.StringData(convert.ToString(entry.ID)),
-			"name":       llx.StringData(convert.ToString(entry.Name)),
-			"kind":       llx.StringData(convert.ToString(entry.Kind)),
-			"type":       llx.StringData(convert.ToString(entry.Type)),
+			"id":         llx.StringDataPtr(entry.ID),
+			"name":       llx.StringDataPtr(entry.Name),
+			"kind":       llx.StringDataPtr(entry.Kind),
+			"type":       llx.StringDataPtr(entry.Type),
 			"properties": llx.DictData(properties),
 		})
 	if err != nil {
@@ -336,10 +336,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteauthsettings",
 		map[string]*llx.RawData{
-			"id":         llx.StringData(convert.ToString(configuration.ID)),
-			"name":       llx.StringData(convert.ToString(configuration.Name)),
-			"kind":       llx.StringData(convert.ToString(configuration.Kind)),
-			"type":       llx.StringData(convert.ToString(configuration.Type)),
+			"id":         llx.StringDataPtr(configuration.ID),
+			"name":       llx.StringDataPtr(configuration.Name),
+			"kind":       llx.StringDataPtr(configuration.Kind),
+			"type":       llx.StringDataPtr(configuration.Type),
 			"properties": llx.DictData(properties),
 		})
 	if err != nil {

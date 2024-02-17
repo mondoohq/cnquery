@@ -139,10 +139,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]interface{},
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.container",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(container.ID)),
-					"name":       llx.StringData(convert.ToString(container.Name)),
-					"etag":       llx.StringData(convert.ToString(container.Etag)),
-					"type":       llx.StringData(convert.ToString(container.Type)),
+					"id":         llx.StringDataPtr(container.ID),
+					"name":       llx.StringDataPtr(container.Name),
+					"etag":       llx.StringDataPtr(container.Etag),
+					"type":       llx.StringDataPtr(container.Type),
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
@@ -275,7 +275,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.Logging.RetentionPolicy.Days)),
-			"enabled":       llx.BoolData(convert.ToBool(props.Logging.RetentionPolicy.Enabled)),
+			"enabled":       llx.BoolDataPtr(props.Logging.RetentionPolicy.Enabled),
 		})
 	if err != nil {
 		return nil, err
@@ -284,10 +284,10 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(loggingRetentionPolicy, "retentionPolicy"),
-			"delete":          llx.BoolData(convert.ToBool(props.Logging.Delete)),
-			"write":           llx.BoolData(convert.ToBool(props.Logging.Write)),
-			"read":            llx.BoolData(convert.ToBool(props.Logging.Read)),
-			"version":         llx.StringData(convert.ToString(props.Logging.Version)),
+			"delete":          llx.BoolDataPtr(props.Logging.Delete),
+			"write":           llx.BoolDataPtr(props.Logging.Write),
+			"read":            llx.BoolDataPtr(props.Logging.Read),
+			"version":         llx.StringDataPtr(props.Logging.Version),
 		})
 	if err != nil {
 		return nil, err
@@ -296,7 +296,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.MinuteMetrics.RetentionPolicy.Days)),
-			"enabled":       llx.BoolData(convert.ToBool(props.MinuteMetrics.RetentionPolicy.Enabled)),
+			"enabled":       llx.BoolDataPtr(props.MinuteMetrics.RetentionPolicy.Enabled),
 		})
 	if err != nil {
 		return nil, err
@@ -305,9 +305,9 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(minuteMetricsRetentionPolicy, "retentionPolicy"),
-			"enabled":         llx.BoolData(convert.ToBool(props.MinuteMetrics.Enabled)),
-			"includeAPIs":     llx.BoolData(convert.ToBool(props.MinuteMetrics.IncludeAPIs)),
-			"version":         llx.StringData(convert.ToString(props.MinuteMetrics.Version)),
+			"enabled":         llx.BoolDataPtr(props.MinuteMetrics.Enabled),
+			"includeAPIs":     llx.BoolDataPtr(props.MinuteMetrics.IncludeAPIs),
+			"version":         llx.StringDataPtr(props.MinuteMetrics.Version),
 		})
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
 			"retentionDays": llx.IntData(convert.ToInt64From32(props.HourMetrics.RetentionPolicy.Days)),
-			"enabled":       llx.BoolData(convert.ToBool(props.HourMetrics.RetentionPolicy.Enabled)),
+			"enabled":       llx.BoolDataPtr(props.HourMetrics.RetentionPolicy.Enabled),
 		})
 	if err != nil {
 		return nil, err
@@ -325,9 +325,9 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 		map[string]*llx.RawData{
 			"id":              llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType)),
 			"retentionPolicy": llx.ResourceData(hourMetricsRetentionPolicy, "retentionPolicy"),
-			"enabled":         llx.BoolData(convert.ToBool(props.HourMetrics.Enabled)),
-			"includeAPIs":     llx.BoolData(convert.ToBool(props.HourMetrics.IncludeAPIs)),
-			"version":         llx.StringData(convert.ToString(props.HourMetrics.Version)),
+			"enabled":         llx.BoolDataPtr(props.HourMetrics.Enabled),
+			"includeAPIs":     llx.BoolDataPtr(props.HourMetrics.IncludeAPIs),
+			"version":         llx.StringDataPtr(props.HourMetrics.Version),
 		})
 	if err != nil {
 		return nil, err
@@ -371,11 +371,11 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 	}
 	res, err := CreateResource(runtime, "azure.subscription.storageService.account",
 		map[string]*llx.RawData{
-			"id":         llx.StringData(convert.ToString(account.ID)),
-			"name":       llx.StringData(convert.ToString(account.Name)),
-			"location":   llx.StringData(convert.ToString(account.Location)),
+			"id":         llx.StringDataPtr(account.ID),
+			"name":       llx.StringDataPtr(account.Name),
+			"location":   llx.StringDataPtr(account.Location),
 			"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-			"type":       llx.StringData(convert.ToString(account.Type)),
+			"type":       llx.StringDataPtr(account.Type),
 			"properties": llx.DictData(properties),
 			"identity":   llx.DictData(identity),
 			"sku":        llx.DictData(sku),

@@ -78,12 +78,12 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]interface{}, error) {
 
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(vm.ID)),
-					"name":       llx.StringData(convert.ToString(vm.Name)),
-					"location":   llx.StringData(convert.ToString(vm.Location)),
+					"id":         llx.StringDataPtr(vm.ID),
+					"name":       llx.StringDataPtr(vm.Name),
+					"location":   llx.StringDataPtr(vm.Location),
 					"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
-					"type":       llx.StringData(convert.ToString(vm.Type)),
+					"type":       llx.StringDataPtr(vm.Type),
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {
@@ -254,12 +254,12 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.disk",
 		map[string]*llx.RawData{
-			"id":                llx.StringData(convert.ToString(disk.ID)),
-			"name":              llx.StringData(convert.ToString(disk.Name)),
-			"location":          llx.StringData(convert.ToString(disk.Location)),
+			"id":                llx.StringDataPtr(disk.ID),
+			"name":              llx.StringDataPtr(disk.Name),
+			"location":          llx.StringDataPtr(disk.Location),
 			"tags":              llx.MapData(convert.PtrMapStrToInterface(disk.Tags), types.String),
-			"type":              llx.StringData(convert.ToString(disk.Type)),
-			"managedBy":         llx.StringData(convert.ToString(disk.ManagedBy)),
+			"type":              llx.StringDataPtr(disk.Type),
+			"managedBy":         llx.StringDataPtr(disk.ManagedBy),
 			"managedByExtended": llx.ArrayData(managedByExtended, types.String),
 			"zones":             llx.ArrayData(zones, types.String),
 			"sku":               llx.DictData(sku),
@@ -462,12 +462,12 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]interface{
 				}
 				mqlIpAddress, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.ipAddress",
 					map[string]*llx.RawData{
-						"id":        llx.StringData(convert.ToString(ipAddress.ID)),
-						"name":      llx.StringData(convert.ToString(ipAddress.Name)),
-						"location":  llx.StringData(convert.ToString(ipAddress.Location)),
+						"id":        llx.StringDataPtr(ipAddress.ID),
+						"name":      llx.StringDataPtr(ipAddress.Name),
+						"location":  llx.StringDataPtr(ipAddress.Location),
 						"tags":      llx.MapData(convert.PtrMapStrToInterface(ipAddress.Tags), types.String),
-						"ipAddress": llx.StringData(convert.ToString(ipAddress.Properties.IPAddress)),
-						"type":      llx.StringData(convert.ToString(ipAddress.Type)),
+						"ipAddress": llx.StringDataPtr(ipAddress.Properties.IPAddress),
+						"type":      llx.StringDataPtr(ipAddress.Type),
 					})
 				if err != nil {
 					return nil, err
