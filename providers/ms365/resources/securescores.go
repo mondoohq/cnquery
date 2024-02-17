@@ -55,10 +55,10 @@ func msSecureScoreToMql(runtime *plugin.Runtime, score models.SecureScoreable) (
 	}
 	mqlResource, err := CreateResource(runtime, "microsoft.security.securityscore",
 		map[string]*llx.RawData{
-			"id":                       llx.StringData(convert.ToString(score.GetId())),
+			"id":                       llx.StringDataPtr(score.GetId()),
 			"activeUserCount":          llx.IntData(convert.ToInt64From32(score.GetActiveUserCount())),
 			"averageComparativeScores": llx.ArrayData(averageComparativeScores, types.Any),
-			"azureTenantId":            llx.StringData(convert.ToString(score.GetAzureTenantId())),
+			"azureTenantId":            llx.StringDataPtr(score.GetAzureTenantId()),
 			"controlScores":            llx.ArrayData(controlScores, types.Any),
 			"createdDateTime":          llx.TimeDataPtr(score.GetCreatedDateTime()),
 			"currentScore":             llx.FloatData(convert.ToFloat64(score.GetCurrentScore())),

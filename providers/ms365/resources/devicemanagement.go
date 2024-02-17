@@ -41,11 +41,11 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 		properties := getConfigurationProperties(configuration)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.deviceconfiguration",
 			map[string]*llx.RawData{
-				"id":                   llx.StringData(convert.ToString(configuration.GetId())),
+				"id":                   llx.StringDataPtr(configuration.GetId()),
 				"lastModifiedDateTime": llx.TimeDataPtr(configuration.GetLastModifiedDateTime()),
 				"createdDateTime":      llx.TimeDataPtr(configuration.GetCreatedDateTime()),
-				"description":          llx.StringData(convert.ToString(configuration.GetDescription())),
-				"displayName":          llx.StringData(convert.ToString(configuration.GetDisplayName())),
+				"description":          llx.StringDataPtr(configuration.GetDescription()),
+				"displayName":          llx.StringDataPtr(configuration.GetDisplayName()),
 				"version":              llx.IntData(convert.ToInt64From32(configuration.GetVersion())),
 				"properties":           llx.DictData(properties),
 			})
@@ -85,10 +85,10 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 		properties := getComplianceProperties(compliancePolicy)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
 			map[string]*llx.RawData{
-				"id":                   llx.StringData(convert.ToString(compliancePolicy.GetId())),
+				"id":                   llx.StringDataPtr(compliancePolicy.GetId()),
 				"createdDateTime":      llx.TimeDataPtr(compliancePolicy.GetCreatedDateTime()),
-				"description":          llx.StringData(convert.ToString(compliancePolicy.GetDescription())),
-				"displayName":          llx.StringData(convert.ToString(compliancePolicy.GetDisplayName())),
+				"description":          llx.StringDataPtr(compliancePolicy.GetDescription()),
+				"displayName":          llx.StringDataPtr(compliancePolicy.GetDisplayName()),
 				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
 				"version":              llx.IntData(convert.ToInt64From32(compliancePolicy.GetVersion())),
 				"assignments":          llx.ArrayData(assignments, types.Any),

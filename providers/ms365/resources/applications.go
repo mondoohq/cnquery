@@ -34,12 +34,12 @@ func (a *mqlMicrosoft) applications() ([]interface{}, error) {
 	for _, app := range apps {
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.application",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(convert.ToString(app.GetId())),
-				"appId":           llx.StringData(convert.ToString(app.GetAppId())),
+				"id":              llx.StringDataPtr(app.GetId()),
+				"appId":           llx.StringDataPtr(app.GetAppId()),
 				"createdDateTime": llx.TimeDataPtr(app.GetCreatedDateTime()),
-				"displayName":     llx.StringData(convert.ToString(app.GetDisplayName())),
-				"publisherDomain": llx.StringData(convert.ToString(app.GetPublisherDomain())),
-				"signInAudience":  llx.StringData(convert.ToString(app.GetSignInAudience())),
+				"displayName":     llx.StringDataPtr(app.GetDisplayName()),
+				"publisherDomain": llx.StringDataPtr(app.GetPublisherDomain()),
+				"signInAudience":  llx.StringDataPtr(app.GetSignInAudience()),
 				"identifierUris":  llx.ArrayData(convert.SliceAnyToInterface(app.GetIdentifierUris()), types.String),
 			})
 		if err != nil {

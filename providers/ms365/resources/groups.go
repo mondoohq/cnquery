@@ -9,7 +9,6 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 )
 
@@ -39,12 +38,12 @@ func (a *mqlMicrosoft) groups() ([]interface{}, error) {
 	for _, grp := range grps {
 		graphGrp, err := CreateResource(a.MqlRuntime, "microsoft.group",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(convert.ToString(grp.GetId())),
-				"displayName":     llx.StringData(convert.ToString(grp.GetDisplayName())),
-				"mail":            llx.StringData(convert.ToString(grp.GetMail())),
-				"mailEnabled":     llx.BoolData(convert.ToBool(grp.GetMailEnabled())),
-				"mailNickname":    llx.StringData(convert.ToString(grp.GetMailNickname())),
-				"securityEnabled": llx.BoolData(convert.ToBool(grp.GetSecurityEnabled())),
+				"id":              llx.StringDataPtr(grp.GetId()),
+				"displayName":     llx.StringDataPtr(grp.GetDisplayName()),
+				"mail":            llx.StringDataPtr(grp.GetMail()),
+				"mailEnabled":     llx.BoolDataPtr(grp.GetMailEnabled()),
+				"mailNickname":    llx.StringDataPtr(grp.GetMailNickname()),
+				"securityEnabled": llx.BoolDataPtr(grp.GetSecurityEnabled()),
 				"visibility":      llx.StringDataPtr(grp.GetVisibility()),
 			})
 		if err != nil {
