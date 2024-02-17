@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/cockroachdb/errors"
@@ -14,13 +15,12 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/printer"
 	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"go.mondoo.com/cnquery/v10/cli/shell"
+	"go.mondoo.com/cnquery/v10/explorer/scan"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/mqlc/parser"
 	"go.mondoo.com/cnquery/v10/providers"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory/manager"
-	pp "go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/shared"
 	run "go.mondoo.com/cnquery/v10/shared/proto"
@@ -111,37 +111,16 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	// resolve asset and secret
-	im, err := manager.NewManager(manager.WithInventory(conf.Inventory, providers.DefaultRuntime()))
+	discoveredAssets, err := scan.DiscoverAssets(context.Background(), conf.Inventory, upstreamConfig, runtime.Recording())
 	if err != nil {
-		return errors.New("failed to resolve inventory for connection")
+		return err
 	}
-	assetList := im.GetAssets()
-
 	if conf.Format == "json" {
 		out.WriteString("[")
 	}
 
-	for i := range assetList {
-		asset := assetList[i]
-		resolvedAsset, err := im.ResolveAsset(asset)
-		if err != nil {
-			return err
-		}
-
-		connectAssetRuntime, err := providers.Coordinator.RuntimeFor(asset, runtime)
-		if err != nil {
-			return err
-		}
-
-		err = connectAssetRuntime.Connect(&pp.ConnectReq{
-			Features: config.Features,
-			Asset:    resolvedAsset,
-			Upstream: upstreamConfig,
-		})
-		if err != nil {
-			return err
-		}
+	for i := range discoveredAssets.Assets {
+		asset := discoveredAssets.Assets[i]
 
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
@@ -158,13 +137,13 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
-		sh, err := shell.New(connectAssetRuntime, shellOptions...)
+		sh, err := shell.New(asset.Runtime, shellOptions...)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize the shell")
 		}
 		defer func() {
 			// prevent the recording from being closed multiple times
-			err = connectAssetRuntime.SetRecording(providers.NullRecording{})
+			err = asset.Runtime.SetRecording(providers.NullRecording{})
 			if err != nil {
 				log.Error().Err(err).Msg("failed to set the recording layer to null")
 			}
@@ -208,7 +187,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			sh.PrintResults(code, results)
 		} else {
 			reporter.BundleResultsToJSON(code, results, out)
-			if len(assetList) != i+1 {
+			if len(discoveredAssets.Assets) != i+1 {
 				out.WriteString(",")
 			}
 		}
