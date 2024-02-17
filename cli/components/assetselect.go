@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
-func AssetSelect(assetList []*inventory.Asset) *inventory.Asset {
+func AssetSelect(assetList []*inventory.Asset) int {
 	list := make([]string, len(assetList))
 
 	// map asset name to list
@@ -36,9 +36,9 @@ func AssetSelect(assetList []*inventory.Asset) *inventory.Asset {
 	}
 
 	if selection == -1 {
-		return nil
+		return -1
 	}
 	selected := assetList[selection]
 	log.Info().Int("selection", selection).Str("asset", selected.Name).Msg("selected asset")
-	return selected
+	return selection
 }

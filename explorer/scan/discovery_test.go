@@ -82,7 +82,7 @@ func TestDiscoveredAssets_GetAssetsByPlatformID(t *testing.T) {
 	// Make sure adding duplicates is not possible
 	assets := d.GetAssetsByPlatformID(allPlatformIds[0])
 	assert.Len(t, assets, 1)
-	assert.Equal(t, allPlatformIds[0], assets[0].PlatformIds[0])
+	assert.Equal(t, allPlatformIds[0], assets[0].Asset.PlatformIds[0])
 }
 
 func TestDiscoveredAssets_GetAssetsByPlatformID_Empty(t *testing.T) {
@@ -110,7 +110,7 @@ func TestDiscoveredAssets_GetAssetsByPlatformID_Empty(t *testing.T) {
 	assert.Len(t, assets, 10)
 	platformIds := []string{}
 	for _, a := range assets {
-		platformIds = append(platformIds, a.PlatformIds[0])
+		platformIds = append(platformIds, a.Asset.PlatformIds[0])
 	}
 	assert.ElementsMatch(t, allPlatformIds, platformIds)
 }
