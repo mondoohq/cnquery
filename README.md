@@ -23,7 +23,7 @@ cnquery shell aws
 > aws.ec2.instances{*}
 ```
 
-[:books: To learn more, read the cnquery docs.](https://mondoo.com/docs/cnquery/home)
+[:books: To learn more, read the cnquery docs.](https://mondoo.com/docs/cnquery/home/)
 
 ## Installation
 
@@ -196,7 +196,7 @@ There are so many things cnquery can do! Gather information about your infrastru
 
 Explore:
 
-- [cnquery docs](https://mondoo.com/docs/cnquery/home)
+- [cnquery docs](https://mondoo.com/docs/cnquery/home/)
 - [Query packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL language reference](https://mondoo.com/docs/mql/resources/)

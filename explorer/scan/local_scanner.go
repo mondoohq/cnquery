@@ -102,7 +102,7 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 				"The Mondoo Platform credentials provided at "+viper.ConfigFileUsed()+
 					" didn't successfully authenticate with Mondoo Platform. "+
 					"Please re-authenticate with Mondoo Platform. "+
-					"To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration.")
+					"To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/.")
 		}
 		return nil, err
 	}
