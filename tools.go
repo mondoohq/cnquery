@@ -7,7 +7,7 @@
 package cnquery
 
 import (
-	_ "github.com/golang/mock/mockgen"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "go.uber.org/mock/mockgen"
 	_ "golang.org/x/tools/cmd/stringer"
 )

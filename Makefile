@@ -59,16 +59,18 @@ prep/tools/protolint:
 	# protobuf linting
 	go install github.com/yoheimuta/protolint/cmd/protolint@latest
 
-prep/tools: prep/tools/protolint
-	# protobuf tooling
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
-	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+prep/tools: prep/tools/protolint prep/tools/mockgen
 	# additional helper
 	go install gotest.tools/gotestsum@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/hashicorp/copywrite@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+
+prep/tools/mockgen:
+	go install go.uber.org/mock/mockgen@latest
 
 #   🌙 MQL/MOTOR   #
 
@@ -597,18 +599,21 @@ test: test/go test/lint
 benchmark/go:
 	go test -bench=. -benchmem go.mondoo.com/cnquery/v10/explorer/scan/benchmark
 
-test/go: cnquery/generate test/go/plain
+test/generate: prep/tools/mockgen
+	go generate ./providers
+
+test/go: cnquery/generate test/generate test/go/plain
 
 test/go/plain:
 	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/cli')
 
-test/go/plain-ci: prep/tools providers/build
+test/go/plain-ci: prep/tools test/generate providers/build
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/cli')
 
 test/go-cli/plain:
 	go test -cover $(shell go list ./... | grep 'test/cli')
 
-test/go-cli/plain-ci: prep/tools providers/build
+test/go-cli/plain-ci: prep/tools test/generate providers/build
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep 'test/cli')
 
 .PHONY: test/lint/staticcheck

@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 	Short: "cnquery CLI",
 	Long:  theme.DefaultTheme.Landing + "\n\n" + rootCmdDesc,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		initLogger(cmd)
+		initLogger()
 	},
 }
 
@@ -122,7 +122,7 @@ func init() {
 	config.Init(rootCmd)
 }
 
-func initLogger(cmd *cobra.Command) {
+func initLogger() {
 	// environment variables always over-write custom flags
 	envLevel, ok := logger.GetEnvLogLevel()
 	if ok {

@@ -11,7 +11,7 @@ import (
 
 	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
@@ -25,7 +25,7 @@ func newFetcher() *fetcher {
 	}
 }
 
-func (f *fetcher) fetchBundles(ctx context.Context, schema llx.Schema, urls ...string) (*explorer.Bundle, error) {
+func (f *fetcher) fetchBundles(ctx context.Context, schema resources.ResourcesSchema, urls ...string) (*explorer.Bundle, error) {
 	var res *explorer.Bundle = &explorer.Bundle{}
 
 	for i := range urls {

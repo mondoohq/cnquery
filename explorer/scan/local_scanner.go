@@ -201,9 +201,6 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *upstream.UpstreamConfig) (*explorer.ReportCollection, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 
-	// Always shut down the coordinator, to make sure providers are killed
-	defer providers.Coordinator.Shutdown()
-
 	discoveredAssets, err := DiscoverAssets(ctx, job.Inventory, upstream, s.recording)
 	if err != nil {
 		return nil, err

@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	osfs "os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -58,6 +57,10 @@ func init() {
 	}
 
 	LastProviderInstall = time.Now().Unix()
+
+	// Initialize the global coordinator instance
+	coordinator := newCoordinator()
+	Coordinator = coordinator
 }
 
 type ProviderLookup struct {
@@ -206,7 +209,7 @@ func ListActive() (Providers, error) {
 	}
 
 	// useful for caching; even if the structure gets updated with new providers
-	Coordinator.Providers = res
+	Coordinator.SetProviders(res)
 	return res, nil
 }
 
@@ -828,7 +831,7 @@ func MustLoadSchema(name string, data []byte) *resources.Schema {
 }
 
 func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
-	raw, err := osfs.ReadFile(path)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		panic("cannot read schema file: " + path)
 	}

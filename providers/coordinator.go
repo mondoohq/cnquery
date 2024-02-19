@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -21,24 +22,48 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/v10/providers/core/config"
 	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
-	"google.golang.org/grpc/status"
 )
+
+//go:generate mockgen -source=./coordinator.go -destination=./mock_coordinator.go -package=providers
+//go:generate mockgen -source=../providers-sdk/v1/plugin/interface.go -destination=./mock_plugin_interface.go -package=providers
+
+type ProvidersCoordinator interface {
+	NewRuntime() *Runtime
+	NewRuntimeFrom(parent *Runtime) *Runtime
+	RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error)
+	RemoveRuntime(runtime *Runtime)
+	GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error)
+	SetProviders(providers Providers)
+	Providers() Providers
+	DeactivateProviderDiscovery()
+	LoadSchema(name string) (resources.ResourcesSchema, error)
+	Schema() resources.ResourcesSchema
+	Shutdown()
+}
 
 var BuiltinCoreID = coreconf.Config.ID
 
-var Coordinator = coordinator{
-	RunningByID: map[string]*RunningProvider{},
-	runtimes:    map[string]*Runtime{},
+var Coordinator ProvidersCoordinator
+
+func newCoordinator() *coordinator {
+	c := &coordinator{
+		runningByID: map[string]*RunningProvider{},
+		runtimes:    map[string]*Runtime{},
+		schema:      newExtensibleSchema(),
+	}
+	c.schema.coordinator = c
+	return c
 }
 
 type coordinator struct {
-	Providers   Providers
-	RunningByID map[string]*RunningProvider
+	providers   Providers
+	runningByID map[string]*RunningProvider
 
 	unprocessedRuntimes []*Runtime
 	runtimes            map[string]*Runtime
 	runtimeCnt          int
 	mutex               sync.Mutex
+	schema              extensibleSchema
 }
 
 type builtinProvider struct {
@@ -46,214 +71,11 @@ type builtinProvider struct {
 	Config  *pp.Provider
 }
 
-type RunningProvider struct {
-	Name   string
-	ID     string
-	Plugin pp.ProviderPlugin
-	Client *plugin.Client
-	Schema *resources.Schema
-
-	// isClosed is true for any provider that is not running anymore,
-	// either via shutdown or via crash
-	isClosed bool
-	// isShutdown is only used once during provider shutdown
-	isShutdown bool
-	// provider errors which are evaluated and printed during shutdown of the provider
-	err          error
-	lock         sync.Mutex
-	shutdownLock sync.Mutex
-	interval     time.Duration
-	gracePeriod  time.Duration
-}
-
-// initialize the heartbeat with the provider
-func (p *RunningProvider) heartbeat() error {
-	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
-		p.Shutdown()
-		return err
-	}
-
-	go func() {
-		for !p.isCloseOrShutdown() {
-			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
-				p.Shutdown()
-				break
-			}
-
-			time.Sleep(p.interval)
-		}
-	}()
-
-	return nil
-}
-
-func (p *RunningProvider) doOneHeartbeat(t time.Duration) error {
-	_, err := p.Plugin.Heartbeat(&pp.HeartbeatReq{
-		Interval: uint64(t),
-	})
-	if err != nil {
-		if status, ok := status.FromError(err); ok {
-			if status.Code() == 12 {
-				return errors.New("please update the provider plugin for " + p.Name)
-			}
-		}
-		return errors.New("cannot establish heartbeat with the provider plugin for " + p.Name)
-	}
-	return nil
-}
-
-func (p *RunningProvider) isCloseOrShutdown() bool {
-	p.shutdownLock.Lock()
-	defer p.shutdownLock.Unlock()
-	return p.isClosed || p.isShutdown
-}
-
-func (p *RunningProvider) Shutdown() error {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-
-	if p.isShutdown {
-		return nil
-	}
-
-	// This is an error that happened earlier, so we print it directly.
-	// The error this function returns is about failing to shutdown.
-	if p.err != nil {
-		log.Error().Msg(p.err.Error())
-	}
-
-	var err error
-	if !p.isClosed {
-		_, err = p.Plugin.Shutdown(&pp.ShutdownReq{})
-		if err != nil {
-			log.Debug().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
-		}
-
-		// If the plugin was not in active use, we may not have a client at this
-		// point. Since all of this is run within a sync-lock, we can check the
-		// client and if it exists use it to send the kill signal.
-		if p.Client != nil {
-			p.Client.Kill()
-		}
-		p.shutdownLock.Lock()
-		p.isClosed = true
-		p.isShutdown = true
-		p.shutdownLock.Unlock()
-	} else {
-		p.shutdownLock.Lock()
-		p.isShutdown = true
-		p.shutdownLock.Unlock()
-	}
-
-	return err
-}
-
 type UpdateProvidersConfig struct {
 	// if true, will try to update providers when new versions are available
 	Enabled bool
 	// seconds until we try to refresh the providers version again
 	RefreshInterval int
-}
-
-func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
-	if x, ok := builtinProviders[id]; ok {
-		// We don't warn for core providers, which are the only providers
-		// built into the binary (for now).
-		if id != BuiltinCoreID && id != mockProvider.ID {
-			log.Warn().Msg("using builtin provider for " + x.Config.Name)
-		}
-		if id == mockProvider.ID {
-			mp := x.Runtime.Plugin.(*mockProviderService)
-			mp.Init(x.Runtime)
-		}
-		return x.Runtime, nil
-	}
-
-	if c.Providers == nil {
-		var err error
-		c.Providers, err = ListActive()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	provider, ok := c.Providers[id]
-	if !ok {
-		return nil, errors.New("cannot find provider " + id)
-	}
-
-	if update.Enabled {
-		// We do not stop on failed updates. Up until some other errors happens,
-		// things are still functional. We want to consider failure, possibly
-		// with a config entry in the future.
-		updated, err := c.tryProviderUpdate(provider, update)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("provider", provider.Name).
-				Msg("failed to update provider")
-		} else {
-			provider = updated
-		}
-	}
-
-	if provider.Schema == nil {
-		if err := provider.LoadResources(); err != nil {
-			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
-		}
-	}
-
-	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
-
-	addColorConfig(pluginCmd)
-
-	pluginLogger := &hclogger{Logger: log.Logger}
-	pluginLogger.SetLevel(hclog.Warn)
-	client := plugin.NewClient(&plugin.ClientConfig{
-		HandshakeConfig: pp.Handshake,
-		Plugins:         pp.PluginMap,
-		Cmd:             pluginCmd,
-		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
-		},
-		Logger: pluginLogger,
-		Stderr: os.Stderr,
-	})
-
-	// Connect via RPC
-	rpcClient, err := client.Client()
-	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to initialize plugin client")
-	}
-
-	// Request the plugin
-	pluginName := "provider"
-	raw, err := rpcClient.Dispense(pluginName)
-	if err != nil {
-		client.Kill()
-		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
-	}
-
-	res := &RunningProvider{
-		Name:        provider.Name,
-		ID:          provider.ID,
-		Plugin:      raw.(pp.ProviderPlugin),
-		Client:      client,
-		Schema:      provider.Schema,
-		interval:    2 * time.Second,
-		gracePeriod: 3 * time.Second,
-	}
-
-	if err := res.heartbeat(); err != nil {
-		return nil, err
-	}
-
-	c.mutex.Lock()
-	c.RunningByID[res.ID] = res
-	c.mutex.Unlock()
-
-	return res, nil
 }
 
 type ProviderVersions struct {
@@ -333,20 +155,9 @@ func (c *coordinator) newRuntime() *Runtime {
 	res := &Runtime{
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
-		schema:          newExtensibleSchema(),
 		recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 	}
-	res.schema.runtime = res
-
-	// TODO: do this dynamically in the future
-	// Once these calls are removed, please remember to update mock.go to explicitly
-	// load all schemas on startup.
-	res.schema.unsafeLoadAll()
-	// TODO: this step too shouild be optional only, even when loading all.
-	// It is executed when the we connect via a provider, so doing it here is
-	// overkill.
-	res.schema.unsafeRefresh()
 
 	c.mutex.Lock()
 	c.unprocessedRuntimes = append(c.unprocessedRuntimes, res)
@@ -368,7 +179,7 @@ func (c *coordinator) NewRuntimeFrom(parent *Runtime) *Runtime {
 	return res
 }
 
-// RuntimFor an asset will return a new or existing runtime for a given asset.
+// RuntimeFor an asset will return a new or existing runtime for a given asset.
 // If a runtime for this asset already exists, it will re-use it. If the runtime
 // is new, it will create it and detect the provider.
 // The asset and parent must be defined.
@@ -377,7 +188,6 @@ func (c *coordinator) RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runt
 	c.unsafeRefreshRuntimes()
 	res := c.unsafeGetAssetRuntime(asset)
 	c.mutex.Unlock()
-
 	if res != nil {
 		return res, nil
 	}
@@ -427,48 +237,212 @@ func (c *coordinator) unsafeSetAssetRuntime(asset *inventory.Asset, runtime *Run
 	return found
 }
 
-func (c *coordinator) Stop(provider *RunningProvider) error {
-	if provider == nil {
-		return nil
-	}
+// RemoveRuntime will remove a runtime from the coordinator. This can potentially
+// shutdown a running provider if it's not referenced by another runtime.
+func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	c.unsafeRefreshRuntimes()
 
-	found := c.RunningByID[provider.ID]
-	if found != nil {
-		delete(c.RunningByID, provider.ID)
+	if runtime.asset() != nil {
+		delete(c.runtimes, runtime.asset().Mrn)
+		for _, id := range runtime.asset().PlatformIds {
+			delete(c.runtimes, id)
+		}
 	}
 
+	// Analyze the providers that are still being used by active runtimes
+	usedProviders := map[string]struct{}{}
+	for _, r := range c.runtimes {
+		for _, p := range r.providers {
+			usedProviders[p.Instance.ID] = struct{}{}
+		}
+	}
+
+	// Shutdown any providers that are not being used anymore
+	for id, p := range c.runningByID {
+		if _, ok := usedProviders[id]; !ok {
+			log.Debug().Msg("shutting down unused provider " + p.Name)
+			if err := c.stop(p); err != nil {
+				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
+			}
+		}
+	}
+}
+
+func (c *coordinator) GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	running := c.runningByID[id]
+	if running == nil {
+		var err error
+		running, err = c.unsafeStartProvider(id, update)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return running, nil
+}
+
+// unsafeStartProvider will start a provider and add it to the list of running providers. Must be called
+// with a mutex lock around it.
+func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
+	if x, ok := builtinProviders[id]; ok {
+		// We don't warn for core providers, which are the only providers
+		// built into the binary (for now).
+		if id != BuiltinCoreID && id != mockProvider.ID {
+			log.Warn().Msg("using builtin provider for " + x.Config.Name)
+		}
+		if id == mockProvider.ID {
+			mp := x.Runtime.Plugin.(*mockProviderService)
+			mp.Init(x.Runtime)
+		}
+		c.schema.Add(id, x.Runtime.Schema)
+		return x.Runtime, nil
+	}
+
+	if c.providers == nil {
+		var err error
+		c.providers, err = ListActive()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	provider, ok := c.providers[id]
+	if !ok {
+		return nil, errors.New("cannot find provider " + id)
+	}
+
+	if update.Enabled {
+		// We do not stop on failed updates. Up until some other errors happens,
+		// things are still functional. We want to consider failure, possibly
+		// with a config entry in the future.
+		updated, err := c.tryProviderUpdate(provider, update)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("provider", provider.Name).
+				Msg("failed to update provider")
+		} else {
+			provider = updated
+		}
+	}
+
+	if provider.Schema == nil {
+		if err := provider.LoadResources(); err != nil {
+			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
+		}
+	}
+
+	pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
+
+	addColorConfig(pluginCmd)
+
+	pluginLogger := &hclogger{Logger: log.Logger}
+	pluginLogger.SetLevel(hclog.Warn)
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig: pp.Handshake,
+		Plugins:         pp.PluginMap,
+		Cmd:             pluginCmd,
+		AllowedProtocols: []plugin.Protocol{
+			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
+		},
+		Logger: pluginLogger,
+		Stderr: os.Stderr,
+	})
+
+	// Connect via RPC
+	rpcClient, err := client.Client()
+	if err != nil {
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to initialize plugin client")
+	}
+
+	// Request the plugin
+	pluginName := "provider"
+	raw, err := rpcClient.Dispense(pluginName)
+	if err != nil {
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
+	}
+
+	res := &RunningProvider{
+		Name:        provider.Name,
+		ID:          provider.ID,
+		Plugin:      raw.(pp.ProviderPlugin),
+		Client:      client,
+		Schema:      provider.Schema,
+		interval:    2 * time.Second,
+		gracePeriod: 3 * time.Second,
+	}
+
+	c.schema.Add(provider.ID, provider.Schema)
+
+	if err := res.heartbeat(); err != nil {
+		return nil, err
+	}
+	c.runningByID[res.ID] = res
+
+	return res, nil
+}
+
+func (c *coordinator) SetProviders(providers Providers) {
+	c.providers = providers
+}
+
+func (c *coordinator) Providers() Providers {
+	return c.providers
+}
+
+// stop will stop a provider and remove it from the list of running providers. Must be called
+// with a mutex lock around it.
+func (c *coordinator) stop(provider *RunningProvider) error {
+	found := c.runningByID[provider.ID]
+	if found != nil {
+		delete(c.runningByID, provider.ID)
+	}
 	return provider.Shutdown()
 }
 
 func (c *coordinator) Shutdown() {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-	for _, runtime := range c.RunningByID {
-		if err := runtime.Shutdown(); err != nil {
-			log.Warn().Err(err).Str("provider", runtime.Name).Msg("failed to shut down provider")
+	for _, provider := range c.runningByID {
+		if err := provider.Shutdown(); err != nil {
+			log.Warn().Err(err).Str("provider", provider.Name).Msg("failed to shut down provider")
 		}
-		runtime.isClosed = true
-		runtime.Client.Kill()
+		provider.Client.Kill()
 	}
-	c.RunningByID = map[string]*RunningProvider{}
+	c.runningByID = map[string]*RunningProvider{}
 	c.runtimes = map[string]*Runtime{}
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
+	c.schema.Close()
+}
 
-	c.mutex.Unlock()
+func (c *coordinator) DeactivateProviderDiscovery() {
+	// Setting this to the max int means this value will always be larger than
+	// any real timestamp for the last installation time of a provider.
+	c.schema.lastRefreshed = math.MaxInt64
+}
+
+func (c *coordinator) Schema() resources.ResourcesSchema {
+	return &c.schema
 }
 
 // LoadSchema for a given provider. Providers also cache their Schemas, so
 // calling this with the same provider multiple times will use the loaded
 // cached schema after the first call.
-func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
+func (c *coordinator) LoadSchema(name string) (resources.ResourcesSchema, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	if x, ok := builtinProviders[name]; ok {
 		return x.Runtime.Schema, nil
 	}
 
-	provider, ok := c.Providers[name]
+	provider, ok := c.providers[name]
 	if !ok {
 		return nil, errors.New("cannot find provider '" + name + "'")
 	}

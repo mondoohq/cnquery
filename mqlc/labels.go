@@ -9,12 +9,13 @@ import (
 	"strconv"
 
 	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/types"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
 
-func createLabel(res *llx.CodeBundle, ref uint64, schema llx.Schema) (string, error) {
+func createLabel(res *llx.CodeBundle, ref uint64, schema resources.ResourcesSchema) (string, error) {
 	code := res.CodeV2
 	chunk := code.Chunk(ref)
 
@@ -129,7 +130,7 @@ func stripCtlAndExtFromUnicode(str string) string {
 }
 
 // UpdateLabels for the given code under the schema
-func UpdateLabels(res *llx.CodeBundle, schema llx.Schema) error {
+func UpdateLabels(res *llx.CodeBundle, schema resources.ResourcesSchema) error {
 	if res == nil || res.CodeV2 == nil {
 		return errors.New("cannot create labels without code")
 	}
@@ -147,7 +148,7 @@ func UpdateLabels(res *llx.CodeBundle, schema llx.Schema) error {
 	return nil
 }
 
-func updateLabels(res *llx.CodeBundle, block *llx.Block, schema llx.Schema) error {
+func updateLabels(res *llx.CodeBundle, block *llx.Block, schema resources.ResourcesSchema) error {
 	datapoints := block.Datapoints
 	code := res.CodeV2
 	labels := res.Labels.Labels
