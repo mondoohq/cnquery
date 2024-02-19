@@ -95,7 +95,7 @@ jobs:
           name: test-results
           path: '*.xml'
 
-  go-test-cli:
+  go-test-integration:
     runs-on: self-hosted
     timeout-minutes: 120
     steps:
@@ -119,8 +119,8 @@ jobs:
       - name: Display Provider PAth
         run: echo $PROVIDERS_PATH
 
-      - name: Test cnquery CLI
-        run: make test/go-cli/plain-ci
+      - name: Test cnquery CLI and Providers
+        run: make test/integration
 
       - uses: actions/upload-artifact@v4  # upload test results
         if: success() || failure()        # run this step even if previous step failed
