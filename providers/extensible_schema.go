@@ -173,16 +173,8 @@ func (x *extensibleSchema) unsafeRefresh() {
 		Resources: map[string]*resources.ResourceInfo{},
 	}
 
-	for id, schema := range x.loaded {
-		if id == BuiltinCoreID {
-			continue
-		}
+	for _, schema := range x.loaded {
 		res.Add(schema)
-	}
-
-	// Add the core schema last, so that it cannot be overridden by any other schema
-	if coreSchema, ok := x.loaded[BuiltinCoreID]; ok {
-		res.Add(coreSchema)
 	}
 
 	// Note: This object is read-only and thus must be re-created to
