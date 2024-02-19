@@ -386,7 +386,7 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]interface{}, error) {
 			"projectId":  llx.StringData(projectId),
 			"name":       llx.StringData(s.ID()),
 			"topic":      llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
-			"expirtaion": llx.TimeData(s.Expiration),
+			"expiration": llx.TimeData(s.Expiration),
 		})
 		if err != nil {
 			return nil, err

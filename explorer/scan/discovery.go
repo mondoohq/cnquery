@@ -169,7 +169,7 @@ func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *ups
 func createRuntimeForAsset(asset *inventory.Asset, upstream *upstream.UpstreamConfig, recording llx.Recording) (*AssetWithRuntime, error) {
 	var runtime *providers.Runtime
 	var err error
-	// Close the runtime if an error occured
+	// Close the runtime if an error occurred
 	defer func() {
 		if err != nil && runtime != nil {
 			runtime.Close()

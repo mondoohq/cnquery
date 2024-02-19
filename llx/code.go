@@ -419,7 +419,7 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 			listRef := chunk.Function.Binding
 			// Find the datapoint linked to this listRef
 			// For .all(...) queries and alike, all is bound to a list.
-			// This list only has the resource ids as datpoints.
+			// This list only has the resource ids as datapoints.
 			// But earlier on, we also bound a datapoint for the default fields to the list.
 			// We need to find this datapoint and use it as the listRef.
 		OUTER:
