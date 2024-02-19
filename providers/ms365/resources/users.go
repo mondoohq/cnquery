@@ -39,33 +39,29 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 	res := []interface{}{}
 	users := resp.GetValue()
 	for _, u := range users {
-		mails := []interface{}{}
-		for _, mail := range u.GetOtherMails() {
-			mails = append(mails, mail)
-		}
 		graphUser, err := CreateResource(a.MqlRuntime, "microsoft.user",
 			map[string]*llx.RawData{
-				"id":                llx.StringData(convert.ToString(u.GetId())),
-				"accountEnabled":    llx.BoolData(convert.ToBool(u.GetAccountEnabled())),
-				"city":              llx.StringData(convert.ToString(u.GetCity())),
-				"companyName":       llx.StringData(convert.ToString(u.GetCompanyName())),
-				"country":           llx.StringData(convert.ToString(u.GetCountry())),
+				"id":                llx.StringDataPtr(u.GetId()),
+				"accountEnabled":    llx.BoolDataPtr(u.GetAccountEnabled()),
+				"city":              llx.StringDataPtr(u.GetCity()),
+				"companyName":       llx.StringDataPtr(u.GetCompanyName()),
+				"country":           llx.StringDataPtr(u.GetCountry()),
 				"createdDateTime":   llx.TimeDataPtr(u.GetCreatedDateTime()),
-				"department":        llx.StringData(convert.ToString(u.GetDepartment())),
-				"displayName":       llx.StringData(convert.ToString(u.GetDisplayName())),
-				"employeeId":        llx.StringData(convert.ToString(u.GetEmployeeId())),
-				"givenName":         llx.StringData(convert.ToString(u.GetGivenName())),
-				"jobTitle":          llx.StringData(convert.ToString(u.GetJobTitle())),
-				"mail":              llx.StringData(convert.ToString(u.GetMail())),
-				"mobilePhone":       llx.StringData(convert.ToString(u.GetMobilePhone())),
-				"otherMails":        llx.ArrayData(mails, types.String),
-				"officeLocation":    llx.StringData(convert.ToString(u.GetOfficeLocation())),
-				"postalCode":        llx.StringData(convert.ToString(u.GetPostalCode())),
-				"state":             llx.StringData(convert.ToString(u.GetState())),
-				"streetAddress":     llx.StringData(convert.ToString(u.GetStreetAddress())),
-				"surname":           llx.StringData(convert.ToString(u.GetSurname())),
-				"userPrincipalName": llx.StringData(convert.ToString(u.GetUserPrincipalName())),
-				"userType":          llx.StringData(convert.ToString(u.GetUserType())),
+				"department":        llx.StringDataPtr(u.GetDepartment()),
+				"displayName":       llx.StringDataPtr(u.GetDisplayName()),
+				"employeeId":        llx.StringDataPtr(u.GetEmployeeId()),
+				"givenName":         llx.StringDataPtr(u.GetGivenName()),
+				"jobTitle":          llx.StringDataPtr(u.GetJobTitle()),
+				"mail":              llx.StringDataPtr(u.GetMail()),
+				"mobilePhone":       llx.StringDataPtr(u.GetMobilePhone()),
+				"otherMails":        llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String),
+				"officeLocation":    llx.StringDataPtr(u.GetOfficeLocation()),
+				"postalCode":        llx.StringDataPtr(u.GetPostalCode()),
+				"state":             llx.StringDataPtr(u.GetState()),
+				"streetAddress":     llx.StringDataPtr(u.GetStreetAddress()),
+				"surname":           llx.StringDataPtr(u.GetSurname()),
+				"userPrincipalName": llx.StringDataPtr(u.GetUserPrincipalName()),
+				"userType":          llx.StringDataPtr(u.GetUserType()),
 			})
 		if err != nil {
 			return nil, err

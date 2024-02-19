@@ -42,14 +42,14 @@ func (a *mqlMicrosoftRolemanagement) roleDefinitions() ([]interface{}, error) {
 		}
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roledefinition",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(convert.ToString(role.GetId())),
-				"description":     llx.StringData(convert.ToString(role.GetDescription())),
-				"displayName":     llx.StringData(convert.ToString(role.GetDisplayName())),
-				"isBuiltIn":       llx.BoolData(convert.ToBool(role.GetIsBuiltIn())),
-				"isEnabled":       llx.BoolData(convert.ToBool(role.GetIsEnabled())),
+				"id":              llx.StringDataPtr(role.GetId()),
+				"description":     llx.StringDataPtr(role.GetDescription()),
+				"displayName":     llx.StringDataPtr(role.GetDisplayName()),
+				"isBuiltIn":       llx.BoolDataPtr(role.GetIsBuiltIn()),
+				"isEnabled":       llx.BoolDataPtr(role.GetIsEnabled()),
 				"rolePermissions": llx.ArrayData(rolePermissions, types.Any),
-				"templateId":      llx.StringData(convert.ToString(role.GetTemplateId())),
-				"version":         llx.StringData(convert.ToString(role.GetVersion())),
+				"templateId":      llx.StringDataPtr(role.GetTemplateId()),
+				"version":         llx.StringDataPtr(role.GetVersion()),
 			})
 		if err != nil {
 			return nil, err
@@ -89,9 +89,9 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]interface{},
 		}
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roleassignment",
 			map[string]*llx.RawData{
-				"id":               llx.StringData(convert.ToString(roleAssignment.GetId())),
-				"roleDefinitionId": llx.StringData(convert.ToString(roleAssignment.GetRoleDefinitionId())),
-				"principalId":      llx.StringData(convert.ToString(roleAssignment.GetPrincipalId())),
+				"id":               llx.StringDataPtr(roleAssignment.GetId()),
+				"roleDefinitionId": llx.StringDataPtr(roleAssignment.GetRoleDefinitionId()),
+				"principalId":      llx.StringDataPtr(roleAssignment.GetPrincipalId()),
 				"principal":        llx.DictData(principal),
 			})
 		if err != nil {
