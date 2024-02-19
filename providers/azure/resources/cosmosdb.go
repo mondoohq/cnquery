@@ -62,12 +62,12 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]interface{}, error) 
 
 			mqlCosmosDbAccount, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(account.ID)),
-					"name":       llx.StringData(convert.ToString(account.Name)),
+					"id":         llx.StringDataPtr(account.ID),
+					"name":       llx.StringDataPtr(account.Name),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":   llx.StringData(convert.ToString(account.Location)),
-					"kind":       llx.StringData(convert.ToString((*string)(account.Kind))),
-					"type":       llx.StringData(convert.ToString(account.Type)),
+					"location":   llx.StringDataPtr(account.Location),
+					"kind":       llx.StringDataPtr((*string)(account.Kind)),
+					"type":       llx.StringDataPtr(account.Type),
 					"properties": llx.DictData(properties),
 				})
 			if err != nil {

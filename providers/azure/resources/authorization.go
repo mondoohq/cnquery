@@ -85,9 +85,9 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleDefinitions() ([]interfac
 			}
 			mqlRoleDefinition, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.roleDefinition",
 				map[string]*llx.RawData{
-					"id":          llx.StringData(convert.ToString(roleDef.ID)),
-					"name":        llx.StringData(convert.ToString(roleDef.Properties.RoleName)),
-					"description": llx.StringData(convert.ToString(roleDef.Properties.Description)),
+					"id":          llx.StringDataPtr(roleDef.ID),
+					"name":        llx.StringDataPtr(roleDef.Properties.RoleName),
+					"description": llx.StringDataPtr(roleDef.Properties.Description),
 					"isCustom":    llx.BoolData(isCustom),
 					"scopes":      llx.ArrayData(scopes, types.String),
 					"permissions": llx.ArrayData(permissions, types.ResourceLike),

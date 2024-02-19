@@ -103,10 +103,10 @@ func (a *mqlAzureSubscriptionKeyVaultService) vaults() ([]interface{}, error) {
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.vault",
 				map[string]*llx.RawData{
-					"id":        llx.StringData(convert.ToString(entry.ID)),
-					"vaultName": llx.StringData(convert.ToString(entry.Name)),
-					"location":  llx.StringData(convert.ToString(entry.Location)),
-					"type":      llx.StringData(convert.ToString(entry.Type)),
+					"id":        llx.StringDataPtr(entry.ID),
+					"vaultName": llx.StringDataPtr(entry.Name),
+					"location":  llx.StringDataPtr(entry.Location),
+					"type":      llx.StringDataPtr(entry.Type),
 					"tags":      llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 				})
 			if err != nil {
@@ -188,15 +188,15 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
-					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
-					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
+					"kid":           llx.StringDataPtr((*string)(entry.KID)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
 					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringData(convert.ToString((*string)(entry.Attributes.RecoveryLevel))),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
 				})
 			if err != nil {
 				return nil, err
@@ -230,11 +230,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
-					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
+					"id":          llx.StringDataPtr((*string)(entry.ID)),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"contentType": llx.StringData(convert.ToString(entry.ContentType)),
-					"managed":     llx.BoolData(convert.ToBool(entry.Managed)),
-					"enabled":     llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"contentType": llx.StringDataPtr(entry.ContentType),
+					"managed":     llx.BoolDataPtr(entry.Managed),
+					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":     llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),
@@ -272,14 +272,14 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
-					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
+					"id":            llx.StringDataPtr((*string)(entry.ID)),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
 					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringData(convert.ToString((*string)(entry.Attributes.RecoveryLevel))),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
 					"x5t":           llx.StringData(hex.EncodeToString(entry.X509Thumbprint)),
 				})
 			if err != nil {
@@ -350,15 +350,15 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key",
 				map[string]*llx.RawData{
-					"kid":           llx.StringData(convert.ToString((*string)(entry.KID))),
-					"managed":       llx.BoolData(convert.ToBool(entry.Managed)),
+					"kid":           llx.StringDataPtr((*string)(entry.KID)),
+					"managed":       llx.BoolDataPtr(entry.Managed),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
 					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringData(convert.ToString((*string)(entry.Attributes.RecoveryLevel))),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
 				})
 			if err != nil {
 				return nil, err
@@ -424,14 +424,14 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.certificate",
 				map[string]*llx.RawData{
-					"id":            llx.StringData(convert.ToString((*string)(entry.ID))),
+					"id":            llx.StringDataPtr((*string)(entry.ID)),
 					"tags":          llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"enabled":       llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"enabled":       llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":       llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":       llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":       llx.TimeDataPtr(entry.Attributes.Expires),
 					"notBefore":     llx.TimeDataPtr(entry.Attributes.NotBefore),
-					"recoveryLevel": llx.StringData(convert.ToString((*string)(entry.Attributes.RecoveryLevel))),
+					"recoveryLevel": llx.StringDataPtr((*string)(entry.Attributes.RecoveryLevel)),
 					"x5t":           llx.StringData(hex.EncodeToString(entry.X509Thumbprint)),
 				})
 			if err != nil {
@@ -500,11 +500,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, e
 		for _, entry := range page.Value {
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.secret",
 				map[string]*llx.RawData{
-					"id":          llx.StringData(convert.ToString((*string)(entry.ID))),
+					"id":          llx.StringDataPtr((*string)(entry.ID)),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"contentType": llx.StringData(convert.ToString(entry.ContentType)),
-					"managed":     llx.BoolData(convert.ToBool(entry.Managed)),
-					"enabled":     llx.BoolData(convert.ToBool(entry.Attributes.Enabled)),
+					"contentType": llx.StringDataPtr(entry.ContentType),
+					"managed":     llx.BoolDataPtr(entry.Managed),
+					"enabled":     llx.BoolDataPtr(entry.Attributes.Enabled),
 					"created":     llx.TimeDataPtr(entry.Attributes.Created),
 					"updated":     llx.TimeDataPtr(entry.Attributes.Updated),
 					"expires":     llx.TimeDataPtr(entry.Attributes.Expires),

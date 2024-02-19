@@ -102,10 +102,10 @@ func (a *mqlAzureSubscriptionMonitorService) logProfiles() ([]interface{}, error
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.logprofile",
 				map[string]*llx.RawData{
-					"id":               llx.StringData(convert.ToString(entry.ID)),
-					"name":             llx.StringData(convert.ToString(entry.Name)),
-					"location":         llx.StringData(convert.ToString(entry.Location)),
-					"type":             llx.StringData(convert.ToString(entry.Type)),
+					"id":               llx.StringDataPtr(entry.ID),
+					"name":             llx.StringDataPtr(entry.Name),
+					"location":         llx.StringDataPtr(entry.Location),
+					"type":             llx.StringDataPtr(entry.Type),
 					"tags":             llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"properties":       llx.DictData(properties),
 					"storageAccountId": llx.StringDataPtr(entry.Properties.StorageAccountID),
@@ -152,13 +152,13 @@ func (a *mqlAzureSubscriptionMonitorService) applicationInsights() ([]interface{
 
 			mqlAppInsight, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.applicationInsight",
 				map[string]*llx.RawData{
-					"id":         llx.StringData(convert.ToString(entry.ID)),
-					"name":       llx.StringData(convert.ToString(entry.Name)),
+					"id":         llx.StringDataPtr(entry.ID),
+					"name":       llx.StringDataPtr(entry.Name),
 					"properties": llx.DictData(properties),
-					"location":   llx.StringData(convert.ToString(entry.Location)),
-					"type":       llx.StringData(convert.ToString(entry.Type)),
+					"location":   llx.StringDataPtr(entry.Location),
+					"type":       llx.StringDataPtr(entry.Type),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"kind":       llx.StringData(convert.ToString(entry.Kind)),
+					"kind":       llx.StringDataPtr(entry.Kind),
 				})
 			if err != nil {
 				return nil, err
@@ -253,15 +253,15 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]interface{},
 			}
 			alert, err := CreateResource(a.MqlRuntime, "azure.subscription.monitorService.activityLog.alert",
 				map[string]*llx.RawData{
-					"id":          llx.StringData(convert.ToString(entry.ID)),
-					"name":        llx.StringData(convert.ToString(entry.Name)),
+					"id":          llx.StringDataPtr(entry.ID),
+					"name":        llx.StringDataPtr(entry.Name),
 					"actions":     llx.DictData(actionsDict),
 					"conditions":  llx.DictData(conditionsDict),
-					"description": llx.StringData(convert.ToString(entry.Properties.Description)),
+					"description": llx.StringDataPtr(entry.Properties.Description),
 					"scopes":      llx.ArrayData(convert.SliceStrPtrToInterface(entry.Properties.Scopes), types.String),
-					"type":        llx.StringData(convert.ToString(entry.Type)),
+					"type":        llx.StringDataPtr(entry.Type),
 					"tags":        llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"location":    llx.StringData(convert.ToString(entry.Location)),
+					"location":    llx.StringDataPtr(entry.Location),
 				})
 			if err != nil {
 				return nil, err
@@ -324,9 +324,9 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 
 			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
 				map[string]*llx.RawData{
-					"id":               llx.StringData(convert.ToString(entry.ID)),
-					"name":             llx.StringData(convert.ToString(entry.Name)),
-					"type":             llx.StringData(convert.ToString(entry.Type)),
+					"id":               llx.StringDataPtr(entry.ID),
+					"name":             llx.StringDataPtr(entry.Name),
+					"type":             llx.StringDataPtr(entry.Type),
 					"properties":       llx.DictData(properties),
 					"storageAccountId": llx.StringDataPtr(entry.Properties.StorageAccountID),
 				})

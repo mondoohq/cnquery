@@ -46,13 +46,13 @@ func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
-	args["id"] = llx.StringData(convert.ToString(resp.ID))
-	args["name"] = llx.StringData(convert.ToString(resp.DisplayName))
-	args["tenantId"] = llx.StringData(convert.ToString(resp.TenantID))
+	args["id"] = llx.StringDataPtr(resp.ID)
+	args["name"] = llx.StringDataPtr(resp.DisplayName)
+	args["tenantId"] = llx.StringDataPtr(resp.TenantID)
 	args["tags"] = llx.MapData(convert.PtrMapStrToInterface(resp.Tags), types.String)
-	args["state"] = llx.StringData(convert.ToString((*string)(resp.State)))
-	args["subscriptionId"] = llx.StringData(convert.ToString(resp.SubscriptionID))
-	args["authorizationSource"] = llx.StringData(convert.ToString((*string)(resp.AuthorizationSource)))
+	args["state"] = llx.StringDataPtr((*string)(resp.State))
+	args["subscriptionId"] = llx.StringDataPtr(resp.SubscriptionID)
+	args["authorizationSource"] = llx.StringDataPtr((*string)(resp.AuthorizationSource))
 	args["managedByTenants"] = llx.ArrayData(managedByTenants, types.String)
 	args["subscriptionsPolicies"] = llx.DictData(subPolicies)
 
@@ -65,7 +65,7 @@ func (a *mqlAzureSubscription) id() (string, error) {
 
 func (a *mqlAzureSubscription) compute() (*mqlAzureSubscriptionComputeService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.computeService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (a *mqlAzureSubscription) compute() (*mqlAzureSubscriptionComputeService, e
 
 func (a *mqlAzureSubscription) network() (*mqlAzureSubscriptionNetworkService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.networkService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (a *mqlAzureSubscription) network() (*mqlAzureSubscriptionNetworkService, e
 
 func (a *mqlAzureSubscription) storage() (*mqlAzureSubscriptionStorageService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.storageService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (a *mqlAzureSubscription) storage() (*mqlAzureSubscriptionStorageService, e
 
 func (a *mqlAzureSubscription) web() (*mqlAzureSubscriptionWebService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.webService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (a *mqlAzureSubscription) web() (*mqlAzureSubscriptionWebService, error) {
 
 func (a *mqlAzureSubscription) sql() (*mqlAzureSubscriptionSqlService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (a *mqlAzureSubscription) sql() (*mqlAzureSubscriptionSqlService, error) {
 
 func (a *mqlAzureSubscription) mySql() (*mqlAzureSubscriptionMySqlService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.mySqlService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (a *mqlAzureSubscription) mySql() (*mqlAzureSubscriptionMySqlService, error
 
 func (a *mqlAzureSubscription) postgreSql() (*mqlAzureSubscriptionPostgreSqlService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.postgreSqlService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (a *mqlAzureSubscription) postgreSql() (*mqlAzureSubscriptionPostgreSqlServ
 
 func (a *mqlAzureSubscription) mariaDb() (*mqlAzureSubscriptionMariaDbService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.mariaDbService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func (a *mqlAzureSubscription) mariaDb() (*mqlAzureSubscriptionMariaDbService, e
 
 func (a *mqlAzureSubscription) cosmosDb() (*mqlAzureSubscriptionCosmosDbService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.cosmosDbService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (a *mqlAzureSubscription) cosmosDb() (*mqlAzureSubscriptionCosmosDbService,
 
 func (a *mqlAzureSubscription) keyVault() (*mqlAzureSubscriptionKeyVaultService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.keyVaultService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (a *mqlAzureSubscription) keyVault() (*mqlAzureSubscriptionKeyVaultService,
 
 func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizationService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.authorizationService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (a *mqlAzureSubscription) authorization() (*mqlAzureSubscriptionAuthorizati
 
 func (a *mqlAzureSubscription) cloudDefender() (*mqlAzureSubscriptionCloudDefenderService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.cloudDefenderService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (a *mqlAzureSubscription) cloudDefender() (*mqlAzureSubscriptionCloudDefend
 
 func (a *mqlAzureSubscription) aks() (*mqlAzureSubscriptionAksService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.aksService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -208,7 +208,7 @@ func (a *mqlAzureSubscription) aks() (*mqlAzureSubscriptionAksService, error) {
 
 func (a *mqlAzureSubscription) monitor() (*mqlAzureSubscriptionMonitorService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.monitorService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (a *mqlAzureSubscription) monitor() (*mqlAzureSubscriptionMonitorService, e
 
 func (a *mqlAzureSubscription) advisor() (*mqlAzureSubscriptionAdvisorService, error) {
 	svc, err := NewResource(a.MqlRuntime, "azure.subscription.advisorService", map[string]*llx.RawData{
-		"subscriptionId": llx.StringDataPtr(&a.SubscriptionId.Data),
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
 	})
 	if err != nil {
 		return nil, err
