@@ -40,6 +40,9 @@ message ResourceInfo {
   string min_mondoo_version = 25;
   string defaults = 26;
   string provider = 27;
+  // This field contains references to other providers with the same resource/field.
+  // Note: Please do not use this field, it is only temporary and will be removed
+  // in the future once binding resources are mandatory for all executions.
   repeated ResourceInfo others = 29;
 }
 
@@ -55,5 +58,8 @@ message Field {
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
   string provider = 27;
+  // This field contains references to other providers with the same resource/field.
+  // Note: Please do not use this field, it is only temporary and will be removed
+  // in the future once binding resources are mandatory for all executions.
   repeated Field others = 29;
 }

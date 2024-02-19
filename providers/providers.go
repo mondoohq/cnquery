@@ -64,6 +64,7 @@ func init() {
 	Coordinator = coordinator
 
 	// Load the schema for all the active providers
+	// FIXME: dynamically load providers on startup
 	providers, err := ListActive()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to list active providers")
