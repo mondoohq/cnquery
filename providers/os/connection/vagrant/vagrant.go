@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package vagrant
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/vagrant"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh"
 	"go.mondoo.com/cnquery/v10/providers/os/id/ids"
 )
 
@@ -22,7 +22,7 @@ const (
 var _ shared.Connection = (*VagrantConnection)(nil)
 
 type VagrantConnection struct {
-	SshConnection
+	ssh.SshConnection
 }
 
 func NewVagrantConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*VagrantConnection, error) {
@@ -46,7 +46,7 @@ func (p *VagrantConnection) Type() shared.ConnectionType {
 	return Vagrant
 }
 
-func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.Asset) (*SshConnection, error) {
+func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.Asset) (*ssh.SshConnection, error) {
 	// For now, we do not provide the conf to the local connection
 	// conf might include sudo, which is only intended for the actual vagrant connection
 	// local currently does not need it. Quite the contrary, it cause issues.
@@ -59,7 +59,7 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 		return nil, err
 	}
 
-	vmStatus, err := vagrant.ParseVagrantStatus(cmd.Stdout)
+	vmStatus, err := ParseVagrantStatus(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 		return nil, err
 	}
 
-	vmSshConfig, err := vagrant.ParseVagrantSshConfig(cmd.Stdout)
+	vmSshConfig, err := ParseVagrantSshConfig(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -88,10 +88,10 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 	if err != nil {
 		return nil, err
 	}
-	return NewSshConnection(id, root.Connections[0], root)
+	return ssh.NewSshConnection(id, root.Connections[0], root)
 }
 
-func migrateVagrantAssetToSsh(id uint32, sshConfig *vagrant.VagrantVmSSHConfig, rootTransportConfig *inventory.Config, asset *inventory.Asset) error {
+func migrateVagrantAssetToSsh(id uint32, sshConfig *VagrantVmSSHConfig, rootTransportConfig *inventory.Config, asset *inventory.Asset) error {
 	if sshConfig == nil {
 		return errors.New("missing vagrant ssh config")
 	}

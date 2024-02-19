@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package docker
 
 import (
 	"context"
@@ -16,11 +16,11 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/docker_engine"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/cat"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 	docker_discovery "go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 )
@@ -156,7 +156,7 @@ func (c *DockerContainerConnection) FileSystem() afero.Fs {
 
 func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
-	cmd := &docker_engine.Command{Client: c.Client, Container: c.container}
+	cmd := &Command{Client: c.Client, Container: c.container}
 	res, err := cmd.Exec(command)
 	// this happens, when we try to run /bin/sh in a container, which does not have it
 	if err == nil && res.ExitStatus == 126 {
@@ -169,73 +169,6 @@ func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command,
 		err = errors.New("could not execute command: " + output)
 	}
 	return res, err
-}
-
-// NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
-	ref, err := name.ParseReference(conf.Host, name.WeakValidation)
-	if err == nil {
-		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
-
-		registryOpts := []image.Option{image.WithInsecure(conf.Insecure)}
-		remoteOpts := auth.AuthOption(conf.Credentials)
-		registryOpts = append(registryOpts, remoteOpts...)
-
-		img, err := image.LoadImageFromRegistry(ref, registryOpts...)
-		if err != nil {
-			return nil, err
-		}
-		if asset.Connections[0].Options == nil {
-			asset.Connections[0].Options = map[string]string{}
-		}
-
-		conn, err := NewTarConnectionForContainer(id, conf, asset, img)
-		if err != nil {
-			return nil, err
-		}
-
-		var identifier string
-		hash, err := img.Digest()
-		if err == nil {
-			identifier = containerid.MondooContainerImageID(hash.String())
-		}
-
-		conn.PlatformIdentifier = identifier
-		conn.Metadata.Name = containerid.ShortContainerImageID(hash.String())
-
-		repoName := ref.Context().Name()
-		imgDigest := hash.String()
-		name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
-		if asset.Name == "" {
-			asset.Name = name
-		}
-		if len(asset.PlatformIds) == 0 {
-			asset.PlatformIds = []string{identifier}
-		} else {
-			asset.PlatformIds = append(asset.PlatformIds, identifier)
-		}
-
-		// set the platform architecture using the image configuration
-		imgConfig, err := img.ConfigFile()
-		if err == nil {
-			conn.PlatformArchitecture = imgConfig.Architecture
-		}
-
-		labels := map[string]string{}
-		labels["docker.io/digests"] = ref.String()
-
-		manifest, err := img.Manifest()
-		if err == nil {
-			labels["mondoo.com/image-id"] = manifest.Config.Digest.String()
-		}
-
-		conn.Metadata.Labels = labels
-		asset.Labels = labels
-
-		return conn, err
-	}
-	log.Debug().Str("image", conf.Host).Msg("Could not detect a valid repository url")
-	return nil, err
 }
 
 func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventory.Asset) (shared.Connection, error) {
@@ -282,7 +215,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 	}
 }
 
-func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
+func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.TarConnection, error) {
 	disableInmemoryCache := false
 	if _, ok := conf.Options["disable-cache"]; ok {
 		var err error
@@ -307,7 +240,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 		asset.Name = resolvedAssets[0].Name
 		asset.PlatformIds = resolvedAssets[0].PlatformIds
 		asset.Labels = resolvedAssets[0].Labels
-		return NewContainerRegistryImage(id, conf, asset)
+		return container.NewContainerRegistryImage(id, conf, asset)
 	}
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
@@ -347,7 +280,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	asset.Name = ii.Name
 	asset.Labels = ii.Labels
 
-	tarConn, err := NewWithReader(id, conf, asset, rc)
+	tarConn, err := tar.NewWithReader(id, conf, asset, rc)
 	if err != nil {
 		return nil, err
 	}

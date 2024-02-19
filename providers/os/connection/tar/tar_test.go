@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection_test
+package tar_test
 
 import (
 	"io"
@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
@@ -33,10 +32,10 @@ func TestTarCommand(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -57,10 +56,10 @@ func TestPlatformIdentifier(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	conn, err := connection.NewTarConnection(0, &inventory.Config{
+	conn, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	require.NoError(t, err)
@@ -73,10 +72,10 @@ func TestTarSymlinkFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -105,10 +104,10 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	err := cacheCentos()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: centosContainerPath,
+			tar.OPTION_FILE: centosContainerPath,
 		},
 	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -136,10 +135,10 @@ func TestTarFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -166,10 +165,10 @@ func TestFilePermissions(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	require.NoError(t, err)
@@ -223,10 +222,10 @@ func TestTarFileFind(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := connection.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewTarConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			connection.OPTION_FILE: alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, &inventory.Asset{})
 	assert.Equal(t, nil, err, "should create tar without error")

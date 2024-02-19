@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package docker
 
 import (
 	"testing"
@@ -9,13 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
 // This test has an external dependency on the gcr.io registry
 // To test this specific case, we cannot use a stored image, we need to call remote.Get
 func TestAssetNameForRemoteImages(t *testing.T) {
 	var err error
-	var conn *TarConnection
+	var conn *tar.TarConnection
 	var asset *inventory.Asset
 	retries := 3
 	counter := 0

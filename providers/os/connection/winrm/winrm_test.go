@@ -4,7 +4,7 @@
 //go:build debugtest
 // +build debugtest
 
-package connection
+package winrm
 
 import (
 	"testing"

@@ -1,25 +1,25 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package docker
 
 import (
 	"context"
 	"os"
 
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
 var _ shared.Connection = &DockerSnapshotConnection{}
 
 type DockerSnapshotConnection struct {
-	TarConnection
+	tar.TarConnection
 }
 
 func NewDockerSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerSnapshotConnection, error) {
-	tarConnection, err := NewWithClose(id, conf, asset, func() {})
+	tarConnection, err := tar.NewWithClose(id, conf, asset, func() {})
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func NewDockerSnapshotConnection(id uint32, conf *inventory.Config, asset *inven
 // NewFromDockerEngine creates a snapshot for a docker engine container and opens it
 func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerSnapshotConnection, error) {
 	// cache container on local disk
-	f, err := cache.RandomFile()
+	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +42,10 @@ func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Ass
 		return nil, err
 	}
 
-	tarConnection, err := NewWithClose(id, &inventory.Config{
+	tarConnection, err := tar.NewWithClose(id, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
-			OPTION_FILE: f.Name(),
+			tar.OPTION_FILE: f.Name(),
 		},
 	}, asset, func() {
 		// remove temporary file on stream close
@@ -70,7 +70,7 @@ func ExportSnapshot(containerid string, f *os.File) error {
 		return err
 	}
 
-	return cache.StreamToTmpFile(rc, f)
+	return tar.StreamToTmpFile(rc, f)
 }
 
 func (p *DockerSnapshotConnection) Name() string {

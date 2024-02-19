@@ -12,7 +12,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
 type ShaReference struct {
@@ -61,7 +61,7 @@ func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, io.Rea
 
 // writeCompressedTarImage writes image including the metradata unflattened to disk
 func writeCompressedTarImage(img v1.Image, digest string) (*os.File, error) {
-	f, err := cache.RandomFile()
+	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err
 	}

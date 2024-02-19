@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package winrm
 
 import (
 	"bytes"
@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	winrmConn "go.mondoo.com/cnquery/v10/providers/os/connection/winrm"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/winrm/cat"
 )
 
@@ -49,7 +48,7 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	}
 
 	// set default config if required
-	winrmEndpoint = winrmConn.DefaultConfig(winrmEndpoint)
+	winrmEndpoint = DefaultConfig(winrmEndpoint)
 
 	params := winrm.DefaultParameters
 	params.TransportDecorator = func() winrm.Transporter { return &winrm.ClientNTLM{} }

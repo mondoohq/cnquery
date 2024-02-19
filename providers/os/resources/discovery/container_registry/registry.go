@@ -11,9 +11,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/google/go-containerregistry/pkg/authn"
-
 	"github.com/cockroachdb/errors"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"

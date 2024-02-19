@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package tar
 
 import (
 	"archive/tar"
@@ -18,9 +18,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	provider_tar "go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/fsutil"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 )
@@ -42,7 +40,7 @@ type TarConnection struct {
 	fetchFn   func() (string, error)
 	fetchOnce sync.Once
 
-	Fs      *provider_tar.FS
+	Fs      *FS
 	CloseFN func()
 	// fields are exposed since the tar backend is re-used for the docker backend
 	PlatformKind         string
@@ -148,7 +146,7 @@ func (c *TarConnection) Load(stream io.Reader) error {
 			return err
 		}
 
-		path := provider_tar.Abs(h.Name)
+		path := Abs(h.Name)
 		c.Fs.FileMap[path] = h
 	}
 	log.Debug().Int("files", len(c.Fs.FileMap)).Msg("tar> successfully loaded")
@@ -175,7 +173,7 @@ func (c *TarConnection) Runtime() string {
 }
 
 func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*TarConnection, error) {
-	f, err := cache.RandomFile()
+	f, err := RandomFile()
 	if err != nil {
 		return nil, err
 	}
@@ -183,9 +181,9 @@ func NewTarConnectionForContainer(id uint32, conf *inventory.Config, asset *inve
 	return &TarConnection{
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
-		Fs:         provider_tar.NewFs(f.Name()),
+		Fs:         NewFs(f.Name()),
 		fetchFn: func() (string, error) {
-			err = cache.StreamToTmpFile(mutate.Extract(img), f)
+			err = StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
 				os.Remove(f.Name())
 				return "", err
@@ -217,7 +215,7 @@ func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc
 		filename = x.Name()
 	} else {
 		// cache file locally
-		f, err := cache.RandomFile()
+		f, err := RandomFile()
 		if err != nil {
 			return nil, err
 		}
@@ -225,7 +223,7 @@ func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc
 		// we return a pure tar image
 		filename = f.Name()
 
-		err = cache.StreamToTmpFile(rc, f)
+		err = StreamToTmpFile(rc, f)
 		if err != nil {
 			os.Remove(filename)
 			return nil, err
@@ -279,7 +277,7 @@ func NewWithClose(id uint32, conf *inventory.Config, asset *inventory.Asset, clo
 		c := &TarConnection{
 			Connection:      plugin.NewConnection(id, asset),
 			asset:           asset,
-			Fs:              provider_tar.NewFs(filename),
+			Fs:              NewFs(filename),
 			CloseFN:         closeFn,
 			PlatformKind:    conf.Type,
 			PlatformRuntime: conf.Runtime,
@@ -307,12 +305,12 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 		}
 	}
 	if !useCached {
-		f, err := cache.RandomFile()
+		f, err := RandomFile()
 		if err != nil {
 			return nil, err
 		}
 		imageFilename = f.Name()
-		err = cache.StreamToTmpFile(mutate.Extract(*img), f)
+		err = StreamToTmpFile(mutate.Extract(*img), f)
 		if err != nil {
 			os.Remove(imageFilename)
 			return nil, err
@@ -322,7 +320,7 @@ func newWithFlattenedImage(id uint32, conf *inventory.Config, asset *inventory.A
 	c := &TarConnection{
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
-		Fs:         provider_tar.NewFs(imageFilename),
+		Fs:         NewFs(imageFilename),
 		CloseFN: func() {
 			if closeFn != nil {
 				closeFn()
