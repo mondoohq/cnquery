@@ -10,7 +10,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
-	go.mondoo.com/cnquery/v10 v10.3.1
+	go.mondoo.com/cnquery/v10 v10.3.4
 )
 
 require (
@@ -25,7 +25,7 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.50.19 // indirect
+	github.com/aws/aws-sdk-go v1.50.20 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.0 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.27.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.46.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.27.0 // indirect
