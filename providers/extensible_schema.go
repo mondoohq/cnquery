@@ -172,6 +172,7 @@ func (x *extensibleSchema) unsafeRefresh() {
 	res := resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
+
 	for _, schema := range x.loaded {
 		res.Add(schema)
 	}

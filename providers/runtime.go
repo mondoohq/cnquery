@@ -531,25 +531,9 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 }
 
 func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *resources.ResourceInfo, error) {
-	info := r.coordinator.Schema().Lookup(resource)
-	if info == nil {
-		return nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
-	}
-
-	// prioritize ids
-	resourcesPerProvider := map[string]*resources.ResourceInfo{
-		info.Provider: info,
-	}
-	for _, other := range info.Others {
-		resourcesPerProvider[other.Provider] = other
-	}
-
-	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
-	for i := len(priority) - 1; i >= 0; i-- {
-		id := priority[i]
-		if s := resourcesPerProvider[id]; s != nil {
-			info = s
-		}
+	info, err := r.lookupResource(resource)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	if info.Provider == "" {
@@ -604,33 +588,68 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	return res, info, nil
 }
 
-func (r *Runtime) lookupFieldProvider(resource string, field string) (*ConnectedProvider, *resources.ResourceInfo, *resources.Field, error) {
-	resourceInfo, fieldInfo := r.coordinator.Schema().LookupField(resource, field)
-	if resourceInfo == nil {
-		return nil, nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
+func (r *Runtime) lookupResource(resource string) (*resources.ResourceInfo, error) {
+	info := r.coordinator.Schema().Lookup(resource)
+	if info == nil {
+		return nil, errors.New("cannot find resource '" + resource + "' in schema")
 	}
-	if fieldInfo == nil {
+
+	// prioritize ids
+	resourcesPerProvider := map[string]*resources.ResourceInfo{
+		info.Provider: info,
+	}
+	for _, other := range info.Others {
+		resourcesPerProvider[other.Provider] = other
+	}
+
+	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
+	for i := len(priority) - 1; i >= 0; i-- {
+		id := priority[i]
+		if s := resourcesPerProvider[id]; s != nil {
+			info = s
+		}
+	}
+	return info, nil
+}
+
+func (r *Runtime) lookupFieldProvider(resource string, field string) (*ConnectedProvider, *resources.ResourceInfo, *resources.Field, error) {
+	// First grab the resource from the correct provider
+	resourceInfo, err := r.lookupResource(resource)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// Then find the field we are looking for
+	fieldInfo, ok := resourceInfo.Fields[field]
+	if !ok {
 		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
 	}
 
-	// Make sure we grab the field that matches the provider of this runtime (if possible).
-	if fieldInfo.Provider != r.Provider.Instance.ID {
-		for _, rI := range resourceInfo.Others {
-			// Check if the same field exists in another provider's resource
-			for _, f := range rI.Fields {
-				if f.Provider == r.Provider.Instance.ID {
-					fieldInfo = f
-					break
-				}
+	fieldsPerProvider := map[string]*resources.Field{
+		fieldInfo.Provider: fieldInfo,
+	}
 
-				// Check if the same field is extended by another provider
-				for _, otherF := range f.Others {
-					if otherF.Provider == r.Provider.Instance.ID {
-						fieldInfo = f
-						break
-					}
-				}
+	// Make a flat list of all definitions of this field in all providers
+	for _, rI := range resourceInfo.Others {
+		if f, ok := rI.Fields[field]; ok {
+			fieldsPerProvider[f.Provider] = f
+
+			for _, otherF := range f.Others {
+				fieldsPerProvider[otherF.Provider] = otherF
 			}
+		}
+	}
+
+	for _, otherF := range fieldInfo.Others {
+		fieldsPerProvider[otherF.Provider] = otherF
+	}
+
+	// prioritize ids
+	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
+	for i := len(priority) - 1; i >= 0; i-- {
+		id := priority[i]
+		if s := fieldsPerProvider[id]; s != nil {
+			fieldInfo = s
 		}
 	}
 
