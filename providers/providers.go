@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	osfs "os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -62,23 +61,6 @@ func init() {
 	// Initialize the global coordinator instance
 	coordinator := newCoordinator()
 	Coordinator = coordinator
-
-	// Load the schema for all the active providers
-	// FIXME: dynamically load providers on startup
-	providers, err := ListActive()
-	if err != nil {
-		log.Error().Err(err).Msg("failed to list active providers")
-		return
-	}
-
-	for name := range providers {
-		schema, err := Coordinator.LoadSchema(name)
-		if err != nil {
-			log.Error().Err(err).Str("provider", name).Msg("failed to load schema")
-			continue
-		}
-		coordinator.schema.Add(name, schema)
-	}
 }
 
 type ProviderLookup struct {
@@ -849,7 +831,7 @@ func MustLoadSchema(name string, data []byte) *resources.Schema {
 }
 
 func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
-	raw, err := osfs.ReadFile(path)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		panic("cannot read schema file: " + path)
 	}
