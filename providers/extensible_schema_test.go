@@ -6,12 +6,14 @@ package providers
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 )
 
 func TestExtensibleSchema(t *testing.T) {
 	s := newExtensibleSchema()
+	s.coordinator = newCoordinator()
 
 	s.Add("first", &resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{
@@ -36,23 +38,23 @@ func TestExtensibleSchema(t *testing.T) {
 		},
 	})
 
-	s.prioritizeIDs("second")
-
 	info := s.Lookup("eternity")
 	require.NotNil(t, info)
-	require.Equal(t, "second", info.Provider)
+	require.Len(t, info.Others, 1)
 
-	_, finfo := s.LookupField("eternity", "iii")
+	// Check that both providers are present for resource "eternity"
+	providers := []string{info.Provider, info.Others[0].Provider}
+	assert.ElementsMatch(t, []string{"first", "second"}, providers)
+
+	info, finfo := s.LookupField("eternity", "iii")
 	require.NotNil(t, info)
-	require.Equal(t, "second", finfo.Provider)
+	require.Len(t, info.Others, 1)
+
+	// Check that both providers are present for field "iii"
+	providers = []string{finfo.Provider, info.Others[0].Fields["iii"].Provider}
+	assert.ElementsMatch(t, []string{"first", "second"}, providers)
 
 	_, finfo = s.LookupField("eternity", "v")
 	require.NotNil(t, info)
-	require.Equal(t, "first", finfo.Provider)
-
-	s.prioritizeIDs("first")
-
-	_, finfo = s.LookupField("eternity", "iii")
-	require.NotNil(t, info)
-	require.Equal(t, "first", finfo.Provider)
+	assert.Equal(t, "first", finfo.Provider)
 }

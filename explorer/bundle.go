@@ -15,9 +15,9 @@ import (
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/checksums"
-	llx "go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"sigs.k8s.io/yaml"
 )
@@ -212,7 +212,7 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 }
 
 // Compile a bundle. See CompileExt for a full description.
-func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, error) {
+func (p *Bundle) Compile(ctx context.Context, schema resources.ResourcesSchema) (*BundleMap, error) {
 	return p.CompileExt(ctx, BundleCompileConf{
 		CompilerConfig: mqlc.NewConfig(schema, cnquery.DefaultFeatures),
 	})

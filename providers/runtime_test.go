@@ -31,6 +31,4 @@ func TestRuntimeClose(t *testing.T) {
 
 	// Make sure the runtime is closed and the schema is empty
 	assert.True(t, r.isClosed)
-	assert.Empty(t, r.schema.loaded)
-	assert.Empty(t, r.schema.roAggregate.Resources)
 }

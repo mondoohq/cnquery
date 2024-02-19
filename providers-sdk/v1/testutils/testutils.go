@@ -213,6 +213,12 @@ func Local() llx.Runtime {
 	networkSchema := MustLoadSchema(SchemaProvider{Provider: "network"})
 	mockSchema := MustLoadSchema(SchemaProvider{Provider: "mockprovider"})
 
+	schema := providers.Coordinator.Schema().(providers.ExtensibleSchema)
+	schema.Add(providers.BuiltinCoreID, coreSchema)
+	schema.Add(osconf.Config.Name, osSchema)
+	schema.Add(networkconf.Config.Name, networkSchema)
+	schema.Add(mockprovider.Config.Name, mockSchema)
+
 	runtime := providers.Coordinator.NewRuntime()
 
 	provider := &providers.RunningProvider{
@@ -245,7 +251,7 @@ func Local() llx.Runtime {
 	// This prevents us from accidentally pulling locally installed providers
 	// which may not work with the current dependencies. The task of testing
 	// those falls to an integration environment, not to unit tests.
-	runtime.DeactivateProviderDiscovery()
+	providers.Coordinator.DeactivateProviderDiscovery()
 
 	return runtime
 }

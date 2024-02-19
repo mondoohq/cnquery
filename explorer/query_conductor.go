@@ -14,6 +14,7 @@ import (
 	llx "go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -279,7 +280,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 
 // MatchFilters will take the list of filters and only return the ones
 // that are supported by the given querypacks.
-func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schema llx.Schema) (string, error) {
+func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schema resources.ResourcesSchema) (string, error) {
 	supported := map[string]*Mquery{}
 	for i := range packs {
 		pack := packs[i]

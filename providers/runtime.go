@@ -5,7 +5,6 @@ package providers
 
 import (
 	"errors"
-	"math"
 	"sync"
 	"time"
 
@@ -35,9 +34,7 @@ type Runtime struct {
 	// coordinator is used to grab providers
 	coordinator ProvidersCoordinator
 	// providers for with open connections
-	providers map[string]*ConnectedProvider
-	// schema aggregates all resources executable on this asset
-	schema          extensibleSchema
+	providers       map[string]*ConnectedProvider
 	isClosed        bool
 	close           sync.Once
 	shutdownTimeout time.Duration
@@ -99,17 +96,7 @@ func (r *Runtime) Close() {
 			}
 		}
 		r.coordinator.RemoveRuntime(r)
-
-		// TODO: ideally, we try to close the provider here but only if there are no more assets that need it
-		// r.coordinator.Close(r.Provider.Instance)
-		r.schema.Close()
 	})
-}
-
-func (r *Runtime) DeactivateProviderDiscovery() {
-	// Setting this to the max int means this value will always be larger than
-	// any real timestamp for the last installation time of a provider.
-	r.schema.lastRefreshed = math.MaxInt64
 }
 
 func (r *Runtime) Recording() llx.Recording {
@@ -136,7 +123,6 @@ func (r *Runtime) UseProvider(id string) error {
 
 func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
 	r.providers[c.Instance.ID] = c
-	r.schema.Add(c.Instance.Name, c.Instance.Schema)
 }
 
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
@@ -243,7 +229,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	}
 
 	r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
-	r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
+	// r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
 	return nil
 }
 
@@ -545,9 +531,25 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 }
 
 func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *resources.ResourceInfo, error) {
-	info := r.schema.Lookup(resource)
+	info := r.coordinator.Schema().Lookup(resource)
 	if info == nil {
 		return nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
+	}
+
+	// prioritize ids
+	resourcesPerProvider := map[string]*resources.ResourceInfo{
+		info.Provider: info,
+	}
+	for _, other := range info.Others {
+		resourcesPerProvider[other.Provider] = other
+	}
+
+	priority := []string{BuiltinCoreID, r.Provider.Instance.ID}
+	for i := len(priority) - 1; i >= 0; i-- {
+		id := priority[i]
+		if s := resourcesPerProvider[id]; s != nil {
+			info = s
+		}
 	}
 
 	if info.Provider == "" {
@@ -603,12 +605,33 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 }
 
 func (r *Runtime) lookupFieldProvider(resource string, field string) (*ConnectedProvider, *resources.ResourceInfo, *resources.Field, error) {
-	resourceInfo, fieldInfo := r.schema.LookupField(resource, field)
+	resourceInfo, fieldInfo := r.coordinator.Schema().LookupField(resource, field)
 	if resourceInfo == nil {
 		return nil, nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
 	}
 	if fieldInfo == nil {
 		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
+	}
+
+	// Make sure we grab the field that matches the provider of this runtime (if possible).
+	if fieldInfo.Provider != r.Provider.Instance.ID {
+		for _, rI := range resourceInfo.Others {
+			// Check if the same field exists in another provider's resource
+			for _, f := range rI.Fields {
+				if f.Provider == r.Provider.Instance.ID {
+					fieldInfo = f
+					break
+				}
+
+				// Check if the same field is extended by another provider
+				for _, otherF := range f.Others {
+					if otherF.Provider == r.Provider.Instance.ID {
+						fieldInfo = f
+						break
+					}
+				}
+			}
+		}
 	}
 
 	if provider := r.providers[fieldInfo.Provider]; provider != nil {
@@ -632,8 +655,8 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	return res, resourceInfo, fieldInfo, nil
 }
 
-func (r *Runtime) Schema() llx.Schema {
-	return &r.schema
+func (r *Runtime) Schema() resources.ResourcesSchema {
+	return r.coordinator.Schema()
 }
 
 func (r *Runtime) asset() *inventory.Asset {

@@ -14,16 +14,10 @@ type Runtime interface {
 	CreateResource(name string, args map[string]*Primitive) (Resource, error)
 	CloneResource(src Resource, id string, fields []string, args map[string]*Primitive) (Resource, error)
 	WatchAndUpdate(resource Resource, field string, watcherUID string, callback func(res interface{}, err error)) error
-	Schema() Schema
+	Schema() resources.ResourcesSchema
 	Close()
 	Recording() Recording
 	SetRecording(recording Recording) error
-}
-
-type Schema interface {
-	Lookup(resource string) *resources.ResourceInfo
-	LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field)
-	AllResources() map[string]*resources.ResourceInfo
 }
 
 type Recording interface {

@@ -8,8 +8,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"golang.org/x/exp/slices"
 )
+
+type ExtensibleSchema interface {
+	Add(name string, schema resources.ResourcesSchema)
+}
 
 type extensibleSchema struct {
 	// Note: this object is re-created every time we refresh. It is treated
@@ -17,11 +20,11 @@ type extensibleSchema struct {
 	// Thus, its contents are read-only and may only be replaced entirely.
 	roAggregate resources.Schema
 	// These are all individual schemas that have been added (not their aggregate)
-	loaded map[string]*resources.Schema
+	loaded map[string]resources.ResourcesSchema
 	// Optional prioritization order of select schemas in aggregation.
 	prioritization []string
-	runtime        *Runtime
 	lastRefreshed  int64
+	coordinator    ProvidersCoordinator
 	sync           sync.Mutex
 }
 
@@ -30,12 +33,12 @@ func newExtensibleSchema() extensibleSchema {
 		roAggregate: resources.Schema{
 			Resources: map[string]*resources.ResourceInfo{},
 		},
-		loaded:         map[string]*resources.Schema{},
+		loaded:         map[string]resources.ResourcesSchema{},
 		prioritization: []string{BuiltinCoreID},
 	}
 }
 
-func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
+func (x *extensibleSchema) Add(name string, schema resources.ResourcesSchema) {
 	x.sync.Lock()
 	x.unsafeAdd(name, schema)
 	x.unsafeRefresh()
@@ -69,7 +72,7 @@ func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
 
 func (x *extensibleSchema) Close() {
 	x.sync.Lock()
-	x.loaded = map[string]*resources.Schema{}
+	x.loaded = map[string]resources.ResourcesSchema{}
 	x.roAggregate = resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
@@ -97,31 +100,19 @@ func (x *extensibleSchema) LookupField(resource string, field string) (*resource
 	x.sync.Lock()
 	defer x.sync.Unlock()
 
-	found, ok := x.roAggregate.Resources[resource]
-	if !ok {
-		if x.lastRefreshed >= LastProviderInstall {
-			return nil, nil
-		}
-
-		found, ok = x.roAggregate.Resources[resource]
-		if !ok {
-			return nil, nil
-		}
-		return found, found.Fields[field]
+	res, f := x.roAggregate.LookupField(resource, field)
+	if res != nil && f != nil {
+		return res, f
 	}
 
-	fieldObj, ok := found.Fields[field]
-	if ok {
-		return found, fieldObj
-	}
 	if x.lastRefreshed >= LastProviderInstall {
-		return found, nil
+		return res, f
 	}
 
 	x.unsafeLoadAll()
 	x.unsafeRefresh()
 
-	return found, found.Fields[field]
+	return x.roAggregate.LookupField(resource, field)
 }
 
 // Prioritize the provider IDs in the order that is provided. Any other
@@ -156,7 +147,7 @@ func (x *extensibleSchema) unsafeLoadAll() {
 	}
 
 	for name := range providers {
-		schema, err := x.runtime.coordinator.LoadSchema(name)
+		schema, err := x.coordinator.LoadSchema(name)
 		if err != nil {
 			log.Error().Err(err).Msg("load schema failed")
 		} else {
@@ -165,7 +156,7 @@ func (x *extensibleSchema) unsafeLoadAll() {
 	}
 }
 
-func (x *extensibleSchema) unsafeAdd(name string, schema *resources.Schema) {
+func (x *extensibleSchema) unsafeAdd(name string, schema resources.ResourcesSchema) {
 	if schema == nil {
 		return
 	}
@@ -181,17 +172,8 @@ func (x *extensibleSchema) unsafeRefresh() {
 	res := resources.Schema{
 		Resources: map[string]*resources.ResourceInfo{},
 	}
-	for id, schema := range x.loaded {
-		if !slices.Contains(x.prioritization, id) {
-			res.Add(schema)
-		}
-	}
-
-	for i := len(x.prioritization) - 1; i >= 0; i-- {
-		id := x.prioritization[i]
-		if s := x.loaded[id]; s != nil {
-			res.Add(s)
-		}
+	for _, schema := range x.loaded {
+		res.Add(schema)
 	}
 
 	// Note: This object is read-only and thus must be re-created to

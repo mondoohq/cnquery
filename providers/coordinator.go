@@ -4,6 +4,7 @@
 package providers
 
 import (
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -34,15 +35,24 @@ type ProvidersCoordinator interface {
 	GetRunningProvider(id string, update UpdateProvidersConfig) (*RunningProvider, error)
 	SetProviders(providers Providers)
 	Providers() Providers
-	LoadSchema(name string) (*resources.Schema, error)
+	DeactivateProviderDiscovery()
+	LoadSchema(name string) (resources.ResourcesSchema, error)
+	Schema() resources.ResourcesSchema
 	Shutdown()
 }
 
 var BuiltinCoreID = coreconf.Config.ID
 
-var Coordinator ProvidersCoordinator = &coordinator{
-	runningByID: map[string]*RunningProvider{},
-	runtimes:    map[string]*Runtime{},
+var Coordinator ProvidersCoordinator
+
+func newCoordinator() *coordinator {
+	c := &coordinator{
+		runningByID: map[string]*RunningProvider{},
+		runtimes:    map[string]*Runtime{},
+		schema:      newExtensibleSchema(),
+	}
+	c.schema.coordinator = c
+	return c
 }
 
 type coordinator struct {
@@ -53,6 +63,7 @@ type coordinator struct {
 	runtimes            map[string]*Runtime
 	runtimeCnt          int
 	mutex               sync.Mutex
+	schema              extensibleSchema
 }
 
 type builtinProvider struct {
@@ -144,20 +155,9 @@ func (c *coordinator) newRuntime() *Runtime {
 	res := &Runtime{
 		coordinator:     c,
 		providers:       map[string]*ConnectedProvider{},
-		schema:          newExtensibleSchema(),
 		recording:       NullRecording{},
 		shutdownTimeout: defaultShutdownTimeout,
 	}
-	res.schema.runtime = res
-
-	// TODO: do this dynamically in the future
-	// Once these calls are removed, please remember to update mock.go to explicitly
-	// load all schemas on startup.
-	res.schema.unsafeLoadAll()
-	// TODO: this step too should be optional only, even when loading all.
-	// It is executed when the we connect via a provider, so doing it here is
-	// overkill.
-	res.schema.unsafeRefresh()
 
 	c.mutex.Lock()
 	c.unprocessedRuntimes = append(c.unprocessedRuntimes, res)
@@ -297,6 +297,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			mp := x.Runtime.Plugin.(*mockProviderService)
 			mp.Init(x.Runtime)
 		}
+		c.schema.Add(id, x.Runtime.Schema)
 		return x.Runtime, nil
 	}
 
@@ -376,11 +377,13 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		gracePeriod: 3 * time.Second,
 	}
 
+	c.schema.Add(provider.ID, provider.Schema)
+
 	if err := res.heartbeat(); err != nil {
 		return nil, err
 	}
-
 	c.runningByID[res.ID] = res
+
 	return res, nil
 }
 
@@ -416,12 +419,23 @@ func (c *coordinator) Shutdown() {
 	c.runtimes = map[string]*Runtime{}
 	c.runtimeCnt = 0
 	c.unprocessedRuntimes = []*Runtime{}
+	c.schema.Close()
+}
+
+func (c *coordinator) DeactivateProviderDiscovery() {
+	// Setting this to the max int means this value will always be larger than
+	// any real timestamp for the last installation time of a provider.
+	c.schema.lastRefreshed = math.MaxInt64
+}
+
+func (c *coordinator) Schema() resources.ResourcesSchema {
+	return &c.schema
 }
 
 // LoadSchema for a given provider. Providers also cache their Schemas, so
 // calling this with the same provider multiple times will use the loaded
 // cached schema after the first call.
-func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
+func (c *coordinator) LoadSchema(name string) (resources.ResourcesSchema, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if x, ok := builtinProviders[name]; ok {

@@ -3,16 +3,28 @@
 
 package resources
 
+type ResourcesSchema interface {
+	Lookup(resource string) *ResourceInfo
+	LookupField(resource string, field string) (*ResourceInfo, *Field)
+	AllResources() map[string]*ResourceInfo
+}
+
 // Add another schema and return yourself. other may be nil.
 // The other schema overrides specifications in this schema, unless
 // it is trying to extend a resource whose base is already defined.
-func (s *Schema) Add(other *Schema) *Schema {
+func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 	if other == nil {
 		return s
 	}
 
-	for k, v := range other.Resources {
+	for k, v := range other.AllResources() {
 		if existing, ok := s.Resources[k]; ok {
+			// If neither resource is an extension, we can't merge them. We store both references.
+			if !v.IsExtension && !existing.IsExtension && v.Provider != existing.Provider {
+				existing.Others = append(existing.Others, v)
+				continue
+			}
+
 			// We will merge resources into it until we find one that is not extending.
 			// Technically, this should only happen with one resource and one only,
 			// i.e. the root resource. In case they are incorrectly specified, the
@@ -50,7 +62,13 @@ func (s *Schema) Add(other *Schema) *Schema {
 				existing.Fields = map[string]*Field{}
 			}
 			for fk, fv := range v.Fields {
-				existing.Fields[fk] = fv
+				// If the field exists in the current resource, but is from a different provider,
+				// we store it as an "other"
+				if fExisting, ok := existing.Fields[fk]; ok && fv.Provider != fExisting.Provider {
+					fExisting.Others = append(fExisting.Others, fv)
+				} else {
+					existing.Fields[fk] = fv
+				}
 			}
 		} else {
 			ri := &ResourceInfo{
@@ -83,8 +101,18 @@ func (s *Schema) Lookup(name string) *ResourceInfo {
 
 func (s *Schema) LookupField(resource string, field string) (*ResourceInfo, *Field) {
 	res := s.Lookup(resource)
-	if res == nil || res.Fields == nil {
+	if res == nil {
 		return res, nil
+	}
+
+	// If the fields don't exist in the current resource, check the other instances of it
+	if res.Fields == nil {
+		for _, o := range res.Others {
+			if o.Fields != nil && o.Fields[field] != nil {
+				res = o
+				break
+			}
+		}
 	}
 	return res, res.Fields[field]
 }

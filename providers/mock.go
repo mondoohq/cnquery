@@ -121,12 +121,9 @@ func (s *mockProviderService) Init(running *RunningProvider) {
 	}
 	s.initialized = true
 
-	rt := s.coordinator.NewRuntime()
-
 	// TODO: Currently not needed, as the runtime loads all schemas right now.
 	// Once it doesn't do that anymore, remember to load all schemas here
 	// rt.schema.unsafeLoadAll()
 	// rt.schema.unsafeRefresh()
-
-	running.Schema = rt.schema.Schema()
+	running.Schema = s.coordinator.Schema()
 }
