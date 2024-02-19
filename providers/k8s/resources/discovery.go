@@ -822,12 +822,14 @@ func convertImagesToAssets(images map[string]ContainerImage) ([]*inventory.Asset
 
 		ref, err := name.ParseReference(i.resolvedImage, name.WeakValidation)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("failed to parse image reference")
+			continue
 		}
 
 		a, err := ccresolver.GetImage(ref, nil)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msg("failed to get image")
+			continue
 		}
 		assetList = append(assetList, a)
 	}
