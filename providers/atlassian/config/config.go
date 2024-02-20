@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "atlassian",
 	ID:      "go.mondoo.com/cnquery/v9/providers/atlassian",
-	Version: "10.0.0",
+	Version: "10.0.1",
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,
 		"jira",
