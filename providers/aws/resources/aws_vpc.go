@@ -179,6 +179,7 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 				map[string]*llx.RawData{
 					"createdAt":              llx.TimeDataPtr(flowLog.CreationTime),
 					"destination":            llx.StringDataPtr(flowLog.LogDestination),
+					"destinationType":        llx.StringData(string(flowLog.LogDestinationType)),
 					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
 					"maxAggregationInterval": llx.IntData(convert.ToInt64From32(flowLog.MaxAggregationInterval)),
 					"region":                 llx.StringData(a.Region.Data),

@@ -2471,6 +2471,8 @@ resources:
         min_mondoo_version: 9.0.0
       destination:
         min_mondoo_version: 9.0.0
+      destinationType:
+        min_mondoo_version: 9.0.0
       id: {}
       maxAggregationInterval:
         min_mondoo_version: 9.0.0

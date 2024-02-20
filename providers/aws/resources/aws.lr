@@ -135,6 +135,8 @@ private aws.vpc.flowlog @defaults("id region status") {
   createdAt time
   // The destination for the flow log data
   destination string
+  // The destination type for the flow log data
+  destinationType string
   // The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. The possible values are 60 seconds (1 minute) or 600 seconds (10 minutes).
   maxAggregationInterval int
   // The type of traffic to monitor. ACCEPT, ALL, and REJECT
