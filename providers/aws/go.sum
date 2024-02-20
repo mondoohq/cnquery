@@ -34,8 +34,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/aws/aws-sdk-go v1.50.20 h1:xfAnSDVf/azIWTVQXQODp89bubvCS85r70O3nuQ4dnE=
-github.com/aws/aws-sdk-go v1.50.20/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.50.21 h1:W8awpwiInOt4qHQE6JghRYQJhHcf/cDJS3mlZYqioSQ=
+github.com/aws/aws-sdk-go v1.50.21/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.25.0 h1:sv7+1JVJxOu/dD/sz/csHX7jFqmP001TIY7aytBWDSQ=
 github.com/aws/aws-sdk-go-v2 v1.25.0/go.mod h1:G104G1Aho5WqF+SR3mDIobTABQzpYV0WxMsKxlMggOA=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.0 h1:2UO6/nT1lCZq1LqM67Oa4tdgP1CvL1sLSxvuD+VrOeE=
@@ -76,8 +76,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.33.1 h1:M9ydMUcO1pvr81Fgb
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.33.1/go.mod h1:onjRazV8gvuLIWcTJ/g6vVdtxELnNWEoyR2khNisxl8=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.29.1 h1:Vl5XOYqrMbC1mSNZHjFG3kKNZKkhu5cTims3euVPlyA=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.29.1/go.mod h1:qTe5W+kKIJ2OUSms/+/X5HiLPfKVHj7MQWPHztMWgik=
-github.com/aws/aws-sdk-go-v2/service/configservice v1.45.1 h1:5KIeUpDo7/67LES8+DpT6CeqyKFuv4a348Gt5VfUbUg=
-github.com/aws/aws-sdk-go-v2/service/configservice v1.45.1/go.mod h1:XR4m4xJNxDHwiPrSo9RYkARS22XeAbXHkSIKTqPMkbo=
+github.com/aws/aws-sdk-go-v2/service/configservice v1.45.2 h1:vSKRyTNGxzWBXpMTtFHXr+Dnx+kWc9OM8t0U+oRZ1Gk=
+github.com/aws/aws-sdk-go-v2/service/configservice v1.45.2/go.mod h1:XR4m4xJNxDHwiPrSo9RYkARS22XeAbXHkSIKTqPMkbo=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.37.0 h1:6ZR0L+lP/Zw+nWHogoKraoGkqXCqBnOracATXbkbtz8=
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.37.0/go.mod h1:EF/UkL+0uEqcqr0sKFJJIT3Jbcxgt2oWz9R0vaLNSVU=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.29.0 h1:zZP5rgaQYyDw0nNZRsbYqwC4NS/KsmVKGSwm0EzYAzU=
@@ -130,8 +130,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.71.0 h1:CVR5LejJqSysdPFQv19rkmRITeda
 github.com/aws/aws-sdk-go-v2/service/rds v1.71.0/go.mod h1:3GxUcfiSRQS+iGNMGtAvtkma/PMuyU4VCUZF5iID3uA=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.42.0 h1:3BKNhXPPNu9WH+jBmoHtwSt5C1apxPpLfmOQVyStW8w=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.42.0/go.mod h1:uIYrwk+SdDZaLcD3iRmZ72bzaJkYB0ikcr2sxLM+3iE=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.50.0 h1:jZAdMD1ioZdqirzzVVRhpHHWJmcGGCn8JqDYBs5nmYA=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.50.0/go.mod h1:1o/W6JFUuREj2ExoQ21vHJgO7wakvjhol91M9eknFgs=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.50.1 h1:bjpWJEXch7moIt3PX2r5XpGROsletl7enqG1Q3Te1Dc=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.50.1/go.mod h1:1o/W6JFUuREj2ExoQ21vHJgO7wakvjhol91M9eknFgs=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.43.0 h1:VO5qWH5KhcjT7rWDQ41+J+o6E8SxauCEcA32YC61cKY=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.43.0/go.mod h1:AlyUeK61XMsZHGAodC5NGeZ1m14armL4BYJfU6nw5dM=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.130.0 h1:Wow/UvkCpGKvKHoINm5UUNWb/e9sCgtx7joQNxCyA9s=
