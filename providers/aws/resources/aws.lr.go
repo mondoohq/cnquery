@@ -853,6 +853,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.flowlog.destination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetDestination()).ToDataRes(types.String)
 	},
+	"aws.vpc.flowlog.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcFlowlog).GetDestinationType()).ToDataRes(types.String)
+	},
 	"aws.vpc.flowlog.maxAggregationInterval": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcFlowlog).GetMaxAggregationInterval()).ToDataRes(types.Int)
 	},
@@ -3863,6 +3866,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.flowlog.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcFlowlog).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.flowlog.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcFlowlog).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.flowlog.maxAggregationInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8769,6 +8776,7 @@ type mqlAwsVpcFlowlog struct {
 	Tags plugin.TValue[map[string]interface{}]
 	CreatedAt plugin.TValue[*time.Time]
 	Destination plugin.TValue[string]
+	DestinationType plugin.TValue[string]
 	MaxAggregationInterval plugin.TValue[int64]
 	TrafficType plugin.TValue[string]
 }
@@ -8831,6 +8839,10 @@ func (c *mqlAwsVpcFlowlog) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsVpcFlowlog) GetDestination() *plugin.TValue[string] {
 	return &c.Destination
+}
+
+func (c *mqlAwsVpcFlowlog) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
 }
 
 func (c *mqlAwsVpcFlowlog) GetMaxAggregationInterval() *plugin.TValue[int64] {
