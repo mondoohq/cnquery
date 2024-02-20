@@ -190,8 +190,10 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 	if err != nil {
 		return nil, err
 	}
-
-	awsAccount := res.(*mqlAwsAccount)
+	var awsAccount *mqlAwsAccount
+	if res != nil {
+		awsAccount = res.(*mqlAwsAccount)
+	}
 
 	targets := handleTargets(conn.Conf.Discover.Targets)
 	for i := range targets {
