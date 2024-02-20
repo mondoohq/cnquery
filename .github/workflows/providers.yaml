@@ -89,7 +89,7 @@ jobs:
 
   provider-build:
     name: "${{ matrix.provider }}"
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     needs: scoping
     if: ${{ needs.scoping.outputs.build_list != '[]' }}
