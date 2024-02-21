@@ -118,7 +118,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y xz-utils make protobuf-compiler curl zip unzip jq
-          go install google.golang.org/protobuf/cmd/protoc-gen-go
+          make prep/tools
 
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
