@@ -78,7 +78,7 @@ en
 config
 enable password xyrt1
 // deletes the enable password
-no enable password 
+no enable password
 ```
 
 see https://www.arista.com/en/um-eos/eos-user-security
@@ -97,7 +97,7 @@ expose api (requires port forwarding)
 http://localhost:8080/explorer.html
 
 arista user manual
-https://www.arista.com/assets/data/pdf/user-manual/um-books/EOS-4.24.1F-Manual.pdf
+https://www.arista.com/en/um-eos
 
 vagrant setup (not tested)
 https://github.com/jerearista/vagrant-veos
