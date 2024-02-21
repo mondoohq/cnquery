@@ -2469,6 +2469,8 @@ resources:
     fields:
       createdAt:
         min_mondoo_version: 9.0.0
+      deliverLogsStatus:
+        min_mondoo_version: 9.0.0
       destination:
         min_mondoo_version: 9.0.0
       destinationType:

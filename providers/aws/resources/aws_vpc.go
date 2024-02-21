@@ -180,6 +180,7 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 					"createdAt":              llx.TimeDataPtr(flowLog.CreationTime),
 					"destination":            llx.StringDataPtr(flowLog.LogDestination),
 					"destinationType":        llx.StringData(string(flowLog.LogDestinationType)),
+					"deliverLogsStatus":      llx.StringDataPtr(flowLog.DeliverLogsStatus),
 					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
 					"maxAggregationInterval": llx.IntData(convert.ToInt64From32(flowLog.MaxAggregationInterval)),
 					"region":                 llx.StringData(a.Region.Data),
