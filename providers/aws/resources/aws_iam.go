@@ -421,22 +421,29 @@ func (a *mqlAwsIam) policies() ([]interface{}, error) {
 
 func (a *mqlAwsIam) roles() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	svc := conn.Iam("")
 	ctx := context.Background()
 
-	res := []interface{}{}
+	var res []interface{}
 	var marker *string
+
 	for {
 		rolesResp, err := svc.ListRoles(ctx, &iam.ListRolesInput{
 			Marker: marker,
 		})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to list roles: %w", err)
 		}
 
-		for i := range rolesResp.Roles {
-			role := rolesResp.Roles[i]
+		for _, role := range rolesResp.Roles {
+			assumeRolePolicyJSON, err := json.Marshal(role.AssumeRolePolicyDocument)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal AssumeRolePolicyDocument for role %s: %w", *role.RoleName, err)
+			}
+
+			//  []byte to string  & then pointer to the string
+			assumeRolePolicyStr := string(assumeRolePolicyJSON)
+			// assumeRolePolicyStrPtr := &assumeRolePolicyStr
 
 			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, "aws.iam.role",
 				map[string]*llx.RawData{
@@ -446,10 +453,10 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 					"description":              llx.StringDataPtr(role.Description),
 					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
 					"createDate":               llx.TimeDataPtr(role.CreateDate),
-					"assumeRolePolicyDocument": llx.StringDataPtr(role.AssumeRolePolicyDocument),
+					"assumeRolePolicyDocument": llx.StringData(assumeRolePolicyStr),
 				})
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to create resource for role %s: %w", *role.RoleName, err)
 			}
 
 			res = append(res, mqlAwsIamRole)
