@@ -440,12 +440,13 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 
 			mqlAwsIamRole, err := CreateResource(a.MqlRuntime, "aws.iam.role",
 				map[string]*llx.RawData{
-					"arn":         llx.StringDataPtr(role.Arn),
-					"id":          llx.StringDataPtr(role.RoleId),
-					"name":        llx.StringDataPtr(role.RoleName),
-					"description": llx.StringDataPtr(role.Description),
-					"tags":        llx.MapData(iamTagsToMap(role.Tags), types.String),
-					"createDate":  llx.TimeDataPtr(role.CreateDate),
+					"arn":                      llx.StringDataPtr(role.Arn),
+					"id":                       llx.StringDataPtr(role.RoleId),
+					"name":                     llx.StringDataPtr(role.RoleName),
+					"description":              llx.StringDataPtr(role.Description),
+					"tags":                     llx.MapData(iamTagsToMap(role.Tags), types.String),
+					"createDate":               llx.TimeDataPtr(role.CreateDate),
+					"assumeRolePolicyDocument": llx.StringDataPtr(role.AssumeRolePolicyDocument),
 				})
 			if err != nil {
 				return nil, err

@@ -813,6 +813,8 @@ private aws.iam.policy @defaults("arn name") {
   versions() []aws.iam.policyversion
   // Default version of the policy
   defaultVersion() aws.iam.policyversion
+  // Policy attached to an AWS IAM role
+  assumeRolePolicyDocument() string
 
   // List of users attached to the policy
   attachedUsers() []aws.iam.user

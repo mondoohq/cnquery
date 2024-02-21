@@ -1730,6 +1730,7 @@ resources:
         The `aws.iam.policy` provides fields for assessing the configuration of individual IAM Policies. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
+      assumeRolePolicyDocument: {}
       attachedGroups: {}
       attachedRoles: {}
       attachedUsers: {}

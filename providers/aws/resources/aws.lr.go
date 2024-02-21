@@ -1591,6 +1591,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.policy.defaultVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetDefaultVersion()).ToDataRes(types.Resource("aws.iam.policyversion"))
 	},
+	"aws.iam.policy.assumeRolePolicyDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamPolicy).GetAssumeRolePolicyDocument()).ToDataRes(types.String)
+	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamPolicy).GetAttachedUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
 	},
@@ -5030,6 +5033,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.policy.defaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamPolicy).DefaultVersion, ok = plugin.RawToTValue[*mqlAwsIamPolicyversion](v.Value, v.Error)
+		return
+	},
+	"aws.iam.policy.assumeRolePolicyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamPolicy).AssumeRolePolicyDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.iam.policy.attachedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12228,6 +12235,7 @@ type mqlAwsIamPolicy struct {
 	Scope plugin.TValue[string]
 	Versions plugin.TValue[[]interface{}]
 	DefaultVersion plugin.TValue[*mqlAwsIamPolicyversion]
+	AssumeRolePolicyDocument plugin.TValue[string]
 	AttachedUsers plugin.TValue[[]interface{}]
 	AttachedRoles plugin.TValue[[]interface{}]
 	AttachedGroups plugin.TValue[[]interface{}]
@@ -12349,6 +12357,12 @@ func (c *mqlAwsIamPolicy) GetDefaultVersion() *plugin.TValue[*mqlAwsIamPolicyver
 		}
 
 		return c.defaultVersion()
+	})
+}
+
+func (c *mqlAwsIamPolicy) GetAssumeRolePolicyDocument() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AssumeRolePolicyDocument, func() (string, error) {
+		return c.assumeRolePolicyDocument()
 	})
 }
 
