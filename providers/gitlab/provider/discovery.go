@@ -96,7 +96,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 		subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.Path)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to discover sub groups")
-			return []*inventory.Asset{root}, []*gitlab.Group{group}, err
+			return []*inventory.Asset{}, []*gitlab.Group{group}, err
 		}
 		groups = append(groups, subgroups...)
 		assets = append(assets, s.convertGitlabGroupsToAssetGroups(subgroups, conn, group.Path)...)
@@ -131,7 +131,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 	subgroups, err := connection.DiscoverSubAndDescendantGroupsForGroup(conn, group.Path)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to discover sub groups")
-		return []*inventory.Asset{root}, []*gitlab.Group{group}, err
+		return []*inventory.Asset{}, []*gitlab.Group{group}, err
 	}
 	groups = append(groups, subgroups...)
 	assets = append(assets, s.convertGitlabGroupsToAssetGroups(subgroups, conn, group.Path)...)
