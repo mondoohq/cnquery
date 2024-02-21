@@ -86,7 +86,7 @@ For automation, it is often helpful to convert the output to JSON. Use `-j` or `
 cnquery run local -c "services { * }" -j
 ```
 
-You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other applications.
+You can then pipe the output to [jq](https://jqlang.github.io/jq/) or other applications.
 
 ## Query packs
 
@@ -122,7 +122,7 @@ To more easily explore your infrastructure, sign up for a free Mondoo Platform a
 
 Go to [console.mondoo.com](https://console.mondoo.com) to sign up.
 
-To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://www.mondoo.com).
+To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://mondoo.com).
 
 ## Distribute queries across your infrastructure with private query packs
 
