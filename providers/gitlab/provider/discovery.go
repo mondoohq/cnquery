@@ -87,7 +87,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 			return nil, nil, err
 		}
 		groups := []*gitlab.Group{group}
-		assets := []*inventory.Asset{root}
+		assets := []*inventory.Asset{}
 		if names := strings.Split(group.Name, "/"); len(names) > 1 {
 			log.Debug().Msg("skipping subgroup discovery for subgroup")
 			return assets, groups, nil
@@ -108,7 +108,7 @@ func (s *Service) discoverGroups(root *inventory.Asset, conn *connection.GitLabC
 		return nil, nil, err
 	}
 
-	conf := conn.Conf.Clone()
+	conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
 	conf.Type = GitlabGroupConnection
 	conf.Options = map[string]string{
 		"group":    group.FullPath,
@@ -142,7 +142,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 	log.Debug().Msg("discover projects")
 	if conn.IsProject() {
 		project, err := conn.Project()
-		return []*inventory.Asset{root}, []*gitlab.Project{project}, err
+		return []*inventory.Asset{}, []*gitlab.Project{project}, err
 	}
 
 	var assets []*inventory.Asset
@@ -157,7 +157,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 
 		for j := range groupProjects {
 			project := groupProjects[j]
-			conf := conn.Conf.Clone()
+			conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
 			conf.Type = GitlabProjectConnection
 			conf.Options = map[string]string{
 				"group":      group.FullPath,
@@ -206,7 +206,7 @@ func (s *Service) convertGitlabGroupsToAssetGroups(groups []*gitlab.Group, conn 
 	var list []*inventory.Asset
 	// convert to assets
 	for _, group := range groups {
-		conf := conn.Conf.Clone()
+		conf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))
 		if conf.Options == nil {
 			conf.Options = map[string]string{}
 		}
