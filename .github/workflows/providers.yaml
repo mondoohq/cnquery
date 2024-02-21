@@ -115,6 +115,7 @@ jobs:
 
       ## Install Build Tools, for Github Hosted Runners only
       - name: Install Build Tools
+        if: contains( ${{ runner.name }}, 'Github Actions')
         run: |
           sudo apt-get update
           sudo apt-get install -y xz-utils make protobuf-compiler curl zip unzip jq
