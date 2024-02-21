@@ -338,7 +338,7 @@ func getInstanceName(id string, labels map[string]string) string {
 
 func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, conn *connection.AwsConnection) *inventory.Asset {
 	asset := &inventory.Asset{}
-	asset.Labels = mapStringInterfaceToStringString(instance.Tags.Data)
+	asset.Labels = mapStringInterfaceToStringString(instance.GetTags().Data)
 	asset.Labels["mondoo.com/platform"] = instance.PlatformName.Data
 	asset.Labels["mondoo.com/region"] = instance.Region.Data
 
@@ -378,7 +378,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 		log.Warn().Str("asset", asset.Name).Str("id", instance.InstanceId.Data).Msg("cannot use ssm session credentials for connection")
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: asset.Name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
+				name: asset.Name, labels: asset.Labels,
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ssm", objectType: "instance",
