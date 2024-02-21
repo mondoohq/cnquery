@@ -19,12 +19,12 @@ import (
 
 type GithubConnection struct {
 	plugin.Connection
-	Conf   *inventory.Config
 	asset  *inventory.Asset
 	client *github.Client
 }
 
-func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*GithubConnection, error) {
+func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, error) {
+	conf := asset.Connections[0]
 	token := conf.Options["token"]
 
 	// if no token was provided, lets read the env variable
@@ -68,7 +68,6 @@ func NewGithubConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 	}
 	return &GithubConnection{
 		Connection: plugin.NewConnection(id, asset),
-		Conf:       conf,
 		asset:      asset,
 		client:     client,
 	}, nil

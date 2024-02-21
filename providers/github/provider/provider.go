@@ -127,10 +127,8 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	asset := req.Asset
-	conf := asset.Connections[0]
-
 	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
-		conn, err := connection.NewGithubConnection(connId, asset, conf)
+		conn, err := connection.NewGithubConnection(connId, asset)
 		if err != nil {
 			return nil, err
 		}
@@ -162,16 +160,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnection) error {
-	asset.Name = conn.Conf.Host
+	conf := asset.Connections[0]
+	asset.Name = conf.Host
 
-	repoOpt := conn.Conf.Options["repository"]
-	ownerOpt := conn.Conf.Options["owner"]
-	// try and parse the repo only if the owner isn't explicitly set
+	repoOpt := conf.Options["repository"]
+	ownerOpt := conf.Options["owner"]
+	// try and parse the repo ßonly if the owner isn't explicitly set
 	if repoOpt != "" && ownerOpt == "" {
 		repoParts := strings.Split(repoOpt, "/")
 		if len(repoParts) > 1 {
-			conn.Conf.Options["owner"] = repoParts[0]
-			conn.Conf.Options["repository"] = repoParts[1]
+			conf.Options["owner"] = repoParts[0]
+			conf.Options["repository"] = repoParts[1]
 		}
 	}
 
@@ -185,7 +184,8 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.GithubConnecti
 }
 
 func (s *Service) discover(conn *connection.GithubConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+	conf := conn.Asset().Connections[0]
+	if conf.Discover == nil {
 		return nil, nil
 	}
 
@@ -194,5 +194,5 @@ func (s *Service) discover(conn *connection.GithubConnection) (*inventory.Invent
 		return nil, err
 	}
 
-	return resources.Discover(runtime, conn.Conf.Options)
+	return resources.Discover(runtime, conf.Options)
 }

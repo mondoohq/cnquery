@@ -46,11 +46,12 @@ var (
 )
 
 func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
-	if orgId := c.Conf.Options["organization"]; orgId != "" {
+	conf := c.asset.Connections[0]
+	if orgId := conf.Options["organization"]; orgId != "" {
 		return GithubOrgPlatform, nil
 	}
 
-	if userId := c.Conf.Options["user"]; userId != "" {
+	if userId := conf.Options["user"]; userId != "" {
 		return GithubUserPlatform, nil
 	}
 
@@ -75,24 +76,25 @@ func NewGitHubRepoIdentifier(ownerId string, repoId string) string {
 }
 
 func (c *GithubConnection) Identifier() (string, error) {
-	orgId := c.Conf.Options["organization"]
+	conf := c.asset.Connections[0]
+	orgId := conf.Options["organization"]
 	if orgId != "" {
 		return NewGithubOrgIdentifier(orgId), nil
 	}
 
-	userId := c.Conf.Options["user"]
+	userId := conf.Options["user"]
 	if userId != "" {
 		return NewGithubUserIdentifier(userId), nil
 	}
 
-	repoId := c.Conf.Options["repository"]
+	repoId := conf.Options["repository"]
 	if repoId != "" {
-		ownerId := c.Conf.Options["owner"]
+		ownerId := conf.Options["owner"]
 		if ownerId == "" {
-			ownerId = c.Conf.Options["organization"]
+			ownerId = conf.Options["organization"]
 		}
 		if ownerId == "" {
-			ownerId = c.Conf.Options["user"]
+			ownerId = conf.Options["user"]
 		}
 		return NewGitHubRepoIdentifier(ownerId, repoId), nil
 	}
@@ -101,9 +103,10 @@ func (c *GithubConnection) Identifier() (string, error) {
 }
 
 func (c *GithubConnection) Organization() (*github.Organization, error) {
-	orgId := c.Conf.Options["organization"]
+	conf := c.asset.Connections[0]
+	orgId := conf.Options["organization"]
 	if orgId == "" {
-		orgId = c.Conf.Options["owner"]
+		orgId = conf.Options["owner"]
 	}
 	if orgId != "" {
 		org, _, err := c.Client().Organizations.Get(context.Background(), orgId)
@@ -114,9 +117,10 @@ func (c *GithubConnection) Organization() (*github.Organization, error) {
 }
 
 func (c *GithubConnection) User() (*github.User, error) {
-	userId := c.Conf.Options["user"]
+	conf := c.asset.Connections[0]
+	userId := conf.Options["user"]
 	if userId == "" {
-		userId = c.Conf.Options["owner"]
+		userId = conf.Options["owner"]
 	}
 
 	if userId != "" {
@@ -127,15 +131,16 @@ func (c *GithubConnection) User() (*github.User, error) {
 }
 
 func (c *GithubConnection) Repository() (*github.Repository, error) {
-	ownerId := c.Conf.Options["owner"]
+	conf := c.asset.Connections[0]
+	ownerId := conf.Options["owner"]
 	if ownerId == "" {
-		ownerId = c.Conf.Options["organization"]
+		ownerId = conf.Options["organization"]
 	}
 	if ownerId == "" {
-		ownerId = c.Conf.Options["user"]
+		ownerId = conf.Options["user"]
 	}
 
-	repoId := c.Conf.Options["repository"]
+	repoId := conf.Options["repository"]
 	if ownerId != "" && repoId != "" {
 		repo, _, err := c.Client().Repositories.Get(context.Background(), ownerId, repoId)
 		return repo, err
