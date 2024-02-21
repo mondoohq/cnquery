@@ -70,7 +70,7 @@ func (r *Runtime) tryShutdown() shutdownResult {
 					continue
 				}
 			}
-			log.Error().Msg("failed to disconnect from provider " + provider.Instance.Name)
+			log.Error().Err(err).Msg("failed to disconnect from provider " + provider.Instance.Name)
 		}
 	}
 	return shutdownResult{}

@@ -34,12 +34,26 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 	// gitlab.Group and gitlab.Project objects, no matter if we connect to only
 	// one system or many. This reduces code complexity.
 
+	platformIds := map[string]struct{}{}
 	groupAssets, groups, err := s.discoverGroups(root, conn)
 	if err != nil {
 		return nil, err
 	}
 	if slices.Contains(targets, DiscoveryGroup) || slices.Contains(targets, DiscoveryAuto) {
-		assets = append(assets, groupAssets...)
+		for _, g := range groupAssets {
+			duplicate := false
+			for _, platformId := range g.PlatformIds {
+				if _, ok := platformIds[platformId]; ok {
+					duplicate = true
+					break
+				}
+				platformIds[platformId] = struct{}{}
+			}
+			if duplicate {
+				continue
+			}
+			assets = append(assets, g)
+		}
 	}
 
 	projectAssets, projects, err := s.discoverProjects(root, conn, groups)
@@ -47,7 +61,20 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 		return nil, err
 	}
 	if slices.Contains(targets, DiscoveryProject) {
-		assets = append(assets, projectAssets...)
+		for _, p := range projectAssets {
+			duplicate := false
+			for _, platformId := range p.PlatformIds {
+				if _, ok := platformIds[platformId]; ok {
+					duplicate = true
+					break
+				}
+				platformIds[platformId] = struct{}{}
+			}
+			if duplicate {
+				continue
+			}
+			assets = append(assets, p)
+		}
 	}
 
 	if slices.Contains(targets, DiscoveryTerraform) {
@@ -61,6 +88,7 @@ func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnect
 	if len(assets) == 0 {
 		return nil, nil
 	}
+
 	return &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
 			Assets: assets,
@@ -146,7 +174,7 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 	}
 
 	var assets []*inventory.Asset
-	var projects []*gitlab.Project
+	projects := map[int]*gitlab.Project{}
 
 	for i := range groups {
 		group := groups[i]
@@ -177,10 +205,15 @@ func (s *Service) discoverProjects(root *inventory.Asset, conn *connection.GitLa
 			}
 
 			assets = append(assets, asset)
-			projects = append(projects, project)
+			projects[project.ID] = project
 		}
 	}
-	return assets, projects, nil
+
+	projectsArr := make([]*gitlab.Project, 0, len(projects))
+	for _, project := range projects {
+		projectsArr = append(projectsArr, project)
+	}
+	return assets, projectsArr, nil
 }
 
 func discoverGroupProjects(conn *connection.GitLabConnection, gid interface{}) ([]*gitlab.Project, error) {
