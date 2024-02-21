@@ -113,6 +113,12 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
+      ## Install Protoc, for Github Hosted Runners only
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
