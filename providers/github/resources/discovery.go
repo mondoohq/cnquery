@@ -18,7 +18,7 @@ func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inven
 		Assets: []*inventory.Asset{},
 	}}
 
-	targets := handleTargets(conn.Conf.Discover.Targets)
+	targets := handleTargets(conn.Asset().Connections[0].Discover.Targets)
 	list, err := discover(runtime, targets)
 	if err != nil {
 		return in, err
@@ -37,8 +37,9 @@ func handleTargets(targets []string) []string {
 
 func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, error) {
 	conn := runtime.Connection.(*connection.GithubConnection)
+	conf := conn.Asset().Connections[0]
 	assetList := []*inventory.Asset{}
-	if orgName := conn.Conf.Options["organization"]; orgName != "" {
+	if orgName := conf.Options["organization"]; orgName != "" {
 		orgAssets, err := org(runtime, orgName, conn, targets)
 		if err != nil {
 			return nil, err
@@ -46,16 +47,16 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 		assetList = append(assetList, orgAssets...)
 	}
 
-	repoName := conn.Conf.Options["repository"]
+	repoName := conf.Options["repository"]
 	var owner string
-	repoId := conn.Conf.Options["repository"]
+	repoId := conf.Options["repository"]
 	if repoId != "" {
-		owner = conn.Conf.Options["owner"]
+		owner = conf.Options["owner"]
 		if owner == "" {
-			owner = conn.Conf.Options["organization"]
+			owner = conf.Options["organization"]
 		}
 		if owner == "" {
-			owner = conn.Conf.Options["user"]
+			owner = conf.Options["user"]
 		}
 	}
 	if repoName != "" && owner != "" {
@@ -66,11 +67,11 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 		assetList = append(assetList, repoAssets...)
 	}
 
-	userId := conn.Conf.Options["user"]
+	userId := conf.Options["user"]
 	if userId == "" {
-		userId = conn.Conf.Options["owner"]
+		userId = conf.Options["owner"]
 	}
-	if conn.Conf.Options["user"] != "" {
+	if conf.Options["user"] != "" {
 		userAssets, err := user(runtime, userId, conn)
 		if err != nil {
 			return nil, err
@@ -82,6 +83,7 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 }
 
 func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {
+	conf := conn.Asset().Connections[0]
 	assetList := []*inventory.Asset{}
 	org, err := getMqlGithubOrg(runtime, orgName)
 	if err != nil {
@@ -92,7 +94,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Name:        org.Name.Data,
 		Platform:    connection.GithubOrgPlatform,
 		Labels:      map[string]string{},
-		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
+		Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 	})
 	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) || stringx.Contains(targets, connection.DiscoveryAll) || stringx.Contains(targets, connection.DiscoveryAuto) {
 		if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
@@ -100,12 +102,14 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		}
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
+			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+			cfg.Options["repository"] = repo.Name.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Login.Data, repo.Name.Data)},
 				Name:        org.Login.Data + "/" + repo.Name.Data,
 				Platform:    connection.GithubRepoPlatform,
 				Labels:      make(map[string]string),
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
+				Connections: []*inventory.Config{cfg},
 			})
 		}
 	}
@@ -116,12 +120,14 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			if user.Name.Data == "" {
 				continue
 			}
+			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+			cfg.Options["user"] = user.Login.Data
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
 				Platform:    connection.GithubUserPlatform,
 				Labels:      make(map[string]string),
-				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
+				Connections: []*inventory.Config{cfg},
 			})
 		}
 	}
@@ -137,19 +143,21 @@ func getMqlGithubOrg(runtime *plugin.Runtime, orgName string) (*mqlGithubOrganiz
 }
 
 func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {
+	conf := conn.Asset().Connections[0]
 	assetList := []*inventory.Asset{}
 
 	repo, err := getMqlGithubRepo(runtime, repoName)
 	if err != nil {
 		return nil, err
 	}
-
+	cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+	cfg.Options["repository"] = repo.Name.Data
 	assetList = append(assetList, &inventory.Asset{
 		PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
 		Name:        owner + "/" + repo.Name.Data,
 		Platform:    connection.GithubRepoPlatform,
 		Labels:      make(map[string]string),
-		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
+		Connections: []*inventory.Config{cfg},
 	})
 
 	return assetList, nil
@@ -165,18 +173,21 @@ func getMqlGithubRepo(runtime *plugin.Runtime, repoName string) (*mqlGithubRepos
 }
 
 func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConnection) ([]*inventory.Asset, error) {
+	conf := conn.Asset().Connections[0]
 	assetList := []*inventory.Asset{}
 
 	user, err := getMqlGithubUser(runtime, userName)
 	if err != nil {
 		return nil, err
 	}
+	cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
+	cfg.Options["user"] = user.Login.Data
 	assetList = append(assetList, &inventory.Asset{
 		PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 		Name:        user.Name.Data,
 		Platform:    connection.GithubUserPlatform,
 		Labels:      make(map[string]string),
-		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.ID()))},
+		Connections: []*inventory.Config{cfg},
 	})
 	return assetList, nil
 }
