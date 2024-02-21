@@ -113,18 +113,11 @@ jobs:
           go-version: ">=${{ env.golang-version }}"
           cache: false
 
-      ## Install Protoc, for Github Hosted Runners only
-      - name: Install Protoc
-        id: protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       ## Install Build Tools, for Github Hosted Runners only
       - name: Install Build Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y xz-utils make
+          sudo apt-get install -y xz-utils make protobuf-compiler curl zip unzip jq
 
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
@@ -138,8 +131,6 @@ jobs:
         run: |
           make providers/proto
           go build -o lr ./providers-sdk/v1/lr/cli/main.go
-        env:
-          PATH: ${{ env.PATH }}:${{ steps.protoc.outputs.path }}
 
       - name: 'Build Provider'
         run: |
