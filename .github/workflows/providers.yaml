@@ -95,7 +95,7 @@ jobs:
     if: ${{ needs.scoping.outputs.build_list != '[]' }}
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 12
       matrix:
         provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
