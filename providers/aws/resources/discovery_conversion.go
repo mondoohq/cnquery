@@ -23,9 +23,10 @@ import (
 )
 
 type mqlObject struct {
-	name      string
-	labels    map[string]string
-	awsObject awsObject
+	name        string
+	labels      map[string]string
+	awsObject   awsObject
+	platformIds []string
 }
 
 type awsObject struct {
@@ -61,8 +62,10 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 	platformid := MondooObjectID(mqlObject.awsObject)
 	t := conn.Conf
 	t.PlatformId = platformid
+	platformIds := []string{platformid, mqlObject.awsObject.arn}
+	platformIds = append(platformIds, mqlObject.platformIds...)
 	return &inventory.Asset{
-		PlatformIds: []string{platformid, mqlObject.awsObject.arn},
+		PlatformIds: platformIds,
 		Name:        mqlObject.name,
 		Platform:    connection.GetPlatformForObject(platformName),
 		Labels:      mqlObject.labels,
@@ -288,7 +291,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: asset.Name, labels: mapStringInterfaceToStringString(instance.Tags.Data),
+				name: asset.Name, labels: asset.Labels, platformIds: asset.PlatformIds,
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
@@ -378,7 +381,7 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 		log.Warn().Str("asset", asset.Name).Str("id", instance.InstanceId.Data).Msg("cannot use ssm session credentials for connection")
 		asset = MqlObjectToAsset(accountId,
 			mqlObject{
-				name: asset.Name, labels: asset.Labels,
+				name: asset.Name, labels: asset.Labels, platformIds: asset.PlatformIds,
 				awsObject: awsObject{
 					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
 					id: instance.InstanceId.Data, service: "ssm", objectType: "instance",
