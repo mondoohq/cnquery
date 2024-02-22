@@ -119,7 +119,7 @@ require (
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c // indirect
 	github.com/std-uritemplate/std-uritemplate/go v0.0.53 // indirect
 	go.mondoo.com/ranger-rpc v0.5.3 // indirect
 	go.opencensus.io v0.24.0 // indirect

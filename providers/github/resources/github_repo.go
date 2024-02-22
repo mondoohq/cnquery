@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v57/github"
+	"github.com/google/go-github/v59/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
@@ -124,122 +124,42 @@ func (g *mqlGithubRepository) id() (string, error) {
 	return strconv.FormatInt(id, 10), nil
 }
 
-func initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 2 {
-		return args, nil, nil
-	}
-
-	var number int64
-	if x, ok := args["number"]; ok {
-		number, ok = x.Value.(int64)
-		if !ok {
-			return nil, nil, errors.New("wrong type for 'number' in github.mergeRequest initialization, it must be a number")
-		}
-	}
-
-	if number == 0 {
-		return nil, nil, errors.New("number must be set for github.mergeRequest initialization")
-	}
-
-	conn := runtime.Connection.(*connection.GithubConnection)
-	var org *github.Organization
-	var user *github.User
-	var err error
-	org, err = conn.Organization()
-	if err != nil {
-		if strings.Contains(err.Error(), "404") {
-			log.Debug().Msg("could not find organization, trying to get user")
-			user, err = conn.User()
-			if err != nil {
-				return nil, nil, err
-			}
-		} else {
-			return nil, nil, err
-		}
-	}
-	owner := ""
-	if org != nil {
-		owner = org.GetLogin()
-	} else if user != nil {
-		owner = user.GetLogin()
-	}
-	reponame := ""
-	if x, ok := args["repoName"]; ok {
-		reponame = x.Value.(string)
-	} else {
-		repo, err := conn.Repository()
-		if err != nil {
-			return nil, nil, err
-		}
-		reponame = *repo.Name
-	}
-	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
-	if owner != "" && reponame != "" {
-		pr, _, err := conn.Client().PullRequests.Get(context.Background(), owner, reponame, int(number))
-		if err != nil {
-			return nil, nil, err
-		}
-
-		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
-			"id":    llx.IntData(pr.GetUser().GetID()),
-			"login": llx.StringData(pr.GetUser().GetLogin()),
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-		assignee, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
-			"id":    llx.IntData(pr.GetAssignee().GetID()),
-			"login": llx.StringData(pr.GetAssignee().GetLogin()),
-		})
-		var labels []interface{}
-		for _, label := range pr.Labels {
-			labels = append(labels, label)
-		}
-		var assignees []interface{}
-		assignees = append(assignees, assignee)
-		prNumber := int64(*pr.Number)
-		args["id"] = llx.IntDataPtr(pr.ID)
-		args["number"] = llx.IntDataPtr(&prNumber)
-		args["state"] = llx.StringDataPtr(pr.State)
-		args["createdAt"] = llx.TimeData(pr.CreatedAt.Time)
-		args["title"] = llx.StringDataPtr(pr.Title)
-		args["owner"] = llx.ResourceData(owner, owner.MqlName())
-		args["assignees"] = llx.ArrayData(assignees, types.Resource(assignee.MqlName()))
-		args["repoName"] = llx.StringData(reponame)
-		args["labels"] = llx.ArrayData(labels, types.Dict)
-	}
-	return args, nil, nil
-}
-
 func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
 	conn := runtime.Connection.(*connection.GithubConnection)
 
-	// userLogin := user.GetLogin()
-	var org *github.Organization
-	var user *github.User
+	var org *mqlGithubOrganization
+	var user *mqlGithubUser
 	var err error
-	org, err = conn.Organization()
-	if err != nil {
-		if strings.Contains(err.Error(), "404") {
-			log.Debug().Msg("could not find organization, trying to get user")
-			user, err = conn.User()
-			if err != nil {
-				return nil, nil, err
+	orgId, err := conn.Organization()
+	if err == nil {
+		obj, err := CreateResource(runtime, "github.organization", map[string]*llx.RawData{
+			"login": llx.StringData(orgId.Name),
+		})
+		if err != nil {
+			// If the owner isn't an org, we try to find a user
+			if strings.Contains(err.Error(), "404") {
+				userId, err := conn.User()
+				if err != nil {
+					return nil, nil, err
+				}
+				obj, err = CreateResource(runtime, "github.user", map[string]*llx.RawData{
+					"login": llx.StringData(userId.Name),
+				})
+				if err != nil {
+					// If a user doesn't exist either, then we error out
+					return nil, nil, err
+				}
+				user = obj.(*mqlGithubUser)
 			}
-		} else {
 			return nil, nil, err
+		} else {
+			org = obj.(*mqlGithubOrganization)
 		}
 	}
 
-	owner := ""
-	if org != nil {
-		owner = org.GetLogin()
-	} else if user != nil {
-		owner = user.GetLogin()
-	}
 	reponame := ""
 	if x, ok := args["name"]; ok {
 		reponame = x.Value.(string)
@@ -248,59 +168,33 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		if err != nil {
 			return nil, nil, err
 		}
-		reponame = *repo.Name
+		reponame = repo.Name
 	}
-	// return nil, nil, errors.New("Wrong type for 'path' in github.repository initialization, it must be a string")
 
-	if owner != "" && reponame != "" {
-		repo, _, err := conn.Client().Repositories.Get(context.Background(), owner, reponame)
-		if err != nil {
-			return nil, nil, err
+	if reponame == "" {
+		return nil, nil, errors.New("name must be set for github.repository initialization")
+	}
+
+	var repos *plugin.TValue[[]interface{}]
+	if org != nil {
+		repos = org.GetRepositories()
+		if repos.Error != nil {
+			return nil, nil, repos.Error
 		}
-
-		owner, err := NewResource(runtime, "github.user", map[string]*llx.RawData{
-			"id":    llx.IntData(repo.GetOwner().GetID()),
-			"login": llx.StringData(repo.GetOwner().GetLogin()),
-		})
-		if err != nil {
-			return nil, nil, err
+	} else if user != nil {
+		repos = user.GetRepositories()
+		if repos.Error != nil {
+			return nil, nil, repos.Error
 		}
+	} else {
+		return nil, nil, errors.New("no user and no org specified")
+	}
 
-		args["id"] = llx.IntDataPtr(repo.ID)
-		args["name"] = llx.StringDataPtr(repo.Name)
-		args["fullName"] = llx.StringDataPtr(repo.FullName)
-		args["description"] = llx.StringDataPtr(repo.Description)
-		args["homepage"] = llx.StringDataPtr(repo.Homepage)
-		args["topics"] = llx.ArrayData(convert.SliceAnyToInterface[string](repo.Topics), types.String)
-		args["language"] = llx.StringData(repo.GetLanguage())
-		args["watchersCount"] = llx.IntData(int64(repo.GetWatchersCount()))
-		args["forksCount"] = llx.IntData(int64(repo.GetForksCount()))
-		args["openIssuesCount"] = llx.IntData(int64(repo.GetOpenIssues()))
-		args["stargazersCount"] = llx.IntData(int64(repo.GetStargazersCount()))
-		args["createdAt"] = llx.TimeDataPtr(githubTimestamp(repo.CreatedAt))
-		args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(repo.UpdatedAt))
-		args["pushedAt"] = llx.TimeDataPtr(githubTimestamp(repo.PushedAt))
-		args["archived"] = llx.BoolDataPtr(repo.Archived)
-		args["disabled"] = llx.BoolDataPtr(repo.Disabled)
-		args["private"] = llx.BoolDataPtr(repo.Private)
-		args["isFork"] = llx.BoolData(repo.GetFork())
-		args["visibility"] = llx.StringDataPtr(repo.Visibility)
-		args["allowAutoMerge"] = llx.BoolDataPtr(repo.AllowAutoMerge)
-		args["allowForking"] = llx.BoolDataPtr(repo.AllowForking)
-		args["allowMergeCommit"] = llx.BoolDataPtr(repo.AllowMergeCommit)
-		args["allowRebaseMerge"] = llx.BoolDataPtr(repo.AllowRebaseMerge)
-		args["allowSquashMerge"] = llx.BoolDataPtr(repo.AllowSquashMerge)
-		args["hasIssues"] = llx.BoolData(repo.GetHasIssues())
-		args["hasProjects"] = llx.BoolData(repo.GetHasProjects())
-		args["hasWiki"] = llx.BoolData(repo.GetHasWiki())
-		args["hasPages"] = llx.BoolData(repo.GetHasPages())
-		args["hasDownloads"] = llx.BoolData(repo.GetHasDownloads())
-		args["hasDiscussions"] = llx.BoolData(repo.GetHasDiscussions())
-		args["isTemplate"] = llx.BoolData(repo.GetIsTemplate())
-		args["defaultBranchName"] = llx.StringDataPtr(repo.DefaultBranch)
-		args["cloneUrl"] = llx.StringData(repo.GetCloneURL())
-		args["sshUrl"] = llx.StringData(repo.GetSSHURL())
-		args["owner"] = llx.ResourceData(owner, owner.MqlName())
+	for _, obj := range repos.Data {
+		repo := obj.(*mqlGithubRepository)
+		if repo.Name.Data == reponame {
+			return args, repo, nil
+		}
 	}
 
 	return args, nil, nil

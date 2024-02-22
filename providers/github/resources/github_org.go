@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v57/github"
+	"github.com/google/go-github/v59/github"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
@@ -31,20 +31,23 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 	conn := runtime.Connection.(*connection.GithubConnection)
 
-	org, err := conn.Organization()
+	orgId, err := conn.Organization()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var name string
-	if org.Name != nil {
-		name = *org.Name
-	}
+	name := orgId.Name
 	if name == "" {
 		if x, ok := args["name"]; ok {
 			name = x.Value.(string)
 		}
 	}
+
+	org, _, err := conn.Client().Organizations.Get(context.Background(), name)
+	if err != nil {
+		return args, nil, err
+	}
+
 	args["id"] = llx.IntDataPtr(org.ID)
 	args["name"] = llx.StringData(name)
 	args["login"] = llx.StringDataPtr(org.Login)
