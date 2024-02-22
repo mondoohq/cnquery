@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v57/github"
+	"github.com/google/go-github/v59/github"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/github/connection"
@@ -34,42 +34,45 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 	conn := runtime.Connection.(*connection.GithubConnection)
 
-	var user *github.User
-	var err error
-	if args["login"] == nil {
-		user, err = conn.User()
+	userLogin := ""
+	if args["login"] != nil {
+		userLogin = args["login"].Value.(string)
+	} else {
+		userId, err := conn.User()
 		if err != nil {
 			return nil, nil, errors.New("login required to fetch github user")
 		}
-	} else {
-		userLogin := args["login"]
-		user, _, err = conn.Client().Users.Get(context.Background(), userLogin.Value.(string))
-		if err != nil {
-			return nil, nil, err
-		}
+		userLogin = userId.Name
 	}
-	name := user.GetName()
+
+	// finally grab the user from github
+	githubUser, err := getUser(context.Background(), runtime, conn, userLogin)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	name := githubUser.GetName()
 	if name == "" {
 		if x, ok := args["name"]; ok {
 			name = x.Value.(string)
 		}
 	}
-	args["id"] = llx.IntData(user.GetID())
-	args["login"] = llx.StringData(user.GetLogin())
+	args["id"] = llx.IntData(githubUser.GetID())
+	args["login"] = llx.StringData(githubUser.GetLogin())
 	args["name"] = llx.StringData(name)
-	args["email"] = llx.StringData(user.GetEmail())
-	args["blog"] = llx.StringData(user.GetBlog())
-	args["location"] = llx.StringData(user.GetLocation())
-	args["avatarUrl"] = llx.StringData(user.GetAvatarURL())
-	args["followers"] = llx.IntData(int64(user.GetFollowers()))
-	args["following"] = llx.IntData(int64(user.GetFollowing()))
-	args["twitterUsername"] = llx.StringData(user.GetTwitterUsername())
-	args["bio"] = llx.StringData(user.GetBio())
+	args["email"] = llx.StringData(githubUser.GetEmail())
+	args["blog"] = llx.StringData(githubUser.GetBlog())
+	args["location"] = llx.StringData(githubUser.GetLocation())
+	args["avatarUrl"] = llx.StringData(githubUser.GetAvatarURL())
+	args["followers"] = llx.IntData(int64(githubUser.GetFollowers()))
+	args["following"] = llx.IntData(int64(githubUser.GetFollowing()))
+	args["twitterUsername"] = llx.StringData(githubUser.GetTwitterUsername())
+	args["bio"] = llx.StringData(githubUser.GetBio())
 
-	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(user.CreatedAt))
-	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(user.UpdatedAt))
-	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(user.SuspendedAt))
-	args["company"] = llx.StringData(user.GetCompany())
+	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.CreatedAt))
+	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.UpdatedAt))
+	args["suspendedAt"] = llx.TimeDataPtr(githubTimestamp(githubUser.SuspendedAt))
+	args["company"] = llx.StringData(githubUser.GetCompany())
 	return args, nil, nil
 }
 

@@ -18,6 +18,10 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
+		"github": {
+			// to override args, implement: initGithub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithub,
+		},
 		"git.commit": {
 			// to override args, implement: initGitCommit(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGitCommit,
@@ -87,7 +91,7 @@ func init() {
 			Create: createGithubCommit,
 		},
 		"github.mergeRequest": {
-			Init: initGithubMergeRequest,
+			// to override args, implement: initGithubMergeRequest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubMergeRequest,
 		},
 		"github.review": {
@@ -925,6 +929,10 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"github.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGithub).__id, ok = v.Value.(string)
+			return
+		},
 	"git.commit.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlGitCommit).__id, ok = v.Value.(string)
 			return
@@ -2019,6 +2027,45 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
+}
+
+// mqlGithub for the github resource
+type mqlGithub struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlGithubInternal
+}
+
+// createGithub creates a new instance of this resource
+func createGithub(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithub{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithub) MqlName() string {
+	return "github"
+}
+
+func (c *mqlGithub) MqlID() string {
+	return c.__id
 }
 
 // mqlGitCommit for the git.commit resource

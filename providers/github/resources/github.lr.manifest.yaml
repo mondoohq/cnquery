@@ -32,6 +32,7 @@ resources:
     fields:
       repositories: {}
       user: {}
+    is_private: true
     min_mondoo_version: 6.4.0
   github.branch:
     fields:

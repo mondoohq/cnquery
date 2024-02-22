@@ -4,6 +4,8 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/github"
 option go_package = "go.mondoo.com/cnquery/v10/providers/github/resources"
 
+private github {}
+
 // Git commit
 private git.commit @defaults("sha") {
   // Git commit SHA
