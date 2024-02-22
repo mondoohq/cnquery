@@ -73,13 +73,17 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 					recording = val.recording
 					lastStatus = val.lastStatus
 				}
+				resourceTypesInterface := make([]interface{}, len(r.RecordingGroup.ResourceTypes))
+				for i, resourceType := range r.RecordingGroup.ResourceTypes {
+					resourceTypesInterface[i] = resourceType
+				}
 				mqlRecorder, err := CreateResource(a.MqlRuntime, "aws.config.recorder",
 					map[string]*llx.RawData{
 						"name":                       llx.StringDataPtr(r.Name),
 						"roleArn":                    llx.StringDataPtr(r.RoleARN),
 						"allSupported":               llx.BoolData(r.RecordingGroup.AllSupported),
 						"includeGlobalResourceTypes": llx.BoolData(r.RecordingGroup.IncludeGlobalResourceTypes),
-						"resourceTypes":              llx.ArrayData(r.RecordingGroup.ResourceTypes, types.Any),
+						"resourceTypes":              llx.ArrayData(resourceTypesInterface, types.Any),
 						"recording":                  llx.BoolData(recording),
 						"region":                     llx.StringData(regionVal),
 						"lastStatus":                 llx.StringData(lastStatus),
