@@ -2,6 +2,15 @@ module go.mondoo.com/cnquery/v10/providers/k8s
 
 replace go.mondoo.com/cnquery/v10 => ../..
 
+// We need the k8s packages to be pinned to 0.28.4 because we use PodSecurityPolicies
+replace k8s.io/api => k8s.io/api v0.28.4
+
+replace k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.28.4
+
+replace k8s.io/apimachinery => k8s.io/apimachinery v0.28.4
+
+replace k8s.io/client-go => k8s.io/client-go v0.28.4
+
 go 1.22
 
 toolchain go1.22.0
