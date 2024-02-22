@@ -136,7 +136,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 			if len(boms) > 1 {
 				filename = fmt.Sprintf("%s-%d.%s", path.Base(outputTarget), i, path.Ext(outputTarget))
 			}
-			err := os.WriteFile(filename, output.Bytes(), 0600)
+			err := os.WriteFile(filename, output.Bytes(), 0o600)
 			if err != nil {
 				log.Fatal().Err(err).Msg("failed to write SBOM to file")
 			}
@@ -177,7 +177,7 @@ func getSbomScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *p
 		cliRes.Asset.Name = assetName
 	}
 
-	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
+	inv, err := inventoryloader.ParseOrUse(func() *inventory.Asset { return cliRes.Asset }, viper.GetBool("insecure"), optAnnotations)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse inventory")
 	}
