@@ -605,6 +605,14 @@ func (p *mqlAwsIamUsercredentialreportentry) accessKey1LastUsedDate() (*time.Tim
 	return p.getTimeValue("access_key_1_last_used_date")
 }
 
+func (p *mqlAwsIamUsercredentialreportentry) accessKey1CreateDate() (*time.Time, error) {
+	return p.getTimeValue("access_key_1_create_date")
+}
+
+func (p *mqlAwsIamUsercredentialreportentry) accessKey2CreateDate() (*time.Time, error) {
+	return p.getTimeValue("access_key_2_create_date")
+}
+
 func (p *mqlAwsIamUsercredentialreportentry) accessKey1LastUsedRegion() (string, error) {
 	return p.getStringValue("access_key_1_last_used_region")
 }

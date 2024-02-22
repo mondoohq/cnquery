@@ -1474,6 +1474,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.usercredentialreportentry.accessKey1LastUsedService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1LastUsedService()).ToDataRes(types.String)
 	},
+	"aws.iam.usercredentialreportentry.accessKey1CreateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey1CreateDate()).ToDataRes(types.Time)
+	},
+	"aws.iam.usercredentialreportentry.accessKey2CreateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2CreateDate()).ToDataRes(types.Time)
+	},
 	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUsercredentialreportentry).GetAccessKey2Active()).ToDataRes(types.Bool)
 	},
@@ -4862,6 +4868,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.usercredentialreportentry.accessKey1LastUsedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1LastUsedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey1CreateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey1CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.usercredentialreportentry.accessKey2CreateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUsercredentialreportentry).AccessKey2CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.usercredentialreportentry.accessKey2Active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11838,6 +11852,8 @@ type mqlAwsIamUsercredentialreportentry struct {
 	AccessKey1LastUsedDate plugin.TValue[*time.Time]
 	AccessKey1LastUsedRegion plugin.TValue[string]
 	AccessKey1LastUsedService plugin.TValue[string]
+	AccessKey1CreateDate plugin.TValue[*time.Time]
+	AccessKey2CreateDate plugin.TValue[*time.Time]
 	AccessKey2Active plugin.TValue[bool]
 	AccessKey2LastRotated plugin.TValue[*time.Time]
 	AccessKey2LastUsedDate plugin.TValue[*time.Time]
@@ -11930,6 +11946,18 @@ func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedRegion() *plug
 func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1LastUsedService() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AccessKey1LastUsedService, func() (string, error) {
 		return c.accessKey1LastUsedService()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey1CreateDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey1CreateDate, func() (*time.Time, error) {
+		return c.accessKey1CreateDate()
+	})
+}
+
+func (c *mqlAwsIamUsercredentialreportentry) GetAccessKey2CreateDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.AccessKey2CreateDate, func() (*time.Time, error) {
+		return c.accessKey2CreateDate()
 	})
 }
 

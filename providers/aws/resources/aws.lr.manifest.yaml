@@ -1807,11 +1807,13 @@ resources:
         The `aws.iam.credentialreportentry` provides fields for assessing the metadata for individual IAM Credential Report entries. For usage, read the `aws.iam` resource documentation.
     fields:
       accessKey1Active: {}
+      accessKey1CreateDate: {}
       accessKey1LastRotated: {}
       accessKey1LastUsedDate: {}
       accessKey1LastUsedRegion: {}
       accessKey1LastUsedService: {}
       accessKey2Active: {}
+      accessKey2CreateDate: {}
       accessKey2LastRotated: {}
       accessKey2LastUsedDate: {}
       accessKey2LastUsedRegion: {}

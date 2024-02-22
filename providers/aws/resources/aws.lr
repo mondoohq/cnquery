@@ -718,6 +718,10 @@ private aws.iam.usercredentialreportentry @defaults("arn") {
   accessKey1LastUsedRegion() string
   // Service that last used the key
   accessKey1LastUsedService() string
+  //  Time when key was created
+  accessKey1CreateDate() time
+  //  Time when key was created
+  accessKey2CreateDate() time
 
   // Denotes if the access key is active
   accessKey2Active() bool
