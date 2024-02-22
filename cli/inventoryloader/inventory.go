@@ -136,7 +136,7 @@ func parseDomainListInventory(data []byte) (*inventory.Inventory, error) {
 
 // ParseOrUse tries to load the inventory and if nothing exists it
 // will instead use the provided asset.
-func ParseOrUse(cliAsset *inventory.Asset, insecure bool, annotations map[string]string) (*inventory.Inventory, error) {
+func ParseOrUse(asset *inventory.Asset, insecure bool, annotations map[string]string) (*inventory.Inventory, error) {
 	var v1inventory *inventory.Inventory
 	var err error
 
@@ -147,13 +147,16 @@ func ParseOrUse(cliAsset *inventory.Asset, insecure bool, annotations map[string
 	}
 
 	// add asset from cli to inventory
-	if (len(v1inventory.Spec.GetAssets()) == 0) && cliAsset != nil {
-		cliAsset.AddAnnotations(annotations)
-		v1inventory.AddAssets(cliAsset)
+	if len(v1inventory.Spec.GetAssets()) == 0 && asset != nil {
+		v1inventory.AddAssets(asset)
+	}
+
+	for _, asset := range v1inventory.Spec.GetAssets() {
+		asset.AddAnnotations(annotations)
 	}
 
 	// if the --insecure flag is set, we overwrite the individual setting for the asset
-	if insecure == true {
+	if insecure {
 		v1inventory.MarkConnectionsInsecure()
 	}
 
