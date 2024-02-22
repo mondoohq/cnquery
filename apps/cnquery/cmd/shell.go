@@ -106,7 +106,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("could not find an asset that we can connect to")
 	}
 
-	connectAsset := filteredAssets[0]
+	var connectAsset *scan.AssetWithRuntime
 	if len(filteredAssets) > 1 {
 		invAssets := make([]*inventory.Asset, 0, len(filteredAssets))
 		for _, a := range filteredAssets {
@@ -116,7 +116,9 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 		if isTTY {
 			selectedAsset := components.AssetSelect(invAssets)
-			connectAsset = filteredAssets[selectedAsset]
+			if selectedAsset >= 0 {
+				connectAsset = filteredAssets[selectedAsset]
+			}
 		} else {
 			fmt.Println(components.AssetList(theme.OperatingSystemTheme, invAssets))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
