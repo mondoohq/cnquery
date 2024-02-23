@@ -107,7 +107,9 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	}
 
 	var connectAsset *scan.AssetWithRuntime
-	if len(filteredAssets) > 1 {
+	if len(filteredAssets) == 1 {
+		connectAsset = filteredAssets[0]
+	} else if len(filteredAssets) > 1 {
 		invAssets := make([]*inventory.Asset, 0, len(filteredAssets))
 		for _, a := range filteredAssets {
 			invAssets = append(invAssets, a.Asset)
