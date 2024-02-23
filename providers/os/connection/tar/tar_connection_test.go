@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
@@ -66,6 +67,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	platformId, err := conn.Identifier()
 	require.NoError(t, err)
 	assert.True(t, len(platformId) > 0)
+	assert.True(t, strings.HasPrefix(platformId, "//platformid.api.mondoo.app/runtime/tar/hash/"))
 }
 
 func TestTarSymlinkFile(t *testing.T) {
@@ -270,5 +272,12 @@ func cacheImageToTar(source string, filename string) error {
 		return err
 	}
 
-	return tarball.WriteToFile(filename, tag, img)
+	// it is important that we extract the image here, since tar does not understand the OCI image
+	// format and its layers
+	w, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	return tar.StreamToTmpFile(mutate.Extract(img), w)
 }

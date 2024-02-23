@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -280,7 +281,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	asset.Name = ii.Name
 	asset.Labels = ii.Labels
 
-	tarConn, err := tar.NewWithReader(id, conf, asset, rc)
+	tarConn, err := NewWithReader(id, conf, asset, rc)
 	if err != nil {
 		return nil, err
 	}
@@ -316,4 +317,39 @@ func FetchConnectionType(target string) (string, error) {
 	}
 
 	return "", errors.New("could not find container or image " + target)
+}
+
+// Used with docker snapshots
+// NewWithReader provides a tar provider from a container image stream
+func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser) (*tar.TarConnection, error) {
+	filename := ""
+	if x, ok := rc.(*os.File); ok {
+		filename = x.Name()
+	} else {
+		// cache file locally
+		f, err := tar.RandomFile()
+		if err != nil {
+			return nil, err
+		}
+
+		// we return a pure tar image
+		filename = f.Name()
+
+		err = tar.StreamToTmpFile(rc, f)
+		if err != nil {
+			os.Remove(filename)
+			return nil, err
+		}
+	}
+
+	return tar.NewTarConnectionWithClose(id, &inventory.Config{
+		Type:    "tar",
+		Runtime: "docker-image",
+		Options: map[string]string{
+			tar.OPTION_FILE: filename,
+		},
+	}, asset, func() {
+		log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
+		os.Remove(filename)
+	})
 }
