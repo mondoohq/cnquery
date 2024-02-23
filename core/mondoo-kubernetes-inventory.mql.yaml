@@ -10,11 +10,11 @@ packs:
       - name: Mondoo, Inc
         email: hello@mondoo.com
     tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/platform: kubernetes
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Kubernetes Inventory Pack by Mondoo pack retrieves data about a Kubernetes Cluster for asset inventory. 
+        The Kubernetes Inventory Pack by Mondoo pack retrieves data about a Kubernetes Cluster for asset inventory.
 
         To run this pack for a Kubernetes Cluster:
 
@@ -23,7 +23,7 @@ packs:
         ```
 
         ## Join the community!
-        Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data.
 
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     groups:
