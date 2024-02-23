@@ -2549,6 +2549,8 @@ private aws.config.recorder @defaults("name region") {
   lastStatus string
   // Region for the recorder
   region string
+  // Whether the recorder records specific resource types
+  resourceTypes []string
 }
 
 // Amazon Elastic Kubernetes Service (EKS)

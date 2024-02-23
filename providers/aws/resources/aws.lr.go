@@ -3589,6 +3589,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.config.recorder.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRecorder).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.config.recorder.resourceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigRecorder).GetResourceTypes()).ToDataRes(types.Array(types.String))
+	},
 	"aws.eks.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEks).GetClusters()).ToDataRes(types.Array(types.Resource("aws.eks.cluster")))
 	},
@@ -8097,6 +8100,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.config.recorder.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsConfigRecorder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.recorder.resourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigRecorder).ResourceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.eks.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21041,6 +21048,7 @@ type mqlAwsConfigRecorder struct {
 	Recording plugin.TValue[bool]
 	LastStatus plugin.TValue[string]
 	Region plugin.TValue[string]
+	ResourceTypes plugin.TValue[[]interface{}]
 }
 
 // createAwsConfigRecorder creates a new instance of this resource
@@ -21106,6 +21114,10 @@ func (c *mqlAwsConfigRecorder) GetLastStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsConfigRecorder) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsConfigRecorder) GetResourceTypes() *plugin.TValue[[]interface{}] {
+	return &c.ResourceTypes
 }
 
 // mqlAwsEks for the aws.eks resource
