@@ -35,7 +35,7 @@ type TarConnection struct {
 	fetchFn   func() (string, error)
 	fetchOnce sync.Once
 
-	Fs      *FS
+	fs      *FS
 	closeFN func()
 	// fields are exposed since the tar backend is re-used for the docker backend
 	PlatformKind         string
@@ -96,7 +96,7 @@ func (p *TarConnection) EnsureLoaded() {
 
 func (p *TarConnection) FileSystem() afero.Fs {
 	p.EnsureLoaded()
-	return p.Fs
+	return p.fs
 }
 
 func (c *TarConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
@@ -142,9 +142,9 @@ func (c *TarConnection) Load(stream io.Reader) error {
 		}
 
 		path := Abs(h.Name)
-		c.Fs.FileMap[path] = h
+		c.fs.FileMap[path] = h
 	}
-	log.Debug().Int("files", len(c.Fs.FileMap)).Msg("tar> successfully loaded")
+	log.Debug().Int("files", len(c.fs.FileMap)).Msg("tar> successfully loaded")
 	return nil
 }
 
@@ -188,6 +188,8 @@ func WithFetchFn(fetchFn func() (string, error)) tarClientOption {
 	}
 }
 
+func WithCustomFileSystem() {}
+
 // NewTarConnection is opening a tar file and creating a new tar connection. The tar file is expected to be a valid
 // tar file and contains a flattened file structure. Nested tar files as used in docker images are not supported and
 // need to be extracted before using this connection.
@@ -213,7 +215,7 @@ func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset,
 	c := &TarConnection{
 		Connection:      plugin.NewConnection(id, asset),
 		asset:           asset,
-		Fs:              NewFs(filename),
+		fs:              NewFs(filename),
 		closeFN:         params.closeFn,
 		fetchFn:         params.fetchFn,
 		PlatformKind:    conf.Type,

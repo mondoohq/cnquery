@@ -1,13 +1,11 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-//go:build debugtest
-// +build debugtest
-
 package processes
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -19,13 +17,14 @@ import (
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/docker"
 )
 
 func TestDockerProcsList(t *testing.T) {
 	image := "docker.io/nginx:stable"
 	ctx := context.Background()
-	dClient, err := connection.GetDockerClient()
+	dClient, err := docker.GetDockerClient()
 	assert.NoError(t, err)
 
 	// If docker is not available, then skip the test.
@@ -67,14 +66,23 @@ func TestDockerProcsList(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	panic("inject: " + created.ID)
-	provider, err := connection.NewDockerContainerConnection(0, nil, nil)
+	fmt.Println("inject: " + created.ID)
+	conn, err := docker.NewDockerContainerConnection(0, &inventory.Config{
+		Host: created.ID,
+	}, &inventory.Asset{
+		// for the test we need to set the platform
+		Platform: &inventory.Platform{
+			Name:    "debian",
+			Version: "11",
+			Family:  []string{"debian", "linux"},
+		},
+	})
 	assert.NoError(t, err)
 
 	pMan, err := ResolveManager(conn)
 	assert.NoError(t, err)
 
-	procs, err := pMan.List()
+	proc, err := pMan.Process(1)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, procs)
+	assert.NotEmpty(t, proc)
 }

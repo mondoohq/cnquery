@@ -61,8 +61,8 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 	if err != nil {
 		return nil, err
 	}
-	if asset.Connections[0].Options == nil {
-		asset.Connections[0].Options = map[string]string{}
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
 	}
 
 	conn, err := NewContainerImageConnection(id, conf, asset, img)
