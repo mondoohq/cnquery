@@ -342,14 +342,18 @@ func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc
 		}
 	}
 
-	return tar.NewTarConnectionWithClose(id, &inventory.Config{
-		Type:    "tar",
-		Runtime: "docker-image",
-		Options: map[string]string{
-			tar.OPTION_FILE: filename,
+	return tar.NewTarConnection(
+		id,
+		&inventory.Config{
+			Type:    "tar",
+			Runtime: "docker-image",
+			Options: map[string]string{
+				tar.OPTION_FILE: filename,
+			},
 		},
-	}, asset, func() {
-		log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
-		os.Remove(filename)
-	})
+		asset,
+		tar.WithCloseFn(func() {
+			log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
+			os.Remove(filename)
+		}))
 }

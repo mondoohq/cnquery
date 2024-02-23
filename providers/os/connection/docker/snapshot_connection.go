@@ -19,7 +19,7 @@ type DockerSnapshotConnection struct {
 }
 
 func NewDockerSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerSnapshotConnection, error) {
-	tarConnection, err := tar.NewTarConnectionWithClose(id, conf, asset, func() {})
+	tarConnection, err := tar.NewTarConnection(id, conf, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +42,19 @@ func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Ass
 		return nil, err
 	}
 
-	tarConnection, err := tar.NewTarConnectionWithClose(id, &inventory.Config{
-		Type: "tar",
-		Options: map[string]string{
-			tar.OPTION_FILE: f.Name(),
+	tarConnection, err := tar.NewTarConnection(
+		id,
+		&inventory.Config{
+			Type: "tar",
+			Options: map[string]string{
+				tar.OPTION_FILE: f.Name(),
+			},
 		},
-	}, asset, func() {
-		// remove temporary file on stream close
-		os.Remove(f.Name())
-	})
+		asset,
+		tar.WithCloseFn(func() {
+			// remove temporary file on stream close
+			os.Remove(f.Name())
+		}))
 	if err != nil {
 		return nil, err
 	}
