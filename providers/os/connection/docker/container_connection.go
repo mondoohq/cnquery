@@ -216,7 +216,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 	}
 }
 
-func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
+func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
 	disableInmemoryCache := false
 	if _, ok := conf.Options["disable-cache"]; ok {
 		var err error
@@ -270,10 +270,6 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	if ii.Size > 1024 && !disableInmemoryCache { // > 1GB
 		log.Warn().Int64("size", ii.Size).Msg("Because the image is larger than 1 GB, this task will require a lot of memory. Consider disabling the in-memory cache by adding this flag to the command: `--disable-cache=true`")
 	}
-	_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
-	if err != nil {
-		return nil, err
-	}
 
 	identifier := containerid.MondooContainerImageID(labelImageId)
 
@@ -281,7 +277,40 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	asset.Name = ii.Name
 	asset.Labels = ii.Labels
 
-	tarConn, err := NewWithReader(id, conf, asset, rc)
+	// cache file locally
+	var filename string
+	tmpFile, err := tar.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+	filename = tmpFile.Name()
+
+	tarConn, err := tar.NewConnection(
+		id,
+		&inventory.Config{
+			Type:    "tar",
+			Runtime: "docker-image",
+			Options: map[string]string{
+				tar.OPTION_FILE: filename,
+			},
+		},
+		asset,
+		tar.WithFetchFn(func() (string, error) {
+			_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
+			if err != nil {
+				return filename, err
+			}
+			err = tar.StreamToTmpFile(rc, tmpFile)
+			if err != nil {
+				_ = os.Remove(filename)
+				return filename, err
+			}
+			return filename, nil
+		}),
+		tar.WithCloseFn(func() {
+			log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
+			_ = os.Remove(filename)
+		}))
 	if err != nil {
 		return nil, err
 	}
@@ -291,11 +320,11 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	return tarConn, nil
 }
 
-// based on the target, try and find out what kind of connection we are dealing with, this can be either a
+// FindDockerObjectConnectionType tries to find out what kind of connection we are dealing with, this can be either a
 // 1. a container, referenced by name or id
 // 2. a locally present image, referenced by tag or digest
 // 3. a remote image, referenced by tag or digest
-func FetchConnectionType(target string) (string, error) {
+func FindDockerObjectConnectionType(target string) (string, error) {
 	ded, err := dockerDiscovery.NewDockerEngineDiscovery()
 	if err != nil {
 		return "", err
@@ -317,43 +346,4 @@ func FetchConnectionType(target string) (string, error) {
 	}
 
 	return "", errors.New("could not find container or image " + target)
-}
-
-// Used with docker snapshots
-// NewWithReader provides a tar provider from a container image stream
-func NewWithReader(id uint32, conf *inventory.Config, asset *inventory.Asset, rc io.ReadCloser) (*tar.Connection, error) {
-	filename := ""
-	if x, ok := rc.(*os.File); ok {
-		filename = x.Name()
-	} else {
-		// cache file locally
-		f, err := tar.RandomFile()
-		if err != nil {
-			return nil, err
-		}
-
-		// we return a pure tar image
-		filename = f.Name()
-
-		err = tar.StreamToTmpFile(rc, f)
-		if err != nil {
-			_ = os.Remove(filename)
-			return nil, err
-		}
-	}
-
-	return tar.NewConnection(
-		id,
-		&inventory.Config{
-			Type:    "tar",
-			Runtime: "docker-image",
-			Options: map[string]string{
-				tar.OPTION_FILE: filename,
-			},
-		},
-		asset,
-		tar.WithCloseFn(func() {
-			log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
-			_ = os.Remove(filename)
-		}))
 }

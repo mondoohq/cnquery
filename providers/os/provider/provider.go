@@ -96,7 +96,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 				conf.Host = req.Args[1]
 			}
 		} else {
-			connType, err := docker.FetchConnectionType(req.Args[0])
+			connType, err := docker.FindDockerObjectConnectionType(req.Args[0])
 			if err != nil {
 				return nil, err
 			}
@@ -374,7 +374,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_DockerImage.String():
-			conn, err = docker.NewDockerContainerImageConnection(connId, conf, asset)
+			conn, err = docker.NewContainerImageConnection(connId, conf, asset)
 
 		case shared.Type_DockerContainer.String():
 			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)

@@ -39,7 +39,7 @@ func TestAssetNameForRemoteImages(t *testing.T) {
 		asset = &inventory.Asset{
 			Connections: []*inventory.Config{config},
 		}
-		conn, err = NewDockerContainerImageConnection(0, config, asset)
+		conn, err = NewContainerImageConnection(0, config, asset)
 		if counter > retries || (err == nil && conn != nil) {
 			break
 		}
