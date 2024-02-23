@@ -15,7 +15,7 @@ import (
 var _ shared.Connection = &SnapshotConnection{}
 
 type SnapshotConnection struct {
-	tar.Connection
+	*tar.Connection
 }
 
 // NewSnapshotConnection creates a snapshot for a docker engine container and opens it
@@ -26,14 +26,14 @@ func NewSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.A
 		return nil, err
 	}
 
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+	conf.Options[tar.OPTION_FILE] = f.Name()
+
 	tarConnection, err := tar.NewConnection(
 		id,
-		&inventory.Config{
-			Type: "tar",
-			Options: map[string]string{
-				tar.OPTION_FILE: f.Name(),
-			},
-		},
+		conf,
 		asset,
 		tar.WithFetchFn(func() (string, error) {
 			err := exportSnapshot(conf.Host, f)
@@ -51,7 +51,7 @@ func NewSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.A
 		return nil, err
 	}
 
-	return &SnapshotConnection{*tarConnection}, nil
+	return &SnapshotConnection{tarConnection}, nil
 }
 
 // ExportSnapshot exports a given container from docker engine to a tar file

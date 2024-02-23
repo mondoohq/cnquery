@@ -6,6 +6,7 @@ package docker
 import (
 	"context"
 	"errors"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"io"
 	"os"
 	"strconv"
@@ -285,22 +286,21 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	}
 	filename = tmpFile.Name()
 
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+	conf.Options[tar.OPTION_FILE] = filename
+
 	tarConn, err := tar.NewConnection(
 		id,
-		&inventory.Config{
-			Type:    "tar",
-			Runtime: "docker-image",
-			Options: map[string]string{
-				tar.OPTION_FILE: filename,
-			},
-		},
+		conf,
 		asset,
 		tar.WithFetchFn(func() (string, error) {
-			_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
+			img, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
 			if err != nil {
 				return filename, err
 			}
-			err = tar.StreamToTmpFile(rc, tmpFile)
+			err = tar.StreamToTmpFile(mutate.Extract(img), tmpFile)
 			if err != nil {
 				_ = os.Remove(filename)
 				return filename, err

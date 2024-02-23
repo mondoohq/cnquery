@@ -116,6 +116,10 @@ func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar
 		return nil, errors.New("tar provider requires a valid tar file")
 	}
 
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+
 	filename := conf.Options[tar.OPTION_FILE]
 	var identifier string
 
