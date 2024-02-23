@@ -21,7 +21,7 @@ require (
 	cloud.google.com/go/recommender v1.12.1
 	cloud.google.com/go/run v1.3.4
 	cloud.google.com/go/serviceusage v1.8.4
-	github.com/aws/smithy-go v1.20.0
+	github.com/aws/smithy-go v1.20.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.19.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -30,7 +30,7 @@ require (
 	go.mondoo.com/cnquery/v10 v10.4.0
 	go.mondoo.com/ranger-rpc v0.5.3
 	golang.org/x/oauth2 v0.17.0
-	google.golang.org/api v0.165.0
+	google.golang.org/api v0.166.0
 	google.golang.org/genproto v0.0.0-20240221002015-b0ce06bbee7c
 	google.golang.org/protobuf v1.32.0
 )
