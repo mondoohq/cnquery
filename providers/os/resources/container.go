@@ -14,7 +14,7 @@ func initContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	if len(args) > 1 {
 		return args, nil, nil
 	}
-	conn := runtime.Connection.(*tar.TarConnection)
+	conn := runtime.Connection.(*tar.Connection)
 	reference := conn.Metadata.Labels["docker.io/digests"]
 
 	ref, err := name.ParseReference(reference)

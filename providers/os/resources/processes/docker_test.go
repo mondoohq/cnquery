@@ -34,7 +34,12 @@ func TestDockerProcsList(t *testing.T) {
 	}
 
 	responseBody, err := dClient.ImagePull(ctx, image, types.ImagePullOptions{})
-	defer responseBody.Close()
+	defer func() {
+		err = responseBody.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	require.NoError(t, err)
 
 	_, err = io.Copy(os.Stdout, responseBody)
@@ -42,8 +47,11 @@ func TestDockerProcsList(t *testing.T) {
 
 	// Make sure the docker image is cleaned up
 	defer func() {
-		_, err := dClient.ImageRemove(ctx, image, types.ImageRemoveOptions{})
-		require.NoError(t, err, "failed to cleanup pre-pulled docker image")
+		_, err := dClient.ImageRemove(ctx, image, types.ImageRemoveOptions{
+			Force: true,
+		})
+		// ignore error, worst case is that the image is not removed but parallel tests may fail otherwise
+		fmt.Printf("failed to cleanup pre-pulled docker image: %v", err)
 	}()
 
 	cfg := &container.Config{
@@ -54,20 +62,20 @@ func TestDockerProcsList(t *testing.T) {
 		Image:        image,
 	}
 
-	uuid := uuid.New()
-	created, err := dClient.ContainerCreate(ctx, cfg, &container.HostConfig{}, &network.NetworkingConfig{}, &specs.Platform{}, uuid.String())
+	uuidVal := uuid.New()
+	created, err := dClient.ContainerCreate(ctx, cfg, &container.HostConfig{}, &network.NetworkingConfig{}, &specs.Platform{}, uuidVal.String())
 	require.NoError(t, err)
 
-	require.NoError(t, dClient.ContainerStart(ctx, created.ID, types.ContainerStartOptions{}))
+	require.NoError(t, dClient.ContainerStart(ctx, created.ID, container.StartOptions{}))
 
 	// Make sure the container is cleaned up
 	defer func() {
-		err := dClient.ContainerRemove(ctx, created.ID, types.ContainerRemoveOptions{Force: true})
+		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{Force: true})
 		require.NoError(t, err)
 	}()
 
 	fmt.Println("inject: " + created.ID)
-	conn, err := docker.NewDockerContainerConnection(0, &inventory.Config{
+	conn, err := docker.NewContainerConnection(0, &inventory.Config{
 		Host: created.ID,
 	}, &inventory.Asset{
 		// for the test we need to set the platform
@@ -77,7 +85,7 @@ func TestDockerProcsList(t *testing.T) {
 			Family:  []string{"debian", "linux"},
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	pMan, err := ResolveManager(conn)
 	assert.NoError(t, err)

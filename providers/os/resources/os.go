@@ -27,9 +27,9 @@ import (
 
 func (p *mqlOs) rebootpending() (bool, error) {
 	switch p.MqlRuntime.Connection.(type) {
-	case *docker.DockerSnapshotConnection:
+	case *docker.SnapshotConnection:
 		return false, nil
-	case *tar.TarConnection:
+	case *tar.Connection:
 		return false, nil
 	}
 
@@ -325,9 +325,9 @@ func (p *mqlOsBase) id() (string, error) {
 func (p *mqlOsBase) rebootpending() (bool, error) {
 	// it is a container image, a reboot is never required
 	switch p.MqlRuntime.Connection.(type) {
-	case *docker.DockerSnapshotConnection:
+	case *docker.SnapshotConnection:
 		return false, nil
-	case *tar.TarConnection:
+	case *tar.Connection:
 		return false, nil
 	}
 

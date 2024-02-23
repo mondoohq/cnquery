@@ -235,7 +235,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	connType := conn.Asset().Connections[0].Type
 	switch connType {
 	case "docker-registry":
-		tarConn := conn.(*tar.TarConnection)
+		tarConn := conn.(*tar.Connection)
 		inv, err = s.discoverRegistry(tarConn)
 		if err != nil {
 			return nil, err
@@ -308,7 +308,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_SSH.String():
-			conn, err = ssh.NewSshConnection(connId, conf, asset)
+			conn, err = ssh.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -323,7 +323,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_Winrm.String():
-			conn, err = winrm.NewWinrmConnection(connId, conf, asset)
+			conn, err = winrm.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -336,7 +336,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_Tar.String():
-			conn, err = tar.NewTarConnection(connId, conf, asset)
+			conn, err = tar.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -349,7 +349,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_DockerSnapshot.String():
-			conn, err = docker.NewDockerSnapshotConnection(connId, conf, asset)
+			conn, err = docker.NewSnapshotConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -380,10 +380,10 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)
 
 		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
-			conn, err = container.NewContainerRegistryImage(connId, conf, asset)
+			conn, err = container.NewRegistryImage(connId, conf, asset)
 
 		case shared.Type_RegistryImage.String():
-			conn, err = container.NewContainerRegistryImage(connId, conf, asset)
+			conn, err = container.NewRegistryImage(connId, conf, asset)
 
 		case shared.Type_FileSystem.String():
 			conn, err = fs.NewConnection(connId, conf, asset)
@@ -444,7 +444,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.Connection), nil
 }
 
-func (s *Service) discoverRegistry(conn *tar.TarConnection) (*inventory.Inventory, error) {
+func (s *Service) discoverRegistry(conn *tar.Connection) (*inventory.Inventory, error) {
 	conf := conn.Asset().Connections[0]
 	if conf == nil {
 		return nil, nil

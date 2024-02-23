@@ -30,7 +30,7 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
-	tarConn, ok := conn.(*tar.TarConnection)
+	tarConn, ok := conn.(*tar.Connection)
 	if resolved && ok {
 		pi.Arch = tarConn.PlatformArchitecture
 		di.Runtime = "docker-image"
@@ -44,7 +44,7 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform,
 		}
 	}
 
-	containerConn, ok := conn.(*docker.DockerContainerConnection)
+	containerConn, ok := conn.(*docker.ContainerConnection)
 	if resolved && ok {
 		pi.Arch = containerConn.PlatformArchitecture
 		di.Runtime = string(containerConn.Type())

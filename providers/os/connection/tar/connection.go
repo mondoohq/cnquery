@@ -24,11 +24,11 @@ const (
 )
 
 var (
-	_ shared.Connection = (*TarConnection)(nil)
-	_ plugin.Closer     = (*TarConnection)(nil)
+	_ shared.Connection = (*Connection)(nil)
+	_ plugin.Closer     = (*Connection)(nil)
 )
 
-type TarConnection struct {
+type Connection struct {
 	plugin.Connection
 	asset     *inventory.Asset
 	conf      *inventory.Config
@@ -49,36 +49,36 @@ type TarConnection struct {
 	}
 }
 
-func (p *TarConnection) Name() string {
+func (p *Connection) Name() string {
 	return string(shared.Type_Tar)
 }
 
-func (p *TarConnection) Type() shared.ConnectionType {
+func (p *Connection) Type() shared.ConnectionType {
 	return shared.Type_Tar
 }
 
-func (p *TarConnection) Asset() *inventory.Asset {
+func (p *Connection) Asset() *inventory.Asset {
 	return p.asset
 }
 
-func (p *TarConnection) Conf() *inventory.Config {
+func (p *Connection) Conf() *inventory.Config {
 	return p.conf
 }
 
-func (c *TarConnection) Identifier() (string, error) {
+func (c *Connection) Identifier() (string, error) {
 	return c.PlatformIdentifier, nil
 }
 
-func (c *TarConnection) Capabilities() shared.Capabilities {
+func (c *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_FileSearch | shared.Capability_FindFile
 }
 
-func (p *TarConnection) RunCommand(command string) (*shared.Command, error) {
+func (p *Connection) RunCommand(command string) (*shared.Command, error) {
 	res := shared.Command{Command: command, Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}, ExitStatus: -1}
 	return &res, nil
 }
 
-func (p *TarConnection) EnsureLoaded() {
+func (p *Connection) EnsureLoaded() {
 	if p.fetchFn != nil {
 		p.fetchOnce.Do(func() {
 			f, err := p.fetchFn()
@@ -94,12 +94,12 @@ func (p *TarConnection) EnsureLoaded() {
 	}
 }
 
-func (p *TarConnection) FileSystem() afero.Fs {
+func (p *Connection) FileSystem() afero.Fs {
 	p.EnsureLoaded()
 	return p.fs
 }
 
-func (c *TarConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := c.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -123,13 +123,13 @@ func (c *TarConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	}, nil
 }
 
-func (c *TarConnection) Close() {
+func (c *Connection) Close() {
 	if c.closeFN != nil {
 		c.closeFN()
 	}
 }
 
-func (c *TarConnection) Load(stream io.Reader) error {
+func (c *Connection) Load(stream io.Reader) error {
 	tr := tar.NewReader(stream)
 	for {
 		h, err := tr.Next()
@@ -148,7 +148,7 @@ func (c *TarConnection) Load(stream io.Reader) error {
 	return nil
 }
 
-func (c *TarConnection) LoadFile(path string) error {
+func (c *Connection) LoadFile(path string) error {
 	log.Debug().Str("path", path).Msg("tar> load tar file into backend")
 
 	f, err := os.Open(path)
@@ -159,11 +159,11 @@ func (c *TarConnection) LoadFile(path string) error {
 	return c.Load(f)
 }
 
-func (c *TarConnection) Kind() string {
+func (c *Connection) Kind() string {
 	return c.PlatformKind
 }
 
-func (c *TarConnection) Runtime() string {
+func (c *Connection) Runtime() string {
 	return c.PlatformRuntime
 }
 
@@ -188,12 +188,10 @@ func WithFetchFn(fetchFn func() (string, error)) tarClientOption {
 	}
 }
 
-func WithCustomFileSystem() {}
-
-// NewTarConnection is opening a tar file and creating a new tar connection. The tar file is expected to be a valid
+// NewConnection is opening a tar file and creating a new tar connection. The tar file is expected to be a valid
 // tar file and contains a flattened file structure. Nested tar files as used in docker images are not supported and
 // need to be extracted before using this connection.
-func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, opts ...tarClientOption) (*TarConnection, error) {
+func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, opts ...tarClientOption) (*Connection, error) {
 	if conf == nil || len(conf.Options[OPTION_FILE]) == 0 {
 		return nil, errors.New("tar provider requires a valid tar file")
 	}
@@ -212,7 +210,7 @@ func NewTarConnection(id uint32, conf *inventory.Config, asset *inventory.Asset,
 		o(params)
 	}
 
-	c := &TarConnection{
+	c := &Connection{
 		Connection:      plugin.NewConnection(id, asset),
 		asset:           asset,
 		fs:              NewFs(filename),

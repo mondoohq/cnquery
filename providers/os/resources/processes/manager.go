@@ -41,7 +41,7 @@ func ResolveManager(conn shared.Connection) (OSProcessManager, error) {
 	// procfs over ssh is super slow, lets deactivate until we have a faster approach
 	disableProcFs := false
 	switch conn.(type) {
-	case *ssh.SshConnection:
+	case *ssh.Connection:
 		disableProcFs = true
 	case *mock.Connection:
 		disableProcFs = true

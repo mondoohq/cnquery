@@ -19,8 +19,8 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 )
 
-// NewContainerImageConnection uses a container image reference as input and creates a tar connection
-func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.TarConnection, error) {
+// NewImageConnection uses a container image reference as input and creates a tar connection
+func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.Connection, error) {
 	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err
@@ -28,11 +28,11 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 
 	conf.Options[tar.OPTION_FILE] = f.Name()
 
-	return tar.NewTarConnection(id, conf, asset,
+	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
 			err = tar.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
-				os.Remove(f.Name())
+				_ = os.Remove(f.Name())
 				return "", err
 			}
 			log.Debug().Msg("tar> extracted image to temporary file")
@@ -40,13 +40,13 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 		}),
 		tar.WithCloseFn(func() {
 			log.Debug().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
-			os.Remove(f.Name())
+			_ = os.Remove(f.Name())
 		}),
 	)
 }
 
-// NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.TarConnection, error) {
+// NewRegistryImage loads a container image from a remote registry
+func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
 	ref, err := name.ParseReference(conf.Host, name.WeakValidation)
 	if err != nil {
 		return nil, errors.New("invalid container registry reference: " + conf.Host)
@@ -65,7 +65,7 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 		conf.Options = map[string]string{}
 	}
 
-	conn, err := NewContainerImageConnection(id, conf, asset, img)
+	conn, err := NewImageConnection(id, conf, asset, img)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +81,9 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 
 	repoName := ref.Context().Name()
 	imgDigest := hash.String()
-	name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
+	containerAssetName := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
 	if asset.Name == "" {
-		asset.Name = name
+		asset.Name = containerAssetName
 	}
 	if len(asset.PlatformIds) == 0 {
 		asset.PlatformIds = []string{identifier}
@@ -111,7 +111,7 @@ func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *invento
 	return conn, err
 }
 
-func NewContainerFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.TarConnection, error) {
+func NewFromTar(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
 	if conf == nil || len(conf.Options[tar.OPTION_FILE]) == 0 {
 		return nil, errors.New("tar provider requires a valid tar file")
 	}
@@ -141,11 +141,11 @@ func NewContainerFromTar(id uint32, conf *inventory.Config, asset *inventory.Ass
 	imageFilename = f.Name()
 	conf.Options[tar.OPTION_FILE] = imageFilename
 
-	c, err := tar.NewTarConnection(id, conf, asset,
+	c, err := tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
 			err = tar.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
-				os.Remove(imageFilename)
+				_ = os.Remove(imageFilename)
 				return imageFilename, err
 			}
 			return imageFilename, nil
@@ -153,7 +153,7 @@ func NewContainerFromTar(id uint32, conf *inventory.Config, asset *inventory.Ass
 		tar.WithCloseFn(func() {
 			// remove temporary file on stream close
 			log.Debug().Str("tar", imageFilename).Msg("tar> remove temporary flattened image file on connection close")
-			os.Remove(imageFilename)
+			_ = os.Remove(imageFilename)
 		}),
 	)
 	if err != nil {

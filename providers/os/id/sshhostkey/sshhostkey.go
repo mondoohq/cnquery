@@ -17,7 +17,7 @@ import (
 
 func Detect(t shared.Connection, p *inventory.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
-	if sshTransport, ok := t.(*sshconn.SshConnection); ok {
+	if sshTransport, ok := t.(*sshconn.Connection); ok {
 		identifier, err := sshTransport.PlatformID()
 		if err != nil {
 			return nil, err

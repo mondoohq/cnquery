@@ -33,7 +33,7 @@ func TestTarCommand(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,
@@ -57,7 +57,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	conn, err := tar.NewTarConnection(0, &inventory.Config{
+	conn, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,
@@ -74,7 +74,7 @@ func TestTarSymlinkFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,
@@ -106,7 +106,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	err := cacheCentos()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: centosContainerPath,
@@ -137,7 +137,7 @@ func TestTarFile(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,
@@ -167,7 +167,7 @@ func TestFilePermissions(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,
@@ -224,7 +224,7 @@ func TestTarFileFind(t *testing.T) {
 	err := cacheAlpine()
 	require.NoError(t, err, "should create tar without error")
 
-	c, err := tar.NewTarConnection(0, &inventory.Config{
+	c, err := tar.NewConnection(0, &inventory.Config{
 		Type: "tar",
 		Options: map[string]string{
 			tar.OPTION_FILE: alpineContainerPath,

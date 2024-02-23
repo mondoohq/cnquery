@@ -20,7 +20,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/fsutil"
 )
 
-func FileOpen(dockerClient *client.Client, path string, container string, conn *DockerContainerConnection, catFs *cat.Fs) (afero.File, error) {
+func FileOpen(dockerClient *client.Client, path string, container string, conn *ContainerConnection, catFs *cat.Fs) (afero.File, error) {
 	f := &File{
 		path:         path,
 		dockerClient: dockerClient,
@@ -36,7 +36,7 @@ type File struct {
 	path         string
 	container    string
 	dockerClient *client.Client
-	connection   *DockerContainerConnection
+	connection   *ContainerConnection
 	reader       *bytes.Reader
 	catFs        *cat.Fs
 }

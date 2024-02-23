@@ -19,7 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/connection/winrm/cat"
 )
 
-var _ shared.Connection = (*WinrmConnection)(nil)
+var _ shared.Connection = (*Connection)(nil)
 
 func VerifyConfig(config *inventory.Config) (*winrm.Endpoint, error) {
 	if config.Type != string(shared.Type_Winrm) {
@@ -39,8 +39,8 @@ func VerifyConfig(config *inventory.Config) (*winrm.Endpoint, error) {
 	return winrmEndpoint, nil
 }
 
-// NewWinrmConnection creates a winrm client and establishes a connection to verify the connection
-func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*WinrmConnection, error) {
+// NewConnection creates a winrm client and establishes a connection to verify the connection
+func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*Connection, error) {
 	// ensure all required configs are set
 	winrmEndpoint, err := VerifyConfig(conf)
 	if err != nil {
@@ -77,7 +77,7 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	}
 
 	log.Debug().Msg("winrm> connection established")
-	return &WinrmConnection{
+	return &Connection{
 		Connection: plugin.NewConnection(id, asset),
 		conf:       conf,
 		asset:      asset,
@@ -86,7 +86,7 @@ func NewWinrmConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	}, nil
 }
 
-type WinrmConnection struct {
+type Connection struct {
 	plugin.Connection
 	conf  *inventory.Config
 	asset *inventory.Asset
@@ -97,23 +97,23 @@ type WinrmConnection struct {
 	Client   *winrm.Client
 }
 
-func (c *WinrmConnection) Name() string {
+func (c *Connection) Name() string {
 	return "ssh"
 }
 
-func (c *WinrmConnection) Type() shared.ConnectionType {
+func (c *Connection) Type() shared.ConnectionType {
 	return shared.Type_Winrm
 }
 
-func (p *WinrmConnection) Asset() *inventory.Asset {
+func (p *Connection) Asset() *inventory.Asset {
 	return p.asset
 }
 
-func (p *WinrmConnection) Capabilities() shared.Capabilities {
+func (p *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
 }
 
-func (p *WinrmConnection) RunCommand(command string) (*shared.Command, error) {
+func (p *Connection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Str("provider", "winrm").Msg("winrm> run command")
 
 	stdoutBuffer := &bytes.Buffer{}
@@ -142,7 +142,7 @@ func (p *WinrmConnection) RunCommand(command string) (*shared.Command, error) {
 	return res, nil
 }
 
-func (p *WinrmConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+func (p *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := p.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -162,7 +162,7 @@ func (p *WinrmConnection) FileInfo(path string) (shared.FileInfoDetails, error) 
 	}, nil
 }
 
-func (p *WinrmConnection) FileSystem() afero.Fs {
+func (p *Connection) FileSystem() afero.Fs {
 	if p.fs == nil {
 		p.fs = cat.New(p)
 	}

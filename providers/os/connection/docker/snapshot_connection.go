@@ -12,37 +12,21 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
-var _ shared.Connection = &DockerSnapshotConnection{}
+var _ shared.Connection = &SnapshotConnection{}
 
-type DockerSnapshotConnection struct {
-	tar.TarConnection
+type SnapshotConnection struct {
+	tar.Connection
 }
 
-func NewDockerSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerSnapshotConnection, error) {
-	tarConnection, err := tar.NewTarConnection(id, conf, asset)
-	if err != nil {
-		return nil, err
-	}
-
-	// FIXME: ??? use NewFromDockerEngine
-
-	return &DockerSnapshotConnection{*tarConnection}, nil
-}
-
-// NewFromDockerEngine creates a snapshot for a docker engine container and opens it
-func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerSnapshotConnection, error) {
+// NewSnapshotConnection creates a snapshot for a docker engine container and opens it
+func NewSnapshotConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*SnapshotConnection, error) {
 	// cache container on local disk
 	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err
 	}
 
-	err = ExportSnapshot(conf.Host, f)
-	if err != nil {
-		return nil, err
-	}
-
-	tarConnection, err := tar.NewTarConnection(
+	tarConnection, err := tar.NewConnection(
 		id,
 		&inventory.Config{
 			Type: "tar",
@@ -51,19 +35,27 @@ func NewFromDockerEngine(id uint32, conf *inventory.Config, asset *inventory.Ass
 			},
 		},
 		asset,
+		tar.WithFetchFn(func() (string, error) {
+			err := exportSnapshot(conf.Host, f)
+			if err != nil {
+				return "", err
+			}
+
+			return f.Name(), nil
+		}),
 		tar.WithCloseFn(func() {
 			// remove temporary file on stream close
-			os.Remove(f.Name())
+			_ = os.Remove(f.Name())
 		}))
 	if err != nil {
 		return nil, err
 	}
 
-	return &DockerSnapshotConnection{*tarConnection}, nil
+	return &SnapshotConnection{*tarConnection}, nil
 }
 
 // ExportSnapshot exports a given container from docker engine to a tar file
-func ExportSnapshot(containerid string, f *os.File) error {
+func exportSnapshot(containerid string, f *os.File) error {
 	dc, err := GetDockerClient()
 	if err != nil {
 		return err
@@ -77,10 +69,10 @@ func ExportSnapshot(containerid string, f *os.File) error {
 	return tar.StreamToTmpFile(rc, f)
 }
 
-func (p *DockerSnapshotConnection) Name() string {
+func (p *SnapshotConnection) Name() string {
 	return string(shared.Type_DockerSnapshot)
 }
 
-func (p *DockerSnapshotConnection) Type() shared.ConnectionType {
+func (p *SnapshotConnection) Type() shared.ConnectionType {
 	return shared.Type_DockerSnapshot
 }

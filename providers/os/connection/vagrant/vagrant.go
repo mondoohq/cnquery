@@ -22,7 +22,7 @@ const (
 var _ shared.Connection = (*VagrantConnection)(nil)
 
 type VagrantConnection struct {
-	ssh.SshConnection
+	ssh.Connection
 }
 
 func NewVagrantConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*VagrantConnection, error) {
@@ -32,7 +32,7 @@ func NewVagrantConnection(id uint32, conf *inventory.Config, asset *inventory.As
 		return nil, err
 	}
 	res := VagrantConnection{
-		SshConnection: *conn,
+		Connection: *conn,
 	}
 
 	return &res, nil
@@ -46,7 +46,7 @@ func (p *VagrantConnection) Type() shared.ConnectionType {
 	return Vagrant
 }
 
-func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.Asset) (*ssh.SshConnection, error) {
+func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.Asset) (*ssh.Connection, error) {
 	// For now, we do not provide the conf to the local connection
 	// conf might include sudo, which is only intended for the actual vagrant connection
 	// local currently does not need it. Quite the contrary, it cause issues.
@@ -88,7 +88,7 @@ func resolveVagrantSshConf(id uint32, conf *inventory.Config, root *inventory.As
 	if err != nil {
 		return nil, err
 	}
-	return ssh.NewSshConnection(id, root.Connections[0], root)
+	return ssh.NewConnection(id, root.Connections[0], root)
 }
 
 func migrateVagrantAssetToSsh(id uint32, sshConfig *VagrantVmSSHConfig, rootTransportConfig *inventory.Config, asset *inventory.Asset) error {
