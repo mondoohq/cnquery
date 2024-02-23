@@ -6054,7 +6054,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlAzure struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAzureInternal it will be used here
+	mqlAzureInternal
 }
 
 // createAzure creates a new instance of this resource
