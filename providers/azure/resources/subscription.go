@@ -15,14 +15,21 @@ import (
 	"go.mondoo.com/cnquery/v10/types"
 )
 
-// TODO: we need to make this NOT go through init, this is heavy on the API
-// every request calls the  API
 func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
 	}
 
 	conn := runtime.Connection.(*connection.AzureConnection)
+
+	azure, err := CreateResource(runtime, "azure", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	az := azure.(*mqlAzure)
+	if az.sub != nil {
+		return nil, az.sub, nil
+	}
 
 	subscriptionsC, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
@@ -55,8 +62,12 @@ func initAzureSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData
 	args["authorizationSource"] = llx.StringDataPtr((*string)(resp.AuthorizationSource))
 	args["managedByTenants"] = llx.ArrayData(managedByTenants, types.String)
 	args["subscriptionsPolicies"] = llx.DictData(subPolicies)
-
-	return args, nil, nil
+	sub, err := CreateResource(runtime, "azure.subscription", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	az.sub = sub.(*mqlAzureSubscription)
+	return nil, az.sub, nil
 }
 
 func (a *mqlAzureSubscription) id() (string, error) {
