@@ -121,7 +121,7 @@ func NewContainerFromTar(id uint32, conf *inventory.Config, asset *inventory.Ass
 
 	// try to determine if the tar is a container image
 	img, iErr := tarball.ImageFromPath(filename, nil)
-	if iErr == nil {
+	if iErr != nil {
 		return nil, iErr
 	}
 
