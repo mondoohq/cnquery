@@ -89,13 +89,13 @@ jobs:
 
   provider-build:
     name: "${{ matrix.provider }}"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 120
     needs: scoping
     if: ${{ needs.scoping.outputs.build_list != '[]' }}
     strategy:
       fail-fast: false
-      max-parallel: 12
+      max-parallel: 2
       matrix:
         provider: ${{ fromJSON(needs.scoping.outputs.build_list) }}
     steps:
@@ -112,14 +112,6 @@ jobs:
         with:
           go-version: ">=${{ env.golang-version }}"
           cache: false
-
-      ## Install Build Tools, for Github Hosted Runners only
-      - name: Install Build Tools
-        if: contains( ${{ runner.name }}, 'Github Actions')
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xz-utils make protobuf-compiler curl zip unzip jq
-          make prep/tools
 
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
