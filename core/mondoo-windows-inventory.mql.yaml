@@ -87,7 +87,7 @@ packs:
           windows.computerInfo['OsProductType'] == 1
         mql: windows.security.products { guid state type name productState signatureState timestamp }
       - uid: mondoo-windows-bitlocker-volumes
-        title: Bitlocker Volumes
+        title: BitLocker Volumes
         filters: |
           windows.computerInfo['OsProductType'] == 1
         mql: windows.bitlocker.volumes { deviceID driveLetter encryptionMethod version persistentVolumeID protectionStatus lockStatus conversionStatus }
