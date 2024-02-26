@@ -5,9 +5,10 @@ package resources
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/v10/types"
 	"regexp"
 	"sync"
+
+	"go.mondoo.com/cnquery/v10/types"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
@@ -74,6 +75,7 @@ func initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	res.Arch.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Format.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Origin.State = plugin.StateIsSet | plugin.StateIsNull
+	res.OriginVersion.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Status.State = plugin.StateIsSet | plugin.StateIsNull
 	res.Files.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, res, nil
@@ -91,6 +93,10 @@ func (p *mqlPackage) outdated() (bool, error) {
 }
 
 func (p *mqlPackage) origin() (string, error) {
+	return "", nil
+}
+
+func (p *mqlPackage) originVersion() (string, error) {
 	return "", nil
 }
 
@@ -189,18 +195,19 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 		}
 
 		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]*llx.RawData{
-			"name":        llx.StringData(osPkg.Name),
-			"version":     llx.StringData(osPkg.Version),
-			"available":   llx.StringData(available),
-			"arch":        llx.StringData(osPkg.Arch),
-			"status":      llx.StringData(osPkg.Status),
-			"description": llx.StringData(osPkg.Description),
-			"format":      llx.StringData(osPkg.Format),
-			"installed":   llx.BoolData(true),
-			"origin":      llx.StringData(osPkg.Origin),
-			"epoch":       llx.StringData(osPkg.Epoch),
-			"purl":        llx.StringData(osPkg.PUrl),
-			"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
+			"name":          llx.StringData(osPkg.Name),
+			"version":       llx.StringData(osPkg.Version),
+			"available":     llx.StringData(available),
+			"arch":          llx.StringData(osPkg.Arch),
+			"status":        llx.StringData(osPkg.Status),
+			"description":   llx.StringData(osPkg.Description),
+			"format":        llx.StringData(osPkg.Format),
+			"installed":     llx.BoolData(true),
+			"origin":        llx.StringData(osPkg.Origin),
+			"originVersion": llx.StringData(osPkg.OriginVersion),
+			"epoch":         llx.StringData(osPkg.Epoch),
+			"purl":          llx.StringData(osPkg.PUrl),
+			"cpes":          llx.ArrayData(cpes, types.Resource("cpe")),
 		})
 		if err != nil {
 			return nil, err

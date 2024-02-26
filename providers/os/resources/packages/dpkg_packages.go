@@ -6,14 +6,15 @@ package packages
 import (
 	"bufio"
 	"fmt"
-	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/purl"
 	"io"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/purl"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -25,7 +26,8 @@ const (
 )
 
 var (
-	DPKG_REGEX        = regexp.MustCompile(`^(.+):\s(.+)$`)
+	DPKG_REGEX = regexp.MustCompile(`^(.+):\s(.+)$`)
+	// e.g. source with version: samba (2:4.17.12+dfsg-0+deb12u1)
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
 )
 
@@ -80,10 +82,14 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 			pkg.Status = strings.TrimSpace(m[2])
 		case key == "Source":
 			o := DPKG_ORIGIN_REGEX.FindStringSubmatch(m[2])
-			if o != nil && len(o) >= 1 {
+			if len(o) >= 1 {
 				pkg.Origin = strings.TrimSpace(o[1])
 			} else {
 				log.Error().Str("origin", m[2]).Msg("cannot parse dpkg origin")
+			}
+			// Some packages also have a version as part of the Source field
+			if len(o) >= 2 {
+				pkg.OriginVersion = strings.TrimSpace(o[2])
 			}
 		// description supports multi-line statements, start desc
 		case key == "Description":

@@ -1132,6 +1132,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"package.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetOrigin()).ToDataRes(types.String)
 	},
+	"package.originVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetOriginVersion()).ToDataRes(types.String)
+	},
 	"package.available": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackage).GetAvailable()).ToDataRes(types.String)
 	},
@@ -3092,6 +3095,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"package.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackage).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"package.originVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).OriginVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"package.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8121,6 +8128,7 @@ type mqlPackage struct {
 	Purl plugin.TValue[string]
 	Cpes plugin.TValue[[]interface{}]
 	Origin plugin.TValue[string]
+	OriginVersion plugin.TValue[string]
 	Available plugin.TValue[string]
 	Installed plugin.TValue[bool]
 	Outdated plugin.TValue[bool]
@@ -8205,6 +8213,12 @@ func (c *mqlPackage) GetCpes() *plugin.TValue[[]interface{}] {
 func (c *mqlPackage) GetOrigin() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Origin, func() (string, error) {
 		return c.origin()
+	})
+}
+
+func (c *mqlPackage) GetOriginVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OriginVersion, func() (string, error) {
+		return c.originVersion()
 	})
 }
 

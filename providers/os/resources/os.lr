@@ -616,6 +616,9 @@ package @defaults("name version") {
 
   // Package origin (optional)
   origin() string
+  // Package origin version (optional)
+  originVersion() string
+
 
   // Available version
   available string
