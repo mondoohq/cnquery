@@ -59,8 +59,9 @@ outlined above.
 
 ## Debug providers
 
-In v9 we introduced provider plugins, which split up the providers into individual go modules. This makes 
-development more lightweight and speedy.
+`cnquery` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
+the appropriate provider. Since providers are their own binaries, debugging is more complex. To ease debugging, we wrote
+a small tool that configures the provider accordingly so that it is compiled into the main binary.
 
 To debug a provider locally with cnquery:
 
@@ -76,6 +77,9 @@ To debug a provider locally with cnquery:
 4. Once done, please remember to restore `providers.yaml` (or just set back: `builtin: []`) and
    re-run `make providers/config`.
 
+In your favorite IDE use `apps/cnquery/cnquery.go` as main entry point and set the following program
+arguments `run aws -c "aws.ec2.instances"` to run the AWS provider with the `aws.ec2.instances` MQL query.
+
 ### Remote debug providers
 
 Some providers need to run on specific VMs, e.g., GCP Snapshot scanning.
@@ -89,6 +93,7 @@ Additionally, you need to set up the debugger on the remote VM:
 4. Copy the source to the remote VM. (`rsync` makes multiple debug session easier.)
 5. Allow ingress traffic to the debugger in the firewall.
 6. Run the debugger on the remove VM:
+
   ```
   dlv debug <path>/apps/cnquery/cnquery.go --headless --listen=:12345 -- run gcp snapshot --project-id xyz-123 suse15 -c "asset{ name ids }" --verbose
   ```
@@ -100,7 +105,8 @@ https://github.com/golang/vscode-go/blob/master/docs/debugging.md
 
 Each provider has its own version, which is based on [Semver](https://semver.org/).
 
-It's often easy to forget to update them. We didn't want to auto-update versions and accidentally release them for now, so you must update versions in order to get the new providers out.
+It's often easy to forget to update them. We didn't want to auto-update versions and accidentally release them for now,
+so you must update versions in order to get the new providers out.
 
 Here's how to make this process as easy as 🥧 :
 
@@ -116,7 +122,8 @@ alias version="go run providers-sdk/v1/util/version/version.go"
 
 **Check provider versions**
 
-The version utility can check if providers need upgrades. If you use it in `--fast` mode, it doesn't crawl the entire Git change history but only looks for the first change.
+The version utility can check if providers need upgrades. If you use it in `--fast` mode, it doesn't crawl the entire
+Git change history but only looks for the first change.
 
 ```bash
 version check providers/*/
@@ -131,7 +138,8 @@ crawling git history......
 ...
 ```
 
-The utility automatically detects if providers have no changes since their last version bump. It also counts changes to all providers that have changed.
+The utility automatically detects if providers have no changes since their last version bump. It also counts changes to
+all providers that have changed.
 
 If you prefer not to wait, you can use the `--fast` option, which only looks for the first change.
 
@@ -146,7 +154,9 @@ version update providers/*/
 ```
 
 Notable options include:
-- `--increment` auto-increments either the patch or minor version for you (e.g., `--increment=patch`). Without this option you get the interactive CLI.
+
+- `--increment` auto-increments either the patch or minor version for you (e.g., `--increment=patch`). Without this
+  option you get the interactive CLI.
 - `--fast` performs fast change detection (i.e., once a change is found it will create the update).
 - `--commit` automatically generates the commit for you and pushes the branch to GitHub.
 
@@ -203,12 +213,15 @@ use (
 
 ## Providers development best practices
 
-The more time we spend building providers, the more we learn how to do better in the future. Here we describe learnings that will help you get started with providers development.
+The more time we spend building providers, the more we learn how to do better in the future. Here we describe learnings
+that will help you get started with providers development.
 
 ### Referencing MQL resources
-Often we have a top-level MQL resource, which we want to reference in another top-level resource. 
+
+Often we have a top-level MQL resource, which we want to reference in another top-level resource.
 
 For example, GCP networks can be retrieved for a project. That is a top-level resource:
+
 ```
 // GCP Compute Engine
 private gcp.project.computeService {
@@ -217,7 +230,9 @@ private gcp.project.computeService {
 }
 ```
 
-However, we have a reference to a GCP network in a GCP Compute address. This allows us to quickly navigate to the network in which an address is created:
+However, we have a reference to a GCP network in a GCP Compute address. This allows us to quickly navigate to the
+network in which an address is created:
+
 ```
 private gcp.project.computeService.address {
   // Static IP address
@@ -228,11 +243,15 @@ private gcp.project.computeService.address {
 }
 ```
 
-The simple way to implement the reference would be to call the GCP API every time `gcp.project.computeService.address.network` is executed. However, this would generate an excessive amount of API calls when scanning large GCP projects. If we have 10 addresses, this would mean 10 separate API calls to get the network, one for each of them.
+The simple way to implement the reference would be to call the GCP API every
+time `gcp.project.computeService.address.network` is executed. However, this would generate an excessive amount of API
+calls when scanning large GCP projects. If we have 10 addresses, this would mean 10 separate API calls to get the
+network, one for each of them.
 
-MQL has powerful caching capabilities that let us achieve the same end result with a single (or fewer) API calls. 
+MQL has powerful caching capabilities that let us achieve the same end result with a single (or fewer) API calls.
 
 First, create an init function for `gcp.project.computeService.network`, which is the resource we are cross-referencing:
+
 ```go
 func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// Here we check that the resource isn't fully initialized yet
@@ -288,6 +307,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 ```
 
 Then, we implement the function for retrieving the network for a GCP compute address:
+
 ```go
 func (g *mqlGcpProjectComputeServiceAddress) network() (*mqlGcpProjectComputeServiceNetwork, error) {
 	if g.NetworkUrl.Error != nil {
