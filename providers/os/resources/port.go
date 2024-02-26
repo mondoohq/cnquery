@@ -253,7 +253,7 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
 	} else if err != nil {
-		return nil, errors.New("cannot access stat for " + path)
+		return nil, fmt.Errorf("cannot access stat for "+path+": %v", err)
 	}
 	if stat.IsDir() {
 		return nil, errors.New("something is wrong, looks like " + path + " is a folder")
