@@ -58,10 +58,6 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 	targets := handleTargets(conn.Conf.Discover.Targets)
 
-	if stringx.Contains(targets, DiscoveryApi) {
-		in.Spec.Assets = append(in.Spec.Assets, conn.Asset())
-	}
-
 	res, err := NewResource(runtime, "vsphere", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
