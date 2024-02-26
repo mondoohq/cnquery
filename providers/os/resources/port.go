@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/netip"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -242,14 +243,17 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 	return processes.BySocketID, err
 }
 
-// See:
-// - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
+// parseProcNet parses the proc filesystem
+// See socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
 func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
 	stat, err := fs.Stat(path)
-	if err != nil {
-		return nil, errors.New("cannot access stat for " + path)
+	// if the file does not exist, we just return nil since no ports are open then
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("cannot access stat for "+path+": %v", err)
 	}
 	if stat.IsDir() {
 		return nil, errors.New("something is wrong, looks like " + path + " is a folder")
@@ -379,6 +383,8 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 
+	// check if kernel supports /proc/net/tcp4
+
 	var ports []interface{}
 	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users)
 	if err != nil {
@@ -391,6 +397,8 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 	ports = append(ports, udpPorts...)
+
+	// check if kernel supports /proc/net/tcp6
 
 	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6", users)
 	if err != nil {
