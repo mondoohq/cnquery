@@ -694,8 +694,8 @@ resources:
     - query: "aws.config.rules {\n  arn \n  state \n  source\n}\n"
       title: Return a list of `aws.config.rule` resources representing AWS Config
         rules configured across all enabled regions and the values for specified fields
-    - query: "aws.config.recorders {\n  name \n  roleArn \n  allSupported \n  includeGlobalResourceTypes
-        \n resourceTypes \n  recording \n  lastStatus \n  region \n}\n"
+    - query: "aws.config.recorders {\n  name\n  roleArn\n  allSupported\n  includeGlobalResourceTypes
+        \n  resourceTypes\n  recording\n  lastStatus\n  region\n}\n"
       title: Return a list of AWS Config recorders configured across all enabled regions
         and the values for specified fields
     - query: |
