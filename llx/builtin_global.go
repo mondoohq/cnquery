@@ -67,8 +67,11 @@ func ifCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, erro
 	max := len(f.Args)
 	for idx+2 < max {
 		res, dref, err := e.resolveValue(f.Args[idx], ref)
-		if err != nil || dref != 0 || res == nil {
+		if dref != 0 || (err != nil && res == nil) {
 			return res, dref, err
+		}
+		if res.Error != nil {
+			return NilData, 0, res.Error
 		}
 
 		if truthy, _ := res.IsTruthy(); truthy {
