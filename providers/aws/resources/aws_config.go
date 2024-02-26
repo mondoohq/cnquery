@@ -100,6 +100,66 @@ func (a *mqlAwsConfig) getRecorders(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
+func (a *mqlAwsConfig) deliveryChannels() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(a.getDeliveryChannels(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsConfig) getDeliveryChannels(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("config>getDeliveryChannels>calling aws with region %s", regionVal)
+
+			svc := conn.ConfigService(regionVal)
+			ctx := context.Background()
+			res := []interface{}{}
+
+			deliveryChannelsParams := &configservice.DescribeDeliveryChannelsInput{}
+			deliveryChannels, err := svc.DescribeDeliveryChannels(ctx, deliveryChannelsParams)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, channel := range deliveryChannels.DeliveryChannels {
+				mqlDeliveryChannel, err := CreateResource(a.MqlRuntime, "aws.config.deliverychannel",
+					map[string]*llx.RawData{
+						"name":         llx.StringDataPtr(channel.Name),
+						"s3BucketName": llx.StringDataPtr(channel.S3BucketName),
+						"s3KeyPrefix":  llx.StringDataPtr(channel.S3KeyPrefix),
+						"snsTopicARN":  llx.StringDataPtr(channel.SnsTopicARN),
+						"region":       llx.StringData(regionVal),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlDeliveryChannel)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
 func getName(name string, region string) string {
 	return name + "/" + region
 }
