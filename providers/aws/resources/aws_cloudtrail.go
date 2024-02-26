@@ -86,7 +86,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 			return args, trail, nil
 		}
 	}
-	return args, nil, err
+	return args, nil, errors.New("cloudtrail trail does not exist")
 }
 
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
