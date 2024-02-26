@@ -31,6 +31,8 @@ func init() {
 	LoginCmd.Flags().StringToString("annotation", nil, "Set the client annotations.")
 	LoginCmd.Flags().String("name", "", "Set asset name.")
 	LoginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
+	LoginCmd.Flags().Int("timer", 0, "Set the scan interval in minutes.")
+	LoginCmd.Flags().Int("splay", 0, "Randomize the timer by up to this many minutes.")
 }
 
 var LoginCmd = &cobra.Command{
@@ -55,11 +57,13 @@ You remain logged in until you explicitly log out using the 'logout' subcommand.
 		defer cnquery_providers.Coordinator.Shutdown()
 		token, _ := cmd.Flags().GetString("token")
 		annotations, _ := cmd.Flags().GetStringToString("annotation")
-		return register(token, annotations)
+		timer, _ := cmd.Flags().GetInt("timer")
+		splay, _ := cmd.Flags().GetInt("splay")
+		return register(token, annotations, timer, splay)
 	},
 }
 
-func register(token string, annotations map[string]string) error {
+func register(token string, annotations map[string]string, timer int, splay int) error {
 	var err error
 	var credential *upstream.ServiceAccountCredentials
 
@@ -151,6 +155,12 @@ func register(token string, annotations map[string]string) error {
 		viper.Set("private_key", confirmation.Credential.PrivateKey)
 		viper.Set("certificate", confirmation.Credential.Certificate)
 		viper.Set("annotations", annotations)
+		if timer > 0 {
+			viper.Set("scan_interval.timer", timer)
+		}
+		if splay > 0 {
+			viper.Set("scan_interval.splay", splay)
+		}
 		credential = confirmation.Credential
 	} else {
 		// try to read local options
