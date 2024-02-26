@@ -1,12 +1,14 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package docker
 
 import (
 	"context"
 	"errors"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -16,22 +18,22 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/docker_engine"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/cat"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
-	docker_discovery "go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
+	dockerDiscovery "go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 )
 
 const (
-	DockerContainer shared.ConnectionType = "docker-container"
+	ContainerConnectionType shared.ConnectionType = "docker-container"
 )
 
-var _ shared.Connection = &DockerContainerConnection{}
+var _ shared.Connection = &ContainerConnection{}
 
-type DockerContainerConnection struct {
+type ContainerConnection struct {
 	plugin.Connection
 	asset *inventory.Asset
 
@@ -51,7 +53,7 @@ type DockerContainerConnection struct {
 	runtime string
 }
 
-func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerContainerConnection, error) {
+func NewContainerConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*ContainerConnection, error) {
 	// expect unix shell by default
 	dockerClient, err := GetDockerClient()
 	if err != nil {
@@ -68,7 +70,7 @@ func NewDockerContainerConnection(id uint32, conf *inventory.Config, asset *inve
 		return nil, errors.New("container " + data.ID + " is not running")
 	}
 
-	conn := &DockerContainerConnection{
+	conn := &ContainerConnection{
 		Connection: plugin.NewConnection(id, asset),
 		asset:      asset,
 		Client:     dockerClient,
@@ -104,27 +106,27 @@ func GetDockerClient() (*client.Client, error) {
 	return cli, nil
 }
 
-func (c *DockerContainerConnection) Name() string {
-	return string(DockerContainer)
+func (c *ContainerConnection) Name() string {
+	return string(ContainerConnectionType)
 }
 
-func (c *DockerContainerConnection) Type() shared.ConnectionType {
-	return DockerContainer
+func (c *ContainerConnection) Type() shared.ConnectionType {
+	return ContainerConnectionType
 }
 
-func (c *DockerContainerConnection) Asset() *inventory.Asset {
+func (c *ContainerConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
-func (c *DockerContainerConnection) ContainerId() string {
+func (c *ContainerConnection) ContainerId() string {
 	return c.container
 }
 
-func (c *DockerContainerConnection) Capabilities() shared.Capabilities {
+func (c *ContainerConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
 }
 
-func (c *DockerContainerConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+func (c *ContainerConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := c.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -150,13 +152,13 @@ func (c *DockerContainerConnection) FileInfo(path string) (shared.FileInfoDetail
 	}, nil
 }
 
-func (c *DockerContainerConnection) FileSystem() afero.Fs {
+func (c *ContainerConnection) FileSystem() afero.Fs {
 	return c.Fs
 }
 
-func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command, error) {
+func (c *ContainerConnection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
-	cmd := &docker_engine.Command{Client: c.Client, Container: c.container}
+	cmd := &Command{Client: c.Client, Container: c.container}
 	res, err := cmd.Exec(command)
 	// this happens, when we try to run /bin/sh in a container, which does not have it
 	if err == nil && res.ExitStatus == 126 {
@@ -171,76 +173,9 @@ func (c *DockerContainerConnection) RunCommand(command string) (*shared.Command,
 	return res, err
 }
 
-// NewContainerRegistryImage loads a container image from a remote registry
-func NewContainerRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
-	ref, err := name.ParseReference(conf.Host, name.WeakValidation)
-	if err == nil {
-		log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
-
-		registryOpts := []image.Option{image.WithInsecure(conf.Insecure)}
-		remoteOpts := auth.AuthOption(conf.Credentials)
-		registryOpts = append(registryOpts, remoteOpts...)
-
-		img, err := image.LoadImageFromRegistry(ref, registryOpts...)
-		if err != nil {
-			return nil, err
-		}
-		if asset.Connections[0].Options == nil {
-			asset.Connections[0].Options = map[string]string{}
-		}
-
-		conn, err := NewTarConnectionForContainer(id, conf, asset, img)
-		if err != nil {
-			return nil, err
-		}
-
-		var identifier string
-		hash, err := img.Digest()
-		if err == nil {
-			identifier = containerid.MondooContainerImageID(hash.String())
-		}
-
-		conn.PlatformIdentifier = identifier
-		conn.Metadata.Name = containerid.ShortContainerImageID(hash.String())
-
-		repoName := ref.Context().Name()
-		imgDigest := hash.String()
-		name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
-		if asset.Name == "" {
-			asset.Name = name
-		}
-		if len(asset.PlatformIds) == 0 {
-			asset.PlatformIds = []string{identifier}
-		} else {
-			asset.PlatformIds = append(asset.PlatformIds, identifier)
-		}
-
-		// set the platform architecture using the image configuration
-		imgConfig, err := img.ConfigFile()
-		if err == nil {
-			conn.PlatformArchitecture = imgConfig.Architecture
-		}
-
-		labels := map[string]string{}
-		labels["docker.io/digests"] = ref.String()
-
-		manifest, err := img.Manifest()
-		if err == nil {
-			labels["mondoo.com/image-id"] = manifest.Config.Digest.String()
-		}
-
-		conn.Metadata.Labels = labels
-		asset.Labels = labels
-
-		return conn, err
-	}
-	log.Debug().Str("image", conf.Host).Msg("Could not detect a valid repository url")
-	return nil, err
-}
-
 func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventory.Asset) (shared.Connection, error) {
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	ded, err := dockerDiscovery.NewDockerEngineDiscovery()
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +188,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 	if ci.Running {
 		log.Debug().Msg("found running container " + ci.ID)
 
-		conn, err := NewDockerContainerConnection(id, &inventory.Config{
+		conn, err := NewContainerConnection(id, &inventory.Config{
 			Host: ci.ID,
 		}, asset)
 		if err != nil {
@@ -267,7 +202,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		return conn, nil
 	} else {
 		log.Debug().Msg("found stopped container " + ci.ID)
-		conn, err := NewFromDockerEngine(id, &inventory.Config{
+		conn, err := NewSnapshotConnection(id, &inventory.Config{
 			Host: ci.ID,
 		}, asset)
 		if err != nil {
@@ -282,7 +217,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 	}
 }
 
-func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*TarConnection, error) {
+func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*tar.Connection, error) {
 	disableInmemoryCache := false
 	if _, ok := conf.Options["disable-cache"]; ok {
 		var err error
@@ -292,7 +227,7 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 		}
 	}
 	// Determine whether the image is locally present or not.
-	resolver := docker_discovery.Resolver{}
+	resolver := dockerDiscovery.Resolver{}
 	resolvedAssets, err := resolver.Resolve(context.Background(), asset, conf, nil)
 	if err != nil {
 		return nil, err
@@ -307,11 +242,11 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 		asset.Name = resolvedAssets[0].Name
 		asset.PlatformIds = resolvedAssets[0].PlatformIds
 		asset.Labels = resolvedAssets[0].Labels
-		return NewContainerRegistryImage(id, conf, asset)
+		return container.NewRegistryImage(id, conf, asset)
 	}
 
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
+	ded, err := dockerDiscovery.NewDockerEngineDiscovery()
 	if err != nil {
 		return nil, err
 	}
@@ -336,10 +271,6 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	if ii.Size > 1024 && !disableInmemoryCache { // > 1GB
 		log.Warn().Int64("size", ii.Size).Msg("Because the image is larger than 1 GB, this task will require a lot of memory. Consider disabling the in-memory cache by adding this flag to the command: `--disable-cache=true`")
 	}
-	_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
-	if err != nil {
-		return nil, err
-	}
 
 	identifier := containerid.MondooContainerImageID(labelImageId)
 
@@ -347,7 +278,39 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	asset.Name = ii.Name
 	asset.Labels = ii.Labels
 
-	tarConn, err := NewWithReader(id, conf, asset, rc)
+	// cache file locally
+	var filename string
+	tmpFile, err := tar.RandomFile()
+	if err != nil {
+		return nil, err
+	}
+	filename = tmpFile.Name()
+
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+	conf.Options[tar.OPTION_FILE] = filename
+
+	tarConn, err := tar.NewConnection(
+		id,
+		conf,
+		asset,
+		tar.WithFetchFn(func() (string, error) {
+			img, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
+			if err != nil {
+				return filename, err
+			}
+			err = tar.StreamToTmpFile(mutate.Extract(img), tmpFile)
+			if err != nil {
+				_ = os.Remove(filename)
+				return filename, err
+			}
+			return filename, nil
+		}),
+		tar.WithCloseFn(func() {
+			log.Debug().Str("tar", filename).Msg("tar> remove temporary tar file on connection close")
+			_ = os.Remove(filename)
+		}))
 	if err != nil {
 		return nil, err
 	}
@@ -357,12 +320,12 @@ func NewDockerContainerImageConnection(id uint32, conf *inventory.Config, asset 
 	return tarConn, nil
 }
 
-// based on the target, try and find out what kind of connection we are dealing with, this can be either a
+// FindDockerObjectConnectionType tries to find out what kind of connection we are dealing with, this can be either a
 // 1. a container, referenced by name or id
 // 2. a locally present image, referenced by tag or digest
 // 3. a remote image, referenced by tag or digest
-func FetchConnectionType(target string) (string, error) {
-	ded, err := docker_discovery.NewDockerEngineDiscovery()
+func FindDockerObjectConnectionType(target string) (string, error) {
+	ded, err := dockerDiscovery.NewDockerEngineDiscovery()
 	if err != nil {
 		return "", err
 	}

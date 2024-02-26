@@ -7,9 +7,9 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh"
 )
 
 type OSProcess struct {
@@ -41,7 +41,7 @@ func ResolveManager(conn shared.Connection) (OSProcessManager, error) {
 	// procfs over ssh is super slow, lets deactivate until we have a faster approach
 	disableProcFs := false
 	switch conn.(type) {
-	case *connection.SshConnection:
+	case *ssh.Connection:
 		disableProcFs = true
 	case *mock.Connection:
 		disableProcFs = true

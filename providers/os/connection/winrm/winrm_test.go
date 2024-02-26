@@ -4,7 +4,7 @@
 //go:build debugtest
 // +build debugtest
 
-package connection
+package winrm
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestWinrmConnection(t *testing.T) {
 	}
 	cred.PreProcess()
 
-	conn, err := NewWinrmConnection(0, &inventory.Config{
+	conn, err := NewConnection(0, &inventory.Config{
 		Type:        shared.Type_Winrm.String(),
 		Host:        "192.168.1.111",
 		Credentials: []*vault.Credential{cred},

@@ -7,14 +7,14 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
 func initContainerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
 	}
-	conn := runtime.Connection.(*connection.TarConnection)
+	conn := runtime.Connection.(*tar.Connection)
 	reference := conn.Metadata.Labels["docker.io/digests"]
 
 	ref, err := name.ParseReference(reference)

@@ -13,8 +13,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/docker"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/id/hostname"
 	"go.mondoo.com/cnquery/v10/providers/os/id/platformid"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/reboot"
@@ -26,9 +27,9 @@ import (
 
 func (p *mqlOs) rebootpending() (bool, error) {
 	switch p.MqlRuntime.Connection.(type) {
-	case *connection.DockerSnapshotConnection:
+	case *docker.SnapshotConnection:
 		return false, nil
-	case *connection.TarConnection:
+	case *tar.Connection:
 		return false, nil
 	}
 
@@ -324,9 +325,9 @@ func (p *mqlOsBase) id() (string, error) {
 func (p *mqlOsBase) rebootpending() (bool, error) {
 	// it is a container image, a reboot is never required
 	switch p.MqlRuntime.Connection.(type) {
-	case *connection.DockerSnapshotConnection:
+	case *docker.SnapshotConnection:
 		return false, nil
-	case *connection.TarConnection:
+	case *tar.Connection:
 		return false, nil
 	}
 

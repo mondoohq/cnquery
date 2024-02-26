@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package cache
+package tar
 
 import (
 	"io"
@@ -12,7 +12,7 @@ func RandomFile() (*os.File, error) {
 	return os.CreateTemp("", "mondoo.inspection")
 }
 
-// This streams a binary stream into a file. The user of this method
+// StreamToTmpFile streams a binary stream into a file. The user of this method
 // is responsible for deleting the file late
 func StreamToTmpFile(r io.ReadCloser, outFile *os.File) error {
 	defer outFile.Close()

@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package ssh
 
 import (
 	"testing"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestSSHDefaultSettings(t *testing.T) {
-	conn := &SshConnection{
+	conn := &Connection{
 		conf: &inventory.Config{
 			Sudo: &inventory.Sudo{
 				Active: true,
@@ -25,12 +25,12 @@ func TestSSHDefaultSettings(t *testing.T) {
 }
 
 func TestSSHProviderError(t *testing.T) {
-	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_Local.String(), Host: "example.local"}, &inventory.Asset{})
+	_, err := NewConnection(0, &inventory.Config{Type: shared.Type_Local.String(), Host: "example.local"}, &inventory.Asset{})
 	assert.Equal(t, "provider type does not match", err.Error())
 }
 
 func TestSSHAuthError(t *testing.T) {
-	_, err := NewSshConnection(0, &inventory.Config{Type: shared.Type_SSH.String(), Host: "example.local"}, &inventory.Asset{})
+	_, err := NewConnection(0, &inventory.Config{Type: shared.Type_SSH.String(), Host: "example.local"}, &inventory.Asset{})
 	assert.True(t,
 		// local testing if ssh agent is available
 		err.Error() == "dial tcp: lookup example.local: no such host" ||

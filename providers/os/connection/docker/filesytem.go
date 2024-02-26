@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package docker
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 type FS struct {
 	Container    string
 	dockerClient *client.Client
-	Connection   *DockerContainerConnection
+	Connection   *ContainerConnection
 	catFS        *cat.Fs
 }
 

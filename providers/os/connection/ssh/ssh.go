@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package ssh
 
 import (
 	"bytes"
@@ -38,11 +38,11 @@ import (
 )
 
 var (
-	_ shared.Connection = (*SshConnection)(nil)
-	_ plugin.Closer     = (*SshConnection)(nil)
+	_ shared.Connection = (*Connection)(nil)
+	_ plugin.Closer     = (*Connection)(nil)
 )
 
-type SshConnection struct {
+type Connection struct {
 	plugin.Connection
 	conf  *inventory.Config
 	asset *inventory.Asset
@@ -56,8 +56,8 @@ type SshConnection struct {
 	SSHClient        *ssh.Client
 }
 
-func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*SshConnection, error) {
-	res := SshConnection{
+func NewConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*Connection, error) {
+	res := Connection{
 		Connection: plugin.NewConnection(id, asset),
 		conf:       conf,
 		asset:      asset,
@@ -119,30 +119,30 @@ func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	return &res, nil
 }
 
-func (c *SshConnection) Name() string {
+func (c *Connection) Name() string {
 	return "ssh"
 }
 
-func (c *SshConnection) Type() shared.ConnectionType {
+func (c *Connection) Type() shared.ConnectionType {
 	return shared.Type_SSH
 }
 
-func (p *SshConnection) Asset() *inventory.Asset {
+func (p *Connection) Asset() *inventory.Asset {
 	return p.asset
 }
 
-func (p *SshConnection) Capabilities() shared.Capabilities {
+func (p *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
 }
 
-func (c *SshConnection) RunCommand(command string) (*shared.Command, error) {
+func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 	if c.Sudo != nil && c.Sudo.Active {
 		command = shared.BuildSudoCommand(c.Sudo, command)
 	}
 	return c.runRawCommand(command)
 }
 
-func (c *SshConnection) runRawCommand(command string) (*shared.Command, error) {
+func (c *Connection) runRawCommand(command string) (*shared.Command, error) {
 	log.Debug().Str("command", command).Str("provider", "ssh").Msg("run command")
 
 	if c.SSHClient == nil {
@@ -197,7 +197,7 @@ func (c *SshConnection) runRawCommand(command string) (*shared.Command, error) {
 	return &res, err
 }
 
-func (c *SshConnection) FileSystem() afero.Fs {
+func (c *Connection) FileSystem() afero.Fs {
 	if c.fs != nil {
 		return c.fs
 	}
@@ -244,7 +244,7 @@ func (c *SshConnection) FileSystem() afero.Fs {
 	return c.fs
 }
 
-func (c *SshConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := c.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
@@ -276,14 +276,14 @@ func (c *SshConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	}, nil
 }
 
-func (c *SshConnection) Close() {
+func (c *Connection) Close() {
 	if c.SSHClient != nil {
 		c.SSHClient.Close()
 	}
 }
 
 // checks the connection config and set default values if not provided by the user
-func (c *SshConnection) setDefaultSettings() {
+func (c *Connection) setDefaultSettings() {
 	// we always want to ensure we use the default port if nothing was specified
 	if c.conf.Port == 0 {
 		c.conf.Port = 22
@@ -295,7 +295,7 @@ func (c *SshConnection) setDefaultSettings() {
 	}
 }
 
-func (c *SshConnection) Connect() error {
+func (c *Connection) Connect() error {
 	cc := c.conf
 
 	c.setDefaultSettings()
@@ -353,7 +353,7 @@ func (c *SshConnection) Connect() error {
 	return nil
 }
 
-func (c *SshConnection) PlatformID() (string, error) {
+func (c *Connection) PlatformID() (string, error) {
 	return PlatformIdentifier(c.HostKey), nil
 }
 
@@ -666,7 +666,7 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 	return auths, closer, nil
 }
 
-func (c *SshConnection) verify() error {
+func (c *Connection) verify() error {
 	var out *shared.Command
 	var err error
 	if c.Sudo != nil {

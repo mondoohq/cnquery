@@ -12,7 +12,6 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/cache"
 )
 
 type ShaReference struct {
@@ -39,40 +38,17 @@ func (r ShaReference) Scope(scope string) string {
 	return ""
 }
 
-func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, io.ReadCloser, error) {
+func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, error) {
 	opts := []daemon.Option{}
 	if disableBuffer {
 		opts = append(opts, daemon.WithUnbufferedOpener())
 	}
 	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)}, opts...)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	// write image to disk (conmpressed, unflattened)
-	// Otherwise we can not later recognize it as a valid image
-	f, err := writeCompressedTarImage(img, sha)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return img, f, nil
-}
-
-// writeCompressedTarImage writes image including the metradata unflattened to disk
-func writeCompressedTarImage(img v1.Image, digest string) (*os.File, error) {
-	f, err := cache.RandomFile()
-	if err != nil {
 		return nil, err
 	}
-	filename := f.Name()
 
-	if err := WriteCompressedTarImageToFile(img, digest, f); err != nil {
-		os.Remove(filename)
-		return nil, err
-
-	}
-	return f, nil
+	return img, nil
 }
 
 func WriteCompressedTarImageToFile(img v1.Image, digest string, f *os.File) error {

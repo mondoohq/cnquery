@@ -4,7 +4,7 @@
 //go:build debugtest
 // +build debugtest
 
-package docker_engine
+package docker
 
 import (
 	"context"

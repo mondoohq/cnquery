@@ -1,11 +1,12 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package processes
+package docker
 
 import (
 	"context"
 	"fmt"
+	"github.com/docker/docker/client"
 	"io"
 	"os"
 	"testing"
@@ -18,17 +19,42 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/docker"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
-func TestDockerProcsList(t *testing.T) {
-	image := "docker.io/nginx:stable"
-	ctx := context.Background()
-	dClient, err := docker.GetDockerClient()
-	assert.NoError(t, err)
+// This test has an external dependency on the gcr.io registry
+// To test this specific case, we cannot use a stored image, we need to call remote.Get
+func TestAssetNameForRemoteImages(t *testing.T) {
+	var err error
+	var conn *tar.Connection
+	var asset *inventory.Asset
+	retries := 3
+	counter := 0
 
+	for {
+		config := &inventory.Config{
+			Type: "docker-image",
+			Host: "gcr.io/google-containers/busybox:1.27.2",
+		}
+		asset = &inventory.Asset{
+			Connections: []*inventory.Config{config},
+		}
+		conn, err = NewContainerImageConnection(0, config, asset)
+		if counter > retries || (err == nil && conn != nil) {
+			break
+		}
+		counter++
+	}
+	require.NoError(t, err)
+	require.NotNil(t, conn)
+
+	assert.Equal(t, "gcr.io/google-containers/busybox@545e6a6310a2", asset.Name)
+	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/545e6a6310a27636260920bc07b994a299b6708a1b26910cfefd335fdfb60d2b")
+}
+
+func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, image string) container.CreateResponse {
 	// If docker is not available, then skip the test.
-	_, err = dClient.ServerVersion(ctx)
+	_, err := dClient.ServerVersion(ctx)
 	if err != nil {
 		t.SkipNow()
 	}
@@ -68,14 +94,27 @@ func TestDockerProcsList(t *testing.T) {
 
 	require.NoError(t, dClient.ContainerStart(ctx, created.ID, container.StartOptions{}))
 
+	return created
+}
+
+// TestDockerContainerConnection creates a new running container and tests the connection
+func TestDockerContainerConnection(t *testing.T) {
+	ctx := context.Background()
+	image := "docker.io/nginx:stable"
+	dClient, err := GetDockerClient()
+	assert.NoError(t, err)
+	created := fetchAndCreateImage(t, ctx, dClient, image)
+
 	// Make sure the container is cleaned up
 	defer func() {
-		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{Force: true})
+		err := dClient.ContainerRemove(ctx, created.ID, container.RemoveOptions{
+			Force: true,
+		})
 		require.NoError(t, err)
 	}()
 
 	fmt.Println("inject: " + created.ID)
-	conn, err := docker.NewContainerConnection(0, &inventory.Config{
+	conn, err := NewContainerConnection(0, &inventory.Config{
 		Host: created.ID,
 	}, &inventory.Asset{
 		// for the test we need to set the platform
@@ -87,10 +126,8 @@ func TestDockerProcsList(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pMan, err := ResolveManager(conn)
-	assert.NoError(t, err)
-
-	proc, err := pMan.Process(1)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, proc)
+	cmd, err := conn.RunCommand("ls /")
+	require.NoError(t, err)
+	assert.NotNil(t, cmd)
+	assert.Equal(t, 0, cmd.ExitStatus)
 }

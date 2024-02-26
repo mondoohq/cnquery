@@ -16,11 +16,16 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/providers/os/connection"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/docker"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/vagrant"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/winrm"
 	"go.mondoo.com/cnquery/v10/providers/os/id"
 	"go.mondoo.com/cnquery/v10/providers/os/resources"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/container_registry"
@@ -91,7 +96,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 				conf.Host = req.Args[1]
 			}
 		} else {
-			connType, err := connection.FetchConnectionType(req.Args[0])
+			connType, err := docker.FindDockerObjectConnectionType(req.Args[0])
 			if err != nil {
 				return nil, err
 			}
@@ -230,7 +235,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	connType := conn.Asset().Connections[0].Type
 	switch connType {
 	case "docker-registry":
-		tarConn := conn.(*connection.TarConnection)
+		tarConn := conn.(*tar.Connection)
 		inv, err = s.discoverRegistry(tarConn)
 		if err != nil {
 			return nil, err
@@ -303,7 +308,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_SSH.String():
-			conn, err = connection.NewSshConnection(connId, conf, asset)
+			conn, err = ssh.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -318,7 +323,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_Winrm.String():
-			conn, err = connection.NewWinrmConnection(connId, conf, asset)
+			conn, err = winrm.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -331,7 +336,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_Tar.String():
-			conn, err = connection.NewTarConnection(connId, conf, asset)
+			conn, err = tar.NewConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -344,7 +349,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_DockerSnapshot.String():
-			conn, err = connection.NewDockerSnapshotConnection(connId, conf, asset)
+			conn, err = docker.NewSnapshotConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -357,7 +362,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_Vagrant.String():
-			conn, err = connection.NewVagrantConnection(connId, conf, asset)
+			conn, err = vagrant.NewVagrantConnection(connId, conf, asset)
 			if err != nil {
 				return nil, err
 			}
@@ -369,16 +374,16 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			}
 
 		case shared.Type_DockerImage.String():
-			conn, err = connection.NewDockerContainerImageConnection(connId, conf, asset)
+			conn, err = docker.NewContainerImageConnection(connId, conf, asset)
 
 		case shared.Type_DockerContainer.String():
-			conn, err = connection.NewDockerEngineContainer(connId, conf, asset)
+			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)
 
 		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
-			conn, err = connection.NewContainerRegistryImage(connId, conf, asset)
+			conn, err = container.NewRegistryImage(connId, conf, asset)
 
 		case shared.Type_RegistryImage.String():
-			conn, err = connection.NewContainerRegistryImage(connId, conf, asset)
+			conn, err = container.NewRegistryImage(connId, conf, asset)
 
 		case shared.Type_FileSystem.String():
 			conn, err = fs.NewConnection(connId, conf, asset)
@@ -439,7 +444,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.Connection), nil
 }
 
-func (s *Service) discoverRegistry(conn *connection.TarConnection) (*inventory.Inventory, error) {
+func (s *Service) discoverRegistry(conn *tar.Connection) (*inventory.Inventory, error) {
 	conf := conn.Asset().Connections[0]
 	if conf == nil {
 		return nil, nil
