@@ -691,6 +691,11 @@ func (t *mqlTerraformModule) block() (*mqlTerraformBlock, error) {
 		}
 	}
 
+	if mqlHclBlock == nil {
+		t.Block.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
 	return mqlHclBlock, nil
 }
 
