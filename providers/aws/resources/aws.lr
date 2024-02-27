@@ -2569,13 +2569,6 @@ private aws.config.deliverychannel @defaults("name region") {
   region string
 }
 
-
-
-
-
-
-
-
 // Amazon Elastic Kubernetes Service (EKS)
 aws.eks {
   // EKS clusters
