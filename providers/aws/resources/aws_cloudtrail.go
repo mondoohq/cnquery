@@ -263,7 +263,7 @@ func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]interface{}, error) {
 		}
 
 		// Basic plus advanced event selectors
-		allSelectors = append(basicSelectors, advancedSelectors)
+		allSelectors = append(basicSelectors, advancedSelectors...)
 	}
 
 	return allSelectors, nil
