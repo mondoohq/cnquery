@@ -12,13 +12,12 @@ import (
 	"strings"
 
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/purl"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v10/providers/os/resources/purl"
 )
 
 const (
