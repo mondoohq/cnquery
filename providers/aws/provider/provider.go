@@ -88,7 +88,7 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			if k == "instance-id" {
 				o[k] = string(v.Value)
 			}
-			if strings.Contains(k, ":region") {
+			if strings.Contains(k, "region") {
 				o[k] = string(v.Value)
 			}
 		}

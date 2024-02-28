@@ -112,20 +112,23 @@ func containsInterfaceSlice(sl []interface{}, s string) bool {
 }
 
 func instanceMatchesFilters(instance *mqlAwsEc2Instance, filters connection.DiscoveryFilters) bool {
-	matches := true
-	f := filters.Ec2DiscoveryFilters
-	if len(f.Regions) > 0 {
-		if !contains(f.Regions, instance.Region.Data) {
-			matches = false
+	regions := []string{}
+	if len(filters.GeneralDiscoveryFilters.Regions) > 0 {
+		regions = append(regions, filters.GeneralDiscoveryFilters.Regions...)
+	}
+	if len(filters.Ec2DiscoveryFilters.Regions) > 0 {
+		regions = append(regions, filters.Ec2DiscoveryFilters.Regions...)
+	}
+	if len(regions) > 0 && !contains(regions, instance.Region.Data) {
+		return false
+	}
+	if len(filters.Ec2DiscoveryFilters.InstanceIds) > 0 {
+		if !contains(filters.Ec2DiscoveryFilters.InstanceIds, instance.InstanceId.Data) {
+			return false
 		}
 	}
-	if len(f.InstanceIds) > 0 {
-		if !contains(f.InstanceIds, instance.InstanceId.Data) {
-			matches = false
-		}
-	}
-	if len(f.Tags) > 0 {
-		for k, v := range f.Tags {
+	if len(filters.Ec2DiscoveryFilters.Tags) > 0 {
+		for k, v := range filters.Ec2DiscoveryFilters.Tags {
 			if instance.Tags.Data[k] == nil {
 				return false
 			}
@@ -134,7 +137,7 @@ func instanceMatchesFilters(instance *mqlAwsEc2Instance, filters connection.Disc
 			}
 		}
 	}
-	return matches
+	return true
 }
 
 func imageMatchesFilters(image *mqlAwsEcrImage, filters connection.DiscoveryFilters) bool {

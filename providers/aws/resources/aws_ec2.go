@@ -618,6 +618,9 @@ func (a *mqlAwsEc2) getInstances(conn *connection.AwsConnection) []*jobpool.Job 
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
 	}
+	if len(conn.Filters.Ec2DiscoveryFilters.Regions) > 0 {
+		regions = conn.Filters.Ec2DiscoveryFilters.Regions
+	}
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {

@@ -126,18 +126,15 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	for k, v := range opts {
 		switch {
 		case strings.HasPrefix(k, "ec2:tag:"):
-			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix("ec2:tag:", k)] = v
+			d.Ec2DiscoveryFilters.Tags[strings.TrimPrefix(k, "ec2:tag:")] = v
 		case k == "ec2:region":
 			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
-		case k == "all:region":
+		case k == "all:region", k == "region":
 			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
-		case k == "region":
-			d.GeneralDiscoveryFilters.Regions = append(d.GeneralDiscoveryFilters.Regions, v)
-			d.Ec2DiscoveryFilters.Regions = append(d.Ec2DiscoveryFilters.Regions, v)
 		case k == "instance-id":
 			d.Ec2DiscoveryFilters.InstanceIds = append(d.Ec2DiscoveryFilters.InstanceIds, v)
 		case strings.HasPrefix(k, "all:tag:"):
-			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix("all:tag:", k)] = v
+			d.GeneralDiscoveryFilters.Tags[strings.TrimPrefix(k, "all:tag:")] = v
 		case k == "ecr:tag":
 			d.EcrDiscoveryFilters.Tags = append(d.EcrDiscoveryFilters.Tags, v)
 		}
