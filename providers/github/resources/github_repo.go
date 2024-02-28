@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -197,7 +198,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		}
 	}
 
-	return args, nil, nil
+	return args, nil, fmt.Errorf("could not find repository %q. Make sure the repository exists and the token has sufficient permissions to access it", reponame)
 }
 
 func (g *mqlGithubLicense) id() (string, error) {
