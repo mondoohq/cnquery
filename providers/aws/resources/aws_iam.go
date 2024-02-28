@@ -434,6 +434,7 @@ func (a *mqlAwsIam) roles() ([]interface{}, error) {
 			return nil, err
 		}
 
+		// Added Trust relationship policy attached to each role
 		for _, role := range rolesResp.Roles {
 			policyOutput, err := svc.GetRole(ctx, &iam.GetRoleInput{RoleName: role.RoleName})
 			var policyDocumentMap map[string]interface{}
