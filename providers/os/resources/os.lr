@@ -614,7 +614,7 @@ package @defaults("name version") {
   // Common Platform Enumeration (CPE) for the package
   cpes []core.cpe
 
-  // Package origin (optional)
+  // Package origin, may includes version if available (optional)
   origin() string
 
   // Available version

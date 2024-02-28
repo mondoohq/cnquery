@@ -5,7 +5,6 @@ package resources
 
 import (
 	"errors"
-	"go.mondoo.com/cnquery/v10/types"
 	"regexp"
 	"sync"
 
@@ -14,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/v10/types"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
