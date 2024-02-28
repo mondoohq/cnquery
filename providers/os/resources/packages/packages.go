@@ -33,9 +33,8 @@ type Package struct {
 	// this may be the source package or an origin
 	// e.g. on alpine it is used for parent  packages
 	// o 	Package Origin - https://wiki.alpinelinux.org/wiki/Apk_spec
-	Origin        string `json:"origin"`
-	OriginVersion string `json:"originVersion"`
-	Format        string `json:"format"`
+	Origin string `json:"origin"`
+	Format string `json:"format"`
 
 	// Package Url follows https://github.com/package-url/purl-spec
 	PUrl string `json:"purl,omitempty"`

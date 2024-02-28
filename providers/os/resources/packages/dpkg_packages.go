@@ -81,16 +81,7 @@ func ParseDpkgPackages(pf *inventory.Platform, input io.Reader) ([]Package, erro
 		case key == "Status":
 			pkg.Status = strings.TrimSpace(m[2])
 		case key == "Source":
-			o := DPKG_ORIGIN_REGEX.FindStringSubmatch(m[2])
-			if len(o) >= 1 {
-				pkg.Origin = strings.TrimSpace(o[1])
-			} else {
-				log.Error().Str("origin", m[2]).Msg("cannot parse dpkg origin")
-			}
-			// Some packages also have a version as part of the Source field
-			if len(o) >= 2 {
-				pkg.OriginVersion = strings.TrimSpace(o[2])
-			}
+			pkg.Origin = strings.TrimSpace(m[2])
 		// description supports multi-line statements, start desc
 		case key == "Description":
 			pkg.Description = strings.TrimSpace(m[2])

@@ -587,8 +587,6 @@ resources:
       installed: {}
       name: {}
       origin: {}
-      originVersion:
-        min_mondoo_version: latest
       outdated: {}
       purl:
         min_mondoo_version: latest

@@ -57,12 +57,11 @@ The sfdisk utility is mostly for automation and scripting uses.`,
 	assert.Equal(t, findPkg(m, p.Name), p, p.Name)
 
 	p = Package{
-		Name:          "libaudit1",
-		Version:       "1:2.4-1+b1",
-		Arch:          "amd64",
-		Status:        "install ok installed",
-		Origin:        "audit",
-		OriginVersion: "1:2.4-1",
+		Name:    "libaudit1",
+		Version: "1:2.4-1+b1",
+		Arch:    "amd64",
+		Status:  "install ok installed",
+		Origin:  "audit (1:2.4-1)",
 		Description: `Dynamic library for security auditing
 The audit-libs package contains the dynamic libraries needed for
 applications to use the audit framework. It is used to monitor systems for
