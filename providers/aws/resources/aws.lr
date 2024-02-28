@@ -852,6 +852,8 @@ private aws.iam.role @defaults("arn name") {
   tags map[string]string
   // Time when the role was created
   createDate time
+  // The policy document that grants an entity permission to assume the role
+  assumeRolePolicyDocument dict
 }
 
 // AWS IAM group
