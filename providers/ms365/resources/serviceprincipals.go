@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
@@ -50,7 +51,7 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
-	} // TODO: what if we have more than 1k SPs?
+	}
 	ctx := context.Background()
 	resp, err := graphClient.ServicePrincipals().Get(ctx, &serviceprincipals.ServicePrincipalsRequestBuilderGetRequestConfiguration{
 		QueryParameters: params,
@@ -58,9 +59,11 @@ func fetchServicePrincipals(runtime *plugin.Runtime, conn *connection.Ms365Conne
 	if err != nil {
 		return nil, transformError(err)
 	}
-
+	sps, err := iterate[*models.ServicePrincipal](ctx, resp, graphClient.GetAdapter(), serviceprincipals.CreateDeltaGetResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, transformError(err)
+	}
 	res := []interface{}{}
-	sps := resp.GetValue()
 	for _, sp := range sps {
 		hideApp := stringx.Contains(sp.GetTags(), "HideApp")
 		assignments := []interface{}{}
