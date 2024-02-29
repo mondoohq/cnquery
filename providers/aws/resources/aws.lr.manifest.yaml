@@ -1835,6 +1835,19 @@ resources:
     platform:
       name:
       - aws
+  aws.iam.accessKey:
+  docs:
+    desc: |
+      The `aws.iam.accessKey` provides fields for assessing the configuration of individual IAM Access Keys. For usage, read the `aws.iam` resource documentation. This resource helps in identifying and analyzing the state and configurations of access keys, allowing for better security and management of AWS IAM credentials.
+  fields:
+    accessKeyId: {}
+    createDate: {}
+    status: {}
+  is_private: true
+  min_mondoo_version: 9.0.0
+  platform:
+    name:
+    - aws
   aws.iam.virtualmfadevice:
     docs:
       desc: |

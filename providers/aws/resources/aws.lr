@@ -699,6 +699,8 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // List of server certificates stored in IAM
   serverCertificates() []dict
+  // Retrieves metadata for IAM access keys
+   accessKeyMetadata() []aws.iam.accessKey
 }
 
 // Entry in AWS IAM credential report
@@ -2587,4 +2589,14 @@ private aws.eks.cluster @defaults("arn version status") {
   resourcesVpcConfig dict
   // Cluster creation timestamp
   createdAt time
+}
+
+// AWS IAM accessKey definition
+private aws.iam.accessKey {"accessKeyId status"
+  // Access Key ID
+  accessKeyId string
+  // Status of the access key (Active/Inactive)
+  status string
+  // Time when the access key was created
+  createDate time
 }

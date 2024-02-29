@@ -1360,3 +1360,50 @@ func (a *mqlAwsIamLoginProfile) init() (string, error) {
 	// specify a precision. Using seconds is reasonable.
 	return strconv.FormatInt(date.Unix(), 10), nil
 }
+
+func (a *mqlAwsIamUser) accessKeyMetadata() ([]interface{}, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+	name := a.Name.Data
+
+	res := []interface{}{}
+	var marker *string
+	for {
+		accessKeysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
+			UserName: &name,
+			Marker:   marker,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, metadata := range accessKeysResp.AccessKeyMetadata {
+			if metadata.CreateDate == nil {
+				continue
+			}
+
+			statusStr := string(metadata.Status)
+
+			accessKeyData := map[string]*llx.RawData{
+				"AccessKeyId": llx.StringDataPtr(metadata.AccessKeyId),
+				"Status":      llx.StringDataPtr(&statusStr),
+				"CreateDate":  llx.TimeDataPtr(metadata.CreateDate),
+			}
+
+			accessKeyResource, err := CreateResource(a.MqlRuntime, "aws.iam.accessKey", accessKeyData)
+			if err != nil {
+				return nil, err
+			}
+
+			res = append(res, accessKeyResource)
+		}
+
+		if !accessKeysResp.IsTruncated {
+			break
+		}
+		marker = accessKeysResp.Marker
+	}
+
+	return res, nil
+}
