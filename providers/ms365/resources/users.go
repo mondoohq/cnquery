@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
@@ -29,15 +30,19 @@ func (a *mqlMicrosoft) users() ([]interface{}, error) {
 		"jobTitle", "mail", "mobilePhone", "otherMails", "officeLocation", "postalCode", "state", "streetAddress", "surname", "userPrincipalName", "userType",
 	}
 	ctx := context.Background()
+	top := int32(999)
 	resp, err := graphClient.Users().Get(ctx, &users.UsersRequestBuilderGetRequestConfiguration{QueryParameters: &users.UsersRequestBuilderGetQueryParameters{
 		Select: selectFields,
+		Top:    &top,
 	}})
 	if err != nil {
 		return nil, transformError(err)
 	}
-
+	users, err := iterate[*models.User](ctx, resp, graphClient.GetAdapter(), users.CreateDeltaGetResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, transformError(err)
+	}
 	res := []interface{}{}
-	users := resp.GetValue()
 	for _, u := range users {
 		graphUser, err := CreateResource(a.MqlRuntime, "microsoft.user",
 			map[string]*llx.RawData{
