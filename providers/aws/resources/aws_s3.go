@@ -73,10 +73,12 @@ func (a *mqlAwsS3) buckets() ([]interface{}, error) {
 			Bucket: bucket.Name,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "Could not get bucket location")
+			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location")
+			continue
 		}
 		if location == nil {
-			return nil, errors.New("Could not get bucket location (returned null)")
+			log.Error().Err(err).Str("bucket", *bucket.Name).Msg("Could not get bucket location (returned null)")
+			continue
 		}
 
 		region := string(location.LocationConstraint)
