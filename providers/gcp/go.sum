@@ -25,8 +25,8 @@ cloud.google.com/go/longrunning v0.5.5 h1:GOE6pZFdSrTb4KAiKnXsJBtlE6mEyaW44oKyMI
 cloud.google.com/go/longrunning v0.5.5/go.mod h1:WV2LAxD8/rg5Z1cNW6FJ/ZpX4E4VnDnoTk0yawPBB7s=
 cloud.google.com/go/monitoring v1.18.0 h1:NfkDLQDG2UR3WYZVQE8kwSbUIEyIqJUPl+aOQdFH1T4=
 cloud.google.com/go/monitoring v1.18.0/go.mod h1:c92vVBCeq/OB4Ioyo+NbN2U7tlg5ZH41PZcdvfc+Lcg=
-cloud.google.com/go/pubsub v1.36.1 h1:dfEPuGCHGbWUhaMCTHUFjfroILEkx55iUmKBZTP5f+Y=
-cloud.google.com/go/pubsub v1.36.1/go.mod h1:iYjCa9EzWOoBiTdd4ps7QoMtMln5NwaZQpK1hbRfBDE=
+cloud.google.com/go/pubsub v1.36.2 h1:nAUD4aiWHZFYyINhRag1qOnHUk0/7QiWEa04XWnqACA=
+cloud.google.com/go/pubsub v1.36.2/go.mod h1:mHCFLNG8abCrPzhuOnpBcr9DUy+l3/LWWn0qoJdbh1w=
 cloud.google.com/go/recommender v1.12.1 h1:LVLYS3r3u0MSCxQSDUtLSkporEGi9OAE6hGvayrZNPs=
 cloud.google.com/go/recommender v1.12.1/go.mod h1:gf95SInWNND5aPas3yjwl0I572dtudMhMIG4ni8nr+0=
 cloud.google.com/go/run v1.3.4 h1:m9WDA7DzTpczhZggwYlZcBWgCRb+kgSIisWn1sbw2rQ=
