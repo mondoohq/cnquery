@@ -1662,6 +1662,10 @@ resources:
       desc: |
         Use the `aws.iam` resource to assess the configuration of the AWS IAM service. The resource provides a list of `aws.iam.user` resources representing GuardDuty Detectors deployed across all enabled regions.
     fields:
+      accessKeyMetadata:
+        min_mondoo_version: latest
+      accessKeys:
+        min_mondoo_version: latest
       accountPasswordPolicy: {}
       accountSummary: {}
       attachedPolicies: {}
@@ -1702,6 +1706,28 @@ resources:
         != null\n  ) \n"
       title: Do not setup access keys during initial user setup for all IAM users
         that have a console password
+  aws.iam.accessKey:
+    docs:
+      desc: |
+        The `aws.iam.accessKey` provides fields for assessing the configuration of individual IAM Access Keys. For usage, read the `aws.iam` resource documentation. This resource helps in identifying and analyzing the state and configurations of access keys, allowing for better security and management of AWS IAM credentials.
+    fields:
+      accessKeyId: {}
+      createDate: {}
+      status: {}
+    is_private: true
+    min_mondoo_version: 9.0.0
+    platform:
+      name:
+      - aws
+  aws.iam.accessKeys:
+    fields:
+      accessKeyId: {}
+      createDate: {}
+      status: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.iam.group:
     docs:
       desc: |
@@ -1817,6 +1843,9 @@ resources:
       accessKey2LastUsedDate: {}
       accessKey2LastUsedRegion: {}
       accessKey2LastUsedService: {}
+      accessKeyMetadata:
+        min_mondoo_version: latest
+      accessKeys: {}
       arn: {}
       cert1Active: {}
       cert1LastRotated: {}
@@ -1835,19 +1864,6 @@ resources:
     platform:
       name:
       - aws
-  aws.iam.accessKey:
-  docs:
-    desc: |
-      The `aws.iam.accessKey` provides fields for assessing the configuration of individual IAM Access Keys. For usage, read the `aws.iam` resource documentation. This resource helps in identifying and analyzing the state and configurations of access keys, allowing for better security and management of AWS IAM credentials.
-  fields:
-    accessKeyId: {}
-    createDate: {}
-    status: {}
-  is_private: true
-  min_mondoo_version: 9.0.0
-  platform:
-    name:
-    - aws
   aws.iam.virtualmfadevice:
     docs:
       desc: |

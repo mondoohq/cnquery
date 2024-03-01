@@ -222,6 +222,10 @@ func init() {
 			Init: initAwsIamUser,
 			Create: createAwsIamUser,
 		},
+		"aws.iam.accessKey": {
+			// to override args, implement: initAwsIamAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamAccessKey,
+		},
 		"aws.iam.loginProfile": {
 			// to override args, implement: initAwsIamLoginProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamLoginProfile,
@@ -1553,10 +1557,19 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsIamUser).GetGroups()).ToDataRes(types.Array(types.String))
 	},
 	"aws.iam.user.accessKeys": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsIamUser).GetAccessKeys()).ToDataRes(types.Array(types.Resource("aws.iam.accessKey")))
 	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
+	},
+	"aws.iam.accessKey.accessKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessKey).GetAccessKeyId()).ToDataRes(types.String)
+	},
+	"aws.iam.accessKey.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessKey).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.iam.accessKey.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessKey).GetCreateDate()).ToDataRes(types.Time)
 	},
 	"aws.iam.loginProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamLoginProfile).GetCreatedAt()).ToDataRes(types.Time)
@@ -4984,6 +4997,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).LoginProfile, ok = plugin.RawToTValue[*mqlAwsIamLoginProfile](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsIamAccessKey).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.iam.accessKey.accessKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessKey).AccessKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessKey.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessKey.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessKey).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.loginProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12167,6 +12196,16 @@ func (c *mqlAwsIamUser) GetGroups() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsIamUser) GetAccessKeys() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.AccessKeys, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "accessKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.accessKeys()
 	})
 }
@@ -12185,6 +12224,60 @@ func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile]
 
 		return c.loginProfile()
 	})
+}
+
+// mqlAwsIamAccessKey for the aws.iam.accessKey resource
+type mqlAwsIamAccessKey struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsIamAccessKeyInternal it will be used here
+	AccessKeyId plugin.TValue[string]
+	Status plugin.TValue[string]
+	CreateDate plugin.TValue[*time.Time]
+}
+
+// createAwsIamAccessKey creates a new instance of this resource
+func createAwsIamAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamAccessKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.accessKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamAccessKey) MqlName() string {
+	return "aws.iam.accessKey"
+}
+
+func (c *mqlAwsIamAccessKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamAccessKey) GetAccessKeyId() *plugin.TValue[string] {
+	return &c.AccessKeyId
+}
+
+func (c *mqlAwsIamAccessKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIamAccessKey) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
 }
 
 // mqlAwsIamLoginProfile for the aws.iam.loginProfile resource

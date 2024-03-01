@@ -756,14 +756,13 @@ func (a *mqlAwsIamUser) id() (string, error) {
 
 func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
 	svc := conn.Iam("")
 	ctx := context.Background()
-
 	username := a.Name.Data
 
 	var marker *string
-	res := []interface{}{}
+	var resources []interface{} // This will store the created resources.
+
 	for {
 		keysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
 			UserName: &username,
@@ -772,18 +771,29 @@ func (a *mqlAwsIamUser) accessKeys() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		metadata, err := convert.JsonToDictSlice(keysResp.AccessKeyMetadata)
-		if err != nil {
-			return nil, err
+
+		for _, keyMetadata := range keysResp.AccessKeyMetadata {
+			// Create a resource for each access key.
+			accessKeyResource, err := CreateResource(a.MqlRuntime, "aws.iam.accessKey",
+				map[string]*llx.RawData{
+					"accessKeyId": llx.StringDataPtr(keyMetadata.AccessKeyId),
+					"status":      llx.StringData(string(keyMetadata.Status)),
+					"createDate":  llx.TimeDataPtr(keyMetadata.CreateDate),
+				},
+			)
+			if err != nil {
+				return nil, err
+			}
+			resources = append(resources, accessKeyResource)
 		}
-		res = append(res, metadata)
+
 		if !keysResp.IsTruncated {
 			break
 		}
 		marker = keysResp.Marker
 	}
 
-	return res, nil
+	return resources, nil
 }
 
 func (a *mqlAwsIamUser) policies() ([]interface{}, error) {
@@ -1359,51 +1369,4 @@ func (a *mqlAwsIamLoginProfile) init() (string, error) {
 	// Note: the precision of AWS logins is in seconds. Current AWS docs don't
 	// specify a precision. Using seconds is reasonable.
 	return strconv.FormatInt(date.Unix(), 10), nil
-}
-
-func (a *mqlAwsIamUser) accessKeyMetadata() ([]interface{}, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Iam("")
-	ctx := context.Background()
-	name := a.Name.Data
-
-	res := []interface{}{}
-	var marker *string
-	for {
-		accessKeysResp, err := svc.ListAccessKeys(ctx, &iam.ListAccessKeysInput{
-			UserName: &name,
-			Marker:   marker,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		for _, metadata := range accessKeysResp.AccessKeyMetadata {
-			if metadata.CreateDate == nil {
-				continue
-			}
-
-			statusStr := string(metadata.Status)
-
-			accessKeyData := map[string]*llx.RawData{
-				"AccessKeyId": llx.StringDataPtr(metadata.AccessKeyId),
-				"Status":      llx.StringDataPtr(&statusStr),
-				"CreateDate":  llx.TimeDataPtr(metadata.CreateDate),
-			}
-
-			accessKeyResource, err := CreateResource(a.MqlRuntime, "aws.iam.accessKey", accessKeyData)
-			if err != nil {
-				return nil, err
-			}
-
-			res = append(res, accessKeyResource)
-		}
-
-		if !accessKeysResp.IsTruncated {
-			break
-		}
-		marker = accessKeysResp.Marker
-	}
-
-	return res, nil
 }
