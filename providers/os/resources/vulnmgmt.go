@@ -265,10 +265,15 @@ func (v *mqlVulnmgmt) getIncognitoReport(mondooClient *gql.MondooClient) (*gql.V
 		}
 	}
 
+	family := []*mondoogql.String{}
+	for _, f := range platform.Family {
+		family = append(family, mondoogql.NewStringPtr(mondoogql.String(f)))
+	}
 	inputPlatform := mondoogql.PlatformInput{
 		Name:    mondoogql.NewStringPtr(mondoogql.String(platform.Name)),
 		Release: mondoogql.NewStringPtr(mondoogql.String(platform.Version)),
 		Build:   mondoogql.NewStringPtr(mondoogql.String(platform.Build)),
+		Family:  &family,
 	}
 	inputLabels := []*mondoogql.KeyValueInput{}
 	for k := range platform.Labels {
