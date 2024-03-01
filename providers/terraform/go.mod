@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/hashicorp/hcl/v2 v2.19.1
+	github.com/hashicorp/hcl/v2 v2.20.0
 	go.mondoo.com/cnquery/v10 v10.4.2
 )
 
@@ -153,6 +153,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
-	github.com/zclconf/go-cty v1.14.2
+	github.com/zclconf/go-cty v1.14.3
 	golang.org/x/text v0.14.0 // indirect
 )
