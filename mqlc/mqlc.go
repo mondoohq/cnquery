@@ -1300,6 +1300,17 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		return restCalls, variable.typ, nil
 	}
 
+	f = typeConversions[id]
+	if f != nil {
+		typ, err := f(c, id, call)
+		// If it works or is some random error, we are done. However, we
+		// try to toss this fish back in the sea if it's not a conversion.
+		// For example: regex.ipv4 can be handled below, since it's not a conversion
+		if err == nil || err != errNotConversion {
+			return restCalls, typ, err
+		}
+	}
+
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err

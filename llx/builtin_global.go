@@ -34,10 +34,17 @@ func init() {
 		"switch":         switchCallV2,
 		"score":          scoreCallV2,
 		"typeof":         typeofCallV2,
-		"semver":         semverCall,
 		"{}":             blockV2,
 		"return":         returnCallV2,
 		"createResource": globalCreateResource,
+		// type-conversions
+		"string": stringCall,
+		"$regex": regexCall, // TODO: support both the regex resource and the internal typemap!
+		"float":  floatCall,
+		"int":    intCall,
+		"bool":   boolCall,
+		"dict":   dictCall,
+		"semver": semverCall,
 	}
 }
 
@@ -197,6 +204,168 @@ func semverCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, er
 	}
 
 	return &RawData{Type: types.Semver, Value: res.Value}, 0, nil
+}
+
+func stringCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `string` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string:
+		return StringData(v), 0, nil
+	case int64:
+		i := strconv.FormatInt(v, 10)
+		return StringData(i), 0, nil
+	case float64:
+		f := strconv.FormatFloat(v, 'f', 2, 64)
+		return StringData(f), 0, nil
+	case bool:
+		if v {
+			return StringData("true"), 0, nil
+		}
+		return StringData("false"), 0, nil
+	default:
+		return NilData, 0, nil
+	}
+}
+
+func regexCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `regex` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string:
+		return RegexData(v), 0, nil
+	case int64:
+		i := strconv.FormatInt(v, 10)
+		return RegexData(i), 0, nil
+	case float64:
+		f := strconv.FormatFloat(v, 'f', 2, 64)
+		return RegexData(f), 0, nil
+	case bool:
+		if v {
+			return RegexData("true"), 0, nil
+		}
+		return RegexData("false"), 0, nil
+	default:
+		return NilData, 0, nil
+	}
+}
+
+func intCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `int` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string:
+		i, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, 0, err
+		}
+		return IntData(i), 0, nil
+	case int64:
+		return IntData(v), 0, nil
+	case float64:
+		return IntData(int64(v)), 0, nil
+	case bool:
+		if v {
+			return IntData(1), 0, nil
+		}
+		return IntData(0), 0, nil
+	default:
+		return NilData, 0, nil
+	}
+}
+
+func floatCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `float` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string:
+		i, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, 0, err
+		}
+		return FloatData(i), 0, nil
+	case int64:
+		return FloatData(float64(v)), 0, nil
+	case float64:
+		return FloatData(v), 0, nil
+	case bool:
+		if v {
+			return FloatData(1), 0, nil
+		}
+		return FloatData(0), 0, nil
+	default:
+		return NilData, 0, nil
+	}
+}
+
+func boolCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `bool` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string:
+		return BoolData(v == "true"), 0, nil
+	case int64:
+		return BoolData(v != 0), 0, nil
+	case float64:
+		return BoolData(v != 0), 0, nil
+	case bool:
+		return BoolData(v), 0, nil
+	default:
+		return NilData, 0, nil
+	}
+}
+
+func dictCall(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if len(f.Args) != 1 {
+		return nil, 0, errors.New("Called `dict` with " + strconv.Itoa(len(f.Args)) + " arguments, expected one")
+	}
+
+	res, dref, err := e.resolveValue(f.Args[0], ref)
+	if err != nil || dref != 0 || res == nil {
+		return res, dref, err
+	}
+
+	switch v := res.Value.(type) {
+	case string, int64, float64, bool, []any, map[string]any:
+		return DictData(v), 0, nil
+	default:
+		return NilData, 0, nil
+	}
 }
 
 func expectV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
