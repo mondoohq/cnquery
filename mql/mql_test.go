@@ -156,6 +156,67 @@ func TestResourceAliases(t *testing.T) {
 	})
 }
 
+func TestTypeCasts(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock())
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "/regex2string/",
+			ResultIndex: 0,
+			Expectation: "regex2string",
+		},
+		{
+			Code:        "regex('s.*g') == 'string'",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "int(1.23)",
+			ResultIndex: 0,
+			Expectation: int64(1),
+		},
+		{
+			Code:        "int('12')",
+			ResultIndex: 0,
+			Expectation: int64(12),
+		},
+		{
+			Code:        "float(123)",
+			ResultIndex: 0,
+			Expectation: float64(123),
+		},
+		{
+			Code:        "float('123')",
+			ResultIndex: 0,
+			Expectation: float64(123),
+		},
+		{
+			Code:        "int(float('1.23'))",
+			ResultIndex: 0,
+			Expectation: int64(1),
+		},
+		{
+			Code:        "bool(1.23)",
+			ResultIndex: 0,
+			Expectation: true,
+		},
+		{
+			Code:        "bool(0)",
+			ResultIndex: 0,
+			Expectation: false,
+		},
+		{
+			Code:        "bool('true')",
+			ResultIndex: 0,
+			Expectation: true,
+		},
+		{
+			Code:        "bool('false')",
+			ResultIndex: 0,
+			Expectation: false,
+		},
+	})
+}
+
 func TestNullResources(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
