@@ -1152,7 +1152,7 @@ func intLTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(left.(int64) < f)
 	})
@@ -1162,7 +1162,7 @@ func intLTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(left.(int64) <= f)
 	})
@@ -1172,7 +1172,7 @@ func intGTStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(left.(int64) > f)
 	})
@@ -1182,7 +1182,7 @@ func intGTEStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(right.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(left.(int64) >= f)
 	})
@@ -1194,7 +1194,7 @@ func stringLTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(f < right.(int64))
 	})
@@ -1204,7 +1204,7 @@ func stringLTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(f <= right.(int64))
 	})
@@ -1214,7 +1214,7 @@ func stringGTIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(f > right.(int64))
 	})
@@ -1224,7 +1224,7 @@ func stringGTEIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	return nonNilDataOpV2(e, bind, chunk, ref, types.Bool, func(left interface{}, right interface{}) *RawData {
 		f, err := strconv.ParseInt(left.(string), 10, 64)
 		if err != nil {
-			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to float")}
+			return &RawData{Type: types.Bool, Error: errors.New("failed to convert string to int")}
 		}
 		return BoolData(f >= right.(int64))
 	})

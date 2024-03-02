@@ -1300,6 +1300,12 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 		return restCalls, variable.typ, nil
 	}
 
+	f = typeConversions[id]
+	if f != nil {
+		typ, err := f(c, id, call)
+		return restCalls, typ, err
+	}
+
 	found, restCalls, typ, err = c.compileResource(id, calls)
 	if found {
 		return restCalls, typ, err
