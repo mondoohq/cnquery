@@ -15,20 +15,22 @@ var typeConversions map[string]fieldCompiler
 
 func init() {
 	typeConversions = map[string]fieldCompiler{
-		"semver": compileTypeConversion(types.Semver),
-		"bool":   compileTypeConversion(types.Bool),
-		"int":    compileTypeConversion(types.Int),
-		"float":  compileTypeConversion(types.Float),
-		"string": compileTypeConversion(types.String),
-		"regex":  compileTypeConversion(types.Regex),
-		"dict":   compileTypeConversion(types.Dict),
+		"bool":   compileTypeConversion("bool", types.Bool),
+		"int":    compileTypeConversion("int", types.Int),
+		"float":  compileTypeConversion("float", types.Float),
+		"string": compileTypeConversion("string", types.String),
+		"regex":  compileTypeConversion("$regex", types.Regex),
+		"dict":   compileTypeConversion("dict", types.Dict),
+		"semver": compileTypeConversion("semver", types.Semver),
 	}
 }
 
-func compileTypeConversion(typ types.Type) fieldCompiler {
+var errNotConversion = errors.New("not a type-conversion")
+
+func compileTypeConversion(llxID string, typ types.Type) fieldCompiler {
 	return func(c *compiler, id string, call *parser.Call) (types.Type, error) {
 		if call == nil || len(call.Function) < 1 {
-			return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
+			return types.Nil, errNotConversion
 		}
 
 		arg := call.Function[0]
@@ -43,9 +45,9 @@ func compileTypeConversion(typ types.Type) fieldCompiler {
 
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
-			Id:   id,
+			Id:   llxID,
 			Function: &llx.Function{
-				Type: string(types.String),
+				Type: string(typ),
 				Args: []*llx.Primitive{argValue},
 			},
 		})

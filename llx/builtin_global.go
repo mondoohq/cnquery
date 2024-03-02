@@ -38,13 +38,13 @@ func init() {
 		"return":         returnCallV2,
 		"createResource": globalCreateResource,
 		// type-conversions
-		"semver": semverCall,
 		"string": stringCall,
-		"regex":  regexCall,
+		"$regex": regexCall, // TODO: support both the regex resource and the internal typemap!
 		"float":  floatCall,
 		"int":    intCall,
 		"bool":   boolCall,
 		"dict":   dictCall,
+		"semver": semverCall,
 	}
 }
 
