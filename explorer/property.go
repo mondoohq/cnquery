@@ -45,15 +45,27 @@ func (p *Property) Compile(props map[string]*llx.Primitive, conf mqlc.CompilerCo
 	return mqlc.Compile(p.Mql, props, conf)
 }
 
-// RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (p *Property) RefreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
-	return p.refreshChecksumAndType(conf)
+// id gets any valid ID for the property, prioritizing uid > mrn > title
+func (p *Property) id() string {
+	if p.Uid != "" {
+		return p.Uid
+	}
+	if p.Mrn != "" {
+		return p.Mrn
+	}
+	// last resort
+	return p.Title
 }
 
-func (p *Property) refreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+// RefreshChecksumAndType by compiling the query and updating the Checksum field
+func (p *Property) RefreshChecksumAndType(conf mqlc.CompilerConfig) (*llx.CodeBundle, error) {
+	if p.Mql == "" {
+		return nil, errors.New("property must not be empty (property '" + p.id() + "')")
+	}
+
 	bundle, err := p.Compile(nil, conf)
 	if err != nil {
-		return bundle, multierr.Wrap(err, "failed to compile property '"+p.Mql+"'")
+		return bundle, multierr.Wrap(err, "failed to compile property '"+p.id()+"', mql: '"+p.Mql+"'")
 	}
 
 	if bundle.GetCodeV2().GetId() == "" {
