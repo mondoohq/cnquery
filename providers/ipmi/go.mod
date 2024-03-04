@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/rs/zerolog v1.32.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.mondoo.com/cnquery/v10 v10.4.2
 )
