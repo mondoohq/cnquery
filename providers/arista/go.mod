@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/aristanetworks/goeapi v1.0.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.4.2
 )
 
