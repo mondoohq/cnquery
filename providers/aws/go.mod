@@ -7,31 +7,31 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.50.28
+	github.com/aws/aws-sdk-go v1.50.30
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/backup v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.149.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.149.2
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.1
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.131.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.132.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.1
@@ -58,7 +58,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/afero v1.11.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.4.2
 	k8s.io/client-go v0.29.2
 )
