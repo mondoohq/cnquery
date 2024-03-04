@@ -9,7 +9,7 @@ toolchain go1.22.0
 require (
 	github.com/okta/okta-sdk-golang/v2 v2.20.0
 	github.com/rs/zerolog v1.32.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.4.2
 	go.mondoo.com/ranger-rpc v0.6.0
 )
