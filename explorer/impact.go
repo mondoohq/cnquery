@@ -125,6 +125,10 @@ func (s *ScoringSystem) UnmarshalJSON(data []byte) error {
 			*s = ScoringSystem_WEIGHTED
 		case "average", "":
 			*s = ScoringSystem_AVERAGE
+		case "banded":
+			*s = ScoringSystem_BANDED
+		case "decayed":
+			*s = ScoringSystem_DECAYED
 		default:
 			return errors.New("unknown scoring system: " + string(data))
 		}
@@ -149,6 +153,10 @@ func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
 			*s = ScoringSystem_WEIGHTED
 		case "average", "":
 			*s = ScoringSystem_AVERAGE
+		case "banded":
+			*s = ScoringSystem_BANDED
+		case "decayed":
+			*s = ScoringSystem_DECAYED
 		default:
 			return errors.New("unknown scoring system: " + string(name))
 		}
@@ -164,6 +172,10 @@ func (s *ScoringSystem) MarshalYAML() (interface{}, error) {
 		return "weighted", nil
 	case ScoringSystem_AVERAGE:
 		return "average", nil
+	case ScoringSystem_BANDED:
+		return "banded", nil
+	case ScoringSystem_DECAYED:
+		return "decayed", nil
 	default:
 		return *s, nil
 	}
