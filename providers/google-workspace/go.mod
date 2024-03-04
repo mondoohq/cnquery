@@ -7,7 +7,7 @@ go 1.22
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.32.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.4.2
 	golang.org/x/oauth2 v0.17.0
 	google.golang.org/api v0.167.0
@@ -291,7 +291,7 @@ require (
 	github.com/spf13/viper v1.18.2 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
-	github.com/stretchr/objx v0.5.1 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
