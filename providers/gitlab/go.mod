@@ -6,9 +6,9 @@ go 1.22
 
 require (
 	github.com/rs/zerolog v1.32.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/xanzy/go-gitlab v0.98.0
-	go.mondoo.com/cnquery/v10 v10.4.2
+	go.mondoo.com/cnquery/v10 v10.5.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/protobuf v1.32.0
 )
@@ -20,12 +20,12 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/kms v1.15.7 // indirect
 	cloud.google.com/go/secretmanager v1.11.5 // indirect
-	cloud.google.com/go/storage v1.38.0 // indirect
+	cloud.google.com/go/storage v1.39.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/GoogleCloudPlatform/berglas v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/aws/aws-sdk-go v1.50.26 // indirect
+	github.com/aws/aws-sdk-go v1.50.30 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.4 // indirect
@@ -122,9 +122,9 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/api v0.167.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240221002015-b0ce06bbee7c // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240221002015-b0ce06bbee7c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240221002015-b0ce06bbee7c // indirect
+	google.golang.org/genproto v0.0.0-20240228224816-df926f6c8641 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240228224816-df926f6c8641 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240228224816-df926f6c8641 // indirect
 	google.golang.org/grpc v1.62.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
