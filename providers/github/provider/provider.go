@@ -127,7 +127,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	asset := req.Asset
-	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+	runtime, err := s.AddRuntime(asset.Connections[0], func(connId uint32) (*plugin.Runtime, error) {
 		conn, err := connection.NewGithubConnection(connId, asset)
 		if err != nil {
 			return nil, err

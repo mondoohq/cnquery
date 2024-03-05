@@ -35,7 +35,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	connectionId := defaultConnection
-	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+	runtime, err := s.AddRuntime(req.Asset.Connections[0], func(connId uint32) (*plugin.Runtime, error) {
 		connectionId = connId
 		var upstream *upstream.UpstreamClient
 		var err error
