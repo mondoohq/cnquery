@@ -1,0 +1,67 @@
+name: Trigger provider release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+# https://github.com/peter-evans/create-pull-request/issues/48
+# https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
+# tl;dr:
+# The GITHUB_TOKEN is limited when creating PRs from a workflow
+# becasue of that we use a ssh key for which the limitations do not apply
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.CNQUERY_DEPLOY_KEY_PRIV }}
+
+      - name: Import environment variables from file
+        run: cat ".github/env" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=${{ env.golang-version }}"
+          cache: false
+
+      - name: Check for provider updates
+        id: update-providers
+        run: |
+          shopt -s expand_aliases
+          alias version="go run providers-sdk/v1/util/version/version.go"
+          update providers/*/ --increment=patch
+
+      - name: Prepare title and branch name
+        id: branch
+        run: |
+          BRANCH_NAME="version/providers_update_$(date +%Y%m%d_%H%M)"
+          COMMIT_MSG="✨ Update providers $(date +%Y%m%d)"
+          echo "COMMIT_TITLE=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+# We have to use this extensions, becasuse `gh pr create` does not support the ssh key case
+      - name: Create pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          base: main
+          labels: providers
+          committer: "Mondoo Tools <tools@mondoo.com>"
+          author: "Mondoo Tools <tools@mondoo.com>"
+          commit-message: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          title: ${{ steps.branch.outputs.COMMIT_TITLE }}
+          branch: ${{ steps.branch.outputs.BRANCH_NAME }}
+          body-path: .github/pr-body-providers.md
+
+      - name: PR infos
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
