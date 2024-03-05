@@ -10,7 +10,7 @@ packs:
       - name: Mondoo, Inc
         email: hello@mondoo.com
     tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/platform: kubernetes
       mondoo.com/category: security
     groups:
       - title: Cluster Incident Response
@@ -59,12 +59,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-pod-container
             title: Container image information
             mql: |
-              k8s.pod { 
+              k8s.pod {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -74,9 +74,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -86,9 +86,9 @@ packs:
                     }
                   }
                 }
-                ephemeralContainers { 
-                  image 
-                  containerImage { 
+                ephemeralContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -118,12 +118,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-deployment-container
             title: Container image information
             mql: |
-              k8s.deployment { 
+              k8s.deployment {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -133,9 +133,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -164,12 +164,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-cronjob-container
             title: Container image information
             mql: |
-              k8s.cronjob { 
+              k8s.cronjob {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -179,9 +179,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -210,12 +210,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-job-container
             title: Container image information
             mql: |
-              k8s.job { 
+              k8s.job {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -225,9 +225,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -256,12 +256,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-daemonset-container
             title: Container image information
             mql: |
-              k8s.daemonset { 
+              k8s.daemonset {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -271,9 +271,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -302,12 +302,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-statefulset-container
             title: Container image information
             mql: |
-              k8s.statefulset { 
+              k8s.statefulset {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -317,9 +317,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -348,12 +348,12 @@ packs:
           - uid: mondoo-kubernetes-incident-response-replicaset-container
             title: Container image information
             mql: |
-              k8s.replicaset { 
+              k8s.replicaset {
                 name
                 namespace
-                initContainers { 
-                  image 
-                  containerImage { 
+                initContainers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
@@ -363,9 +363,9 @@ packs:
                     }
                   }
                 }
-                containers { 
-                  image 
-                  containerImage { 
+                containers {
+                  image
+                  containerImage {
                     name
                     identifier
                     identifierType
