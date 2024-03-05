@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
@@ -59,7 +60,7 @@ func TestAddRuntime(t *testing.T) {
 	addRuntimes := func() {
 		defer wg.Done()
 		for i := 0; i < 50; i++ {
-			_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+			_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 				return &Runtime{}, nil
 			})
 			require.NoError(t, err)
@@ -82,7 +83,7 @@ func TestAddRuntime(t *testing.T) {
 func TestAddRuntime_ParentNotExist(t *testing.T) {
 	s := NewService()
 	parentId := uint32(10)
-	_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
 		c.parentId = parentId
 		return &Runtime{
@@ -96,7 +97,7 @@ func TestAddRuntime_ParentNotExist(t *testing.T) {
 func TestAddRuntime_Parent(t *testing.T) {
 	s := NewService()
 
-	parent, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	parent, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		resMap := &syncx.Map[Resource]{}
 		resMap.Set("test.resource", &TestResource{})
 
@@ -108,7 +109,7 @@ func TestAddRuntime_Parent(t *testing.T) {
 	require.NoError(t, err)
 
 	parentId := parent.Connection.ID()
-	child, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	child, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
 		c.parentId = parentId
 		return &Runtime{
@@ -128,7 +129,7 @@ func TestAddRuntime_Parent(t *testing.T) {
 func TestGetRuntime(t *testing.T) {
 	s := NewService()
 
-	runtime, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		return &Runtime{
 			Connection: newTestConnection(connId),
 		}, nil
@@ -137,7 +138,7 @@ func TestGetRuntime(t *testing.T) {
 
 	// Add some more runtimes
 	for i := 0; i < 5; i++ {
-		_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnection(connId),
 			}, nil
@@ -154,7 +155,7 @@ func TestGetRuntime(t *testing.T) {
 func TestGetRuntime_DoesNotExist(t *testing.T) {
 	s := NewService()
 
-	_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		return &Runtime{
 			Connection: newTestConnection(connId),
 		}, nil
@@ -169,7 +170,7 @@ func TestGetRuntime_DoesNotExist(t *testing.T) {
 func TestDisconnect(t *testing.T) {
 	s := NewService()
 
-	runtime, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		return &Runtime{
 			Connection: newTestConnection(connId),
 		}, nil
@@ -186,7 +187,7 @@ func TestDisconnect(t *testing.T) {
 func TestDisconnect_Closer(t *testing.T) {
 	s := NewService()
 
-	runtime, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+	runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		return &Runtime{
 			Connection: newTestConnectionWithClose(connId),
 		}, nil
@@ -208,7 +209,7 @@ func TestShutdown(t *testing.T) {
 
 	// Add some more runtimes
 	for i := 0; i < 50; i++ {
-		_, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnection(connId),
 			}, nil
@@ -228,7 +229,7 @@ func TestShutdown_Closer(t *testing.T) {
 	// Add some more runtimes
 	runtimes := []*Runtime{}
 	for i := 0; i < 50; i++ {
-		runtime, err := s.AddRuntime(func(connId uint32) (*Runtime, error) {
+		runtime, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 			return &Runtime{
 				Connection: newTestConnectionWithClose(connId),
 			}, nil
