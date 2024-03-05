@@ -4,6 +4,8 @@
 package plugin
 
 import (
+	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 
@@ -57,6 +59,57 @@ func TestAddRuntime(t *testing.T) {
 	s := NewService()
 	wg := sync.WaitGroup{}
 	wg.Add(4)
+	addRuntimes := func(j int) {
+		defer wg.Done()
+		for i := 1; i < 51; i++ {
+			idStr := fmt.Sprintf("%d%d", i, j)
+			id, err := strconv.Atoi(idStr)
+			require.NoError(t, err)
+			_, err = s.AddRuntime(&inventory.Config{Id: uint32(id)}, func(connId uint32) (*Runtime, error) {
+				return &Runtime{}, nil
+			})
+			require.NoError(t, err)
+		}
+	}
+
+	// Add runtimes concurrently
+	for i := 1; i < 5; i++ {
+		go addRuntimes(i)
+	}
+
+	// Wait until all runtimes are added
+	wg.Wait()
+
+	// Vertify that all runtimes are added and the last connectiod ID is correct
+	assert.Len(t, s.runtimes, 200)
+	assert.Equal(t, s.lastConnectionID, uint32(0))
+}
+
+func TestAddRuntime_Existing(t *testing.T) {
+	s := NewService()
+
+	inv := &inventory.Config{Id: 1}
+	createRuntime := func(connId uint32) (*Runtime, error) {
+		resMap := &syncx.Map[Resource]{}
+		resMap.Set("test.resource", &TestResource{})
+
+		return &Runtime{
+			Resources:  resMap,
+			Connection: newTestConnection(connId),
+		}, nil
+	}
+	runtime1, err := s.AddRuntime(inv, createRuntime)
+	require.NoError(t, err)
+
+	runtime2, err := s.AddRuntime(inv, createRuntime)
+	require.NoError(t, err)
+	assert.Equal(t, runtime1, runtime2)
+}
+
+func TestDeprecatedAddRuntime(t *testing.T) {
+	s := NewService()
+	wg := sync.WaitGroup{}
+	wg.Add(4)
 	addRuntimes := func() {
 		defer wg.Done()
 		for i := 0; i < 50; i++ {
@@ -83,6 +136,20 @@ func TestAddRuntime(t *testing.T) {
 func TestAddRuntime_ParentNotExist(t *testing.T) {
 	s := NewService()
 	parentId := uint32(10)
+	_, err := s.AddRuntime(&inventory.Config{Id: 1}, func(connId uint32) (*Runtime, error) {
+		c := newTestConnection(connId)
+		c.parentId = parentId
+		return &Runtime{
+			Connection: c,
+		}, nil
+	})
+	require.Error(t, err)
+	assert.Equal(t, "parent connection 10 not found", err.Error())
+}
+
+func TestDeprecatedAddRuntime_ParentNotExist(t *testing.T) {
+	s := NewService()
+	parentId := uint32(10)
 	_, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
 		c := newTestConnection(connId)
 		c.parentId = parentId
@@ -95,6 +162,38 @@ func TestAddRuntime_ParentNotExist(t *testing.T) {
 }
 
 func TestAddRuntime_Parent(t *testing.T) {
+	s := NewService()
+
+	parent, err := s.AddRuntime(&inventory.Config{Id: 1}, func(connId uint32) (*Runtime, error) {
+		resMap := &syncx.Map[Resource]{}
+		resMap.Set("test.resource", &TestResource{})
+
+		return &Runtime{
+			Resources:  resMap,
+			Connection: newTestConnection(connId),
+		}, nil
+	})
+	require.NoError(t, err)
+
+	parentId := parent.Connection.ID()
+	child, err := s.AddRuntime(&inventory.Config{Id: 2}, func(connId uint32) (*Runtime, error) {
+		c := newTestConnection(connId)
+		c.parentId = parentId
+		return &Runtime{
+			Connection: c,
+		}, nil
+	})
+	require.NoError(t, err)
+
+	// Check that the resources for the parent and the child are the same
+	assert.Equal(t, parent.Resources, child.Resources)
+
+	// Add another resource and check that it appears in the child runtime
+	parent.Resources.Set("test.resource2", &TestResource{})
+	assert.Equal(t, parent.Resources, child.Resources)
+}
+
+func TestDeprecatedAddRuntime_Parent(t *testing.T) {
 	s := NewService()
 
 	parent, err := s.AddRuntime(&inventory.Config{}, func(connId uint32) (*Runtime, error) {
