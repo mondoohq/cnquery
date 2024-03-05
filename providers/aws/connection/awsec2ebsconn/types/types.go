@@ -49,6 +49,6 @@ type VolumeInfo struct {
 }
 
 func (s *InstanceId) String() string {
-	// e.g. account/999000999000/region/us-east-2/instance/i-0989478343232
-	return path.Join("account", s.Account, "region", s.Region, "instance", s.Id)
+	// e.g. account/999000999000/region/us-east-2/instances/i-0989478343232
+	return path.Join("account", s.Account, "region", s.Region, "instances", s.Id)
 }
