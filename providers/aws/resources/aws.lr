@@ -2515,6 +2515,8 @@ aws.config {
   recorders() []aws.config.recorder
   // List of AWS Config rules
   rules() []aws.config.rule
+  // List of delivery channels for each region in the account
+  deliveryChannels() []aws.config.deliverychannel
 }
 
 // AWS config rule
@@ -2553,6 +2555,20 @@ private aws.config.recorder @defaults("name region") {
   region string
   // Whether the recorder records specific resource types
   resourceTypes []string
+}
+
+// AWS config delivery channel
+private aws.config.deliverychannel @defaults("name region") {
+  // Name of the delivery channel
+  name string
+  // S3 bucket name where configuration snapshots are delivered
+  s3BucketName string
+  // Prefix for the S3 bucket where configuration snapshots are delivered
+  s3KeyPrefix string
+  // ARN of the SNS topic that AWS Config delivers notifications to
+  snsTopicARN string
+  // Region for the delivery channel
+  region string
 }
 
 // Amazon Elastic Kubernetes Service (EKS)

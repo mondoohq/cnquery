@@ -84,3 +84,4 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xssmatchstatement
+deliverychannel

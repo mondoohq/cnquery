@@ -630,6 +630,10 @@ func init() {
 			// to override args, implement: initAwsConfigRecorder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsConfigRecorder,
 		},
+		"aws.config.deliverychannel": {
+			// to override args, implement: initAwsConfigDeliverychannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsConfigDeliverychannel,
+		},
 		"aws.eks": {
 			// to override args, implement: initAwsEks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEks,
@@ -3550,6 +3554,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.config.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfig).GetRules()).ToDataRes(types.Array(types.Resource("aws.config.rule")))
 	},
+	"aws.config.deliveryChannels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfig).GetDeliveryChannels()).ToDataRes(types.Array(types.Resource("aws.config.deliverychannel")))
+	},
 	"aws.config.rule.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRule).GetArn()).ToDataRes(types.String)
 	},
@@ -3594,6 +3601,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.config.recorder.resourceTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsConfigRecorder).GetResourceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.config.deliverychannel.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigDeliverychannel).GetName()).ToDataRes(types.String)
+	},
+	"aws.config.deliverychannel.s3BucketName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigDeliverychannel).GetS3BucketName()).ToDataRes(types.String)
+	},
+	"aws.config.deliverychannel.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigDeliverychannel).GetS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"aws.config.deliverychannel.snsTopicARN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigDeliverychannel).GetSnsTopicARN()).ToDataRes(types.String)
+	},
+	"aws.config.deliverychannel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsConfigDeliverychannel).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.eks.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEks).GetClusters()).ToDataRes(types.Array(types.Resource("aws.eks.cluster")))
@@ -8045,6 +8067,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsConfig).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.config.deliveryChannels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfig).DeliveryChannels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"aws.config.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsConfigRule).__id, ok = v.Value.(string)
 			return
@@ -8111,6 +8137,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.config.recorder.resourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsConfigRecorder).ResourceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.config.deliverychannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsConfigDeliverychannel).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.config.deliverychannel.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigDeliverychannel).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.deliverychannel.s3BucketName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigDeliverychannel).S3BucketName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.deliverychannel.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigDeliverychannel).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.deliverychannel.snsTopicARN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigDeliverychannel).SnsTopicARN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.config.deliverychannel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsConfigDeliverychannel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eks.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20898,6 +20948,7 @@ type mqlAwsConfig struct {
 	// optional: if you define mqlAwsConfigInternal it will be used here
 	Recorders plugin.TValue[[]interface{}]
 	Rules plugin.TValue[[]interface{}]
+	DeliveryChannels plugin.TValue[[]interface{}]
 }
 
 // createAwsConfig creates a new instance of this resource
@@ -20966,6 +21017,22 @@ func (c *mqlAwsConfig) GetRules() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlAwsConfig) GetDeliveryChannels() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.DeliveryChannels, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.config", c.__id, "deliveryChannels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.deliveryChannels()
 	})
 }
 
@@ -21130,6 +21197,70 @@ func (c *mqlAwsConfigRecorder) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsConfigRecorder) GetResourceTypes() *plugin.TValue[[]interface{}] {
 	return &c.ResourceTypes
+}
+
+// mqlAwsConfigDeliverychannel for the aws.config.deliverychannel resource
+type mqlAwsConfigDeliverychannel struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsConfigDeliverychannelInternal it will be used here
+	Name plugin.TValue[string]
+	S3BucketName plugin.TValue[string]
+	S3KeyPrefix plugin.TValue[string]
+	SnsTopicARN plugin.TValue[string]
+	Region plugin.TValue[string]
+}
+
+// createAwsConfigDeliverychannel creates a new instance of this resource
+func createAwsConfigDeliverychannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsConfigDeliverychannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.config.deliverychannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsConfigDeliverychannel) MqlName() string {
+	return "aws.config.deliverychannel"
+}
+
+func (c *mqlAwsConfigDeliverychannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsConfigDeliverychannel) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsConfigDeliverychannel) GetS3BucketName() *plugin.TValue[string] {
+	return &c.S3BucketName
+}
+
+func (c *mqlAwsConfigDeliverychannel) GetS3KeyPrefix() *plugin.TValue[string] {
+	return &c.S3KeyPrefix
+}
+
+func (c *mqlAwsConfigDeliverychannel) GetSnsTopicARN() *plugin.TValue[string] {
+	return &c.SnsTopicARN
+}
+
+func (c *mqlAwsConfigDeliverychannel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEks for the aws.eks resource
