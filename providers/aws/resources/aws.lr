@@ -2509,7 +2509,7 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipv6Ranges []string
 }
 
-// AWS config
+// AWS Config
 aws.config {
   // List of configuration recorders for each region in the account
   recorders() []aws.config.recorder
@@ -2519,7 +2519,7 @@ aws.config {
   deliveryChannels() []aws.config.deliverychannel
 }
 
-// AWS config rule
+// AWS Config rule
 private aws.config.rule @defaults("name id region state") {
   // ARN for the config rule
   arn string
@@ -2537,7 +2537,7 @@ private aws.config.rule @defaults("name id region state") {
   region string
 }
 
-// AWS config recorder
+// AWS Config recorder
 private aws.config.recorder @defaults("name region") {
   // Name of the recorder
   name string
@@ -2557,7 +2557,7 @@ private aws.config.recorder @defaults("name region") {
   resourceTypes []string
 }
 
-// AWS config delivery channel
+// AWS Config delivery channel
 private aws.config.deliverychannel @defaults("name region") {
   // Name of the delivery channel
   name string

@@ -315,6 +315,9 @@
 # s.b. CodeStar
 \bCodestar\b
 
+# s.b. AWS Config
+\bAWS config\b
+
 # s.b. Copilot
 \bCoPilot\b
 
