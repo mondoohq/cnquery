@@ -96,7 +96,7 @@ private vuln.cve @defaults("id") {
 // Advisory information
 private vuln.advisory @defaults("id") {
   // Advisory ID
-  id string  
+  id string
   // Title of the advisory
   title string
   // Description of the advisory
@@ -614,7 +614,7 @@ package @defaults("name version") {
   // Common Platform Enumeration (CPE) for the package
   cpes []core.cpe
 
-  // Package origin, may includes version if available (optional)
+  // Package origin, may include version if available (optional)
   origin() string
 
   // Available version
@@ -1294,7 +1294,7 @@ macos.systemsetup {
 // Windows-specific resource to get operating system details
 windows {
   // A consolidated object of system and operating system properties
-  // 
+  //
   // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
   computerInfo() dict
 
@@ -1323,7 +1323,7 @@ windows.hotfix {
 // Windows feature resource
 windows.feature {
   init(name string)
-  // Feature full path 
+  // Feature full path
   path string
   // Command IDs of role, role service, or feature
   name string
