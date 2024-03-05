@@ -61,6 +61,10 @@ func (p *Connection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *Connection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (p *Connection) Conf() *inventory.Config {
 	return p.conf
 }

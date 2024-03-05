@@ -51,6 +51,7 @@ type Connection interface {
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
+	UpdateAsset(asset *inventory.Asset)
 	Capabilities() Capabilities
 }
 

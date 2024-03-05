@@ -116,3 +116,7 @@ func (c *FileSystemConnection) Type() shared.ConnectionType {
 func (c *FileSystemConnection) Asset() *inventory.Asset {
 	return c.asset
 }
+
+func (p *FileSystemConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}

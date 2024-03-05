@@ -119,6 +119,10 @@ func (c *ContainerConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (p *ContainerConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (c *ContainerConnection) ContainerId() string {
 	return c.container
 }

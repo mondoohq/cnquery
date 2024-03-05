@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	sync "sync"
 	"time"
@@ -181,6 +182,7 @@ func CreateProgressBar(discoveredAssets *DiscoveredAssets, disableProgressBar bo
 			asset := discoveredAssets.Assets[i].Asset
 			// this shouldn't happen, but might
 			// it normally indicates a bug in the provider
+			slices.Sort(asset.PlatformIds)
 			if presentAsset, present := progressBarElements[asset.PlatformIds[0]]; present {
 				return nil, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, asset.Name, asset.PlatformIds[0])
 			}
@@ -358,7 +360,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 							continue
 						}
 
-						// platformMrn := asset.PlatformIds[0]
+						asset = runtime.Provider.Connection.Asset
+						slices.Sort(asset.PlatformIds)
 						details := resp.Details[asset.PlatformIds[0]]
 						asset.Mrn = details.AssetMrn
 						asset.Url = details.Url

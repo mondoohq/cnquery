@@ -60,6 +60,10 @@ func (p *LocalConnection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *LocalConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (p *LocalConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
 }
