@@ -1770,6 +1770,7 @@ resources:
         The `aws.iam.role` provides fields for assessing the configuration of individual IAM Roles. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
+      assumeRolePolicyDocument: {}
       createDate: {}
       description: {}
       id: {}

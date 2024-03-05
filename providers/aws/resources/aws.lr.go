@@ -1636,6 +1636,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.role.createDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamRole).GetCreateDate()).ToDataRes(types.Time)
 	},
+	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamRole).GetAssumeRolePolicyDocument()).ToDataRes(types.Dict)
+	},
 	"aws.iam.group.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetArn()).ToDataRes(types.String)
 	},
@@ -5104,6 +5107,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.iam.role.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamRole).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.role.assumeRolePolicyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamRole).AssumeRolePolicyDocument, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.iam.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -12501,6 +12508,7 @@ type mqlAwsIamRole struct {
 	Description plugin.TValue[string]
 	Tags plugin.TValue[map[string]interface{}]
 	CreateDate plugin.TValue[*time.Time]
+	AssumeRolePolicyDocument plugin.TValue[interface{}]
 }
 
 // createAwsIamRole creates a new instance of this resource
@@ -12562,6 +12570,10 @@ func (c *mqlAwsIamRole) GetTags() *plugin.TValue[map[string]interface{}] {
 
 func (c *mqlAwsIamRole) GetCreateDate() *plugin.TValue[*time.Time] {
 	return &c.CreateDate
+}
+
+func (c *mqlAwsIamRole) GetAssumeRolePolicyDocument() *plugin.TValue[interface{}] {
+	return &c.AssumeRolePolicyDocument
 }
 
 // mqlAwsIamGroup for the aws.iam.group resource
