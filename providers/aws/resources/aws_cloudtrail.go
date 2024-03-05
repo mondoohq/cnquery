@@ -240,11 +240,31 @@ func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]interface{}, error) {
 
 	arnValue := a.Arn.Data
 	// no pagination required
-	trailmgmtevents, err := svc.GetEventSelectors(ctx, &cloudtrail.GetEventSelectorsInput{
+	eventSelectorsOutput, err := svc.GetEventSelectors(ctx, &cloudtrail.GetEventSelectorsInput{
 		TrailName: &arnValue,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return convert.JsonToDictSlice(trailmgmtevents.EventSelectors)
+
+	// Basic event selectors
+	basicSelectors, err := convert.JsonToDictSlice(eventSelectorsOutput.EventSelectors)
+	if err != nil {
+		return nil, err
+	}
+
+	allSelectors := basicSelectors
+
+	// Advanced event selectors if they exist
+	if len(eventSelectorsOutput.AdvancedEventSelectors) > 0 {
+		advancedSelectors, err := convert.JsonToDictSlice(eventSelectorsOutput.AdvancedEventSelectors)
+		if err != nil {
+			return nil, err
+		}
+
+		// Basic plus advanced event selectors
+		allSelectors = append(basicSelectors, advancedSelectors...)
+	}
+
+	return allSelectors, nil
 }
