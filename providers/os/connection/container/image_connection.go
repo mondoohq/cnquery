@@ -21,6 +21,7 @@ import (
 
 // NewImageConnection uses a container image reference as input and creates a tar connection
 func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.Connection, error) {
+	conf.SkipDiscovery = true
 	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err
@@ -30,6 +31,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
+			log.Warn().Msgf("fetching image %s", conf.Host)
 			err = tar.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
 				_ = os.Remove(f.Name())
@@ -39,7 +41,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 			return f.Name(), nil
 		}),
 		tar.WithCloseFn(func() {
-			log.Debug().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
+			log.Warn().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
 			_ = os.Remove(f.Name())
 		}),
 	)

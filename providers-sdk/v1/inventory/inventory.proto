@@ -197,6 +197,8 @@ message Config {
   // connection
   string platform_id = 26;
   repeated string capabilities = 29;
+  // Determines whether to skip discovery during the connection phase
+  bool skip_discovery = 31;
 }
 
 message Sudo {

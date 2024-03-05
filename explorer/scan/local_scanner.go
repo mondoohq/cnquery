@@ -27,6 +27,7 @@ import (
 	"go.mondoo.com/cnquery/v10/mrn"
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"go.mondoo.com/cnquery/v10/utils/slicesx"
@@ -243,30 +244,39 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}()
 
+	spaceMrn := ""
+	var services *explorer.Services
+	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
+		log.Info().Msg("synchronize assets")
+		client, err := upstream.InitClient()
+		if err != nil {
+			return nil, err
+		}
+		spaceMrn = client.SpaceMrn
+
+		services, err = explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	assetBatches := slicesx.Batch(discoveredAssets.Assets, 100)
 	for i := range assetBatches {
 		batch := assetBatches[i]
 
 		// sync assets
-		if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
-			log.Info().Msg("synchronize assets")
-			client, err := upstream.InitClient()
-			if err != nil {
-				return nil, err
-			}
-
-			services, err := explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
-			if err != nil {
-				return nil, err
-			}
-
+		if services != nil {
 			assetsToSync := make([]*inventory.Asset, 0, len(batch))
 			for i := range batch {
+				// If discovery has been skipped, then we don't sync that asset just yet. We will do that during the scan
+				if batch[i].Asset.Connections[0].SkipDiscovery {
+					continue
+				}
 				assetsToSync = append(assetsToSync, batch[i].Asset)
 			}
 
 			resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
-				SpaceMrn: client.SpaceMrn,
+				SpaceMrn: spaceMrn,
 				List:     assetsToSync,
 			})
 			if err != nil {
@@ -284,8 +294,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				asset := batch[i].Asset
 				log.Debug().Str("asset", asset.Name).Strs("platform-ids", asset.PlatformIds).Msg("update asset")
 				platformMrn := asset.PlatformIds[0]
-				asset.Mrn = platformAssetMapping[platformMrn].AssetMrn
-				asset.Url = platformAssetMapping[platformMrn].Url
+				if details, ok := platformAssetMapping[platformMrn]; ok {
+					asset.Mrn = details.AssetMrn
+					asset.Url = details.Url
+				}
 			}
 		} else {
 			// ensure we have non-empty asset MRNs
@@ -325,6 +337,32 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 					multiprogress.Close()
 					return
 				default:
+				}
+
+				if asset.Connections[0].SkipDiscovery {
+					asset.Connections[0].SkipDiscovery = false
+					if err := runtime.Connect(&plugin.ConnectReq{Asset: asset}); err != nil {
+						log.Error().Err(err).Str("asset", asset.Name).Msg("failed to connect to asset")
+						reporter.AddScanError(asset, err)
+						multiprogress.Errored(asset.PlatformIds[0])
+						continue
+					}
+					if services != nil {
+						resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
+							SpaceMrn: spaceMrn,
+							List:     []*inventory.Asset{asset},
+						})
+						if err != nil {
+							reporter.AddScanError(asset, err)
+							multiprogress.Errored(asset.PlatformIds[0])
+							continue
+						}
+
+						// platformMrn := asset.PlatformIds[0]
+						details := resp.Details[asset.PlatformIds[0]]
+						asset.Mrn = details.AssetMrn
+						asset.Url = details.Url
+					}
 				}
 
 				p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}

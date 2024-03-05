@@ -6,11 +6,12 @@ package docker
 import (
 	"context"
 	"errors"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -211,6 +212,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
+		conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
 		asset.Name = ci.Name
 		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
@@ -290,12 +292,14 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 		conf.Options = map[string]string{}
 	}
 	conf.Options[tar.OPTION_FILE] = filename
+	conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
 
 	tarConn, err := tar.NewConnection(
 		id,
 		conf,
 		asset,
 		tar.WithFetchFn(func() (string, error) {
+			log.Warn().Msgf("pulling image %s", ii.ID)
 			img, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
 			if err != nil {
 				return filename, err
