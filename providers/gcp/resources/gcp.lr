@@ -1194,11 +1194,11 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   kmsName string
   // Access permissions
   access []gcp.project.bigqueryService.dataset.accessEntry
-  // Returns tables in the Dataset
+  // Returns tables in the dataset
   tables() []gcp.project.bigqueryService.table
-  // Returns models in the Dataset
+  // Returns models in the dataset
   models() []gcp.project.bigqueryService.model
-  // Returns routines in the Dataset
+  // Returns routines in the dataset
   routines() []gcp.project.bigqueryService.routine
 }
 
