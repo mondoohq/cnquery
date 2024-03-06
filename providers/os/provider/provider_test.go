@@ -69,6 +69,53 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.NotNil(t, shutdownconnectResp)
 }
 
+func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
+	srv := &Service{
+		Service: plugin.NewService(),
+	}
+
+	connectResp, err := srv.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type:           "local",
+					DelayDiscovery: true,
+				},
+			},
+		},
+	}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, connectResp)
+
+	require.Len(t, connectResp.Asset.IdDetector, 2)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
+	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
+	require.Len(t, connectResp.Asset.PlatformIds, 1)
+	require.Nil(t, connectResp.Asset.Platform)
+
+	// Disable delayed discovery and reconnect
+	connectResp.Asset.Connections[0].DelayDiscovery = false
+	connectResp, err = srv.Connect(&plugin.ConnectReq{
+		Asset: connectResp.Asset,
+	}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, connectResp)
+
+	require.Len(t, connectResp.Asset.IdDetector, 2)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
+	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
+	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
+	// Now the platformIDs are cleaned up
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
+	// Verify the platform is set
+	require.NotNil(t, connectResp.Asset.Platform)
+
+	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
+	require.NoError(t, err)
+	require.NotNil(t, shutdownconnectResp)
+}
+
 func TestIdentifyDockerString(t *testing.T) {
 	tests := []struct {
 		input string

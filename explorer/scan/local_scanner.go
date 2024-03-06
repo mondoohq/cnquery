@@ -249,7 +249,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	spaceMrn := ""
 	var services *explorer.Services
 	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
-		log.Info().Msg("synchronize assets")
 		client, err := upstream.InitClient()
 		if err != nil {
 			return nil, err
@@ -264,6 +263,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	assetBatches := slicesx.Batch(discoveredAssets.Assets, 100)
 	for i := range assetBatches {
+		log.Info().Msg("synchronize assets")
 		batch := assetBatches[i]
 
 		// sync assets

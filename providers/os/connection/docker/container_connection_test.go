@@ -6,10 +6,11 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/client"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/docker/docker/client"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -19,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
@@ -31,14 +33,15 @@ func TestAssetNameForRemoteImages(t *testing.T) {
 	retries := 3
 	counter := 0
 
+	config := &inventory.Config{
+		Type: "docker-image",
+		Host: "gcr.io/google-containers/busybox:1.27.2",
+	}
+	asset = &inventory.Asset{
+		Connections: []*inventory.Config{config},
+	}
+
 	for {
-		config := &inventory.Config{
-			Type: "docker-image",
-			Host: "gcr.io/google-containers/busybox:1.27.2",
-		}
-		asset = &inventory.Asset{
-			Connections: []*inventory.Config{config},
-		}
 		conn, err = NewContainerImageConnection(0, config, asset)
 		if counter > retries || (err == nil && conn != nil) {
 			break
@@ -48,6 +51,42 @@ func TestAssetNameForRemoteImages(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, conn)
 
+	assert.True(t, config.DelayDiscovery)
+	assert.Equal(t, "gcr.io/google-containers/busybox@545e6a6310a2", asset.Name)
+	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/545e6a6310a27636260920bc07b994a299b6708a1b26910cfefd335fdfb60d2b")
+}
+
+// This test has an external dependency on the gcr.io registry
+// To test this specific case, we cannot use a stored image, we need to call remote.Get
+func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
+	var err error
+	var conn *tar.Connection
+	var asset *inventory.Asset
+	retries := 3
+	counter := 0
+
+	config := &inventory.Config{
+		Type: "docker-image",
+		Host: "gcr.io/google-containers/busybox:1.27.2",
+		Options: map[string]string{
+			plugin.DISABLE_DELAYED_DISCOVERY_OPTION: "true",
+		},
+	}
+	asset = &inventory.Asset{
+		Connections: []*inventory.Config{config},
+	}
+
+	for {
+		conn, err = NewContainerImageConnection(0, config, asset)
+		if counter > retries || (err == nil && conn != nil) {
+			break
+		}
+		counter++
+	}
+	require.NoError(t, err)
+	require.NotNil(t, conn)
+
+	assert.False(t, config.DelayDiscovery)
 	assert.Equal(t, "gcr.io/google-containers/busybox@545e6a6310a2", asset.Name)
 	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/545e6a6310a27636260920bc07b994a299b6708a1b26910cfefd335fdfb60d2b")
 }

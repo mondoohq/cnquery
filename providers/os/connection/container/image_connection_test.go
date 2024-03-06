@@ -17,7 +17,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 )
 
@@ -66,6 +68,32 @@ type dockerConnTest struct {
 	name     string
 	conn     *tar.Connection
 	testfile string
+}
+
+func TestNewImageConnection_DelayDiscovery(t *testing.T) {
+	ref, err := name.ParseReference(alpineImage, name.WeakValidation)
+	require.NoError(t, err)
+
+	img, err := image.LoadImageFromRegistry(ref)
+	require.NoError(t, err)
+
+	inv := &inventory.Config{Options: map[string]string{}}
+	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img)
+	require.NoError(t, err)
+	assert.True(t, inv.DelayDiscovery)
+}
+
+func TestNewImageConnection_DisableDelayDiscovery(t *testing.T) {
+	ref, err := name.ParseReference(alpineImage, name.WeakValidation)
+	require.NoError(t, err)
+
+	img, err := image.LoadImageFromRegistry(ref)
+	require.NoError(t, err)
+
+	inv := &inventory.Config{Options: map[string]string{plugin.DISABLE_DELAYED_DISCOVERY_OPTION: "true"}}
+	_, err = container.NewImageConnection(1, inv, &inventory.Asset{}, img)
+	require.NoError(t, err)
+	assert.False(t, inv.DelayDiscovery)
 }
 
 func TestImageConnections(t *testing.T) {
@@ -214,7 +242,6 @@ func TestImageConnections(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func TestTarSymlinkFile(t *testing.T) {
