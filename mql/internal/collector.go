@@ -31,7 +31,7 @@ type Collector interface {
 type BufferedCollector struct {
 	results   map[string]*llx.RawResult
 	lock      sync.Mutex
-	collector Collector
+	collector *ResultCollector
 	duration  time.Duration
 	stopChan  chan struct{}
 	wg        sync.WaitGroup
@@ -39,7 +39,7 @@ type BufferedCollector struct {
 
 type BufferedCollectorOpt func(*BufferedCollector)
 
-func NewBufferedCollector(collector Collector, opts ...BufferedCollectorOpt) *BufferedCollector {
+func NewBufferedCollector(collector *ResultCollector, opts ...BufferedCollectorOpt) *BufferedCollector {
 	c := &BufferedCollector{
 		results:   map[string]*llx.RawResult{},
 		duration:  5 * time.Second,
@@ -69,8 +69,8 @@ func (c *BufferedCollector) run() {
 
 			c.lock.Unlock()
 
-			if len(results) > 0 {
-				c.collector.SinkData(results)
+			if len(results) > 0 || done {
+				c.collector.SinkData(results, done)
 			}
 
 			results = results[:0]
@@ -124,7 +124,7 @@ func (c *ResultCollector) toResult(rr *llx.RawResult) *llx.Result {
 	return v
 }
 
-func (c *ResultCollector) SinkData(results []*llx.RawResult) {
+func (c *ResultCollector) SinkData(results []*llx.RawResult, isDone bool) {
 	if len(results) == 0 {
 		return
 	}
@@ -141,7 +141,7 @@ type FuncCollector struct {
 	SinkDataFunc func(results []*llx.RawResult)
 }
 
-func (c *FuncCollector) SinkData(results []*llx.RawResult) {
+func (c *FuncCollector) SinkData(results []*llx.RawResult, isDone bool) {
 	if len(results) == 0 || c.SinkDataFunc == nil {
 		return
 	}
