@@ -342,30 +342,13 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				}
 
 				if asset.Connections[0].DelayDiscovery {
-					asset.Connections[0].DelayDiscovery = false
-					if err := runtime.Connect(&plugin.ConnectReq{Asset: asset}); err != nil {
-						log.Error().Err(err).Str("asset", asset.Name).Msg("failed to connect to asset")
+					discoveredAsset, err := handleDelayedDiscovery(ctx, asset, runtime, services, spaceMrn)
+					if err != nil {
 						reporter.AddScanError(asset, err)
 						multiprogress.Errored(asset.PlatformIds[0])
 						continue
 					}
-					if services != nil {
-						resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
-							SpaceMrn: spaceMrn,
-							List:     []*inventory.Asset{asset},
-						})
-						if err != nil {
-							reporter.AddScanError(asset, err)
-							multiprogress.Errored(asset.PlatformIds[0])
-							continue
-						}
-
-						asset = runtime.Provider.Connection.Asset
-						slices.Sort(asset.PlatformIds)
-						details := resp.Details[asset.PlatformIds[0]]
-						asset.Mrn = details.AssetMrn
-						asset.Url = details.Url
-					}
+					asset = discoveredAsset
 				}
 
 				p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
@@ -390,6 +373,30 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}
 	scanGroups.Wait()
 	return reporter.Reports(), nil
+}
+
+func handleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime *providers.Runtime, services *explorer.Services, spaceMrn string) (*inventory.Asset, error) {
+	asset.Connections[0].DelayDiscovery = false
+	if err := runtime.Connect(&plugin.ConnectReq{Asset: asset}); err != nil {
+		return nil, err
+	}
+	if services != nil {
+		resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
+			SpaceMrn: spaceMrn,
+			List:     []*inventory.Asset{asset},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		asset = runtime.Provider.Connection.Asset
+		slices.Sort(asset.PlatformIds)
+		details := resp.Details[asset.PlatformIds[0]]
+		asset.Mrn = details.AssetMrn
+		asset.Url = details.Url
+		asset.KindString = asset.GetPlatform().Kind
+	}
+	return asset, nil
 }
 
 func (s *LocalScanner) RunAssetJob(job *AssetJob) {

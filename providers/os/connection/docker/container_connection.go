@@ -313,7 +313,6 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 		conf,
 		asset,
 		tar.WithFetchFn(func() (string, error) {
-			log.Warn().Msgf("pulling image %s", ii.ID)
 			img, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
 			if err != nil {
 				return filename, err

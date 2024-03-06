@@ -37,7 +37,6 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
-			log.Warn().Msgf("fetching image %s", conf.Host)
 			err = tar.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
 				_ = os.Remove(f.Name())
@@ -47,7 +46,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 			return f.Name(), nil
 		}),
 		tar.WithCloseFn(func() {
-			log.Warn().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
+			log.Debug().Str("tar", f.Name()).Msg("tar> remove temporary tar file on connection close")
 			_ = os.Remove(f.Name())
 		}),
 	)

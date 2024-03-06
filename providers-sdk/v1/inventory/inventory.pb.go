@@ -661,8 +661,8 @@ type Config struct {
 	// connection
 	PlatformId   string   `protobuf:"bytes,26,opt,name=platform_id,json=platformId,proto3" json:"platform_id,omitempty"`
 	Capabilities []string `protobuf:"bytes,29,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
-	// Determines whether to delay discovery during the connection phase. Discovery
-	// will only happen if this is false
+	// Determines whether to delay discovery during the connection phase.
+	// Discovery will only happen if this is false
 	DelayDiscovery bool `protobuf:"varint,31,opt,name=delay_discovery,json=delayDiscovery,proto3" json:"delay_discovery,omitempty"`
 }
 
