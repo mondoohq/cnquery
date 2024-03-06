@@ -216,7 +216,12 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
-		conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
+		// FIXME: DEPRECATED, remove in v12.0 vv
+		// The SkipDiscovery flag should always be set from v12
+		if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+			conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
+		}
+		// ^^
 		asset.Name = ci.Name
 		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
@@ -296,7 +301,12 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 		conf.Options = map[string]string{}
 	}
 	conf.Options[tar.OPTION_FILE] = filename
-	conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// The SkipDiscovery flag should always be set from v12
+	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+		conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
+	}
+	// ^^
 
 	tarConn, err := tar.NewConnection(
 		id,
