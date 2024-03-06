@@ -12,6 +12,7 @@ import (
 	"time"
 
 	llx "go.mondoo.com/cnquery/v10/llx"
+	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
 type Service struct {
@@ -31,7 +32,46 @@ func NewService() *Service {
 
 var heartbeatRes HeartbeatRes
 
-func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)) (*Runtime, error) {
+// FIXME: once we move to v12, remove the conf parametrer and remove the connId from the createRuntime function.
+// The connection ID will always be set before the connection call is done, so we don't need to do anything about it here.
+// The parameters are needed now, only to make sure that old clients can work with new providers.
+func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId uint32) (*Runtime, error)) (*Runtime, error) {
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// This approach is used only when old clients use new providers. We will throw it away in v12
+	if conf.Id == 0 {
+		return s.deprecatedAddRuntime(createRuntime)
+	}
+	// ^^
+
+	s.runtimesLock.Lock()
+	defer s.runtimesLock.Unlock()
+
+	// If a runtime with this ID already exists, then return that
+	if runtime, ok := s.runtimes[conf.Id]; ok {
+		return runtime, nil
+	}
+
+	runtime, err := createRuntime(conf.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.Connection != nil {
+		if parentId := runtime.Connection.ParentID(); parentId > 0 {
+			parentRuntime, err := s.doGetRuntime(parentId)
+			if err != nil {
+				return nil, errors.New("parent connection " + strconv.FormatUint(uint64(parentId), 10) + " not found")
+			}
+			runtime.Resources = parentRuntime.Resources
+
+		}
+	}
+	s.runtimes[conf.Id] = runtime
+	return runtime, nil
+}
+
+// FIXME: DEPRECATED, remove in v12.0 vv
+func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runtime, error)) (*Runtime, error) {
 	s.runtimesLock.Lock()
 	defer s.runtimesLock.Unlock()
 
@@ -56,6 +96,8 @@ func (s *Service) AddRuntime(createRuntime func(connId uint32) (*Runtime, error)
 	s.runtimes[s.lastConnectionID] = runtime
 	return runtime, nil
 }
+
+// ^^
 
 func (s *Service) GetRuntime(id uint32) (*Runtime, error) {
 	s.runtimesLock.Lock()

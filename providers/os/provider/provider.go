@@ -292,7 +292,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 
-	runtime, err := s.AddRuntime(func(connId uint32) (*plugin.Runtime, error) {
+	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
 		var conn shared.Connection
 		var err error
 

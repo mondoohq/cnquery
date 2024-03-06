@@ -417,7 +417,7 @@ func (cfg *Config) Clone(opts ...CloneOption) *Config {
 	}
 
 	clonedObject := proto.Clone(cfg).(*Config)
-
+	clonedObject.Id = 0
 	if cloneSettings.noDiscovery {
 		clonedObject.Discover = &Discovery{}
 	}

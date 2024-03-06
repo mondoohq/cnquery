@@ -29,6 +29,7 @@ import (
 //go:generate mockgen -source=../providers-sdk/v1/resources/schema.go -destination=./mock_schema.go -package=providers
 
 type ProvidersCoordinator interface {
+	NextConnectionId() uint32
 	NewRuntime() *Runtime
 	NewRuntimeFrom(parent *Runtime) *Runtime
 	RuntimeFor(asset *inventory.Asset, parent *Runtime) (*Runtime, error)
@@ -57,6 +58,9 @@ func newCoordinator() *coordinator {
 }
 
 type coordinator struct {
+	lastConnectionID uint32
+	connectionsLock  sync.Mutex
+
 	providers   Providers
 	runningByID map[string]*RunningProvider
 
@@ -86,6 +90,13 @@ type ProviderVersions struct {
 type ProviderVersion struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
+}
+
+func (c *coordinator) NextConnectionId() uint32 {
+	c.connectionsLock.Lock()
+	defer c.connectionsLock.Unlock()
+	c.lastConnectionID++
+	return c.lastConnectionID
 }
 
 func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
@@ -268,6 +279,13 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
 			}
 		}
+	}
+
+	// If all providers have been killed, reset the connection IDs back to 0
+	if len(c.runningByID) == 0 {
+		c.connectionsLock.Lock()
+		defer c.connectionsLock.Unlock()
+		c.lastConnectionID = 0
 	}
 }
 

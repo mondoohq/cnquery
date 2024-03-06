@@ -193,6 +193,11 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return errors.New("cannot connect to asset, no connection info provided")
 	}
 
+	// If there is no connection ID set, we need to assign one from the coordinator
+	if asset.Connections[0].Id == 0 {
+		asset.Connections[0].Id = Coordinator.NextConnectionId()
+	}
+
 	r.features = req.Features
 	callbacks := providerCallbacks{
 		runtime: r,
