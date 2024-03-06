@@ -322,16 +322,16 @@ func NewInstanceId(account string, region string, id string) (*awsec2ebstypes.In
 
 func ParseInstanceId(path string) (*awsec2ebstypes.InstanceId, error) {
 	if !IsValidInstanceId(path) {
-		return nil, errors.New("invalid instance id. expected account/<id>/region/<region-val>/instance/<instance-id>")
+		return nil, errors.New("invalid instance id. expected account/<id>/region/<region-val>/instances/<instance-id>")
 	}
 	keyValues := strings.Split(path, "/")
 	if len(keyValues) != 6 {
-		return nil, errors.New("invalid instance id. expected account/<id>/region/<region-val>/instance/<instance-id>")
+		return nil, errors.New("invalid instance id. expected account/<id>/region/<region-val>/instances/<instance-id>")
 	}
 	return NewInstanceId(keyValues[1], keyValues[3], keyValues[5])
 }
 
-var VALID_INSTANCE_ID = regexp.MustCompile(`^account/\d{12}/region\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/instance\/.+$`)
+var VALID_INSTANCE_ID = regexp.MustCompile(`^account/\d{12}/region\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/instances\/.+$`)
 
 func IsValidInstanceId(path string) bool {
 	return VALID_INSTANCE_ID.MatchString(path)
