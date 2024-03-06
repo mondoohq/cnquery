@@ -1602,7 +1602,7 @@ resources:
   aws.es:
     docs:
       desc: |
-        Use the `aws.es` resource to assess the configuration of Amazon Elasticsearch domains. This resource provides a list of `aws.es.domain` resources representing Elasticsearch domains deployed across all enabled regions.
+        Use the `aws.es` resource to assess the configuration of Amazon OpenSearch (formerly Elasticsearch) domains. This resource provides a list of `aws.es.domain` resources representing OpenSearch domains deployed across all enabled regions.
     fields:
       domains: {}
     min_mondoo_version: 5.15.0
@@ -1610,12 +1610,12 @@ resources:
       name:
       - aws
     refs:
-    - title: Amazon Security Blog on Elasticsearch
+    - title: Amazon Security Blog posts on Elasticsearch
       url: https://aws.amazon.com/blogs/security/tag/amazon-elasticsearch-service/
   aws.es.domain:
     docs:
       desc: |
-        The `aws.es.domain` provides fields for assessing the configuration of individual Amazon Elasticsearch domains. For usage, read the `aws.es` resource documentation
+        The `aws.es.domain` provides fields for assessing the configuration of individual Amazon OpenSearch (formerly Elasticsearch) domains. For usage, read the `aws.es` resource documentation
     fields:
       arn: {}
       domainId:

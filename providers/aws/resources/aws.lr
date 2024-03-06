@@ -954,21 +954,21 @@ private aws.sns.subscription @defaults("arn") {
   protocol string
 }
 
-// AWS Elasticsearch service
+// AWS OpenSearch (formerly Elasticsearch) service
 aws.es {
-  // List of Elasticsearch domains
+  // List of OpenSearch (formerly Elasticsearch) domains
   domains() []aws.es.domain
 }
 
-// Amazon Elasticsearch service domain
+// Amazon OpenSearch (formerly Elasticsearch) service domain
 private aws.es.domain @defaults("arn name") {
-  // ARN for the Elasticsearch domain
+  // ARN for the OpenSearch domain
   arn string
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
   // Denoted whether node to node encryption is enabled
   nodeToNodeEncryptionEnabled bool
-  // Name of the Elasticsearch domain
+  // Name of the OpenSearch domain
   name string
   // Endpoint used to submit index and search requests
   endpoint string
@@ -976,11 +976,11 @@ private aws.es.domain @defaults("arn name") {
   region string
   // Tags for the domain
   tags map[string]string
-  // The version of Elasticsearch running
+  // The version of OpenSearch running
   elasticsearchVersion string
-  // The Elasticsearch domain ID
+  // The OpenSearch domain ID
   domainId string
-  // The Elasticsearch domain name
+  // The OpenSearch domain name
   domainName string
 }
 
