@@ -141,7 +141,7 @@ type FuncCollector struct {
 	SinkDataFunc func(results []*llx.RawResult)
 }
 
-func (c *FuncCollector) SinkData(results []*llx.RawResult, isDone bool) {
+func (c *FuncCollector) SinkData(results []*llx.RawResult) {
 	if len(results) == 0 || c.SinkDataFunc == nil {
 		return
 	}
