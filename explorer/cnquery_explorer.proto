@@ -179,6 +179,18 @@ enum ScoringSystem {
   AVERAGE = 3;
   DATA_ONLY = 4;
   IGNORE_SCORE = 5;
+  // Experimental: BANDED scoring mechanism which creates a score based on
+  // the 4 categories of criticality (critical, high, medium, low) and
+  // positions scores so that:
+  // 1. Any critical/high issues won't generate a high score (upper limit)
+  // 2. Lower scoring categories can have an impact on the score
+  //    (e.g. 1 crit + 200 medium failures will be lower than 1 crit only)
+  // 3. A large collection of medium findings won't generate a critical score
+  BANDED = 6;
+  // Experimental: DECAYED scoring uses a scaled decay function to estimate a
+  // score value. This means that a few critical findings will quickly reduce
+  // the resulting score, but it won't just drop it to the lowest value.
+  DECAYED = 7;
 }
 
 // Impact explains how important certain queries are. They are especially useful
