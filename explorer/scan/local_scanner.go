@@ -271,7 +271,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			assetsToSync := make([]*inventory.Asset, 0, len(batch))
 			for i := range batch {
 				// If discovery has been skipped, then we don't sync that asset just yet. We will do that during the scan
-				if batch[i].Asset.Connections[0].SkipDiscovery {
+				if batch[i].Asset.Connections[0].DelayDiscovery {
 					continue
 				}
 				assetsToSync = append(assetsToSync, batch[i].Asset)
@@ -341,8 +341,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				default:
 				}
 
-				if asset.Connections[0].SkipDiscovery {
-					asset.Connections[0].SkipDiscovery = false
+				if asset.Connections[0].DelayDiscovery {
+					asset.Connections[0].DelayDiscovery = false
 					if err := runtime.Connect(&plugin.ConnectReq{Asset: asset}); err != nil {
 						log.Error().Err(err).Str("asset", asset.Name).Msg("failed to connect to asset")
 						reporter.AddScanError(asset, err)

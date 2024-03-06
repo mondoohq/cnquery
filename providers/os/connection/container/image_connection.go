@@ -25,7 +25,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// The SkipDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
-		conf.SkipDiscovery = true // Skip discovery, to make sure we don't directly download the image
+		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}
 	// ^^
 	f, err := tar.RandomFile()

@@ -116,9 +116,9 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	slices.Sort(asset.PlatformIds)
 	asset.PlatformIds = slices.Compact(asset.PlatformIds)
 
-	// If the asset connection had the SkipDiscovery flag and the current asset doesn't, we just performed
+	// If the asset connection had the DelayDiscovery flag and the current asset doesn't, we just performed
 	// discovery for the asset and we need to update it.
-	if conn.Asset().Connections[0].SkipDiscovery && !asset.Connections[0].SkipDiscovery {
+	if conn.Asset().Connections[0].DelayDiscovery && !asset.Connections[0].DelayDiscovery {
 		conn.UpdateAsset(asset)
 	}
 	return nil
