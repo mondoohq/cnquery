@@ -369,6 +369,8 @@ message StoreResultsReq {
   string asset_mrn = 1;
   map<string, cnquery.llx.Result> data = 3;
   map<string, cnquery.llx.ResourceRecording> resources = 4;
+  // Determines if this is the last batch of results for the asset
+  bool is_last_batch = 5;
 }
 
 // Retrieve data for a given set of entities which was previously stored

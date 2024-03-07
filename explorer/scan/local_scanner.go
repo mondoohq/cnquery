@@ -616,8 +616,9 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 			log.Debug().Msg("not storing resource data for this asset, nothing available")
 		} else {
 			_, err = conductor.StoreResults(context.Background(), &explorer.StoreResultsReq{
-				AssetMrn:  s.job.Asset.Mrn,
-				Resources: data,
+				AssetMrn:    s.job.Asset.Mrn,
+				Resources:   data,
+				IsLastBatch: true,
 			})
 			if err != nil {
 				return nil, err
