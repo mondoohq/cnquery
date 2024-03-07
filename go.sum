@@ -1163,8 +1163,8 @@ go-simpler.org/sloglint v0.4.0/go.mod h1:v6zJ++j/thFPhefs2wEXoCKwT10yo5nkBDYRCXy
 go.etcd.io/etcd/api/v3 v3.5.1/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.1/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.1/go.mod h1:pMEacxZW7o8pg4CrFE7pquyCJJzZvkvdD2RibOCCCGs=
-go.mondoo.com/mondoo-go v0.0.0-20240303102235-bc102d6ef0cb h1:37qJkE0oehPTtpnRJ4PKzXpBh4v3KVCHyRiWAY3RRF4=
-go.mondoo.com/mondoo-go v0.0.0-20240303102235-bc102d6ef0cb/go.mod h1:JDTzAPQ3y9bVoDOBrkhcd1zFKHKjmeuJ0jZRTeQ46QA=
+go.mondoo.com/mondoo-go v0.0.0-20240307081130-83b805182b6b h1:MSUQyChh5C21eThnx0h684PqA3gbumiZ9KG5ymiLGZc=
+go.mondoo.com/mondoo-go v0.0.0-20240307081130-83b805182b6b/go.mod h1:JDTzAPQ3y9bVoDOBrkhcd1zFKHKjmeuJ0jZRTeQ46QA=
 go.mondoo.com/ranger-rpc v0.6.0 h1:u8FY0NGhR1B/LZk9+DdmqksrWc007argv+nMGJGa3OA=
 go.mondoo.com/ranger-rpc v0.6.0/go.mod h1:aSYxuQLk764rCv3LW0G1L33ORDwZK55WJHbAHVGQr9U=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
