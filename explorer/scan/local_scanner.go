@@ -221,6 +221,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		}
 	}()
 
+	// plan scan jobs
+	reporter := NewAggregateReporter()
 	if job.Bundle == nil && upstream != nil && upstream.Creds != nil {
 		client, err := upstream.InitClient()
 		if err != nil {
@@ -237,10 +239,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 			return nil, err
 		}
 		job.Bundle = bundle
+		reporter.AddBundle(bundle)
 	}
 
-	// plan scan jobs
-	reporter := NewAggregateReporter()
 	// if we had asset errors we want to place them into the reporter
 	for i := range discoveredAssets.Errors {
 		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
@@ -461,6 +462,11 @@ func (s *localAssetScanner) prepareAsset() error {
 		if err := s.ensureBundle(); err != nil {
 			return err
 		}
+
+		// add asset bundle to the reporter
+		if s.job.Reporter != nil && s.job.Bundle != nil {
+			s.job.Reporter.AddBundle(s.job.Bundle)
+		}
 	}
 
 	if s.job.Bundle == nil {
@@ -653,8 +659,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	}
 
 	ar := &AssetReport{
-		Mrn: s.job.Asset.Mrn,
-		// Bundle:   assetBundle,
+		Mrn:      s.job.Asset.Mrn,
 		Resolved: resolvedPack,
 	}
 

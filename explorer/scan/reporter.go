@@ -11,12 +11,12 @@ import (
 
 type Reporter interface {
 	AddReport(asset *inventory.Asset, results *AssetReport)
+	AddBundle(bundle *explorer.Bundle)
 	AddScanError(asset *inventory.Asset, err error)
 }
 
 type AssetReport struct {
 	Mrn      string
-	Bundle   *explorer.Bundle
 	Report   *explorer.Report
 	Resolved *explorer.ResolvedPack
 }
@@ -42,7 +42,10 @@ func (r *AggregateReporter) AddReport(asset *inventory.Asset, results *AssetRepo
 	r.assets[asset.Mrn] = &explorer.Asset{Name: asset.Name, Mrn: asset.Mrn}
 	r.assetReports[asset.Mrn] = results.Report
 	r.resolved[asset.Mrn] = results.Resolved
-	r.bundle = results.Bundle
+}
+
+func (r *AggregateReporter) AddBundle(bundle *explorer.Bundle) {
+	r.bundle = bundle
 }
 
 func (r *AggregateReporter) AddScanError(asset *inventory.Asset, err error) {
