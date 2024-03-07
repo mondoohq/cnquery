@@ -239,14 +239,6 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
-		// TODO: determine if this needs migrating
-		// // determine information about the client
-		// sysInfo, err := sysinfo.GatherSystemInfo()
-		// if err != nil {
-		// 	log.Warn().Err(err).Msg("could not gather client information")
-		// }
-		// plugins = append(plugins, defaultRangerPlugins(sysInfo, opts.GetFeatures())...)
-
 		log.Info().Msg("using service account credentials")
 		conf.runtime.UpstreamConfig = &upstream.UpstreamConfig{
 			SpaceMrn:    opts.GetParentMrn(),
