@@ -347,7 +347,7 @@ require (
 	gitlab.com/bosi/decorder v0.4.1 // indirect
 	go-simpler.org/musttag v0.9.0 // indirect
 	go-simpler.org/sloglint v0.4.0 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240303102235-bc102d6ef0cb // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20240307081130-83b805182b6b // indirect
 	go.mondoo.com/ranger-rpc v0.6.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
