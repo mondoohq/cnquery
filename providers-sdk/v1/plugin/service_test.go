@@ -133,6 +133,20 @@ func TestDeprecatedAddRuntime(t *testing.T) {
 	assert.Equal(t, s.lastConnectionID, uint32(200))
 }
 
+func TestDeprecatedAddRuntime_DisableDelayedDiscovery(t *testing.T) {
+	s := NewService()
+	inv := &inventory.Config{}
+	_, err := s.AddRuntime(inv, func(connId uint32) (*Runtime, error) {
+		c := newTestConnection(connId)
+		return &Runtime{
+			Connection: c,
+		}, nil
+	})
+	require.NoError(t, err)
+	require.Contains(t, inv.Options, DISABLE_DELAYED_DISCOVERY_OPTION)
+	assert.Equal(t, "true", inv.Options[DISABLE_DELAYED_DISCOVERY_OPTION])
+}
+
 func TestAddRuntime_ParentNotExist(t *testing.T) {
 	s := NewService()
 	parentId := uint32(10)

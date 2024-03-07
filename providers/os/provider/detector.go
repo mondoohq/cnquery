@@ -115,6 +115,12 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	// First sort the platform IDs and then call Compact, because Compact removes only consecutive duplicates
 	slices.Sort(asset.PlatformIds)
 	asset.PlatformIds = slices.Compact(asset.PlatformIds)
+
+	// If the asset connection had the DelayDiscovery flag and the current asset doesn't, we just performed
+	// discovery for the asset and we need to update it.
+	if conn.Asset().Connections[0].DelayDiscovery && !asset.Connections[0].DelayDiscovery {
+		conn.UpdateAsset(asset)
+	}
 	return nil
 }
 

@@ -197,6 +197,9 @@ message Config {
   // connection
   string platform_id = 26;
   repeated string capabilities = 29;
+  // Determines whether to delay discovery during the connection phase.
+  // Discovery will only happen if Connect is called and this is false
+  bool delay_discovery = 31;
 }
 
 message Sudo {

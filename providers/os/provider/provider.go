@@ -224,7 +224,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	// We only need to run the detection step when we don't have any asset information yet.
-	if req.Asset.Platform == nil || req.Asset.Platform.Name == "" {
+	if !req.Asset.Connections[0].DelayDiscovery && (req.Asset.Platform == nil || req.Asset.Platform.Name == "") {
 		if err := s.detect(req.Asset, conn); err != nil {
 			return nil, err
 		}

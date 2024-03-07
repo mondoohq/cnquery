@@ -377,6 +377,10 @@ func (c *AwsEbsConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (p *AwsEbsConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (c *AwsEbsConnection) Capabilities() shared.Capabilities {
 	return shared.Capability_RunCommand // not true, update to nothing
 }

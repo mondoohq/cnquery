@@ -123,6 +123,10 @@ func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (p *Connection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (c *Connection) Capabilities() shared.Capabilities {
 	return shared.Capability_File | shared.Capability_RunCommand
 }

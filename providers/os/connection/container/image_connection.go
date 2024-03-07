@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
@@ -21,6 +22,12 @@ import (
 
 // NewImageConnection uses a container image reference as input and creates a tar connection
 func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.Connection, error) {
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// The DelayDiscovery flag should always be set from v12
+	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
+	}
+	// ^^
 	f, err := tar.RandomFile()
 	if err != nil {
 		return nil, err

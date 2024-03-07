@@ -13,7 +13,7 @@ import (
 func TestParseTarget(t *testing.T) {
 	t.Run("parse snapshot target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},
@@ -34,7 +34,7 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse instance target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},
@@ -55,7 +55,7 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse disk target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},
@@ -76,7 +76,7 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse snapshot target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},
@@ -97,7 +97,7 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse instance target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},
@@ -118,7 +118,7 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse disk target with a fully qualified Azure resource ID", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: instanceInfo{
+			instanceInfo: &instanceInfo{
 				resourceGroup: "my-rg",
 				instanceName:  "my-instance",
 			},

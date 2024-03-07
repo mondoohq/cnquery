@@ -200,7 +200,9 @@ func prepareAsset(a *inventory.Asset, rootAsset *inventory.Asset, runtimeLabels 
 	a.AddMondooLabels(rootAsset)
 	a.AddAnnotations(rootAsset.GetAnnotations())
 	a.ManagedBy = rootAsset.ManagedBy
-	a.KindString = a.GetPlatform().Kind
+	if platform := a.GetPlatform(); platform != nil {
+		a.KindString = platform.Kind
+	}
 	if a.Labels == nil {
 		a.Labels = map[string]string{}
 	}

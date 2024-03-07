@@ -6,11 +6,12 @@ package docker
 import (
 	"context"
 	"errors"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 
 	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -118,6 +119,10 @@ func (c *ContainerConnection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (p *ContainerConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (c *ContainerConnection) ContainerId() string {
 	return c.container
 }
@@ -211,6 +216,12 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.PlatformIdentifier = containerid.MondooContainerID(ci.ID)
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
+		// FIXME: DEPRECATED, remove in v12.0 vv
+		// The DelayDiscovery flag should always be set from v12
+		if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+			conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
+		}
+		// ^^
 		asset.Name = ci.Name
 		asset.PlatformIds = []string{containerid.MondooContainerID(ci.ID)}
 		return conn, nil
@@ -290,6 +301,12 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 		conf.Options = map[string]string{}
 	}
 	conf.Options[tar.OPTION_FILE] = filename
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// The DelayDiscovery flag should always be set from v12
+	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
+	}
+	// ^^
 
 	tarConn, err := tar.NewConnection(
 		id,

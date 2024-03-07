@@ -233,6 +233,10 @@ func (p *AwsConnection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *AwsConnection) UpdateAsset(asset *inventory.Asset) {
+	p.asset = asset
+}
+
 func (p *AwsConnection) AccountId() string {
 	return p.accountId
 }

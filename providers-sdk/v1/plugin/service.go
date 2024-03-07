@@ -15,6 +15,8 @@ import (
 	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
+const DISABLE_DELAYED_DISCOVERY_OPTION = "disable-delayed-discovery"
+
 type Service struct {
 	runtimes         map[uint32]*Runtime
 	lastConnectionID uint32
@@ -39,6 +41,12 @@ func (s *Service) AddRuntime(conf *inventory.Config, createRuntime func(connId u
 	// FIXME: DEPRECATED, remove in v12.0 vv
 	// This approach is used only when old clients use new providers. We will throw it away in v12
 	if conf.Id == 0 {
+		if conf.Options == nil {
+			conf.Options = make(map[string]string)
+		}
+
+		// Disable delayed discovery for old clients since they don't know how to handle it
+		conf.Options[DISABLE_DELAYED_DISCOVERY_OPTION] = "true"
 		return s.deprecatedAddRuntime(createRuntime)
 	}
 	// ^^
