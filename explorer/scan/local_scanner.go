@@ -115,18 +115,21 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 // returns the upstream config for the job. If the job has a specified config, it has precedence
 // over the automatically detected one
 func (s *LocalScanner) getUpstreamConfig(inv *inventory.Inventory, incognito bool) (*upstream.UpstreamConfig, error) {
+	var res *upstream.UpstreamConfig
+	if s.upstream != nil {
+		res = proto.Clone(s.upstream).(*upstream.UpstreamConfig)
+	} else {
+		res = &upstream.UpstreamConfig{}
+	}
+
 	jobCreds := inv.GetSpec().GetUpstreamCredentials()
-	if s.upstream == nil && jobCreds == nil {
-		return nil, errors.New("no default or job upstream config provided")
-	}
-	u := proto.Clone(s.upstream).(*upstream.UpstreamConfig)
-	u.Incognito = incognito
+	res.Incognito = incognito
 	if jobCreds != nil {
-		u.ApiEndpoint = jobCreds.GetApiEndpoint()
-		u.Creds = jobCreds
-		u.SpaceMrn = jobCreds.GetParentMrn()
+		res.ApiEndpoint = jobCreds.GetApiEndpoint()
+		res.Creds = jobCreds
+		res.SpaceMrn = jobCreds.GetParentMrn()
 	}
-	return u, nil
+	return res, nil
 }
 
 func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
@@ -223,6 +226,25 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	// plan scan jobs
 	reporter := NewAggregateReporter()
+	if job.Bundle == nil && upstream != nil && upstream.Creds != nil {
+		client, err := upstream.InitClient()
+		if err != nil {
+			return nil, err
+		}
+
+		services, err := explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
+		if err != nil {
+			return nil, err
+		}
+
+		bundle, err := services.GetBundle(ctx, &explorer.Mrn{Mrn: upstream.Creds.ParentMrn})
+		if err != nil {
+			return nil, err
+		}
+		job.Bundle = bundle
+		reporter.AddBundle(bundle)
+	}
+
 	// if we had asset errors we want to place them into the reporter
 	for i := range discoveredAssets.Errors {
 		reporter.AddScanError(discoveredAssets.Errors[i].Asset, discoveredAssets.Errors[i].Err)
@@ -478,13 +500,21 @@ func (s *localAssetScanner) prepareAsset() error {
 	var hub explorer.QueryHub = s.services
 	var conductor explorer.QueryConductor = s.services
 
-	// if we are using upstream we get the bundle from there
-	if s.job.UpstreamConfig != nil && !s.job.UpstreamConfig.Incognito {
+	// if we are using upstream we get the bundle from there. If we are in incognito mode,
+	// we should still use the upstream bundle but without reporting the results back
+	if !s.job.UpstreamConfig.Incognito {
 		return nil
 	}
 
-	if err := s.ensureBundle(); err != nil {
-		return err
+	if s.job.Bundle == nil {
+		if err := s.ensureBundle(); err != nil {
+			return err
+		}
+
+		// add asset bundle to the reporter
+		if s.job.Reporter != nil && s.job.Bundle != nil {
+			s.job.Reporter.AddBundle(s.job.Bundle)
+		}
 	}
 
 	if s.job.Bundle == nil {
@@ -609,13 +639,16 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	var conductor explorer.QueryConductor = s.services
 
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> request bundle for asset")
-	assetBundle, err := hub.GetBundle(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
-	if err != nil {
-		return nil, err
+	// If we run in debug mode, download the asset bundle and dump it to disk
+	if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
+		assetBundle, err := hub.GetBundle(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
+		if err != nil {
+			return nil, err
+		}
+		log.Debug().Msg("client> got bundle")
+		logger.TraceJSON(assetBundle)
+		logger.DebugDumpJSON("assetBundle", assetBundle)
 	}
-	log.Debug().Msg("client> got bundle")
-	logger.TraceJSON(assetBundle)
-	logger.DebugDumpJSON("assetBundle", assetBundle)
 
 	rawFilters, err := hub.GetFilters(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
 	if err != nil {
@@ -676,7 +709,6 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 
 	ar := &AssetReport{
 		Mrn:      s.job.Asset.Mrn,
-		Bundle:   assetBundle,
 		Resolved: resolvedPack,
 	}
 
