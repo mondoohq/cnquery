@@ -263,7 +263,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 
 	assetBatches := slicesx.Batch(discoveredAssets.Assets, 100)
 	for i := range assetBatches {
-		log.Info().Msg("synchronize assets")
 		batch := assetBatches[i]
 
 		// sync assets
@@ -277,6 +276,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				assetsToSync = append(assetsToSync, batch[i].Asset)
 			}
 
+			log.Info().Msg("synchronize assets")
 			resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 				SpaceMrn: spaceMrn,
 				List:     assetsToSync,

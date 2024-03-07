@@ -217,7 +217,7 @@ func NewDockerEngineContainer(id uint32, conf *inventory.Config, asset *inventor
 		conn.Metadata.Name = containerid.ShortContainerImageID(ci.ID)
 		conn.Metadata.Labels = ci.Labels
 		// FIXME: DEPRECATED, remove in v12.0 vv
-		// The SkipDiscovery flag should always be set from v12
+		// The DelayDiscovery flag should always be set from v12
 		if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
 			conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 		}
@@ -302,7 +302,7 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	}
 	conf.Options[tar.OPTION_FILE] = filename
 	// FIXME: DEPRECATED, remove in v12.0 vv
-	// The SkipDiscovery flag should always be set from v12
+	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}

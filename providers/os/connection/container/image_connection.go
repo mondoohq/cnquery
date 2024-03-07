@@ -23,7 +23,7 @@ import (
 // NewImageConnection uses a container image reference as input and creates a tar connection
 func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, img v1.Image) (*tar.Connection, error) {
 	// FIXME: DEPRECATED, remove in v12.0 vv
-	// The SkipDiscovery flag should always be set from v12
+	// The DelayDiscovery flag should always be set from v12
 	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
 		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
 	}

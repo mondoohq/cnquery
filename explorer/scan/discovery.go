@@ -201,7 +201,7 @@ func prepareAsset(a *inventory.Asset, rootAsset *inventory.Asset, runtimeLabels 
 	a.AddAnnotations(rootAsset.GetAnnotations())
 	a.ManagedBy = rootAsset.ManagedBy
 	if platform := a.GetPlatform(); platform != nil {
-		a.KindString = a.GetPlatform().Kind
+		a.KindString = platform.Kind
 	}
 	if a.Labels == nil {
 		a.Labels = map[string]string{}
