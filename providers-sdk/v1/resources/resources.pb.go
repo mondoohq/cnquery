@@ -252,7 +252,12 @@ type ResourceInfo struct {
 	MinMondooVersion string            `protobuf:"bytes,25,opt,name=min_mondoo_version,json=minMondooVersion,proto3" json:"min_mondoo_version,omitempty"`
 	Defaults         string            `protobuf:"bytes,26,opt,name=defaults,proto3" json:"defaults,omitempty"`
 	Provider         string            `protobuf:"bytes,27,opt,name=provider,proto3" json:"provider,omitempty"`
-	Others           []*ResourceInfo   `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	// This field contains references to other providers with the same
+	// resource/field.
+	// Note: Please do not use this field, it is only temporary and will be
+	// removed in the future once binding resources are mandatory for all
+	// executions.
+	Others []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
 }
 
 func (x *ResourceInfo) Reset() {
@@ -394,7 +399,12 @@ type Field struct {
 	IsImplicitResource bool     `protobuf:"varint,24,opt,name=is_implicit_resource,json=isImplicitResource,proto3" json:"is_implicit_resource,omitempty"`
 	IsEmbedded         bool     `protobuf:"varint,25,opt,name=is_embedded,json=isEmbedded,proto3" json:"is_embedded,omitempty"`
 	Provider           string   `protobuf:"bytes,27,opt,name=provider,proto3" json:"provider,omitempty"`
-	Others             []*Field `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	// This field contains references to other providers with the same
+	// resource/field.
+	// Note: Please do not use this field, it is only temporary and will be
+	// removed in the future once binding resources are mandatory for all
+	// executions.
+	Others []*Field `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
 }
 
 func (x *Field) Reset() {
