@@ -16,14 +16,14 @@ func genTestSchema(t *testing.T) *AssetUrlSchema {
 	require.NoError(t, err)
 
 	err = root.Add(&AssetUrlBranch{
-		Path: []string{"technology=aws"},
-		Key:  "account",
+		PathSegments: []string{"technology=aws"},
+		Key:          "account",
 		Values: map[string]*AssetUrlBranch{
 			"*": {
 				Key: "service",
 				Values: map[string]*AssetUrlBranch{
 					"ec2": {
-						Reference: []string{"technology=os"},
+						References: []string{"technology=os"},
 					},
 				},
 			},
@@ -32,8 +32,8 @@ func genTestSchema(t *testing.T) *AssetUrlSchema {
 	require.NoError(t, err)
 
 	err = root.Add(&AssetUrlBranch{
-		Path: []string{"technology=os"},
-		Key:  "family",
+		PathSegments: []string{"technology=os"},
+		Key:          "family",
 		Values: map[string]*AssetUrlBranch{
 			"windows": {
 				Key: "platform",
@@ -46,8 +46,8 @@ func genTestSchema(t *testing.T) *AssetUrlSchema {
 	require.NoError(t, err)
 
 	err = root.Add(&AssetUrlBranch{
-		Path: []string{"technology=os", "family=windows", "platform=windows server"},
-		Key:  "version",
+		PathSegments: []string{"technology=os", "family=windows", "platform=windows server"},
+		Key:          "version",
 		Values: map[string]*AssetUrlBranch{
 			"2019": nil,
 			"2022": nil,

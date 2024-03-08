@@ -125,11 +125,11 @@ func (a *AssetUrlSchema) Add(branch *AssetUrlBranch) error {
 	if branch == nil {
 		return errors.New("cannot attach empty asset url branch")
 	}
-	if len(branch.Path) == 0 {
+	if len(branch.PathSegments) == 0 {
 		return errors.New("don't know where to attach asset url branch")
 	}
 
-	urlChain, err := NewAssetUrlChain(branch.Path)
+	urlChain, err := NewAssetUrlChain(branch.PathSegments)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (a *AssetUrlSchema) Add(branch *AssetUrlBranch) error {
 	}
 
 	if found == nil {
-		return errors.New("failed to attach asset url branch to any existing subtree for: " + strings.Join(branch.Path, "/"))
+		return errors.New("failed to attach asset url branch to any existing subtree for: " + strings.Join(branch.PathSegments, "/"))
 	}
 
 	if err = branch.validate(); err != nil {
@@ -169,7 +169,7 @@ func (a *AssetUrlBranch) validate() error {
 		branch := branches[i]
 		i++
 
-		if len(branch.Reference) != 0 {
+		if len(branch.References) != 0 {
 			if len(branch.Key) != 0 {
 				return errors.New("asset url segment with reference cannot have a key set")
 			}
@@ -240,12 +240,12 @@ func (a *AssetUrlSchema) cloneBranch(branch *AssetUrlBranch, depth uint32, isDer
 		return nil, errors.New("maximum depth reached for asset url during clone (look for circular branch references)")
 	}
 
-	if len(branch.Reference) != 0 {
+	if len(branch.References) != 0 {
 		if isDereferenced {
-			return nil, errors.New("dereferenced an asset url branch with more references (reference to = '" + strings.Join(branch.Reference, "/") + "')")
+			return nil, errors.New("dereferenced an asset url branch with more references (reference to = '" + strings.Join(branch.References, "/") + "')")
 		}
 
-		urlChain, err := NewAssetUrlChain(branch.Reference)
+		urlChain, err := NewAssetUrlChain(branch.References)
 		if err != nil {
 			return nil, err
 		}
@@ -293,7 +293,7 @@ func (a *AssetUrlSchema) RefreshCache() error {
 		branch := branches[i]
 		i++
 
-		if len(branch.Reference) != 0 {
+		if len(branch.References) != 0 {
 			res, err := a.cloneBranch(branch, branch.Depth, false)
 			if err != nil {
 				return err
@@ -364,3 +364,5 @@ func buildParentQuery(leaf *AssetUrlBranch, value string) AssetUrlChain {
 
 	return res
 }
+
+func (a *AssetUrlSchema) PathToAssetUrlChain(path []string)

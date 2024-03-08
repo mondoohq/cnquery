@@ -84,16 +84,17 @@ message Asset {
   string fqdn = 37;
 }
 
-// AssetUrlBranch defines the hierarchy into which an asset can be placed. It makes
-// it easier to find and group assets. Typically this is a subset of all possible
-// asset relationships used to generate an opinionated view on an asset.
+// AssetUrlBranch defines the hierarchy into which an asset can be placed. It
+// makes it easier to find and group assets. Typically this is a subset of all
+// possible asset relationships used to generate an opinionated view on an
+// asset.
 //
 // AssetUrlBranches are part of the overall AssetUrlSchema, to which they are
 // attached.
 message AssetUrlBranch {
   // The path to which this tree is getting attached. Only necessary for the
   // top-most branches, not necessary for branches inside the values field.
-  repeated string path = 1;
+  repeated string path_segments = 1;
   // key of this tree. Every tree must have one key only at its root.
   // Must be [a-z0-9_-]+ up to 100 characters
   string key = 2;
@@ -106,12 +107,12 @@ message AssetUrlBranch {
   // reference to other subtree that will be used at this position. Allows
   // providers to re-use url parts from other definitions. For example:
   // attaching the /technology=os subtree to cloud VMs
-  repeated string reference = 5;
+  repeated string references = 5;
   // internal only: depth of the subtree
   uint32 depth = 20;
   // internal only: parent relationships
   AssetUrlBranch parent = 21;
-  string parentValue = 22;
+  string parent_value = 22;
 }
 
 // FIXME: DEPRECATED, remove in v10.0 (or later) vv
