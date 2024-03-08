@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -14,15 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
 	"go.mondoo.com/cnquery/v10/cli/providers"
 	"go.mondoo.com/cnquery/v10/cli/theme"
 	"go.mondoo.com/cnquery/v10/logger"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
-	"go.mondoo.com/ranger-rpc"
-	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
 
 const (
@@ -136,38 +131,6 @@ func initLogger() {
 		level = "debug"
 	}
 	logger.Set(level)
-}
-
-func defaultRangerPlugins(sysInfo *sysinfo.SystemInfo, features cnquery.Features) []ranger.ClientPlugin {
-	plugins := []ranger.ClientPlugin{}
-	plugins = append(plugins, scope.NewRequestIDRangerPlugin())
-	plugins = append(plugins, sysInfoHeader(sysInfo, features))
-	return plugins
-}
-
-func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) ranger.ClientPlugin {
-	const (
-		HttpHeaderUserAgent      = "User-Agent"
-		HttpHeaderClientFeatures = "Mondoo-Features"
-		HttpHeaderPlatformID     = "Mondoo-PlatformID"
-	)
-
-	h := http.Header{}
-	info := map[string]string{
-		"cnquery": cnquery.Version,
-		"build":   cnquery.Build,
-	}
-	if sysInfo != nil {
-		info["PN"] = sysInfo.Platform.Name
-		info["PR"] = sysInfo.Platform.Version
-		info["PA"] = sysInfo.Platform.Arch
-		info["IP"] = sysInfo.IP
-		info["HN"] = sysInfo.Hostname
-		h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
-	}
-	h.Set(HttpHeaderUserAgent, scope.XInfoHeader(info))
-	h.Set(HttpHeaderClientFeatures, features.Encode())
-	return scope.NewCustomHeaderRangerPlugin(h)
 }
 
 var reMdName = regexp.MustCompile(`/([^/]+)\.md$`)

@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 
 	"go.mondoo.com/cnquery/v10/llx"
@@ -40,7 +41,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		var upstream *upstream.UpstreamClient
 		var err error
 		if req.Upstream != nil && !req.Upstream.Incognito {
-			upstream, err = req.Upstream.InitClient()
+			upstream, err = req.Upstream.InitClient(context.Background())
 			if err != nil {
 				return nil, err
 			}

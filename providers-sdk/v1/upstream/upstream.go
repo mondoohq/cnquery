@@ -4,12 +4,15 @@
 package upstream
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v10"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
+	rangerUtils "go.mondoo.com/cnquery/v10/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
@@ -52,15 +55,17 @@ type UpstreamClient struct {
 	HttpClient *http.Client
 }
 
-func (c *UpstreamConfig) InitClient() (*UpstreamClient, error) {
+func (c *UpstreamConfig) InitClient(ctx context.Context) (*UpstreamClient, error) {
 	certAuth, err := NewServiceAccountRangerPlugin(c.Creds)
 	if err != nil {
 		return nil, multierr.Wrap(err, "could not initialize client authentication")
 	}
+	plugins := []ranger.ClientPlugin{certAuth}
+	plugins = append(plugins, rangerUtils.DefaultRangerPlugins(cnquery.GetFeatures(ctx))...)
 
 	res := UpstreamClient{
 		UpstreamConfig: *c,
-		Plugins:        []ranger.ClientPlugin{certAuth},
+		Plugins:        plugins,
 		HttpClient:     c.httpClient(),
 	}
 
