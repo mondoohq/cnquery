@@ -7,6 +7,7 @@ import (
 	"errors"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -365,4 +366,22 @@ func buildParentQuery(leaf *AssetUrlBranch, value string) AssetUrlChain {
 	return res
 }
 
-func (a *AssetUrlSchema) PathToAssetUrlChain(path []string)
+func (a *AssetUrlSchema) PathToAssetUrlChain(path []string) (AssetUrlChain, error) {
+	cur := a.root
+	res := make([]KV, len(path))
+	for idx, term := range path {
+		if cur == nil {
+			return nil, errors.New("invalid asset url, no more definitions at depth " + strconv.Itoa(idx) + " (value: " + term + ")")
+		}
+
+		next, ok := cur.Values[term]
+		if !ok {
+			return nil, errors.New("invalid asset url, value not found: " + cur.Key + "=" + term)
+		}
+
+		res[idx] = KV{cur.Key, term}
+		cur = next
+	}
+
+	return res, nil
+}
