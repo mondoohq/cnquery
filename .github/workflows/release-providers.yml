@@ -35,8 +35,8 @@ jobs:
         id: update-providers
         run: |
           shopt -s expand_aliases
-          alias update="go run providers-sdk/v1/util/version/version.go"
-          update providers/*/ --increment=patch
+          alias version="go run providers-sdk/v1/util/version/version.go"
+          version update providers/*/ --increment=patch
 
       - name: Prepare title and branch name
         id: branch
