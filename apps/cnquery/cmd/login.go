@@ -19,6 +19,7 @@ import (
 	cnquery_providers "go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	rangerUtils "go.mondoo.com/cnquery/v10/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
@@ -72,7 +73,7 @@ func register(token string, annotations map[string]string, timer int, splay int)
 	if err != nil {
 		return cli_errors.NewCommandError(errors.Wrap(err, "could not gather client information"), 1)
 	}
-	defaultPlugins := defaultRangerPlugins(sysInfo, cnquery.DefaultFeatures)
+	defaultPlugins := rangerUtils.DefaultRangerPlugins(cnquery.DefaultFeatures)
 
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)

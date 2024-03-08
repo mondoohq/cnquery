@@ -227,7 +227,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	// plan scan jobs
 	reporter := NewAggregateReporter()
 	if job.Bundle == nil && upstream != nil && upstream.Creds != nil {
-		client, err := upstream.InitClient()
+		client, err := upstream.InitClient(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -271,7 +271,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	spaceMrn := ""
 	var services *explorer.Services
 	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
-		client, err := upstream.InitClient()
+		client, err := upstream.InitClient(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -447,7 +447,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	runtimeErr := inmemory.WithDb(job.runtime, func(db *inmemory.Db, services *explorer.LocalServices) error {
 		if job.UpstreamConfig != nil && job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + job.UpstreamConfig.ApiEndpoint)
-			client, err := job.UpstreamConfig.InitClient()
+			client, err := job.UpstreamConfig.InitClient(job.Ctx)
 			if err != nil {
 				return err
 			}

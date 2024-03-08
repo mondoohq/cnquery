@@ -14,8 +14,8 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
 	cnquery_providers "go.mondoo.com/cnquery/v10/providers"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/sysinfo"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	rangerUtils "go.mondoo.com/cnquery/v10/utils/ranger"
 	"sigs.k8s.io/yaml"
 )
 
@@ -48,19 +48,13 @@ ensure the credentials cannot be used in the future.
 		// print the used config to the user
 		config.DisplayUsedConfig()
 
-		// determine information about the client
-		sysInfo, err := sysinfo.Get()
-		if err != nil {
-			return errors.Wrap(err, "could not gather client information")
-		}
-
 		// check valid client authentication
 		serviceAccount := opts.GetServiceCredential()
 		if serviceAccount == nil {
 			return cli_errors.NewCommandError(errors.Wrap(err, "could not initialize client authentication"), ConfigurationErrorCode)
 		}
 
-		plugins := defaultRangerPlugins(sysInfo, opts.GetFeatures())
+		plugins := rangerUtils.DefaultRangerPlugins(opts.GetFeatures())
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 		if err != nil {
 			log.Error().Err(err).Msg("could not initialize client authentication")
