@@ -964,6 +964,7 @@ resources:
       lastAssessment: {}
       packages: {}
       stats: {}
+      summary: {}
     min_mondoo_version: latest
   windows:
     fields:

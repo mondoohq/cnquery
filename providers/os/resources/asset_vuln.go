@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -13,7 +12,6 @@ import (
 	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/gql"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd/cvss"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
@@ -40,7 +38,8 @@ func getKernelVersion(kernel *mqlKernel) string {
 	return val.(string)
 }
 
-func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
+// TODO: this is not efficient, we should use a cache
+func fetchVulnReport(runtime *plugin.Runtime) (*mvd.VulnReport, error) {
 	mcc := runtime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
 		return nil, resources.MissingUpstreamError{}
@@ -98,12 +97,7 @@ func fetchVulnReport(runtime *plugin.Runtime) (interface{}, error) {
 	logger.DebugDumpYAML("vuln-scan-job", scanjob)
 
 	log.Debug().Bool("incognito", mcc.Incognito).Msg("run advisory scan")
-	report, err := scannerClient.AnalyseAsset(context.Background(), scanjob)
-	if err != nil {
-		return nil, err
-	}
-
-	return convert.JsonToDict(report)
+	return scannerClient.AnalyseAsset(context.Background(), scanjob)
 }
 
 func (p *mqlPlatform) vulnerabilityReport() (interface{}, error) {
@@ -115,39 +109,12 @@ func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
 	return fetchVulnReport(p.MqlRuntime)
 }
 
-func getAdvisoryReport(runtime *plugin.Runtime) (*mvd.VulnReport, error) {
-	mcc := runtime.Upstream
-	if mcc == nil || mcc.ApiEndpoint == "" {
-		return nil, resources.MissingUpstreamError{}
-	}
-
-	// get new gql client
-	mondooClient, err := gql.NewClient(&mcc.UpstreamConfig, mcc.HttpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	gqlVulnReport, err := mondooClient.GetVulnCompactReport(runtime.Upstream.AssetMrn)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debug().Interface("gqlReport", gqlVulnReport).Msg("search for asset vuln report")
-	if gqlVulnReport == nil {
-		return nil, errors.New("no vulnerability report available")
-	}
-
-	vulnReport := gql.ConvertToMvdVulnReport(gqlVulnReport)
-
-	return vulnReport, nil
-}
-
 func (a *mqlPlatformAdvisories) id() (string, error) {
 	return "platform.advisories", nil
 }
 
 func (a *mqlPlatformAdvisories) cvss() (*mqlAuditCvss, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +131,7 @@ func (a *mqlPlatformAdvisories) cvss() (*mqlAuditCvss, error) {
 }
 
 func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +187,7 @@ func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
 }
 
 func (a *mqlPlatformAdvisories) stats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +205,7 @@ func (a *mqlPlatformCves) id() (string, error) {
 }
 
 func (a *mqlPlatformCves) list() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +264,7 @@ func (a *mqlPlatformCves) list() ([]interface{}, error) {
 }
 
 func (a *mqlPlatformCves) cvss() (*mqlAuditCvss, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -313,19 +280,11 @@ func (a *mqlPlatformCves) cvss() (*mqlAuditCvss, error) {
 		}
 	}
 
-	obj, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
-		"score":  llx.FloatData(float64(int(score*10)) / 10),
-		"vector": llx.StringData(""),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return obj.(*mqlAuditCvss), nil
+	return newMqlVulnCvss(a.MqlRuntime, float64(int(score*10)), "")
 }
 
 func (a *mqlPlatformCves) stats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MqlRuntime)
+	report, err := fetchVulnReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
