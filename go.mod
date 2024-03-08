@@ -17,15 +17,15 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.50.32
-	github.com/aws/aws-sdk-go-v2 v1.25.2
-	github.com/aws/aws-sdk-go-v2/config v1.27.6
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.6
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.149.4
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.22.1
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.1
+	github.com/aws/aws-sdk-go v1.50.34
+	github.com/aws/aws-sdk-go-v2 v1.25.3
+	github.com/aws/aws-sdk-go-v2/config v1.27.7
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.3
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.0
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.2
 	github.com/aws/smithy-go v1.20.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240206212017-5795caca6e8e
 	// pin v0.2.6
@@ -35,12 +35,12 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-	github.com/docker/cli v25.0.3+incompatible
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/cli v25.0.4+incompatible
+	github.com/docker/docker v25.0.4+incompatible
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/go-jose/go-jose/v3 v3.0.2
+	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -57,7 +57,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
-	github.com/knqyf263/go-rpmdb v0.0.0-20231206071317-a8af76a6220f
+	github.com/knqyf263/go-rpmdb v0.1.0
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/masterzen/winrm v0.0.0-20231227165926-e811dad5ac77
@@ -106,13 +106,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.2
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.2
 	// pin v0.28.4
-	k8s.io/component-base v0.28.4
+	k8s.io/component-base v0.29.2
 	// pin v0.28.4
-	k8s.io/kubelet v0.28.4
+	k8s.io/kubelet v0.29.2
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -206,15 +206,15 @@ require (
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.28.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
@@ -413,7 +413,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.29.2 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	modernc.org/libc v1.41.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
