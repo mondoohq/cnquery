@@ -5,7 +5,7 @@
 # Catch placeholder text
 #
 
-\b[Lo]orem [Ii]psum\
+\b[Ll]orem [Ii]psum\b
 
 #
 # Terms to avoid
@@ -37,6 +37,16 @@
 
 # s.b. Compliance Hub
 \s[Cc]ompliance hub\b
+
+#
+# Compliance Terms
+#
+
+# s.b. SOC 2
+\bSOC2\b
+
+# s.b. ISO 270001
+\bISO270001\b
 
 #
 # Industry Terms
@@ -170,23 +180,23 @@
 \bopenSSL\b
 
 # s.b. CloudBees
-\bCloudbees\b
+\b[Cc]loudbees\b
 
 # s.b. System76
 \bSystem 76\b
 
 # s.b. VirtualBox
-\bvirtualbox\b
-\bVirtualbox\b
+\b[Vv]irtualbox\b
 \bVirtual Box\b
 
 # s.b. SentinelOne
-\bSentinalOne\b
+\bSentinal[Oo]ne\b
+\bSentinelone\b
 \bSentinal One\b
 
 # s.b. CrowdStrike
 \bCrowd Strike\b
-\bCrowdstrike\b
+\b[Cc]rowdstrike\b
 
 #
 # HashiCorp Products
@@ -295,8 +305,7 @@
 \bCloudfront\b
 
 # s.b. CloudHSM
-\bCloudHsm\b
-\bCloudhsm\b
+\bCloud[Hh]sm\b
 
 # s.b. CloudSearch
 \bCloudsearch\b
