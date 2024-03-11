@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -19,7 +20,6 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/execruntime"
 	"go.mondoo.com/cnquery/v10/cli/inventoryloader"
 	cliproviders "go.mondoo.com/cnquery/v10/cli/providers"
-	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"go.mondoo.com/cnquery/v10/cli/theme"
 	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/cnquery/v10/providers"
@@ -208,7 +208,7 @@ func GenerateMarkdown(dir string) error {
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
 	opts, err := config.Read()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to load config")
+		return nil, errors.Wrap(err, "failed to load config")
 	}
 
 	config.DisplayUsedConfig()
@@ -232,7 +232,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 
 	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse inventory")
+		return nil, errors.Wrap(err, "failed to parse inventory")
 	}
 
 	// TODO: We currently deduplicate this here because it leads to errors down the line,
@@ -249,14 +249,8 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		runtime:        runtime,
 	}
 
-	// if users want to get more information on available output options,
-	// print them before executing the scan
+	// determine the output format
 	output := viper.GetString("output")
-	if output == "help" {
-		fmt.Println("Available output formats: " + reporter.AllFormats())
-		os.Exit(0)
-	}
-
 	// --json takes precedence
 	if ok := viper.GetBool("json"); ok {
 		output = "json"

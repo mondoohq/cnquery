@@ -114,6 +114,14 @@ var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		log.Fatal().Err(err).Msg("failed to prepare config")
 	}
 
+	// if users want to get more information on available output options,
+	// print them before executing the scan
+	output := viper.GetString("output")
+	if output == "help" {
+		fmt.Println("Available output formats: " + reporter.AllFormats())
+		os.Exit(0)
+	}
+
 	err = conf.loadBundles()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to resolve query packs")
