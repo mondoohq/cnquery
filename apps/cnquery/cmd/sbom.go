@@ -12,15 +12,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v10/cli/config"
-	"go.mondoo.com/cnquery/v10/cli/execruntime"
-	"go.mondoo.com/cnquery/v10/cli/inventoryloader"
 	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/cnquery/v10/providers"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	sbom "go.mondoo.com/cnquery/v10/sbom"
 	"go.mondoo.com/cnquery/v10/shared"
 )
@@ -77,7 +72,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		log.Fatal().Err(err).Msg("failed to load query pack")
 	}
 
-	conf, err := getSbomScanConfig(cmd, runtime, cliRes)
+	conf, err := getCobraScanConfig(cmd, runtime, cliRes)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to get scan config")
 	}
@@ -85,6 +80,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	conf.QueryPackNames = nil
 	conf.QueryPackPaths = nil
 	conf.Bundle = pb
+	conf.IsIncognito = true
 
 	report, err := RunScan(conf)
 	if err != nil {
@@ -98,14 +94,9 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		logger.DebugDumpJSON("mondoo-sbom-report", buf.Bytes())
 	}
 
-	jr, err := sbom.NewReportCollectionJson(buf.Bytes())
+	boms, err := sbom.NewBom(buf.Bytes())
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse report collection")
-	}
-
-	boms, err := sbom.GenerateBom(jr)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to generate SBOM")
+		log.Fatal().Err(err).Msg("failed to parse bom")
 	}
 
 	var exporter sbom.Exporter
@@ -144,81 +135,4 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 			fmt.Println(output.String())
 		}
 	}
-}
-
-// TODO: harmonize with getCobraScanConfig
-func getSbomScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
-	opts, err := config.Read()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to load config")
-	}
-
-	config.DisplayUsedConfig()
-
-	annotations, err := cmd.Flags().GetStringToString("annotation")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse annotations")
-	}
-
-	// merge the config and the user-provided annotations with the latter having precedence
-	optAnnotations := opts.Annotations
-	if optAnnotations == nil {
-		optAnnotations = map[string]string{}
-	}
-	for k, v := range annotations {
-		optAnnotations[k] = v
-	}
-
-	assetName, err := cmd.Flags().GetString("asset-name")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse asset-name")
-	}
-	if assetName != "" && cliRes.Asset != nil {
-		cliRes.Asset.Name = assetName
-	}
-
-	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse inventory")
-	}
-
-	conf := scanConfig{
-		Features:    opts.GetFeatures(),
-		IsIncognito: true,
-		Inventory:   inv,
-		runtime:     runtime,
-	}
-
-	// detect CI/CD runs and read labels from runtime and apply them to all assets in the inventory
-	runtimeEnv := execruntime.Detect()
-	if opts.AutoDetectCICDCategory && runtimeEnv.IsAutomatedEnv() || opts.Category == "cicd" {
-		log.Info().Msg("detected ci-cd environment")
-		// NOTE: we only apply those runtime environment labels for CI/CD runs to ensure other assets from the
-		// inventory are not touched, we may consider to add the data to the flagAsset
-		if runtimeEnv != nil {
-			runtimeLabels := runtimeEnv.Labels()
-			conf.Inventory.ApplyLabels(runtimeLabels)
-		}
-		conf.Inventory.ApplyCategory(inventory.AssetCategory_CATEGORY_CICD)
-	}
-
-	var serviceAccount *upstream.ServiceAccountCredentials
-	if !conf.IsIncognito {
-		serviceAccount = opts.GetServiceCredential()
-		if serviceAccount != nil {
-			log.Info().Msg("using service account credentials")
-			conf.runtime.UpstreamConfig = &upstream.UpstreamConfig{
-				SpaceMrn:    opts.GetParentMrn(),
-				ApiEndpoint: opts.UpstreamApiEndpoint(),
-				ApiProxy:    opts.APIProxy,
-				Incognito:   conf.IsIncognito,
-				Creds:       serviceAccount,
-			}
-		} else {
-			log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
-			conf.IsIncognito = true
-		}
-	}
-
-	return &conf, nil
 }

@@ -14,18 +14,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/cli/config"
-	"go.mondoo.com/cnquery/v10/cli/execruntime"
-	"go.mondoo.com/cnquery/v10/cli/inventoryloader"
 	"go.mondoo.com/cnquery/v10/cli/reporter"
-	"go.mondoo.com/cnquery/v10/cli/theme"
 	"go.mondoo.com/cnquery/v10/explorer"
 	"go.mondoo.com/cnquery/v10/explorer/scan"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 )
 
 func init() {
@@ -81,24 +76,27 @@ To manually configure a query pack, use this:
 			os.Exit(0)
 		}
 
-		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
+		_ = viper.BindPFlag("inventory-ansible", cmd.Flags().Lookup("inventory-ansible"))
+		_ = viper.BindPFlag("inventory-domainlist", cmd.Flags().Lookup("inventory-domainlist"))
+		_ = viper.BindPFlag("querypack-bundle", cmd.Flags().Lookup("querypack-bundle"))
+		_ = viper.BindPFlag("detect-cicd", cmd.Flags().Lookup("detect-cicd"))
+		_ = viper.BindPFlag("asset-name", cmd.Flags().Lookup("asset-name"))
+		_ = viper.BindPFlag("category", cmd.Flags().Lookup("category"))
 
-		viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
-		viper.BindPFlag("inventory-ansible", cmd.Flags().Lookup("inventory-ansible"))
-		viper.BindPFlag("inventory-domainlist", cmd.Flags().Lookup("inventory-domainlist"))
-		viper.BindPFlag("querypack-bundle", cmd.Flags().Lookup("querypack-bundle"))
-		viper.BindPFlag("detect-cicd", cmd.Flags().Lookup("detect-cicd"))
-		viper.BindPFlag("asset-name", cmd.Flags().Lookup("asset-name"))
-		viper.BindPFlag("category", cmd.Flags().Lookup("category"))
+		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
+		_ = viper.BindPFlag("props", cmd.Flags().Lookup("props"))
 
 		// for all assets
-		viper.BindPFlag("incognito", cmd.Flags().Lookup("incognito"))
-		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
-		viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
-		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
-		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
+		_ = viper.BindPFlag("incognito", cmd.Flags().Lookup("incognito"))
+		_ = viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
+		_ = viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
+		_ = viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
+		_ = viper.BindPFlag("record", cmd.Flags().Lookup("record"))
 
-		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
+		_ = viper.BindPFlag("output", cmd.Flags().Lookup("output"))
+		_ = viper.BindPFlag("json", cmd.Flags().Lookup("json"))
 	},
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
@@ -154,116 +152,6 @@ type scanConfig struct {
 	runtime        *providers.Runtime
 
 	IsIncognito bool
-}
-
-func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
-	opts, err := config.Read()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to load config")
-	}
-
-	config.DisplayUsedConfig()
-
-	props, err := cmd.Flags().GetStringToString("props")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse props")
-	}
-
-	annotations, err := cmd.Flags().GetStringToString("annotation")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse annotations")
-	}
-
-	// merge the config and the user-provided annotations with the latter having precedence
-	optAnnotations := opts.Annotations
-	if optAnnotations == nil {
-		optAnnotations = map[string]string{}
-	}
-	for k, v := range annotations {
-		optAnnotations[k] = v
-	}
-
-	assetName, err := cmd.Flags().GetString("asset-name")
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse asset-name")
-	}
-	if assetName != "" && cliRes.Asset != nil {
-		cliRes.Asset.Name = assetName
-	}
-
-	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to parse inventory")
-	}
-
-	// TODO: We currently deduplicate this here because it leads to errors down the line,
-	// if the same querypack is added more than once. Fix this properly downstream.
-	querypackPaths := dedupe(viper.GetStringSlice("querypack-bundle"))
-
-	conf := scanConfig{
-		Features:       opts.GetFeatures(),
-		IsIncognito:    viper.GetBool("incognito"),
-		Inventory:      inv,
-		QueryPackPaths: querypackPaths,
-		QueryPackNames: viper.GetStringSlice("querypacks"),
-		Props:          props,
-		runtime:        runtime,
-	}
-
-	// if users want to get more information on available output options,
-	// print them before executing the scan
-	output, _ := cmd.Flags().GetString("output")
-	if output == "help" {
-		fmt.Println("Available output formats: " + reporter.AllFormats())
-		os.Exit(0)
-	}
-
-	// --json takes precedence
-	if ok, _ := cmd.Flags().GetBool("json"); ok {
-		output = "json"
-	}
-	conf.Output = output
-
-	// detect CI/CD runs and read labels from runtime and apply them to all assets in the inventory
-	runtimeEnv := execruntime.Detect()
-	if opts.AutoDetectCICDCategory && runtimeEnv.IsAutomatedEnv() || opts.Category == "cicd" {
-		log.Info().Msg("detected ci-cd environment")
-		// NOTE: we only apply those runtime environment labels for CI/CD runs to ensure other assets from the
-		// inventory are not touched, we may consider to add the data to the flagAsset
-		if runtimeEnv != nil {
-			runtimeLabels := runtimeEnv.Labels()
-			conf.Inventory.ApplyLabels(runtimeLabels)
-		}
-		conf.Inventory.ApplyCategory(inventory.AssetCategory_CATEGORY_CICD)
-	}
-
-	serviceAccount := opts.GetServiceCredential()
-	if serviceAccount != nil {
-		log.Info().Msg("using service account credentials")
-		conf.runtime.UpstreamConfig = &upstream.UpstreamConfig{
-			SpaceMrn:    opts.GetParentMrn(),
-			ApiEndpoint: opts.UpstreamApiEndpoint(),
-			ApiProxy:    opts.APIProxy,
-			Incognito:   conf.IsIncognito,
-			Creds:       serviceAccount,
-		}
-		providers.DefaultRuntime().UpstreamConfig = conf.runtime.UpstreamConfig
-	} else {
-		log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
-		conf.IsIncognito = true
-	}
-
-	if len(conf.QueryPackPaths) > 0 && !conf.IsIncognito {
-		log.Warn().Msg("Scanning with local bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
-		conf.IsIncognito = true
-	}
-
-	// print headline when its not printed to yaml
-	if output == "" {
-		fmt.Fprintln(os.Stdout, theme.DefaultTheme.Welcome)
-	}
-
-	return &conf, nil
 }
 
 func (c *scanConfig) loadBundles() error {
