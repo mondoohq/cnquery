@@ -190,6 +190,8 @@ func initGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[stri
 			args["id"] = llx.StringData(ids.name)
 			args["location"] = llx.StringData(ids.region)
 			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 

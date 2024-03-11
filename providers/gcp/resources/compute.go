@@ -807,6 +807,8 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 		if ids := getAssetIdentifier(runtime); ids != nil {
 			args["name"] = llx.StringData(ids.name)
 			args["projectId"] = llx.StringData(ids.project)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 
