@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -143,6 +144,8 @@ func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string
 			args["name"] = llx.StringData(ids.name)
 			args["projectId"] = llx.StringData(ids.project)
 			args["location"] = llx.StringData(ids.region)
+		} else {
+			return nil, nil, errors.New("no asset identifier found")
 		}
 	}
 

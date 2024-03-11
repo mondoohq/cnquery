@@ -462,7 +462,6 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 						}
 
 						mqlConfig, err = CreateResource(g.MqlRuntime, "gcp.project.dataprocService.cluster.config", map[string]*llx.RawData{
-							"projectId":             llx.StringData(c.ProjectId),
 							"parentResourcePath":    llx.StringData(fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName)),
 							"autoscaling":           llx.DictData(mqlAutoscalingCfg),
 							"configBucket":          llx.StringData(c.Config.ConfigBucket),
