@@ -710,9 +710,8 @@ resources:
       title: Ensure AWS Config is enabled in all regions
   aws.config.deliverychannel:
     docs:
-      desc: "The `aws.config.deliverychannel` resource provides fields representing
-        an individual AWS Config delivery channel configured within an account. For
-        usage, read the `aws.config` resource documentation.\n"
+      desc: |
+        The `aws.config.deliverychannel` resource provides fields representing an individual AWS Config delivery channel configured within an account. For usage, read the `aws.config` resource documentation.
     fields:
       name: {}
       region: {}
