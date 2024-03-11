@@ -507,6 +507,7 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 		// Dom: we may need to retain the original asset ID, not sure yet...
 		asset.Id = "mock-asset"
 		asset.Connections = []*inventory.Config{{
+			Id:   Coordinator.NextConnectionId(),
 			Type: "mock",
 		}}
 
