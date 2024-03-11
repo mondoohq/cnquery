@@ -27,6 +27,15 @@ func QueryPack() (*explorer.Bundle, error) {
 	return explorer.BundleFromYAML(sbomQueryPack)
 }
 
+// NewBom creates a BOM from a json report collection
+func NewBom(data []byte) ([]Sbom, error) {
+	jr, err := NewReportCollectionJson(data)
+	if err != nil {
+		return nil, err
+	}
+	return GenerateBom(jr)
+}
+
 // GenerateBom generates a BOM from a cnspec json report collection
 func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 	if r == nil {

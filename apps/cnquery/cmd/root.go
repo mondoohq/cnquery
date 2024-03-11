@@ -4,10 +4,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -15,9 +17,15 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/v10/cli/config"
 	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
-	"go.mondoo.com/cnquery/v10/cli/providers"
+	"go.mondoo.com/cnquery/v10/cli/execruntime"
+	"go.mondoo.com/cnquery/v10/cli/inventoryloader"
+	cliproviders "go.mondoo.com/cnquery/v10/cli/providers"
 	"go.mondoo.com/cnquery/v10/cli/theme"
 	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 )
 
 const (
@@ -39,24 +47,24 @@ var rootCmd = &cobra.Command{
 }
 
 func BuildRootCmd() (*cobra.Command, error) {
-	err := providers.AttachCLIs(
+	err := cliproviders.AttachCLIs(
 		rootCmd,
-		&providers.Command{
+		&cliproviders.Command{
 			Command: shellCmd,
 			Run:     shellRun,
 			Action:  "Interactive shell with ",
 		},
-		&providers.Command{
+		&cliproviders.Command{
 			Command: RunCmd,
 			Run:     RunCmdRun,
 			Action:  "Run a query with ",
 		},
-		&providers.Command{
+		&cliproviders.Command{
 			Command: scanCmd,
 			Run:     scanCmdRun,
 			Action:  "Scan ",
 		},
-		&providers.Command{
+		&cliproviders.Command{
 			Command:             sbomCmd,
 			Run:                 sbomCmdRun,
 			Action:              "Collect a software bill of materials (SBOM) for ",
@@ -195,4 +203,98 @@ func GenerateMarkdown(dir string) error {
 	}
 
 	return nil
+}
+
+func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
+	opts, err := config.Read()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load config")
+	}
+
+	config.DisplayUsedConfig()
+
+	props := viper.GetStringMapString("props")
+	annotations := viper.GetStringMapString("annotation")
+
+	// merge the config and the user-provided annotations with the latter having precedence
+	optAnnotations := opts.Annotations
+	if optAnnotations == nil {
+		optAnnotations = map[string]string{}
+	}
+	for k, v := range annotations {
+		optAnnotations[k] = v
+	}
+
+	assetName := viper.GetString("asset-name")
+	if assetName != "" && cliRes.Asset != nil {
+		cliRes.Asset.Name = assetName
+	}
+
+	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse inventory")
+	}
+
+	// TODO: We currently deduplicate this here because it leads to errors down the line,
+	// if the same querypack is added more than once. Fix this properly downstream.
+	querypackPaths := dedupe(viper.GetStringSlice("querypack-bundle"))
+
+	conf := scanConfig{
+		Features:       opts.GetFeatures(),
+		IsIncognito:    viper.GetBool("incognito"),
+		Inventory:      inv,
+		QueryPackPaths: querypackPaths,
+		QueryPackNames: viper.GetStringSlice("querypacks"),
+		Props:          props,
+		runtime:        runtime,
+	}
+
+	// determine the output format
+	output := viper.GetString("output")
+	// --json takes precedence
+	if ok := viper.GetBool("json"); ok {
+		output = "json"
+	}
+	conf.Output = output
+
+	// detect CI/CD runs and read labels from runtime and apply them to all assets in the inventory
+	runtimeEnv := execruntime.Detect()
+	if opts.AutoDetectCICDCategory && runtimeEnv.IsAutomatedEnv() || opts.Category == "cicd" {
+		log.Info().Msg("detected ci-cd environment")
+		// NOTE: we only apply those runtime environment labels for CI/CD runs to ensure other assets from the
+		// inventory are not touched, we may consider to add the data to the flagAsset
+		if runtimeEnv != nil {
+			runtimeLabels := runtimeEnv.Labels()
+			conf.Inventory.ApplyLabels(runtimeLabels)
+		}
+		conf.Inventory.ApplyCategory(inventory.AssetCategory_CATEGORY_CICD)
+	}
+
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		log.Info().Msg("using service account credentials")
+		conf.runtime.UpstreamConfig = &upstream.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			ApiProxy:    opts.APIProxy,
+			Incognito:   conf.IsIncognito,
+			Creds:       serviceAccount,
+		}
+		providers.DefaultRuntime().UpstreamConfig = conf.runtime.UpstreamConfig
+	} else {
+		log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
+		conf.IsIncognito = true
+	}
+
+	if len(conf.QueryPackPaths) > 0 && !conf.IsIncognito {
+		log.Warn().Msg("Scanning with local bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
+		conf.IsIncognito = true
+	}
+
+	// print headline when its not printed to yaml
+	if output == "" {
+		fmt.Fprintln(os.Stdout, theme.DefaultTheme.Welcome)
+	}
+
+	return &conf, nil
 }
