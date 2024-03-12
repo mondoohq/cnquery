@@ -182,11 +182,15 @@ type CommonOpts struct {
 
 	// service account credentials
 	ServiceAccountMrn string `json:"mrn,omitempty" mapstructure:"mrn"`
-	ParentMrn         string `json:"parent_mrn,omitempty" mapstructure:"parent_mrn"`
-	SpaceMrn          string `json:"space_mrn,omitempty" mapstructure:"space_mrn"`
-	PrivateKey        string `json:"private_key,omitempty" mapstructure:"private_key"`
-	Certificate       string `json:"certificate,omitempty" mapstructure:"certificate"`
-	APIEndpoint       string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
+	// The scope mrn is used to scope the service account to a specific organization or space.
+	ScopeMrn string `json:"scope_mrn,omitempty" mapstructure:"scope_mrn"`
+	// Deprecated: use scope_mrn instead
+	ParentMrn string `json:"parent_mrn,omitempty" mapstructure:"parent_mrn"`
+	// Deprecated: use scope_mrn instead
+	SpaceMrn    string `json:"space_mrn,omitempty" mapstructure:"space_mrn"`
+	PrivateKey  string `json:"private_key,omitempty" mapstructure:"private_key"`
+	Certificate string `json:"certificate,omitempty" mapstructure:"certificate"`
+	APIEndpoint string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
 
 	// authentication
 	Authentication *CliConfigAuthentication `json:"auth,omitempty" mapstructure:"auth"`
@@ -254,22 +258,36 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 
 	return &upstream.ServiceAccountCredentials{
 		Mrn:         c.ServiceAccountMrn,
-		ParentMrn:   c.GetParentMrn(),
+		ParentMrn:   c.GetScopeMrn(),
+		ScopeMrn:    c.GetScopeMrn(),
 		PrivateKey:  c.PrivateKey,
 		Certificate: c.Certificate,
 		ApiEndpoint: c.APIEndpoint,
 	}
 }
 
-func (c *CommonOpts) GetParentMrn() string {
-	parent := c.ParentMrn
+// GetScopeMrn returns the scope mrn that is used for the service account.
+// This is either the organization mrn or the space mrn.
+func (c *CommonOpts) GetScopeMrn() string {
+	scopeMrn := c.ScopeMrn
 
 	// fallback to old space_mrn config
-	if parent == "" {
-		parent = c.SpaceMrn
+	if scopeMrn == "" {
+		scopeMrn = c.SpaceMrn
 	}
 
-	return parent
+	if scopeMrn == "" {
+		scopeMrn = c.ParentMrn
+	}
+
+	return scopeMrn
+}
+
+// GetParentMrn returns the scope mrn that is used for the service account.
+// This is either the organization mrn or the space mrn.
+// Deprecated: Use GetScopeMrn instead
+func (c *CommonOpts) GetParentMrn() string {
+	return c.GetScopeMrn()
 }
 
 func (c *CommonOpts) UpstreamApiEndpoint() string {
