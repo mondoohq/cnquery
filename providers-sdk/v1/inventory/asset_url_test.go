@@ -92,5 +92,74 @@ func TestAddSubtree(t *testing.T) {
 				KV{"platform", "windows server"},
 			},
 		}, queries)
+
+		queries = root.BuildQueries([]KV{
+			{Key: "account", Value: "123"},
+			{Key: "platform", Value: "windows server"},
+		})
+		assert.Equal(t, []AssetUrlChain{
+			{
+				KV{"technology", "aws"},
+				KV{"account", "*"},
+				KV{"service", "ec2"},
+				KV{"family", "windows"},
+				KV{"platform", "windows server"},
+			},
+		}, queries)
+
+		queries = root.BuildQueries([]KV{
+			{Key: "technology", Value: "os"},
+			{Key: "platform", Value: "windows server"},
+		})
+		assert.Equal(t, []AssetUrlChain{
+			{
+				KV{"technology", "os"},
+				KV{"family", "windows"},
+				KV{"platform", "windows server"},
+			},
+		}, queries)
 	})
+}
+
+func TestBroken(t *testing.T) {
+	root, err := NewAssetUrlSchema("technology")
+	require.NoError(t, err)
+
+	err = root.Add(&AssetUrlBranch{
+		PathSegments: []string{"technology=tech1"},
+		Key:          "environment",
+		Values: map[string]*AssetUrlBranch{
+			"*": {
+				Key: "region",
+				Values: map[string]*AssetUrlBranch{
+					"*": nil,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = root.Add(&AssetUrlBranch{
+		PathSegments: []string{"technology=tech2"},
+		Key:          "environment",
+		Values: map[string]*AssetUrlBranch{
+			"*": nil,
+		},
+	})
+	require.NoError(t, err)
+
+	root.RefreshCache()
+
+	queries := root.BuildQueries([]KV{
+		{Key: "technology", Value: "tech2"},
+		{Key: "environment", Value: "foo"},
+	})
+
+	require.Equal(t, []AssetUrlChain{
+		{
+			KV{"technology", "tech2"},
+			KV{"environment", "foo"},
+		},
+	}, queries)
+
 }

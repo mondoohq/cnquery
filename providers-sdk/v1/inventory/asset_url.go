@@ -45,6 +45,10 @@ type AssetUrlSchema struct {
 	keys map[string][]*AssetUrlBranch
 }
 
+func NewAssetUrlSchema(rootKey string) (*AssetUrlSchema, error) {
+	return newAssetUrlSchema(rootKey)
+}
+
 type KV struct {
 	Key   string
 	Value string
@@ -319,15 +323,26 @@ func (a *AssetUrlSchema) RefreshCache() error {
 	return nil
 }
 
+func (a *AssetUrlSchema) RootKey() string {
+	return a.root.Key
+}
+
 func (a *AssetUrlSchema) BuildQueries(kvs []KV) []AssetUrlChain {
 	var nodes []*AssetUrlBranch
 	var values []string
+	node2Idx := map[*AssetUrlBranch]int{}
+	idx := 0
 	for i := range kvs {
 		kv := kvs[i]
 		nuNodes := a.keys[kv.Key]
-		nodes = append(nodes, nuNodes...)
-		for i := 0; i < len(nuNodes); i++ {
-			values = append(values, kv.Value)
+		for _, n := range nuNodes {
+			_, acceptsAny := n.Values["*"]
+			if acceptsAny || n.Values[kv.Value] != nil {
+				nodes = append(nodes, n)
+				values = append(values, kv.Value)
+				node2Idx[n] = idx
+				idx++
+			}
 		}
 	}
 
@@ -335,16 +350,84 @@ func (a *AssetUrlSchema) BuildQueries(kvs []KV) []AssetUrlChain {
 		return nodes[i].Depth < nodes[j].Depth
 	})
 
-	var res []AssetUrlChain
-	for len(nodes) != 0 {
-		lastIdx := len(nodes) - 1
-		cur := nodes[lastIdx]
-		curKey := values[lastIdx]
-		nodes = nodes[:lastIdx]
-		values = values[:lastIdx]
-
-		res = append(res, buildParentQuery(cur, curKey))
+	type nodeKey struct {
+		nodeIdx int
+		value   string
 	}
+
+	memo := map[nodeKey][]bool{}
+	vmap := map[nodeKey]string{}
+	var walkFn func(*AssetUrlBranch, string)
+	walkFn = func(cur *AssetUrlBranch, val string) {
+		if cur == nil {
+			return
+		}
+
+		_, ok := node2Idx[cur]
+		if !ok {
+			node2Idx[cur] = idx
+			nodes = append(nodes, cur)
+			values = append(values, val)
+			idx++
+		}
+
+		curKey := nodeKey{
+			nodeIdx: node2Idx[cur],
+			value:   val,
+		}
+
+		if memo[curKey] != nil {
+			return
+		}
+
+		walkFn(cur.Parent, cur.ParentValue)
+
+		memo[curKey] = make([]bool, len(kvs))
+
+		if cur.Parent != nil {
+			parentKey := nodeKey{
+				nodeIdx: node2Idx[cur.Parent],
+				value:   cur.ParentValue,
+			}
+			parentBitmap := memo[parentKey]
+			copy(memo[curKey], parentBitmap)
+		}
+
+		for kvIdx, kv := range kvs {
+			_, acceptsAny := cur.Values["*"]
+
+			if kv.Key == cur.Key && (acceptsAny || kv.Value == val) {
+				memo[curKey][kvIdx] = true
+				vmap[curKey] = kv.Value
+				break
+			}
+		}
+	}
+
+	for idx := range nodes {
+		walkFn(nodes[idx], values[idx])
+	}
+
+	var res []AssetUrlChain
+
+	for nodeKey, n := range memo {
+		allTrue := true
+		for _, v := range n {
+			if !v {
+				allTrue = false
+				break
+			}
+		}
+		if allTrue {
+			v := vmap[nodeKey]
+			node := nodes[nodeKey.nodeIdx]
+			if v == "" {
+				v = node.ParentValue
+			}
+			res = append(res, buildParentQuery(node, v))
+		}
+	}
+
 	return res
 }
 
