@@ -226,7 +226,7 @@ func initGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[stri
 			return args, dataset, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("dataset not found")
 }
 
 func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {

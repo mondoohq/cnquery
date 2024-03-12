@@ -99,7 +99,7 @@ func initGcpProjectGkeServiceCluster(runtime *plugin.Runtime, args map[string]*l
 			return args, cluster, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("cluster not found")
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepool) id() (string, error) {
