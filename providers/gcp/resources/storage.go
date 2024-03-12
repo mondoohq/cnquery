@@ -183,7 +183,7 @@ func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string
 			return args, bucket, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("bucket not found")
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]interface{}, error) {

@@ -327,7 +327,7 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 			return args, instance, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("instance not found")
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
@@ -839,7 +839,7 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 			return args, firewall, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("firewall not found")
 }
 
 func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
@@ -1039,7 +1039,7 @@ func initGcpProjectComputeServiceImage(runtime *plugin.Runtime, args map[string]
 			return args, image, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("image not found")
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (interface{}, error) {
@@ -1178,7 +1178,7 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 			return args, network, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("network not found")
 }
 
 func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
@@ -1301,7 +1301,7 @@ func initGcpProjectComputeServiceSubnetwork(runtime *plugin.Runtime, args map[st
 			return args, subnetwork, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("subnetwork not found")
 }
 
 func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {

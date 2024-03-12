@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/cnquery/v10/llx"
@@ -73,7 +74,7 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 			return args, sa, nil
 		}
 	}
-	return nil, nil, nil
+	return nil, nil, errors.New("service account not found")
 }
 
 func (g *mqlGcpProjectIamService) serviceAccounts() ([]interface{}, error) {
