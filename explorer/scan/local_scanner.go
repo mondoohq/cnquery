@@ -364,7 +364,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				}
 
 				if asset.Connections[0].DelayDiscovery {
-					discoveredAsset, err := handleDelayedDiscovery(ctx, asset, runtime, services, spaceMrn)
+					discoveredAsset, err := HandleDelayedDiscovery(ctx, asset, runtime, services, spaceMrn)
 					if err != nil {
 						reporter.AddScanError(asset, err)
 						multiprogress.Errored(asset.PlatformIds[0])
@@ -397,11 +397,15 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	return reporter.Reports(), nil
 }
 
-func handleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime *providers.Runtime, services *explorer.Services, spaceMrn string) (*inventory.Asset, error) {
+func HandleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime *providers.Runtime, services *explorer.Services, spaceMrn string) (*inventory.Asset, error) {
 	asset.Connections[0].DelayDiscovery = false
 	if err := runtime.Connect(&plugin.ConnectReq{Asset: asset}); err != nil {
 		return nil, err
 	}
+	asset = runtime.Provider.Connection.Asset
+	slices.Sort(asset.PlatformIds)
+	asset.KindString = asset.GetPlatform().Kind
+
 	if services != nil {
 		resp, err := services.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 			SpaceMrn: spaceMrn,
@@ -411,12 +415,10 @@ func handleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime
 			return nil, err
 		}
 
-		asset = runtime.Provider.Connection.Asset
-		slices.Sort(asset.PlatformIds)
 		details := resp.Details[asset.PlatformIds[0]]
 		asset.Mrn = details.AssetMrn
 		asset.Url = details.Url
-		asset.KindString = asset.GetPlatform().Kind
+
 	}
 	return asset, nil
 }

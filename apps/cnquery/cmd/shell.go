@@ -132,6 +132,15 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		os.Exit(1)
 	}
 
+	if connectAsset.Asset.Connections[0].DelayDiscovery {
+		discoveredAsset, err := scan.HandleDelayedDiscovery(ctx, connectAsset.Asset, connectAsset.Runtime, nil, "")
+		if err != nil {
+			log.Error().Msg("no asset selected")
+			os.Exit(1)
+		}
+		connectAsset.Asset = discoveredAsset
+	}
+
 	log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
 
 	// when we close the shell, we need to close the backend and store the recording
