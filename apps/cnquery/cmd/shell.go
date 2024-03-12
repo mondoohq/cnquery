@@ -132,7 +132,15 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		os.Exit(1)
 	}
 
-	log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
+	if connectAsset.Runtime.Provider.Connection.Asset == nil {
+		log.Error().Msg("asset failed to return metadata")
+		os.Exit(1)
+	} else if connectAsset.Runtime.Provider.Connection.Asset.Platform == nil {
+		log.Error().Msg("asset failed to return platform metadata")
+		os.Exit(1)
+	} else {
+		log.Info().Msgf("connected to %s", connectAsset.Runtime.Provider.Connection.Asset.Platform.Title)
+	}
 
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
