@@ -112,6 +112,7 @@ message AssetUrlBranch {
   uint32 depth = 20;
   // internal only: parent relationships
   AssetUrlBranch parent = 21;
+  // internal only: how this branch is connected in the parent's value field
   string parent_value = 22;
 }
 
@@ -294,6 +295,8 @@ message Platform {
   string build = 6;
   string version = 7;
   string kind = 8;
+  // technology url for this asset, raw version of an AssetUrl
+  repeated string technology_url_segments = 9;
 
   // FIXME: DEPRECATED, remove in v10 vv
   DeprecatedV8_Kind deprecated_v8_kind = 20;
