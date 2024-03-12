@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.50.35
+	github.com/aws/aws-sdk-go v1.50.36
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.2
