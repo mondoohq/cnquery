@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "ipmi",
 	ID:              "go.mondoo.com/cnquery/v9/providers/ipmi",
-	Version:         "10.3.1",
+	Version:         "10.3.2",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
