@@ -17,7 +17,7 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.50.35
+	github.com/aws/aws-sdk-go v1.50.36
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
@@ -98,8 +98,8 @@ require (
 	golang.org/x/term v0.18.0
 	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.19.0
-	google.golang.org/genproto v0.0.0-20240308144416-29370a3891b7
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240308144416-29370a3891b7
+	google.golang.org/genproto v0.0.0-20240311173647-c811ad7063a7
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311173647-c811ad7063a7
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/ini.v1 v1.67.0
@@ -191,7 +191,7 @@ require (
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/kms v1.15.7 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
-	cloud.google.com/go/storage v1.39.0 // indirect
+	cloud.google.com/go/storage v1.39.1 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/Abirdcfly/dupword v0.0.14 // indirect
@@ -396,7 +396,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240307081130-83b805182b6b
+	go.mondoo.com/mondoo-go v0.0.0-20240312054001-2ab23a39b500
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -409,13 +409,13 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.169.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240308144416-29370a3891b7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240311173647-c811ad7063a7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
 	k8s.io/api v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	modernc.org/libc v1.43.1 // indirect
+	modernc.org/libc v1.44.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.3 // indirect
