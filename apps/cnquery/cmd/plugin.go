@@ -122,6 +122,18 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	for i := range discoveredAssets.Assets {
 		asset := discoveredAssets.Assets[i]
 
+		// sanity checks to prevent panics
+		if asset.Runtime == nil {
+			log.Error().Msg("asset is missing a runtime")
+			continue
+		} else if asset.Runtime.Provider.Connection.Asset == nil {
+			log.Error().Msg("asset is missing metadata")
+			continue
+		} else if asset.Runtime.Provider.Connection.Asset.Platform == nil {
+			log.Error().Msg("asset is missing platform metadata")
+			continue
+		}
+
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
 			// FIXME: store recording
