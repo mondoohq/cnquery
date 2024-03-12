@@ -111,7 +111,8 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 	}
 
-	discoveredAssets, err := scan.DiscoverAssets(context.Background(), conf.Inventory, upstreamConfig, runtime.Recording())
+	ctx := context.Background()
+	discoveredAssets, err := scan.DiscoverAssets(ctx, conf.Inventory, upstreamConfig, runtime.Recording())
 	if err != nil {
 		return err
 	}
@@ -121,6 +122,15 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range discoveredAssets.Assets {
 		asset := discoveredAssets.Assets[i]
+
+		if asset.Asset.Connections[0].DelayDiscovery {
+			discoveredAsset, err := scan.HandleDelayedDiscovery(ctx, asset.Asset, asset.Runtime, nil, "")
+			if err != nil {
+				log.Error().Err(err).Str("asset", asset.Asset.Name).Msg("failed to handle delayed discovery for asset")
+				continue
+			}
+			asset.Asset = discoveredAsset
+		}
 
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
