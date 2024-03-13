@@ -105,7 +105,7 @@ func TestAddSubtree(t *testing.T) {
 		assert.Equal(t, []AssetUrlChain{
 			{
 				KV{"technology", "aws"},
-				KV{"account", "*"},
+				KV{"account", "123"},
 				KV{"service", "ec2"},
 				KV{"family", "windows"},
 				KV{"platform", "windows server"},

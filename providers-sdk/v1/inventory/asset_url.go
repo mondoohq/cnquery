@@ -369,7 +369,8 @@ func filterArr[T comparable](arr []T, entry T) []T {
 	return arr
 }
 
-func filterKV(kvs []KV, key string, value string) []KV {
+// filter a key-value combination and return the filtered element if any is found
+func filterKV(kvs []KV, key string, value string) ([]KV, *KV) {
 	found := -1
 	for i := range kvs {
 		if kvs[i].Key == key && (value == "*" || kvs[i].Value == value) {
@@ -378,10 +379,12 @@ func filterKV(kvs []KV, key string, value string) []KV {
 		}
 	}
 	if found == -1 {
-		return kvs
+		return kvs, nil
 	}
-	kvs[found] = kvs[len(kvs)-1]
-	return kvs[:len(kvs)-1]
+
+	last := len(kvs) - 1
+	kvs[found], kvs[last] = kvs[last], kvs[found]
+	return kvs[:last], &kvs[last]
 }
 
 // Build a parent query from a leaf in an asset url schema and a given value
@@ -393,13 +396,15 @@ func buildParentQuery(leaf *AssetUrlBranch, value string, requiredKVs []KV) Asse
 
 	cur := leaf
 	curValue := value
+	var found *KV
 	for cur != nil {
-		res[cur.Depth-1] = KV{
-			Key:   cur.Key,
-			Value: curValue,
+		requiredKVs, found = filterKV(requiredKVs, cur.Key, curValue)
+		if found != nil {
+			res[cur.Depth-1] = KV{Key: found.Key, Value: found.Value}
+		} else {
+			res[cur.Depth-1] = KV{Key: cur.Key, Value: curValue}
 		}
 
-		requiredKVs = filterKV(requiredKVs, cur.Key, curValue)
 		curValue = cur.ParentValue
 		cur = cur.Parent
 	}
