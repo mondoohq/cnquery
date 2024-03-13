@@ -44,6 +44,7 @@ func NewQualifiers(qualifier map[string]string) packageurl.Qualifiers {
 
 // NewPackageUrl creates a new package url for a given platform, name, version, arch, epoch and purlType
 // see https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst for more information
+// TODO: support optional origin
 func NewPackageUrl(pf *inventory.Platform, name string, version string, arch string, epoch string, purlType string) string {
 	qualifiers := map[string]string{}
 	if arch != "" {

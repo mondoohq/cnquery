@@ -142,3 +142,223 @@ func (p *AdvisoryScannerServer) IsEol(ctx context.Context, reqBytes *[]byte) (pb
 	}
 	return p.handler.IsEol(ctx, &req)
 }
+
+// service interface definition
+
+type VulnMgmt interface {
+	Analyse(context.Context, *AnalyseRequest) (*AnalyseResponse, error)
+	IsEol(context.Context, *IsEolRequest) (*IsEolResponse, error)
+	ListVulnerablePackages(context.Context, *ListVulnerablePackagesRequest) (*ListVulnerablePackagesResponse, error)
+	ListAdvisories(context.Context, *ListAdvisoriesRequest) (*ListAdvisoriesResponse, error)
+	ListVulnerabilities(context.Context, *ListVulnerabilitiesRequest) (*ListVulnerabilitiesResponse, error)
+}
+
+// client implementation
+
+type VulnMgmtClient struct {
+	ranger.Client
+	httpclient ranger.HTTPClient
+	prefix     string
+}
+
+func NewVulnMgmtClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*VulnMgmtClient, error) {
+	base, err := url.Parse(ranger.SanitizeUrl(addr))
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse("./VulnMgmt")
+	if err != nil {
+		return nil, err
+	}
+
+	serviceClient := &VulnMgmtClient{
+		httpclient: client,
+		prefix:     base.ResolveReference(u).String(),
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
+}
+func (c *VulnMgmtClient) Analyse(ctx context.Context, in *AnalyseRequest) (*AnalyseResponse, error) {
+	out := new(AnalyseResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Analyse"}, ""), in, out)
+	return out, err
+}
+func (c *VulnMgmtClient) IsEol(ctx context.Context, in *IsEolRequest) (*IsEolResponse, error) {
+	out := new(IsEolResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/IsEol"}, ""), in, out)
+	return out, err
+}
+func (c *VulnMgmtClient) ListVulnerablePackages(ctx context.Context, in *ListVulnerablePackagesRequest) (*ListVulnerablePackagesResponse, error) {
+	out := new(ListVulnerablePackagesResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ListVulnerablePackages"}, ""), in, out)
+	return out, err
+}
+func (c *VulnMgmtClient) ListAdvisories(ctx context.Context, in *ListAdvisoriesRequest) (*ListAdvisoriesResponse, error) {
+	out := new(ListAdvisoriesResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ListAdvisories"}, ""), in, out)
+	return out, err
+}
+func (c *VulnMgmtClient) ListVulnerabilities(ctx context.Context, in *ListVulnerabilitiesRequest) (*ListVulnerabilitiesResponse, error) {
+	out := new(ListVulnerabilitiesResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ListVulnerabilities"}, ""), in, out)
+	return out, err
+}
+
+// server implementation
+
+type VulnMgmtServerOption func(s *VulnMgmtServer)
+
+func WithUnknownFieldsForVulnMgmtServer() VulnMgmtServerOption {
+	return func(s *VulnMgmtServer) {
+		s.allowUnknownFields = true
+	}
+}
+
+func NewVulnMgmtServer(handler VulnMgmt, opts ...VulnMgmtServerOption) http.Handler {
+	srv := &VulnMgmtServer{
+		handler: handler,
+	}
+
+	for i := range opts {
+		opts[i](srv)
+	}
+
+	service := ranger.Service{
+		Name: "VulnMgmt",
+		Methods: map[string]ranger.Method{
+			"Analyse":                srv.Analyse,
+			"IsEol":                  srv.IsEol,
+			"ListVulnerablePackages": srv.ListVulnerablePackages,
+			"ListAdvisories":         srv.ListAdvisories,
+			"ListVulnerabilities":    srv.ListVulnerabilities,
+		},
+	}
+	return ranger.NewRPCServer(&service)
+}
+
+type VulnMgmtServer struct {
+	handler            VulnMgmt
+	allowUnknownFields bool
+}
+
+func (p *VulnMgmtServer) Analyse(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req AnalyseRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.Analyse(ctx, &req)
+}
+func (p *VulnMgmtServer) IsEol(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req IsEolRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.IsEol(ctx, &req)
+}
+func (p *VulnMgmtServer) ListVulnerablePackages(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ListVulnerablePackagesRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ListVulnerablePackages(ctx, &req)
+}
+func (p *VulnMgmtServer) ListAdvisories(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ListAdvisoriesRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ListAdvisories(ctx, &req)
+}
+func (p *VulnMgmtServer) ListVulnerabilities(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ListVulnerabilitiesRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ListVulnerabilities(ctx, &req)
+}

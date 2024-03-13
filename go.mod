@@ -165,7 +165,6 @@ require (
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
@@ -396,7 +395,6 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20240312054001-2ab23a39b500
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

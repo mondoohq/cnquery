@@ -7,8 +7,39 @@ package mondoo.mvd.v1;
 
 import "providers-sdk/v1/upstream/mvd/cvss/cvss.proto";
 
-option go_package = 
-  "go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd";
+option go_package =
+    "go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd";
+
+// AdvisoryScanner allows to scan assets for vulnerabilities or EOL information
+// DEPRECATED: Use VulnMgmt service instead
+service AdvisoryScanner {
+  // AnalyseAsset scans the given asset for vulnerabilities
+  // DEPRECATED: Use VulnMgmt.Analyse service instead
+  rpc AnalyseAsset(AnalyseAssetRequest) returns (VulnReport);
+  // IsEol checks if the given platform is end-of-life
+  // DEPRECATED: Use VulnMgmt.IsEol service instead
+  rpc IsEol(Platform) returns (PlatformEolInfo);
+}
+
+// VulnMgmt is a service that is able to analyse for vulnerabilities
+// and end-of-life information.
+// In addition it provides to retrieve information about advisories,
+// vulnerabilities.
+service VulnMgmt {
+  // Analyse scans the given asset for vulnerabilities
+  rpc Analyse(AnalyseRequest) returns (AnalyseResponse);
+  // IsEol checks if the given platform is end-of-life
+  rpc IsEol(IsEolRequest) returns (IsEolResponse);
+  // ListVulnerablePackages returns a list of vulnerable packages
+  rpc ListVulnerablePackages(ListVulnerablePackagesRequest) returns
+      (ListVulnerablePackagesResponse);
+  // ListAdvisories returns a list of advisories
+  rpc ListAdvisories(ListAdvisoriesRequest) returns
+      (ListAdvisoriesResponse);
+  // ListVulnerabilities returns a list of vulnerabilities
+  rpc ListVulnerabilities(ListVulnerabilitiesRequest) returns
+      (ListVulnerabilitiesResponse);
+}
 
 message Platform {
   string name = 1;
@@ -36,16 +67,11 @@ message Package {
   bool affected = 27;
 }
 
-service AdvisoryScanner {
-  rpc AnalyseAsset(AnalyseAssetRequest) returns (VulnReport);
-  rpc IsEol(Platform) returns (PlatformEolInfo);
-}
-
 message AnalyseAssetRequest {
   Platform platform = 1;
   repeated Package packages = 2;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
-  string kernelVersion = 3; 
+  string kernelVersion = 3;
 }
 
 message VulnReport {
@@ -66,7 +92,7 @@ message Advisory {
   string description = 4;
 
   // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
-  repeated Package fixed = 5; 
+  repeated Package fixed = 5;
   // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated Package affected = 6;
   repeated Reference refs = 7;
@@ -89,7 +115,7 @@ message Advisory {
   bool unscored = 29;
 }
 
-enum AdvisoryState { // protolint:disable ENUM_FIELD_NAMES_PREFIX
+enum AdvisoryState {// protolint:disable ENUM_FIELD_NAMES_PREFIX
   RELEASED = 0; // protolint:disable ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
   PENDING = 1;
   IGNORED = 2;
@@ -98,7 +124,7 @@ enum AdvisoryState { // protolint:disable ENUM_FIELD_NAMES_PREFIX
 
 message Reference {
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
-  string ID = 1; 
+  string ID = 1;
   string url = 2;
   string source = 3;
   string title = 4;
@@ -199,11 +225,63 @@ enum CveState {
 message PlatformEolInfo {
   Platform platform = 1;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
-  string DocsUrl = 2; 
+  string DocsUrl = 2;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ProductUrl = 3;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string ReleaseDate = 4;
   // protolint:disable:next FIELD_NAMES_LOWER_SNAKE_CASE
   string EolDate = 5;
+}
+
+message AnalyseRequest {
+  string scope_mrn = 1;
+  Platform platform = 2;
+  repeated Package packages = 3;
+}
+
+message AnalyseResponse {
+  string report_mrn = 1;
+}
+
+message IsEolRequest {
+  string scope_mrn = 1;
+  Platform platform = 2;
+}
+
+message IsEolResponse {
+  bool isEol = 1;
+  // TODO: we may want our own struct
+  PlatformEolInfo eolInfo = 2;
+}
+
+message ListVulnerablePackagesRequest {
+  // Asset Mrn or Report Mrn
+  string mrn = 1;
+}
+
+// TODO: add pagination support here
+message ListVulnerablePackagesResponse {
+  repeated Package packages = 1;
+}
+
+message ListAdvisoriesRequest {
+  // Asset Mrn or Report Mrn
+  string mrn = 1;
+}
+
+// TODO: add pagination support here
+message ListAdvisoriesResponse {
+  // TODO: add pagination support here
+  repeated Advisory advisories = 1;
+}
+
+message ListVulnerabilitiesRequest {
+  // Asset Mrn or Report Mrn
+  string mrn = 1;
+}
+
+// TODO: add pagination support here
+message ListVulnerabilitiesResponse {
+  repeated CVE cves = 1;
 }
