@@ -420,7 +420,7 @@ func MondooImageRegistryID(id string) string {
 
 func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConnection) *inventory.Asset {
 	a := &inventory.Asset{}
-	a.PlatformIds = []string{containerid.MondooContainerImageID(image.Digest.Data)}
+	// NOTE: do not include platform id here, it will get filled in when we actually discover the images
 	a.Platform = &inventory.Platform{
 		Kind:    "container_image",
 		Runtime: "aws-ecr",
@@ -439,6 +439,7 @@ func addConnectionInfoToEcrAsset(image *mqlAwsEcrImage, conn *connection.AwsConn
 				"region":  image.Region.Data,
 				"profile": conn.Profile(),
 			},
+			DelayDiscovery: true,
 		})
 
 	}
