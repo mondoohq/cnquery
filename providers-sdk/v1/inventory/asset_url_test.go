@@ -71,7 +71,7 @@ func TestAddSubtree(t *testing.T) {
 		}, keys)
 	})
 
-	t.Run("build a query with referenced tree positions", func(t *testing.T) {
+	t.Run("build query with 1 params and 2 results", func(t *testing.T) {
 		err := root.RefreshCache()
 		require.NoError(t, err)
 
@@ -86,6 +86,42 @@ func TestAddSubtree(t *testing.T) {
 				KV{"family", "windows"},
 				KV{"platform", "windows server"},
 			},
+			{
+				KV{"technology", "os"},
+				KV{"family", "windows"},
+				KV{"platform", "windows server"},
+			},
+		}, queries)
+	})
+
+	t.Run("build query with 2 params and 1 result", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		queries := root.BuildQueries([]KV{
+			{Key: "account", Value: "123"},
+			{Key: "platform", Value: "windows server"},
+		})
+		assert.Equal(t, []AssetUrlChain{
+			{
+				KV{"technology", "aws"},
+				KV{"account", "*"},
+				KV{"service", "ec2"},
+				KV{"family", "windows"},
+				KV{"platform", "windows server"},
+			},
+		}, queries)
+	})
+
+	t.Run("build query with 2 params (incl root) and 1 result", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		queries := root.BuildQueries([]KV{
+			{Key: "technology", Value: "os"},
+			{Key: "platform", Value: "windows server"},
+		})
+		assert.Equal(t, []AssetUrlChain{
 			{
 				KV{"technology", "os"},
 				KV{"family", "windows"},
