@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -105,4 +106,16 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 		return nil, err
 	}
 	return res.(*mqlGcpProjectComputeServiceSubnetwork), nil
+}
+
+func getDiskIdByUrl(diskUrl string) (*resourceId, error) {
+	// A reference to a subnetwork is not mandatory for this resource
+	if diskUrl == "" {
+		return nil, errors.New("diskUrl is empty")
+	}
+
+	// Format is https://www.googleapis.com/compute/v1/projects/project1/regions/us-central1/disks/subnet-1
+	params := strings.TrimPrefix(diskUrl, "https://www.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	return &resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}, nil
 }
