@@ -61,6 +61,11 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 			sb.WriteString(" ")
 			sb.WriteString(pkg.Architecture)
 		}
+		if pkg.Origin != "" {
+			sb.WriteString(" (origin:")
+			sb.WriteString(pkg.Origin)
+			sb.WriteString(")")
+		}
 
 		// we only print the location if it is not empty
 		// this approach is deprecated and we should remove that once everything moved to evidence
