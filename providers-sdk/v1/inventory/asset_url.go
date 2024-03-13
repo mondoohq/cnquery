@@ -326,7 +326,7 @@ func (a *AssetUrlSchema) BuildQueries(kvs []KV) []AssetUrlChain {
 		kv := kvs[i]
 		nuNodes := a.keys[kv.Key]
 		nodes = append(nodes, nuNodes...)
-		for i := 0; i < len(nuNodes); i++ {
+		for j := 0; j < len(nuNodes); j++ {
 			values = append(values, kv.Value)
 		}
 	}
@@ -339,28 +339,80 @@ func (a *AssetUrlSchema) BuildQueries(kvs []KV) []AssetUrlChain {
 	for len(nodes) != 0 {
 		lastIdx := len(nodes) - 1
 		cur := nodes[lastIdx]
-		curKey := values[lastIdx]
+		curValue := values[lastIdx]
 		nodes = nodes[:lastIdx]
 		values = values[:lastIdx]
 
-		res = append(res, buildParentQuery(cur, curKey))
+		query := buildParentQuery(cur, curValue, kvs)
+		if len(query) == 0 {
+			continue
+		}
+
+		res = append(res, query)
+		// since this is a valid chain, let's check the list of remaining nodes
+		// if anything can get eliminated
+		for cur != nil {
+			nodes = filterArr(nodes, cur)
+			cur = cur.Parent
+		}
 	}
 	return res
 }
 
-func buildParentQuery(leaf *AssetUrlBranch, value string) AssetUrlChain {
+func filterArr[T comparable](arr []T, entry T) []T {
+	for i := range arr {
+		if arr[i] == entry {
+			arr[i] = arr[len(arr)-1]
+			return arr[:len(arr)-1]
+		}
+	}
+	return arr
+}
+
+// filter a key-value combination and return the filtered element if any is found
+func filterKV(kvs []KV, key string, value string) ([]KV, *KV) {
+	found := -1
+	for i := range kvs {
+		if kvs[i].Key == key && (value == "*" || kvs[i].Value == value) {
+			found = i
+			break
+		}
+	}
+	if found == -1 {
+		return kvs, nil
+	}
+
+	last := len(kvs) - 1
+	kvs[found], kvs[last] = kvs[last], kvs[found]
+	return kvs[:last], &kvs[last]
+}
+
+// Build a parent query from a leaf in an asset url schema and a given value
+// in the parent branch under which this leaf was located. The required KVs
+// are a list of identifiers that should be contained (or supported) by the
+// resulting asset URL chain.
+func buildParentQuery(leaf *AssetUrlBranch, value string, requiredKVs []KV) AssetUrlChain {
 	res := make([]KV, leaf.Depth)
 
 	cur := leaf
 	curValue := value
+	var found *KV
 	for cur != nil {
-		res[cur.Depth-1] = KV{
-			Key:   cur.Key,
-			Value: curValue,
+		requiredKVs, found = filterKV(requiredKVs, cur.Key, curValue)
+		if found != nil {
+			res[cur.Depth-1] = KV{Key: found.Key, Value: found.Value}
+		} else {
+			res[cur.Depth-1] = KV{Key: cur.Key, Value: curValue}
 		}
 
 		curValue = cur.ParentValue
 		cur = cur.Parent
+	}
+
+	// if we have any KVs that remain on this chain, that means we haven't found
+	// a valid query
+	if len(requiredKVs) != 0 {
+		return nil
 	}
 
 	return res
