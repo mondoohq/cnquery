@@ -11,10 +11,64 @@ import (
 )
 
 func DetectOS(conn shared.Connection) (*inventory.Platform, bool) {
+	var res *inventory.Platform
+	var ok bool
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
-		return WindowsFamily.Resolve(conn)
+		res, ok = WindowsFamily.Resolve(conn)
+	} else {
+		res, ok = OperatingSystems.Resolve(conn)
 	}
-	return OperatingSystems.Resolve(conn)
+
+	addTechnologyUrl(res)
+	return res, ok
+}
+
+// returns a primary family for the platform, e.g. linux, windows, osx, etc
+// platform must be non-nil
+func primaryFamily(platform *inventory.Platform) string {
+	families := platform.Family
+	for len(families) != 0 {
+		last := families[0]
+		switch last {
+		case "windows":
+			return "windows"
+		case "linux":
+			return "linux"
+		case "darwin":
+			return "darwin"
+		case "unix":
+			return "unix"
+		}
+
+		families = families[1:]
+	}
+
+	return "other"
+}
+
+func addTechnologyUrl(platform *inventory.Platform) {
+	if platform == nil {
+		return
+	}
+
+	if platform.Kind == "container-image" {
+		platform.TechnologyUrlSegments = []string{
+			// technology, kind
+			"container", platform.Kind,
+		}
+	} else {
+		platform.TechnologyUrlSegments = []string{"os"}
+	}
+
+	if platform.Name == "" {
+		platform.Name = "unknown"
+	}
+	if platform.Version == "" {
+		platform.Version = "unknown"
+	}
+
+	platform.TechnologyUrlSegments = append(platform.TechnologyUrlSegments,
+		primaryFamily(platform), platform.Name, platform.Version)
 }
 
 // map that is organized by platform name, to quickly determine its families

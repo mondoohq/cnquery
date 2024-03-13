@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 	"go.mondoo.com/cnquery/v10/logger"
+	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
 type Provider struct {
@@ -31,6 +32,7 @@ type Provider struct {
 	// call out.
 	CrossProviderTypes []string
 	Connectors         []Connector
+	AssetUrlTrees      []*inventory.AssetUrlBranch
 }
 
 type Connector struct {

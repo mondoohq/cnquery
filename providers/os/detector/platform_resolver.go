@@ -22,39 +22,39 @@ type PlatformResolver struct {
 
 func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform, bool) {
 	// prepare detect info object
-	di := &inventory.Platform{}
-	di.Family = make([]string, 0)
+	platform := &inventory.Platform{}
+	platform.Family = make([]string, 0)
 
 	// start recursive platform resolution
-	pi, resolved := r.resolvePlatform(di, conn)
+	pi, resolved := r.resolvePlatform(platform, conn)
 
 	// if we have a container image use the architecture specified in the transport as it is resolved
 	// using the container image properties
 	tarConn, ok := conn.(*tar.Connection)
 	if resolved && ok {
 		pi.Arch = tarConn.PlatformArchitecture
-		di.Runtime = "docker-image"
-		di.Kind = "container-image"
+		platform.Runtime = "docker-image"
+		platform.Kind = "container-image"
 
 		// if the platform name is not set, we should fallback to the scratch operating system
 		if len(pi.Name) == 0 {
-			di.Name = "scratch"
-			di.Arch = tarConn.PlatformArchitecture
-			return di, true
+			platform.Name = "scratch"
+			platform.Arch = tarConn.PlatformArchitecture
+			return platform, true
 		}
 	}
 
 	containerConn, ok := conn.(*docker.ContainerConnection)
 	if resolved && ok {
 		pi.Arch = containerConn.PlatformArchitecture
-		di.Runtime = string(containerConn.Type())
-		di.Kind = "container"
+		platform.Runtime = string(containerConn.Type())
+		platform.Kind = "container"
 
 		// if the platform name is not set, we should fallback to the scratch operating system
 		if len(pi.Name) == 0 {
-			di.Name = "scratch"
-			di.Arch = pi.Arch
-			return di, true
+			platform.Name = "scratch"
+			platform.Arch = pi.Arch
+			return platform, true
 		}
 	}
 

@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
@@ -244,6 +245,42 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Path to a local file or directory for the connection to use.",
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=os"},
+			Key:          "family",
+			Title:        "Family",
+			Values: map[string]*inventory.AssetUrlBranch{
+				// linux, windows, darwin, unix, ...
+				"*": {
+					Key:   "platform",
+					Title: "Platform",
+					Values: map[string]*inventory.AssetUrlBranch{
+						// redhat, arch, ...
+						"*": {
+							Key:   "version",
+							Title: "Version",
+							Values: map[string]*inventory.AssetUrlBranch{
+								// any valid version for the OS
+								"*": nil,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			PathSegments: []string{"technology=container"},
+			Key:          "kind",
+			Title:        "Kind",
+			Values: map[string]*inventory.AssetUrlBranch{
+				// container-image, container, ...
+				"*": {
+					References: []string{"technology=os"},
 				},
 			},
 		},
