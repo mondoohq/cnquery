@@ -12,7 +12,7 @@ packs:
         mql: asset { name platform version arch ids labels cpes.map(uri) }
       - uid: mondoo-sbom-packages
         title: Retrieve list of installed packages
-        mql: packages { name version purl cpes.map(uri) format files.map(path) }
+        mql: packages { name version purl cpes.map(uri) arch origin format files.map(path) }
       - uid: mondoo-sbom-python-packages
         title: Retrieve list of installed Python packages
         mql: python.packages { name version purl cpes.map(uri) file.path }

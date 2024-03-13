@@ -90,11 +90,13 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 			if rb.Packages != nil {
 				for _, pkg := range rb.Packages {
 					bomPkg := &Package{
-						Name:    pkg.Name,
-						Version: pkg.Version,
-						Purl:    pkg.Purl,
-						Cpes:    pkg.CPEs,
-						Type:    pkg.Format,
+						Name:         pkg.Name,
+						Version:      pkg.Version,
+						Architecture: pkg.Arch,
+						Origin:       pkg.Origin,
+						Purl:         pkg.Purl,
+						Cpes:         pkg.CPEs,
+						Type:         pkg.Format,
 					}
 
 					for _, filepath := range pkg.FilePaths {

@@ -216,6 +216,8 @@ message Package {
   // 'evidence_list' is a collection of evidence that supports the presence of
   // the package in the asset. This evidence could include eg. file paths
   repeated Evidence evidence_list = 21;
+  // Package Origin (e.g. other package name, or source of the package)
+  string origin = 22;
 }
 
 enum EvidenceType {
