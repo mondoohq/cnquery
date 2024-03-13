@@ -116,13 +116,17 @@ type ServiceAccountCredentials struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// MRN of the service account
 	Mrn string `protobuf:"bytes,1,opt,name=mrn,proto3" json:"mrn,omitempty"`
 	// Deprecated: use scope_mrn instead
-	ParentMrn   string `protobuf:"bytes,2,opt,name=parent_mrn,json=parentMrn,proto3" json:"parent_mrn,omitempty"`
-	PrivateKey  string `protobuf:"bytes,3,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	ParentMrn string `protobuf:"bytes,2,opt,name=parent_mrn,json=parentMrn,proto3" json:"parent_mrn,omitempty"`
+	// PEM-encoded private key
+	PrivateKey string `protobuf:"bytes,3,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	// PEM-encoded certificate
 	Certificate string `protobuf:"bytes,4,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	// API Endpoint for the service account
 	ApiEndpoint string `protobuf:"bytes,5,opt,name=api_endpoint,json=apiEndpoint,proto3" json:"api_endpoint,omitempty"`
-	// Scope MRN for the service account, can be either and organization or a space
+	// Scope MRN for the service account, either organization or a space
 	ScopeMrn string `protobuf:"bytes,6,opt,name=scope_mrn,json=scopeMrn,proto3" json:"scope_mrn,omitempty"`
 }
 
