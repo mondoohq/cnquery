@@ -443,9 +443,31 @@ func (g *mqlGcpProjectComputeServiceAttachedDisk) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceAttachedDisk) source() (*mqlGcpProjectComputeServiceDisk, error) {
-	// g.attachedDiskSource
-	// TODO search for reference resource
-	return nil, nil
+	diskId, err := getDiskIdByUrl(g.attachedDiskSource)
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := CreateResource(g.MqlRuntime, "gcp.project.computeService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.ProjectId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	computeSvc := obj.(*mqlGcpProjectComputeService)
+	disks := computeSvc.GetDisks()
+	if disks.Error != nil {
+		return nil, disks.Error
+	}
+
+	for _, d := range disks.Data {
+		disk := d.(*mqlGcpProjectComputeServiceDisk)
+		if disk.Zone.Data.GetName().Data == diskId.Region && disk.Name.Data == diskId.Name {
+			return disk, nil
+		}
+
+	}
+	return nil, errors.New("disk not found")
 }
 
 type mqlGcpProjectComputeServiceInstanceInternal struct {
