@@ -60,6 +60,13 @@ func addTechnologyUrl(platform *inventory.Platform) {
 		platform.TechnologyUrlSegments = []string{"os"}
 	}
 
+	if platform.Name == "" {
+		platform.Name = "unknown"
+	}
+	if platform.Version == "" {
+		platform.Version = "unknown"
+	}
+
 	platform.TechnologyUrlSegments = append(platform.TechnologyUrlSegments,
 		primaryFamily(platform), platform.Name, platform.Version)
 }
