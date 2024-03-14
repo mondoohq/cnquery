@@ -74,7 +74,7 @@ func (d *DiscoveredAssets) GetAssetsByPlatformID(platformID string) []*AssetWith
 func DiscoverAssets(ctx context.Context, inv *inventory.Inventory, upstream *upstream.UpstreamConfig, recording llx.Recording) (*DiscoveredAssets, error) {
 	im, err := manager.NewManager(manager.WithInventory(inv, providers.DefaultRuntime()))
 	if err != nil {
-		return nil, errors.New("failed to resolve inventory for connection")
+		return nil, errors.New("failed to resolve inventory for connection: " + err.Error())
 	}
 	invAssets := im.GetAssets()
 	if len(invAssets) == 0 {

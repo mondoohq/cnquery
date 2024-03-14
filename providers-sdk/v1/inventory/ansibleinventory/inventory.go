@@ -30,6 +30,10 @@ type All struct {
 }
 
 func Parse(data []byte) (*Inventory, error) {
+	if !IsInventory(data) {
+		return nil, errors.New("unsupported ansible inventory, use `ansible-inventory -i {inventory} --list` to convert it first")
+	}
+
 	inventory := Inventory{}
 	err := inventory.Decode(data)
 	if err != nil {
@@ -52,13 +56,15 @@ func IsInventory(data []byte) bool {
 		return false
 	}
 
-	// if the all key is there, its a ansible yaml
+	// if the all key is there, its a ansible format
 	// NOTE: as this point we only support fully resolved ansible config
 	_, ok := raw["all"]
-	if ok {
-		return true
+	if !ok {
+		return false
 	}
-	return false
+
+	_, ok = raw["_meta"]
+	return ok
 }
 
 func (i *Inventory) Decode(data []byte) error {

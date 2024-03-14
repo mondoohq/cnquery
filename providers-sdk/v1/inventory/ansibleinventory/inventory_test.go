@@ -44,6 +44,41 @@ func TestValidInventory(t *testing.T) {
 	}
 }
 `
+	assert.False(t, ansibleinventory.IsInventory([]byte(jsonFile)))
+
+	jsonFile = `
+all:
+  hosts:
+    ub2204:
+      ansible_host: 34.69.247.108
+      ansible_user: chris
+      ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+`
+	assert.False(t, ansibleinventory.IsInventory([]byte(jsonFile)))
+
+	jsonFile = `
+{
+    "_meta": {
+        "hostvars": {
+            "ub2204": {
+                "ansible_host": "34.69.247.108",
+                "ansible_ssh_private_key_file": "~/.ssh/id_ed25519",
+                "ansible_user": "chris"
+            }
+        }
+    },
+    "all": {
+        "children": [
+            "ungrouped"
+        ]
+    },
+    "ungrouped": {
+        "hosts": [
+            "ub2204"
+        ]
+    }
+}
+`
 	assert.True(t, ansibleinventory.IsInventory([]byte(jsonFile)))
 }
 

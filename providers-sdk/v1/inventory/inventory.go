@@ -5,6 +5,7 @@ package inventory
 
 import (
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -172,10 +173,18 @@ func (p *Inventory) PreProcess() error {
 		if cred.PrivateKeyPath != "" {
 			path := cred.PrivateKeyPath
 
-			// special handling for relative filenames, instead of loading
-			// private keys from relative to the work directory, we want to
-			// load the files relative to the source inventory
-			if !filepath.IsAbs(cred.PrivateKeyPath) {
+			if strings.HasPrefix(path, "~/") {
+				// special handling for ~
+				usr, err := user.Current()
+				if err != nil {
+					return err
+				}
+				path = filepath.Join(usr.HomeDir, path[2:])
+			} else if !filepath.IsAbs(cred.PrivateKeyPath) {
+				// special handling for relative filenames, instead of loading
+				// private keys from relative to the work directory, we want to
+				// load the files relative to the source inventory
+
 				// we handle credentials relative to the inventory file
 				fileLoc, ok := p.Metadata.Labels[InventoryFilePath]
 				if ok {
