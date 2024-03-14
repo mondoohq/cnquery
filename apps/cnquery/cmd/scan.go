@@ -9,7 +9,6 @@ import (
 	"os"
 	"sort"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -182,9 +181,6 @@ func (c *scanConfig) loadBundles() error {
 			// them locally requires us to do it in here.
 			RemoveFailing: true,
 		})
-		if err != nil {
-			return errors.Wrap(err, "failed to compile bundle")
-		}
 
 		c.Bundle = bundle
 		return nil

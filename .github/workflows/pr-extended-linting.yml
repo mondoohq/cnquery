@@ -10,6 +10,13 @@ on:
 
 jobs:
   golangci-lint:
+    permissions:
+      # allow read access to the content for analysis.
+      contents: read
+      # allow read access to pull request. Use with `only-new-issues` option.
+      pull-requests: read
+      # allow write access to checks to allow the action to annotate code in the PR.
+      checks: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,3 +36,4 @@ jobs:
           version: latest
           args: --config=.github/.golangci.yml --timeout=30m
           only-new-issues: true
+          skip-cache: true
