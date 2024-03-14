@@ -127,6 +127,7 @@ jobs:
           go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
       - name: 'Build Provider'
+        id: build-providers
         run: |
           rm -rf ./dist
           scripts/provider_bundler.sh ${{ matrix.provider }}
@@ -150,6 +151,15 @@ jobs:
         with:
           name: ${{ matrix.provider }}
           path: dist
+
+      - uses: sarisia/actions-status-discord@v1
+        if: ${{ steps.build-providers.outcome != 'success' }}
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ steps.build-providers.outcome }}
+          url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          description: Workflow ${{ github.workflow }} for commit ${{ github.sha }} on ${{ github.ref_name }} failed
+          color: 0xff4d4d        
 
   provider-index:
     needs: [provider-build, scoping]
