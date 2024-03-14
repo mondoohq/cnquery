@@ -37,7 +37,7 @@ mkdir -p $BUNDLE_DIST
 START_TIME=$(date +%s)
 
 # Extract the version from the provider
-PROVIDER_VERSION=$(grep Version ${PROVIDER_PATH}/config/config.go | cut -f2 -d\")
+PROVIDER_VERSION=$(grep "Version:" ${PROVIDER_PATH}/config/config.go | cut -f2 -d\")
 
 # Build the provider
 echo "Building the ${PROVIDER_NAME} provider (Version: ${PROVIDER_VERSION})..."
