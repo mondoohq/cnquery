@@ -81,7 +81,7 @@ func Parse() (*inventory.Inventory, error) {
 	}
 
 	// force detection
-	if viper.GetBool("inventory-ansible") {
+	if viper.GetBool("inventory-format-ansible") || viper.GetBool("inventory-ansible") {
 		log.Debug().Msg("parse ansible inventory")
 		inventory, err := parseAnsibleInventory(data)
 		if err != nil {
@@ -90,7 +90,7 @@ func Parse() (*inventory.Inventory, error) {
 		return inventory, nil
 	}
 
-	if viper.GetBool("inventory-domainlist") {
+	if viper.GetBool("inventory-format-domainlist") || viper.GetBool("inventory-domainlist") {
 		log.Debug().Msg("parse domainlist inventory")
 		inventory, err := parseDomainListInventory(data)
 		if err != nil {
@@ -119,6 +119,7 @@ func Parse() (*inventory.Inventory, error) {
 }
 
 func parseAnsibleInventory(data []byte) (*inventory.Inventory, error) {
+	log.Info().Msg("use ansible inventory")
 	inventory, err := ansibleinventory.Parse(data)
 	if err != nil {
 		return nil, err
@@ -127,6 +128,7 @@ func parseAnsibleInventory(data []byte) (*inventory.Inventory, error) {
 }
 
 func parseDomainListInventory(data []byte) (*inventory.Inventory, error) {
+	log.Info().Msg("use domainlist inventory")
 	inventory, err := domainlist.Parse(bytes.NewReader(data))
 	if err != nil {
 		return nil, err
