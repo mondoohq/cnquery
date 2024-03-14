@@ -67,6 +67,9 @@ func GetLatestReleaseName(releaseUrl string, client *http.Client) (string, error
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %v", err)
+	}
 
 	var release Release
 	if err := json.Unmarshal(body, &release); err != nil {
