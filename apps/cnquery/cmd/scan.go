@@ -32,17 +32,17 @@ func init() {
 
 	scanCmd.Flags().String("inventory-file", "", "Set the path to the inventory file.")
 
-	scanCmd.Flags().Bool("inventory-format-ansible", false, "Set the inventory format to Ansible.")
+	_ = scanCmd.Flags().Bool("inventory-format-ansible", false, "Set the inventory format to Ansible.")
 	// "inventory-ansible" is deprecated, use "inventory-format-ansible" instead
-	scanCmd.Flags().Bool("inventory-ansible", false, "Set the inventory format to Ansible.")
-	scanCmd.Flags().MarkDeprecated("inventory-ansible", "use --inventory-format-ansible")
-	scanCmd.Flags().MarkHidden("inventory-ansible")
+	_ = scanCmd.Flags().Bool("inventory-ansible", false, "Set the inventory format to Ansible.")
+	_ = scanCmd.Flags().MarkDeprecated("inventory-ansible", "use --inventory-format-ansible")
+	_ = scanCmd.Flags().MarkHidden("inventory-ansible")
 
-	scanCmd.Flags().Bool("inventory-format-domainlist", false, "Set the inventory format to domain list.")
+	_ = scanCmd.Flags().Bool("inventory-format-domainlist", false, "Set the inventory format to domain list.")
 	// "inventory-domainlist" is deprecated, use "inventory-format-domainlist" instead
-	scanCmd.Flags().Bool("inventory-domainlist", false, "Set the inventory format to domain list.")
-	scanCmd.Flags().MarkDeprecated("inventory-domainlist", "use --inventory-format-domainlist")
-	scanCmd.Flags().MarkHidden("inventory-domainlist")
+	_ = scanCmd.Flags().Bool("inventory-domainlist", false, "Set the inventory format to domain list.")
+	_ = scanCmd.Flags().MarkDeprecated("inventory-domainlist", "use --inventory-format-domainlist")
+	_ = scanCmd.Flags().MarkHidden("inventory-domainlist")
 
 	// bundles, packs & incognito mode
 	scanCmd.Flags().Bool("incognito", false, "Run in incognito mode. Do not report scan results to  Mondoo Platform.")
