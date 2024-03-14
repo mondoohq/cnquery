@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v59 v59.0.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v10 v10.6.1
+	go.mondoo.com/cnquery/v10 v10.7.1
 	go.mondoo.com/ranger-rpc v0.6.0
 	golang.org/x/oauth2 v0.18.0
 	sigs.k8s.io/yaml v1.4.0
@@ -53,7 +53,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.50.36 // indirect
+	github.com/aws/aws-sdk-go v1.50.38 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.25.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.7 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.7 // indirect
@@ -61,14 +61,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.22.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.4 // indirect
@@ -182,7 +182,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/vault/api v1.12.0 // indirect
+	github.com/hashicorp/vault/api v1.12.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/hnakamur/go-scp v1.0.2 // indirect
@@ -361,10 +361,10 @@ require (
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kubelet v0.29.0 // indirect
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57 // indirect
-	modernc.org/libc v1.44.0 // indirect
+	modernc.org/libc v1.44.1 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
-	modernc.org/sqlite v1.29.3 // indirect
+	modernc.org/sqlite v1.29.5 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	mvdan.cc/gofumpt v0.6.0 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
