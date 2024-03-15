@@ -488,3 +488,7 @@ func (a *AssetUrlSchema) FindChild(path AssetUrlChain) (*AssetUrlBranch, error) 
 
 	return nil, errors.New("invalid asset url, value not found")
 }
+
+func (a *AssetUrlSchema) RootKey() string {
+	return a.root.Key
+}

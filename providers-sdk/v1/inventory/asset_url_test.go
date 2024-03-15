@@ -170,5 +170,4 @@ func TestAddSubtree(t *testing.T) {
 		require.NotNil(t, childBranch)
 		assert.Equal(t, "service", childBranch.Key)
 	})
-
 }
