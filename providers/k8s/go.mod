@@ -18,7 +18,7 @@ toolchain go1.22.0
 require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-containerregistry v0.19.0
+	github.com/google/go-containerregistry v0.19.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
