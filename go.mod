@@ -6,7 +6,7 @@ toolchain go1.22.0
 
 require (
 	cloud.google.com/go/logging v1.9.0
-	cloud.google.com/go/secretmanager v1.11.5
+	cloud.google.com/go/secretmanager v1.11.6
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.3.2
 	github.com/CycloneDX/cyclonedx-go v0.8.0
@@ -17,14 +17,14 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.50.38
+	github.com/aws/aws-sdk-go v1.51.0
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.1
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.22.2
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.0
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.3
 	github.com/aws/smithy-go v1.20.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240206212017-5795caca6e8e
@@ -47,7 +47,7 @@ require (
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/google/go-cmdtest v0.4.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.19.0
+	github.com/google/go-containerregistry v0.19.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-plugin v1.6.0
@@ -106,13 +106,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.2
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.2
 	// pin v0.28.4
-	k8s.io/component-base v0.28.4
+	k8s.io/component-base v0.29.2
 	// pin v0.28.4
-	k8s.io/kubelet v0.28.4
+	k8s.io/kubelet v0.29.2
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -413,7 +413,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.29.2 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	modernc.org/libc v1.44.1 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
