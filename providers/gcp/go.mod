@@ -7,30 +7,30 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	cloud.google.com/go/accessapproval v1.7.5
+	cloud.google.com/go/accessapproval v1.7.6
 	cloud.google.com/go/bigquery v1.59.1
-	cloud.google.com/go/compute v1.25.0
-	cloud.google.com/go/container v1.33.0
-	cloud.google.com/go/functions v1.16.0
-	cloud.google.com/go/iam v1.1.6
-	cloud.google.com/go/kms v1.15.7
+	cloud.google.com/go/compute v1.25.1
+	cloud.google.com/go/container v1.33.1
+	cloud.google.com/go/functions v1.16.1
+	cloud.google.com/go/iam v1.1.7
+	cloud.google.com/go/kms v1.15.8
 	cloud.google.com/go/logging v1.9.0
-	cloud.google.com/go/longrunning v0.5.5
-	cloud.google.com/go/monitoring v1.18.0
+	cloud.google.com/go/longrunning v0.5.6
+	cloud.google.com/go/monitoring v1.18.1
 	cloud.google.com/go/pubsub v1.37.0
-	cloud.google.com/go/recommender v1.12.1
-	cloud.google.com/go/run v1.3.5
-	cloud.google.com/go/serviceusage v1.8.4
+	cloud.google.com/go/recommender v1.12.2
+	cloud.google.com/go/run v1.3.6
+	cloud.google.com/go/serviceusage v1.8.5
 	github.com/aws/smithy-go v1.20.1
 	github.com/cockroachdb/errors v1.11.1
-	github.com/google/go-containerregistry v0.19.0
+	github.com/google/go-containerregistry v0.19.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.7.1
 	go.mondoo.com/ranger-rpc v0.6.0
 	golang.org/x/oauth2 v0.18.0
-	google.golang.org/api v0.169.0
+	google.golang.org/api v0.170.0
 	google.golang.org/genproto v0.0.0-20240311173647-c811ad7063a7
 	google.golang.org/protobuf v1.33.0
 )
