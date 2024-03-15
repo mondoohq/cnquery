@@ -105,7 +105,7 @@ func ResolveSystemPkgManager(conn shared.Connection) (OperatingSystemPkgManager,
 		pm = &RpmPkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.IsFamily("suse"): // suse handling
 		pm = &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}}
-	case asset.Platform.Name == "alpine": // alpine
+	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi": // alpine & wolfi share apk
 		pm = &AlpinePkgManager{conn: conn, platform: asset.Platform}
 	case asset.Platform.Name == "macos": // mac os family
 		pm = &MacOSPkgManager{conn: conn}
