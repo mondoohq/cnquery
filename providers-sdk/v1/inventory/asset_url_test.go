@@ -18,6 +18,7 @@ func genTestSchema(t *testing.T) *AssetUrlSchema {
 	err = root.Add(&AssetUrlBranch{
 		PathSegments: []string{"technology=aws"},
 		Key:          "account",
+		Title:        "Account",
 		Values: map[string]*AssetUrlBranch{
 			"*": {
 				Key: "service",
@@ -143,5 +144,17 @@ func TestAddSubtree(t *testing.T) {
 			KV{"family", "windows"},
 			KV{"platform", "windows server"},
 		}, chain)
+	})
+
+	t.Run("test PathTitles", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		chain, err := root.PathToAssetUrlChain([]string{"aws", "1234", "ec2", "windows", "windows server"})
+		require.NoError(t, err)
+
+		titles, err := root.PathTitles(chain)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"technology", "Account", "service", "family", "platform"}, titles)
 	})
 }

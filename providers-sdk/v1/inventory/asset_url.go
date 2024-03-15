@@ -225,7 +225,10 @@ func (a *AssetUrlBranch) FindPath(path AssetUrlChain) (*AssetUrlBranch, string, 
 
 		branch, ok := curBranch.Values[value]
 		if !ok {
-			return nil, "", errors.New("cannot find asset url branch for '" + key + "=" + value + "'")
+			branch, ok = curBranch.Values["*"]
+			if !ok {
+				return nil, "", errors.New("cannot find asset url branch for '" + key + "=" + value + "'")
+			}
 		}
 		if branch == nil {
 			return nil, "", errors.New("ran into premature end for asset url branch '" + key + "=" + value + "'")
@@ -436,6 +439,30 @@ func (a *AssetUrlSchema) PathToAssetUrlChain(path []string) (AssetUrlChain, erro
 
 		res[idx] = KV{cur.Key, term}
 		cur = next
+	}
+
+	return res, nil
+}
+
+func (a *AssetUrlSchema) PathTitles(path AssetUrlChain) ([]string, error) {
+	found, _, err := a.root.FindPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]string, len(path))
+	cur := found
+	for i := len(path) - 1; i >= 0; i-- {
+		if cur == nil {
+			return nil, errors.New("invalid asset url, no more definitions at depth " + strconv.Itoa(i))
+		}
+
+		if cur.Title != "" {
+			res[i] = cur.Title
+		} else {
+			res[i] = cur.Key
+		}
+		cur = cur.Parent
 	}
 
 	return res, nil
