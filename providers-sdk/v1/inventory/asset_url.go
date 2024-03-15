@@ -108,7 +108,7 @@ func validateValue(value string) error {
 	return nil
 }
 
-func newAssetUrlSchema(rootKey string) (*AssetUrlSchema, error) {
+func NewAssetUrlSchema(rootKey string) (*AssetUrlSchema, error) {
 	if err := validateKey(rootKey); err != nil {
 		return nil, err
 	}

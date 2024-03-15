@@ -12,7 +12,7 @@ import (
 )
 
 func genTestSchema(t *testing.T) *AssetUrlSchema {
-	root, err := newAssetUrlSchema("technology")
+	root, err := NewAssetUrlSchema("technology")
 	require.NoError(t, err)
 
 	err = root.Add(&AssetUrlBranch{
