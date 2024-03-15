@@ -428,7 +428,10 @@ func (a *AssetUrlSchema) PathToAssetUrlChain(path []string) (AssetUrlChain, erro
 
 		next, ok := cur.Values[term]
 		if !ok {
-			return nil, errors.New("invalid asset url, value not found: " + cur.Key + "=" + term)
+			next, ok = cur.Values["*"]
+			if !ok {
+				return nil, errors.New("invalid asset url, value not found: " + cur.Key + "=" + term)
+			}
 		}
 
 		res[idx] = KV{cur.Key, term}

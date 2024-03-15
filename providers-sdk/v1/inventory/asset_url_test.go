@@ -129,4 +129,19 @@ func TestAddSubtree(t *testing.T) {
 			},
 		}, queries)
 	})
+
+	t.Run("test PathToAssetUrlChain", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		chain, err := root.PathToAssetUrlChain([]string{"aws", "1234", "ec2", "windows", "windows server"})
+		require.NoError(t, err)
+		require.Equal(t, AssetUrlChain{
+			KV{"technology", "aws"},
+			KV{"account", "1234"},
+			KV{"service", "ec2"},
+			KV{"family", "windows"},
+			KV{"platform", "windows server"},
+		}, chain)
+	})
 }
