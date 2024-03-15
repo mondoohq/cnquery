@@ -108,7 +108,7 @@ func validateValue(value string) error {
 	return nil
 }
 
-func newAssetUrlSchema(rootKey string) (*AssetUrlSchema, error) {
+func NewAssetUrlSchema(rootKey string) (*AssetUrlSchema, error) {
 	if err := validateKey(rootKey); err != nil {
 		return nil, err
 	}
@@ -225,7 +225,10 @@ func (a *AssetUrlBranch) FindPath(path AssetUrlChain) (*AssetUrlBranch, string, 
 
 		branch, ok := curBranch.Values[value]
 		if !ok {
-			return nil, "", errors.New("cannot find asset url branch for '" + key + "=" + value + "'")
+			branch, ok = curBranch.Values["*"]
+			if !ok {
+				return nil, "", errors.New("cannot find asset url branch for '" + key + "=" + value + "'")
+			}
 		}
 		if branch == nil {
 			return nil, "", errors.New("ran into premature end for asset url branch '" + key + "=" + value + "'")
@@ -428,7 +431,10 @@ func (a *AssetUrlSchema) PathToAssetUrlChain(path []string) (AssetUrlChain, erro
 
 		next, ok := cur.Values[term]
 		if !ok {
-			return nil, errors.New("invalid asset url, value not found: " + cur.Key + "=" + term)
+			next, ok = cur.Values["*"]
+			if !ok {
+				return nil, errors.New("invalid asset url, value not found: " + cur.Key + "=" + term)
+			}
 		}
 
 		res[idx] = KV{cur.Key, term}
@@ -436,4 +442,53 @@ func (a *AssetUrlSchema) PathToAssetUrlChain(path []string) (AssetUrlChain, erro
 	}
 
 	return res, nil
+}
+
+func (a *AssetUrlSchema) PathTitles(path AssetUrlChain) ([]string, error) {
+	found, _, err := a.root.FindPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]string, len(path))
+	cur := found
+	for i := len(path) - 1; i >= 0; i-- {
+		if cur == nil {
+			return nil, errors.New("invalid asset url, no more definitions at depth " + strconv.Itoa(i))
+		}
+
+		if cur.Title != "" {
+			res[i] = cur.Title
+		} else {
+			res[i] = cur.Key
+		}
+		cur = cur.Parent
+	}
+
+	return res, nil
+}
+
+// FindChild returns the child branch for the given path.
+func (a *AssetUrlSchema) FindChild(path AssetUrlChain) (*AssetUrlBranch, error) {
+	found, _, err := a.root.FindPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if found == nil {
+		return nil, errors.New("invalid asset url, path not found")
+	}
+
+	last := path[len(path)-1]
+	if b, ok := found.Values[last.Value]; ok {
+		return b, nil
+	} else if b, ok := found.Values["*"]; ok {
+		return b, nil
+	}
+
+	return nil, errors.New("invalid asset url, value not found")
+}
+
+func (a *AssetUrlSchema) RootKey() string {
+	return a.root.Key
 }

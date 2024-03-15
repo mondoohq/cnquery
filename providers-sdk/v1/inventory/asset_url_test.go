@@ -12,12 +12,13 @@ import (
 )
 
 func genTestSchema(t *testing.T) *AssetUrlSchema {
-	root, err := newAssetUrlSchema("technology")
+	root, err := NewAssetUrlSchema("technology")
 	require.NoError(t, err)
 
 	err = root.Add(&AssetUrlBranch{
 		PathSegments: []string{"technology=aws"},
 		Key:          "account",
+		Title:        "Account",
 		Values: map[string]*AssetUrlBranch{
 			"*": {
 				Key: "service",
@@ -128,5 +129,45 @@ func TestAddSubtree(t *testing.T) {
 				KV{"platform", "windows server"},
 			},
 		}, queries)
+	})
+
+	t.Run("test PathToAssetUrlChain", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		chain, err := root.PathToAssetUrlChain([]string{"aws", "1234", "ec2", "windows", "windows server"})
+		require.NoError(t, err)
+		require.Equal(t, AssetUrlChain{
+			KV{"technology", "aws"},
+			KV{"account", "1234"},
+			KV{"service", "ec2"},
+			KV{"family", "windows"},
+			KV{"platform", "windows server"},
+		}, chain)
+	})
+
+	t.Run("test PathTitles", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		chain, err := root.PathToAssetUrlChain([]string{"aws", "1234", "ec2", "windows", "windows server"})
+		require.NoError(t, err)
+
+		titles, err := root.PathTitles(chain)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"technology", "Account", "service", "family", "platform"}, titles)
+	})
+
+	t.Run("find child key of a chain", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		childBranch, err := root.FindChild(AssetUrlChain{
+			KV{"technology", "aws"},
+			KV{"account", "*"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, childBranch)
+		assert.Equal(t, "service", childBranch.Key)
 	})
 }
