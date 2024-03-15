@@ -157,4 +157,18 @@ func TestAddSubtree(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []string{"technology", "Account", "service", "family", "platform"}, titles)
 	})
+
+	t.Run("find child key of a chain", func(t *testing.T) {
+		err := root.RefreshCache()
+		require.NoError(t, err)
+
+		childBranch, err := root.FindChild(AssetUrlChain{
+			KV{"technology", "aws"},
+			KV{"account", "*"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, childBranch)
+		assert.Equal(t, "service", childBranch.Key)
+	})
+
 }

@@ -467,3 +467,24 @@ func (a *AssetUrlSchema) PathTitles(path AssetUrlChain) ([]string, error) {
 
 	return res, nil
 }
+
+// FindChild returns the child branch for the given path.
+func (a *AssetUrlSchema) FindChild(path AssetUrlChain) (*AssetUrlBranch, error) {
+	found, _, err := a.root.FindPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if found == nil {
+		return nil, errors.New("invalid asset url, path not found")
+	}
+
+	last := path[len(path)-1]
+	if b, ok := found.Values[last.Value]; ok {
+		return b, nil
+	} else if b, ok := found.Values["*"]; ok {
+		return b, nil
+	}
+
+	return nil, errors.New("invalid asset url, value not found")
+}
