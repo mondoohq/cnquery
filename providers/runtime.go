@@ -233,7 +233,9 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
-	r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
+	if !r.Provider.Connection.Asset.Connections[0].DelayDiscovery {
+		r.Recording().EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.ID, r.Provider.Connection.Id, asset.Connections[0])
+	}
 	// r.schema.prioritizeIDs(BuiltinCoreID, r.Provider.Instance.ID)
 	return nil
 }
