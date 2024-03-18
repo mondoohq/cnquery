@@ -253,7 +253,7 @@ var Config = plugin.Provider{
 		{
 			PathSegments: []string{"technology=os"},
 			Key:          "family",
-			Title:        "Family",
+			Title:        "OS Family",
 			Values: map[string]*inventory.AssetUrlBranch{
 				// linux, windows, darwin, unix, ...
 				"*": {
@@ -276,7 +276,7 @@ var Config = plugin.Provider{
 		{
 			PathSegments: []string{"technology=container"},
 			Key:          "kind",
-			Title:        "Kind",
+			Title:        "Container Kind",
 			Values: map[string]*inventory.AssetUrlBranch{
 				// container-image, container, ...
 				"*": {
