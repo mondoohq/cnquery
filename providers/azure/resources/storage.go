@@ -209,29 +209,29 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) dataProtection() (*mqlAzureS
 	}
 
 	var blobSoftDeletionEnabled bool
-	var blobRetentionDays int64
+	var blobRetentionDays *int32
 	var containerSoftDeletionEnabled bool
-	var containerRetentionDays int64
+	var containerRetentionDays *int32
 	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
 		blobSoftDeletionEnabled = convert.ToBool(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Enabled)
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy != nil {
-		blobRetentionDays = convert.ToInt64From32(properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Days)
+		blobRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.DeleteRetentionPolicy.Days
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
 		containerSoftDeletionEnabled = convert.ToBool(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Enabled)
 	}
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
-		containerRetentionDays = convert.ToInt64From32(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days)
+		containerRetentionDays = properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days
 	}
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.dataProtection",
 		map[string]*llx.RawData{
 			"storageAccountId":             llx.StringData(id),
 			"blobSoftDeletionEnabled":      llx.BoolData(blobSoftDeletionEnabled),
-			"blobRetentionDays":            llx.IntData(blobRetentionDays),
+			"blobRetentionDays":            llx.IntDataDefault(blobRetentionDays, 0),
 			"containerSoftDeletionEnabled": llx.BoolData(containerSoftDeletionEnabled),
-			"containerRetentionDays":       llx.IntData(containerRetentionDays),
+			"containerRetentionDays":       llx.IntDataDefault(containerRetentionDays, 0),
 		})
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	loggingRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType)),
-			"retentionDays": llx.IntData(convert.ToInt64From32(props.Logging.RetentionPolicy.Days)),
+			"retentionDays": llx.IntDataDefault(props.Logging.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.Logging.RetentionPolicy.Enabled),
 		})
 	if err != nil {
@@ -295,7 +295,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	minuteMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType)),
-			"retentionDays": llx.IntData(convert.ToInt64From32(props.MinuteMetrics.RetentionPolicy.Days)),
+			"retentionDays": llx.IntDataDefault(props.MinuteMetrics.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.MinuteMetrics.RetentionPolicy.Enabled),
 		})
 	if err != nil {
@@ -315,7 +315,7 @@ func toMqlServiceStorageProperties(runtime *plugin.Runtime, props table.ServiceP
 	hourMetricsRetentionPolicy, err := CreateResource(runtime, "azure.subscription.storageService.account.service.properties.retentionPolicy",
 		map[string]*llx.RawData{
 			"id":            llx.StringData(fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType)),
-			"retentionDays": llx.IntData(convert.ToInt64From32(props.HourMetrics.RetentionPolicy.Days)),
+			"retentionDays": llx.IntDataDefault(props.HourMetrics.RetentionPolicy.Days, 0),
 			"enabled":       llx.BoolDataPtr(props.HourMetrics.RetentionPolicy.Enabled),
 		})
 	if err != nil {

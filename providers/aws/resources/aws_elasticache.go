@@ -195,11 +195,11 @@ func (a *mqlAwsElasticache) getCacheClusters(conn *connection.AwsConnection) []*
 							"logDeliveryConfigurations": llx.ArrayData(logDeliveryConfigurations, types.Any),
 							"networkType":               llx.StringData(string(cluster.NetworkType)),
 							"notificationConfiguration": llx.StringData(notificationConfiguration),
-							"numCacheNodes":             llx.IntData(convert.ToInt64From32(cluster.NumCacheNodes)),
+							"numCacheNodes":             llx.IntDataDefault(cluster.NumCacheNodes, 0),
 							"preferredAvailabilityZone": llx.StringDataPtr(cluster.PreferredAvailabilityZone),
 							"region":                    llx.StringData(regionVal),
 							"securityGroups":            llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"snapshotRetentionLimit":    llx.IntData(convert.ToInt64From32(cluster.SnapshotRetentionLimit)),
+							"snapshotRetentionLimit":    llx.IntDataDefault(cluster.SnapshotRetentionLimit, 0),
 							"transitEncryptionEnabled":  llx.BoolData(convert.ToBool(cluster.TransitEncryptionEnabled)),
 							"transitEncryptionMode":     llx.StringData(string(cluster.TransitEncryptionMode)),
 						})

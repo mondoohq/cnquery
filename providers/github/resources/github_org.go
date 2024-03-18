@@ -58,16 +58,16 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["email"] = llx.StringDataPtr(org.Email)
 	args["twitterUsername"] = llx.StringDataPtr(org.TwitterUsername)
 	args["avatarUrl"] = llx.StringDataPtr(org.AvatarURL)
-	args["followers"] = llx.IntData(convert.ToInt64FromInt(org.Followers))
-	args["following"] = llx.IntData(convert.ToInt64FromInt(org.Following))
+	args["followers"] = llx.IntDataDefault(org.Followers, 0)
+	args["following"] = llx.IntDataDefault(org.Following, 0)
 	args["description"] = llx.StringDataPtr(org.Description)
 	args["createdAt"] = llx.TimeDataPtr(githubTimestamp(org.CreatedAt))
 	args["updatedAt"] = llx.TimeDataPtr(githubTimestamp(org.UpdatedAt))
 	args["totalPrivateRepos"] = llx.IntDataPtr(org.TotalPrivateRepos)
 	args["ownedPrivateRepos"] = llx.IntDataPtr(org.OwnedPrivateRepos)
-	args["privateGists"] = llx.IntData(convert.ToInt64FromInt(org.PrivateGists))
-	args["diskUsage"] = llx.IntData(convert.ToInt64FromInt(org.DiskUsage))
-	args["collaborators"] = llx.IntData(convert.ToInt64FromInt(org.Collaborators))
+	args["privateGists"] = llx.IntDataDefault(org.PrivateGists, 0)
+	args["diskUsage"] = llx.IntDataDefault(org.DiskUsage, 0)
+	args["collaborators"] = llx.IntDataDefault(org.Collaborators, 0)
 	args["billingEmail"] = llx.StringDataPtr(org.BillingEmail)
 
 	plan, _ := convert.JsonToDict(org.Plan)
@@ -120,7 +120,7 @@ func (g *mqlGithubOrganization) members() ([]interface{}, error) {
 		member := allMembers[i]
 
 		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
-			"id":    llx.IntData(convert.ToInt64(member.ID)),
+			"id":    llx.IntDataDefault(member.ID, 0),
 			"login": llx.StringDataPtr(member.Login),
 		})
 		if err != nil {

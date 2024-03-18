@@ -31,7 +31,7 @@ func TestRawData_String(t *testing.T) {
 		{BoolDataPtr(nil), "<null>"},
 		{IntData(0), "0"},
 		{IntDataPtr(&intVal), "1"},
-		{IntDataPtr(nil), "<null>"},
+		{IntDataPtr[int](nil), "<null>"},
 		{FloatData(123), "123"},
 		{StringData("yo"), "\"yo\""},
 		{StringDataPtr(nil), "<null>"},

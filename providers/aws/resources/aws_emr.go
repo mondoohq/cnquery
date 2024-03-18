@@ -77,7 +77,7 @@ func (a *mqlAwsEmr) getClusters(conn *connection.AwsConnection) []*jobpool.Job {
 						map[string]*llx.RawData{
 							"arn":                     llx.StringDataPtr(cluster.ClusterArn),
 							"name":                    llx.StringDataPtr(cluster.Name),
-							"normalizedInstanceHours": llx.IntData(convert.ToInt64From32(cluster.NormalizedInstanceHours)),
+							"normalizedInstanceHours": llx.IntDataDefault(cluster.NormalizedInstanceHours, 0),
 							"outpostArn":              llx.StringDataPtr(cluster.OutpostArn),
 							"status":                  llx.MapData(jsonStatus, types.String),
 							"id":                      llx.StringDataPtr(cluster.Id),

@@ -438,17 +438,25 @@ var BoolFalse = BoolData(false)
 var BoolTrue = BoolData(true)
 
 // IntData creates a rawdata struct from a go int
-func IntData(v int64) *RawData {
+func IntData[T int64 | int32 | int](v T) *RawData {
 	return &RawData{
 		Type:  types.Int,
-		Value: v,
+		Value: int64(v),
 	}
 }
 
 // IntDataPtr creates a rawdata struct from a go int pointer
-func IntDataPtr(v *int64) *RawData {
+func IntDataPtr[T int64 | int32 | int](v *T) *RawData {
 	if v == nil {
 		return NilData
+	}
+	return IntData(*v)
+}
+
+// IntDataDefault creates a rawdata struct from a go int pointer with a fallback default value
+func IntDataDefault[T int64 | int32 | int](v *T, dflt int64) *RawData {
+	if v == nil {
+		return IntData(dflt)
 	}
 	return IntData(*v)
 }

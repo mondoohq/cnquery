@@ -182,7 +182,7 @@ func (a *mqlAwsVpc) flowLogs() ([]interface{}, error) {
 					"destinationType":        llx.StringData(string(flowLog.LogDestinationType)),
 					"deliverLogsStatus":      llx.StringDataPtr(flowLog.DeliverLogsStatus),
 					"id":                     llx.StringDataPtr(flowLog.FlowLogId),
-					"maxAggregationInterval": llx.IntData(convert.ToInt64From32(flowLog.MaxAggregationInterval)),
+					"maxAggregationInterval": llx.IntDataDefault(flowLog.MaxAggregationInterval, 0),
 					"region":                 llx.StringData(a.Region.Data),
 					"status":                 llx.StringDataPtr(flowLog.FlowLogStatus),
 					"tags":                   llx.MapData(Ec2TagsToMap(flowLog.Tags), types.String),

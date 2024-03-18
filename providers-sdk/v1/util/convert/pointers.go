@@ -24,27 +24,6 @@ func ToString(ptr *string) string {
 	return *ptr
 }
 
-func ToInt64(ptr *int64) int64 {
-	if ptr == nil {
-		return 0
-	}
-	return *ptr
-}
-
-func ToInt64From32(ptr *int32) int64 {
-	if ptr == nil {
-		return 0
-	}
-	return int64(*ptr)
-}
-
-func ToInt64FromInt(ptr *int) int64 {
-	if ptr == nil {
-		return 0
-	}
-	return int64(*ptr)
-}
-
 func ToFloat64(ptr *float64) float64 {
 	if ptr == nil {
 		return 0
