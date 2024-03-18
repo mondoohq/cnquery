@@ -250,6 +250,8 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 	asset.Labels["mondoo.com/region"] = instance.Region.Data
 	asset.Labels["mondoo.com/platform"] = instance.PlatformDetails.Data
 	asset.Labels["mondoo.com/instance-type"] = instance.InstanceType.Data
+	asset.Labels["mondoo.com/parent-id"] = accountId
+	asset.Labels["mondoo.com/instance-id"] = instance.InstanceId.Data
 
 	if instance.GetImage().Data != nil {
 		asset.Labels["mondoo.com/image"] = instance.GetImage().Data.Id.Data
@@ -285,6 +287,7 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 					User: probableUsername,
 					Type: vault.CredentialType_aws_ec2_ssm_session,
 				})
+				asset.Labels["mondoo.com/ssm-connection"] = "Online"
 			}
 		}
 	} else {
