@@ -5,10 +5,11 @@ package cpe
 
 import (
 	"bytes"
-	"go.mondoo.com/cnquery/v10/utils/stringx"
 	"regexp"
 	"strconv"
 	"text/template"
+
+	"go.mondoo.com/cnquery/v10/utils/stringx"
 )
 
 type platformCPEEntry struct {
@@ -146,7 +147,7 @@ var platformCPES = []platformCPEEntry{
 	{
 		Platform: "ubuntu",
 		CPEBuilder: func(platform, version string, workstation bool) (string, error) {
-			lts := []string{"14.04", "16.04", "18.04", "20.04", "22.04"}
+			lts := []string{"14.04", "16.04", "18.04", "20.04", "22.04", "24.04"}
 			swEdition := "*"
 			isLts := stringx.Contains(lts, version)
 			if isLts {
