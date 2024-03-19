@@ -290,16 +290,6 @@ func addConnectionInfoToEc2Asset(instance *mqlAwsEc2Instance, accountId string, 
 				asset.Labels["mondoo.com/ssm-connection"] = "Online"
 			}
 		}
-	} else {
-		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
-		asset = MqlObjectToAsset(accountId,
-			mqlObject{
-				name: asset.Name, labels: asset.Labels, platformIds: asset.PlatformIds,
-				awsObject: awsObject{
-					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
-					id: instance.InstanceId.Data, service: "ec2", objectType: "instance",
-				},
-			}, conn)
 	}
 	return asset
 }
@@ -380,16 +370,6 @@ func addConnectionInfoToSSMAsset(instance *mqlAwsSsmInstance, accountId string, 
 				"instance": instance.InstanceId.Data,
 			},
 		}}
-	} else {
-		log.Warn().Str("asset", asset.Name).Str("id", instance.InstanceId.Data).Msg("cannot use ssm session credentials for connection")
-		asset = MqlObjectToAsset(accountId,
-			mqlObject{
-				name: asset.Name, labels: asset.Labels, platformIds: asset.PlatformIds,
-				awsObject: awsObject{
-					account: accountId, region: instance.Region.Data, arn: instance.Arn.Data,
-					id: instance.InstanceId.Data, service: "ssm", objectType: "instance",
-				},
-			}, conn)
 	}
 	return asset
 }
