@@ -17,17 +17,17 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.51.1
-	github.com/aws/aws-sdk-go-v2 v1.25.3
-	github.com/aws/aws-sdk-go-v2/config v1.27.7
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.151.0
-	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.3
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.3
+	github.com/aws/aws-sdk-go v1.51.2
+	github.com/aws/aws-sdk-go-v2 v1.26.0
+	github.com/aws/aws-sdk-go-v2/config v1.27.8
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.8
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.151.1
+	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4
 	github.com/aws/smithy-go v1.20.1
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240206212017-5795caca6e8e
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240318154307-a1a918375412
 	// pin v0.2.6
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.18.0
@@ -52,7 +52,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/vault/api v1.12.1
+	github.com/hashicorp/vault/api v1.12.2
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kevinburke/ssh_config v1.2.0
@@ -98,8 +98,8 @@ require (
 	golang.org/x/term v0.18.0
 	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.19.0
-	google.golang.org/genproto v0.0.0-20240314234333-6e1732d8331c
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240314234333-6e1732d8331c
+	google.golang.org/genproto v0.0.0-20240318140521-94a12d6c2237
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/ini.v1 v1.67.0
@@ -206,15 +206,15 @@ require (
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.3 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.28.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
@@ -401,7 +401,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
+	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
 	golang.org/x/exp/typeparams v0.0.0-20240213143201-ec583247a57a // indirect
 	golang.org/x/mod v0.16.0
 	golang.org/x/oauth2 v0.18.0 // indirect
@@ -409,13 +409,13 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.170.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240314234333-6e1732d8331c // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.6 // indirect
 	k8s.io/api v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	modernc.org/libc v1.45.0 // indirect
+	modernc.org/libc v1.45.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
