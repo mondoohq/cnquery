@@ -641,16 +641,13 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	var conductor explorer.QueryConductor = s.services
 
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> request bundle for asset")
-	// If we run in debug mode, download the asset bundle and dump it to disk
-	if val, ok := os.LookupEnv("DEBUG"); ok && (val == "1" || val == "true") {
-		assetBundle, err := hub.GetBundle(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
-		if err != nil {
-			return nil, err
-		}
-		log.Debug().Msg("client> got bundle")
-		logger.TraceJSON(assetBundle)
-		logger.DebugDumpJSON("assetBundle", assetBundle)
+	assetBundle, err := hub.GetBundle(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
+	if err != nil {
+		return nil, err
 	}
+	log.Debug().Msg("client> got bundle")
+	logger.TraceJSON(assetBundle)
+	logger.DebugDumpJSON("assetBundle", assetBundle)
 
 	rawFilters, err := hub.GetFilters(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
 	if err != nil {
