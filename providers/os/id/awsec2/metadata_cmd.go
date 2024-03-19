@@ -71,7 +71,7 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 		return Identity{}, errors.Wrap(err, "failed to decode EC2 instance identity document")
 	}
 
-	name := ""
+	name := doc.InstanceID
 	// Note that the tags metadata service has to be enabled for this to work. If not, we fallback to trying to get the name
 	// via the aws API (if there's a config provided).
 	taggedName, err := m.instanceNameTag()
