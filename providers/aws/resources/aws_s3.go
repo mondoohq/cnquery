@@ -434,7 +434,7 @@ func (a *mqlAwsS3Bucket) cors() ([]interface{}, error) {
 				"allowedMethods": llx.ArrayData(toInterfaceArr(corsrule.AllowedMethods), types.String),
 				"allowedOrigins": llx.ArrayData(toInterfaceArr(corsrule.AllowedOrigins), types.String),
 				"exposeHeaders":  llx.ArrayData(toInterfaceArr(corsrule.ExposeHeaders), types.String),
-				"maxAgeSeconds":  llx.IntData(convert.ToInt64From32(corsrule.MaxAgeSeconds)),
+				"maxAgeSeconds":  llx.IntDataDefault(corsrule.MaxAgeSeconds, 0),
 			})
 		if err != nil {
 			return nil, err

@@ -164,11 +164,10 @@ func (a *mqlAwsLambdaFunction) concurrency() (int64, error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
 	}
-	if functionConcurrency.ReservedConcurrentExecutions != nil {
-		return convert.ToInt64From32(functionConcurrency.ReservedConcurrentExecutions), nil
+	if functionConcurrency.ReservedConcurrentExecutions == nil {
+		return 0, nil
 	}
-
-	return 0, nil
+	return int64(*functionConcurrency.ReservedConcurrentExecutions), nil
 }
 
 func (a *mqlAwsLambdaFunction) policy() (interface{}, error) {

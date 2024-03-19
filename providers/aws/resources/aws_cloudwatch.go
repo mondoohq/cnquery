@@ -608,7 +608,7 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					args["arn"] = llx.StringDataPtr(loggroup.Arn)
 					args["name"] = llx.StringDataPtr(loggroup.LogGroupName)
 					args["region"] = llx.StringData(regionVal)
-					args["retentionInDays"] = llx.IntData(convert.ToInt64From32(loggroup.RetentionInDays))
+					args["retentionInDays"] = llx.IntDataDefault(loggroup.RetentionInDays, 0)
 
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {

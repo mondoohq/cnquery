@@ -89,8 +89,8 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(conn *connection.AwsConnection
 							"arn":               llx.StringData(fmt.Sprintf("arn:aws:application-autoscaling:%s:%s:%s/%s", regionVal, conn.AccountId(), namespace, convert.ToString(target.ResourceId))),
 							"namespace":         llx.StringData(string(target.ServiceNamespace)),
 							"scalableDimension": llx.StringData(string(target.ScalableDimension)),
-							"minCapacity":       llx.IntData(convert.ToInt64From32(target.MinCapacity)),
-							"maxCapacity":       llx.IntData(convert.ToInt64From32(target.MaxCapacity)),
+							"minCapacity":       llx.IntDataDefault(target.MinCapacity, 0),
+							"maxCapacity":       llx.IntDataDefault(target.MaxCapacity, 0),
 							"suspendedState":    llx.MapData(targetState, types.Any),
 						})
 					if err != nil {

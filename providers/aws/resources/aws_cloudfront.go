@@ -54,8 +54,8 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 						map[string]*llx.RawData{
 							"domainName":         llx.StringDataPtr(o.DomainName),
 							"id":                 llx.StringDataPtr(o.Id),
-							"connectionAttempts": llx.IntData(convert.ToInt64From32(o.ConnectionAttempts)),
-							"connectionTimeout":  llx.IntData(convert.ToInt64From32(o.ConnectionTimeout)),
+							"connectionAttempts": llx.IntDataDefault(o.ConnectionAttempts, 0),
+							"connectionTimeout":  llx.IntDataDefault(o.ConnectionTimeout, 0),
 							"originPath":         llx.StringDataPtr(o.OriginPath),
 							"account":            llx.StringData(conn.AccountId()),
 						})

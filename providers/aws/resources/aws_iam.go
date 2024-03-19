@@ -343,7 +343,7 @@ func (a *mqlAwsIam) mqlPolicies(policies []iamtypes.Policy) ([]interface{}, erro
 				"name":            llx.StringDataPtr(policy.PolicyName),
 				"description":     llx.StringDataPtr(policy.Description),
 				"isAttachable":    llx.BoolData(policy.IsAttachable),
-				"attachmentCount": llx.IntData(convert.ToInt64From32(policy.AttachmentCount)),
+				"attachmentCount": llx.IntDataDefault(policy.AttachmentCount, 0),
 				"createDate":      llx.TimeDataPtr(policy.CreateDate),
 				"updateDate":      llx.TimeDataPtr(policy.UpdateDate),
 			})
@@ -930,10 +930,10 @@ func (a *mqlAwsIamPolicy) attachmentCount() (int64, error) {
 	arn := a.Arn.Data
 
 	policy, err := a.loadPolicy(arn)
-	if err != nil {
+	if err != nil || policy.AttachmentCount == nil {
 		return int64(0), err
 	}
-	return convert.ToInt64From32(policy.AttachmentCount), nil
+	return int64(*policy.AttachmentCount), nil
 }
 
 func (a *mqlAwsIamPolicy) createDate() (*time.Time, error) {

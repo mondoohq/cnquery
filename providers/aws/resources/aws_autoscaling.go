@@ -82,11 +82,11 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 							"healthCheckType":         llx.StringDataPtr(group.HealthCheckType),
 							"tags":                    llx.MapData(autoscalingTagsToMap(group.Tags), types.String),
 							"region":                  llx.StringData(regionVal),
-							"minSize":                 llx.IntData(convert.ToInt64From32(group.MinSize)),
-							"maxSize":                 llx.IntData(convert.ToInt64From32(group.MaxSize)),
-							"defaultCooldown":         llx.IntData(convert.ToInt64From32(group.DefaultCooldown)),
+							"minSize":                 llx.IntDataDefault(group.MinSize, 0),
+							"maxSize":                 llx.IntDataDefault(group.MaxSize, 0),
+							"defaultCooldown":         llx.IntDataDefault(group.DefaultCooldown, 0),
 							"launchConfigurationName": llx.StringDataPtr(group.LaunchConfigurationName),
-							"healthCheckGracePeriod":  llx.IntData(convert.ToInt64From32(group.HealthCheckGracePeriod)),
+							"healthCheckGracePeriod":  llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
 							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
 						})
 					if err != nil {

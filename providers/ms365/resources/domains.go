@@ -9,7 +9,6 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
 	"go.mondoo.com/cnquery/v10/types"
 )
@@ -51,8 +50,8 @@ func (a *mqlMicrosoft) domains() ([]interface{}, error) {
 				"isInitial":                        llx.BoolDataPtr(domain.GetIsInitial()),
 				"isRoot":                           llx.BoolDataPtr(domain.GetIsRoot()),
 				"isVerified":                       llx.BoolDataPtr(domain.GetIsVerified()),
-				"passwordNotificationWindowInDays": llx.IntData(convert.ToInt64From32(domain.GetPasswordNotificationWindowInDays())),
-				"passwordValidityPeriodInDays":     llx.IntData(convert.ToInt64From32(domain.GetPasswordValidityPeriodInDays())),
+				"passwordNotificationWindowInDays": llx.IntDataDefault(domain.GetPasswordNotificationWindowInDays(), 0),
+				"passwordValidityPeriodInDays":     llx.IntDataDefault(domain.GetPasswordValidityPeriodInDays(), 0),
 				"supportedServices":                llx.ArrayData(supportedServices, types.String),
 			})
 		if err != nil {
@@ -89,7 +88,7 @@ func (a *mqlMicrosoftDomain) serviceConfigurationRecords() ([]interface{}, error
 				"label":            llx.StringDataPtr(record.GetLabel()),
 				"recordType":       llx.StringDataPtr(record.GetRecordType()),
 				"supportedService": llx.StringDataPtr(record.GetSupportedService()),
-				"ttl":              llx.IntData(convert.ToInt64From32(record.GetTtl())),
+				"ttl":              llx.IntDataDefault(record.GetTtl(), 0),
 				"properties":       llx.DictData(properties),
 			})
 		if err != nil {

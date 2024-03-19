@@ -83,7 +83,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 						map[string]*llx.RawData{
 							"allowVersionUpgrade":              llx.BoolDataPtr(cluster.AllowVersionUpgrade),
 							"arn":                              llx.StringData(fmt.Sprintf(redshiftClusterArnPattern, regionVal, conn.AccountId(), convert.ToString(cluster.ClusterIdentifier))),
-							"automatedSnapshotRetentionPeriod": llx.IntData(convert.ToInt64From32(cluster.AutomatedSnapshotRetentionPeriod)),
+							"automatedSnapshotRetentionPeriod": llx.IntDataDefault(cluster.AutomatedSnapshotRetentionPeriod, 0),
 							"availabilityZone":                 llx.StringDataPtr(cluster.AvailabilityZone),
 							"clusterParameterGroupNames":       llx.ArrayData(names, types.String),
 							"clusterRevisionNumber":            llx.StringDataPtr(cluster.ClusterRevisionNumber),
@@ -98,7 +98,7 @@ func (a *mqlAwsRedshift) getClusters(conn *connection.AwsConnection) []*jobpool.
 							"name":                             llx.StringDataPtr(cluster.ClusterIdentifier),
 							"nextMaintenanceWindowStartTime":   llx.TimeDataPtr(cluster.NextMaintenanceWindowStartTime),
 							"nodeType":                         llx.StringDataPtr(cluster.NodeType),
-							"numberOfNodes":                    llx.IntData(convert.ToInt64From32(cluster.NumberOfNodes)),
+							"numberOfNodes":                    llx.IntDataDefault(cluster.NumberOfNodes, 0),
 							"preferredMaintenanceWindow":       llx.StringDataPtr(cluster.PreferredMaintenanceWindow),
 							"publiclyAccessible":               llx.BoolDataPtr(cluster.PubliclyAccessible),
 							"region":                           llx.StringData(regionVal),

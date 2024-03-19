@@ -158,7 +158,7 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 		args := map[string]*llx.RawData{
 			"egress":        llx.BoolData(egress),
 			"ruleAction":    llx.StringData(string(entry.RuleAction)),
-			"ruleNumber":    llx.IntData(convert.ToInt64From32(entry.RuleNumber)),
+			"ruleNumber":    llx.IntDataDefault(entry.RuleNumber, 0),
 			"cidrBlock":     llx.StringDataPtr(entry.CidrBlock),
 			"ipv6CidrBlock": llx.StringDataPtr(entry.Ipv6CidrBlock),
 			"id":            llx.StringData(entryId),
@@ -166,8 +166,8 @@ func (a *mqlAwsEc2Networkacl) entries() ([]interface{}, error) {
 		if entry.PortRange != nil {
 			mqlPortRange, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.entry.portrange",
 				map[string]*llx.RawData{
-					"from": llx.IntData(convert.ToInt64From32(entry.PortRange.From)),
-					"to":   llx.IntData(convert.ToInt64From32(entry.PortRange.To)),
+					"from": llx.IntDataDefault(entry.PortRange.From, -1),
+					"to":   llx.IntDataDefault(entry.PortRange.To, -1),
 					"id":   llx.StringData(entryId + "-" + strconv.Itoa(convert.ToIntFrom32(entry.PortRange.From))),
 				})
 			if err != nil {
@@ -269,8 +269,8 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
 							map[string]*llx.RawData{
 								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p)),
-								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
-								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
+								"fromPort":   llx.IntDataDefault(permission.FromPort, -1),
+								"toPort":     llx.IntDataDefault(permission.ToPort, -1),
 								"ipProtocol": llx.StringDataPtr(permission.IpProtocol),
 								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
 								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
@@ -304,8 +304,8 @@ func (a *mqlAwsEc2) getSecurityGroups(conn *connection.AwsConnection) []*jobpool
 						mqlSecurityGroupIpPermission, err := CreateResource(a.MqlRuntime, "aws.ec2.securitygroup.ippermission",
 							map[string]*llx.RawData{
 								"id":         llx.StringData(convert.ToString(group.GroupId) + "-" + strconv.Itoa(p) + "-egress"),
-								"fromPort":   llx.IntData(convert.ToInt64From32(permission.FromPort)),
-								"toPort":     llx.IntData(convert.ToInt64From32(permission.ToPort)),
+								"fromPort":   llx.IntDataDefault(permission.FromPort, -1),
+								"toPort":     llx.IntDataDefault(permission.ToPort, -1),
 								"ipProtocol": llx.StringDataPtr(permission.IpProtocol),
 								"ipRanges":   llx.ArrayData(ipRanges, types.Any),
 								"ipv6Ranges": llx.ArrayData(ipv6Ranges, types.Any),
@@ -1062,13 +1062,13 @@ func (a *mqlAwsEc2) getVolumes(conn *connection.AwsConnection) []*jobpool.Job {
 							"createTime":         llx.TimeDataPtr(vol.CreateTime),
 							"encrypted":          llx.BoolDataPtr(vol.Encrypted),
 							"id":                 llx.StringDataPtr(vol.VolumeId),
-							"iops":               llx.IntData(convert.ToInt64From32(vol.Iops)),
+							"iops":               llx.IntDataDefault(vol.Iops, 0),
 							"multiAttachEnabled": llx.BoolDataPtr(vol.MultiAttachEnabled),
 							"region":             llx.StringData(regionVal),
-							"size":               llx.IntData(convert.ToInt64From32(vol.Size)),
+							"size":               llx.IntDataDefault(vol.Size, 0),
 							"state":              llx.StringData(string(vol.State)),
 							"tags":               llx.MapData(Ec2TagsToMap(vol.Tags), types.String),
-							"throughput":         llx.IntData(convert.ToInt64From32(vol.Throughput)),
+							"throughput":         llx.IntDataDefault(vol.Throughput, 0),
 							"volumeType":         llx.StringData(string(vol.VolumeType)),
 						})
 					if err != nil {
@@ -1358,7 +1358,7 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 							"state":       llx.StringData(string(snapshot.State)),
 							"tags":        llx.MapData(Ec2TagsToMap(snapshot.Tags), types.String),
 							"volumeId":    llx.StringDataPtr(snapshot.VolumeId),
-							"volumeSize":  llx.IntData(convert.ToInt64From32(snapshot.VolumeSize)),
+							"volumeSize":  llx.IntDataDefault(snapshot.VolumeSize, 0),
 						})
 					if err != nil {
 						return nil, err

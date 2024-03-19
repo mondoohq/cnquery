@@ -46,7 +46,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceConfigurations() ([]interface{}, er
 				"createdDateTime":      llx.TimeDataPtr(configuration.GetCreatedDateTime()),
 				"description":          llx.StringDataPtr(configuration.GetDescription()),
 				"displayName":          llx.StringDataPtr(configuration.GetDisplayName()),
-				"version":              llx.IntData(convert.ToInt64From32(configuration.GetVersion())),
+				"version":              llx.IntDataDefault(configuration.GetVersion(), 0),
 				"properties":           llx.DictData(properties),
 			})
 		if err != nil {
@@ -90,7 +90,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]interface{}
 				"description":          llx.StringDataPtr(compliancePolicy.GetDescription()),
 				"displayName":          llx.StringDataPtr(compliancePolicy.GetDisplayName()),
 				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
-				"version":              llx.IntData(convert.ToInt64From32(compliancePolicy.GetVersion())),
+				"version":              llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
 				"assignments":          llx.ArrayData(assignments, types.Any),
 				"properties":           llx.DictData(properties),
 			})

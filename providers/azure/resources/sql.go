@@ -142,7 +142,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]interface{}, error
 				"sourceDatabaseId": llx.StringDataPtr(entry.Properties.SourceDatabaseID),
 				"recoveryServicesRecoveryPointResourceId": llx.StringDataPtr(entry.Properties.RecoveryServicesRecoveryPointID),
 				"edition":                       llx.StringDataPtr(entry.SKU.Tier),
-				"maxSizeBytes":                  llx.IntData(convert.ToInt64(entry.Properties.MaxSizeBytes)),
+				"maxSizeBytes":                  llx.IntDataDefault(entry.Properties.MaxSizeBytes, 0),
 				"requestedServiceObjectiveName": llx.StringDataPtr(entry.Properties.RequestedServiceObjectiveName),
 				"serviceLevelObjective":         llx.StringDataPtr(entry.Properties.CurrentServiceObjectiveName),
 				"status":                        llx.StringDataPtr((*string)(entry.Properties.Status)),

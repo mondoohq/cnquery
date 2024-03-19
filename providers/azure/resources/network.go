@@ -297,7 +297,7 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]interface{}, e
 					"etag":               llx.StringDataPtr(flowLog.Etag),
 					"retentionPolicy":    llx.DictData(retentionPolicyDict),
 					"format":             llx.StringDataPtr((*string)(flowLog.Properties.Format.Type)),
-					"version":            llx.IntData(convert.ToInt64From32(flowLog.Properties.Format.Version)),
+					"version":            llx.IntDataDefault(flowLog.Properties.Format.Version, 0),
 					"enabled":            llx.BoolDataPtr(flowLog.Properties.Enabled),
 					"storageAccountId":   llx.StringDataPtr(flowLog.Properties.StorageID),
 					"targetResourceId":   llx.StringDataPtr(flowLog.Properties.TargetResourceID),
@@ -937,7 +937,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 						"id":                        llx.StringData(bgpSettingsId),
 						"asn":                       llx.IntDataPtr(vng.Properties.BgpSettings.Asn),
 						"bgpPeeringAddress":         llx.StringDataPtr(vng.Properties.BgpSettings.BgpPeeringAddress),
-						"peerWeight":                llx.IntData(convert.ToInt64From32(vng.Properties.BgpSettings.PeerWeight)),
+						"peerWeight":                llx.IntDataDefault(vng.Properties.BgpSettings.PeerWeight, 0),
 						"bgpPeeringAddressesConfig": llx.ArrayData(bgpPeeringAddresses, types.ResourceLike),
 					})
 				if err != nil {
@@ -995,7 +995,7 @@ func (a *mqlAzureSubscriptionNetworkService) virtualNetworkGateways() ([]interfa
 					"disableIPSecReplayProtection":    llx.BoolDataPtr(vng.Properties.DisableIPSecReplayProtection),
 					"inboundDNSForwardingEndpoint":    llx.StringDataPtr(vng.Properties.InboundDNSForwardingEndpoint),
 					"skuName":                         llx.StringDataPtr((*string)(vng.Properties.SKU.Name)),
-					"skuCapacity":                     llx.IntData(convert.ToInt64From32(vng.Properties.SKU.Capacity)),
+					"skuCapacity":                     llx.IntDataDefault(vng.Properties.SKU.Capacity, 0),
 					"provisioningState":               llx.StringDataPtr((*string)(vng.Properties.ProvisioningState)),
 					"properties":                      llx.DictData(props),
 					"vpnType":                         llx.StringDataPtr((*string)(vng.Properties.VPNType)),
