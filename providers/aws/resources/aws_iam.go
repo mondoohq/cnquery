@@ -1229,12 +1229,23 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		}
 
 		role := resp.Role
+
+		var policyDocumentMap map[string]interface{}
+		if role != nil && role.AssumeRolePolicyDocument != nil {
+			policyDocument := *role.AssumeRolePolicyDocument
+			decodedPolicyDocument, decodeErr := url.QueryUnescape(policyDocument)
+			if decodeErr == nil {
+				json.Unmarshal([]byte(decodedPolicyDocument), &policyDocumentMap)
+			}
+		}
+
 		args["arn"] = llx.StringDataPtr(role.Arn)
 		args["id"] = llx.StringDataPtr(role.RoleId)
 		args["name"] = llx.StringDataPtr(role.RoleName)
 		args["description"] = llx.StringDataPtr(role.Description)
 		args["tags"] = llx.MapData(iamTagsToMap(role.Tags), types.String)
 		args["createDate"] = llx.TimeDataPtr(role.CreateDate)
+		args["assumeRolePolicyDocument"] = llx.MapData(policyDocumentMap, types.Any)
 		return args, nil, nil
 	}
 
