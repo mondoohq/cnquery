@@ -190,21 +190,6 @@ func ipv6EndianTranslation(s string) string {
 	return string(swappedBytes)
 }
 
-func (p *mqlPorts) users() (map[int64]*mqlUser, error) {
-	obj, err := CreateResource(p.MqlRuntime, "users", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, err
-	}
-	users := obj.(*mqlUsers)
-
-	err = users.refreshCache(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return users.usersByID, nil
-}
-
 func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -245,7 +230,7 @@ func (p *mqlPorts) processesBySocket() (map[int64]*mqlProcess, error) {
 
 // parseProcNet parses the proc filesystem
 // See socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*mqlUser) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string) ([]interface{}, error) {
 	conn := p.MqlRuntime.Connection.(shared.Connection)
 	fs := conn.FileSystem()
 	stat, err := fs.Stat(path)
@@ -278,11 +263,18 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 			continue
 		}
 
+		user, err := NewResource(p.MqlRuntime, "user", map[string]*llx.RawData{
+			"uid": llx.IntData(port.Uid),
+		})
+		if err != nil {
+			return nil, err
+		}
+
 		obj, err := CreateResource(p.MqlRuntime, "port", map[string]*llx.RawData{
 			"protocol":      llx.StringData(protocol),
 			"port":          llx.IntData(port.Port),
 			"address":       llx.StringData(port.Address),
-			"user":          llx.ResourceData(users[port.Uid], "user"),
+			"user":          llx.ResourceData(user, "user"),
 			"state":         llx.StringData(port.State),
 			"remoteAddress": llx.StringData(port.RemoteAddress),
 			"remotePort":    llx.IntData(port.RemotePort),
@@ -378,21 +370,16 @@ func parseProcNetLine(line string) (*procNetPort, error) {
 }
 
 func (p *mqlPorts) listLinux() ([]interface{}, error) {
-	users, err := p.users()
-	if err != nil {
-		return nil, err
-	}
-
 	// check if kernel supports /proc/net/tcp4
 
 	var ports []interface{}
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users)
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4")
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPorts...)
 
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp4", users)
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp4")
 	if err != nil {
 		return nil, err
 	}
@@ -400,13 +387,13 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 
 	// check if kernel supports /proc/net/tcp6
 
-	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6", users)
+	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6")
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPortsV6...)
 
-	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp6", users)
+	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp6")
 	if err != nil {
 		return nil, err
 	}
@@ -530,11 +517,6 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProces
 
 // listMacos reads the lsof information of all open files that are tcp sockets
 func (p *mqlPorts) listMacos() ([]interface{}, error) {
-	users, err := p.users()
-	if err != nil {
-		return nil, err
-	}
-
 	processes, err := p.processesByPid()
 	if err != nil {
 		return nil, err
@@ -565,7 +547,13 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			user := users[int64(uid)]
+
+			user, err := NewResource(p.MqlRuntime, "user", map[string]*llx.RawData{
+				"uid": llx.IntData(uid),
+			})
+			if err != nil {
+				return nil, err
+			}
 
 			pid, err := strconv.Atoi(process.PID)
 			if err != nil {

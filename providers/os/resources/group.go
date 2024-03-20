@@ -79,19 +79,16 @@ func (x *mqlGroup) id() (string, error) {
 }
 
 func (x *mqlGroup) members() ([]interface{}, error) {
-	raw, err := CreateResource(x.MqlRuntime, "users", nil)
-	if err != nil {
-		return nil, errors.New("cannot get users info for group: " + err.Error())
-	}
-	users := raw.(*mqlUsers)
-
-	if err := users.refreshCache(nil); err != nil {
-		return nil, err
-	}
-
 	res := make([]interface{}, len(x.membersArr))
 	for i, name := range x.membersArr {
-		res[i] = users.usersByName[name]
+		user, err := NewResource(x.MqlRuntime, "user", map[string]*llx.RawData{
+			"name": llx.StringData(name),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		res[i] = user
 	}
 
 	return res, nil

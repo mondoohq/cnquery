@@ -7755,7 +7755,7 @@ func (c *mqlPrivatekey) GetEncrypted() *plugin.TValue[bool] {
 type mqlUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	mqlUsersInternal
+	// optional: if you define mqlUsersInternal it will be used here
 	List plugin.TValue[[]interface{}]
 }
 

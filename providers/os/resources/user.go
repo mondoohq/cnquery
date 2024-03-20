@@ -9,7 +9,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v10/llx"
@@ -46,9 +45,9 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 		return nil, nil, errors.New("cannot get list of users: " + err.Error())
 	}
 	users := raw.(*mqlUsers)
-
-	if err := users.refreshCache(nil); err != nil {
-		return nil, nil, err
+	usersList := users.GetList()
+	if usersList.Error != nil {
+		return nil, nil, usersList.Error
 	}
 
 	if nameOk {
@@ -56,8 +55,8 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected string)")
 		}
-		user, ok := users.usersByName[name]
-		if !ok {
+		user, err := users.findName(name)
+		if err != nil {
 			return nil, nil, errors.New("cannot find user with name '" + name + "'")
 		}
 		return nil, user, nil
@@ -68,9 +67,9 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected int)")
 		}
-		user, ok := users.usersByID[id]
-		if !ok {
-			return nil, nil, errors.New("cannot find user with UID '" + strconv.Itoa(int(id)) + "'")
+		user, err := users.findID(id)
+		if err != nil {
+			return nil, nil, err
 		}
 		return nil, user, nil
 	}
@@ -99,23 +98,7 @@ func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 	return ak.(*mqlAuthorizedkeys), nil
 }
 
-type mqlUsersInternal struct {
-	lock        sync.Mutex
-	usersByID   map[int64]*mqlUser
-	usersByName map[string]*mqlUser
-}
-
 func (x *mqlUsers) list() ([]interface{}, error) {
-	x.lock.Lock()
-	defer x.lock.Unlock()
-
-	// in the unlikely case that we get called twice into the same method,
-	// any subsequent calls are locked until user detection finishes; at this point
-	// we only need to return a non-nil error field and it will pull the data from cache
-	if x.usersByID != nil {
-		return nil, errors.New("no users found")
-	}
-
 	conn := x.MqlRuntime.Connection.(shared.Connection)
 	um, err := users.ResolveManager(conn)
 	if um == nil || err != nil {
@@ -146,40 +129,37 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 		res = append(res, nu)
 	}
 
-	return res, x.refreshCache(res)
-}
-
-func (x *mqlUsers) refreshCache(all []interface{}) error {
-	if all == nil {
-		raw := x.GetList()
-		if raw.Error != nil {
-			return raw.Error
-		}
-		all = raw.Data
-	}
-
-	x.usersByID = map[int64]*mqlUser{}
-	x.usersByName = map[string]*mqlUser{}
-
-	for i := range all {
-		u := all[i].(*mqlUser)
-		x.usersByID[u.Uid.Data] = u
-		x.usersByName[u.Name.Data] = u
-	}
-
-	return nil
-}
-
-func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
-	if x := x.GetList(); x.Error != nil {
-		return nil, x.Error
-	}
-
-	res, ok := x.mqlUsersInternal.usersByID[id]
-	if !ok {
-		return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(id)))
-	}
 	return res, nil
+}
+
+func (x *mqlUsers) findID(uid int64) (*mqlUser, error) {
+	list := x.GetList()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	for _, u := range list.Data {
+		user := u.(*mqlUser)
+		if user.Uid.Data == uid {
+			return user, nil
+		}
+	}
+	return nil, errors.New("cannot find user with UID " + strconv.Itoa(int(uid)))
+}
+
+func (x *mqlUsers) findName(name string) (*mqlUser, error) {
+	list := x.GetList()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	for _, u := range list.Data {
+		user := u.(*mqlUser)
+		if user.Name.Data == name {
+			return user, nil
+		}
+	}
+	return nil, errors.New("cannot find user with name " + name)
 }
 
 func (u *mqlUser) sshkeys() ([]interface{}, error) {
