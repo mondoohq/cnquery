@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:    "os",
 	ID:      "go.mondoo.com/cnquery/v9/providers/os",
-	Version: "10.3.6",
+	Version: "10.3.7",
 	ConnectionTypes: []string{
 		shared.Type_Local.String(),
 		shared.Type_SSH.String(),
