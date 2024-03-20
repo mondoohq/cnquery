@@ -605,16 +605,16 @@ test/generate: prep/tools/mockgen
 test/go: cnquery/generate test/generate test/go/plain
 
 test/go/plain:
-	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/cli')
+	go test -cover $(shell go list ./... | grep -v '/providers/' | grep -v '/test/')
 
 test/go/plain-ci: prep/tools test/generate providers/build
-	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/cli')
+	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/providers/' | grep -v '/test/')
 
-test/go-cli/plain:
-	go test -cover $(shell go list ./... | grep 'test/cli')
+test/integration:
+	go test -cover $(shell go list ./... | grep '/test/')
 
 test/go-cli/plain-ci: prep/tools test/generate providers/build
-	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep 'test/cli')
+	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep '/test/')
 
 .PHONY: test/lint/staticcheck
 test/lint/staticcheck:

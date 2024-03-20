@@ -1,148 +1,148 @@
-rpm/aaa_base/84.87+git20231023.f347d36-1.2
-rpm/alts/1.2+30.a5431e9-1.4
-rpm/bash/5.2.26-10.3
-rpm/bash-sh/5.2.26-10.3
-rpm/boost-license1_84_0/1.84.0-1.2
-rpm/branding-openSUSE/84.87.20230227-3.6
-rpm/ca-certificates/2+git20230406.2dae8b7-1.3
-rpm/ca-certificates-mozilla/2.62-2.2
-rpm/chkstat/1699_20240206-1.1
-rpm/coreutils/9.4-4.1
-rpm/cracklib-dict-small/2.9.11-1.3
-rpm/crypto-policies/20230920.570ea89-3.1
-rpm/curl/8.6.0-1.2
-rpm/dbus-1/1.14.10-2.2
-rpm/dbus-1-common/1.14.10-2.2
-rpm/dbus-1-daemon/1.14.10-2.2
-rpm/dbus-1-tools/1.14.10-2.2
-rpm/diffutils/3.10-1.6
-rpm/file-magic/5.45-1.5
-rpm/filesystem/84.87-15.2
-rpm/fillup/1.42-280.2
-rpm/findutils/4.9.0-3.3
-rpm/gio-branding-openSUSE/42.1-20.9
-rpm/glib2-tools/2.78.3-1.2
-rpm/glibc/2.39-2.1
-rpm/glibc-locale-base/2.39-2.1
-rpm/gpg-pubkey/29b700a4-62b07e22
-rpm/gpg-pubkey/39db7c82-510a966b
-rpm/gpg2/2.4.4-1.2
-rpm/grep/3.11-2.3
-rpm/gzip/1.13-2.2
-rpm/krb5/1.21.2-1.2
-rpm/libabsl2308_0_0/20230802.1-3.1
-rpm/libacl1/2.3.1-2.13
-rpm/libalternatives1/1.2+30.a5431e9-1.4
-rpm/libassuan0/2.5.6-1.3
-rpm/libattr1/2.5.1-1.29
-rpm/libaudit1/3.1.1-1.5
-rpm/libaugeas0/1.14.1-1.2
-rpm/libblkid1/2.39.3-3.3
-rpm/libboost_thread1_84_0/1.84.0-1.2
-rpm/libbrotlicommon1/1.1.0-1.2
-rpm/libbrotlidec1/1.1.0-1.2
-rpm/libbz2-1/1.0.8-5.9
-rpm/libcap-ng0/0.8.4-1.2
-rpm/libcap2/2.69-1.6
-rpm/libcom_err2/1.47.0-3.2
-rpm/libcrypt1/4.4.36-1.5
-rpm/libcurl4/8.6.0-1.2
-rpm/libdbus-1-3/1.14.10-2.2
-rpm/libduktape207/2.7.0-3.2
-rpm/libeconf0/0.6.1-1.3
-rpm/libelf1/0.190-1.2
-rpm/libexpat1/2.5.0-2.7
-rpm/libfa1/1.14.1-1.2
-rpm/libfdisk1/2.39.3-3.3
-rpm/libffi8/3.4.4-2.2
-rpm/libgcc_s1/13.2.1+git8285-1.1
-rpm/libgcrypt20/1.10.3-3.2
-rpm/libgio-2_0-0/2.78.3-1.2
-rpm/libglib-2_0-0/2.78.3-1.2
-rpm/libgmodule-2_0-0/2.78.3-1.2
-rpm/libgmp10/6.3.0-2.3
-rpm/libgobject-2_0-0/2.78.3-1.2
-rpm/libgpg-error0/1.47-2.2
-rpm/libgpgme11/1.23.2-3.4
-rpm/libidn2-0/2.3.7-1.1
-rpm/libkeyutils1/1.6.3-6.4
-rpm/libksba8/1.6.5-1.2
-rpm/libldap2/2.6.6-1.3
-rpm/liblua5_4-5/5.4.6-3.2
-rpm/liblz4-1/1.9.4-2.7
-rpm/liblzma5/5.4.6-1.2
-rpm/libmagic1/5.45-1.5
-rpm/libmount1/2.39.3-3.3
-rpm/libncurses6/6.4.20240120-30.2
-rpm/libnghttp2-14/1.59.0-1.2
-rpm/libnpth0/1.6-2.12
-rpm/libnss_usrfiles2/2.27-3.17
-rpm/libopenssl-3-fips-provider/3.1.4-4.1
-rpm/libopenssl3/3.1.4-4.1
-rpm/libp11-kit0/0.25.3-1.2
-rpm/libpcre2-8-0/10.42-3.13
-rpm/libpopt0/1.19-1.7
-rpm/libprocps8/3.3.17-16.2
-rpm/libprotobuf-lite25_1_0/25.1-9.4
-rpm/libproxy1/0.5.3-1.2
-rpm/libpsl5/0.21.2-1.6
-rpm/libpxbackend-1_0/0.5.3-1.2
-rpm/libreadline8/8.2.10-1.2
-rpm/libsasl2-3/2.1.28-6.2
-rpm/libselinux1/3.6-1.2
-rpm/libsemanage-conf/3.6-1.3
-rpm/libsemanage2/3.6-1.3
-rpm/libsepol2/3.6-1.2
-rpm/libsigc-2_0-0/2.12.1-2.2
-rpm/libsmartcols1/2.39.3-3.3
-rpm/libsolv-tools/0.7.28-1.5
-rpm/libsqlite3-0/3.44.2-1.2
-rpm/libssh-config/0.10.6-1.2
-rpm/libssh4/0.10.6-1.2
-rpm/libstdc++6/13.2.1+git8285-1.1
-rpm/libsubid4/4.14.3-1.3
-rpm/libsystemd0/254.8-4.1
-rpm/libtasn1-6/4.19.0-1.6
-rpm/libudev1/254.8-4.1
-rpm/libunistring5/1.1-3.2
-rpm/libusb-1_0-0/1.0.27-1.1
-rpm/libuuid1/2.39.3-3.3
-rpm/libverto1/0.3.2-3.2
-rpm/libxml2-2/2.11.6-2.1
-rpm/libyaml-cpp0_8/0.8.0-1.2
-rpm/libz1/1.3-1.2
-rpm/libzck1/1.4.0-1.2
-rpm/libzstd1/1.5.5-5.2
-rpm/libzypp/17.31.31-1.1
-rpm/login_defs/4.14.3-1.3
-rpm/lsb-release/3.3-1.2
-rpm/ncurses-utils/6.4.20240120-30.2
-rpm/netcfg/11.6-13.2
-rpm/openSUSE-build-key/1.0-48.2
-rpm/openSUSE-release/20240212-2740.1
-rpm/openSUSE-release-appliance-docker/20240212-2740.1
-rpm/openssl/3.1.4-2.2
-rpm/openssl-3/3.1.4-4.1
-rpm/p11-kit/0.25.3-1.2
-rpm/p11-kit-tools/0.25.3-1.2
-rpm/pam/1.6.0-3.1
-rpm/patterns-base-fips/20200505-47.1
-rpm/patterns-base-minimal_base/20200505-47.1
-rpm/permissions/1699_20240206-1.1
-rpm/permissions-config/1699_20240206-1.1
-rpm/pinentry/1.2.1-3.4
-rpm/procps/3.3.17-16.2
-rpm/rpm/4.19.1-3.1
-rpm/rpm-config-SUSE/20240118-1.2
-rpm/sed/4.9-2.5
-rpm/shadow/4.14.3-1.3
-rpm/shared-mime-info/2.4-1.2
-rpm/system-user-root/20190513-2.15
-rpm/sysuser-shadow/3.2-2.2
-rpm/tar/1.35-1.2
-rpm/terminfo-base/6.4.20240120-30.2
-rpm/timezone/2024a-1.1
-rpm/util-linux/2.39.3-3.3
-rpm/xz/5.4.6-1.2
-rpm/zypper/1.14.68-1.3
+rpm/aaa_base/84.87+git20240202.9526d46 x86_64
+rpm/alts/1.2+30.a5431e9 x86_64
+rpm/bash/5.2.26 x86_64
+rpm/bash-sh/5.2.26 noarch
+rpm/boost-license1_84_0/1.84.0 noarch
+rpm/branding-openSUSE/84.87.20230227 noarch
+rpm/ca-certificates/2+git20230406.2dae8b7 noarch
+rpm/ca-certificates-mozilla/2.66 noarch
+rpm/chkstat/1699_20240307 x86_64
+rpm/coreutils/9.4 x86_64
+rpm/cracklib-dict-small/2.9.11 x86_64
+rpm/crypto-policies/20230920.570ea89 noarch
+rpm/curl/8.6.0 x86_64
+rpm/dbus-1/1.14.10 x86_64
+rpm/dbus-1-common/1.14.10 noarch
+rpm/dbus-1-daemon/1.14.10 x86_64
+rpm/dbus-1-tools/1.14.10 x86_64
+rpm/diffutils/3.10 x86_64
+rpm/file-magic/5.45 noarch
+rpm/filesystem/84.87 x86_64
+rpm/fillup/1.42 x86_64
+rpm/findutils/4.9.0 x86_64
+rpm/gio-branding-openSUSE/42.1 noarch
+rpm/glib2-tools/2.78.3 x86_64
+rpm/glibc/2.39 x86_64
+rpm/glibc-locale-base/2.39 x86_64
+rpm/gpg-pubkey/29b700a4
+rpm/gpg-pubkey/39db7c82
+rpm/gpg2/2.4.5 x86_64
+rpm/grep/3.11 x86_64
+rpm/gzip/1.13 x86_64
+rpm/krb5/1.21.2 x86_64
+rpm/libabsl2401_0_0/20240116.1 x86_64
+rpm/libacl1/2.3.2 x86_64
+rpm/libalternatives1/1.2+30.a5431e9 x86_64
+rpm/libassuan0/2.5.7 x86_64
+rpm/libattr1/2.5.2 x86_64
+rpm/libaudit1/3.1.1 x86_64
+rpm/libaugeas0/1.14.1 x86_64
+rpm/libblkid1/2.39.3 x86_64
+rpm/libboost_thread1_84_0/1.84.0 x86_64
+rpm/libbrotlicommon1/1.1.0 x86_64
+rpm/libbrotlidec1/1.1.0 x86_64
+rpm/libbz2-1/1.0.8 x86_64
+rpm/libcap-ng0/0.8.4 x86_64
+rpm/libcap2/2.69 x86_64
+rpm/libcom_err2/1.47.0 x86_64
+rpm/libcrypt1/4.4.36 x86_64
+rpm/libcurl4/8.6.0 x86_64
+rpm/libdbus-1-3/1.14.10 x86_64
+rpm/libduktape207/2.7.0 x86_64
+rpm/libeconf0/0.6.2 x86_64
+rpm/libelf1/0.190 x86_64
+rpm/libexpat1/2.6.2 x86_64
+rpm/libfa1/1.14.1 x86_64
+rpm/libfdisk1/2.39.3 x86_64
+rpm/libffi8/3.4.4 x86_64
+rpm/libgcc_s1/14.0.1+git9355 x86_64
+rpm/libgcrypt20/1.10.3 x86_64
+rpm/libgio-2_0-0/2.78.3 x86_64
+rpm/libglib-2_0-0/2.78.3 x86_64
+rpm/libgmodule-2_0-0/2.78.3 x86_64
+rpm/libgmp10/6.3.0 x86_64
+rpm/libgobject-2_0-0/2.78.3 x86_64
+rpm/libgpg-error0/1.48 x86_64
+rpm/libgpgme11/1.23.2 x86_64
+rpm/libidn2-0/2.3.7 x86_64
+rpm/libkeyutils1/1.6.3 x86_64
+rpm/libksba8/1.6.6 x86_64
+rpm/libldap2/2.6.6 x86_64
+rpm/liblua5_4-5/5.4.6 x86_64
+rpm/liblz4-1/1.9.4 x86_64
+rpm/liblzma5/5.6.0 x86_64
+rpm/libmagic1/5.45 x86_64
+rpm/libmount1/2.39.3 x86_64
+rpm/libncurses6/6.4.20240224 x86_64
+rpm/libnghttp2-14/1.59.0 x86_64
+rpm/libnpth0/1.7 x86_64
+rpm/libnss_usrfiles2/2.27 x86_64
+rpm/libopenssl-3-fips-provider/3.1.4 x86_64
+rpm/libopenssl3/3.1.4 x86_64
+rpm/libp11-kit0/0.25.3 x86_64
+rpm/libpcre2-8-0/10.43 x86_64
+rpm/libpopt0/1.19 x86_64
+rpm/libprocps8/3.3.17 x86_64
+rpm/libprotobuf-lite25_3_0/25.3 x86_64
+rpm/libproxy1/0.5.3 x86_64
+rpm/libpsl5/0.21.2 x86_64
+rpm/libpxbackend-1_0/0.5.3 x86_64
+rpm/libreadline8/8.2.10 x86_64
+rpm/libsasl2-3/2.1.28 x86_64
+rpm/libselinux1/3.6 x86_64
+rpm/libsemanage-conf/3.6 x86_64
+rpm/libsemanage2/3.6 x86_64
+rpm/libsepol2/3.6 x86_64
+rpm/libsigc-2_0-0/2.12.1 x86_64
+rpm/libsmartcols1/2.39.3 x86_64
+rpm/libsolv-tools/0.7.28 x86_64
+rpm/libsqlite3-0/3.45.2 x86_64
+rpm/libssh-config/0.10.6 x86_64
+rpm/libssh4/0.10.6 x86_64
+rpm/libstdc++6/14.0.1+git9355 x86_64
+rpm/libsubid4/4.14.6 x86_64
+rpm/libsystemd0/255.3 x86_64
+rpm/libtasn1-6/4.19.0 x86_64
+rpm/libudev1/255.3 x86_64
+rpm/libunistring5/1.2 x86_64
+rpm/libusb-1_0-0/1.0.27 x86_64
+rpm/libuuid1/2.39.3 x86_64
+rpm/libverto1/0.3.2 x86_64
+rpm/libxml2-2/2.11.6 x86_64
+rpm/libyaml-cpp0_8/0.8.0 x86_64
+rpm/libz1/1.3.1 x86_64
+rpm/libzck1/1.4.0 x86_64
+rpm/libzstd1/1.5.5 x86_64
+rpm/libzypp/17.31.31 x86_64
+rpm/login_defs/4.14.6 noarch
+rpm/lsb-release/3.3 noarch
+rpm/ncurses-utils/6.4.20240224 x86_64
+rpm/netcfg/11.6 noarch
+rpm/openSUSE-build-key/1.0 x86_64
+rpm/openSUSE-release/20240319 x86_64
+rpm/openSUSE-release-appliance-docker/20240319 x86_64
+rpm/openssl/3.1.4 noarch
+rpm/openssl-3/3.1.4 x86_64
+rpm/p11-kit/0.25.3 x86_64
+rpm/p11-kit-tools/0.25.3 x86_64
+rpm/pam/1.6.0 x86_64
+rpm/patterns-base-fips/20200505 x86_64
+rpm/patterns-base-minimal_base/20200505 x86_64
+rpm/permissions/1699_20240307 x86_64
+rpm/permissions-config/1699_20240307 noarch
+rpm/pinentry/1.2.1 x86_64
+rpm/procps/3.3.17 x86_64
+rpm/rpm/4.19.1.1 x86_64
+rpm/rpm-config-SUSE/20240214 noarch
+rpm/sed/4.9 x86_64
+rpm/shadow/4.14.6 x86_64
+rpm/shared-mime-info/2.4 x86_64
+rpm/system-user-root/20190513 noarch
+rpm/sysuser-shadow/3.2 noarch
+rpm/tar/1.35 x86_64
+rpm/terminfo-base/6.4.20240224 x86_64
+rpm/timezone/2024a x86_64
+rpm/util-linux/2.39.3 x86_64
+rpm/xz/5.6.0 x86_64
+rpm/zypper/1.14.68 x86_64
 

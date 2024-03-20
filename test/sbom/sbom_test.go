@@ -7,18 +7,17 @@
 package sbom
 
 import (
-	"os/exec"
-	"sync"
-
-	"bytes"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/test"
 )
 
 var once sync.Once
@@ -98,34 +97,24 @@ func testSbomExport(t *testing.T, img string, update bool, useRecording bool) {
 	if useRecording {
 		args = append(args, "--use-recording", "testdata/"+fileImgName+"-recording.json")
 	}
-	cmd := exec.Command("./cnquery", args...)
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("Error starting command: %s\n", err)
-		return
-	}
-
-	// Wait for the command to finish
-	if err := cmd.Wait(); err != nil {
-		fmt.Printf("Command finished with error: %v\n", err)
-	}
+	r := test.NewCliTestRunner("./cnquery", args...)
+	err := r.Run()
+	require.NoError(t, err)
+	assert.Equal(t, 0, r.ExitCode())
 
 	// Check the output
-	fmt.Println("stdout:\n", stdout.String())
-	fmt.Println("stderr:\n", stderr.String())
+	fmt.Println("stdout:\n", string(r.Stdout()))
+	fmt.Println("stderr:\n", string(r.Stderr()))
 
 	if update {
-		os.WriteFile("testdata/"+fileImgName+"-cli.txt", stdout.Bytes(), 0600)
+		os.WriteFile("testdata/"+fileImgName+"-cli.txt", r.Stdout(), 0600)
 	}
 
 	expected, err := os.ReadFile("testdata/" + fileImgName + "-cli.txt")
 	require.NoError(t, err)
 
-	output := stdout.String()
+	output := string(r.Stdout())
 	assert.Equal(t, string(expected), output)
 	assert.NotEmpty(t, strings.TrimSpace(output))
 }
