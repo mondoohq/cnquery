@@ -278,11 +278,16 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]*m
 			continue
 		}
 
+		user, ok := users[port.Uid]
+		if !ok {
+			return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(port.Uid)))
+		}
+
 		obj, err := CreateResource(p.MqlRuntime, "port", map[string]*llx.RawData{
 			"protocol":      llx.StringData(protocol),
 			"port":          llx.IntData(port.Port),
 			"address":       llx.StringData(port.Address),
-			"user":          llx.ResourceData(users[port.Uid], "user"),
+			"user":          llx.ResourceData(user, "user"),
 			"state":         llx.StringData(port.State),
 			"remoteAddress": llx.StringData(port.RemoteAddress),
 			"remotePort":    llx.IntData(port.RemotePort),
@@ -565,7 +570,10 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			user := users[int64(uid)]
+			user, ok := users[int64(uid)]
+			if !ok {
+				return nil, errors.New("cannot find user for uid " + process.UID)
+			}
 
 			pid, err := strconv.Atoi(process.PID)
 			if err != nil {
