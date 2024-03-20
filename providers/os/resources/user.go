@@ -38,7 +38,7 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 	rawName, nameOk := args["name"]
 	rawUID, idOk := args["uid"]
 	if !nameOk && !idOk {
-		return args, nil, nil
+		return args, nil, errors.New("cannot find user, no search criteria provided")
 	}
 
 	raw, err := CreateResource(runtime, "users", nil)
@@ -113,7 +113,7 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 	// any subsequent calls are locked until user detection finishes; at this point
 	// we only need to return a non-nil error field and it will pull the data from cache
 	if x.usersByID != nil {
-		return nil, nil
+		return nil, errors.New("no users found")
 	}
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
