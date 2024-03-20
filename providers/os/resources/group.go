@@ -91,7 +91,11 @@ func (x *mqlGroup) members() ([]interface{}, error) {
 
 	res := make([]interface{}, len(x.membersArr))
 	for i, name := range x.membersArr {
-		res[i] = users.usersByName[name]
+		user, ok := users.usersByName[name]
+		if !ok {
+			return nil, errors.New("cannot find user with name '" + name + "'")
+		}
+		res[i] = user
 	}
 
 	return res, nil
