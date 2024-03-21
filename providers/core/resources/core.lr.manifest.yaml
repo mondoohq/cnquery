@@ -4,6 +4,8 @@
 resources:
   asset:
     fields:
+      annotations:
+        min_mondoo_version: 10.8.3
       arch: {}
       build: {}
       family: {}

@@ -169,6 +169,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"asset.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"asset.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAssetEol).GetDocsUrl()).ToDataRes(types.String)
 	},
@@ -360,6 +363,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"asset.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -641,6 +648,7 @@ type mqlAsset struct {
 	Fqdn plugin.TValue[string]
 	Build plugin.TValue[string]
 	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
 }
 
 // createAsset creates a new instance of this resource
@@ -721,6 +729,10 @@ func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
 
 func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
+}
+
+func (c *mqlAsset) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return &c.Annotations
 }
 
 // mqlAssetEol for the asset.eol resource
