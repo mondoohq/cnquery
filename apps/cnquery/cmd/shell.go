@@ -29,6 +29,8 @@ func init() {
 
 	shellCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
 	shellCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
+	shellCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
+	_ = shellCmd.Flags().MarkHidden("annotations")
 }
 
 var shellCmd = &cobra.Command{
@@ -36,7 +38,8 @@ var shellCmd = &cobra.Command{
 	Short: "Interactive query shell for MQL",
 	Long:  `Allows the interactive exploration of MQL queries`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
 	},
 	// we have to initialize an empty run so it shows up as a runnable command in --help
 	Run: func(cmd *cobra.Command, args []string) {},
@@ -81,6 +84,9 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 			Creds:       conf.GetServiceCredential(),
 		}
 	}
+
+	annotations, _ := cmd.Flags().GetStringToString("annotations")
+	cliRes.Asset.AddAnnotations(annotations)
 
 	shellConf := ShellConfig{
 		Features:       config.Features,
