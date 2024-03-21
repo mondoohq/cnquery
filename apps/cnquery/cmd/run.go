@@ -30,6 +30,8 @@ func init() {
 	RunCmd.Flags().MarkHidden("llx")
 	RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
 	RunCmd.Flags().MarkHidden("use-llx")
+	RunCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
+	RunCmd.Flags().MarkHidden("annotations")
 }
 
 var RunCmd = &cobra.Command{
@@ -37,7 +39,8 @@ var RunCmd = &cobra.Command{
 	Short: "Run an MQL query",
 	Long:  `Run an MQL query on the CLI and displays its results.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+		_ = viper.BindPFlag("annotations", cmd.Flags().Lookup("annotations"))
 	},
 	// we have to initialize an empty run so it shows up as a runnable command in --help
 	Run: func(cmd *cobra.Command, args []string) {},
@@ -60,7 +63,11 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 	if llx, _ := cmd.Flags().GetString("use-llx"); llx != "" {
 		conf.Input = llx
 	}
+
 	conf.PlatformId, _ = cmd.Flags().GetString("platform-id")
+	annotations, _ := cmd.Flags().GetStringToString("annotations")
+	cliRes.Asset.AddAnnotations(annotations)
+
 	in := &inventory.Inventory{
 		Spec: &inventory.InventorySpec{
 			Assets: []*inventory.Asset{cliRes.Asset},

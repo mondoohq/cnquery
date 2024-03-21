@@ -68,11 +68,14 @@ func (a *Asset) AddLabels(labels map[string]string) {
 }
 
 func (a *Asset) AddAnnotations(annotations map[string]string) {
+	if len(annotations) == 0 {
+		return
+	}
+
 	if a.Annotations == nil {
 		a.Annotations = map[string]string{}
 	}
 
-	// copy annotations
 	for k := range annotations {
 		a.Annotations[k] = annotations[k]
 	}
