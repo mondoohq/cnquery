@@ -11,9 +11,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/checksums"
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v10/utils/sortx"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets
@@ -135,6 +137,33 @@ func (s *Filters) Compile(ownerMRN string, conf mqlc.CompilerConfig) error {
 
 	s.Items = res
 	return nil
+}
+
+func (s *Filters) ComputeChecksum(checksum checksums.Fast, queryMrn string, conf mqlc.CompilerConfig) (checksums.Fast, error) {
+	if s == nil {
+		return checksum, nil
+	}
+
+	// TODO: filters don't support properties yet
+	keys := sortx.Keys(s.Items)
+	for _, k := range keys {
+		query := s.Items[k]
+		if query.Checksum == "" {
+			// this is a fallback safeguard
+			log.Warn().
+				Str("filter", query.Mql).
+				Msg("refresh checksum on filters, which should have been pre-compiled")
+			_, err := query.RefreshAsFilter(queryMrn, conf)
+			if err != nil {
+				return checksum, multierr.Wrap(err, "cannot refresh checksum for query, failed to compile")
+			}
+			if query.Checksum == "" {
+				return checksum, errors.New("cannot refresh checksum for query, its filters were not compiled")
+			}
+		}
+		checksum = checksum.Add(query.Checksum)
+	}
+	return checksum, nil
 }
 
 // AddFilters takes all given filters (or nil) and adds them to the parent.
