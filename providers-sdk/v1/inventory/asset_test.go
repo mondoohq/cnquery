@@ -43,7 +43,7 @@ func TestAddAnnotations(t *testing.T) {
 			},
 		}
 		asset.AddAnnotations(map[string]string{})
-		assert.Equal(t, nil, asset.Annotations)
+		assert.Equal(t, map[string]string(nil), asset.Annotations)
 	})
 
 	t.Run("test nil", func(t *testing.T) {
@@ -53,7 +53,7 @@ func TestAddAnnotations(t *testing.T) {
 			},
 		}
 		asset.AddAnnotations(nil)
-		assert.Equal(t, nil, asset.Annotations)
+		assert.Equal(t, map[string]string(nil), asset.Annotations)
 	})
 
 	t.Run("test merge", func(t *testing.T) {
