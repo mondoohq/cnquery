@@ -121,6 +121,26 @@ jobs:
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v2'
 
+      - name: Configure DigiCert Signing Variables
+        shell: bash
+        run: |
+          # CertLocker Authentication Certifiate
+          CERT_PATH="$(mktemp -t cert.XXX)"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}
+          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          # CertLocker API Key & Host
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
+          # DigiCert CertLocker Code Signing Certificate
+          echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
+          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
+
+      # - name: Install jSign (Windows Signing Tool) -- Required for public runners
+      #   run: |
+      #     curl -LO https://github.com/ebourg/jsign/releases/download/5.0/jsign_5.0_all.deb
+      #     sudo dpkg -i ./jsign_5.0_all.deb
+
       - name: 'Build dependencies'
         run: |
           make providers/proto
@@ -159,7 +179,7 @@ jobs:
           status: ${{ steps.build-providers.outcome }}
           url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           description: Workflow ${{ github.workflow }} for commit ${{ github.sha }} on ${{ github.ref_name }} failed
-          color: 0xff4d4d        
+          color: 0xff4d4d
 
   provider-index:
     needs: [provider-build, scoping]
