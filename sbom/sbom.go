@@ -23,6 +23,8 @@ import (
 //go:embed sbom.mql.yaml
 var sbomQueryPack []byte
 
+var LABEL_KERNEL_RUNNING = "mondoo.com/os/kernel-running"
+
 func QueryPack() (*explorer.Bundle, error) {
 	return explorer.BundleFromYAML(sbomQueryPack)
 }
@@ -87,6 +89,21 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 				bom.Asset.Platform.Labels = rb.Asset.Labels
 				bom.Asset.PlatformIds = enrichPlatformIds(rb.Asset.IDs)
 			}
+
+			if bom.Asset == nil {
+				bom.Asset = &Asset{}
+			}
+			if bom.Asset.Labels == nil {
+				bom.Asset.Labels = map[string]string{}
+			}
+
+			// store version of running kernel
+			for _, kernel := range rb.KernelInstalled {
+				if kernel.Running {
+					bom.Asset.Labels[LABEL_KERNEL_RUNNING] = kernel.Version
+				}
+			}
+
 			if rb.Packages != nil {
 				for _, pkg := range rb.Packages {
 					bomPkg := &Package{

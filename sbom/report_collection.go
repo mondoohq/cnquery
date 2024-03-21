@@ -53,11 +53,18 @@ type BomPackage struct {
 	FilePaths []string `json:"files.map,omitempty"`
 }
 
+type KernelInstalled struct {
+	Name    string
+	Running bool
+	Version string
+}
+
 type BomReport struct {
-	Asset          *BomAsset    `json:"asset,omitempty"`
-	Packages       []BomPackage `json:"packages.list,omitempty"`
-	PythonPackages []BomPackage `json:"python.packages,omitempty"`
-	NpmPackages    []BomPackage `json:"npm.packages.list,omitempty"`
+	Asset           *BomAsset         `json:"asset,omitempty"`
+	Packages        []BomPackage      `json:"packages.list,omitempty"`
+	PythonPackages  []BomPackage      `json:"python.packages,omitempty"`
+	NpmPackages     []BomPackage      `json:"npm.packages.list,omitempty"`
+	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 
 func (b *BomReport) ToJSON() ([]byte, error) {

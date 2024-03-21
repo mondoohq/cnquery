@@ -19,3 +19,9 @@ packs:
       - uid: mondoo-sbom-npm-packages
         title: Retrieve list of installed npm packages
         mql: npm.packages { name version purl cpes.map(uri) files.map(path) }
+      - uid: mondoo-sbom-kernel-installed
+        filters:
+          - asset.family.contains('linux')
+          - asset.runtime != 'container' && asset.kind != 'container' && asset.kind != 'container-image'
+        title: Retrieve information about the installed kernel
+        mql: kernel.installed
