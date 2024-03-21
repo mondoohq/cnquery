@@ -29,9 +29,9 @@ func init() {
 	RunCmd.Flags().String("llx", "", "Generate the executable code bundle and save it to the specified file.")
 	RunCmd.Flags().MarkHidden("llx")
 	RunCmd.Flags().String("use-llx", "", "Run the code specified in the code bundle on disk")
-	RunCmd.Flags().MarkHidden("use-llx")
+	_ = RunCmd.Flags().MarkHidden("use-llx")
 	RunCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
-	RunCmd.Flags().MarkHidden("annotations")
+	_ = RunCmd.Flags().MarkHidden("annotations")
 }
 
 var RunCmd = &cobra.Command{
