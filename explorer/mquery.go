@@ -148,27 +148,10 @@ func (m *Mquery) RefreshChecksum(
 		}
 	}
 
-	// TODO: filters don't support properties yet
-	if m.Filters != nil {
-		keys := sortx.Keys(m.Filters.Items)
-		for _, k := range keys {
-			query := m.Filters.Items[k]
-			if query.Checksum == "" {
-				// FIXME: we don't want this here, it should not be tied to the query
-				log.Warn().
-					Str("mql", m.Mql).
-					Str("filter", query.Mql).
-					Msg("refresh checksum on filter of query , which should have been pre-compiled")
-				_, err := query.RefreshAsFilter(m.Mrn, conf)
-				if err != nil {
-					return multierr.Wrap(err, "cannot refresh checksum for query, failed to compile")
-				}
-				if query.Checksum == "" {
-					return errors.New("cannot refresh checksum for query, its filters were not compiled")
-				}
-			}
-			c = c.Add(query.Checksum)
-		}
+	var err error
+	c, err = m.Filters.ComputeChecksum(c, m.Mrn, conf)
+	if err != nil {
+		return err
 	}
 
 	if m.Docs != nil {
