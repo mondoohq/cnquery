@@ -30,7 +30,7 @@ func init() {
 	shellCmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
 	shellCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
 	shellCmd.Flags().StringToString("annotations", nil, "Specify annotations for this run")
-	shellCmd.Flags().MarkHidden("annotations")
+	_ = shellCmd.Flags().MarkHidden("annotations")
 }
 
 var shellCmd = &cobra.Command{
