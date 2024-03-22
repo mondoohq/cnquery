@@ -149,8 +149,32 @@ func (a *AssetUrlSchema) Add(branch *AssetUrlBranch) error {
 	}
 
 	branch.setDepth(found.Depth + 1)
-	found.Values[lastKey] = branch
+	found.Values[lastKey] = copyBranch(branch)
 	return nil
+}
+
+func copyBranch(b *AssetUrlBranch) *AssetUrlBranch {
+	if b == nil {
+		return nil
+	}
+
+	res := &AssetUrlBranch{
+		PathSegments: make([]string, len(b.PathSegments)),
+		Key:          b.Key,
+		Values:       make(map[string]*AssetUrlBranch, len(b.Values)),
+		Title:        b.Title,
+		References:   make([]string, len(b.References)),
+		Depth:        b.Depth,
+	}
+
+	copy(res.PathSegments, b.PathSegments)
+	copy(res.References, b.References)
+
+	for k, v := range b.Values {
+		res.Values[k] = copyBranch(v)
+	}
+
+	return res
 }
 
 func (a *AssetUrlBranch) setDepth(i uint32) {
