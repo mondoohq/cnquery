@@ -2720,6 +2720,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.dbcluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetEndpoint()).ToDataRes(types.String)
 	},
+	"aws.rds.dbcluster.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
 	"aws.rds.snapshot.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetArn()).ToDataRes(types.String)
 	},
@@ -2842,6 +2851,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.rds.dbinstance.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetLatestRestorableTime()).ToDataRes(types.Time)
 	},
 	"aws.elasticache.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticache).GetClusters()).ToDataRes(types.Array(types.Dict))
@@ -6823,6 +6838,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsRdsDbcluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.rds.dbcluster.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsRdsSnapshot).__id, ok = v.Value.(string)
 			return
@@ -6993,6 +7020,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.rds.dbinstance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.elasticache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17702,6 +17737,9 @@ type mqlAwsRdsDbcluster struct {
 	AvailabilityZones plugin.TValue[[]interface{}]
 	Port plugin.TValue[int64]
 	Endpoint plugin.TValue[string]
+	HostedZoneId plugin.TValue[string]
+	MasterUsername plugin.TValue[string]
+	LatestRestorableTime plugin.TValue[*time.Time]
 }
 
 // createAwsRdsDbcluster creates a new instance of this resource
@@ -17847,6 +17885,18 @@ func (c *mqlAwsRdsDbcluster) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlAwsRdsDbcluster) GetEndpoint() *plugin.TValue[string] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsRdsDbcluster) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRdsDbcluster) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsRdsDbcluster) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
 }
 
 // mqlAwsRdsSnapshot for the aws.rds.snapshot resource
@@ -17997,6 +18047,8 @@ type mqlAwsRdsDbinstance struct {
 	CreatedTime plugin.TValue[*time.Time]
 	Port plugin.TValue[int64]
 	Endpoint plugin.TValue[string]
+	MasterUsername plugin.TValue[string]
+	LatestRestorableTime plugin.TValue[*time.Time]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -18154,6 +18206,14 @@ func (c *mqlAwsRdsDbinstance) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlAwsRdsDbinstance) GetEndpoint() *plugin.TValue[string] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsRdsDbinstance) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsRdsDbinstance) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
 }
 
 // mqlAwsElasticache for the aws.elasticache resource

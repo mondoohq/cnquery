@@ -98,10 +98,13 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"dbInstanceIdentifier":          llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
 							"deletionProtection":            llx.BoolDataPtr(dbInstance.DeletionProtection),
 							"enabledCloudwatchLogsExports":  llx.ArrayData(stringSliceInterface, types.String),
+							"endpoint":                      llx.StringDataPtr(dbInstance.Endpoint.Address),
 							"engine":                        llx.StringDataPtr(dbInstance.Engine),
 							"engineVersion":                 llx.StringDataPtr(dbInstance.EngineVersion),
 							"enhancedMonitoringResourceArn": llx.StringDataPtr(dbInstance.EnhancedMonitoringResourceArn),
 							"id":                            llx.StringDataPtr(dbInstance.DBInstanceIdentifier),
+							"latestRestorableTime":          llx.TimeDataPtr(dbInstance.LatestRestorableTime),
+							"masterUsername":                llx.StringDataPtr(dbInstance.MasterUsername),
 							"multiAZ":                       llx.BoolDataPtr(dbInstance.MultiAZ),
 							"name":                          llx.StringDataPtr(dbInstance.DBName),
 							"port":                          llx.IntDataDefault(dbInstance.DbInstancePort, 0),
@@ -114,7 +117,6 @@ func (a *mqlAwsRds) getDbInstances(conn *connection.AwsConnection) []*jobpool.Jo
 							"storageIops":                   llx.IntDataDefault(dbInstance.Iops, 0),
 							"storageType":                   llx.StringDataPtr(dbInstance.StorageType),
 							"tags":                          llx.MapData(rdsTagsToMap(dbInstance.TagList), types.String),
-							"endpoint":                      llx.StringDataPtr(dbInstance.Endpoint.Address),
 						})
 					if err != nil {
 						return nil, err
@@ -268,7 +270,10 @@ func (a *mqlAwsRds) getDbClusters(conn *connection.AwsConnection) []*jobpool.Job
 							"endpoint":                llx.StringDataPtr(cluster.Endpoint),
 							"engine":                  llx.StringDataPtr(cluster.Engine),
 							"engineVersion":           llx.StringDataPtr(cluster.EngineVersion),
+							"hostedZoneId":            llx.StringDataPtr(cluster.HostedZoneId),
 							"id":                      llx.StringDataPtr(cluster.DBClusterIdentifier),
+							"latestRestorableTime":    llx.TimeDataPtr(cluster.LatestRestorableTime),
+							"masterUsername":          llx.StringDataPtr(cluster.MasterUsername),
 							"members":                 llx.ArrayData(mqlRdsDbInstances, types.Resource("aws.rds.dbinstance")),
 							"multiAZ":                 llx.BoolDataPtr(cluster.MultiAZ),
 							"port":                    llx.IntDataDefault(cluster.Port, -1),

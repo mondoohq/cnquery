@@ -1828,6 +1828,12 @@ private aws.rds.dbcluster @defaults("id region") {
   port int
   // The connection endpoint for the primary instance of the DB cluster
   endpoint string
+  // The cluster hosted zone ID
+  hostedZoneId string
+  // The master username for the DB instance
+  masterUsername string
+  // The latest time to which a database can be restored with point-in-time restore
+  latestRestorableTime time
 }
 
 // Amazon RDS snapshot
@@ -1918,6 +1924,10 @@ private aws.rds.dbinstance @defaults("id region engine engineVersion") {
   port int
   // The connection endpoint for the DB instance
   endpoint string
+  // The master username for the DB instance
+  masterUsername string
+  // The latest time to which a database can be restored with point-in-time restore
+  latestRestorableTime time
 }
 
 // Amazon ElastiCache
