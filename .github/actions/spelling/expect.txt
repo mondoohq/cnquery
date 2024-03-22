@@ -73,7 +73,6 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
-sshkeys
 testutils
 toplevel
 tpu
