@@ -1056,6 +1056,10 @@ private aws.autoscaling.group @defaults("name region") {
   healthCheckGracePeriod int
   // Time when the autoscaling group was created
   createdAt time
+  // The maximum amount of time, in seconds, that an instance can be in service
+  maxInstanceLifetime int
+  // The desired size of the group
+  desiredCapacity int
 }
 
 // AWS Elastic Load Balancing
@@ -1456,6 +1460,8 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   enabled bool
   // The price class of the distribution
   priceClass string
+  // CNAMEs aliases if any for this distribution
+  cnames []dict
 }
 
 // Amazon CloudFront distribution origin

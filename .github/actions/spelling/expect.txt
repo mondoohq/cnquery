@@ -9,12 +9,14 @@ cavium
 cdn
 certificatechains
 cmek
+cnames
 Cooldown
 cpe
 cryptokey
 customresources
 datapath
 Ddos
+deliverychannel
 dfw
 DIRECTORYID
 dlq
@@ -83,4 +85,3 @@ vulnerabilityassessmentsettings
 vulnmgmt
 wil
 xssmatchstatement
-deliverychannel

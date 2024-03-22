@@ -76,17 +76,24 @@ func (a *mqlAwsCloudfront) distributions() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			cnames := []interface{}{}
+			for i := range d.Aliases.Items {
+				cnames = append(cnames, d.Aliases.Items[i])
+			}
+
 			args := map[string]*llx.RawData{
 				"arn":                  llx.StringDataPtr(d.ARN),
-				"status":               llx.StringDataPtr(d.Status),
-				"domainName":           llx.StringDataPtr(d.DomainName),
-				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
-				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
 				"cacheBehaviors":       llx.ArrayData(cacheBehaviors, types.Any),
+				"cnames":               llx.ArrayData(cnames, types.String),
+				"defaultCacheBehavior": llx.MapData(defaultCacheBehavior, types.Any),
+				"domainName":           llx.StringDataPtr(d.DomainName),
+				"enabled":              llx.BoolDataPtr(d.Enabled),
 				"httpVersion":          llx.StringData(string(d.HttpVersion)),
 				"isIPV6Enabled":        llx.BoolDataPtr(d.IsIPV6Enabled),
-				"enabled":              llx.BoolDataPtr(d.Enabled),
+				"origins":              llx.ArrayData(origins, types.Resource("aws.cloudfront.distribution.origin")),
 				"priceClass":           llx.StringData(string(d.PriceClass)),
+				"status":               llx.StringDataPtr(d.Status),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
