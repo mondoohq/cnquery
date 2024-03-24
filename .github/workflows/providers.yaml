@@ -130,6 +130,11 @@ jobs:
           echo "SM_CLIENT_CERT_FILE=Certificate_pkcs12.p12" >> "$GITHUB_ENV"
           echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
           echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
+          echo "--- DEBUG ---"
+          echo "Certificate:"
+          cat Certificate_pkcs12.p12
+          echo "Environment Variables:"
+          cat $GITHUB_ENV
 
       # - name: Install jSign (Windows Signing Tool) -- Required for public runners
       #   run: |
