@@ -121,20 +121,15 @@ jobs:
       - name: 'Set up gcloud CLI'
         uses: 'google-github-actions/setup-gcloud@v2'
 
-      - name: Configure DigiCert Signing Variables
+      - name: Set DigiCert Signing Variables
         shell: bash
         run: |
-          # CertLocker Authentication Certifiate
-          CERT_PATH="$(mktemp -t cert.XXX)"
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${CERT_PATH}
-          echo "SM_CLIENT_CERT_FILE=${CERT_PATH}" >> "$GITHUB_ENV"
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
-          # CertLocker API Key & Host
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > Certificate_pkcs12.p12
           echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
-          # DigiCert CertLocker Code Signing Certificate
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_FILE=Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
           echo "SM_CODE_SIGNING_CERT_SHA1_HASH=${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" >> "$GITHUB_ENV"
-          echo "SM_CERT_ALIAS=${{ secrets.SM_CERT_ALIAS }}" >> "$GITHUB_ENV"
 
       # - name: Install jSign (Windows Signing Tool) -- Required for public runners
       #   run: |
