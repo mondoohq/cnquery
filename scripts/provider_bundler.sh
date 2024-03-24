@@ -65,6 +65,14 @@ build_bundle(){
   fi
   cd ${PROVIDER_PATH} && CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -tags production -ldflags "-s -w" -o ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE} main.go
 
+  if [[ "${GOOS}" == "windows" ]]; then
+    ### SIGN THE BINARY
+    echo "  - Signing the binary ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}..."
+    jsign --storetype DIGICERTONE --alias "cert_492206180" \
+          --storepass "${SM_API_KEY}|${SM_CLIENT_CERT_FILE}|${SM_CLIENT_CERT_PASSWORD}" \
+          --tsaurl "http://timestamp.digicert.com"  ${PROVIDER_DIST}/${PROVIDER_EXECUTABLE}
+  fi
+
   # set linux flags that do not work on macos
   TAR_FLAGS=""
   if uname -s | grep -q 'Linux'; then
