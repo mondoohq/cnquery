@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"crypto/tls"
 	"crypto/x509"
+	"net"
 	"regexp"
 	"strconv"
 	"sync"
@@ -113,8 +115,9 @@ func (s *mqlTls) id() (string, error) {
 	return "tls+" + s.Socket.Data.__id, nil
 }
 
-func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tlsshake.Findings, certificateList []*x509.Certificate) ([]interface{}, error) {
+func parseCertificates(runtime *plugin.Runtime, domainName string, certificateList []*x509.Certificate, revocations map[string]*tlsshake.Revocation) ([]interface{}, []string, error) {
 	res := make([]interface{}, len(certificateList))
+	errors := []string{}
 
 	verified := false
 	if len(certificateList) != 0 {
@@ -128,7 +131,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tls
 			Intermediates: intermediates,
 		})
 		if err != nil {
-			findings.Errors = append(findings.Errors, "Failed to verify certificate chain for "+certificateList[0].Subject.String())
+			errors = append(errors, "Failed to verify certificate chain for "+certificateList[0].Subject.String())
 		}
 
 		if len(verifyCerts) != 0 {
@@ -141,7 +144,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tls
 
 		var isRevoked bool
 		var revokedAt time.Time
-		revocation, ok := findings.Revocations[string(cert.Signature)]
+		revocation, ok := revocations[string(cert.Signature)]
 		if ok {
 			if revocation == nil {
 				isRevoked = false
@@ -153,8 +156,9 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tls
 		}
 
 		pem, err := certificates.EncodeCertAsPEM(cert)
+
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		raw, err := CreateResource(runtime, "certificate", map[string]*llx.RawData{
@@ -167,7 +171,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tls
 			"isVerified":   llx.BoolData(verified),
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// store parsed object with resource
@@ -177,7 +181,7 @@ func parseCertificates(runtime *plugin.Runtime, domainName string, findings *tls
 		res[i] = mqlCert
 	}
 
-	return res, nil
+	return res, errors, nil
 }
 
 func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interface{}, error) {
@@ -222,21 +226,6 @@ func (s *mqlTls) params(socket *mqlSocket, domainName string) (map[string]interf
 			v[k] = vv
 		}
 		res[field] = v
-	}
-
-	// Create certificates
-	certs, err := parseCertificates(s.MqlRuntime, domainName, &findings, findings.Certificates)
-	if err != nil {
-		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
-	} else {
-		s.Certificates = plugin.TValue[[]interface{}]{Data: certs, State: plugin.StateIsSet}
-	}
-
-	certs, err = parseCertificates(s.MqlRuntime, domainName, &findings, findings.NonSNIcertificates)
-	if err != nil {
-		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
-	} else {
-		s.NonSniCertificates = plugin.TValue[[]interface{}]{Data: certs, State: plugin.StateIsSet}
 	}
 
 	return res, nil
@@ -314,24 +303,72 @@ func (s *mqlTls) extensions(params interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlTls) certificates(params interface{}) ([]interface{}, error) {
-	// We leverage the fact that params has to be created first, and that params
-	// causes this field to be set. If it isn't, then we cannot determine it.
-	// (TODO: use the recording data to do this async)
-	if len(s.Certificates.Data) == 0 {
-		s.Certificates.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+func gatherTlsCertificates(host, port, domainName string) ([]*x509.Certificate, []*x509.Certificate, error) {
+	isSNIcert := map[string]struct{}{}
+	conn, err := tls.Dial("tcp", net.JoinHostPort(host, port), &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         domainName,
+	})
+	if err != nil {
+		return nil, nil, err
 	}
-	return s.Certificates.Data, nil
+	defer conn.Close()
+
+	// Get the ConnectionState where we can find x509.Certificate(s)
+	sniCerts := conn.ConnectionState().PeerCertificates
+	for _, sniCerts := range sniCerts {
+		isSNIcert[sniCerts.SerialNumber.String()] = struct{}{}
+	}
+
+	nonSniCerts := []*x509.Certificate{}
+	nonSniConn, err := tls.Dial("tcp", net.JoinHostPort(host, port), &tls.Config{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	defer nonSniConn.Close()
+	potentialNonSniCerts := nonSniConn.ConnectionState()
+	for _, nonSniCert := range potentialNonSniCerts.PeerCertificates {
+		if _, ok := isSNIcert[nonSniCert.SerialNumber.String()]; !ok {
+			nonSniCerts = append(nonSniCerts, nonSniCert)
+		}
+	}
+
+	return sniCerts, nonSniCerts, nil
 }
 
-func (s *mqlTls) nonSniCertificates(params interface{}) ([]interface{}, error) {
-	// We leverage the fact that params has to be created first, and that params
-	// causes this field to be set. If it isn't, then we cannot determine it.
-	// (TODO: use the recording data to do this async)
-	if len(s.NonSniCertificates.Data) == 0 {
-		s.NonSniCertificates.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+func (s *mqlTls) populateCertificates(socket *mqlSocket, domainName string) error {
+	host := socket.Address.Data
+	port := socket.Port.Data
+
+	certs, nonSniCerts, err := gatherTlsCertificates(host, strconv.FormatInt(port, 10), domainName)
+	if err != nil {
+		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+		return err
 	}
-	return s.NonSniCertificates.Data, nil
+
+	mqlCerts, _, err := parseCertificates(s.MqlRuntime, domainName, certs, map[string]*tlsshake.Revocation{})
+	if err != nil {
+		s.Certificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+	} else {
+		s.Certificates = plugin.TValue[[]interface{}]{Data: mqlCerts, State: plugin.StateIsSet}
+	}
+
+	mqlNonSniCerts, _, err := parseCertificates(s.MqlRuntime, domainName, nonSniCerts, map[string]*tlsshake.Revocation{})
+	if err != nil {
+		s.NonSniCertificates = plugin.TValue[[]interface{}]{Error: err, State: plugin.StateIsSet}
+	} else {
+		s.NonSniCertificates = plugin.TValue[[]interface{}]{Data: mqlNonSniCerts, State: plugin.StateIsSet}
+	}
+	return nil
+}
+
+func (s *mqlTls) certificates(socket *mqlSocket, domainName string) ([]interface{}, error) {
+	return nil, s.populateCertificates(socket, domainName)
+}
+
+func (s *mqlTls) nonSniCertificates(socket *mqlSocket, domainName string) ([]interface{}, error) {
+	return nil, s.populateCertificates(socket, domainName)
 }
