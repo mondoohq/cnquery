@@ -312,11 +312,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		case shared.Type_Local.String():
 			conn = local.NewConnection(connId, conf, asset)
 
-			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
+				asset.Platform = p
+				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
 		case shared.Type_SSH.String():
@@ -325,13 +327,15 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				if conn.Asset().Connections[0].Runtime != "vagrant" {
 					asset.Name = fingerprint.Name
 				}
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
+				asset.Platform = p
+				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
 		case shared.Type_Winrm.String():
@@ -340,11 +344,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
+				asset.Platform = p
+				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
 		case shared.Type_Tar.String():
@@ -353,11 +359,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
+				asset.Platform = p
+				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
 		case shared.Type_DockerSnapshot.String():
@@ -366,11 +374,13 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
-			fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+			fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 			if err == nil {
 				asset.Name = fingerprint.Name
 				asset.PlatformIds = fingerprint.PlatformIDs
 				asset.IdDetector = fingerprint.ActiveIdDetectors
+				asset.Platform = p
+				appendRelatedAssetsFromFingerprint(fingerprint, asset)
 			}
 
 		case shared.Type_Vagrant.String():
@@ -408,11 +418,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			// This is a workaround to set Google COS platform IDs when scanned from inside k8s
 			pID, err := conn.(*fs.FileSystemConnection).Identifier()
 			if err != nil {
-				fingerprint, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
+				fingerprint, p, err := id.IdentifyPlatform(conn, asset.Platform, asset.IdDetector)
 				if err == nil {
 					asset.Name = fingerprint.Name
 					asset.PlatformIds = fingerprint.PlatformIDs
 					asset.IdDetector = fingerprint.ActiveIdDetectors
+					asset.Platform = p
 				}
 			} else {
 				// In this case asset.Name should already be set via the inventory

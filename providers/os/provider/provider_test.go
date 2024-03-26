@@ -39,10 +39,8 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	// here we have the hostname twice, as platformid and stand alone
-	// This get's cleaned up later in the code
-	// FIXME: this should only be 1
-	require.Len(t, connectResp.Asset.PlatformIds, 2)
+
+	require.Len(t, connectResp.Asset.PlatformIds, 1)
 
 	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
@@ -92,7 +90,7 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
 	require.Len(t, connectResp.Asset.PlatformIds, 1)
-	require.Nil(t, connectResp.Asset.Platform)
+	require.Nil(t, connectResp.Asset.Platform) // Why does this need to be nil
 
 	// Disable delayed discovery and reconnect
 	connectResp.Asset.Connections[0].DelayDiscovery = false
@@ -106,8 +104,8 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	// Now the platformIDs are cleaned up
-	require.Len(t, connectResp.Asset.PlatformIds, 2)
+
+	require.Len(t, connectResp.Asset.PlatformIds, 1)
 	// Verify the platform is set
 	require.NotNil(t, connectResp.Asset.Platform)
 

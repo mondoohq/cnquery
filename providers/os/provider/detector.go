@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v11/providers/os/id"
 	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
 	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
 	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
@@ -130,4 +131,26 @@ func relatedIds2assets(ids []string) []*inventory.Asset {
 		res[i] = &inventory.Asset{Id: ids[i]}
 	}
 	return res
+}
+
+func appendRelatedAssetsFromFingerprint(f *id.PlatformFingerprint, a *inventory.Asset) {
+	if f == nil || len(f.RelatedAssets) == 0 {
+		return
+	}
+	included := make(map[string]struct{}, len(a.RelatedAssets))
+	for i := range a.RelatedAssets {
+		included[a.RelatedAssets[i].Id] = struct{}{}
+	}
+	for _, ra := range f.RelatedAssets {
+		shouldAdd := true
+		for _, pId := range ra.PlatformIDs {
+			if _, ok := included[pId]; ok {
+				shouldAdd = false
+				break
+			}
+		}
+		if shouldAdd {
+			a.RelatedAssets = append(a.RelatedAssets, &inventory.Asset{Id: ra.PlatformIDs[0]})
+		}
+	}
 }
