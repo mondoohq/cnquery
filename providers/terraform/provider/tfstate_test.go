@@ -13,7 +13,7 @@ import (
 
 func TestResource_Tfstate(t *testing.T) {
 	t.Run("tf state outputs", func(t *testing.T) {
-		srv, connRes := newTestService("state", "")
+		srv, connRes := newTestService(StateConnectionType, "./testdata/tfstate/state_simple.json")
 		require.NotEmpty(t, srv)
 		// simulate terraform.state.outputs.length
 
@@ -37,7 +37,7 @@ func TestResource_Tfstate(t *testing.T) {
 	})
 
 	t.Run("tf state recursive modules", func(t *testing.T) {
-		srv, connRes := newTestService("state", "")
+		srv, connRes := newTestService(StateConnectionType, "./testdata/tfstate/state_simple.json")
 		require.NotEmpty(t, srv)
 		// simulate "terraform.state.modules.length"
 

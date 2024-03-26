@@ -17,7 +17,7 @@ import (
 
 func TestResource_Tfplan(t *testing.T) {
 	t.Run("tf plan changes", func(t *testing.T) {
-		srv, connRes := newTestService("plan", "")
+		srv, connRes := newTestService(PlanConnectionType, "./testdata/tfplan/plan_gcp_simple.json")
 		require.NotEmpty(t, srv)
 		// simulate "terraform.plan.resourceChanges[0].providerName"
 
@@ -52,7 +52,7 @@ func TestResource_Tfplan(t *testing.T) {
 	})
 
 	t.Run("tf plan configuration", func(t *testing.T) {
-		srv, connRes := newTestService("plan", "")
+		srv, connRes := newTestService(PlanConnectionType, "./testdata/tfplan/plan_gcp_simple.json")
 		require.NotEmpty(t, srv)
 		// simulate "terraform.plan.configuration.resources[0]['name'] | ['type']"
 
@@ -88,6 +88,7 @@ func TestTerraformPlanParsing(t *testing.T) {
 
 	var tfPlan connection.Plan
 	err = json.Unmarshal(data, &tfPlan)
+	require.NoError(t, err)
 
 	pc := resources.PlanConfiguration{}
 
