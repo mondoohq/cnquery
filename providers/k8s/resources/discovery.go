@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/gobwas/glob"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10"
@@ -17,7 +16,6 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared/resources"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/container_registry"
 	"go.mondoo.com/cnquery/v10/types"
 	"go.mondoo.com/cnquery/v10/utils/stringx"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -807,31 +805,17 @@ func discoverContainerImages(conn shared.Connection, runtime *plugin.Runtime, in
 		runningImages = types.MergeMaps(runningImages, podImages)
 	}
 
-	assetList, err := convertImagesToAssets(runningImages)
-	if err != nil {
-		return nil, err
-	}
-
-	return assetList, nil
-}
-
-func convertImagesToAssets(images map[string]ContainerImage) ([]*inventory.Asset, error) {
-	assetList := make([]*inventory.Asset, 0, len(images))
-	for _, i := range images {
-		ccresolver := container_registry.NewContainerRegistryResolver()
-
-		ref, err := name.ParseReference(i.resolvedImage, name.WeakValidation)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to parse image reference")
-			continue
-		}
-
-		a, err := ccresolver.GetImage(ref, nil)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to get image")
-			continue
-		}
-		assetList = append(assetList, a)
+	assetList := make([]*inventory.Asset, 0, len(runningImages))
+	for _, i := range runningImages {
+		assetList = append(assetList, &inventory.Asset{
+			Connections: []*inventory.Config{
+				{
+					Type: "registry-image",
+					Host: i.resolvedImage,
+				},
+			},
+			Category: conn.Asset().Category,
+		})
 	}
 
 	return assetList, nil
