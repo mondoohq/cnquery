@@ -53,34 +53,40 @@ func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []st
 		}
 	}
 
+	isAws := false
 	for _, v := range values {
 		if strings.Contains(strings.ToLower(v), "amazon") {
-			mdsvc, err := awsec2.Resolve(conn, p)
-			if err != nil {
-				log.Debug().Err(err).Msg("failed to get metadata resolver")
-				return "", "", nil
-			}
-			id, err := mdsvc.Identify()
-			if err == nil {
-				return id.InstanceID, id.InstanceName, []string{id.AccountID}
-			}
+			isAws = true
+			break
+		}
+	}
+
+	if isAws {
+		mdsvc, err := awsec2.Resolve(conn, p)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to get metadata resolver")
+			return "", "", nil
+		}
+		id, err := mdsvc.Identify()
+		if err == nil {
+			return id.InstanceID, id.InstanceName, []string{id.AccountID}
+		}
+		log.Debug().Err(err).
+			Strs("platform", p.GetFamily()).
+			Msg("failed to get AWS platform id")
+		// try ecs
+		mdsvcEcs, err := awsecs.Resolve(conn, p)
+		if err != nil {
+			log.Debug().Err(err).Msg("failed to get metadata resolver")
+			return "", "", nil
+		}
+		idEcs, err := mdsvcEcs.Identify()
+		if err == nil {
+			return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
+		} else {
 			log.Debug().Err(err).
 				Strs("platform", p.GetFamily()).
 				Msg("failed to get AWS platform id")
-			// try ecs
-			mdsvcEcs, err := awsecs.Resolve(conn, p)
-			if err != nil {
-				log.Debug().Err(err).Msg("failed to get metadata resolver")
-				return "", "", nil
-			}
-			idEcs, err := mdsvcEcs.Identify()
-			if err == nil {
-				return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
-			} else {
-				log.Debug().Err(err).
-					Strs("platform", p.GetFamily()).
-					Msg("failed to get AWS platform id")
-			}
 		}
 	}
 
