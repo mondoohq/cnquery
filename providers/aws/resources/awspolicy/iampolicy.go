@@ -15,14 +15,14 @@ type IamPolicyDocument struct {
 }
 
 type IamPolicyStatement struct {
-	Sid          string             `json:"Sid,omitempty"`
-	Effect       string             `json:"Effect,omitempty"`
-	Action       statementSection   `json:"Action,omitempty"`
-	NotAction    statementSection   `json:"NotAction,omitempty"`
-	NotResource  statementSection   `json:"NotResource,omitempty"`
-	Principal    statementSection   `json:"Principal,omitempty"`
-	NotPrincipal statementSection   `json:"NotPrincipal,omitempty"`
-	Resource     statementSection   `json:"Resource,omitempty"`
+	Sid          string           `json:"Sid,omitempty"`
+	Effect       string           `json:"Effect,omitempty"`
+	Action       statementSection `json:"Action,omitempty"`
+	NotAction    statementSection `json:"NotAction,omitempty"`
+	NotResource  statementSection `json:"NotResource,omitempty"`
+	Principal    statementSection `json:"Principal,omitempty"`
+	NotPrincipal statementSection `json:"NotPrincipal,omitempty"`
+	Resource     statementSection `json:"Resource,omitempty"`
 }
 
 type policyStatements []IamPolicyStatement
@@ -44,6 +44,13 @@ func (v *statementSection) UnmarshalJSON(b []byte) error {
 	case []interface{}:
 		for _, item := range v {
 			section = append(section, item.(string))
+		}
+	case map[string]interface{}:
+		for _, item := range v {
+			m, err := json.Marshal(item)
+			if err == nil {
+				section = append(section, string(m))
+			}
 		}
 	default:
 		return fmt.Errorf("invalid %T value element, policy action and resource only support string or []string", v)
