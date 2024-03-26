@@ -237,6 +237,15 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 			return nil, err
 		}
 	}
+	if conf.Options == nil {
+		conf.Options = map[string]string{}
+	}
+	// FIXME: DEPRECATED, remove in v12.0 vv
+	// The DelayDiscovery flag should always be set from v12
+	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
+		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
+	}
+	// ^^
 	// Determine whether the image is locally present or not.
 	resolver := dockerDiscovery.Resolver{}
 	resolvedAssets, err := resolver.Resolve(context.Background(), asset, conf, nil)
@@ -297,16 +306,7 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	}
 	filename = tmpFile.Name()
 
-	if conf.Options == nil {
-		conf.Options = map[string]string{}
-	}
 	conf.Options[tar.OPTION_FILE] = filename
-	// FIXME: DEPRECATED, remove in v12.0 vv
-	// The DelayDiscovery flag should always be set from v12
-	if conf.Options == nil || conf.Options[plugin.DISABLE_DELAYED_DISCOVERY_OPTION] == "" {
-		conf.DelayDiscovery = true // Delay discovery, to make sure we don't directly download the image
-	}
-	// ^^
 
 	tarConn, err := tar.NewConnection(
 		id,
