@@ -24,8 +24,8 @@ func TestVSphereTransport(t *testing.T) {
 	require.NoError(t, err)
 
 	conn, err := NewVsphereConnection(
-		0,
-		nil,
+		1,
+		&inventory.Asset{},
 		&inventory.Config{
 			Type:     "vsphere",
 			Host:     vs.Server.URL.Hostname(),

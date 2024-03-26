@@ -4,6 +4,9 @@
 package manifest_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +20,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
 	k8s_provider "go.mondoo.com/cnquery/v10/providers/k8s/provider"
 	"go.mondoo.com/cnquery/v10/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v10/utils/syncx"
 )
 
 func K8s() *providers.Runtime {
@@ -44,12 +48,22 @@ func TestPlatformIDDetectionManifest(t *testing.T) {
 				Options: map[string]string{
 					shared.OPTION_MANIFEST: path,
 				},
+				Discover: &inventory.Discovery{
+					Targets: []string{"auto"},
+				},
 			}},
 		},
 	})
 	require.NoError(t, err)
+
+	h := sha256.New()
+	absPath, err := filepath.Abs(path)
+	require.NoError(t, err)
+	h.Write([]byte(absPath))
+	manifestHash := hex.EncodeToString(h.Sum(nil))
+	require.NoError(t, err)
 	// verify that the asset object gets the platform id
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/5c44b3080881cb47faaedf5754099b8b670a85b69861f64692d6323550197b2d", runtime.Provider.Connection.Asset.PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash, runtime.Provider.Connection.Inventory.Spec.Assets[0].PlatformIds[0])
 }
 
 func TestManifestDiscovery(t *testing.T) {
@@ -76,6 +90,7 @@ func TestManifestDiscovery(t *testing.T) {
 	require.NoError(t, err)
 
 	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -86,6 +101,7 @@ func TestManifestDiscovery(t *testing.T) {
 
 	conn.InventoryConfig().Discover.Targets = []string{"all"}
 	pluginRuntime = &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -96,6 +112,7 @@ func TestManifestDiscovery(t *testing.T) {
 
 	conn.InventoryConfig().Discover.Targets = []string{"deployments"}
 	pluginRuntime = &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -129,6 +146,7 @@ func TestOperatorManifest(t *testing.T) {
 	require.NoError(t, err)
 
 	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -147,9 +165,17 @@ func TestOperatorManifest(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, asset.PlatformIds[0])
 	}
+
+	h := sha256.New()
+	absPath, err := filepath.Abs(path)
+	require.NoError(t, err)
+	h.Write([]byte(absPath))
+	manifestHash := hex.EncodeToString(h.Sum(nil))
+	require.NoError(t, err)
+
 	require.NotEqual(t, inv.Spec.Assets[0].PlatformIds[0], inv.Spec.Assets[1].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/7b0dacb1266786d90e70e4c924064ef619eff6b1ccb4b0769f408510570fbbd2", inv.Spec.Assets[0].PlatformIds[0])
-	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/7b0dacb1266786d90e70e4c924064ef619eff6b1ccb4b0769f408510570fbbd2/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash, inv.Spec.Assets[0].PlatformIds[0])
+	require.Equal(t, "//platformid.api.mondoo.app/runtime/k8s/uid/"+manifestHash+"/namespace/mondoo-operator/deployments/name/mondoo-operator-controller-manager", inv.Spec.Assets[1].PlatformIds[0])
 }
 
 func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
@@ -177,6 +203,7 @@ func TestOperatorManifestWithNamespaceFilter(t *testing.T) {
 	require.NoError(t, err)
 
 	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -224,6 +251,7 @@ func TestManifestNoObjects(t *testing.T) {
 	require.NoError(t, err)
 
 	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,
@@ -269,6 +297,7 @@ func TestManifestDir(t *testing.T) {
 	require.NoError(t, err)
 
 	pluginRuntime := &plugin.Runtime{
+		Resources:      &syncx.Map[plugin.Resource]{},
 		Connection:     conn,
 		HasRecording:   false,
 		CreateResource: resources.CreateResource,

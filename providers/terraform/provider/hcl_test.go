@@ -19,7 +19,7 @@ const (
 
 func TestResource_Terraform(t *testing.T) {
 	t.Run("terraform providers", func(t *testing.T) {
-		srv, connRes := newTestService("hcl", terraformHclPath)
+		srv, connRes := newTestService(HclConnectionType, terraformHclPath)
 		require.NotEmpty(t, srv)
 		// simulate "terraform.providers[0].type"
 
@@ -54,7 +54,7 @@ func TestResource_Terraform(t *testing.T) {
 	})
 
 	t.Run("terraform ignore commented out resources", func(t *testing.T) {
-		srv, connRes := newTestService("hcl", terraformHclPath)
+		srv, connRes := newTestService(HclConnectionType, terraformHclPath)
 		require.NotEmpty(t, srv)
 		// simulate "terraform.providers.length"
 
@@ -120,7 +120,7 @@ func TestResource_Terraform(t *testing.T) {
 
 func TestModuleWithoutResources_Terraform(t *testing.T) {
 	t.Run("terraform settings", func(t *testing.T) {
-		srv, connRes := newTestService("hcl", terraformHclModulePath)
+		srv, connRes := newTestService(HclConnectionType, terraformHclModulePath)
 		require.NotEmpty(t, srv)
 		// simulate "terraform.settings"
 
@@ -134,7 +134,7 @@ func TestModuleWithoutResources_Terraform(t *testing.T) {
 	})
 
 	t.Run("terraform settings", func(t *testing.T) {
-		srv, connRes := newTestService("hcl", terraformHclModulePath)
+		srv, connRes := newTestService(HclConnectionType, terraformHclModulePath)
 		require.NotEmpty(t, srv)
 		// simulate "terraform.settings.block"
 
@@ -157,7 +157,9 @@ func TestModuleWithoutResources_Terraform(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Empty(t, dataResp.Error)
-		assert.Nil(t, dataResp.Data)
+		assert.Nil(t, dataResp.Data.Value)
+		assert.Empty(t, dataResp.Data.Array)
+		assert.Empty(t, dataResp.Data.Map)
 	})
 }
 

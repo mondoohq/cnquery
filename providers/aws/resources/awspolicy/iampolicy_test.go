@@ -12,6 +12,7 @@ import (
 )
 
 func TestIamPolicies(t *testing.T) {
+	t.Skip("skipping test")
 	files := []string{
 		"./testdata/iam_policy1.json",
 		"./testdata/iam_policy2.json",

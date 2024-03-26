@@ -10,9 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDetectNameFromFile(t *testing.T) {
-	name := parseNameFromPath("/test/path/nested/terraform.tfstate")
-	assert.Equal(t, "nested", name)
+func TestDetectNameFromFile_Directory(t *testing.T) {
+	name := parseNameFromPath("./testdata/nested")
+	assert.Equal(t, "directory nested", name)
+}
+
+func TestDetectNameFromFile_File(t *testing.T) {
+	name := parseNameFromPath("./testdata/nested/terraform.tfstate")
+	assert.Equal(t, "terraform", name)
 }
 
 func TestDetectNameFromSsh(t *testing.T) {
