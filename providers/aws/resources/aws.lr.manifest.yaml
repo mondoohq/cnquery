@@ -1984,7 +1984,13 @@ resources:
         min_mondoo_version: 9.0.0
       engineVersion:
         min_mondoo_version: 9.0.0
+      hostedZoneId:
+        min_mondoo_version: 9.0.0
       id: {}
+      latestRestorableTime:
+        min_mondoo_version: 9.0.0
+      masterUsername:
+        min_mondoo_version: 9.0.0
       members: {}
       multiAZ:
         min_mondoo_version: 9.0.0
@@ -2039,6 +2045,10 @@ resources:
         min_mondoo_version: 9.0.0
       enhancedMonitoringResourceArn: {}
       id: {}
+      latestRestorableTime:
+        min_mondoo_version: 9.0.0
+      masterUsername:
+        min_mondoo_version: 9.0.0
       multiAZ: {}
       name: {}
       port:
@@ -2548,7 +2558,7 @@ resources:
       scope: {}
       subnets: {}
       tags: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
