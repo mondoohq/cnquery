@@ -75,10 +75,10 @@ type Findings struct {
 	Errors             []string
 	Certificates       []*x509.Certificate
 	NonSNIcertificates []*x509.Certificate
-	Revocations        map[string]*revocation
+	Revocations        map[string]*Revocation
 }
 
-type revocation struct {
+type Revocation struct {
 	At     time.Time
 	Via    string
 	Reason int
@@ -95,7 +95,7 @@ func New(proto string, domainName string, host string, port int) *Tester {
 			Versions:    map[string]bool{},
 			Ciphers:     map[string]bool{},
 			Extensions:  map[string]bool{},
-			Revocations: map[string]*revocation{},
+			Revocations: map[string]*Revocation{},
 		},
 		proto:      proto,
 		target:     target,
@@ -719,7 +719,7 @@ func (s *Tester) ocspRequest(cert *x509.Certificate, issuer *x509.Certificate) e
 	if ocspRes.RevokedAt.IsZero() {
 		s.Findings.Revocations[string(cert.Signature)] = nil
 	} else {
-		s.Findings.Revocations[string(cert.Signature)] = &revocation{
+		s.Findings.Revocations[string(cert.Signature)] = &Revocation{
 			At:     ocspRes.RevokedAt,
 			Via:    server,
 			Reason: ocspRes.RevocationReason,

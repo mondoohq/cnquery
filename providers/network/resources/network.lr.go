@@ -2150,12 +2150,17 @@ func (c *mqlTls) GetCertificates() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		vargParams := c.GetParams()
-		if vargParams.Error != nil {
-			return nil, vargParams.Error
+		vargSocket := c.GetSocket()
+		if vargSocket.Error != nil {
+			return nil, vargSocket.Error
 		}
 
-		return c.certificates(vargParams.Data)
+		vargDomainName := c.GetDomainName()
+		if vargDomainName.Error != nil {
+			return nil, vargDomainName.Error
+		}
+
+		return c.certificates(vargSocket.Data, vargDomainName.Data)
 	})
 }
 
@@ -2171,12 +2176,17 @@ func (c *mqlTls) GetNonSniCertificates() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		vargParams := c.GetParams()
-		if vargParams.Error != nil {
-			return nil, vargParams.Error
+		vargSocket := c.GetSocket()
+		if vargSocket.Error != nil {
+			return nil, vargSocket.Error
 		}
 
-		return c.nonSniCertificates(vargParams.Data)
+		vargDomainName := c.GetDomainName()
+		if vargDomainName.Error != nil {
+			return nil, vargDomainName.Error
+		}
+
+		return c.nonSniCertificates(vargSocket.Data, vargDomainName.Data)
 	})
 }
 
