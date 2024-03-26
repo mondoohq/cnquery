@@ -7,19 +7,19 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 )
 
 // be aware that images are prefixed with sha256:, while containers are not
-func (e *dockerEngineDiscovery) imageList() ([]types.ImageSummary, error) {
+func (e *dockerEngineDiscovery) imageList() ([]image.Summary, error) {
 	dc, err := e.client()
 	if err != nil {
 		return nil, err
 	}
 
-	return dc.ImageList(context.Background(), types.ImageListOptions{})
+	return dc.ImageList(context.Background(), image.ListOptions{})
 }
 
 func (e *dockerEngineDiscovery) ListImageShas() ([]string, error) {
