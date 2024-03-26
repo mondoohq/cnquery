@@ -71,7 +71,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/kms v1.15.8 // indirect
-	cloud.google.com/go/secretmanager v1.11.6 // indirect
+	cloud.google.com/go/secretmanager v1.12.0 // indirect
 	cloud.google.com/go/storage v1.39.1 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

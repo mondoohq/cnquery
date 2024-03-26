@@ -20,7 +20,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/kms v1.15.8 // indirect
-	cloud.google.com/go/secretmanager v1.11.6 // indirect
+	cloud.google.com/go/secretmanager v1.12.0 // indirect
 	cloud.google.com/go/storage v1.39.1 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
@@ -45,11 +45,11 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.2 // indirect
+	github.com/aws/aws-sdk-go v1.51.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.8 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.8 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.9 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect

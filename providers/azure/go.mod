@@ -32,7 +32,6 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.13.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.5.0
-	github.com/DataDog/gostackparse v0.7.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
@@ -48,7 +47,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/kms v1.15.8 // indirect
-	cloud.google.com/go/secretmanager v1.11.6 // indirect
+	cloud.google.com/go/secretmanager v1.12.0 // indirect
 	cloud.google.com/go/storage v1.39.1 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -74,11 +73,11 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.2 // indirect
+	github.com/aws/aws-sdk-go v1.51.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.8 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.8 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.9 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
