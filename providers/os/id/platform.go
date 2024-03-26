@@ -35,12 +35,12 @@ type PlatformInfo struct {
 	RelatedPlatformIDs []string
 }
 
-func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, error) {
+func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors []string) (*PlatformFingerprint, *inventory.Platform, error) {
 	var ok bool
 	if p == nil {
 		p, ok = detector.DetectOS(conn)
 		if !ok {
-			return nil, errors.New("cannot detect os")
+			return nil, nil, errors.New("cannot detect os")
 		}
 	}
 
@@ -99,7 +99,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 
 	// if we found zero platform ids something went wrong
 	if len(platformIds) == 0 {
-		return nil, errors.New("could not determine a platform identifier")
+		return nil, nil, errors.New("could not determine a platform identifier")
 	}
 
 	fingerprint.PlatformIDs = platformIds
@@ -111,7 +111,7 @@ func IdentifyPlatform(conn shared.Connection, p *inventory.Platform, idDetectors
 	}
 
 	log.Debug().Interface("id-detector", idDetectors).Strs("platform-ids", platformIds).Msg("detected platform ids")
-	return &fingerprint, nil
+	return &fingerprint, p, nil
 }
 
 func GatherNameForPlatformId(id string) string {
