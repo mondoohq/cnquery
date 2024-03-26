@@ -11,13 +11,10 @@ import (
 )
 
 func TestParseTarget(t *testing.T) {
-	t.Skip("needs to be fixed")
 	t.Run("parse snapshot target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
+			resourceGroup: "my-rg",
+			name:          "my-instance",
 		}
 		target := "my-other-snapshot"
 
@@ -35,10 +32,8 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse instance target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
+			resourceGroup: "my-rg",
+			name:          "my-instance",
 		}
 		target := "my-other-instance"
 
@@ -56,10 +51,8 @@ func TestParseTarget(t *testing.T) {
 	})
 	t.Run("parse disk target with just a resource name", func(t *testing.T) {
 		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
+			resourceGroup: "my-rg",
+			name:          "my-instance",
 		}
 		target := "my-disk"
 
@@ -76,12 +69,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, DiskTargetType, scanTarget.TargetType)
 	})
 	t.Run("parse snapshot target with a fully qualified Azure resource ID", func(t *testing.T) {
-		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
-		}
+		scanner := &azureScannerInstance{}
 		target := "/subscriptions/f1a2873a-6c27-4097-aa7c-3df51f103e91/resourceGroups/my-other-rg/providers/Microsoft.Compute/snapshots/test-snp"
 
 		conf := &inventory.Config{
@@ -97,12 +85,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, SnapshotTargetType, scanTarget.TargetType)
 	})
 	t.Run("parse instance target with a fully qualified Azure resource ID", func(t *testing.T) {
-		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
-		}
+		scanner := &azureScannerInstance{}
 		target := "/subscriptions/f1a2873a-6b27-4097-aa7c-3df51f103e96/resourceGroups/debian_group/providers/Microsoft.Compute/virtualMachines/debian"
 
 		conf := &inventory.Config{
@@ -118,12 +101,7 @@ func TestParseTarget(t *testing.T) {
 		assert.Equal(t, InstanceTargetType, scanTarget.TargetType)
 	})
 	t.Run("parse disk target with a fully qualified Azure resource ID", func(t *testing.T) {
-		scanner := &azureScannerInstance{
-			instanceInfo: &instanceInfo{
-				resourceGroup: "my-rg",
-				instanceName:  "my-instance",
-			},
-		}
+		scanner := &azureScannerInstance{}
 		target := "/subscriptions/f1a2873a-6b27-4097-aa7c-3df51f103e96/resourceGroups/debian_group/providers/Microsoft.Compute/disks/disk-1"
 
 		conf := &inventory.Config{
