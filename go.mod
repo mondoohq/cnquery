@@ -6,7 +6,7 @@ toolchain go1.22.0
 
 require (
 	cloud.google.com/go/logging v1.9.0
-	cloud.google.com/go/secretmanager v1.11.6
+	cloud.google.com/go/secretmanager v1.12.0
 	github.com/99designs/keyring v1.2.2
 	github.com/BurntSushi/toml v1.3.2
 	github.com/CycloneDX/cyclonedx-go v0.8.0
@@ -17,12 +17,12 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.51.2
+	github.com/aws/aws-sdk-go v1.51.7
 	github.com/aws/aws-sdk-go-v2 v1.26.0
-	github.com/aws/aws-sdk-go-v2/config v1.27.8
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.8
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.151.1
+	github.com/aws/aws-sdk-go-v2/config v1.27.9
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.9
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4
@@ -106,13 +106,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.3
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.3
 	// pin v0.28.4
-	k8s.io/component-base v0.28.4
+	k8s.io/component-base v0.29.3
 	// pin v0.28.4
-	k8s.io/kubelet v0.28.4
+	k8s.io/kubelet v0.29.3
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -405,7 +405,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.29.3 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	modernc.org/libc v1.45.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect

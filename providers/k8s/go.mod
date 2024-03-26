@@ -24,13 +24,13 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.8.4
 	// pin v0.28.4
-	k8s.io/api v0.28.4
+	k8s.io/api v0.29.3
 	// pin v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.3
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.3
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
@@ -43,7 +43,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/kms v1.15.8 // indirect
-	cloud.google.com/go/secretmanager v1.11.6 // indirect
+	cloud.google.com/go/secretmanager v1.12.0 // indirect
 	cloud.google.com/go/storage v1.39.1 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -71,15 +71,15 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.2 // indirect
+	github.com/aws/aws-sdk-go v1.51.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.8 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.8 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.9 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.151.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3 // indirect
@@ -384,9 +384,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
 	howett.net/plist v1.0.1 // indirect
-	k8s.io/component-base v0.28.4 // indirect
+	k8s.io/component-base v0.29.3 // indirect
 	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
-	k8s.io/kubelet v0.28.4 // indirect
+	k8s.io/kubelet v0.29.3 // indirect
 	modernc.org/libc v1.45.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
