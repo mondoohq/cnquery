@@ -1461,7 +1461,7 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   // The price class of the distribution
   priceClass string
   // CNAMEs aliases if any for this distribution
-  cnames []dict
+  cnames []string
 }
 
 // Amazon CloudFront distribution origin
