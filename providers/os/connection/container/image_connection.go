@@ -6,6 +6,7 @@ package container
 import (
 	"errors"
 	"os"
+	"slices"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -95,7 +96,9 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	if len(asset.PlatformIds) == 0 {
 		asset.PlatformIds = []string{identifier}
 	} else {
-		asset.PlatformIds = append(asset.PlatformIds, identifier)
+		if !slices.Contains(asset.PlatformIds, identifier) {
+			asset.PlatformIds = append(asset.PlatformIds, identifier)
+		}
 	}
 
 	// set the platform architecture using the image configuration
