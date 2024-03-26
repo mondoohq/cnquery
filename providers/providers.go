@@ -6,6 +6,7 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 	"io"
 	"net"
 	"net/http"
@@ -782,6 +783,66 @@ func readProviderDir(pdir string) (*Provider, error) {
 		Path:      pdir,
 		HasBinary: config.ProbeFile(bin),
 	}, nil
+}
+
+func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
+	if provider.Path == "" {
+		return nil, errors.New("cannot determine installation path for provider")
+	}
+
+	statPath := provider.confJSONPath()
+	stat, err := os.Stat(statPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if update.RefreshInterval > 0 {
+		mtime := stat.ModTime()
+		secs := time.Since(mtime).Seconds()
+		if secs < float64(update.RefreshInterval) {
+			lastRefresh := time.Since(mtime).String()
+			log.Debug().
+				Str("last-refresh", lastRefresh).
+				Str("provider", provider.Name).
+				Msg("no need to update provider")
+			return provider, nil
+		}
+	}
+
+	latest, err := LatestVersion(provider.Name)
+	if err != nil {
+		log.Warn().Msg(err.Error())
+		// we can just continue with the existing provider, no need to error up,
+		// the warning is enough since we are still functional
+		return provider, nil
+	}
+
+	semver := semver.Parser{}
+	diff, err := semver.Compare(provider.Version, latest)
+	if err != nil {
+		return nil, err
+	}
+	if diff >= 0 {
+		return provider, nil
+	}
+
+	log.Info().
+		Str("installed", provider.Version).
+		Str("latest", latest).
+		Msg("found a new version for '" + provider.Name + "' provider")
+	provider, err = installVersion(provider.Name, latest)
+	if err != nil {
+		return nil, err
+	}
+	PrintInstallResults([]*Provider{provider})
+	now := time.Now()
+	if err := os.Chtimes(statPath, now, now); err != nil {
+		log.Warn().
+			Str("provider", provider.Name).
+			Msg("failed to update refresh time on provider")
+	}
+
+	return provider, nil
 }
 
 func (p *Provider) LoadJSON() error {
