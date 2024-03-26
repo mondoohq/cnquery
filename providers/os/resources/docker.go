@@ -8,6 +8,7 @@ import (
 	"os"
 
 	docker_types "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/types"
@@ -59,7 +60,7 @@ func (p *mqlDocker) containers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	dContainers, err := cl.ContainerList(context.Background(), docker_types.ContainerListOptions{})
+	dContainers, err := cl.ContainerList(context.Background(), container.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4
 	github.com/aws/smithy-go v1.20.1
-	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240318154307-a1a918375412
+	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240323062759-1fd604ae58de
 	// pin v0.2.6
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.18.0
@@ -35,8 +35,8 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-	github.com/docker/cli v25.0.4+incompatible
-	github.com/docker/docker v25.0.4+incompatible
+	github.com/docker/cli v26.0.0+incompatible
+	github.com/docker/docker v26.0.0+incompatible
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-git/go-git/v5 v5.11.0
@@ -98,21 +98,21 @@ require (
 	golang.org/x/term v0.18.0
 	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.19.0
-	google.golang.org/genproto v0.0.0-20240318140521-94a12d6c2237
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237
+	google.golang.org/genproto v0.0.0-20240325203815-454cdb8f5daa
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.29.3
+	k8s.io/apimachinery v0.28.4
 	// pin v0.28.4
-	k8s.io/client-go v0.29.3
+	k8s.io/client-go v0.28.4
 	// pin v0.28.4
-	k8s.io/component-base v0.29.3
+	k8s.io/component-base v0.28.4
 	// pin v0.28.4
-	k8s.io/kubelet v0.29.3
+	k8s.io/kubelet v0.28.4
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -399,15 +399,15 @@ require (
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.170.0 // indirect
+	google.golang.org/api v0.171.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240325203815-454cdb8f5daa // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
-	k8s.io/api v0.29.3 // indirect
+	k8s.io/api v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	modernc.org/libc v1.45.2 // indirect
+	modernc.org/libc v1.47.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
@@ -425,6 +425,7 @@ require (
 	github.com/ckaznocha/intrange v0.1.1 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/karamaru-alpha/copyloopvar v1.0.9 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	go.uber.org/automaxprocs v1.5.3 // indirect
 )
