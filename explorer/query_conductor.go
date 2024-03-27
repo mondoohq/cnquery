@@ -377,6 +377,14 @@ func (s *LocalServices) StoreResults(ctx context.Context, req *StoreResultsReq) 
 	return globalEmpty, nil
 }
 
+func (s *LocalServices) GetResourcesData(ctx context.Context, req *EntityResourcesReq) (*EntityResourcesRes, error) {
+	res, err := s.DataLake.GetResources(ctx, req.EntityMrn, req.Resources)
+	return &EntityResourcesRes{
+		Resources: res,
+		EntityMrn: req.EntityMrn,
+	}, err
+}
+
 func (s *LocalServices) GetReport(ctx context.Context, req *EntityDataRequest) (*Report, error) {
 	return s.DataLake.GetReport(ctx, req.EntityMrn, req.DataMrn)
 }

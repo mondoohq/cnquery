@@ -461,6 +461,23 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	return nil
 }
 
+func (r *Runtime) EnableResourcesRecording() error {
+	if _, ok := r.recording.(NullRecording); !ok {
+		return nil
+	}
+
+	recording, err := NewRecording("", RecordingOptions{
+		DoRecord:        true,
+		PrettyPrintJSON: false,
+		DoNotSave:       true,
+	})
+	if err != nil {
+		return err
+	}
+
+	return r.SetRecording(recording)
+}
+
 func (r *Runtime) SetRecording(recording llx.Recording) error {
 	r.recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {

@@ -79,6 +79,20 @@ func (db *Db) GetResolvedPack(mrn string) (*explorer.ResolvedPack, error) {
 
 var errTypesDontMatch = errors.New("types don't match")
 
+// GetResources retrieves previously stored resources about an asset
+func (db *Db) GetResources(ctx context.Context, assetMrn string, req []*explorer.ResourceDataReq) ([]*llx.ResourceRecording, error) {
+	res := make([]*llx.ResourceRecording, len(req))
+	for i := range req {
+		rr := req[i]
+		raw, ok := db.cache.Get(dbIDData + assetMrn + "\x00" + rr.Resource + "\x00" + rr.Id)
+		if !ok {
+			return nil, errors.New("cannot find resource " + rr.Resource + " id=" + rr.Id + " on " + assetMrn)
+		}
+		res[i] = raw.(*llx.ResourceRecording)
+	}
+	return res, nil
+}
+
 // UpdateData sets the list of data value for a given asset and returns a list of updated IDs
 func (db *Db) UpdateData(ctx context.Context, assetMrn string, data map[string]*llx.Result) (map[string]types.Type, error) {
 	resolved, err := db.GetResolvedPack(assetMrn)

@@ -27,7 +27,7 @@ var mockProvider = Provider{
 				Flags: []plugin.Flag{
 					{
 						Long: "asset",
-						Type: plugin.FlagType_KeyValue,
+						Type: plugin.FlagType_String,
 						Desc: "the upstream asset MRN to connect with",
 					},
 				},
@@ -46,6 +46,10 @@ func (s *mockProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heart
 }
 
 func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
+	if req.Connector == "upstream" {
+		return s.parseUpstreamCLI(req)
+	}
+
 	return &plugin.ParseCLIRes{
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
@@ -57,7 +61,83 @@ func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCL
 	}, nil
 }
 
+func (s *mockProviderService) parseUpstreamCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
+	assetMrn := req.Flags["asset"]
+	if assetMrn == nil || len(assetMrn.Value) == 0 {
+		return nil, errors.New("please specify an asset MRN")
+	}
+
+	return &plugin.ParseCLIRes{
+		Asset: &inventory.Asset{
+			Mrn: string(assetMrn.Value),
+			Connections: []*inventory.Config{
+				{
+					Type: "mock",
+				},
+			},
+		},
+	}, nil
+}
+
+// TODO: Replace this entire call with a detector
+func assetinfo2providerName(asset *inventory.Asset) (string, error) {
+	if asset == nil {
+		return "", errors.New("no asset information provided to infer a provider")
+	}
+	if asset.Platform == nil {
+		return "", errors.New("no asset platform information provided to infer a provider")
+	}
+
+	switch asset.Platform.Kind {
+	case "container-image", "baremetal":
+		return "os", nil
+	case "aws":
+		return "aws", nil
+	case "azure":
+		return "azure", nil
+	}
+
+	return "", errors.New("cannot determine provider type for this upstream asset: " + asset.Platform.Name)
+}
+
 func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	// If an upstream asset was requested
+	if req.Asset.Mrn != "" {
+		recording, err := NewUpstreamRecording(req.Upstream, req.Asset.Mrn)
+		if err != nil {
+			return nil, err
+		}
+
+		urecord := recording.(*upstreamRecording)
+		providerName, err := assetinfo2providerName(urecord.asset)
+		if err != nil {
+			return nil, err
+		}
+
+		provider := Coordinator.Providers().Lookup(ProviderLookup{ProviderName: providerName})
+		if provider == nil {
+			return nil, errors.New("failed to look up provider for upstream recording with name=" + providerName)
+		}
+
+		addedProvider, err := s.runtime.addProvider(provider.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to init provider for connection in recording")
+		}
+
+		conn, err := addedProvider.Instance.Plugin.MockConnect(&plugin.ConnectReq{
+			Asset:    urecord.asset,
+			Features: req.Features,
+			Upstream: req.Upstream,
+		}, callback)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to init referenced provider")
+		}
+
+		addedProvider.Connection = conn
+		s.runtime.SetRecording(recording)
+		return conn, nil
+	}
+
 	// initialize all other providers from all asset connections in the recording
 	recording := s.runtime.Recording()
 	if recording == nil {

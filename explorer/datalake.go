@@ -49,6 +49,8 @@ type DataLake interface {
 	SetAssetResolvedPack(ctx context.Context, assetMrn string, resolved *ResolvedPack, version ResolvedVersion) error
 	// UpdateData sets the list of data value for a given asset and returns a list of updated IDs
 	UpdateData(ctx context.Context, assetMrn string, data map[string]*llx.Result) (map[string]types.Type, error)
+	// GetResources retrieves previously stored resources about an asset
+	GetResources(ctx context.Context, assetMrn string, req []*ResourceDataReq) ([]*llx.ResourceRecording, error)
 	// GetReport retrieves all scores and data for a given asset
 	GetReport(ctx context.Context, assetMrn string, packMrn string) (*Report, error)
 }

@@ -85,11 +85,12 @@ const (
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():      MassQueries,
-	PiperCode.String():        PiperCode,
-	BoolAssertions.String():   BoolAssertions,
-	MQLAssetContext.String():  MQLAssetContext,
-	ErrorsAsFailures.String(): ErrorsAsFailures,
+	MassQueries.String():        MassQueries,
+	PiperCode.String():          PiperCode,
+	BoolAssertions.String():     BoolAssertions,
+	MQLAssetContext.String():    MQLAssetContext,
+	ErrorsAsFailures.String():   ErrorsAsFailures,
+	StoreResourcesData.String(): StoreResourcesData,
 }
 
 // DefaultFeatures are a set of default flags that are active
