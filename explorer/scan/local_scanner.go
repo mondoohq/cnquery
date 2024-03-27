@@ -418,7 +418,7 @@ func HandleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime
 		details := resp.Details[asset.PlatformIds[0]]
 		asset.Mrn = details.AssetMrn
 		asset.Url = details.Url
-
+		runtime.AssetUpdated(asset)
 	}
 	return asset, nil
 }

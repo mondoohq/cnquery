@@ -144,7 +144,7 @@ func (n *readOnlyRecording) Save() error {
 func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
 	// we are severely lacking connection IDs.
-	found, _ := n.findAssetConnID(asset, conf)
+	found, _ := n.findAssetConnID(asset)
 	if found != -1 {
 		n.assets[connectionID] = &n.Assets[found]
 	}
@@ -401,29 +401,24 @@ func (asset *assetRecording) finalize() {
 	}
 }
 
-func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Config) (int, string) {
-	var id string
-	if asset.Mrn != "" {
-		id = asset.Mrn
-	} else if asset.Id != "" {
-		id = asset.Id
-	}
-
-	found := -1
-
-	if id != "" {
+func (r *recording) findAssetConnID(asset *inventory.Asset) (int, string) {
+	if asset.Mrn != "" || asset.Id != "" {
 		for i := range r.Assets {
-			if r.Assets[i].Asset.ID == id {
-				found = i
-				break
+			id := r.Assets[i].Asset.ID
+			if id == "" {
+				continue
 			}
-		}
-		if found != -1 {
-			return found, id
+			if id == asset.Mrn {
+				return i, asset.Mrn
+			}
+			if id == asset.Id {
+				return i, asset.Id
+			}
 		}
 	}
 
 	if asset.Platform != nil {
+		found := -1
 		for i := range r.Assets {
 			if r.Assets[i].Asset.Title == asset.Platform.Title {
 				found = i
@@ -435,11 +430,11 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 		}
 	}
 
-	return found, id
+	return -1, ""
 }
 
 func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
-	found, _ := r.findAssetConnID(asset, conf)
+	found, _ := r.findAssetConnID(asset)
 
 	if found == -1 {
 		id := asset.Mrn
@@ -469,7 +464,13 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 		found = len(r.Assets) - 1
 	}
 
+	// An asset is sometimes added to the recording, before it has its MRN assigned.
+	// This method may be called again, after the MRN has been assigned. In that
+	// case we make sure that the asset ID matches the MRN.
 	assetObj := &r.Assets[found]
+	if asset.Mrn != "" {
+		assetObj.Asset.ID = asset.Mrn
+	}
 
 	url := conf.ToUrl()
 	assetObj.connections[url] = &connectionRecording{
