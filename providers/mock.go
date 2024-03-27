@@ -14,11 +14,25 @@ var mockProvider = Provider{
 		Name:    "mock",
 		ID:      "go.mondoo.com/cnquery/v10/providers/mock",
 		Version: "9.0.0",
-		Connectors: []plugin.Connector{{
-			Name:  "mock",
-			Use:   "mock",
-			Short: "use a recording without an active connection",
-		}},
+		Connectors: []plugin.Connector{
+			{
+				Name:  "mock",
+				Use:   "mock",
+				Short: "use a recording without an active connection",
+			},
+			{
+				Name:  "upstream",
+				Use:   "upstream",
+				Short: "use upstream asset data",
+				Flags: []plugin.Flag{
+					{
+						Long: "asset",
+						Type: plugin.FlagType_KeyValue,
+						Desc: "the upstream asset MRN to connect with",
+					},
+				},
+			},
+		},
 	},
 }
 
@@ -34,9 +48,11 @@ func (s *mockProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heart
 func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	return &plugin.ParseCLIRes{
 		Asset: &inventory.Asset{
-			Connections: []*inventory.Config{{
-				Type: "mock",
-			}},
+			Connections: []*inventory.Config{
+				{
+					Type: "mock",
+				},
+			},
 		},
 	}, nil
 }

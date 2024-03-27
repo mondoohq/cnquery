@@ -338,6 +338,7 @@ type QueryConductor interface {
 	Resolve(context.Context, *ResolveReq) (*ResolvedPack, error)
 	StoreResults(context.Context, *StoreResultsReq) (*Empty, error)
 	GetReport(context.Context, *EntityDataRequest) (*Report, error)
+	GetResourcesData(context.Context, *EntityResourcesReq) (*EntityResourcesRes, error)
 	SynchronizeAssets(context.Context, *SynchronizeAssetsReq) (*SynchronizeAssetsResp, error)
 }
 
@@ -397,6 +398,11 @@ func (c *QueryConductorClient) GetReport(ctx context.Context, in *EntityDataRequ
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetReport"}, ""), in, out)
 	return out, err
 }
+func (c *QueryConductorClient) GetResourcesData(ctx context.Context, in *EntityResourcesReq) (*EntityResourcesRes, error) {
+	out := new(EntityResourcesRes)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetResourcesData"}, ""), in, out)
+	return out, err
+}
 func (c *QueryConductorClient) SynchronizeAssets(ctx context.Context, in *SynchronizeAssetsReq) (*SynchronizeAssetsResp, error) {
 	out := new(SynchronizeAssetsResp)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/SynchronizeAssets"}, ""), in, out)
@@ -431,6 +437,7 @@ func NewQueryConductorServer(handler QueryConductor, opts ...QueryConductorServe
 			"Resolve":           srv.Resolve,
 			"StoreResults":      srv.StoreResults,
 			"GetReport":         srv.GetReport,
+			"GetResourcesData":  srv.GetResourcesData,
 			"SynchronizeAssets": srv.SynchronizeAssets,
 		},
 	}
@@ -585,6 +592,30 @@ func (p *QueryConductorServer) GetReport(ctx context.Context, reqBytes *[]byte) 
 		return nil, err
 	}
 	return p.handler.GetReport(ctx, &req)
+}
+func (p *QueryConductorServer) GetResourcesData(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req EntityResourcesReq
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.GetResourcesData(ctx, &req)
 }
 func (p *QueryConductorServer) SynchronizeAssets(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req SynchronizeAssetsReq

@@ -210,7 +210,7 @@ func (x AssignmentDelta_Action) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AssignmentDelta_Action.Descriptor instead.
 func (AssignmentDelta_Action) EnumDescriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{36, 0}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{39, 0}
 }
 
 type Bundle struct {
@@ -2568,6 +2568,179 @@ func (x *Report) GetResolvedVersion() string {
 	return ""
 }
 
+type EntityResourcesReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	EntityMrn string             `protobuf:"bytes,1,opt,name=entity_mrn,json=entityMrn,proto3" json:"entity_mrn,omitempty"`
+	Resources []*ResourceDataReq `protobuf:"bytes,2,rep,name=resources,proto3" json:"resources,omitempty"`
+}
+
+func (x *EntityResourcesReq) Reset() {
+	*x = EntityResourcesReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cnquery_explorer_proto_msgTypes[33]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EntityResourcesReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EntityResourcesReq) ProtoMessage() {}
+
+func (x *EntityResourcesReq) ProtoReflect() protoreflect.Message {
+	mi := &file_cnquery_explorer_proto_msgTypes[33]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EntityResourcesReq.ProtoReflect.Descriptor instead.
+func (*EntityResourcesReq) Descriptor() ([]byte, []int) {
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *EntityResourcesReq) GetEntityMrn() string {
+	if x != nil {
+		return x.EntityMrn
+	}
+	return ""
+}
+
+func (x *EntityResourcesReq) GetResources() []*ResourceDataReq {
+	if x != nil {
+		return x.Resources
+	}
+	return nil
+}
+
+type ResourceDataReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Resource string   `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
+	Id       string   `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Fields   []string `protobuf:"bytes,3,rep,name=fields,proto3" json:"fields,omitempty"`
+}
+
+func (x *ResourceDataReq) Reset() {
+	*x = ResourceDataReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cnquery_explorer_proto_msgTypes[34]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ResourceDataReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceDataReq) ProtoMessage() {}
+
+func (x *ResourceDataReq) ProtoReflect() protoreflect.Message {
+	mi := &file_cnquery_explorer_proto_msgTypes[34]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceDataReq.ProtoReflect.Descriptor instead.
+func (*ResourceDataReq) Descriptor() ([]byte, []int) {
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ResourceDataReq) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *ResourceDataReq) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ResourceDataReq) GetFields() []string {
+	if x != nil {
+		return x.Fields
+	}
+	return nil
+}
+
+type EntityResourcesRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	EntityMrn string                   `protobuf:"bytes,1,opt,name=entity_mrn,json=entityMrn,proto3" json:"entity_mrn,omitempty"`
+	Resources []*llx.ResourceRecording `protobuf:"bytes,4,rep,name=resources,proto3" json:"resources,omitempty"`
+}
+
+func (x *EntityResourcesRes) Reset() {
+	*x = EntityResourcesRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cnquery_explorer_proto_msgTypes[35]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EntityResourcesRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EntityResourcesRes) ProtoMessage() {}
+
+func (x *EntityResourcesRes) ProtoReflect() protoreflect.Message {
+	mi := &file_cnquery_explorer_proto_msgTypes[35]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EntityResourcesRes.ProtoReflect.Descriptor instead.
+func (*EntityResourcesRes) Descriptor() ([]byte, []int) {
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *EntityResourcesRes) GetEntityMrn() string {
+	if x != nil {
+		return x.EntityMrn
+	}
+	return ""
+}
+
+func (x *EntityResourcesRes) GetResources() []*llx.ResourceRecording {
+	if x != nil {
+		return x.Resources
+	}
+	return nil
+}
+
 // Asset is a lean layer of information about an asset
 type Asset struct {
 	state         protoimpl.MessageState
@@ -2581,7 +2754,7 @@ type Asset struct {
 func (x *Asset) Reset() {
 	*x = Asset{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[33]
+		mi := &file_cnquery_explorer_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2594,7 +2767,7 @@ func (x *Asset) String() string {
 func (*Asset) ProtoMessage() {}
 
 func (x *Asset) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[33]
+	mi := &file_cnquery_explorer_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2607,7 +2780,7 @@ func (x *Asset) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Asset.ProtoReflect.Descriptor instead.
 func (*Asset) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{33}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *Asset) GetMrn() string {
@@ -2639,7 +2812,7 @@ type ReportCollection struct {
 func (x *ReportCollection) Reset() {
 	*x = ReportCollection{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[34]
+		mi := &file_cnquery_explorer_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2652,7 +2825,7 @@ func (x *ReportCollection) String() string {
 func (*ReportCollection) ProtoMessage() {}
 
 func (x *ReportCollection) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[34]
+	mi := &file_cnquery_explorer_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2665,7 +2838,7 @@ func (x *ReportCollection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCollection.ProtoReflect.Descriptor instead.
 func (*ReportCollection) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{34}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ReportCollection) GetAssets() map[string]*Asset {
@@ -2719,7 +2892,7 @@ type ErrorStatus struct {
 func (x *ErrorStatus) Reset() {
 	*x = ErrorStatus{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[35]
+		mi := &file_cnquery_explorer_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2732,7 +2905,7 @@ func (x *ErrorStatus) String() string {
 func (*ErrorStatus) ProtoMessage() {}
 
 func (x *ErrorStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[35]
+	mi := &file_cnquery_explorer_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2745,7 +2918,7 @@ func (x *ErrorStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ErrorStatus.ProtoReflect.Descriptor instead.
 func (*ErrorStatus) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{35}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ErrorStatus) GetCode() int32 {
@@ -2781,7 +2954,7 @@ type AssignmentDelta struct {
 func (x *AssignmentDelta) Reset() {
 	*x = AssignmentDelta{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[36]
+		mi := &file_cnquery_explorer_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2794,7 +2967,7 @@ func (x *AssignmentDelta) String() string {
 func (*AssignmentDelta) ProtoMessage() {}
 
 func (x *AssignmentDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[36]
+	mi := &file_cnquery_explorer_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2807,7 +2980,7 @@ func (x *AssignmentDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignmentDelta.ProtoReflect.Descriptor instead.
 func (*AssignmentDelta) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{36}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *AssignmentDelta) GetMrn() string {
@@ -2836,7 +3009,7 @@ type BundleMutationDelta struct {
 func (x *BundleMutationDelta) Reset() {
 	*x = BundleMutationDelta{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[37]
+		mi := &file_cnquery_explorer_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2849,7 +3022,7 @@ func (x *BundleMutationDelta) String() string {
 func (*BundleMutationDelta) ProtoMessage() {}
 
 func (x *BundleMutationDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[37]
+	mi := &file_cnquery_explorer_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2862,7 +3035,7 @@ func (x *BundleMutationDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BundleMutationDelta.ProtoReflect.Descriptor instead.
 func (*BundleMutationDelta) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{37}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *BundleMutationDelta) GetOwnerMrn() string {
@@ -2891,7 +3064,7 @@ type SynchronizeAssetsReq struct {
 func (x *SynchronizeAssetsReq) Reset() {
 	*x = SynchronizeAssetsReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[38]
+		mi := &file_cnquery_explorer_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2904,7 +3077,7 @@ func (x *SynchronizeAssetsReq) String() string {
 func (*SynchronizeAssetsReq) ProtoMessage() {}
 
 func (x *SynchronizeAssetsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[38]
+	mi := &file_cnquery_explorer_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2917,7 +3090,7 @@ func (x *SynchronizeAssetsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SynchronizeAssetsReq.ProtoReflect.Descriptor instead.
 func (*SynchronizeAssetsReq) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{38}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *SynchronizeAssetsReq) GetSpaceMrn() string {
@@ -2947,7 +3120,7 @@ type SynchronizeAssetsRespAssetDetail struct {
 func (x *SynchronizeAssetsRespAssetDetail) Reset() {
 	*x = SynchronizeAssetsRespAssetDetail{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[39]
+		mi := &file_cnquery_explorer_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2960,7 +3133,7 @@ func (x *SynchronizeAssetsRespAssetDetail) String() string {
 func (*SynchronizeAssetsRespAssetDetail) ProtoMessage() {}
 
 func (x *SynchronizeAssetsRespAssetDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[39]
+	mi := &file_cnquery_explorer_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2973,7 +3146,7 @@ func (x *SynchronizeAssetsRespAssetDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SynchronizeAssetsRespAssetDetail.ProtoReflect.Descriptor instead.
 func (*SynchronizeAssetsRespAssetDetail) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{39}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *SynchronizeAssetsRespAssetDetail) GetPlatformMrn() string {
@@ -3008,7 +3181,7 @@ type SynchronizeAssetsResp struct {
 func (x *SynchronizeAssetsResp) Reset() {
 	*x = SynchronizeAssetsResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[40]
+		mi := &file_cnquery_explorer_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3021,7 +3194,7 @@ func (x *SynchronizeAssetsResp) String() string {
 func (*SynchronizeAssetsResp) ProtoMessage() {}
 
 func (x *SynchronizeAssetsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[40]
+	mi := &file_cnquery_explorer_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3034,7 +3207,7 @@ func (x *SynchronizeAssetsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SynchronizeAssetsResp.ProtoReflect.Descriptor instead.
 func (*SynchronizeAssetsResp) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{40}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *SynchronizeAssetsResp) GetDetails() map[string]*SynchronizeAssetsRespAssetDetail {
@@ -3055,7 +3228,7 @@ type ImpactValue struct {
 func (x *ImpactValue) Reset() {
 	*x = ImpactValue{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cnquery_explorer_proto_msgTypes[41]
+		mi := &file_cnquery_explorer_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3068,7 +3241,7 @@ func (x *ImpactValue) String() string {
 func (*ImpactValue) ProtoMessage() {}
 
 func (x *ImpactValue) ProtoReflect() protoreflect.Message {
-	mi := &file_cnquery_explorer_proto_msgTypes[41]
+	mi := &file_cnquery_explorer_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3081,7 +3254,7 @@ func (x *ImpactValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImpactValue.ProtoReflect.Descriptor instead.
 func (*ImpactValue) Descriptor() ([]byte, []int) {
-	return file_cnquery_explorer_proto_rawDescGZIP(), []int{41}
+	return file_cnquery_explorer_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ImpactValue) GetValue() int32 {
@@ -3470,6 +3643,26 @@ var file_cnquery_explorer_proto_rawDesc = []byte{
 	0x79, 0x12, 0x29, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x13, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x6c, 0x6c, 0x78, 0x2e, 0x52,
 	0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
+	0x22, 0x74, 0x0a, 0x12, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x12, 0x1d, 0x0a, 0x0a, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79,
+	0x5f, 0x6d, 0x72, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x65, 0x6e, 0x74, 0x69,
+	0x74, 0x79, 0x4d, 0x72, 0x6e, 0x12, 0x3f, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x52, 0x09, 0x72, 0x65, 0x73,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x22, 0x55, 0x0a, 0x0f, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x73,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x73,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x18,
+	0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x22, 0x71, 0x0a,
+	0x12, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73,
+	0x52, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x5f, 0x6d, 0x72,
+	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x4d,
+	0x72, 0x6e, 0x12, 0x3c, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x18,
+	0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x6c, 0x6c, 0x78, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73,
 	0x22, 0x2d, 0x0a, 0x05, 0x41, 0x73, 0x73, 0x65, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6d, 0x72, 0x6e,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6d, 0x72, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x6e,
 	0x61, 0x6d, 0x65, 0x18, 0x12, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22,
@@ -3627,7 +3820,7 @@ var file_cnquery_explorer_proto_rawDesc = []byte{
 	0x21, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72,
 	0x65, 0x72, 0x2e, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x73, 0x52,
 	0x65, 0x71, 0x1a, 0x16, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70,
-	0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x55, 0x52, 0x4c, 0x73, 0x22, 0x00, 0x32, 0xaa, 0x04, 0x0a,
+	0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x55, 0x52, 0x4c, 0x73, 0x22, 0x00, 0x32, 0x8c, 0x05, 0x0a,
 	0x0e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x12,
 	0x41, 0x0a, 0x06, 0x41, 0x73, 0x73, 0x69, 0x67, 0x6e, 0x12, 0x1c, 0x2e, 0x63, 0x6e, 0x71, 0x75,
 	0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x41, 0x73, 0x73,
@@ -3656,16 +3849,22 @@ var file_cnquery_explorer_proto_rawDesc = []byte{
 	0x72, 0x65, 0x72, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65,
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
 	0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x22,
-	0x00, 0x12, 0x66, 0x0a, 0x11, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x69, 0x7a, 0x65,
-	0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x26, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72,
-	0x6f, 0x6e, 0x69, 0x7a, 0x65, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x27,
-	0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65,
-	0x72, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x69, 0x7a, 0x65, 0x41, 0x73, 0x73,
-	0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x67, 0x6f, 0x2e,
-	0x6d, 0x6f, 0x6e, 0x64, 0x6f, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6e, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x2f, 0x76, 0x31, 0x30, 0x2f, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x00, 0x12, 0x60, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x73, 0x44, 0x61, 0x74, 0x61, 0x12, 0x24, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x52,
+	0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x24, 0x2e, 0x63, 0x6e,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x45,
+	0x6e, 0x74, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x52, 0x65,
+	0x73, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x69,
+	0x7a, 0x65, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x26, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65, 0x72, 0x2e, 0x53, 0x79, 0x6e, 0x63,
+	0x68, 0x72, 0x6f, 0x6e, 0x69, 0x7a, 0x65, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x71,
+	0x1a, 0x27, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x65, 0x78, 0x70, 0x6c, 0x6f,
+	0x72, 0x65, 0x72, 0x2e, 0x53, 0x79, 0x6e, 0x63, 0x68, 0x72, 0x6f, 0x6e, 0x69, 0x7a, 0x65, 0x41,
+	0x73, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x00, 0x42, 0x24, 0x5a, 0x22, 0x67,
+	0x6f, 0x2e, 0x6d, 0x6f, 0x6e, 0x64, 0x6f, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6e, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x30, 0x2f, 0x65, 0x78, 0x70, 0x6c, 0x6f, 0x72, 0x65,
+	0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3681,7 +3880,7 @@ func file_cnquery_explorer_proto_rawDescGZIP() []byte {
 }
 
 var file_cnquery_explorer_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_cnquery_explorer_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
+var file_cnquery_explorer_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
 var file_cnquery_explorer_proto_goTypes = []interface{}{
 	(Action)(0),                              // 0: cnquery.explorer.Action
 	(ScoringSystem)(0),                       // 1: cnquery.explorer.ScoringSystem
@@ -3719,36 +3918,39 @@ var file_cnquery_explorer_proto_goTypes = []interface{}{
 	(*StoreResultsReq)(nil),                  // 33: cnquery.explorer.StoreResultsReq
 	(*EntityDataRequest)(nil),                // 34: cnquery.explorer.EntityDataRequest
 	(*Report)(nil),                           // 35: cnquery.explorer.Report
-	(*Asset)(nil),                            // 36: cnquery.explorer.Asset
-	(*ReportCollection)(nil),                 // 37: cnquery.explorer.ReportCollection
-	(*ErrorStatus)(nil),                      // 38: cnquery.explorer.ErrorStatus
-	(*AssignmentDelta)(nil),                  // 39: cnquery.explorer.AssignmentDelta
-	(*BundleMutationDelta)(nil),              // 40: cnquery.explorer.BundleMutationDelta
-	(*SynchronizeAssetsReq)(nil),             // 41: cnquery.explorer.SynchronizeAssetsReq
-	(*SynchronizeAssetsRespAssetDetail)(nil), // 42: cnquery.explorer.SynchronizeAssetsRespAssetDetail
-	(*SynchronizeAssetsResp)(nil),            // 43: cnquery.explorer.SynchronizeAssetsResp
-	(*ImpactValue)(nil),                      // 44: cnquery.explorer.ImpactValue
-	nil,                                      // 45: cnquery.explorer.QueryPack.AssetFiltersEntry
-	nil,                                      // 46: cnquery.explorer.QueryPack.TagsEntry
-	nil,                                      // 47: cnquery.explorer.Filters.ItemsEntry
-	nil,                                      // 48: cnquery.explorer.Mquery.TagsEntry
-	nil,                                      // 49: cnquery.explorer.ExecutionJob.QueriesEntry
-	nil,                                      // 50: cnquery.explorer.ExecutionJob.DatapointsEntry
-	nil,                                      // 51: cnquery.explorer.ExecutionQuery.PropertiesEntry
-	nil,                                      // 52: cnquery.explorer.StoreResultsReq.DataEntry
-	nil,                                      // 53: cnquery.explorer.StoreResultsReq.ResourcesEntry
-	nil,                                      // 54: cnquery.explorer.Report.DataEntry
-	nil,                                      // 55: cnquery.explorer.ReportCollection.AssetsEntry
-	nil,                                      // 56: cnquery.explorer.ReportCollection.ReportsEntry
-	nil,                                      // 57: cnquery.explorer.ReportCollection.ErrorsEntry
-	nil,                                      // 58: cnquery.explorer.ReportCollection.ResolvedEntry
-	nil,                                      // 59: cnquery.explorer.BundleMutationDelta.DeltasEntry
-	nil,                                      // 60: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
-	(*llx.CodeBundle)(nil),                   // 61: cnquery.llx.CodeBundle
-	(*anypb.Any)(nil),                        // 62: google.protobuf.Any
-	(*inventory.Asset)(nil),                  // 63: cnquery.providers.v1.Asset
-	(*llx.Result)(nil),                       // 64: cnquery.llx.Result
+	(*EntityResourcesReq)(nil),               // 36: cnquery.explorer.EntityResourcesReq
+	(*ResourceDataReq)(nil),                  // 37: cnquery.explorer.ResourceDataReq
+	(*EntityResourcesRes)(nil),               // 38: cnquery.explorer.EntityResourcesRes
+	(*Asset)(nil),                            // 39: cnquery.explorer.Asset
+	(*ReportCollection)(nil),                 // 40: cnquery.explorer.ReportCollection
+	(*ErrorStatus)(nil),                      // 41: cnquery.explorer.ErrorStatus
+	(*AssignmentDelta)(nil),                  // 42: cnquery.explorer.AssignmentDelta
+	(*BundleMutationDelta)(nil),              // 43: cnquery.explorer.BundleMutationDelta
+	(*SynchronizeAssetsReq)(nil),             // 44: cnquery.explorer.SynchronizeAssetsReq
+	(*SynchronizeAssetsRespAssetDetail)(nil), // 45: cnquery.explorer.SynchronizeAssetsRespAssetDetail
+	(*SynchronizeAssetsResp)(nil),            // 46: cnquery.explorer.SynchronizeAssetsResp
+	(*ImpactValue)(nil),                      // 47: cnquery.explorer.ImpactValue
+	nil,                                      // 48: cnquery.explorer.QueryPack.AssetFiltersEntry
+	nil,                                      // 49: cnquery.explorer.QueryPack.TagsEntry
+	nil,                                      // 50: cnquery.explorer.Filters.ItemsEntry
+	nil,                                      // 51: cnquery.explorer.Mquery.TagsEntry
+	nil,                                      // 52: cnquery.explorer.ExecutionJob.QueriesEntry
+	nil,                                      // 53: cnquery.explorer.ExecutionJob.DatapointsEntry
+	nil,                                      // 54: cnquery.explorer.ExecutionQuery.PropertiesEntry
+	nil,                                      // 55: cnquery.explorer.StoreResultsReq.DataEntry
+	nil,                                      // 56: cnquery.explorer.StoreResultsReq.ResourcesEntry
+	nil,                                      // 57: cnquery.explorer.Report.DataEntry
+	nil,                                      // 58: cnquery.explorer.ReportCollection.AssetsEntry
+	nil,                                      // 59: cnquery.explorer.ReportCollection.ReportsEntry
+	nil,                                      // 60: cnquery.explorer.ReportCollection.ErrorsEntry
+	nil,                                      // 61: cnquery.explorer.ReportCollection.ResolvedEntry
+	nil,                                      // 62: cnquery.explorer.BundleMutationDelta.DeltasEntry
+	nil,                                      // 63: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
+	(*llx.CodeBundle)(nil),                   // 64: cnquery.llx.CodeBundle
 	(*llx.ResourceRecording)(nil),            // 65: cnquery.llx.ResourceRecording
+	(*anypb.Any)(nil),                        // 66: google.protobuf.Any
+	(*inventory.Asset)(nil),                  // 67: cnquery.providers.v1.Asset
+	(*llx.Result)(nil),                       // 68: cnquery.llx.Result
 }
 var file_cnquery_explorer_proto_depIdxs = []int32{
 	5,  // 0: cnquery.explorer.Bundle.packs:type_name -> cnquery.explorer.QueryPack
@@ -3756,7 +3958,7 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	10, // 2: cnquery.explorer.Bundle.props:type_name -> cnquery.explorer.Property
 	11, // 3: cnquery.explorer.QueryGroup.queries:type_name -> cnquery.explorer.Mquery
 	7,  // 4: cnquery.explorer.QueryGroup.filters:type_name -> cnquery.explorer.Filters
-	45, // 5: cnquery.explorer.QueryPack.asset_filters:type_name -> cnquery.explorer.QueryPack.AssetFiltersEntry
+	48, // 5: cnquery.explorer.QueryPack.asset_filters:type_name -> cnquery.explorer.QueryPack.AssetFiltersEntry
 	11, // 6: cnquery.explorer.QueryPack.queries:type_name -> cnquery.explorer.Mquery
 	4,  // 7: cnquery.explorer.QueryPack.groups:type_name -> cnquery.explorer.QueryGroup
 	10, // 8: cnquery.explorer.QueryPack.props:type_name -> cnquery.explorer.Property
@@ -3764,96 +3966,100 @@ var file_cnquery_explorer_proto_depIdxs = []int32{
 	7,  // 10: cnquery.explorer.QueryPack.filters:type_name -> cnquery.explorer.Filters
 	13, // 11: cnquery.explorer.QueryPack.docs:type_name -> cnquery.explorer.QueryPackDocs
 	17, // 12: cnquery.explorer.QueryPack.authors:type_name -> cnquery.explorer.Author
-	46, // 13: cnquery.explorer.QueryPack.tags:type_name -> cnquery.explorer.QueryPack.TagsEntry
-	47, // 14: cnquery.explorer.Filters.items:type_name -> cnquery.explorer.Filters.ItemsEntry
+	49, // 13: cnquery.explorer.QueryPack.tags:type_name -> cnquery.explorer.QueryPack.TagsEntry
+	50, // 14: cnquery.explorer.Filters.items:type_name -> cnquery.explorer.Filters.ItemsEntry
 	5,  // 15: cnquery.explorer.QueryPacks.items:type_name -> cnquery.explorer.QueryPack
 	18, // 16: cnquery.explorer.Docs.refs:type_name -> cnquery.explorer.MqueryRef
 	6,  // 17: cnquery.explorer.Property.for:type_name -> cnquery.explorer.ObjectRef
 	18, // 18: cnquery.explorer.Mquery.refs:type_name -> cnquery.explorer.MqueryRef
 	14, // 19: cnquery.explorer.Mquery.docs:type_name -> cnquery.explorer.MqueryDocs
 	12, // 20: cnquery.explorer.Mquery.impact:type_name -> cnquery.explorer.Impact
-	48, // 21: cnquery.explorer.Mquery.tags:type_name -> cnquery.explorer.Mquery.TagsEntry
+	51, // 21: cnquery.explorer.Mquery.tags:type_name -> cnquery.explorer.Mquery.TagsEntry
 	7,  // 22: cnquery.explorer.Mquery.filters:type_name -> cnquery.explorer.Filters
 	10, // 23: cnquery.explorer.Mquery.props:type_name -> cnquery.explorer.Property
 	6,  // 24: cnquery.explorer.Mquery.variants:type_name -> cnquery.explorer.ObjectRef
 	0,  // 25: cnquery.explorer.Mquery.action:type_name -> cnquery.explorer.Action
-	44, // 26: cnquery.explorer.Impact.value:type_name -> cnquery.explorer.ImpactValue
+	47, // 26: cnquery.explorer.Impact.value:type_name -> cnquery.explorer.ImpactValue
 	1,  // 27: cnquery.explorer.Impact.scoring:type_name -> cnquery.explorer.ScoringSystem
 	0,  // 28: cnquery.explorer.Impact.action:type_name -> cnquery.explorer.Action
 	18, // 29: cnquery.explorer.MqueryDocs.refs:type_name -> cnquery.explorer.MqueryRef
 	15, // 30: cnquery.explorer.MqueryDocs.remediation:type_name -> cnquery.explorer.Remediation
 	16, // 31: cnquery.explorer.Remediation.items:type_name -> cnquery.explorer.TypedDoc
-	49, // 32: cnquery.explorer.ExecutionJob.queries:type_name -> cnquery.explorer.ExecutionJob.QueriesEntry
-	50, // 33: cnquery.explorer.ExecutionJob.datapoints:type_name -> cnquery.explorer.ExecutionJob.DatapointsEntry
-	51, // 34: cnquery.explorer.ExecutionQuery.properties:type_name -> cnquery.explorer.ExecutionQuery.PropertiesEntry
-	61, // 35: cnquery.explorer.ExecutionQuery.code:type_name -> cnquery.llx.CodeBundle
+	52, // 32: cnquery.explorer.ExecutionJob.queries:type_name -> cnquery.explorer.ExecutionJob.QueriesEntry
+	53, // 33: cnquery.explorer.ExecutionJob.datapoints:type_name -> cnquery.explorer.ExecutionJob.DatapointsEntry
+	54, // 34: cnquery.explorer.ExecutionQuery.properties:type_name -> cnquery.explorer.ExecutionQuery.PropertiesEntry
+	64, // 35: cnquery.explorer.ExecutionQuery.code:type_name -> cnquery.llx.CodeBundle
 	11, // 36: cnquery.explorer.Mqueries.items:type_name -> cnquery.explorer.Mquery
 	10, // 37: cnquery.explorer.PropsReq.props:type_name -> cnquery.explorer.Property
 	11, // 38: cnquery.explorer.ResolveReq.asset_filters:type_name -> cnquery.explorer.Mquery
 	19, // 39: cnquery.explorer.ResolvedPack.execution_job:type_name -> cnquery.explorer.ExecutionJob
 	11, // 40: cnquery.explorer.ResolvedPack.filters:type_name -> cnquery.explorer.Mquery
 	11, // 41: cnquery.explorer.UpdateAssetJobsReq.asset_filters:type_name -> cnquery.explorer.Mquery
-	52, // 42: cnquery.explorer.StoreResultsReq.data:type_name -> cnquery.explorer.StoreResultsReq.DataEntry
-	53, // 43: cnquery.explorer.StoreResultsReq.resources:type_name -> cnquery.explorer.StoreResultsReq.ResourcesEntry
-	54, // 44: cnquery.explorer.Report.data:type_name -> cnquery.explorer.Report.DataEntry
-	55, // 45: cnquery.explorer.ReportCollection.assets:type_name -> cnquery.explorer.ReportCollection.AssetsEntry
-	3,  // 46: cnquery.explorer.ReportCollection.bundle:type_name -> cnquery.explorer.Bundle
-	56, // 47: cnquery.explorer.ReportCollection.reports:type_name -> cnquery.explorer.ReportCollection.ReportsEntry
-	57, // 48: cnquery.explorer.ReportCollection.errors:type_name -> cnquery.explorer.ReportCollection.ErrorsEntry
-	58, // 49: cnquery.explorer.ReportCollection.resolved:type_name -> cnquery.explorer.ReportCollection.ResolvedEntry
-	62, // 50: cnquery.explorer.ErrorStatus.details:type_name -> google.protobuf.Any
-	2,  // 51: cnquery.explorer.AssignmentDelta.action:type_name -> cnquery.explorer.AssignmentDelta.Action
-	59, // 52: cnquery.explorer.BundleMutationDelta.deltas:type_name -> cnquery.explorer.BundleMutationDelta.DeltasEntry
-	63, // 53: cnquery.explorer.SynchronizeAssetsReq.list:type_name -> cnquery.providers.v1.Asset
-	60, // 54: cnquery.explorer.SynchronizeAssetsResp.details:type_name -> cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
-	11, // 55: cnquery.explorer.QueryPack.AssetFiltersEntry.value:type_name -> cnquery.explorer.Mquery
-	11, // 56: cnquery.explorer.Filters.ItemsEntry.value:type_name -> cnquery.explorer.Mquery
-	21, // 57: cnquery.explorer.ExecutionJob.QueriesEntry.value:type_name -> cnquery.explorer.ExecutionQuery
-	20, // 58: cnquery.explorer.ExecutionJob.DatapointsEntry.value:type_name -> cnquery.explorer.DataQueryInfo
-	64, // 59: cnquery.explorer.StoreResultsReq.DataEntry.value:type_name -> cnquery.llx.Result
-	65, // 60: cnquery.explorer.StoreResultsReq.ResourcesEntry.value:type_name -> cnquery.llx.ResourceRecording
-	64, // 61: cnquery.explorer.Report.DataEntry.value:type_name -> cnquery.llx.Result
-	36, // 62: cnquery.explorer.ReportCollection.AssetsEntry.value:type_name -> cnquery.explorer.Asset
-	35, // 63: cnquery.explorer.ReportCollection.ReportsEntry.value:type_name -> cnquery.explorer.Report
-	38, // 64: cnquery.explorer.ReportCollection.ErrorsEntry.value:type_name -> cnquery.explorer.ErrorStatus
-	31, // 65: cnquery.explorer.ReportCollection.ResolvedEntry.value:type_name -> cnquery.explorer.ResolvedPack
-	39, // 66: cnquery.explorer.BundleMutationDelta.DeltasEntry.value:type_name -> cnquery.explorer.AssignmentDelta
-	42, // 67: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry.value:type_name -> cnquery.explorer.SynchronizeAssetsRespAssetDetail
-	3,  // 68: cnquery.explorer.QueryHub.SetBundle:input_type -> cnquery.explorer.Bundle
-	23, // 69: cnquery.explorer.QueryHub.DeleteQueryPack:input_type -> cnquery.explorer.Mrn
-	3,  // 70: cnquery.explorer.QueryHub.ValidateBundle:input_type -> cnquery.explorer.Bundle
-	23, // 71: cnquery.explorer.QueryHub.GetBundle:input_type -> cnquery.explorer.Mrn
-	23, // 72: cnquery.explorer.QueryHub.GetQueryPack:input_type -> cnquery.explorer.Mrn
-	23, // 73: cnquery.explorer.QueryHub.GetFilters:input_type -> cnquery.explorer.Mrn
-	25, // 74: cnquery.explorer.QueryHub.List:input_type -> cnquery.explorer.ListReq
-	26, // 75: cnquery.explorer.QueryHub.DefaultPacks:input_type -> cnquery.explorer.DefaultPacksReq
-	28, // 76: cnquery.explorer.QueryConductor.Assign:input_type -> cnquery.explorer.Assignment
-	28, // 77: cnquery.explorer.QueryConductor.Unassign:input_type -> cnquery.explorer.Assignment
-	29, // 78: cnquery.explorer.QueryConductor.SetProps:input_type -> cnquery.explorer.PropsReq
-	30, // 79: cnquery.explorer.QueryConductor.Resolve:input_type -> cnquery.explorer.ResolveReq
-	33, // 80: cnquery.explorer.QueryConductor.StoreResults:input_type -> cnquery.explorer.StoreResultsReq
-	34, // 81: cnquery.explorer.QueryConductor.GetReport:input_type -> cnquery.explorer.EntityDataRequest
-	41, // 82: cnquery.explorer.QueryConductor.SynchronizeAssets:input_type -> cnquery.explorer.SynchronizeAssetsReq
-	22, // 83: cnquery.explorer.QueryHub.SetBundle:output_type -> cnquery.explorer.Empty
-	22, // 84: cnquery.explorer.QueryHub.DeleteQueryPack:output_type -> cnquery.explorer.Empty
-	22, // 85: cnquery.explorer.QueryHub.ValidateBundle:output_type -> cnquery.explorer.Empty
-	3,  // 86: cnquery.explorer.QueryHub.GetBundle:output_type -> cnquery.explorer.Bundle
-	5,  // 87: cnquery.explorer.QueryHub.GetQueryPack:output_type -> cnquery.explorer.QueryPack
-	24, // 88: cnquery.explorer.QueryHub.GetFilters:output_type -> cnquery.explorer.Mqueries
-	8,  // 89: cnquery.explorer.QueryHub.List:output_type -> cnquery.explorer.QueryPacks
-	27, // 90: cnquery.explorer.QueryHub.DefaultPacks:output_type -> cnquery.explorer.URLs
-	22, // 91: cnquery.explorer.QueryConductor.Assign:output_type -> cnquery.explorer.Empty
-	22, // 92: cnquery.explorer.QueryConductor.Unassign:output_type -> cnquery.explorer.Empty
-	22, // 93: cnquery.explorer.QueryConductor.SetProps:output_type -> cnquery.explorer.Empty
-	31, // 94: cnquery.explorer.QueryConductor.Resolve:output_type -> cnquery.explorer.ResolvedPack
-	22, // 95: cnquery.explorer.QueryConductor.StoreResults:output_type -> cnquery.explorer.Empty
-	35, // 96: cnquery.explorer.QueryConductor.GetReport:output_type -> cnquery.explorer.Report
-	43, // 97: cnquery.explorer.QueryConductor.SynchronizeAssets:output_type -> cnquery.explorer.SynchronizeAssetsResp
-	83, // [83:98] is the sub-list for method output_type
-	68, // [68:83] is the sub-list for method input_type
-	68, // [68:68] is the sub-list for extension type_name
-	68, // [68:68] is the sub-list for extension extendee
-	0,  // [0:68] is the sub-list for field type_name
+	55, // 42: cnquery.explorer.StoreResultsReq.data:type_name -> cnquery.explorer.StoreResultsReq.DataEntry
+	56, // 43: cnquery.explorer.StoreResultsReq.resources:type_name -> cnquery.explorer.StoreResultsReq.ResourcesEntry
+	57, // 44: cnquery.explorer.Report.data:type_name -> cnquery.explorer.Report.DataEntry
+	37, // 45: cnquery.explorer.EntityResourcesReq.resources:type_name -> cnquery.explorer.ResourceDataReq
+	65, // 46: cnquery.explorer.EntityResourcesRes.resources:type_name -> cnquery.llx.ResourceRecording
+	58, // 47: cnquery.explorer.ReportCollection.assets:type_name -> cnquery.explorer.ReportCollection.AssetsEntry
+	3,  // 48: cnquery.explorer.ReportCollection.bundle:type_name -> cnquery.explorer.Bundle
+	59, // 49: cnquery.explorer.ReportCollection.reports:type_name -> cnquery.explorer.ReportCollection.ReportsEntry
+	60, // 50: cnquery.explorer.ReportCollection.errors:type_name -> cnquery.explorer.ReportCollection.ErrorsEntry
+	61, // 51: cnquery.explorer.ReportCollection.resolved:type_name -> cnquery.explorer.ReportCollection.ResolvedEntry
+	66, // 52: cnquery.explorer.ErrorStatus.details:type_name -> google.protobuf.Any
+	2,  // 53: cnquery.explorer.AssignmentDelta.action:type_name -> cnquery.explorer.AssignmentDelta.Action
+	62, // 54: cnquery.explorer.BundleMutationDelta.deltas:type_name -> cnquery.explorer.BundleMutationDelta.DeltasEntry
+	67, // 55: cnquery.explorer.SynchronizeAssetsReq.list:type_name -> cnquery.providers.v1.Asset
+	63, // 56: cnquery.explorer.SynchronizeAssetsResp.details:type_name -> cnquery.explorer.SynchronizeAssetsResp.DetailsEntry
+	11, // 57: cnquery.explorer.QueryPack.AssetFiltersEntry.value:type_name -> cnquery.explorer.Mquery
+	11, // 58: cnquery.explorer.Filters.ItemsEntry.value:type_name -> cnquery.explorer.Mquery
+	21, // 59: cnquery.explorer.ExecutionJob.QueriesEntry.value:type_name -> cnquery.explorer.ExecutionQuery
+	20, // 60: cnquery.explorer.ExecutionJob.DatapointsEntry.value:type_name -> cnquery.explorer.DataQueryInfo
+	68, // 61: cnquery.explorer.StoreResultsReq.DataEntry.value:type_name -> cnquery.llx.Result
+	65, // 62: cnquery.explorer.StoreResultsReq.ResourcesEntry.value:type_name -> cnquery.llx.ResourceRecording
+	68, // 63: cnquery.explorer.Report.DataEntry.value:type_name -> cnquery.llx.Result
+	39, // 64: cnquery.explorer.ReportCollection.AssetsEntry.value:type_name -> cnquery.explorer.Asset
+	35, // 65: cnquery.explorer.ReportCollection.ReportsEntry.value:type_name -> cnquery.explorer.Report
+	41, // 66: cnquery.explorer.ReportCollection.ErrorsEntry.value:type_name -> cnquery.explorer.ErrorStatus
+	31, // 67: cnquery.explorer.ReportCollection.ResolvedEntry.value:type_name -> cnquery.explorer.ResolvedPack
+	42, // 68: cnquery.explorer.BundleMutationDelta.DeltasEntry.value:type_name -> cnquery.explorer.AssignmentDelta
+	45, // 69: cnquery.explorer.SynchronizeAssetsResp.DetailsEntry.value:type_name -> cnquery.explorer.SynchronizeAssetsRespAssetDetail
+	3,  // 70: cnquery.explorer.QueryHub.SetBundle:input_type -> cnquery.explorer.Bundle
+	23, // 71: cnquery.explorer.QueryHub.DeleteQueryPack:input_type -> cnquery.explorer.Mrn
+	3,  // 72: cnquery.explorer.QueryHub.ValidateBundle:input_type -> cnquery.explorer.Bundle
+	23, // 73: cnquery.explorer.QueryHub.GetBundle:input_type -> cnquery.explorer.Mrn
+	23, // 74: cnquery.explorer.QueryHub.GetQueryPack:input_type -> cnquery.explorer.Mrn
+	23, // 75: cnquery.explorer.QueryHub.GetFilters:input_type -> cnquery.explorer.Mrn
+	25, // 76: cnquery.explorer.QueryHub.List:input_type -> cnquery.explorer.ListReq
+	26, // 77: cnquery.explorer.QueryHub.DefaultPacks:input_type -> cnquery.explorer.DefaultPacksReq
+	28, // 78: cnquery.explorer.QueryConductor.Assign:input_type -> cnquery.explorer.Assignment
+	28, // 79: cnquery.explorer.QueryConductor.Unassign:input_type -> cnquery.explorer.Assignment
+	29, // 80: cnquery.explorer.QueryConductor.SetProps:input_type -> cnquery.explorer.PropsReq
+	30, // 81: cnquery.explorer.QueryConductor.Resolve:input_type -> cnquery.explorer.ResolveReq
+	33, // 82: cnquery.explorer.QueryConductor.StoreResults:input_type -> cnquery.explorer.StoreResultsReq
+	34, // 83: cnquery.explorer.QueryConductor.GetReport:input_type -> cnquery.explorer.EntityDataRequest
+	36, // 84: cnquery.explorer.QueryConductor.GetResourcesData:input_type -> cnquery.explorer.EntityResourcesReq
+	44, // 85: cnquery.explorer.QueryConductor.SynchronizeAssets:input_type -> cnquery.explorer.SynchronizeAssetsReq
+	22, // 86: cnquery.explorer.QueryHub.SetBundle:output_type -> cnquery.explorer.Empty
+	22, // 87: cnquery.explorer.QueryHub.DeleteQueryPack:output_type -> cnquery.explorer.Empty
+	22, // 88: cnquery.explorer.QueryHub.ValidateBundle:output_type -> cnquery.explorer.Empty
+	3,  // 89: cnquery.explorer.QueryHub.GetBundle:output_type -> cnquery.explorer.Bundle
+	5,  // 90: cnquery.explorer.QueryHub.GetQueryPack:output_type -> cnquery.explorer.QueryPack
+	24, // 91: cnquery.explorer.QueryHub.GetFilters:output_type -> cnquery.explorer.Mqueries
+	8,  // 92: cnquery.explorer.QueryHub.List:output_type -> cnquery.explorer.QueryPacks
+	27, // 93: cnquery.explorer.QueryHub.DefaultPacks:output_type -> cnquery.explorer.URLs
+	22, // 94: cnquery.explorer.QueryConductor.Assign:output_type -> cnquery.explorer.Empty
+	22, // 95: cnquery.explorer.QueryConductor.Unassign:output_type -> cnquery.explorer.Empty
+	22, // 96: cnquery.explorer.QueryConductor.SetProps:output_type -> cnquery.explorer.Empty
+	31, // 97: cnquery.explorer.QueryConductor.Resolve:output_type -> cnquery.explorer.ResolvedPack
+	22, // 98: cnquery.explorer.QueryConductor.StoreResults:output_type -> cnquery.explorer.Empty
+	35, // 99: cnquery.explorer.QueryConductor.GetReport:output_type -> cnquery.explorer.Report
+	38, // 100: cnquery.explorer.QueryConductor.GetResourcesData:output_type -> cnquery.explorer.EntityResourcesRes
+	46, // 101: cnquery.explorer.QueryConductor.SynchronizeAssets:output_type -> cnquery.explorer.SynchronizeAssetsResp
+	86, // [86:102] is the sub-list for method output_type
+	70, // [70:86] is the sub-list for method input_type
+	70, // [70:70] is the sub-list for extension type_name
+	70, // [70:70] is the sub-list for extension extendee
+	0,  // [0:70] is the sub-list for field type_name
 }
 
 func init() { file_cnquery_explorer_proto_init() }
@@ -4259,7 +4465,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Asset); i {
+			switch v := v.(*EntityResourcesReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4271,7 +4477,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ReportCollection); i {
+			switch v := v.(*ResourceDataReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4283,7 +4489,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ErrorStatus); i {
+			switch v := v.(*EntityResourcesRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4295,7 +4501,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AssignmentDelta); i {
+			switch v := v.(*Asset); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4307,7 +4513,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BundleMutationDelta); i {
+			switch v := v.(*ReportCollection); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4319,7 +4525,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SynchronizeAssetsReq); i {
+			switch v := v.(*ErrorStatus); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4331,7 +4537,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SynchronizeAssetsRespAssetDetail); i {
+			switch v := v.(*AssignmentDelta); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4343,7 +4549,7 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SynchronizeAssetsResp); i {
+			switch v := v.(*BundleMutationDelta); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4355,6 +4561,42 @@ func file_cnquery_explorer_proto_init() {
 			}
 		}
 		file_cnquery_explorer_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SynchronizeAssetsReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cnquery_explorer_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SynchronizeAssetsRespAssetDetail); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cnquery_explorer_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SynchronizeAssetsResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cnquery_explorer_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ImpactValue); i {
 			case 0:
 				return &v.state
@@ -4373,7 +4615,7 @@ func file_cnquery_explorer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cnquery_explorer_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   58,
+			NumMessages:   61,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

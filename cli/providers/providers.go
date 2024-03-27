@@ -124,7 +124,6 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 	}
 
 	connector := parsedArgs[2]
-	// we may want to double-check if the connector exists
 
 	return connector, autoUpdate
 }
