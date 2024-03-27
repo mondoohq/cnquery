@@ -16,20 +16,20 @@ https://www.youtube.com/watch?v=nbDF7hzBPM0
 Configure SSH
 https://www.youtube.com/watch?v=QEmHqHpeoZM
 
-```
+```text
 ssh -p 2221 admin@localhost
 ```
 
 Cancel zerotouch
 
-```
+```text
 localhost login:admin
 localhost>zerotouch cancel
 ```
 
 Configure IP for management
 
-```
+```text
 config
 interface ma1
 ip address dhcp
@@ -42,7 +42,7 @@ show int ma1
 
 Configure user with password
 
-```
+```text
 en
 config
 username admin secret x245
@@ -50,7 +50,7 @@ username admin secret x245
 
 Enable the eosAPI
 
-```
+```text
 login> admin
 > en
 Switch# configure terminal
@@ -73,7 +73,7 @@ Switch# configure terminal
 
 Enable password:
 
-```
+```text
 en
 config
 enable password xyrt1
@@ -85,7 +85,7 @@ see https://www.arista.com/en/um-eos/eos-user-security
 
 Enter bash mode
 
-```
+```text
 switch#conf t
 switch(config)#bash sudo su -
 ```
@@ -94,7 +94,9 @@ understanding eapi
 https://eos.arista.com/arista-eapi-101/
 
 expose api (requires port forwarding)
+<!-- markdown-link-check-disable -->
 http://localhost:8080/explorer.html
+<!-- markdown-link-check-enable -->
 
 arista user manual
 https://www.arista.com/en/um-eos
