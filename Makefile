@@ -552,6 +552,7 @@ mqlc/test:
 explorer/generate:
 	go generate ./explorer
 	go generate ./explorer/scan
+	go generate ./explorer/resources
 
 sbom/generate:
 	go generate ./sbom

@@ -6,6 +6,7 @@ package explorer
 import (
 	"context"
 
+	"go.mondoo.com/cnquery/v10/explorer/resources"
 	llx "go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/types"
 )
@@ -50,7 +51,7 @@ type DataLake interface {
 	// UpdateData sets the list of data value for a given asset and returns a list of updated IDs
 	UpdateData(ctx context.Context, assetMrn string, data map[string]*llx.Result) (map[string]types.Type, error)
 	// GetResources retrieves previously stored resources about an asset
-	GetResources(ctx context.Context, assetMrn string, req []*ResourceDataReq) ([]*llx.ResourceRecording, error)
+	GetResources(ctx context.Context, assetMrn string, req []*resources.ResourceDataReq) ([]*llx.ResourceRecording, error)
 	// GetReport retrieves all scores and data for a given asset
 	GetReport(ctx context.Context, assetMrn string, packMrn string) (*Report, error)
 }

@@ -1,31 +1,26 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package providers
+package recording
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"os"
-	"sort"
-	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/explorer"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/types"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 )
 
 type recording struct {
-	Assets []assetRecording `json:"assets"`
-	Path   string           `json:"-"`
+	Assets []*Asset `json:"assets"`
+	Path   string   `json:"-"`
 	// assets is used for fast connection to asset lookup
-	assets          map[uint32]*assetRecording `json:"-"`
-	prettyPrintJSON bool                       `json:"-"`
+	assets          map[uint32]*Asset `json:"-"`
+	prettyPrintJSON bool              `json:"-"`
 	// this mode is used when we use the recording layer for data,
 	// but not for storing it on disk
 	doNotSave bool `json:"-"`
@@ -57,11 +52,11 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 		ai.Labels = asset.Platform.Labels
 	}
 	r := &recording{
-		Assets: []assetRecording{
+		Assets: []*Asset{
 			{
 				Asset:       ai,
-				connections: map[string]*connectionRecording{},
-				resources:   map[string]*resourceRecording{},
+				connections: map[string]*connection{},
+				resources:   map[string]*Resource{},
 			},
 		},
 	}
@@ -75,89 +70,28 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 }
 
 // ReadOnly converts the recording into a read-only recording
-func (r *recording) ReadOnly() *readOnlyRecording {
-	return &readOnlyRecording{r}
+func (r *recording) ReadOnly() *readOnly {
+	return &readOnly{r}
 }
 
-type assetRecording struct {
-	Asset       assetInfo             `json:"asset"`
-	Connections []connectionRecording `json:"connections"`
-	Resources   []resourceRecording   `json:"resources"`
-
-	connections map[string]*connectionRecording `json:"-"`
-	resources   map[string]*resourceRecording   `json:"-"`
-}
-
-type assetInfo struct {
-	ID          string            `json:"id"`
-	PlatformIDs []string          `json:"platformIDs,omitempty"`
-	Name        string            `json:"name,omitempty"`
-	Arch        string            `json:"arch,omitempty"`
-	Title       string            `json:"title,omitempty"`
-	Family      []string          `json:"family,omitempty"`
-	Build       string            `json:"build,omitempty"`
-	Version     string            `json:"version,omitempty"`
-	Kind        string            `json:"kind,omitempty"`
-	Runtime     string            `json:"runtime,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-}
-
-type connectionRecording struct {
-	Url        string `json:"url"`
-	ProviderID string `json:"provider"`
-	Connector  string `json:"connector"`
-	Version    string `json:"version"`
-	id         uint32 `json:"-"`
-}
-
-type resourceRecording struct {
-	Resource string
-	ID       string
-	Fields   map[string]*llx.RawData
-}
-
-type NullRecording struct{}
-
-func (n NullRecording) Save() error {
-	return nil
-}
-
-func (n NullRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
-}
-
-func (n NullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
-}
-
-func (n NullRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	return nil, false
-}
-
-func (n NullRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
-	return nil, false
-}
-
-func (n NullRecording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
-	return nil, false
-}
-
-type readOnlyRecording struct {
+type readOnly struct {
 	*recording
 }
 
-func (n *readOnlyRecording) Save() error {
+func (n *readOnly) Save() error {
 	return nil
 }
 
-func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
+func (n *readOnly) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
 	// we are severely lacking connection IDs.
 	found, _ := n.findAssetConnID(asset)
 	if found != -1 {
-		n.assets[connectionID] = &n.Assets[found]
+		n.assets[connectionID] = n.Assets[found]
 	}
 }
 
-func (n *readOnlyRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
+func (n *readOnly) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 }
 
 type RecordingOptions struct {
@@ -166,16 +100,16 @@ type RecordingOptions struct {
 	DoNotSave       bool
 }
 
-// NewRecording loads and creates a new recording based on user settings.
-// If no recording is available and users don't wish to record, it throws an error.
+// NewWithFile loads and creates a new recording based on user settings.
+// If no file is available and users don't wish to record, it throws an error.
 // If users don't wish to record and no recording is available, it will return
 // the null-recording.
-func NewRecording(path string, opts RecordingOptions) (llx.Recording, error) {
+func NewWithFile(path string, opts RecordingOptions) (llx.Recording, error) {
 	if path == "" && !opts.DoNotSave {
 		// we don't want to record and we don't want to load a recording path...
 		// so there is nothing to do, so return nil
 		if !opts.DoRecord {
-			return NullRecording{}, nil
+			return Null{}, nil
 		}
 		// for all remaining cases we do want to record and we want to check
 		// if the recording exists at the default location
@@ -193,7 +127,7 @@ func NewRecording(path string, opts RecordingOptions) (llx.Recording, error) {
 			res.prettyPrintJSON = opts.PrettyPrintJSON
 			return res, nil
 		}
-		return &readOnlyRecording{res}, nil
+		return &readOnly{res}, nil
 
 	} else if errors.Is(err, os.ErrNotExist) {
 		if opts.DoRecord {
@@ -261,11 +195,11 @@ func (r *recording) Save() error {
 }
 
 func (r *recording) refreshCache() {
-	r.assets = make(map[uint32]*assetRecording, len(r.Assets))
+	r.assets = make(map[uint32]*Asset, len(r.Assets))
 	for i := range r.Assets {
-		asset := &r.Assets[i]
-		asset.resources = make(map[string]*resourceRecording, len(asset.Resources))
-		asset.connections = make(map[string]*connectionRecording, len(asset.Connections))
+		asset := r.Assets[i]
+		asset.resources = make(map[string]*Resource, len(asset.Resources))
+		asset.connections = make(map[string]*connection, len(asset.Connections))
 
 		for j := range asset.Resources {
 			resource := &asset.Resources[j]
@@ -291,7 +225,7 @@ func (r *recording) reconnectResources() error {
 	for i := range r.Assets {
 		asset := r.Assets[i]
 		for j := range asset.Resources {
-			if err = r.reconnectResource(&asset, &asset.Resources[j]); err != nil {
+			if err = r.reconnectResource(&asset.Resources[j]); err != nil {
 				return err
 			}
 		}
@@ -299,7 +233,7 @@ func (r *recording) reconnectResources() error {
 	return nil
 }
 
-func (r *recording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
+func (r *recording) reconnectResource(resource *Resource) error {
 	var err error
 	for k, v := range resource.Fields {
 		if v.Error != nil {
@@ -317,7 +251,7 @@ func (r *recording) reconnectResource(asset *assetRecording, resource *resourceR
 	return nil
 }
 
-func tryReconnect(typ types.Type, v interface{}, resource *resourceRecording) (interface{}, error) {
+func tryReconnect(typ types.Type, v interface{}, resource *Resource) (interface{}, error) {
 	var err error
 
 	if typ.IsArray() {
@@ -357,7 +291,7 @@ func tryReconnect(typ types.Type, v interface{}, resource *resourceRecording) (i
 	return reconnectResource(v, resource)
 }
 
-func reconnectResource(v interface{}, resource *resourceRecording) (interface{}, error) {
+func reconnectResource(v interface{}, resource *Resource) (interface{}, error) {
 	vals, ok := v.(map[string]interface{})
 	if !ok {
 		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
@@ -382,34 +316,7 @@ func reconnectResource(v interface{}, resource *resourceRecording) (interface{},
 
 func (r *recording) finalize() {
 	for i := range r.Assets {
-		asset := &r.Assets[i]
-		asset.finalize()
-	}
-}
-
-func (asset *assetRecording) finalize() {
-	asset.Resources = make([]resourceRecording, len(asset.resources))
-	asset.Connections = make([]connectionRecording, len(asset.connections))
-
-	i := 0
-	for _, v := range asset.resources {
-		asset.Resources[i] = *v
-		i++
-	}
-
-	sort.Slice(asset.Resources, func(i, j int) bool {
-		a := asset.Resources[i]
-		b := asset.Resources[j]
-		if a.Resource == b.Resource {
-			return a.ID < b.ID
-		}
-		return a.Resource < b.Resource
-	})
-
-	i = 0
-	for _, v := range asset.connections {
-		asset.Connections[i] = *v
-		i++
+		r.Assets[i].finalize()
 	}
 }
 
@@ -456,7 +363,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 		if id == "" {
 			id = asset.Platform.Title
 		}
-		r.Assets = append(r.Assets, assetRecording{
+		r.Assets = append(r.Assets, &Asset{
 			Asset: assetInfo{
 				ID:          id,
 				PlatformIDs: asset.PlatformIds,
@@ -470,8 +377,8 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 				Runtime:     asset.Platform.Runtime,
 				Labels:      asset.Platform.Labels,
 			},
-			connections: map[string]*connectionRecording{},
-			resources:   map[string]*resourceRecording{},
+			connections: map[string]*connection{},
+			resources:   map[string]*Resource{},
 		})
 		found = len(r.Assets) - 1
 	}
@@ -479,13 +386,13 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	// An asset is sometimes added to the recording, before it has its MRN assigned.
 	// This method may be called again, after the MRN has been assigned. In that
 	// case we make sure that the asset ID matches the MRN.
-	assetObj := &r.Assets[found]
+	assetObj := r.Assets[found]
 	if asset.Mrn != "" {
 		assetObj.Asset.ID = asset.Mrn
 	}
 
 	url := conf.ToUrl()
-	assetObj.connections[url] = &connectionRecording{
+	assetObj.connections[url] = &connection{
 		Url:        url,
 		ProviderID: providerID,
 		Connector:  conf.Type,
@@ -503,7 +410,7 @@ func (r *recording) AddData(connectionID uint32, resource string, id string, fie
 
 	obj, exist := asset.resources[resource+"\x00"+id]
 	if !exist {
-		obj = &resourceRecording{
+		obj = &Resource{
 			Resource: resource,
 			ID:       id,
 			Fields:   map[string]*llx.RawData{},
@@ -554,10 +461,12 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 }
 
 func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
-	var cur *assetRecording
+	var cur *Asset
 	for i := range r.Assets {
-		cur = &r.Assets[i]
-		if cur.Asset.ID != assetMrn {
+		cur = r.Assets[i]
+		if assetMrn == "" && len(r.Assets) == 1 {
+			// next
+		} else if cur.Asset.ID != assetMrn {
 			continue
 		}
 
@@ -581,13 +490,21 @@ func (r *recording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecor
 	return nil, false
 }
 
+func (r *recording) GetAssetRecordings() []*Asset {
+	return r.Assets
+}
+
+func (r *recording) SetAssetRecording(id uint32, reco *Asset) {
+	r.assets[id] = reco
+}
+
 // This method makes sure the asset metadata is always included in the data
 // dump of a recording
-func ensureAssetMetadata(resources map[string]*resourceRecording, asset assetInfo) {
+func ensureAssetMetadata(resources map[string]*Resource, asset assetInfo) {
 	id := "asset\x00"
 	existing, ok := resources[id]
 	if !ok {
-		existing = &resourceRecording{
+		existing = &Resource{
 			Resource: "asset",
 			ID:       "",
 			Fields:   map[string]*llx.RawData{},
@@ -656,163 +573,4 @@ func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Resu
 	}
 
 	return all, err.Deduplicate()
-}
-
-func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.Result {
-	res := make(map[string]*llx.Result, len(args))
-	for k, v := range args {
-		res[k] = &llx.Result{Data: v}
-	}
-	return res
-}
-
-func NewUpstreamRecording(upstream *upstream.UpstreamConfig, assetMrn string) (llx.Recording, error) {
-	if upstream == nil {
-		return nil, errors.New("missing an upstream configuration")
-	}
-
-	ctx := context.Background()
-	client, err := upstream.InitClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	services, err := explorer.NewRemoteServices(client.ApiEndpoint, client.Plugins, client.HttpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	recording := &upstreamRecording{
-		ctx:      ctx,
-		services: services,
-		asset: &inventory.Asset{
-			Mrn: assetMrn,
-		},
-		resourcesCache: map[string]resourceCache{},
-	}
-
-	raw, ok := recording.GetResource(0, "asset", "")
-	if !ok {
-		return nil, errors.New("failed to get asset info for " + assetMrn)
-	}
-
-	asset := rawdata2assetinfo(raw)
-	asset.Mrn = assetMrn
-	recording.asset = asset
-
-	return recording, nil
-}
-
-func rawdata2assetinfo(fields map[string]*llx.RawData) *inventory.Asset {
-	ids := rawValue[[]any](fields["ids"])
-	sids := make([]string, len(ids))
-	for i := range ids {
-		sids[i] = ids[i].(string)
-	}
-
-	return &inventory.Asset{
-		Name:        rawValue[string](fields["name"]),
-		PlatformIds: sids,
-		Platform: &inventory.Platform{
-			Version: rawValue[string](fields["version"]),
-			Arch:    rawValue[string](fields["arch"]),
-			Title:   rawValue[string](fields["title"]),
-			Runtime: rawValue[string](fields["runtime"]),
-			Kind:    rawValue[string](fields["kind"]),
-			Name:    rawValue[string](fields["platform"]),
-			Build:   rawValue[string](fields["build"]),
-		},
-	}
-}
-
-func rawValue[T any](field *llx.RawData) T {
-	var empty T
-	if field == nil || field.Value == nil {
-		return empty
-	}
-	res, ok := field.Value.(T)
-	if !ok {
-		return empty
-	}
-	return res
-}
-
-type upstreamRecording struct {
-	ctx            context.Context
-	services       *explorer.Services
-	asset          *inventory.Asset
-	lock           sync.Mutex
-	resourcesCache map[string]resourceCache
-}
-
-type resourceCache struct {
-	fields map[string]*llx.RawData
-	err    error
-}
-
-func (n *upstreamRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
-	// We don't sync assets with upstream, we only read at this time
-}
-
-func (n *upstreamRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
-	// We don't store asset data this way, we use StoreResults for now.
-	// We will expand this method to handle more ad-hoc data methods in the
-	// future. (e.g. for shell)
-}
-
-func (n *upstreamRecording) GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool) {
-	fields, ok := n.GetResource(connectionID, resource, id)
-	if !ok || len(fields) == 0 {
-		return nil, false
-	}
-	res, ok := fields[field]
-	return res, ok
-}
-
-func (n *upstreamRecording) GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
-
-	cacheID := resource + "\x00" + id
-	if exist, ok := n.resourcesCache[cacheID]; ok {
-		return exist.fields, true
-	}
-
-	res, err := n.services.QueryConductor.GetResourcesData(n.ctx, &explorer.EntityResourcesReq{
-		EntityMrn: n.asset.Mrn,
-		Resources: []*explorer.ResourceDataReq{{
-			Resource: resource,
-			Id:       id,
-		}},
-	})
-	if err != nil {
-		n.resourcesCache[cacheID] = resourceCache{err: err}
-		return nil, false
-	}
-
-	if len(res.Resources) == 0 {
-		n.resourcesCache[cacheID] = resourceCache{}
-		return nil, false
-	} else if len(res.Resources) != 1 {
-		log.Warn().Str("asset", n.asset.Mrn).Str("resource", resource).Msg("too many resources returned for asset request")
-	}
-
-	fields := make(map[string]*llx.RawData, len(res.Resources[0].Fields))
-	for k, v := range res.Resources[0].Fields {
-		fields[k] = v.RawData()
-	}
-	n.resourcesCache[cacheID] = resourceCache{fields: fields}
-
-	return fields, true
-}
-
-func (n *upstreamRecording) GetAssetData(assetMrn string) (map[string]*llx.ResourceRecording, bool) {
-	// We currently don't dump entire upstream asset data.
-	return nil, false
-}
-
-func (n *upstreamRecording) Save() error {
-	// No need to save anything with upstream recordings for now. We will make
-	// use of this once we use AddData with upstream.
-	return nil
 }

@@ -325,8 +325,6 @@ service QueryConductor {
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
   rpc GetReport(EntityDataRequest) returns (Report) {}
-  rpc GetResourcesData(EntityResourcesReq) returns (EntityResourcesRes) {}
-
   rpc SynchronizeAssets(SynchronizeAssetsReq) returns (SynchronizeAssetsResp) {}
 }
 
@@ -392,22 +390,6 @@ message Report {
   int64 modified = 21;
 
   string resolved_version = 33;
-}
-
-message EntityResourcesReq {
-  string entity_mrn = 1;
-  repeated ResourceDataReq resources = 2;
-}
-
-message ResourceDataReq {
-  string resource = 1;
-  string id = 2;
-  repeated string fields = 3;
-}
-
-message EntityResourcesRes {
-  string entity_mrn = 1;
-  repeated cnquery.llx.ResourceRecording resources = 4;
 }
 
 // Asset is a lean layer of information about an asset

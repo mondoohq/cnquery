@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/types"
@@ -280,6 +281,14 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 	return &llx.MockResource{Name: typ.ResourceName(), ID: string(res.Data.Value)}, nil
 }
 
+func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.Result {
+	res := make(map[string]*llx.Result, len(args))
+	for k, v := range args {
+		res[k] = &llx.Result{Data: v}
+	}
+	return res
+}
+
 func (r *Runtime) CloneResource(src llx.Resource, id string, fields []string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	name := src.MqlName()
 	srcID := src.MqlID()
@@ -408,12 +417,12 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider) (boo
 }
 
 type providerCallbacks struct {
-	recording *assetRecording
+	recording *recording.Asset
 	runtime   *Runtime
 }
 
 func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
-	resource, ok := p.recording.resources[req.Resource+"\x00"+req.ResourceId]
+	resource, ok := p.recording.GetResource(req.Resource, req.ResourceId)
 	if !ok {
 		return nil, nil
 	}
@@ -462,11 +471,11 @@ func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 }
 
 func (r *Runtime) EnableResourcesRecording() error {
-	if _, ok := r.recording.(NullRecording); !ok {
+	if _, ok := r.recording.(recording.Null); !ok {
 		return nil
 	}
 
-	recording, err := NewRecording("", RecordingOptions{
+	recording, err := recording.NewWithFile("", recording.RecordingOptions{
 		DoRecord:        true,
 		PrettyPrintJSON: false,
 		DoNotSave:       true,
@@ -496,35 +505,28 @@ func (r *Runtime) SetRecording(recording llx.Recording) error {
 	return nil
 }
 
-func baseRecording(anyRecording llx.Recording) *recording {
-	var baseRecording *recording
-	switch x := anyRecording.(type) {
-	case *recording:
-		baseRecording = x
-	case *readOnlyRecording:
-		baseRecording = x.recording
-	}
-	return baseRecording
-}
-
 // SetMockRecording is only used for test utilities. Please do not use it!
 //
 // Deprecated: This function may not be necessary anymore, consider removing.
 func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string, mockConnection bool) error {
 	r.recording = anyRecording
 
-	baseRecording := baseRecording(anyRecording)
-	if baseRecording == nil {
+	multiRecording, ok := anyRecording.(recording.MultiAsset)
+	if !ok {
 		return nil
 	}
+
+	assetRecordings := multiRecording.GetAssetRecordings()
+	if len(assetRecordings) == 0 {
+		return nil
+	}
+	assetRecording := assetRecordings[0]
+	asset := assetRecording.Asset.ToInventory()
 
 	provider, ok := r.providers[providerID]
 	if !ok {
 		return errors.New("cannot set recording, provider '" + providerID + "' not found")
 	}
-
-	assetRecording := &baseRecording.Assets[0]
-	asset := assetRecording.Asset.ToInventory()
 
 	if mockConnection {
 		// Dom: we may need to retain the original asset ID, not sure yet...
@@ -553,7 +555,7 @@ func (r *Runtime) SetMockRecording(anyRecording llx.Recording, providerID string
 		// Dom: we may need to cancel the entire setup here, may need to be reconsidered...
 		log.Warn().Msg("recording cannot determine asset, no connection was set up!")
 	} else {
-		baseRecording.assets[provider.Connection.Id] = assetRecording
+		multiRecording.SetAssetRecording(provider.Connection.Id, assetRecording)
 	}
 
 	return nil

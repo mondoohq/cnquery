@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/v10/mqlc"
 	"go.mondoo.com/cnquery/v10/mqlc/parser"
 	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/shared"
 	run "go.mondoo.com/cnquery/v10/shared/proto"
@@ -153,7 +154,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		}
 		defer func() {
 			// prevent the recording from being closed multiple times
-			err = asset.Runtime.SetRecording(providers.NullRecording{})
+			err = asset.Runtime.SetRecording(recording.Null{})
 			if err != nil {
 				log.Error().Err(err).Msg("failed to set the recording layer to null")
 			}

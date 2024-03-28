@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v10/explorer/resources"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/types"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
@@ -80,7 +81,7 @@ func (db *Db) GetResolvedPack(mrn string) (*explorer.ResolvedPack, error) {
 var errTypesDontMatch = errors.New("types don't match")
 
 // GetResources retrieves previously stored resources about an asset
-func (db *Db) GetResources(ctx context.Context, assetMrn string, req []*explorer.ResourceDataReq) ([]*llx.ResourceRecording, error) {
+func (db *Db) GetResources(ctx context.Context, assetMrn string, req []*resources.ResourceDataReq) ([]*llx.ResourceRecording, error) {
 	res := make([]*llx.ResourceRecording, len(req))
 	for i := range req {
 		rr := req[i]

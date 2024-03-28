@@ -1,0 +1,29 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+syntax = "proto3";
+
+package cnquery.explorer.resources;
+import "llx/llx.proto";
+
+option go_package = "go.mondoo.com/cnquery/v10/explorer/resources";
+
+service ResourcesExplorer {
+  rpc GetResourcesData(EntityResourcesReq) returns (EntityResourcesRes) {}
+}
+
+message EntityResourcesReq {
+  string entity_mrn = 1;
+  repeated ResourceDataReq resources = 2;
+}
+
+message ResourceDataReq {
+  string resource = 1;
+  string id = 2;
+  repeated string fields = 3;
+}
+
+message EntityResourcesRes {
+  string entity_mrn = 1;
+  repeated cnquery.llx.ResourceRecording resources = 4;
+}

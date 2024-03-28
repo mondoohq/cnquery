@@ -29,6 +29,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"go.mondoo.com/cnquery/v10/utils/slicesx"
@@ -74,7 +75,7 @@ func NewLocalScanner(opts ...ScannerOption) *LocalScanner {
 	}
 
 	if ls.recording == nil {
-		ls.recording = providers.NullRecording{}
+		ls.recording = recording.Null{}
 	}
 
 	return ls
