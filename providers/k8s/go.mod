@@ -22,15 +22,15 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v10 v10.8.4
+	go.mondoo.com/cnquery/v10 v10.9.1
 	// pin v0.28.4
-	k8s.io/api v0.29.3
+	k8s.io/api v0.28.4
 	// pin v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	// pin v0.28.4
-	k8s.io/apimachinery v0.29.3
+	k8s.io/apimachinery v0.28.4
 	// pin v0.28.4
-	k8s.io/client-go v0.29.3
+	k8s.io/client-go v0.28.4
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
@@ -38,7 +38,7 @@ require (
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
-	cloud.google.com/go v0.112.1 // indirect
+	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/compute v1.25.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
@@ -71,7 +71,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.7 // indirect
+	github.com/aws/aws-sdk-go v1.51.9 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.9 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
@@ -79,13 +79,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.3 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
-	github.com/daixiang0/gci v0.13.1 // indirect
+	github.com/daixiang0/gci v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
@@ -225,7 +225,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/julz/importas v0.1.0 // indirect
-	github.com/karamaru-alpha/copyloopvar v1.0.9 // indirect
+	github.com/karamaru-alpha/copyloopvar v1.0.10 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
@@ -342,7 +342,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go-simpler.org/musttag v0.10.0 // indirect
+	go-simpler.org/musttag v0.11.0 // indirect
 	go-simpler.org/sloglint v0.5.0 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20240312054001-2ab23a39b500 // indirect
 	go.mondoo.com/ranger-rpc v0.6.0 // indirect
@@ -372,7 +372,7 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.171.0 // indirect
+	google.golang.org/api v0.172.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240325203815-454cdb8f5daa // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240325203815-454cdb8f5daa // indirect
@@ -388,7 +388,7 @@ require (
 	k8s.io/component-base v0.28.4 // indirect
 	k8s.io/kube-openapi v0.0.0-20240220201932-37d671a357a5 // indirect
 	k8s.io/kubelet v0.28.4 // indirect
-	modernc.org/libc v1.47.0 // indirect
+	modernc.org/libc v1.49.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
