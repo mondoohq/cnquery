@@ -1,6 +1,9 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+// The resources explorer allows us to quickly interact with an upstream
+// resources store. It is kept separate from the explorer
+
 package resources
 
 import (

@@ -386,9 +386,13 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 	// An asset is sometimes added to the recording, before it has its MRN assigned.
 	// This method may be called again, after the MRN has been assigned. In that
 	// case we make sure that the asset ID matches the MRN.
+	// TODO: figure out a better position to do this, both for the MRN and IDs
 	assetObj := r.Assets[found]
 	if asset.Mrn != "" {
 		assetObj.Asset.ID = asset.Mrn
+	}
+	if len(asset.PlatformIds) != 0 {
+		assetObj.Asset.PlatformIDs = asset.PlatformIds
 	}
 
 	url := conf.ToUrl()
