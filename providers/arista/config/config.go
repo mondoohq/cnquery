@@ -11,7 +11,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "arista",
 	ID:              "go.mondoo.com/cnquery/v9/providers/arista",
-	Version:         "10.2.1",
+	Version:         "10.2.2",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
