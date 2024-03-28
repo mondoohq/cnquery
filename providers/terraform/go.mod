@@ -8,7 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/hashicorp/hcl/v2 v2.20.0
+	github.com/hashicorp/hcl/v2 v2.20.1
 	go.mondoo.com/cnquery/v10 v10.8.4
 )
 
