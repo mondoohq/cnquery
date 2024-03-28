@@ -10,7 +10,7 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
-	github.com/vmware/govmomi v0.36.1
+	github.com/vmware/govmomi v0.36.2
 	go.mondoo.com/cnquery/v10 v10.8.4
 	go.mondoo.com/mondoo-go v0.0.0-20240312054001-2ab23a39b500
 )
