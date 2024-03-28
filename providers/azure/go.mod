@@ -32,6 +32,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.13.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.5.0
+	github.com/DataDog/gostackparse v0.7.0
 	github.com/cockroachdb/errors v1.11.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.32.0
@@ -111,7 +112,7 @@ require (
 	github.com/ckaznocha/intrange v0.1.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.13.1 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
@@ -202,7 +203,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
-	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect

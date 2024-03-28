@@ -24,13 +24,13 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v10 v10.8.4
 	// pin v0.28.4
-	k8s.io/api v0.28.4
+	k8s.io/api v0.29.3
 	// pin v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	// pin v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.29.3
 	// pin v0.28.4
-	k8s.io/client-go v0.28.4
+	k8s.io/client-go v0.29.3
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
@@ -114,7 +114,7 @@ require (
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.13.1 // indirect
@@ -230,7 +230,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
-	github.com/klauspost/compress v1.17.2 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/knqyf263/go-rpmdb v0.1.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
