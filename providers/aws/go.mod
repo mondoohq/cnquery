@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.51.7
+	github.com/aws/aws-sdk-go v1.51.9
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.9
@@ -26,13 +26,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.2
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.4
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.3
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.134.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4
@@ -59,14 +59,14 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
-	go.mondoo.com/cnquery/v10 v10.8.4
+	go.mondoo.com/cnquery/v10 v10.9.1
 	k8s.io/client-go v0.29.3
 )
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
-	cloud.google.com/go v0.112.1 // indirect
+	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/compute v1.25.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
-	github.com/daixiang0/gci v0.13.1 // indirect
+	github.com/daixiang0/gci v0.13.3 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denis-tingaikin/go-header v0.5.0 // indirect
@@ -212,7 +212,7 @@ require (
 	github.com/jjti/go-spancheck v0.5.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/julz/importas v0.1.0 // indirect
-	github.com/karamaru-alpha/copyloopvar v1.0.9 // indirect
+	github.com/karamaru-alpha/copyloopvar v1.0.10 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
@@ -309,7 +309,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
-	go-simpler.org/musttag v0.10.0 // indirect
+	go-simpler.org/musttag v0.11.0 // indirect
 	go-simpler.org/sloglint v0.5.0 // indirect
 	go.mondoo.com/ranger-rpc v0.6.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -336,7 +336,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
-	google.golang.org/api v0.171.0 // indirect
+	google.golang.org/api v0.172.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240325203815-454cdb8f5daa // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240325203815-454cdb8f5daa // indirect

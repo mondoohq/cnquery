@@ -17,14 +17,14 @@ require (
 	// pin v0.3.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/aws/aws-sdk-go v1.51.7
+	github.com/aws/aws-sdk-go v1.51.9
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.23.1
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4
 	github.com/aws/smithy-go v1.20.1
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240323062759-1fd604ae58de
@@ -84,7 +84,7 @@ require (
 	github.com/spdx/tools-golang v0.5.3
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
@@ -106,9 +106,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	// pin v0.28.4
-	k8s.io/apimachinery v0.29.3
+	k8s.io/apimachinery v0.28.4
 	// pin v0.28.4
-	k8s.io/client-go v0.29.3
+	k8s.io/client-go v0.28.4
 	// pin v0.28.4
 	k8s.io/component-base v0.28.4
 	// pin v0.28.4
@@ -185,7 +185,7 @@ require (
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
-	cloud.google.com/go v0.112.1 // indirect
+	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/compute v1.25.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.7 // indirect
@@ -399,15 +399,15 @@ require (
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.171.0 // indirect
+	google.golang.org/api v0.172.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240325203815-454cdb8f5daa // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.4.7 // indirect
-	k8s.io/api v0.29.3 // indirect
+	k8s.io/api v0.28.4 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	modernc.org/libc v1.47.0 // indirect
+	modernc.org/libc v1.49.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
