@@ -16,8 +16,11 @@ type Runtime interface {
 	WatchAndUpdate(resource Resource, field string, watcherUID string, callback func(res interface{}, err error)) error
 	Schema() resources.ResourcesSchema
 	Close()
+
+	// Recording handlers
 	Recording() Recording
 	SetRecording(recording Recording) error
+	AssetUpdated(asset *inventory.Asset)
 }
 
 type Recording interface {

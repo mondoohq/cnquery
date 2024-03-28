@@ -6,9 +6,10 @@ package explorer
 import (
 	"net/http"
 
+	"go.mondoo.com/cnquery/v10/explorer/resources"
+	"go.mondoo.com/cnquery/v10/explorer/transport"
 	llx "go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/ranger-rpc"
-	"golang.org/x/sync/semaphore"
 )
 
 type ResolvedVersion string
@@ -22,6 +23,7 @@ var globalEmpty = &Empty{}
 type Services struct {
 	QueryHub
 	QueryConductor
+	resources.ResourcesExplorer
 }
 
 // LocalServices is an implementation of the explorer for a local execution.
@@ -51,7 +53,7 @@ func NewRemoteServices(addr string, auth []ranger.ClientPlugin, httpClient *http
 		httpClient = ranger.DefaultHttpClient()
 	}
 	// restrict parallel upstream connections to two connections
-	httpClient.Transport = NewMaxParallelConnTransport(httpClient.Transport, 2)
+	httpClient.Transport = transport.NewMaxParallelConnTransport(httpClient.Transport, 2)
 
 	queryHub, err := NewQueryHubClient(addr, httpClient, auth...)
 	if err != nil {
@@ -67,33 +69,4 @@ func NewRemoteServices(addr string, auth []ranger.ClientPlugin, httpClient *http
 		QueryHub:       queryHub,
 		QueryConductor: queryConductor,
 	}, nil
-}
-
-// MaxParallelConnHTTPTransport restricts the parallel connections that the client is doing upstream.
-// This has many advantages:
-// - we do not run into max ulimit issues because of parallel execution
-// - we do not ddos our server in case something is wrong upstream
-// - implementing this as http.RoundTripper has the advantage that the http timeout still applies and calls are canceled properly on the client-side
-type MaxParallelConnHTTPTransport struct {
-	transport     http.RoundTripper
-	parallelConns *semaphore.Weighted
-}
-
-// RoundTrip executes a single HTTP transaction, returning
-// a Response for the provided Request.
-func (t *MaxParallelConnHTTPTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	err := t.parallelConns.Acquire(r.Context(), 1)
-	if err != nil {
-		return nil, err
-	}
-	defer t.parallelConns.Release(1)
-	return t.transport.RoundTrip(r)
-}
-
-// NewMaxParallelConnTransport creates a transport with parallel HTTP connections
-func NewMaxParallelConnTransport(transport http.RoundTripper, parallel int64) *MaxParallelConnHTTPTransport {
-	return &MaxParallelConnHTTPTransport{
-		transport:     transport,
-		parallelConns: semaphore.NewWeighted(parallel),
-	}
 }

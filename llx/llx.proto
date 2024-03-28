@@ -122,7 +122,9 @@ message Result {
 message ResourceRecording {
   string resource = 1;
   string id = 2;
-  map<string, cnquery.llx.Result> fields = 3;
+  map<string, Result> fields = 3;
+  int64 created = 4;
+  int64 updated = 5;
 }
 
 message Rating {

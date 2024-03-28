@@ -13,6 +13,13 @@ import (
 	"go.mondoo.com/cnquery/v10/providers"
 )
 
+func TestLocalServicesInterface(t *testing.T) {
+	localServices := &LocalServices{}
+	// LocalServices should be a QueryConductor
+	var conductor QueryConductor = localServices
+	assert.NotNil(t, conductor)
+}
+
 func TestMatchFilters(t *testing.T) {
 	schema := providers.DefaultRuntime().Schema()
 	conf := mqlc.NewConfig(schema, cnquery.DefaultFeatures)

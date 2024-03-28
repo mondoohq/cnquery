@@ -42,6 +42,7 @@ type Connector struct {
 	Long      string   `json:",omitempty"`
 	MinArgs   uint     `json:",omitempty"`
 	MaxArgs   uint     `json:",omitempty"`
+	IsHidden  bool     `json:",omitempty"`
 	Flags     []Flag   `json:",omitempty"`
 	Aliases   []string `json:",omitempty"`
 	Discovery []string `json:",omitempty"`

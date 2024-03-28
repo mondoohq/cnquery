@@ -29,6 +29,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v10/utils/multierr"
 	"go.mondoo.com/cnquery/v10/utils/slicesx"
@@ -74,7 +75,7 @@ func NewLocalScanner(opts ...ScannerOption) *LocalScanner {
 	}
 
 	if ls.recording == nil {
-		ls.recording = providers.NullRecording{}
+		ls.recording = recording.Null{}
 	}
 
 	return ls
@@ -418,7 +419,7 @@ func HandleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime
 		details := resp.Details[asset.PlatformIds[0]]
 		asset.Mrn = details.AssetMrn
 		asset.Url = details.Url
-
+		runtime.AssetUpdated(asset)
 	}
 	return asset, nil
 }

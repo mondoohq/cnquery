@@ -6,7 +6,6 @@ package providers
 import (
 	"archive/tar"
 	"encoding/json"
-	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 	"io"
 	"net"
 	"net/http"
@@ -27,6 +26,7 @@ import (
 	"go.mondoo.com/cnquery/v10/cli/config"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
 	"golang.org/x/exp/slices"
 )
 
@@ -65,15 +65,19 @@ func init() {
 }
 
 type ProviderLookup struct {
-	ID       string
-	ConnName string
-	ConnType string
+	ID           string
+	ProviderName string
+	ConnName     string
+	ConnType     string
 }
 
 func (s ProviderLookup) String() string {
 	res := []string{}
 	if s.ID != "" {
 		res = append(res, "id="+s.ID)
+	}
+	if s.ProviderName != "" {
+		res = append(res, "provider="+s.ProviderName)
 	}
 	if s.ConnName != "" {
 		res = append(res, "name="+s.ConnName)
@@ -110,6 +114,14 @@ func (p Providers) Lookup(search ProviderLookup) *Provider {
 	if search.ID != "" {
 		for _, provider := range p {
 			if provider.ID == search.ID {
+				return provider
+			}
+		}
+	}
+
+	if search.ProviderName != "" {
+		for _, provider := range p {
+			if provider.Name == search.ProviderName {
 				return provider
 			}
 		}

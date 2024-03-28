@@ -325,7 +325,6 @@ service QueryConductor {
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
   rpc GetReport(EntityDataRequest) returns (Report) {}
-
   rpc SynchronizeAssets(SynchronizeAssetsReq) returns (SynchronizeAssetsResp) {}
 }
 

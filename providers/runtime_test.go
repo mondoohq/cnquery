@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.uber.org/mock/gomock"
 )
@@ -17,7 +18,7 @@ func TestRuntimeClose(t *testing.T) {
 	mockC := NewMockProvidersCoordinator(ctrl)
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		Provider: &ConnectedProvider{
 			Instance: &RunningProvider{
 				Name: "test",
@@ -41,7 +42,7 @@ func TestRuntime_LookupResource(t *testing.T) {
 	mockSchema := NewMockResourcesSchema(ctrl)
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		Provider: &ConnectedProvider{
 			Instance: &RunningProvider{
 				ID:   "test",
@@ -70,7 +71,7 @@ func TestRuntime_LookupResource_CoreOverridesAll(t *testing.T) {
 	mockSchema := NewMockResourcesSchema(ctrl)
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		Provider: &ConnectedProvider{
 			Instance: &RunningProvider{
 				ID:   "test",
@@ -104,7 +105,7 @@ func TestRuntime_LookupResource_ProviderOverridesOthers(t *testing.T) {
 	mockSchema := NewMockResourcesSchema(ctrl)
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		Provider: &ConnectedProvider{
 			Instance: &RunningProvider{
 				ID:   "test",
@@ -143,7 +144,7 @@ func TestRuntime_LookupFieldProvider(t *testing.T) {
 	}
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		providers: map[string]*ConnectedProvider{
 			BuiltinCoreID: p,
 		},
@@ -182,7 +183,7 @@ func TestRuntime_LookupFieldProvider_CoreOverridesAll(t *testing.T) {
 	}
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		providers: map[string]*ConnectedProvider{
 			BuiltinCoreID: p,
 		},
@@ -230,7 +231,7 @@ func TestRuntime_LookupFieldProvider_CoreOverridesAll_ResourceInfo(t *testing.T)
 	}
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		providers: map[string]*ConnectedProvider{
 			BuiltinCoreID: p,
 		},
@@ -289,7 +290,7 @@ func TestRuntime_LookupFieldProvider_ProviderOverridesOthers(t *testing.T) {
 	}
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		providers: map[string]*ConnectedProvider{
 			"test": p,
 		},
@@ -335,7 +336,7 @@ func TestRuntime_LookupFieldProvider_ProviderOverridesOthers_ResourceInfo(t *tes
 	}
 	r := &Runtime{
 		coordinator: mockC,
-		recording:   NullRecording{},
+		recording:   recording.Null{},
 		providers: map[string]*ConnectedProvider{
 			"test": p,
 		},

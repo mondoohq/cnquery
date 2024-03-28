@@ -124,6 +124,16 @@ var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		log.Fatal().Err(err).Msg("failed to prepare config")
 	}
 
+	// FIXME: DEPRECATED, remove in v12.0 and make this the default for all
+	// use-cases where we have upstream recording enabled vv
+	// Instead of depending on the feature-flag, we look at the config
+	if conf.Features.IsActive(cnquery.StoreResourcesData) {
+		if err = runtime.EnableResourcesRecording(); err != nil {
+			log.Fatal().Err(err).Msg("failed to enable resources recording")
+		}
+	}
+	// ^^
+
 	// if users want to get more information on available output options,
 	// print them before executing the scan
 	output := viper.GetString("output")

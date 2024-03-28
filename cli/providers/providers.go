@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v10/types"
 )
 
@@ -124,7 +125,6 @@ func detectConnectorName(args []string, rootCmd *cobra.Command, commands []*Comm
 	}
 
 	connector := parsedArgs[2]
-	// we may want to double-check if the connector exists
 
 	return connector, autoUpdate
 }
@@ -191,6 +191,7 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		Aliases: connector.Aliases,
 		PreRun:  cmd.Command.PreRun,
 		PreRunE: cmd.Command.PreRunE,
+		Hidden:  connector.IsHidden,
 	}
 
 	if connector.MinArgs == connector.MaxArgs {
@@ -454,7 +455,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 		doRecord := record != ""
 
-		recording, err := providers.NewRecording(recordingPath, providers.RecordingOptions{
+		recording, err := recording.NewWithFile(recordingPath, recording.RecordingOptions{
 			DoRecord:        doRecord,
 			PrettyPrintJSON: pretty,
 		})
