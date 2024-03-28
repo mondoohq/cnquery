@@ -1856,6 +1856,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.autoscaling.group.maxInstanceLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetMaxInstanceLifetime()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.desiredCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetDesiredCapacity()).ToDataRes(types.Int)
+	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -2290,6 +2296,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetPriceClass()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.cnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetCnames()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
@@ -5494,6 +5503,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsAutoscalingGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.autoscaling.group.maxInstanceLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).MaxInstanceLifetime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.desiredCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).DesiredCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsElb).__id, ok = v.Value.(string)
 			return
@@ -6180,6 +6197,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.cloudfront.distribution.priceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).PriceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.cnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).Cnames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.origin.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13715,6 +13736,8 @@ type mqlAwsAutoscalingGroup struct {
 	LaunchConfigurationName plugin.TValue[string]
 	HealthCheckGracePeriod plugin.TValue[int64]
 	CreatedAt plugin.TValue[*time.Time]
+	MaxInstanceLifetime plugin.TValue[int64]
+	DesiredCapacity plugin.TValue[int64]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -13800,6 +13823,14 @@ func (c *mqlAwsAutoscalingGroup) GetHealthCheckGracePeriod() *plugin.TValue[int6
 
 func (c *mqlAwsAutoscalingGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsAutoscalingGroup) GetMaxInstanceLifetime() *plugin.TValue[int64] {
+	return &c.MaxInstanceLifetime
+}
+
+func (c *mqlAwsAutoscalingGroup) GetDesiredCapacity() *plugin.TValue[int64] {
+	return &c.DesiredCapacity
 }
 
 // mqlAwsElb for the aws.elb resource
@@ -15920,6 +15951,7 @@ type mqlAwsCloudfrontDistribution struct {
 	IsIPV6Enabled plugin.TValue[bool]
 	Enabled plugin.TValue[bool]
 	PriceClass plugin.TValue[string]
+	Cnames plugin.TValue[[]interface{}]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -15997,6 +16029,10 @@ func (c *mqlAwsCloudfrontDistribution) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlAwsCloudfrontDistribution) GetPriceClass() *plugin.TValue[string] {
 	return &c.PriceClass
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetCnames() *plugin.TValue[[]interface{}] {
+	return &c.Cnames
 }
 
 // mqlAwsCloudfrontDistributionOrigin for the aws.cloudfront.distribution.origin resource

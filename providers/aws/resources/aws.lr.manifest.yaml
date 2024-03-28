@@ -307,12 +307,16 @@ resources:
         min_mondoo_version: 9.0.0
       defaultCooldown:
         min_mondoo_version: 9.0.0
+      desiredCapacity:
+        min_mondoo_version: 9.0.0
       healthCheckGracePeriod:
         min_mondoo_version: 9.0.0
       healthCheckType: {}
       launchConfigurationName:
         min_mondoo_version: 9.0.0
       loadBalancerNames: {}
+      maxInstanceLifetime:
+        min_mondoo_version: 9.0.0
       maxSize:
         min_mondoo_version: 9.0.0
       minSize:
@@ -391,6 +395,7 @@ resources:
     fields:
       arn: {}
       cacheBehaviors: {}
+      cnames: {}
       defaultCacheBehavior: {}
       domainName: {}
       enabled: {}
