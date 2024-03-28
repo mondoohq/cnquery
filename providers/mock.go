@@ -25,9 +25,10 @@ var mockProvider = Provider{
 				Short: "use a recording without an active connection",
 			},
 			{
-				Name:  "upstream",
-				Use:   "upstream",
-				Short: "use upstream asset data",
+				Name:     "upstream",
+				Use:      "upstream",
+				Short:    "use upstream asset data",
+				IsHidden: true,
 				Flags: []plugin.Flag{
 					{
 						Long: "asset",
@@ -158,8 +159,8 @@ func (s *mockProviderService) Connect(req *plugin.ConnectReq, callback plugin.Pr
 		}
 
 		addedProvider.Connection = conn
-		s.runtime.SetRecording(urecording)
-		return conn, nil
+		err = s.runtime.SetRecording(urecording)
+		return conn, err
 	}
 
 	// initialize all other providers from all asset connections in the recording

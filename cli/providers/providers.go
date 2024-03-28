@@ -191,6 +191,7 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		Aliases: connector.Aliases,
 		PreRun:  cmd.Command.PreRun,
 		PreRunE: cmd.Command.PreRunE,
+		Hidden:  connector.IsHidden,
 	}
 
 	if connector.MinArgs == connector.MaxArgs {
