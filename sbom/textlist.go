@@ -4,11 +4,12 @@
 package sbom
 
 import (
-	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/muesli/termenv"
+	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 )
 
 type cliOption func(*cLiOpts)

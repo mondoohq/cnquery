@@ -1,0 +1,156 @@
+SPDXVersion: SPDX-2.3
+SPDXID: SPDXRef-DOCUMENT
+Creator: Tool: cnquery
+Created: 2024-05-12T09:03:05Z
+
+##### Package: alpine-baselayout
+
+PackageName: alpine-baselayout
+SPDXID: SPDXRef-Package-apk-alpine-baselayout-51c13aa44c921e81
+PackageVersion: 1695795276:3.4.3-r2
+FilesAnalyzed: false
+PackageLicenseDeclared: 1695795276:3.4.3-r2
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:alpine-baselayout:alpine-baselayout:1695795276:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/alpine-baselayout@1695795276%3A3.4.3-r2?arch=aarch64&distro=alpine-3.19.1&epoch=1695795276
+
+##### Package: alpine-baselayout-data
+
+PackageName: alpine-baselayout-data
+SPDXID: SPDXRef-Package-apk-alpine-baselayout-data-23e95330a4e89b91
+PackageVersion: 1695795276:3.4.3-r2
+FilesAnalyzed: false
+PackageLicenseDeclared: 1695795276:3.4.3-r2
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:alpine-baselayout-data:alpine-baselayout-data:1695795276:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/alpine-baselayout-data@1695795276%3A3.4.3-r2?arch=aarch64&distro=alpine-3.19.1&epoch=1695795276
+
+##### Package: alpine-keys
+
+PackageName: alpine-keys
+SPDXID: SPDXRef-Package-apk-alpine-keys-abf0590fe473c116
+PackageVersion: 1634579657:2.4-r1
+FilesAnalyzed: false
+PackageLicenseDeclared: 1634579657:2.4-r1
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:alpine-keys:alpine-keys:1634579657:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/alpine-keys@1634579657%3A2.4-r1?arch=aarch64&distro=alpine-3.19.1&epoch=1634579657
+
+##### Package: apk-tools
+
+PackageName: apk-tools
+SPDXID: SPDXRef-Package-apk-apk-tools-dc32b5b7683510fd
+PackageVersion: 1684120357:2.14.0-r5
+FilesAnalyzed: false
+PackageLicenseDeclared: 1684120357:2.14.0-r5
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64&distro=alpine-3.19.1&epoch=1684120357
+
+##### Package: busybox
+
+PackageName: busybox
+SPDXID: SPDXRef-Package-apk-busybox-af4a95feb3b5bc85
+PackageVersion: 1699383189:1.36.1-r15
+FilesAnalyzed: false
+PackageLicenseDeclared: 1699383189:1.36.1-r15
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:busybox:busybox:1699383189:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/busybox@1699383189%3A1.36.1-r15?arch=aarch64&distro=alpine-3.19.1&epoch=1699383189
+
+##### Package: busybox-binsh
+
+PackageName: busybox-binsh
+SPDXID: SPDXRef-Package-apk-busybox-binsh-0df62299083009c6
+PackageVersion: 1699383189:1.36.1-r15
+FilesAnalyzed: false
+PackageLicenseDeclared: 1699383189:1.36.1-r15
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:busybox-binsh:busybox-binsh:1699383189:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/busybox-binsh@1699383189%3A1.36.1-r15?arch=aarch64&distro=alpine-3.19.1&epoch=1699383189
+
+##### Package: ca-certificates-bundle
+
+PackageName: ca-certificates-bundle
+SPDXID: SPDXRef-Package-apk-ca-certificates-bundle-97bb56312d34deda
+PackageVersion: 1683374901:20230506-r0
+FilesAnalyzed: false
+PackageLicenseDeclared: 1683374901:20230506-r0
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:ca-certificates-bundle:ca-certificates-bundle:1683374901:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/ca-certificates-bundle@1683374901%3A20230506-r0?arch=aarch64&distro=alpine-3.19.1&epoch=1683374901
+
+##### Package: libc-utils
+
+PackageName: libc-utils
+SPDXID: SPDXRef-Package-apk-libc-utils-b77d26c23f820e39
+PackageVersion: 1682166293:0.7.2-r5
+FilesAnalyzed: false
+PackageLicenseDeclared: 1682166293:0.7.2-r5
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:libc-utils:libc-utils:1682166293:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/libc-utils@1682166293%3A0.7.2-r5?arch=aarch64&distro=alpine-3.19.1&epoch=1682166293
+
+##### Package: libcrypto3
+
+PackageName: libcrypto3
+SPDXID: SPDXRef-Package-apk-libcrypto3-47fc06b67af1d981
+PackageVersion: 1706233893:3.1.4-r5
+FilesAnalyzed: false
+PackageLicenseDeclared: 1706233893:3.1.4-r5
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:libcrypto3:libcrypto3:1706233893:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/libcrypto3@1706233893%3A3.1.4-r5?arch=aarch64&distro=alpine-3.19.1&epoch=1706233893
+
+##### Package: libssl3
+
+PackageName: libssl3
+SPDXID: SPDXRef-Package-apk-libssl3-d8236d72fa711797
+PackageVersion: 1706233893:3.1.4-r5
+FilesAnalyzed: false
+PackageLicenseDeclared: 1706233893:3.1.4-r5
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:libssl3:libssl3:1706233893:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/libssl3@1706233893%3A3.1.4-r5?arch=aarch64&distro=alpine-3.19.1&epoch=1706233893
+
+##### Package: musl
+
+PackageName: musl
+SPDXID: SPDXRef-Package-apk-musl-47223a96149c11dd
+PackageVersion: 1699271358:1.2.4_git20230717-r4
+FilesAnalyzed: false
+PackageLicenseDeclared: 1699271358:1.2.4_git20230717-r4
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:musl:musl:1699271358:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/musl@1699271358%3A1.2.4_git20230717-r4?arch=aarch64&distro=alpine-3.19.1&epoch=1699271358
+
+##### Package: musl-utils
+
+PackageName: musl-utils
+SPDXID: SPDXRef-Package-apk-musl-utils-346266ddea0224da
+PackageVersion: 1699271358:1.2.4_git20230717-r4
+FilesAnalyzed: false
+PackageLicenseDeclared: 1699271358:1.2.4_git20230717-r4
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:musl-utils:musl-utils:1699271358:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/musl-utils@1699271358%3A1.2.4_git20230717-r4?arch=aarch64&distro=alpine-3.19.1&epoch=1699271358
+
+##### Package: scanelf
+
+PackageName: scanelf
+SPDXID: SPDXRef-Package-apk-scanelf-be5032dcede8446c
+PackageVersion: 1687178519:1.3.7-r2
+FilesAnalyzed: false
+PackageLicenseDeclared: 1687178519:1.3.7-r2
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:scanelf:scanelf:1687178519:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/scanelf@1687178519%3A1.3.7-r2?arch=aarch64&distro=alpine-3.19.1&epoch=1687178519
+
+##### Package: ssl_client
+
+PackageName: ssl_client
+SPDXID: SPDXRef-Package-apk-ssl_client-dcf16a36736423ce
+PackageVersion: 1699383189:1.36.1-r15
+FilesAnalyzed: false
+PackageLicenseDeclared: 1699383189:1.36.1-r15
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:ssl_client:ssl_client:1699383189:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/ssl_client@1699383189%3A1.36.1-r15?arch=aarch64&distro=alpine-3.19.1&epoch=1699383189
+
+##### Package: zlib
+
+PackageName: zlib
+SPDXID: SPDXRef-Package-apk-zlib-0b75dfc93a706cf0
+PackageVersion: 1706012658:1.3.1-r0
+FilesAnalyzed: false
+PackageLicenseDeclared: 1706012658:1.3.1-r0
+ExternalRef: SECURITY cpe23Type cpe:2.3:a:zlib:zlib:1706012658:aarch64:*:*:*:*:*:*
+ExternalRef: SECURITY purl pkg:apk/alpine/zlib@1706012658%3A1.3.1-r0?arch=aarch64&distro=alpine-3.19.1&epoch=1706012658
+
+

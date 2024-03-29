@@ -28,6 +28,7 @@ var Config = plugin.Provider{
 		shared.Type_RegistryImage.String(),
 		shared.Type_FileSystem.String(),
 		shared.Type_Winrm.String(),
+		shared.Type_SBOM.String(),
 	},
 	Connectors: []plugin.Connector{
 		{
@@ -246,6 +247,21 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Path to a local file or directory for the connection to use.",
+				},
+			},
+		},
+		{
+			Name:    "sbom",
+			Use:     "sbom [flags]",
+			Short:   "read SBOM file on disk",
+			MinArgs: 1,
+			MaxArgs: 1,
+			Flags: []plugin.Flag{
+				{
+					Long:    "format",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Format of the sbom file (default is auto-detect).",
 				},
 			},
 		},

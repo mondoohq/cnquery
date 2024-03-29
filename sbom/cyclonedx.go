@@ -138,7 +138,12 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 	}
 
 	sbom := &Sbom{
-		Asset:    &Asset{},
+		Generator: &Generator{
+			// TODO: define generator
+		},
+		Asset: &Asset{
+			Name: bom.Metadata.Component.Name + ":" + bom.Metadata.Component.Version,
+		},
 		Packages: make([]*Package, 0),
 	}
 
@@ -180,6 +185,7 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 				Version: component.Version,
 				Title:   component.Description,
 			}
+			sbom.Asset.Platform.Family = familyMap[component.Name]
 
 			if len(component.CPE) > 0 {
 				sbom.Asset.Platform.Cpes = []string{component.CPE}
@@ -190,4 +196,14 @@ func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) 
 	}
 
 	return sbom, nil
+}
+
+var familyMap = map[string][]string{
+	"windows": []string{"windows", "os"},
+	"debian":  []string{"linux", "unix", "os"},
+	"ubuntu":  []string{"linux", "unix", "os"},
+	"centos":  []string{"linux", "unix", "os"},
+	"alpine":  []string{"linux", "unix", "os"},
+	"fedora":  []string{"linux", "unix", "os"},
+	"rhel":    []string{"linux", "unix", "os"},
 }

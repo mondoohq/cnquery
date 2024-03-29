@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	alpineImage         = "alpine:3.15"
+	alpineImage         = "alpine:3.19"
 	alpineContainerPath = "./alpine-container.tar"
 
 	centosImage         = "centos:7"

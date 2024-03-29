@@ -1,10 +1,13 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package generator
 
 import (
 	"encoding/json"
+	"go.mondoo.com/cnquery/v11/cli/reporter"
+	"os"
+	"sigs.k8s.io/yaml"
 )
 
 // Structures to parse the data from cnquery report
@@ -49,4 +52,18 @@ type BomFields struct {
 
 func (b *BomFields) ToJSON() ([]byte, error) {
 	return json.Marshal(b)
+}
+
+func LoadReport(filename string) (*reporter.Report, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+
+	}
+	var report *reporter.Report
+	err = yaml.Unmarshal(data, &report)
+	if err != nil {
+		return nil, err
+	}
+	return report, nil
 }

@@ -1,27 +1,32 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package sbom_test
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/sbom/generator"
 )
 
 func TestSpdxOutput(t *testing.T) {
-	r := loadTestReport(t)
-	sboms, err := GenerateBom(r)
+	report, err := generator.LoadReport("./testdata/alpine.json")
+	require.NoError(t, err)
+
+	sboms, err := generator.GenerateBom(report)
 	require.NoError(t, err)
 
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	formatHandler := &Spdx{
+	formatHandler := &sbom.Spdx{
 		Version: "2.3",
-		Format:  FormatSpdxJSON,
+		Format:  sbom.FormatSpdxJSON,
 	}
 
 	output := bytes.Buffer{}
@@ -44,4 +49,18 @@ func TestSpdxOutput(t *testing.T) {
 	assert.Contains(t, data, "npm")
 	assert.Contains(t, data, "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*")
 	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
+}
+
+func TestDecoder(t *testing.T) {
+	f, err := os.Open("testdata/alpine-319.spdx")
+	require.NoError(t, err)
+
+	decoder := &sbom.Spdx{
+		Version: "2.3",
+		Format:  "JSON",
+	}
+
+	sbomReport, err := decoder.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, sbomReport)
 }

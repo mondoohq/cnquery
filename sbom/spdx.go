@@ -5,16 +5,19 @@ package sbom
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"regexp"
+	"time"
+
+	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/convert"
 	"github.com/spdx/tools-golang/spdx"
 	"github.com/spdx/tools-golang/spdx/v2/v2_1"
 	"github.com/spdx/tools-golang/spdx/v2/v2_2"
 	"github.com/spdx/tools-golang/spdx/v2/v2_3"
 	"github.com/spdx/tools-golang/tagvalue"
-	"io"
-	"regexp"
-	"time"
 )
 
 type Spdx struct {
@@ -32,7 +35,11 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		CreationInfo: &spdx.CreationInfo{
 			Creators: []spdx.Creator{
 				{
-					Creator:     bom.Generator.Name,
+					Creator:     bom.Generator.Vendor,
+					CreatorType: "Organization",
+				},
+				{
+					Creator:     bom.Generator.Name + "-" + bom.Generator.Version,
 					CreatorType: "Tool",
 				},
 			},
@@ -144,5 +151,87 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 }
 
 func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
-	return nil, parsingNotSupportedError
+
+	type reader func(r io.Reader) (*spdx.Document, error)
+
+	// try to parse all supported SPDX format
+	var readers = []reader{
+		func(r io.Reader) (*spdx.Document, error) {
+			return tagvalue.Read(r)
+		},
+		func(r io.Reader) (*spdx.Document, error) {
+			var doc spdx.Document
+			err := json.NewDecoder(r).Decode(&s)
+			return &doc, err
+		},
+	}
+
+	for _, reader := range readers {
+		doc, err := reader(r)
+		if err == nil {
+			return s.convertToSbom(doc), nil
+		}
+	}
+
+	return nil, errors.New("unable to parse SPDX document")
+}
+
+func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
+	bom := &Sbom{
+		Generator: &Generator{
+			Name: doc.CreationInfo.Creators[0].Creator,
+		},
+		Asset: &Asset{
+			Name: doc.DocumentName,
+		},
+		Packages: []*Package{},
+	}
+
+	for i := range doc.Packages {
+		pkg := doc.Packages[i]
+
+		if pkg.PrimaryPackagePurpose == "CONTAINER" {
+			bom.Asset.Platform = &Platform{
+				Name:    pkg.PackageName,
+				Version: pkg.PackageVersion,
+				Title:   fmt.Sprintf("%s %s", pkg.PackageName, pkg.PackageVersion),
+			}
+			bom.Asset.Platform.Family = familyMap[pkg.PackageName]
+			continue
+		}
+
+		bomPkg := &Package{
+			Name:        pkg.PackageName,
+			Version:     pkg.PackageVersion,
+			Description: pkg.PackageDescription,
+			Location:    pkg.PackageFileName,
+			Type:        "", // extract package type from purl
+			Purl:        "",
+			Cpes:        []string{}, // TODO: extract CPEs from external references
+		}
+
+		for _, ref := range pkg.PackageExternalReferences {
+			if ref.RefType == spdx.PackageManagerPURL {
+				bomPkg.Purl = ref.Locator
+				pkgUrl, err := packageurl.FromString(ref.Locator)
+				if err == nil {
+					bomPkg.Type = pkgUrl.Type
+				}
+			}
+			if ref.RefType == spdx.SecurityCPE23Type {
+				bomPkg.Cpes = append(bomPkg.Cpes, ref.Locator)
+			}
+		}
+
+		if pkg.PackageFileName != "" {
+			bomPkg.EvidenceList = append(bomPkg.EvidenceList, &Evidence{
+				Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+				Value: pkg.PackageFileName,
+			})
+		}
+
+		bom.Packages = append(bom.Packages, bomPkg)
+	}
+
+	return bom
 }

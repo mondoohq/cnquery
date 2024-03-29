@@ -5,6 +5,7 @@ package provider
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/sbom"
 	"slices"
 
 	"github.com/rs/zerolog/log"
@@ -48,7 +49,24 @@ func mapDetectors(raw []string) map[string]struct{} {
 	return res
 }
 
+func (s *Service) detectSbom(asset *inventory.Asset, conn shared.Connection) error {
+	// If the asset connection had the DelayDiscovery flag and the current asset doesn't, we just performed
+	// discovery for the asset and we need to update it.
+	if conn.Asset().Connections[0].DelayDiscovery && !asset.Connections[0].DelayDiscovery {
+		conn.UpdateAsset(asset)
+	}
+	return nil
+}
+
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
+	// for sbom connections we do not need to run the platform detection
+	if _, ok := conn.(*sbom.Connection); ok {
+		err := s.detectSbom(asset, conn)
+		if err != nil {
+			return err
+		}
+	}
+
 	var ok bool
 	asset.Platform, ok = detector.DetectOS(conn)
 	if !ok {

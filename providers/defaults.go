@@ -264,7 +264,7 @@ var DefaultProviders Providers = map[string]*Provider{
 		Provider: &plugin.Provider{
 			Name:            "os",
 			ID:              "go.mondoo.com/cnquery/v9/providers/os",
-			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-image", "docker-container", "docker-file", "docker-registry", "container-registry", "registry-image", "filesystem"},
+			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-image", "docker-container", "docker-file", "docker-registry", "container-registry", "registry-image", "filesystem", "sbom"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "local",
@@ -306,6 +306,12 @@ var DefaultProviders Providers = map[string]*Provider{
 					Name:  "filesystem",
 					Use:   "filesystem [flags]",
 					Short: "a mounted file system target",
+				},
+
+				{
+					Name:  "sbom",
+					Use:   "sbom [flags]",
+					Short: "read SBOM file on disk",
 				},
 			},
 		},

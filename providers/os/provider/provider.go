@@ -21,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/sbom"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
@@ -131,10 +132,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		}
 	case "filesystem", "fs":
 		conf.Type = shared.Type_FileSystem.String()
+	case "sbom":
+		conf.Type = shared.Type_SBOM.String()
+		conf.Path = req.Args[0]
 	}
 
 	user := ""
-	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container")) {
+	if len(req.Args) != 0 && !(strings.HasPrefix(req.Connector, "docker") || strings.HasPrefix(req.Connector, "container") || strings.HasPrefix(req.Connector, "sbom")) {
 		target := req.Args[0]
 		if !strings.Contains(target, "://") {
 			target = "ssh://" + target
@@ -438,6 +442,25 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				// In this case asset.Name should already be set via the inventory
 				asset.PlatformIds = []string{pID}
 			}
+
+		case shared.Type_SBOM.String():
+			conn, err = sbom.NewConnection(connId, conf, asset)
+			if err != nil {
+				return nil, err
+			}
+
+			// This is a workaround to set Google COS platform IDs when scanned from inside k8s
+			pID, err := conn.(*sbom.Connection).Identifier()
+			if err != nil {
+				return nil, err
+			} else {
+				// In this case asset.Name should already be set via the inventory
+				asset.PlatformIds = []string{pID}
+			}
+
+			// sbom files are always converted to recordings internally
+			req.HasRecording = true
+			callback = conn.(*sbom.Connection).GetRecording()
 
 		// Do not expose mock connection as a supported type
 		case "mock":

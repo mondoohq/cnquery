@@ -5,9 +5,10 @@ package sbom
 
 import (
 	"errors"
-	"github.com/CycloneDX/cyclonedx-go"
 	"io"
 	"strings"
+
+	"github.com/CycloneDX/cyclonedx-go"
 )
 
 const (
