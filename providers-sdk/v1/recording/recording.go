@@ -26,8 +26,7 @@ type recording struct {
 	doNotSave bool `json:"-"`
 }
 
-// Creates a recording that holds only the specified asset
-func FromAsset(asset *inventory.Asset) (*recording, error) {
+func NewAssetRecording(asset *inventory.Asset) *Asset {
 	id := asset.Mrn
 	if id == "" {
 		id = asset.Id
@@ -51,13 +50,18 @@ func FromAsset(asset *inventory.Asset) (*recording, error) {
 		ai.Runtime = asset.Platform.Runtime
 		ai.Labels = asset.Platform.Labels
 	}
+	return &Asset{
+		Asset:       ai,
+		connections: map[string]*connection{},
+		resources:   map[string]*Resource{},
+	}
+}
+
+// Creates a recording that holds only the specified asset
+func FromAsset(asset *inventory.Asset) (*recording, error) {
 	r := &recording{
 		Assets: []*Asset{
-			{
-				Asset:       ai,
-				connections: map[string]*connection{},
-				resources:   map[string]*Resource{},
-			},
+			NewAssetRecording(asset),
 		},
 	}
 

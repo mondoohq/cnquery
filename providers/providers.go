@@ -355,6 +355,11 @@ func EnsureProvider(search ProviderLookup, autoUpdate bool, existing Providers) 
 		return &mockProvider, nil
 	}
 
+	if search.ID == sbomProvider.ID || search.ConnName == "sbom" || search.ConnType == "sbom" {
+		existing.Add(&sbomProvider)
+		return &sbomProvider, nil
+	}
+
 	upstream := DefaultProviders.Lookup(search)
 	if upstream == nil {
 		// we can't find any provider for this connector in our default set

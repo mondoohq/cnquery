@@ -7,6 +7,7 @@ Usage:
 
 Available Commands:
   mock        Run a query with a recording file without an active connection
+  sbom        Run a query with read SBOM file on disk
 
 Flags:
       --ast                  Parse the query and return the abstract syntax tree (AST).

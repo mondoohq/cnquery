@@ -40,4 +40,13 @@ var builtinProviders = map[string]*builtinProvider{
 		},
 		Config: mockProvider.Provider,
 	},
+	sbomProvider.ID: {
+		Runtime: &RunningProvider{
+			Name:     sbomProvider.Name,
+			ID:       sbomProvider.ID,
+			Plugin:   &sbomProviderService{},
+			isClosed: false,
+		},
+		Config: sbomProvider.Provider,
+	},
 }

@@ -1,0 +1,510 @@
+{
+  "assets": [
+    {
+      "asset": {
+        "id": "Alpine Linux v3.19",
+        "platformIDs": [
+          "//platformid.api.mondoo.app/runtime/docker/images/ace17d5d883e9ea5a21138d0608d60aa2376c68f616c55b0b7e73fba6d8556a3"
+        ],
+        "name": "alpine",
+        "title": "Alpine Linux v3.19",
+        "family": [
+          "linux",
+          "unix",
+          "os"
+        ],
+        "version": "3.19.1",
+        "kind": "container-image",
+        "runtime": "docker-image",
+        "labels": {
+          "distro-id": "alpine"
+        }
+      },
+      "connections": [
+        {
+          "url": "docker-image://alpine:3.19",
+          "provider": "go.mondoo.com/cnquery/v9/providers/os",
+          "connector": "docker-image",
+          "version": ""
+        }
+      ],
+      "resources": [
+        {
+          "Resource": "asset",
+          "ID": "",
+          "Fields": {
+            "arch": {
+              "type": "\u0007",
+              "value": ""
+            },
+            "cpes": {
+              "type": "\u0019\u001bcpe",
+              "value": [
+                {
+                  "Name": "cpe",
+                  "ID": "cpe:2.3:o:alpinelinux:alpine_linux:3.19.1:*:*:*:*:*:*:*"
+                }
+              ]
+            },
+            "family": {
+              "type": "\u0019\u0007",
+              "value": [
+                "linux",
+                "unix",
+                "os"
+              ]
+            },
+            "ids": {
+              "type": "\u0019\u0007",
+              "value": [
+                "//platformid.api.mondoo.app/runtime/docker/images/ace17d5d883e9ea5a21138d0608d60aa2376c68f616c55b0b7e73fba6d8556a3"
+              ]
+            },
+            "kind": {
+              "type": "\u0007",
+              "value": "container-image"
+            },
+            "labels": {
+              "type": "\u001a\u0007\u0007",
+              "value": {
+                "distro-id": "alpine"
+              }
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "alpine:3.19"
+            },
+            "platform": {
+              "type": "\u0007",
+              "value": "alpine"
+            },
+            "runtime": {
+              "type": "\u0007",
+              "value": "docker-image"
+            },
+            "version": {
+              "type": "\u0007",
+              "value": "3.19.1"
+            }
+          }
+        },
+        {
+          "Resource": "cpe",
+          "ID": "cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*",
+          "Fields": {
+            "uri": {
+              "type": "\u0007",
+              "value": "cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*"
+            }
+          }
+        },
+        {
+          "Resource": "cpe",
+          "ID": "cpe:2.3:a:busybox:busybox:1699383189:aarch64:*:*:*:*:*:*",
+          "Fields": {
+            "uri": {
+              "type": "\u0007",
+              "value": "cpe:2.3:a:busybox:busybox:1699383189:aarch64:*:*:*:*:*:*"
+            }
+          }
+        },
+        {
+          "Resource": "cpe",
+          "ID": "cpe:2.3:o:alpinelinux:alpine_linux:3.19.1:*:*:*:*:*:*:*",
+          "Fields": {
+            "uri": {
+              "type": "\u0007",
+              "value": "cpe:2.3:o:alpinelinux:alpine_linux:3.19.1:*:*:*:*:*:*:*"
+            }
+          }
+        },
+        {
+          "Resource": "kernel",
+          "ID": "",
+          "Fields": {
+            "installed": {
+              "error": "could not determine kernel version"
+            }
+          }
+        },
+        {
+          "Resource": "npm.packages",
+          "ID": "npm.packages",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bnpm.package",
+              "value": []
+            }
+          }
+        },
+        {
+          "Resource": "package",
+          "ID": "apk://apk-tools/1684120357:2.14.0-r5/aarch64",
+          "Fields": {
+            "arch": {
+              "type": "\u0007",
+              "value": "aarch64"
+            },
+            "cpes": {
+              "type": "\u0019\u001bcpe",
+              "value": [
+                {
+                  "Name": "cpe",
+                  "ID": "cpe:2.3:a:apk-tools:apk-tools:1684120357:aarch64:*:*:*:*:*:*"
+                }
+              ]
+            },
+            "files": {
+              "type": "\u0019\u001bpkgFileInfo",
+              "value": [
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "lib/libapk.so.2.14.0"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "sbin/apk"
+                }
+              ]
+            },
+            "format": {
+              "type": "\u0007",
+              "value": "apk"
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "apk-tools"
+            },
+            "origin": {
+              "type": "\u0007",
+              "value": "apk-tools"
+            },
+            "purl": {
+              "type": "\u0007",
+              "value": "pkg:apk/alpine/apk-tools@1684120357%3A2.14.0-r5?arch=aarch64\u0026distro=alpine-3.19.1\u0026epoch=1684120357"
+            },
+            "version": {
+              "type": "\u0007",
+              "value": "1684120357:2.14.0-r5"
+            }
+          }
+        },
+        {
+          "Resource": "package",
+          "ID": "apk://busybox/1699383189:1.36.1-r15/aarch64",
+          "Fields": {
+            "arch": {
+              "type": "\u0007",
+              "value": "aarch64"
+            },
+            "cpes": {
+              "type": "\u0019\u001bcpe",
+              "value": [
+                {
+                  "Name": "cpe",
+                  "ID": "cpe:2.3:a:busybox:busybox:1699383189:aarch64:*:*:*:*:*:*"
+                }
+              ]
+            },
+            "files": {
+              "type": "\u0019\u001bpkgFileInfo",
+              "value": [
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "bin/busybox"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/securetty"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/udhcpd.conf"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/busybox-paths.d/busybox"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/logrotate.d/acpid"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/network/if-up.d/dad"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "etc/udhcpc/udhcpc.conf"
+                },
+                {
+                  "Name": "pkgFileInfo",
+                  "ID": "usr/share/udhcpc/default.script"
+                }
+              ]
+            },
+            "format": {
+              "type": "\u0007",
+              "value": "apk"
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "busybox"
+            },
+            "origin": {
+              "type": "\u0007",
+              "value": "busybox"
+            },
+            "purl": {
+              "type": "\u0007",
+              "value": "pkg:apk/alpine/busybox@1699383189%3A1.36.1-r15?arch=aarch64\u0026distro=alpine-3.19.1\u0026epoch=1699383189"
+            },
+            "version": {
+              "type": "\u0007",
+              "value": "1699383189:1.36.1-r15"
+            }
+          }
+        },
+        {
+          "Resource": "packages",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bpackage",
+              "value": [
+                {
+                  "Name": "package",
+                  "ID": "apk://apk-tools/1684120357:2.14.0-r5/aarch64"
+                },
+                {
+                  "Name": "package",
+                  "ID": "apk://busybox/1699383189:1.36.1-r15/aarch64"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "bin/busybox",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "bin/busybox"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "bin/sh",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "bin/sh"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-524d27bb.rsa.pub"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-58199dcc.rsa.pub"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616a9724.rsa.pub"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616adfeb.rsa.pub"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/apk/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/busybox-paths.d/busybox",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/busybox-paths.d/busybox"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/crontabs/root",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/crontabs/root"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/fstab",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/fstab"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/group",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/group"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/hostname",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/hostname"
+            }
+          }
+        },
+        {
+          "Resource": "python",
+          "ID": "python",
+          "Fields": {
+            "packages": {
+              "type": "\u0019\u001bpython.package",
+              "value": []
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "lib/libapk.so.2.14.0",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "lib/libapk.so.2.14.0"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "sbin/apk",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "sbin/apk"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/securetty",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/securetty"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/udhcpd.conf",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/udhcpd.conf"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/logrotate.d/acpid",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/logrotate.d/acpid"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/network/if-up.d/dad",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/network/if-up.d/dad"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "etc/udhcpc/udhcpc.conf",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "etc/udhcpc/udhcpc.conf"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "usr/share/udhcpc/default.script",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "usr/share/udhcpc/default.script"
+            }
+          }
+        },
+        {
+          "Resource": "pkgFileInfo",
+          "ID": "bin/busybox",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "bin/busybox"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

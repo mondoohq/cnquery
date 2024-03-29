@@ -1,26 +1,31 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package sbom_test
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/sbom/generator"
 )
 
-func TestCycloneDXOutput(t *testing.T) {
-	r := loadTestReport(t)
-	sboms, err := GenerateBom(r)
+func TestCycloneDxOutput(t *testing.T) {
+	report, err := generator.LoadReport("./testdata/alpine.json")
+	require.NoError(t, err)
+
+	sboms, err := generator.GenerateBom(report)
 	require.NoError(t, err)
 
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	formatHandler := &CycloneDX{
+	formatHandler := &sbom.CycloneDX{
 		Format: cyclonedx.BOMFileFormatJSON,
 	}
 
@@ -49,12 +54,25 @@ func TestCycloneDXOutput(t *testing.T) {
 	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
 }
 
-func TestCycloneDXParsing(t *testing.T) {
-	f, err := os.Open("./testdata/debian-buster-20231030.json")
+func TestCycloneDxJsonDecoding(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-319.cyclone.json")
 	require.NoError(t, err)
 
-	formatHandler := &CycloneDX{
+	formatHandler := &sbom.CycloneDX{
 		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+}
+
+func TestCycloneDxXmlDecoding(t *testing.T) {
+	f, err := os.Open("./testdata/alpine-319.cyclone.xml")
+	require.NoError(t, err)
+
+	formatHandler := &sbom.CycloneDX{
+		Format: cyclonedx.BOMFileFormatXML,
 	}
 
 	bom, err := formatHandler.Parse(f)

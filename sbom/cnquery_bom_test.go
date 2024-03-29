@@ -1,7 +1,7 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package sbom
+package sbom_test
 
 import (
 	"bytes"
@@ -9,20 +9,24 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/sbom"
+	"go.mondoo.com/cnquery/v11/sbom/generator"
 )
 
 func TestSimpleBomOutput(t *testing.T) {
-	r := loadTestReport(t)
-	sboms, err := GenerateBom(r)
+	report, err := generator.LoadReport("./testdata/alpine.json")
+	require.NoError(t, err)
+
+	sboms, err := generator.GenerateBom(report)
 	require.NoError(t, err)
 
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	var exporter FormatSpecificationHandler
+	var exporter sbom.FormatSpecificationHandler
 
 	output := bytes.Buffer{}
-	exporter = &CnqueryBOM{}
+	exporter = &sbom.CnqueryBOM{}
 	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 
