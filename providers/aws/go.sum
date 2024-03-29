@@ -104,8 +104,8 @@ github.com/ashanbrown/forbidigo v1.6.0 h1:D3aewfM37Yb3pxHujIPSpTf6oQk9sc9WZi8ger
 github.com/ashanbrown/forbidigo v1.6.0/go.mod h1:Y8j9jy9ZYAEHXdu723cUlraTqbzjKF1MUyfOKL+AjcU=
 github.com/ashanbrown/makezero v1.1.1 h1:iCQ87C0V0vSyO+M9E/FZYbu65auqH0lnsOkf5FcB28s=
 github.com/ashanbrown/makezero v1.1.1/go.mod h1:i1bJLCRSCHOcOa9Y6MyF2FTfMZMFdHvxKHxgO5Z1axI=
-github.com/aws/aws-sdk-go v1.51.9 h1:w6ZlyFX7l4+ZNVPmWw7LwOHSaBDDQuP22l1gh7OYu7w=
-github.com/aws/aws-sdk-go v1.51.9/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.10 h1:/g8K1SllwdCnsVw2BFXsYd+TS5P75skj5a8QFbfdW0U=
+github.com/aws/aws-sdk-go v1.51.10/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.26.0 h1:/Ce4OCiM3EkpW7Y+xUnfAFpchU78K7/Ug01sZni9PgA=
 github.com/aws/aws-sdk-go-v2 v1.26.0/go.mod h1:35hUlJVYd+M++iLI3ALmVwMOyRYMmRqUXpTtRGW+K9I=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 h1:gTK2uhtAPtFcdRRJilZPx8uJLL2J85xK11nKtWL0wfU=
@@ -152,8 +152,8 @@ github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.3 h1:aLuqjrc
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.3/go.mod h1:3se7gWHTTtyTgvZK09ubaIqjSocFA8CCGXqPG6C7c1Y=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0 h1:LtsNRZ6+ZYIbJcPiLHcefXeWkw2DZT9iJyXJJQvhvXw=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0/go.mod h1:ua1eYOCxAAT0PUY3LAi9bUFuKJHC/iAksBLqR1Et7aU=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0 h1:+OJ9EhHaqjtA4YTTbxxLxMffrWuGWh0qMaBmGJTLSSg=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0/go.mod h1:TeZ9dVQzGaLG+SBIgdLIDbJ6WmfFvksLeG3EHGnNfZM=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.0 h1:MuQr3lq2n/5lAdDcIYMANNpYNkFo6HDGq7S9+aRy9uc=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.0/go.mod h1:TeZ9dVQzGaLG+SBIgdLIDbJ6WmfFvksLeG3EHGnNfZM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3 h1:gfgt0D8MGL3gHrJPEv4rcWptA4Nz7uYn25ls8lLiANw=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3/go.mod h1:O5Fvd41s5KfDG093xLM7FhGiH6EmhmEli5D5MQH3TWw=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3 h1:gaq/4fd2/bQeJ33m4csgL7DJHrrmvGhqnrsxchNr46c=
@@ -162,8 +162,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5 h1:KUB2aLoYzKGZIh2mybcwBqBy7Fjw
 github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5/go.mod h1:7b5ZXNyT7SjZhy+MOuXwL2XtsrFDl1bOL4Mqrgr5c3k=
 github.com/aws/aws-sdk-go-v2/service/efs v1.28.3 h1:gmpKWdqGbS1Ui6fV17YV02w2ObXvGCGcFqfW8oVle24=
 github.com/aws/aws-sdk-go-v2/service/efs v1.28.3/go.mod h1:hbNFr+tpJXBR+eqC96RMCqm9pufClQV3h1ozEuJsjME=
-github.com/aws/aws-sdk-go-v2/service/eks v1.41.2 h1:0X5g5H8YyW9QVtlp6j+ZGHl/h0ZS58jiLRXabyiB5uw=
-github.com/aws/aws-sdk-go-v2/service/eks v1.41.2/go.mod h1:T2MBMUUCoSEvHuKPplubyQJbWNghbHhx3ToJpLoipDs=
+github.com/aws/aws-sdk-go-v2/service/eks v1.42.0 h1:9qScaF0c3arFYOuFBTIUEfUIVFYV+U7wv51Ls78MlwM=
+github.com/aws/aws-sdk-go-v2/service/eks v1.42.0/go.mod h1:T2MBMUUCoSEvHuKPplubyQJbWNghbHhx3ToJpLoipDs=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.0 h1:Ac0ujTSUTLJzYsHi+b8mlTNitU5qMy7sOs5/RCkZh9U=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.0/go.mod h1:S/K/QIhqH+2hwikH4SctnR8QhKvaljcPZ6GdcjmFXSk=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.3 h1:pjgSJEvgJzv+e0frrqspeYdHz2JSW1KAGMXRe1FuQ1M=
@@ -174,8 +174,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.3 h1:gJ558ctwXWS
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.3/go.mod h1:lBdwGiU12rcpVlDJs04BwotbuRsM0nX62PFuR8Kk9Mk=
 github.com/aws/aws-sdk-go-v2/service/emr v1.39.3 h1:5dh5/uBMDJZ095pyo8J9Iq6eO+spYSpBxIht3zHSDJE=
 github.com/aws/aws-sdk-go-v2/service/emr v1.39.3/go.mod h1:1XQMB8mMwEgJ/PiqHYroypNRmntlxC4S6Si9s/e6MBg=
-github.com/aws/aws-sdk-go-v2/service/guardduty v1.40.1 h1:fGTQXDhOJ59iJYOjVrmfy56H1MrAqwzCHYH5134yDPo=
-github.com/aws/aws-sdk-go-v2/service/guardduty v1.40.1/go.mod h1:cEd6qKn9yv3pew0lUreVGgnt6oPN0AAmnW8oHeoasOI=
+github.com/aws/aws-sdk-go-v2/service/guardduty v1.41.0 h1:ib5DZXATqwMTsYMoIQfFh0GB0/rinkAIfRj9+6uOVMI=
+github.com/aws/aws-sdk-go-v2/service/guardduty v1.41.0/go.mod h1:cEd6qKn9yv3pew0lUreVGgnt6oPN0AAmnW8oHeoasOI=
 github.com/aws/aws-sdk-go-v2/service/iam v1.31.3 h1:cJn9Snros9WmDA7/qCCN7jSkowcu1CqnwhFpv4ipHEE=
 github.com/aws/aws-sdk-go-v2/service/iam v1.31.3/go.mod h1:+nAQlxsBxPFf6GrL93lvCuv5PxSTX3GO0RYrURyzl/Q=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 h1:EyBZibRTVAs6ECHZOw5/wlylS9OcTzwyjeQMudmREjE=

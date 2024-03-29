@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.51.9
+	github.com/aws/aws-sdk-go v1.51.10
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.9
@@ -26,18 +26,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.154.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.3
-	github.com/aws/aws-sdk-go-v2/service/eks v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/eks v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.3
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/kms v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.3
