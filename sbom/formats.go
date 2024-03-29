@@ -19,11 +19,14 @@ const (
 	FormatList          string = "table"
 )
 
-var conversionNotSupportedError = errors.New("conversion not supported")
+var conversionNotSupportedError = errors.New("conversion is not supported")
+var parsingNotSupportedError = errors.New("parsing is not supported")
 
 type FormatSpecificationHandler interface {
 	// Convert converts cnquery sbom to the desired format
 	Convert(bom *Sbom) (interface{}, error)
+	// Parse parses the sbom format to *Sbom
+	Parse(r io.Reader) (*Sbom, error)
 	// Render writes the converted sbom to the writer in the desired format
 	Render(w io.Writer, bom *Sbom) error
 }

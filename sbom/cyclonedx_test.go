@@ -48,3 +48,16 @@ func TestCycloneDXOutput(t *testing.T) {
 	assert.Contains(t, data, "cpe:2.3:a:npm:npm:10.2.4:*:*:*:*:*:*:*")
 	assert.Contains(t, data, "pkg:npm/npm@10.2.4")
 }
+
+func TestCycloneDXParsing(t *testing.T) {
+	f, err := os.Open("./testdata/debian-buster-20231030.json")
+	require.NoError(t, err)
+
+	formatHandler := &CycloneDX{
+		Format: cyclonedx.BOMFileFormatJSON,
+	}
+
+	bom, err := formatHandler.Parse(f)
+	require.NoError(t, err)
+	assert.NotNil(t, bom)
+}

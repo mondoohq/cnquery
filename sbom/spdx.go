@@ -142,3 +142,7 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 		return enc.Encode(spdxBom)
 	}
 }
+
+func (s *Spdx) Parse(r io.Reader) (*Sbom, error) {
+	return nil, parsingNotSupportedError
+}
