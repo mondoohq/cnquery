@@ -9,6 +9,7 @@ import (
 
 	cyclonedx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/google/uuid"
+	"github.com/package-url/packageurl-go"
 )
 
 type CycloneDX struct {
@@ -117,4 +118,76 @@ func (ccx *CycloneDX) Render(w io.Writer, bom *Sbom) error {
 	enc := cyclonedx.NewBOMEncoder(w, ccx.Format)
 	enc.SetPretty(true)
 	return enc.Encode(sbom)
+}
+
+func (ccx *CycloneDX) Parse(r io.Reader) (*Sbom, error) {
+	doc := &cyclonedx.BOM{
+		Components: &[]cyclonedx.Component{},
+	}
+	err := cyclonedx.NewBOMDecoder(r, ccx.Format).Decode(doc)
+	if err != nil {
+		return nil, err
+	}
+
+	return ccx.convertCycloneDxToSbom(doc)
+}
+
+func (ccx *CycloneDX) convertCycloneDxToSbom(bom *cyclonedx.BOM) (*Sbom, error) {
+	if bom == nil {
+		return nil, nil
+	}
+
+	sbom := &Sbom{
+		Asset:    &Asset{},
+		Packages: make([]*Package, 0),
+	}
+
+	for i := range *bom.Components {
+		component := (*bom.Components)[i]
+		pkg := &Package{
+			Name:    component.Name,
+			Version: component.Version,
+			Purl:    component.PackageURL,
+		}
+
+		// parse purl to gather package type
+		if component.PackageURL != "" {
+			url, err := packageurl.FromString(component.PackageURL)
+			if err == nil {
+				pkg.Type = url.Type
+			}
+		}
+
+		if component.CPE != "" {
+			pkg.Cpes = []string{component.CPE}
+		}
+
+		if component.Evidence != nil && component.Evidence.Occurrences != nil {
+			pkg.EvidenceList = make([]*Evidence, 0)
+			for i := range *component.Evidence.Occurrences {
+				e := (*component.Evidence.Occurrences)[i]
+				pkg.EvidenceList = append(pkg.EvidenceList, &Evidence{
+					Type:  EvidenceType_EVIDENCE_TYPE_FILE,
+					Value: e.Location,
+				})
+			}
+		}
+
+		switch component.Type {
+		case cyclonedx.ComponentTypeOS:
+			sbom.Asset.Platform = &Platform{
+				Name:    component.Name,
+				Version: component.Version,
+				Title:   component.Description,
+			}
+
+			if len(component.CPE) > 0 {
+				sbom.Asset.Platform.Cpes = []string{component.CPE}
+			}
+		case cyclonedx.ComponentTypeLibrary:
+			sbom.Packages = append(sbom.Packages, pkg)
+		}
+	}
+
+	return sbom, nil
 }

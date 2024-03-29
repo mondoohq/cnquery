@@ -23,6 +23,7 @@ func WithEvidence() cliOption {
 	}
 }
 
+// TextList is a simple text list output format
 type TextList struct {
 	opts cLiOpts
 }
@@ -95,4 +96,8 @@ func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 		}
 	}
 	return nil
+}
+
+func (s *TextList) Parse(r io.Reader) (*Sbom, error) {
+	return nil, parsingNotSupportedError
 }

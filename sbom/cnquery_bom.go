@@ -20,3 +20,13 @@ func (ccx *CnqueryBOM) Render(output io.Writer, bom *Sbom) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(bom)
 }
+
+func (ccx *CnqueryBOM) Parse(r io.Reader) (*Sbom, error) {
+	var s Sbom
+	err := json.NewDecoder(r).Decode(&s)
+
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
