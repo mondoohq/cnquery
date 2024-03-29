@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSpdx(t *testing.T) {
+func TestSpdxOutput(t *testing.T) {
 	r := loadTestReport(t)
 	sboms, err := GenerateBom(r)
 	require.NoError(t, err)
@@ -19,13 +19,13 @@ func TestSpdx(t *testing.T) {
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	var exporter Exporter
-	output := bytes.Buffer{}
-	exporter = &Spdx{
+	formatHandler := &Spdx{
 		Version: "2.3",
 		Format:  FormatSpdxJSON,
 	}
-	err = exporter.Render(&output, selectedBom)
+
+	output := bytes.Buffer{}
+	err = formatHandler.Render(&output, selectedBom)
 	require.NoError(t, err)
 
 	data := output.String()

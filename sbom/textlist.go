@@ -33,6 +33,10 @@ func (s *TextList) ApplyOptions(opts ...cliOption) {
 	}
 }
 
+func (s *TextList) Convert(bom *Sbom) (interface{}, error) {
+	return nil, conversionNotSupportedError
+}
+
 func (s *TextList) Render(w io.Writer, bom *Sbom) error {
 
 	sort.SliceStable(bom.Packages, func(i, j int) bool {

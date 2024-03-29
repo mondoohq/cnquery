@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCycloneDX(t *testing.T) {
+func TestCycloneDXOutput(t *testing.T) {
 	r := loadTestReport(t)
 	sboms, err := GenerateBom(r)
 	require.NoError(t, err)
@@ -20,15 +20,15 @@ func TestCycloneDX(t *testing.T) {
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	var exporter Exporter
-	output := bytes.Buffer{}
-	exporter = &CycloneDX{
+	formatHandler := &CycloneDX{
 		Format: cyclonedx.BOMFileFormatJSON,
 	}
-	err = exporter.Render(&output, selectedBom)
-	require.NoError(t, err)
 
+	output := bytes.Buffer{}
+	err = formatHandler.Render(&output, selectedBom)
+	require.NoError(t, err)
 	data := output.String()
+
 	// os.WriteFile("./testdata/bom_cyclone.json", output.Bytes(), 0700)
 	assert.Contains(t, data, "cyclonedx")
 

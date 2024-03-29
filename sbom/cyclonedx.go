@@ -15,7 +15,7 @@ type CycloneDX struct {
 	Format cyclonedx.BOMFileFormat
 }
 
-func (ccx *CycloneDX) convert(bom *Sbom) (*cyclonedx.BOM, error) {
+func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 	sbom := cyclonedx.NewBOM()
 	sbom.SerialNumber = uuid.New().URN()
 	sbom.Metadata = &cyclonedx.Metadata{
@@ -105,8 +105,12 @@ func (ccx *CycloneDX) convert(bom *Sbom) (*cyclonedx.BOM, error) {
 	return sbom, nil
 }
 
+func (ccx *CycloneDX) Convert(bom *Sbom) (interface{}, error) {
+	return ccx.convertToCycloneDx(bom)
+}
+
 func (ccx *CycloneDX) Render(w io.Writer, bom *Sbom) error {
-	sbom, err := ccx.convert(bom)
+	sbom, err := ccx.convertToCycloneDx(bom)
 	if err != nil {
 		return err
 	}

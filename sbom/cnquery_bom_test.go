@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSimpleBom(t *testing.T) {
+func TestSimpleBomOutput(t *testing.T) {
 	r := loadTestReport(t)
 	sboms, err := GenerateBom(r)
 	require.NoError(t, err)
@@ -19,7 +19,7 @@ func TestSimpleBom(t *testing.T) {
 	// store bom in different formats
 	selectedBom := sboms[0]
 
-	var exporter Exporter
+	var exporter FormatSpecificationHandler
 
 	output := bytes.Buffer{}
 	exporter = &CnqueryBOM{}

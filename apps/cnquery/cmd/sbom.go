@@ -98,9 +98,9 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		log.Fatal().Err(err).Msg("failed to parse bom")
 	}
 
-	var exporter sbom.Exporter
+	var exporter sbom.FormatSpecificationHandler
 	output := viper.GetString("output")
-	exporter = sbom.NewExporter(output)
+	exporter = sbom.New(output)
 	if exporter == nil {
 		log.Fatal().Err(err).Msg("failed to get exporter for output format: " + output)
 	}
