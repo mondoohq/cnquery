@@ -22,7 +22,7 @@ type Spdx struct {
 	Format  string
 }
 
-func (s *Spdx) convert(bom *Sbom) *spdx.Document {
+func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 	doc := &spdx.Document{
 		SPDXVersion:                spdx.Version,
 		SPDXIdentifier:             "DOCUMENT",
@@ -90,8 +90,8 @@ func NewSPDXPackageID(pkg *Package) spdx.ElementID {
 	return spdx.ElementID(id)
 }
 
-func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
-	spdxLatestBom := s.convert(bom)
+func (s *Spdx) Convert(bom *Sbom) (interface{}, error) {
+	spdxLatestBom := s.convertToSpdx(bom)
 
 	var spdxBom any
 	var err error
@@ -111,11 +111,19 @@ func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
 		err = convert.Document(spdxLatestBom, &doc)
 		spdxBom = doc
 	default:
-		return fmt.Errorf("unsupported SPDX version %q", s.Version)
+		return nil, fmt.Errorf("unsupported SPDX version %q", s.Version)
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to convert SBOM to SPDX document: %w", err)
+		return nil, fmt.Errorf("unable to convertToCycloneDx SBOM to SPDX document: %w", err)
+	}
+	return spdxBom, nil
+}
+
+func (s *Spdx) Render(w io.Writer, bom *Sbom) error {
+	spdxBom, err := s.Convert(bom)
+	if err != nil {
+		return err
 	}
 
 	switch s.Format {
