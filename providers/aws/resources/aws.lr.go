@@ -1865,6 +1865,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
 	},
+	"aws.autoscaling.group.capacityRebalance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetCapacityRebalance()).ToDataRes(types.Bool)
+	},
+	"aws.autoscaling.group.defaultInstanceWarmup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetDefaultInstanceWarmup()).ToDataRes(types.Int)
+	},
+	"aws.autoscaling.group.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetInstances()).ToDataRes(types.Array(types.Resource("aws.ec2.instance")))
+	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -5516,6 +5525,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.capacityRebalance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).CapacityRebalance, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.defaultInstanceWarmup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).DefaultInstanceWarmup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).Instances, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13746,6 +13767,9 @@ type mqlAwsAutoscalingGroup struct {
 	MaxInstanceLifetime plugin.TValue[int64]
 	DesiredCapacity plugin.TValue[int64]
 	AvailabilityZones plugin.TValue[[]interface{}]
+	CapacityRebalance plugin.TValue[bool]
+	DefaultInstanceWarmup plugin.TValue[int64]
+	Instances plugin.TValue[[]interface{}]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -13843,6 +13867,18 @@ func (c *mqlAwsAutoscalingGroup) GetDesiredCapacity() *plugin.TValue[int64] {
 
 func (c *mqlAwsAutoscalingGroup) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
 	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsAutoscalingGroup) GetCapacityRebalance() *plugin.TValue[bool] {
+	return &c.CapacityRebalance
+}
+
+func (c *mqlAwsAutoscalingGroup) GetDefaultInstanceWarmup() *plugin.TValue[int64] {
+	return &c.DefaultInstanceWarmup
+}
+
+func (c *mqlAwsAutoscalingGroup) GetInstances() *plugin.TValue[[]interface{}] {
+	return &c.Instances
 }
 
 // mqlAwsElb for the aws.elb resource
