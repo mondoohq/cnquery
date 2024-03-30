@@ -1862,6 +1862,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.autoscaling.group.desiredCapacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscalingGroup).GetDesiredCapacity()).ToDataRes(types.Int)
 	},
+	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAutoscalingGroup).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
 	"aws.elb.classicLoadBalancers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElb).GetClassicLoadBalancers()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
 	},
@@ -2298,7 +2301,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsCloudfrontDistribution).GetPriceClass()).ToDataRes(types.String)
 	},
 	"aws.cloudfront.distribution.cnames": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCloudfrontDistribution).GetCnames()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsCloudfrontDistribution).GetCnames()).ToDataRes(types.Array(types.String))
 	},
 	"aws.cloudfront.distribution.origin.domainName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetDomainName()).ToDataRes(types.String)
@@ -5509,6 +5512,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.autoscaling.group.desiredCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscalingGroup).DesiredCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.autoscaling.group.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAutoscalingGroup).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.elb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13738,6 +13745,7 @@ type mqlAwsAutoscalingGroup struct {
 	CreatedAt plugin.TValue[*time.Time]
 	MaxInstanceLifetime plugin.TValue[int64]
 	DesiredCapacity plugin.TValue[int64]
+	AvailabilityZones plugin.TValue[[]interface{}]
 }
 
 // createAwsAutoscalingGroup creates a new instance of this resource
@@ -13831,6 +13839,10 @@ func (c *mqlAwsAutoscalingGroup) GetMaxInstanceLifetime() *plugin.TValue[int64] 
 
 func (c *mqlAwsAutoscalingGroup) GetDesiredCapacity() *plugin.TValue[int64] {
 	return &c.DesiredCapacity
+}
+
+func (c *mqlAwsAutoscalingGroup) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+	return &c.AvailabilityZones
 }
 
 // mqlAwsElb for the aws.elb resource

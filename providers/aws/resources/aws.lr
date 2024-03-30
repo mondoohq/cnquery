@@ -1060,6 +1060,8 @@ private aws.autoscaling.group @defaults("name region") {
   maxInstanceLifetime int
   // The desired size of the group
   desiredCapacity int
+  // List of availability zones associated with the group
+  availabilityZones []string
 }
 
 // AWS Elastic Load Balancing

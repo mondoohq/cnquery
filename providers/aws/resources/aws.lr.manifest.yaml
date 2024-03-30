@@ -303,6 +303,8 @@ resources:
         The `aws.autoscaling.group` resource provides fields representing an individual AWS auto scaling group within the account. For usage, read the `aws.autoscaling` resource documentation.
     fields:
       arn: {}
+      availabilityZones:
+        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       defaultCooldown:

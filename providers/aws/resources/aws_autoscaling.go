@@ -74,9 +74,14 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
+					availabilityZones := []interface{}{}
+					for _, zone := range group.AvailabilityZones {
+						availabilityZones = append(availabilityZones, zone)
+					}
 					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
 							"arn":                     llx.StringDataPtr(group.AutoScalingGroupARN),
+							"availabilityZones":       llx.ArrayData(availabilityZones, types.String),
 							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
 							"defaultCooldown":         llx.IntDataDefault(group.DefaultCooldown, 0),
 							"desiredCapacity":         llx.IntDataDefault(group.DesiredCapacity, 0),
