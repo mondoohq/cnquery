@@ -1031,7 +1031,7 @@ aws.autoscaling @defaults("groups") {
 }
 
 // AWS Auto Scaling group
-private aws.autoscaling.group @defaults("name region") {
+private aws.autoscaling.group @defaults("name region minSize maxSize") {
   // ARN for the autoscaling group
   arn string
   // Name of the group
@@ -1060,6 +1060,14 @@ private aws.autoscaling.group @defaults("name region") {
   maxInstanceLifetime int
   // The desired size of the group
   desiredCapacity int
+  // List of availability zones associated with the group
+  availabilityZones []string
+  // Indicates whether Capacity Rebalancing is enabled
+  capacityRebalance bool
+  // The duration of the default instance warmup, in seconds
+  defaultInstanceWarmup int
+  // The EC2 instances associated with the group
+  instances []aws.ec2.instance
 }
 
 // AWS Elastic Load Balancing

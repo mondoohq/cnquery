@@ -303,15 +303,23 @@ resources:
         The `aws.autoscaling.group` resource provides fields representing an individual AWS auto scaling group within the account. For usage, read the `aws.autoscaling` resource documentation.
     fields:
       arn: {}
+      availabilityZones:
+        min_mondoo_version: 9.0.0
+      capacityRebalance:
+        min_mondoo_version: 9.0.0
       createdAt:
         min_mondoo_version: 9.0.0
       defaultCooldown:
+        min_mondoo_version: 9.0.0
+      defaultInstanceWarmup:
         min_mondoo_version: 9.0.0
       desiredCapacity:
         min_mondoo_version: 9.0.0
       healthCheckGracePeriod:
         min_mondoo_version: 9.0.0
       healthCheckType: {}
+      instances:
+        min_mondoo_version: 9.0.0
       launchConfigurationName:
         min_mondoo_version: 9.0.0
       loadBalancerNames: {}

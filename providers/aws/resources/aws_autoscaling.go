@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -74,14 +75,34 @@ func (a *mqlAwsAutoscaling) getGroups(conn *connection.AwsConnection) []*jobpool
 					for _, name := range group.LoadBalancerNames {
 						lbNames = append(lbNames, name)
 					}
+					availabilityZones := []interface{}{}
+					for _, zone := range group.AvailabilityZones {
+						availabilityZones = append(availabilityZones, zone)
+					}
+					groupInstances := []interface{}{}
+					for _, instance := range group.Instances {
+						mqlInstance, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(ec2InstanceArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.InstanceId))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						groupInstances = append(groupInstances, mqlInstance)
+					}
+
 					mqlGroup, err := CreateResource(a.MqlRuntime, "aws.autoscaling.group",
 						map[string]*llx.RawData{
 							"arn":                     llx.StringDataPtr(group.AutoScalingGroupARN),
+							"availabilityZones":       llx.ArrayData(availabilityZones, types.String),
+							"capacityRebalance":       llx.BoolDataPtr(group.CapacityRebalance),
 							"createdAt":               llx.TimeDataPtr(group.CreatedTime),
 							"defaultCooldown":         llx.IntDataDefault(group.DefaultCooldown, 0),
+							"defaultInstanceWarmup":   llx.IntDataDefault(group.DefaultInstanceWarmup, 0),
 							"desiredCapacity":         llx.IntDataDefault(group.DesiredCapacity, 0),
 							"healthCheckGracePeriod":  llx.IntDataDefault(group.HealthCheckGracePeriod, 0),
 							"healthCheckType":         llx.StringDataPtr(group.HealthCheckType),
+							"instances":               llx.ArrayData(groupInstances, types.Resource("aws.ec2.instance")),
 							"launchConfigurationName": llx.StringDataPtr(group.LaunchConfigurationName),
 							"loadBalancerNames":       llx.ArrayData(lbNames, types.String),
 							"maxInstanceLifetime":     llx.IntDataDefault(group.MaxInstanceLifetime, 0),
