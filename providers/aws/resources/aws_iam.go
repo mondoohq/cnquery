@@ -111,8 +111,6 @@ func (a *mqlAwsIam) credentialReport() ([]interface{}, error) {
 				break
 			}
 
-			log.Error().Err(err).Msgf("resp %v, err: %v", rresp, err)
-
 			if errors.As(err, &ae) {
 				if ae.ErrorCode() != "NoSuchEntity" && ae.ErrorCode() != "ReportInProgress" {
 					return nil, errors.Wrap(err, "could not gather aws iam credential report")
