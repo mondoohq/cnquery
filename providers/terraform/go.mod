@@ -7,9 +7,9 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/go-git/go-git/v5 v5.11.0
+	github.com/go-git/go-git/v5 v5.12.0
 	github.com/hashicorp/hcl/v2 v2.20.1
-	go.mondoo.com/cnquery/v10 v10.9.1
+	go.mondoo.com/cnquery/v10 v10.9.2
 )
 
 require (
@@ -21,7 +21,7 @@ require (
 	cloud.google.com/go/iam v1.1.7 // indirect
 	cloud.google.com/go/kms v1.15.8 // indirect
 	cloud.google.com/go/secretmanager v1.12.0 // indirect
-	cloud.google.com/go/storage v1.39.1 // indirect
+	cloud.google.com/go/storage v1.40.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/4meepo/tagalign v1.3.3 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -45,22 +45,22 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.9 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.26.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.9 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
+	github.com/aws/aws-sdk-go v1.51.11 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.10 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.10 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.5 // indirect
-	github.com/aws/smithy-go v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.49.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6 // indirect
+	github.com/aws/smithy-go v1.20.2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
@@ -69,14 +69,14 @@ require (
 	github.com/breml/bidichk v0.2.7 // indirect
 	github.com/breml/errchkjson v0.3.6 // indirect
 	github.com/butuzov/ireturn v0.3.0 // indirect
-	github.com/butuzov/mirror v1.1.0 // indirect
+	github.com/butuzov/mirror v1.2.0 // indirect
 	github.com/catenacyber/perfsprint v0.7.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
-	github.com/ckaznocha/intrange v0.1.1 // indirect
+	github.com/ckaznocha/intrange v0.1.2 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -123,7 +123,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/gofmt v0.0.0-20231019111953-be8c47862aaa // indirect
-	github.com/golangci/golangci-lint v1.57.1 // indirect
+	github.com/golangci/golangci-lint v1.57.2 // indirect
 	github.com/golangci/misspell v0.4.1 // indirect
 	github.com/golangci/plugin-module-register v0.1.1 // indirect
 	github.com/golangci/revgrep v0.5.2 // indirect
@@ -224,7 +224,7 @@ require (
 	github.com/securego/gosec/v2 v2.19.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
-	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/shazow/go-diff v0.0.0-20160112020656-b6b7b6733b8c // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
