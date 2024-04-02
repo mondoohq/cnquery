@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/v10/cli/config"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
@@ -941,4 +942,30 @@ func convertToFields(keysAndValues ...interface{}) map[string]interface{} {
 		}
 	}
 	return fields
+}
+
+func LoadAssetUrlSchema() (*inventory.AssetUrlSchema, error) {
+	providers, err := ListAll()
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := inventory.NewAssetUrlSchema("technology")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, provider := range providers {
+		for _, b := range provider.AssetUrlTrees {
+			if err := s.Add(b); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := s.RefreshCache(); err != nil {
+		return nil, err
+	}
+
+	return s, nil
 }
