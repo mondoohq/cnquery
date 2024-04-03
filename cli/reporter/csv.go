@@ -27,8 +27,8 @@ func (c csvStruct) toSlice() []string {
 	return []string{c.AssetMrn, c.AssetId, c.AssetName, c.QueryMrn, c.QueryTitle, c.MQL, c.QueryResult}
 }
 
-// ReportCollectionToCSV writes the given report collection to the given output directory
-func ReportCollectionToCSV(data *explorer.ReportCollection, out shared.OutputHelper) error {
+// ConvertToCSV writes the given report collection to the given output directory
+func ConvertToCSV(data *explorer.ReportCollection, out shared.OutputHelper) error {
 	w := csv.NewWriter(out)
 
 	// write header
@@ -151,5 +151,5 @@ func ResultsToCsvEntry(code *llx.CodeBundle, results map[string]*llx.RawResult, 
 		return nil
 	}
 
-	return BundleResultsToJSON(code, results, out)
+	return CodeBundleToJSON(code, results, out)
 }

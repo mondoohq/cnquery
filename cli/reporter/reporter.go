@@ -1,6 +1,8 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
+//go:generate protoc --proto_path=../:. --go_out=. --go_opt=paths=source_relative cnquery_report.proto
+
 package reporter
 
 import (
@@ -108,14 +110,14 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 		return rr.print()
 	case JSON:
 		w := shared.IOWriter{Writer: out}
-		return ReportCollectionToJSON(data, &w)
+		return ConvertToJSON(data, &w)
 	case CSV:
 		w := shared.IOWriter{Writer: out}
-		return ReportCollectionToCSV(data, &w)
+		return ConvertToCSV(data, &w)
 	case YAML:
 		raw := bytes.Buffer{}
 		writer := shared.IOWriter{Writer: &raw}
-		err := ReportCollectionToJSON(data, &writer)
+		err := ConvertToJSON(data, &writer)
 		if err != nil {
 			return err
 		}

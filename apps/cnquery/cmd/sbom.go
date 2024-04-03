@@ -89,7 +89,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 
 	buf := bytes.Buffer{}
 	w := shared.IOWriter{Writer: &buf}
-	err = reporter.ReportCollectionToJSON(report, &w)
+	err = reporter.ConvertToJSON(report, &w)
 	if err == nil {
 		logger.DebugDumpJSON("mondoo-sbom-report", buf.Bytes())
 	}

@@ -6,13 +6,12 @@ package reporter
 import (
 	"encoding/json"
 	"errors"
-
 	"go.mondoo.com/cnquery/v10/explorer"
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/shared"
 )
 
-func BundleResultsToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
+func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
 	var checksums []string
 	eps := code.CodeV2.Entrypoints()
 	checksums = make([]string, len(eps))
@@ -44,7 +43,7 @@ func BundleResultsToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult
 	return nil
 }
 
-func ReportCollectionToJSON(data *explorer.ReportCollection, out shared.OutputHelper) error {
+func ConvertToJSON(data *explorer.ReportCollection, out shared.OutputHelper) error {
 	if data == nil {
 		return nil
 	}
@@ -95,7 +94,7 @@ func ReportCollectionToJSON(data *explorer.ReportCollection, out shared.OutputHe
 			out.WriteString(pre2 + llx.PrettyPrintString(printID) + ":")
 			pre2 = ","
 
-			err := BundleResultsToJSON(query.Code, results, out)
+			err := CodeBundleToJSON(query.Code, results, out)
 			if err != nil {
 				return err
 			}

@@ -197,7 +197,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		if conf.Format != "json" {
 			sh.PrintResults(code, results)
 		} else {
-			reporter.BundleResultsToJSON(code, results, out)
+			_ = reporter.CodeBundleToJSON(code, results, out)
 			if len(discoveredAssets.Assets) != i+1 {
 				out.WriteString(",")
 			}
