@@ -17,7 +17,6 @@ import (
 	"go.mondoo.com/cnquery/v10/providers"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	sbom "go.mondoo.com/cnquery/v10/sbom"
-	"go.mondoo.com/cnquery/v10/shared"
 )
 
 func init() {
@@ -87,14 +86,14 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 		log.Fatal().Err(err).Msg("failed to run scan")
 	}
 
-	buf := bytes.Buffer{}
-	w := shared.IOWriter{Writer: &buf}
-	err = reporter.ConvertToJSON(report, &w)
+	cnspecReport, err := reporter.ConvertToProto(report)
 	if err == nil {
-		logger.DebugDumpJSON("mondoo-sbom-report", buf.Bytes())
+		log.Debug().Msg("converted report to proto")
+		data, _ := cnspecReport.ToJSON()
+		logger.DebugDumpJSON("mondoo-sbom-report", data)
 	}
 
-	boms, err := sbom.NewBom(buf.Bytes())
+	boms, err := sbom.NewBom(cnspecReport)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse bom")
 	}

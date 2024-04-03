@@ -6,13 +6,23 @@ package sbom
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v10/cli/reporter"
+	"os"
+	"sigs.k8s.io/yaml"
 	"testing"
 )
 
-func TestSbomParsing(t *testing.T) {
-	r, err := NewReportCollectionJsonFromSingleFile("./testdata/alpine.json")
+func loadTestReport(t *testing.T) *reporter.Report {
+	data, err := os.ReadFile("./testdata/alpine.json")
 	require.NoError(t, err)
+	var report *reporter.Report
+	err = yaml.Unmarshal(data, &report)
+	require.NoError(t, err)
+	return report
+}
 
+func TestSbomParsing(t *testing.T) {
+	r := loadTestReport(t)
 	sboms, err := GenerateBom(r)
 	require.NoError(t, err)
 

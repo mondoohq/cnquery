@@ -12,9 +12,7 @@ import (
 )
 
 func TestCycloneDX(t *testing.T) {
-	r, err := NewReportCollectionJsonFromSingleFile("./testdata/alpine.json")
-	require.NoError(t, err)
-
+	r := loadTestReport(t)
 	sboms, err := GenerateBom(r)
 	require.NoError(t, err)
 

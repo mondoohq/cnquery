@@ -5,27 +5,7 @@ package sbom
 
 import (
 	"encoding/json"
-	"errors"
-	"os"
-	"sigs.k8s.io/yaml"
 )
-
-type ReportCollectionJsonAsset struct {
-	Mrn          string `json:"mrn"`
-	Name         string `json:"name"`
-	PlatformName string `json:"platform_name"`
-}
-
-type ReportCollectionJsonScore struct {
-	Score  int    `json:"score"`
-	Status string `json:"status"`
-}
-
-type ReportCollectionJson struct {
-	Assets map[string]ReportCollectionJsonAsset            `json:"assets"`
-	Data   map[string]map[string]json.RawMessage           `json:"data"`
-	Scores map[string]map[string]ReportCollectionJsonScore `json:"scores"`
-}
 
 // Structures to parse the data from cnquery report
 type BomAsset struct {
@@ -59,7 +39,7 @@ type KernelInstalled struct {
 	Version string
 }
 
-type BomReport struct {
+type BomFields struct {
 	Asset           *BomAsset         `json:"asset,omitempty"`
 	Packages        []BomPackage      `json:"packages.list,omitempty"`
 	PythonPackages  []BomPackage      `json:"python.packages,omitempty"`
@@ -67,45 +47,6 @@ type BomReport struct {
 	KernelInstalled []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 
-func (b *BomReport) ToJSON() ([]byte, error) {
+func (b *BomFields) ToJSON() ([]byte, error) {
 	return json.Marshal(b)
-}
-
-// AssetMrn returns the MRN of the asset if there is only one
-func (r ReportCollectionJson) AssetMrn() (string, error) {
-	if len(r.Assets) > 1 {
-		return "", errors.New("report contains more than one asset")
-	}
-
-	if len(r.Assets) == 0 {
-		return "", errors.New("report contains no assets")
-	}
-
-	for _, asset := range r.Assets {
-		return asset.Mrn, nil
-	}
-
-	// should not happen
-	return "", errors.New("report contains no assets")
-}
-
-// NewReportCollectionJsonFromSingleFile loads a cnspec report bundle from a single file
-func NewReportCollectionJsonFromSingleFile(path string) (*ReportCollectionJson, error) {
-	reportData, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewReportCollectionJson(reportData)
-}
-
-// NewReportCollectionJson creates a cnspec report from json contents
-func NewReportCollectionJson(data []byte) (*ReportCollectionJson, error) {
-	var res ReportCollectionJson
-	err := yaml.Unmarshal(data, &res)
-	return &res, err
-}
-
-func (p *ReportCollectionJson) ToYAML() ([]byte, error) {
-	return yaml.Marshal(p)
 }
