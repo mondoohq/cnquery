@@ -13,6 +13,7 @@ import (
 	msgrapgh_org "github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/azauth"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
@@ -50,7 +51,7 @@ func NewMs365Connection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	if len(tenantId) == 0 {
 		return nil, errors.New("ms365 backend requires a tenant-id")
 	}
-	token, err := getTokenCredential(cred, tenantId, clientId)
+	token, err := azauth.GetTokenCredential(cred, tenantId, clientId)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}

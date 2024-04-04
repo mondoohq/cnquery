@@ -18,7 +18,7 @@ import (
 // according to https://github.com/Azure/azure-sdk-for-go/blob/main/sdk/azidentity/TROUBLESHOOTING.md#troubleshoot-defaultazurecredential-authentication-issues
 // we should instead use the NewManagedIdentityCredential directly.
 // This function mimics the behavior of the DefaultAzureCredential, but with a higher timeout on the managed identity
-func GetTokenChain(ctx context.Context, options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
+func GetTokenChain(options *azidentity.DefaultAzureCredentialOptions) (*azidentity.ChainedTokenCredential, error) {
 	if options == nil {
 		options = &azidentity.DefaultAzureCredentialOptions{}
 	}
@@ -35,7 +35,7 @@ func GetTokenChain(ctx context.Context, options *azidentity.DefaultAzureCredenti
 	}
 	mic, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{ClientOptions: options.ClientOptions})
 	if err == nil {
-		timedMic := &TimedManagedIdentityCredential{mic: *mic, timeout: 5 * time.Second}
+		timedMic := &timedManagedIdentityCredential{mic: *mic, timeout: 5 * time.Second}
 		chain = append(chain, timedMic)
 	}
 	wic, err := azidentity.NewWorkloadIdentityCredential(&azidentity.WorkloadIdentityCredentialOptions{
@@ -50,12 +50,12 @@ func GetTokenChain(ctx context.Context, options *azidentity.DefaultAzureCredenti
 	return azidentity.NewChainedTokenCredential(chain, nil)
 }
 
-type TimedManagedIdentityCredential struct {
+type timedManagedIdentityCredential struct {
 	mic     azidentity.ManagedIdentityCredential
 	timeout time.Duration
 }
 
-func (t *TimedManagedIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+func (t *timedManagedIdentityCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	ctx, cancel := context.WithTimeout(ctx, t.timeout)
 	defer cancel()
 	var tk azcore.AccessToken

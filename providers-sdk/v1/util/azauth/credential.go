@@ -1,26 +1,29 @@
 // Copyright (c) Mondoo, Inc.
 // SPDX-License-Identifier: BUSL-1.1
 
-package connection
+package azauth
 
 import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-
 	"github.com/pkg/errors"
-
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 )
 
-func getTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
+func GetTokenCredential(credential *vault.Credential, tenantId, clientId string) (azcore.TokenCredential, error) {
 	var azCred azcore.TokenCredential
 	var err error
+	// fallback to default authorizer if no credentials are specified
 	if credential == nil {
-		return nil, errors.New("no credentials provided")
+		log.Debug().Msg("using default azure token chain resolver")
+		azCred, err = GetTokenChain(&azidentity.DefaultAzureCredentialOptions{})
+		if err != nil {
+			return nil, errors.Wrap(err, "error creating CLI credentials")
+		}
 	} else {
-		// we only support private key authentication for ms 365
 		switch credential.Type {
 		case vault.CredentialType_pkcs12:
 			certs, privateKey, err := azidentity.ParseCertificates(credential.Secret, []byte(credential.Password))
