@@ -4,6 +4,10 @@
 package reporter
 
 import (
+	"bytes"
+	"go.mondoo.com/cnquery/v10/explorer"
+	"os"
+	"sigs.k8s.io/yaml"
 	"strings"
 	"testing"
 
@@ -31,7 +35,14 @@ type simpleTest struct {
 	expected string
 }
 
-func runSimpleTests(t *testing.T, tests []simpleTest) {
+func TestQueryConversion(t *testing.T) {
+	tests := []simpleTest{
+		{
+			"users.where(uid==0)",
+			`{"users.where.list":[{"gid":0,"name":"root","uid":0}]}`,
+		},
+	}
+
 	var out strings.Builder
 	w := shared.IOWriter{Writer: &out}
 
@@ -39,7 +50,7 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
 			bundle, results := testQuery(t, cur.code)
-			err := BundleResultsToJSON(bundle, results, &w)
+			err := CodeBundleToJSON(bundle, results, &w)
 			require.NoError(t, err)
 			assert.Equal(t, cur.expected, out.String())
 		})
@@ -47,10 +58,15 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 }
 
 func TestJsonReporter(t *testing.T) {
-	runSimpleTests(t, []simpleTest{
-		{
-			"users.where(uid==0)",
-			`{"users.where.list":[{"gid":0,"name":"root","uid":0}]}`,
-		},
-	})
+	data, err := os.ReadFile("testdata/kubernetes_report.yaml")
+	require.NoError(t, err)
+
+	var report *explorer.ReportCollection
+	err = yaml.Unmarshal(data, &report)
+	require.NoError(t, err)
+
+	buf := &bytes.Buffer{}
+	w := shared.IOWriter{Writer: buf}
+	err = ConvertToJSON(report, &w)
+	require.NoError(t, err)
 }

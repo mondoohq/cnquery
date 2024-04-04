@@ -21,6 +21,6 @@ func TestCSVExport(t *testing.T) {
 	err = yaml.Unmarshal(data, &report)
 	require.NoError(t, err)
 	w := shared.IOWriter{Writer: os.Stdout}
-	err = ReportCollectionToCSV(report, &w)
+	err = ConvertToCSV(report, &w)
 	require.NoError(t, err)
 }

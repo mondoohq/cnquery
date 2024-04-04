@@ -1,0 +1,32 @@
+// Copyright (c) Mondoo, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
+syntax = "proto3";
+
+package mondoo.report.cnquery.v1;
+
+import "google/protobuf/struct.proto";
+
+option go_package = "go.mondoo.com/cnquery/v10/cli/reporter";
+
+message Report {
+  map <string, Asset> assets = 1;
+  map <string, DataValues> data = 2;
+  map <string, string> errors = 3;
+}
+
+message Asset {
+  string mrn = 1;
+  string name = 2;
+  string platform_name = 20;
+}
+
+message DataValues {
+  map <string, DataValue> values = 1;
+}
+
+message DataValue {
+  // JSON object
+  google.protobuf.Value content = 1;
+}
+

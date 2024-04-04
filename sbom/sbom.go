@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"strings"
 	"time"
 
@@ -30,16 +31,12 @@ func QueryPack() (*explorer.Bundle, error) {
 }
 
 // NewBom creates a BOM from a json report collection
-func NewBom(data []byte) ([]Sbom, error) {
-	jr, err := NewReportCollectionJson(data)
-	if err != nil {
-		return nil, err
-	}
-	return GenerateBom(jr)
+func NewBom(report *reporter.Report) ([]Sbom, error) {
+	return GenerateBom(report)
 }
 
 // GenerateBom generates a BOM from a cnspec json report collection
-func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
+func GenerateBom(r *reporter.Report) ([]Sbom, error) {
 	if r == nil {
 		return nil, nil
 	}
@@ -74,9 +71,14 @@ func GenerateBom(r *ReportCollectionJson) ([]Sbom, error) {
 
 		// extract os packages and python packages
 		dataPoints := r.Data[mrn]
-		for k := range dataPoints {
-			rb := BomReport{}
-			err := json.Unmarshal(dataPoints[k], &rb)
+		for k := range dataPoints.Values {
+			dataValue := dataPoints.Values[k]
+			jsondata, err := reporter.JsonValue(dataValue.Content)
+			if err != nil {
+				return nil, err
+			}
+			rb := BomFields{}
+			err = json.Unmarshal(jsondata, &rb)
 			if err != nil {
 				return nil, err
 			}
