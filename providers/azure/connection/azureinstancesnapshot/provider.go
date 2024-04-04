@@ -13,8 +13,8 @@ import (
 	"go.mondoo.com/cnquery/v10/mrn"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/azauth"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/providers/azure/connection/auth"
 	"go.mondoo.com/cnquery/v10/providers/azure/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/fs"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/local"
@@ -133,7 +133,7 @@ func NewAzureSnapshotConnection(id uint32, conf *inventory.Config, asset *invent
 	if len(conf.Credentials) > 0 {
 		cred = conf.Credentials[0]
 	}
-	token, err := auth.GetTokenCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"])
+	token, err := azauth.GetTokenFromCredential(cred, conf.Options["tenant-id"], conf.Options["client-id"])
 	if err != nil {
 		return nil, err
 	}
