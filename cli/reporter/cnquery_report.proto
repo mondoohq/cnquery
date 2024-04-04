@@ -18,8 +18,7 @@ message Report {
 message Asset {
   string mrn = 1;
   string name = 2;
-  string type = 3;
-  string platform_name = 4;
+  string platform_name = 20;
 }
 
 message DataValues {
