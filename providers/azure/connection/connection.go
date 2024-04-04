@@ -42,7 +42,7 @@ func NewAzureConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 		cred = conf.Credentials[0]
 	}
 
-	token, err := azauth.GetTokenCredential(cred, tenantId, clientId)
+	token, err := azauth.GetTokenFromCredential(cred, tenantId, clientId)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch credentials for microsoft provider")
 	}
