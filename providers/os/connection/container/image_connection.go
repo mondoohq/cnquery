@@ -15,7 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
@@ -62,7 +61,7 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
 	registryOpts := []image.Option{image.WithInsecure(conf.Insecure)}
-	remoteOpts := auth.AuthOption(conf.Credentials)
+	remoteOpts := image.AuthOption(conf.Credentials)
 	registryOpts = append(registryOpts, remoteOpts...)
 
 	img, err := image.LoadImageFromRegistry(ref, registryOpts...)

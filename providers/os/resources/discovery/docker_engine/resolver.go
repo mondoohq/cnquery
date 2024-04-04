@@ -199,7 +199,6 @@ func (k *Resolver) images(ctx context.Context, root *inventory.Asset, conf *inve
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	// return rr.Resolve(ctx, root, conf, credsResolver, sfn)
 	return rr.Resolve(ctx, root, conf, credsResolver)
 }
 

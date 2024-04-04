@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
@@ -20,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 )
 
@@ -32,15 +32,15 @@ type DockerRegistryImages struct {
 	DisableKeychainAuth bool
 }
 
-func (a *DockerRegistryImages) remoteOptions() []remote.Option {
+func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
 	options := []remote.Option{}
 
 	// does not work with bearer auth, therefore it need to be disabled when other remote auth options are used
 	// TODO: we should implement this a bit differently
-	if a.DisableKeychainAuth == false {
-		options = append(options, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	if !a.DisableKeychainAuth {
+		kcs := auth.ConstructKeychain(name)
+		options = append(options, remote.WithAuthFromKeychain(kcs))
 	}
-
 	if a.Insecure {
 		// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
 		tr := &http.Transport{
@@ -70,7 +70,8 @@ func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error)
 	last := ""
 	var res []string
 	for {
-		page, err := remote.CatalogPage(reg, last, n, a.remoteOptions()...)
+		opts := a.remoteOptions(reg.Name())
+		page, err := remote.CatalogPage(reg, last, n, opts...)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +132,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Ass
 	}
 
 	// fetch tags
-	tags, err := remote.List(repo, a.remoteOptions()...)
+	tags, err := remote.List(repo, a.remoteOptions(repo.Name())...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, repo.Name())
 	}
@@ -186,7 +187,7 @@ func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Crede
 }
 
 func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
-	desc, err := image.GetImageDescriptor(ref, auth.AuthOption(creds)...)
+	desc, err := image.GetImageDescriptor(ref, image.AuthOption(creds)...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, ref.Name())
 	}
@@ -200,7 +201,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		Name:        name,
 		Connections: []*inventory.Config{
 			{
-				Type:        "container-registry",
+				Type:        string(shared.Type_RegistryImage),
 				Host:        imageUrl,
 				Credentials: creds,
 			},
