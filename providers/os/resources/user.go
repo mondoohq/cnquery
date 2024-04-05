@@ -229,7 +229,7 @@ func (u *mqlUser) sshkeys() ([]interface{}, error) {
 	// iterate over files and check if the content is there
 	for i := range potentialPrivateKeyFiles {
 		path := potentialPrivateKeyFiles[i]
-		data, err := os.ReadFile(path)
+		data, err := afutil.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
@@ -242,7 +242,8 @@ func (u *mqlUser) sshkeys() ([]interface{}, error) {
 		isEncrypted := strings.Contains(content, "ENCRYPTED")
 
 		if isPrivateKey {
-			upk, err := CreateResource(u.MqlRuntime, "privatekey", map[string]*llx.RawData{
+			// NOTE: we use new instead of create so that the file resource is properly initialized
+			upk, err := NewResource(u.MqlRuntime, "privatekey", map[string]*llx.RawData{
 				"pem":       llx.StringData(content),
 				"encrypted": llx.BoolData(isEncrypted),
 				"path":      llx.StringData(path),
