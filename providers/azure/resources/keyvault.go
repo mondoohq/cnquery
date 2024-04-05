@@ -17,10 +17,10 @@ import (
 	"go.mondoo.com/cnquery/v10/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azcertificates"
-	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
-	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
 )
 
 var keyvaultidRegex = regexp.MustCompile(`^(https:\/\/([^\/]*)\.vault\.azure\.net)\/(certificates|secrets|keys)\/([^\/]*)(?:\/([^\/]*)){0,1}$`)
@@ -177,7 +177,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-	pager := client.NewListKeysPager(&azkeys.ListKeysOptions{})
+	pager := client.NewListKeyPropertiesPager(&azkeys.ListKeyPropertiesOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -219,7 +219,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]interface{}, err
 	if err != nil {
 		return nil, err
 	}
-	pager := client.NewListSecretsPager(&azsecrets.ListSecretsOptions{})
+	pager := client.NewListSecretPropertiesPager(&azsecrets.ListSecretPropertiesOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -261,7 +261,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]interface{}
 	if err != nil {
 		return nil, err
 	}
-	pager := client.NewListCertificatesPager(&azcertificates.ListCertificatesOptions{})
+	pager := client.NewListCertificatePropertiesPager(&azcertificates.ListCertificatePropertiesOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -340,7 +340,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]interface{}, erro
 	}
 
 	ctx := context.Background()
-	pager := client.NewListKeyVersionsPager(kvid.Name, &azkeys.ListKeyVersionsOptions{})
+	pager := client.NewListKeyPropertiesVersionsPager(kvid.Name, &azkeys.ListKeyPropertiesVersionsOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -414,7 +414,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]interface
 		return nil, err
 	}
 	ctx := context.Background()
-	pager := client.NewListCertificateVersionsPager(name, &azcertificates.ListCertificateVersionsOptions{})
+	pager := client.NewListCertificatePropertiesVersionsPager(name, &azcertificates.ListCertificatePropertiesVersionsOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -490,7 +490,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]interface{}, e
 		return nil, err
 	}
 
-	pager := client.NewListSecretVersionsPager(name, &azsecrets.ListSecretVersionsOptions{})
+	pager := client.NewListSecretPropertiesVersionsPager(name, &azsecrets.ListSecretPropertiesVersionsOptions{})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
