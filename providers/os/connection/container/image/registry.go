@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/acr"
 )
 
 // Option is a functional option
@@ -62,6 +63,16 @@ func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor,
 				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
 			)
 		}
+		if strings.Contains(ref.Name(), "azurecr.io") {
+			acr, err := acr.NewAcrAuthHelper()
+			if err != nil {
+				return nil, err
+			}
+			kc = authn.NewMultiKeychain(
+				authn.DefaultKeychain,
+				authn.NewKeychainFromHelper(acr),
+			)
+		}
 		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
@@ -92,6 +103,16 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, error)
 			kc = authn.NewMultiKeychain(
 				authn.DefaultKeychain,
 				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
+			)
+		}
+		if strings.Contains(ref.Name(), "azurecr.io") {
+			acr, err := acr.NewAcrAuthHelper()
+			if err != nil {
+				return nil, err
+			}
+			kc = authn.NewMultiKeychain(
+				authn.DefaultKeychain,
+				authn.NewKeychainFromHelper(acr),
 			)
 		}
 		auth, err := kc.Resolve(ref.Context())
