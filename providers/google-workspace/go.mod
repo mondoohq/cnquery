@@ -359,7 +359,7 @@ require (
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kubelet v0.29.3 // indirect
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57 // indirect
-	modernc.org/libc v1.49.1 // indirect
+	modernc.org/libc v1.49.2 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
