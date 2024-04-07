@@ -6,6 +6,8 @@ package provider
 import (
 	"context"
 	"errors"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	"os"
 
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
@@ -75,7 +77,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) != 2 {
-		return nil, errors.New("missing argument, use `gcp project id`, `gcp organization id`, `gcp folder id`, `gcp instance name`, or `gcp snapshot name`")
+		return nil, status.Error(codes.InvalidArgument, "missing argument, use `gcp project id`, `gcp organization id`, `gcp folder id`, `gcp instance name`, or `gcp snapshot name`")
 	}
 
 	conf := &inventory.Config{

@@ -6,6 +6,8 @@ package provider
 import (
 	"context"
 	"errors"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	"os"
 
 	"go.mondoo.com/cnquery/v10/llx"
@@ -36,7 +38,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) != 2 {
-		return nil, errors.New("missing argument, use `equinix project <project-id>`")
+		return nil, status.Error(codes.InvalidArgument, "missing argument, use `equinix project <project-id>`")
 	}
 
 	conf := &inventory.Config{
