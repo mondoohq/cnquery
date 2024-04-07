@@ -473,7 +473,9 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if err != nil {
 			runtime.Close()
 			providers.Coordinator.Shutdown()
-			log.Fatal().Err(err).Msg("failed to parse cli arguments")
+			log.Error().Err(err).Msg("failed to parse cli arguments")
+			cmd.Help()
+			return
 		}
 
 		if cliRes == nil {
