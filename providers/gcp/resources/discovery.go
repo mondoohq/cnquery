@@ -42,7 +42,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	}}
 
 	if conn.ResourceType() == connection.Organization {
-		res, err := runtime.CreateResource(runtime, "gcp.organization", nil)
+		res, err := NewResource(runtime, "gcp.organization", nil)
 		if err != nil {
 			return nil, err
 		}

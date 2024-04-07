@@ -30,6 +30,10 @@ func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return args, nil, nil
 	}
 
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+
 	conn := runtime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
