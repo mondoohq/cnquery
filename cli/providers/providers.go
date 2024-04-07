@@ -5,6 +5,7 @@ package providers
 
 import (
 	"encoding/json"
+	"go.mondoo.com/ranger-rpc/status"
 	"os"
 	"strings"
 
@@ -473,7 +474,12 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if err != nil {
 			runtime.Close()
 			providers.Coordinator.Shutdown()
-			log.Error().Err(err).Msg("failed to parse cli arguments")
+			s, ok := status.FromError(err)
+			if ok {
+				log.Error().Msg(s.Message())
+			} else {
+				log.Error().Err(err).Msg("failed to parse cli arguments")
+			}
 			cmd.Help()
 			return
 		}

@@ -6,6 +6,8 @@ package provider
 import (
 	"context"
 	"errors"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
@@ -38,12 +40,12 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	if len(req.Args) == 0 {
-		return nil, errors.New("missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim {directoryID}`")
+		return nil, status.Error(codes.InvalidArgument, "missing argument, use `atlassian jira`, `atlassian admin`, `atlassian confluence`, or `atlassian scim {directoryID}`")
 	}
 
 	if req.Args[0] == "scim" {
 		if len(req.Args) != 2 {
-			return nil, errors.New("missing argument, scim requires a directory id `atlassian scim {directoryID}`")
+			return nil, status.Error(codes.InvalidArgument, "missing argument, scim requires a directory id `atlassian scim {directoryID}`")
 		}
 	}
 
