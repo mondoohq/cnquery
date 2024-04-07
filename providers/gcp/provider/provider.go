@@ -136,7 +136,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	switch req.Args[0] {
-	case "org":
+	case "org", "organization":
 		conf.Options["organization-id"] = req.Args[1]
 	case "project":
 		conf.Options["project-id"] = req.Args[1]
