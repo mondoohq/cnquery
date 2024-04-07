@@ -23,6 +23,14 @@ func (g *mqlGcpProject) essentialContacts() ([]interface{}, error) {
 	}
 	projectId := g.Id.Data
 
+	serviceEnabled, err := g.isServiceEnabled(service_essential_contacts)
+	if err != nil {
+		return nil, err
+	}
+	if !serviceEnabled {
+		return nil, nil
+	}
+
 	client, err := conn.Client(essentialcontacts.CloudPlatformScope)
 	if err != nil {
 		return nil, err

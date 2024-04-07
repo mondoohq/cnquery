@@ -25,6 +25,14 @@ func (g *mqlGcpProject) apiKeys() ([]interface{}, error) {
 	}
 	projectId := g.Id.Data
 
+	serviceEnabled, err := g.isServiceEnabled(service_apikeys)
+	if err != nil {
+		return nil, err
+	}
+	if !serviceEnabled {
+		return nil, nil
+	}
+
 	client, err := conn.Client(apikeys.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err

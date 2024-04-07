@@ -7,15 +7,25 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
-
 	serviceusage "cloud.google.com/go/serviceusage/apiv1"
 	"cloud.google.com/go/serviceusage/apiv1/serviceusagepb"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+)
+
+const (
+	service_compute            = "compute.googleapis.com"
+	service_gke                = "container.googleapis.com"
+	service_bigquery           = "bigquery.googleapis.com"
+	service_essential_contacts = "essentialcontacts.googleapis.com"
+	service_dns                = "dns.googleapis.com"
+	service_accessapproval     = "accessapproval.googleapis.com"
+	service_apikeys            = "apikeys.googleapis.com"
+	service_dataproc           = "dataproc.googleapis.com"
 )
 
 func serviceName(name string) string {
@@ -24,6 +34,11 @@ func serviceName(name string) string {
 }
 
 func (g *mqlGcpProject) services() ([]interface{}, error) {
+	return g.fetchServices("")
+}
+
+// fetches the gcp services with a filter, e.g. "state:ENABLED"
+func (g *mqlGcpProject) fetchServices(filter string) ([]interface{}, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
@@ -50,8 +65,8 @@ func (g *mqlGcpProject) services() ([]interface{}, error) {
 	//service.Config.Title
 
 	it := c.ListServices(ctx, &serviceusagepb.ListServicesRequest{
-		Parent: `projects/` + projectId,
-		// Filter:   "state:ENABLED",
+		Parent:   `projects/` + projectId,
+		Filter:   filter,
 		PageSize: 200,
 	})
 

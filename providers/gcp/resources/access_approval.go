@@ -33,6 +33,15 @@ func (g *mqlGcpProject) accessApprovalSettings() (*mqlGcpAccessApprovalSettings,
 	}
 	id := g.Id.Data
 
+	serviceEnabled, err := g.isServiceEnabled(service_accessapproval)
+	if err != nil {
+		return nil, err
+	}
+	if !serviceEnabled {
+		g.AccessApprovalSettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
 	return accessApprovalSettings(g.MqlRuntime, fmt.Sprintf("projects/%s/accessApprovalSettings", id))
 }
 

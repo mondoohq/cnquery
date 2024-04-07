@@ -33,6 +33,10 @@ func initGcpProjectBigqueryService(runtime *plugin.Runtime, args map[string]*llx
 	return args, nil, nil
 }
 
+type mqlGcpProjectBigqueryServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProjectBigqueryService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -53,7 +57,15 @@ func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectBigqueryService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_bigquery)
+	if err != nil {
+		return nil, err
+	}
+	bqService := res.(*mqlGcpProjectBigqueryService)
+	bqService.serviceEnabled = serviceEnabled
+
+	return bqService, nil
 }
 
 func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
