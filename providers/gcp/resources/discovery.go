@@ -49,14 +49,45 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 
 		gcpOrg := res.(*mqlGcpOrganization)
 
-		for i := range conn.Conf.Discover.Targets {
-			target := conn.Conf.Discover.Targets[i]
-			list, err := discoverOrganization(conn, gcpOrg, target)
-			if err != nil {
-				return nil, err
-			}
-			in.Spec.Assets = append(in.Spec.Assets, list...)
+		list, err := discoverOrganization(conn, gcpOrg)
+		if err != nil {
+			return nil, err
 		}
+		in.Spec.Assets = append(in.Spec.Assets, list...)
+	} else if conn.ResourceType() == connection.Folder {
+		res, err := NewResource(runtime, "gcp.folder", nil)
+		if err != nil {
+			return nil, err
+		}
+
+		gcpFolder := res.(*mqlGcpFolder)
+		if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryFolders) {
+			in.Spec.Assets = append(in.Spec.Assets, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewFolderPlatformID(gcpFolder.Id.Data),
+				},
+				Name: "GCP Folder " + gcpFolder.Id.Data,
+				Platform: &inventory.Platform{
+					Name:    "gcp-folder",
+					Title:   "GCP Folder",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
+					Family:  []string{"google"},
+				},
+				Labels: map[string]string{},
+				// NOTE: we explicitly do not exclude discovery here, as we want to discover the projects for the folder
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+
+		list, err := discoverFolder(conn, gcpFolder)
+		if err != nil {
+			return nil, err
+		}
+		if len(in.Spec.Assets) > 0 {
+			in.Spec.Assets[0].RelatedAssets = list
+		}
+		in.Spec.Assets = append(in.Spec.Assets, list...)
 	} else if conn.ResourceType() == connection.Project {
 		res, err := NewResource(runtime, "gcp.project", nil)
 		if err != nil {
@@ -110,7 +141,7 @@ func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
 	return in, nil
 }
 
-func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization, target string) ([]*inventory.Asset, error) {
+func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganization) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
 	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
 		projects := gcpOrg.GetProjects()
@@ -131,6 +162,50 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 				projectConf.Options = map[string]string{}
 			}
 			delete(projectConf.Options, "organization-id")
+			projectConf.Options["project-id"] = project.Id.Data
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewProjectPlatformID(project.Id.Data),
+				},
+				Name: project.Name.Data,
+				Platform: &inventory.Platform{
+					Name:    "gcp-project",
+					Title:   "GCP Project " + project.Name.Data,
+					Runtime: "gcp",
+					Kind:    "gcp-object",
+					Family:  []string{"google"},
+				},
+				Labels:      map[string]string{},
+				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
+			})
+		}
+	}
+	return assetList, nil
+}
+
+func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder) ([]*inventory.Asset, error) {
+	assetList := []*inventory.Asset{}
+
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryProjects) {
+		projects := gcpFolder.GetProjects()
+		if projects.Error != nil {
+			return nil, projects.Error
+		}
+
+		projectList := projects.Data.GetList() // resolve all projects including nested
+		if projectList.Error != nil {
+			return nil, projectList.Error
+		}
+
+		for i := range projectList.Data {
+			project := projectList.Data[i].(*mqlGcpProject)
+
+			projectConf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))
+			if projectConf.Options == nil {
+				projectConf.Options = map[string]string{}
+			}
+			delete(projectConf.Options, "folder-id")
 			projectConf.Options["project-id"] = project.Id.Data
 
 			assetList = append(assetList, &inventory.Asset{

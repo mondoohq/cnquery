@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.mondoo.com/cnquery/v10/llx"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
@@ -37,6 +38,10 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return args, nil, nil
 	}
 
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+
 	conn := runtime.Connection.(*connection.GcpConnection)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
@@ -52,14 +57,17 @@ func initGcpFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 
 	folderId := conn.ResourceID()
 	if args["id"] != nil {
-		folderId = fmt.Sprintf("folders/%s", args["id"].Value.(string))
+		folderId = args["id"].Value.(string)
 	}
-	folder, err := svc.Folders.Get(folderId).Do()
+
+	folderPath := fmt.Sprintf("folders/%s", folderId)
+	folder, err := svc.Folders.Get(folderPath).Do()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	args["id"] = llx.StringData(folder.Name)
+	retrievedFolderID := strings.TrimPrefix(folder.Name, "folders/")
+	args["id"] = llx.StringData(retrievedFolderID)
 	args["name"] = llx.StringData(folder.DisplayName)
 	args["created"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
 	args["updated"] = llx.TimeDataPtr(parseTime(folder.CreateTime))
@@ -154,7 +162,7 @@ func (g *mqlGcpFolder) folders() (*mqlGcpFolders, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
-	folderId := g.Id.Data
+	folderId := "folders/" + g.Id.Data
 	res, err := CreateResource(g.MqlRuntime, "gcp.folders", map[string]*llx.RawData{
 		"parentId": llx.StringData(folderId),
 	})
@@ -168,7 +176,7 @@ func (g *mqlGcpFolder) projects() (*mqlGcpProjects, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
-	folderId := g.Id.Data
+	folderId := "folders/" + g.Id.Data
 	res, err := CreateResource(g.MqlRuntime, "gcp.projects", map[string]*llx.RawData{
 		"parentId": llx.StringData(folderId),
 	})
