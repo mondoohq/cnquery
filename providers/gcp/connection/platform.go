@@ -120,27 +120,27 @@ func ResourceTechnologyUrl(service, project, region, objectType, name string) []
 	case "compute":
 		switch objectType {
 		case "instance":
-			return []string{"gcp", "project", project, "compute", region, "instance", "resource"}
+			return []string{"gcp", project, "compute", region, "instance", "resource"}
 		case "image", "network", "subnetwork":
-			return []string{"gcp", "project", project, "compute", region, objectType}
+			return []string{"gcp", project, "compute", region, objectType}
 		default:
-			return []string{"gcp", "project", project, "compute", region, "other"}
+			return []string{"gcp", project, "compute", region, "other"}
 		}
 	case "storage":
 		switch objectType {
 		case "bucket":
-			return []string{"gcp", "project", project, "storage", region, objectType}
+			return []string{"gcp", project, "storage", region, objectType}
 		default:
-			return []string{"gcp", "project", project, "storage", region, "other"}
+			return []string{"gcp", project, "storage", region, "other"}
 		}
 	case "gke":
 		switch objectType {
 		case "cluster":
-			return []string{"gcp", "project", project, "gke", region, objectType}
+			return []string{"gcp", project, "gke", region, objectType}
 		default:
-			return []string{"gcp", "project", project, "gke", region, "other"}
+			return []string{"gcp", project, "gke", region, "other"}
 		}
 	default:
-		return []string{"gcp", "project", project, "other"}
+		return []string{"gcp", project, "other"}
 	}
 }

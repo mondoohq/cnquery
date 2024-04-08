@@ -77,81 +77,66 @@ var Config = plugin.Provider{
 	AssetUrlTrees: []*inventory.AssetUrlBranch{
 		{
 			PathSegments: []string{"technology=gcp"},
-			Key:          "scope",
-			Title:        "Scope",
+			Key:          "project",
+			Title:        "Project",
 			Values: map[string]*inventory.AssetUrlBranch{
-				"other": nil,
-				"resource manager": {
-					Key:   "object",
-					Title: "Resource Manager Object Type",
+				"*": {
+					Key:   "service",
+					Title: "Service",
 					Values: map[string]*inventory.AssetUrlBranch{
-						"organization": nil,
-						"folder":       nil,
-						"project":      nil,
-					},
-				},
-				"project": {
-					Key:   "project",
-					Title: "Project",
-					Values: map[string]*inventory.AssetUrlBranch{
-						"*": {
-							Key:   "service",
-							Title: "Service",
+						"project": nil,
+						"compute": {
+							Key:   "region",
+							Title: "Region",
 							Values: map[string]*inventory.AssetUrlBranch{
-								"compute": {
-									Key:   "region",
-									Title: "Region",
+								"*": {
+									Key:   "object",
+									Title: "Compute Object",
 									Values: map[string]*inventory.AssetUrlBranch{
-										"*": {
-											Key:   "object",
-											Title: "Compute Object",
+										"instance": {
+											Key: "type",
 											Values: map[string]*inventory.AssetUrlBranch{
-												"instance": {
-													Key: "type",
-													Values: map[string]*inventory.AssetUrlBranch{
-														"resource": nil,
-														// os ... references the os asset tree
-													},
-												},
-												"image":      nil,
-												"network":    nil,
-												"subnetwork": nil,
-												"other":      nil,
+												"resource": nil,
+												// os ... references the os asset tree
 											},
 										},
+										"image":      nil,
+										"network":    nil,
+										"subnetwork": nil,
+										"other":      nil,
 									},
 								},
-								"storage": {
-									Key:   "region",
-									Title: "Region",
-									Values: map[string]*inventory.AssetUrlBranch{
-										"*": {
-											Key:   "object",
-											Title: "Storage Object",
-											Values: map[string]*inventory.AssetUrlBranch{
-												"bucket": nil,
-												"other":  nil,
-											},
-										},
-									},
-								},
-								"gke": {
-									Key:   "region",
-									Title: "Region",
-									Values: map[string]*inventory.AssetUrlBranch{
-										"*": {
-											Key:   "object",
-											Title: "GKE Object",
-											Values: map[string]*inventory.AssetUrlBranch{
-												"cluster": nil,
-												"other":   nil,
-											},
-										},
-									},
-								},
-								"other": nil,
 							},
 						},
+						"storage": {
+							Key:   "region",
+							Title: "Region",
+							Values: map[string]*inventory.AssetUrlBranch{
+								"*": {
+									Key:   "object",
+									Title: "Storage Object",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"bucket": nil,
+										"other":  nil,
+									},
+								},
+							},
+						},
+						"gke": {
+							Key:   "region",
+							Title: "Region",
+							Values: map[string]*inventory.AssetUrlBranch{
+								"*": {
+									Key:   "object",
+									Title: "GKE Object",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"cluster": nil,
+										"other":   nil,
+									},
+								},
+							},
+						},
+						"other": nil,
 					},
 				},
 			},
