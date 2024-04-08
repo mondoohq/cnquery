@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn"
 	"go.mondoo.com/cnquery/v10/providers/aws/provider"
@@ -98,6 +99,22 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_KeyValue,
 					Default: "",
 					Desc:    "Filter options e.g --filters region=us-east-2",
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=aws"},
+			Key:          "account",
+			Title:        "Account",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"*": {
+					Key:   "service",
+					Title: "Service",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"account": nil,
+					},
 				},
 			},
 		},
