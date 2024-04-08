@@ -28,7 +28,6 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/connection/winrm"
 	"go.mondoo.com/cnquery/v10/providers/os/id"
 	"go.mondoo.com/cnquery/v10/providers/os/resources"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/container_registry"
 	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
 	"go.mondoo.com/cnquery/v10/utils/stringx"
 )
@@ -88,6 +87,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			case "registry":
 				conf.Type = "docker-registry"
 				conf.Host = req.Args[1]
+				conf.DelayDiscovery = true
 			case "tar":
 				conf.Type = "docker-snapshot"
 				conf.Path = req.Args[1]
@@ -112,6 +112,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			case "registry":
 				conf.Type = "docker-registry"
 				conf.Host = req.Args[1]
+				conf.DelayDiscovery = true
 			case "tar":
 				conf.Type = "docker-snapshot"
 				conf.Path = req.Args[1]
@@ -234,13 +235,13 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	var inv *inventory.Inventory
 	connType := conn.Asset().Connections[0].Type
 	switch connType {
-	case "docker-registry":
-		tarConn := conn.(*tar.Connection)
-		inv, err = s.discoverRegistry(tarConn)
+	case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
+		regConn := conn.(*container.RegistryConnection)
+		inv, err = regConn.DiscoverImages()
 		if err != nil {
 			return nil, err
 		}
-	case "local", "docker-container":
+	case shared.Type_Local.String(), shared.Type_DockerContainer.String():
 		inv, err = s.discoverLocalContainers(conn.Asset().Connections[0])
 		if err != nil {
 			return nil, err
@@ -381,7 +382,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)
 
 		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
-			conn, err = container.NewRegistryImage(connId, conf, asset)
+			conn, err = container.NewRegistryConnection(connId, asset)
 
 		case shared.Type_RegistryImage.String():
 			conn, err = container.NewRegistryImage(connId, conf, asset)
@@ -443,29 +444,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	return runtime.Connection.(shared.Connection), nil
-}
-
-func (s *Service) discoverRegistry(conn *tar.Connection) (*inventory.Inventory, error) {
-	conf := conn.Asset().Connections[0]
-	if conf == nil {
-		return nil, nil
-	}
-
-	resolver := container_registry.Resolver{}
-	resolvedAssets, err := resolver.Resolve(context.Background(), conn.Asset(), conf, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	inventory := &inventory.Inventory{}
-	// we detect the platform for each asset we discover here
-	for _, a := range resolvedAssets {
-		// ignore the error. we will retry detection if we connect to the asset
-		_ = s.detect(a, conn)
-	}
-	inventory.AddAssets(resolvedAssets...)
-
-	return inventory, nil
 }
 
 func (s *Service) discoverLocalContainers(conf *inventory.Config) (*inventory.Inventory, error) {

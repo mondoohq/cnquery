@@ -5,18 +5,18 @@ package image
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
-	ecr "github.com/awslabs/amazon-ecr-credential-helper/ecr-login"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/acr"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 )
 
 // Option is a functional option
@@ -42,6 +42,38 @@ func WithAuthenticator(auth authn.Authenticator) Option {
 	}
 }
 
+func AuthOption(credentials []*vault.Credential) []Option {
+	remoteOpts := []Option{}
+	for i := range credentials {
+		cred := credentials[i]
+		switch cred.Type {
+		case vault.CredentialType_password:
+			log.Debug().Msg("add password authentication")
+			cfg := authn.AuthConfig{
+				Username: cred.User,
+				Password: string(cred.Secret),
+			}
+			remoteOpts = append(remoteOpts, WithAuthenticator((authn.FromConfig(cfg))))
+		case vault.CredentialType_bearer:
+			log.Debug().Str("token", string(cred.Secret)).Msg("add bearer authentication")
+			cfg := authn.AuthConfig{
+				Username:      cred.User,
+				RegistryToken: string(cred.Secret),
+			}
+			remoteOpts = append(remoteOpts, WithAuthenticator((authn.FromConfig(cfg))))
+		default:
+			log.Warn().Msg("unknown credentials for container image")
+			logger.DebugJSON(credentials)
+		}
+	}
+	return remoteOpts
+}
+
+func DefaultAuthOpts(ref name.Reference) (authn.Authenticator, error) {
+	kc := auth.ConstructKeychain(ref.Name())
+	return kc.Resolve(ref.Context())
+}
+
 func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor, error) {
 	o := &options{
 		insecure: false,
@@ -54,28 +86,8 @@ func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor,
 	}
 
 	if o.auth == nil {
-		kc := authn.NewMultiKeychain(
-			authn.DefaultKeychain,
-		)
-		if strings.Contains(ref.Name(), ".ecr.") {
-			kc = authn.NewMultiKeychain(
-				authn.DefaultKeychain,
-				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
-			)
-		}
-		if strings.Contains(ref.Name(), "azurecr.io") {
-			acr, err := acr.NewAcrAuthHelper()
-			if err != nil {
-				return nil, err
-			}
-			kc = authn.NewMultiKeychain(
-				authn.DefaultKeychain,
-				authn.NewKeychainFromHelper(acr),
-			)
-		}
-		auth, err := kc.Resolve(ref.Context())
+		auth, err := DefaultAuthOpts(ref)
 		if err != nil {
-			fmt.Printf("getting creds for %q: %v", ref, err)
 			return nil, err
 		}
 		o.auth = auth
@@ -96,28 +108,8 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, error)
 	}
 
 	if o.auth == nil {
-		kc := authn.NewMultiKeychain(
-			authn.DefaultKeychain,
-		)
-		if strings.Contains(ref.Name(), ".ecr.") {
-			kc = authn.NewMultiKeychain(
-				authn.DefaultKeychain,
-				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
-			)
-		}
-		if strings.Contains(ref.Name(), "azurecr.io") {
-			acr, err := acr.NewAcrAuthHelper()
-			if err != nil {
-				return nil, err
-			}
-			kc = authn.NewMultiKeychain(
-				authn.DefaultKeychain,
-				authn.NewKeychainFromHelper(acr),
-			)
-		}
-		auth, err := kc.Resolve(ref.Context())
+		auth, err := DefaultAuthOpts(ref)
 		if err != nil {
-			fmt.Printf("getting creds for %q: %v", ref, err)
 			return nil, err
 		}
 		o.auth = auth

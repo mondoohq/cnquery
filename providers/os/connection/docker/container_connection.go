@@ -258,7 +258,7 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 	}
 
 	// The requested image isn't locally available, but we can pull it from a remote registry.
-	if len(resolvedAssets) > 0 && resolvedAssets[0].Connections[0].Type == "container-registry" {
+	if len(resolvedAssets) > 0 && resolvedAssets[0].Connections[0].Type == shared.Type_RegistryImage.String() {
 		asset.Name = resolvedAssets[0].Name
 		asset.PlatformIds = resolvedAssets[0].PlatformIds
 		asset.Labels = resolvedAssets[0].Labels
