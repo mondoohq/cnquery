@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/gcp/connection/gcpinstancesnapshot"
 	"go.mondoo.com/cnquery/v10/providers/gcp/provider"
@@ -69,6 +70,89 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_Bool,
 					Default: "false",
 					Desc:    "[gcp snapshot, gcp instance] create a new snapshot instead of using the latest available snapshot (only used for instance)",
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=gcp"},
+			Key:          "scope",
+			Title:        "Scope",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"other": nil,
+				"resource manager": {
+					Key:   "object",
+					Title: "Resource Manager Object Type",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"organization": nil,
+						"folder":       nil,
+						"project":      nil,
+					},
+				},
+				"project": {
+					Key:   "project",
+					Title: "Project",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"*": {
+							Key:   "service",
+							Title: "Service",
+							Values: map[string]*inventory.AssetUrlBranch{
+								"compute": {
+									Key:   "region",
+									Title: "Region",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"*": {
+											Key:   "object",
+											Title: "Compute Object",
+											Values: map[string]*inventory.AssetUrlBranch{
+												"instance": {
+													Key: "type",
+													Values: map[string]*inventory.AssetUrlBranch{
+														"resource": nil,
+														// os ... references the os asset tree
+													},
+												},
+												"image":      nil,
+												"network":    nil,
+												"subnetwork": nil,
+												"other":      nil,
+											},
+										},
+									},
+								},
+								"storage": {
+									Key:   "region",
+									Title: "Region",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"*": {
+											Key:   "object",
+											Title: "Storage Object",
+											Values: map[string]*inventory.AssetUrlBranch{
+												"bucket": nil,
+												"other":  nil,
+											},
+										},
+									},
+								},
+								"gke": {
+									Key:   "region",
+									Title: "Region",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"*": {
+											Key:   "object",
+											Title: "GKE Object",
+											Values: map[string]*inventory.AssetUrlBranch{
+												"cluster": nil,
+												"other":   nil,
+											},
+										},
+									},
+								},
+								"other": nil,
+							},
+						},
+					},
 				},
 			},
 		},
