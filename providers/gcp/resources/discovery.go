@@ -181,6 +181,44 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 			})
 		}
 	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryFolders) {
+		folders := gcpOrg.GetFolders()
+		if folders.Error != nil {
+			return nil, folders.Error
+		}
+
+		folderList := folders.Data.GetList() // resolve all folders including nested
+		if folderList.Error != nil {
+			return nil, folderList.Error
+		}
+
+		for i := range folderList.Data {
+			folder := folderList.Data[i].(*mqlGcpFolder)
+
+			folderConf := conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))
+			if folderConf.Options == nil {
+				folderConf.Options = map[string]string{}
+			}
+			folderConf.Options["folder-id"] = folder.Id.Data
+
+			assetList = append(assetList, &inventory.Asset{
+				PlatformIds: []string{
+					connection.NewFolderPlatformID(folder.Id.Data),
+				},
+				Name: "GCP Folder " + folder.Id.Data,
+				Platform: &inventory.Platform{
+					Name:    "gcp-folder",
+					Title:   "GCP Folder",
+					Runtime: "gcp",
+					Kind:    "gcp-object",
+					Family:  []string{"google"},
+				},
+				Labels: map[string]string{},
+				// NOTE: we explicitly do not exclude discovery here, as we want to discover the projects for the folder
+				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithParentConnectionId(conn.Conf.Id))},
+			})
+		}
+	}
 	return assetList, nil
 }
 
