@@ -31,6 +31,11 @@ func (g *mqlGcpProjects) id() (string, error) {
 	return fmt.Sprintf("gcp.projects/%s", id), nil
 }
 
+type mqlGcpProjectInternal struct {
+	// serviceEnabled services
+	enabledServices map[string]struct{}
+}
+
 func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -303,4 +308,38 @@ func projectToMql(runtime *plugin.Runtime, p *cloudresourcemanager.Project) (*mq
 		return nil, err
 	}
 	return res.(*mqlGcpProject), nil
+}
+
+func (g *mqlGcpProject) getEnabledServices() (map[string]struct{}, error) {
+	if g.enabledServices != nil {
+		return g.enabledServices, nil
+	}
+
+	g.enabledServices = make(map[string]struct{})
+	enabledServices, err := g.fetchServices("state:ENABLED")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range enabledServices {
+		entry := enabledServices[i]
+		srv := entry.(*mqlGcpService)
+		g.enabledServices[srv.Name.Data] = struct{}{}
+	}
+
+	return g.enabledServices, nil
+}
+
+// isServiceEnabled is an internal helper function to check if a service is serviceEnabled
+func (g *mqlGcpProject) isServiceEnabled(serviceName string) (bool, error) {
+	enabledServices, err := g.getEnabledServices()
+	if err != nil {
+		return false, err
+	}
+
+	if _, ok := enabledServices[serviceName]; ok {
+		return true, nil
+	}
+
+	return false, nil
 }

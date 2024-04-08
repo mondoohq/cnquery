@@ -17,7 +17,6 @@ import (
 	"google.golang.org/api/compute/v1"
 	dataproc "google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/option"
-	"google.golang.org/api/serviceusage/v1"
 )
 
 type mqlGkeNodePoolAccelerator struct {
@@ -58,32 +57,19 @@ func (g *mqlGcpProjectDataprocService) id() (string, error) {
 }
 
 func (g *mqlGcpProject) dataproc() (*mqlGcpProjectDataprocService, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
 	projectId := g.Id.Data
 
-	ctx := context.Background()
-	client, err := conn.Client(dataproc.CloudPlatformScope)
+	serviceEnabled, err := g.isServiceEnabled(service_dataproc)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceUsageSvc, err := serviceusage.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-	url := fmt.Sprintf("projects/%s/services/dataproc.googleapis.com", projectId)
-	dataProcSvc, err := serviceUsageSvc.Services.Get(url).Do()
-	if err != nil {
-		return nil, err
-	}
-	enabled := dataProcSvc.State == "ENABLED"
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.dataprocService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
-		"enabled":   llx.BoolData(enabled),
+		"enabled":   llx.BoolData(serviceEnabled),
 	})
 	if err != nil {
 		return nil, err
@@ -129,7 +115,6 @@ func (g *mqlGcpProjectDataprocService) clusters() ([]interface{}, error) {
 	}
 	enabled := g.Enabled.Data
 	if !enabled {
-		log.Warn().Msg("DataProc Cloud API is not enabled, not querying clusters")
 		return []interface{}{}, nil
 	}
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)

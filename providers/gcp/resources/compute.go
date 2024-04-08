@@ -42,6 +42,10 @@ func initGcpProjectComputeService(runtime *plugin.Runtime, args map[string]*llx.
 	return args, nil, nil
 }
 
+type mqlGcpProjectComputeServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProject) compute() (*mqlGcpProjectComputeService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -54,7 +58,16 @@ func (g *mqlGcpProject) compute() (*mqlGcpProjectComputeService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectComputeService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_compute)
+	if err != nil {
+		return nil, err
+	}
+
+	computeService := res.(*mqlGcpProjectComputeService)
+	computeService.serviceEnabled = serviceEnabled
+
+	return computeService, nil
 }
 
 func (g *mqlGcpProjectComputeService) id() (string, error) {
@@ -87,6 +100,11 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 }
 
 func (g *mqlGcpProjectComputeService) regions() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -136,6 +154,11 @@ func (g *mqlGcpProjectComputeServiceZone) region() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -219,6 +242,11 @@ func newMqlMachineType(runtime *plugin.Runtime, entry *compute.MachineType, proj
 }
 
 func (g *mqlGcpProjectComputeService) machineTypes() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -558,7 +586,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	var mqlConfCompute map[string]interface{}
 	if instance.ConfidentialInstanceConfig != nil {
 		type mqlConfidentialInstanceConfig struct {
-			Enabled bool `json:"enabled,omitempty"`
+			Enabled bool `json:"serviceEnabled,omitempty"`
 		}
 		mqlConfCompute, err = convert.JsonToDict(
 			mqlConfidentialInstanceConfig{Enabled: instance.ConfidentialInstanceConfig.EnableConfidentialCompute})
@@ -616,6 +644,11 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 }
 
 func (g *mqlGcpProjectComputeService) instances() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -701,6 +734,11 @@ func (g *mqlGcpProjectComputeServiceDisk) zone() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeService) disks() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -865,6 +903,11 @@ func initGcpProjectComputeServiceFirewall(runtime *plugin.Runtime, args map[stri
 }
 
 func (g *mqlGcpProjectComputeService) firewalls() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -956,6 +999,11 @@ func (g *mqlGcpProjectComputeServiceSnapshot) sourceDisk() (interface{}, error) 
 }
 
 func (g *mqlGcpProjectComputeService) snapshots() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1070,6 +1118,11 @@ func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeService) images() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1204,6 +1257,11 @@ func initGcpProjectComputeServiceNetwork(runtime *plugin.Runtime, args map[strin
 }
 
 func (g *mqlGcpProjectComputeService) networks() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1451,6 +1509,11 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 }
 
 func (g *mqlGcpProjectComputeService) subnetworks() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1539,6 +1602,11 @@ func newMqlRouter(projectId string, region *mqlGcpProjectComputeServiceRegion, r
 }
 
 func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1601,6 +1669,11 @@ func (g *mqlGcpProjectComputeService) routers() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -1754,7 +1827,7 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]interface{}, error) {
 			var mqlIap interface{}
 			if b.Iap != nil {
 				mqlIap = map[string]interface{}{
-					"enabled":                  b.Iap.Enabled,
+					"serviceEnabled":           b.Iap.Enabled,
 					"oauth2ClientId":           b.Iap.Oauth2ClientId,
 					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
 					"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
@@ -1876,6 +1949,11 @@ func networkMode(n *compute.Network) string {
 }
 
 func (g *mqlGcpProjectComputeService) addresses() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

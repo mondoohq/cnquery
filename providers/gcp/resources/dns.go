@@ -18,6 +18,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectDnsServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProjectDnsService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -38,7 +42,16 @@ func (g *mqlGcpProject) dns() (*mqlGcpProjectDnsService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectDnsService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_dns)
+	if err != nil {
+		return nil, err
+	}
+
+	dnsService := res.(*mqlGcpProjectDnsService)
+	dnsService.serviceEnabled = serviceEnabled
+
+	return dnsService, nil
 }
 
 func initGcpProjectDnsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -68,6 +81,11 @@ func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) managedZones() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -149,6 +167,11 @@ func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsService) policies() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

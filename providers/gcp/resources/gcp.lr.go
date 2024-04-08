@@ -9522,7 +9522,7 @@ func (c *mqlGcpProjects) GetList() *plugin.TValue[[]interface{}] {
 type mqlGcpProject struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGcpProjectInternal it will be used here
+	mqlGcpProjectInternal
 	Id plugin.TValue[string]
 	Name plugin.TValue[string]
 	ParentId plugin.TValue[string]
@@ -10206,7 +10206,7 @@ func (c *mqlGcpResourcemanagerBinding) GetRole() *plugin.TValue[string] {
 type mqlGcpProjectComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGcpProjectComputeServiceInternal it will be used here
+	mqlGcpProjectComputeServiceInternal
 	ProjectId plugin.TValue[string]
 	Instances plugin.TValue[[]interface{}]
 	Snapshots plugin.TValue[[]interface{}]
@@ -14026,7 +14026,7 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy) GetReu
 type mqlGcpProjectBigqueryService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGcpProjectBigqueryServiceInternal it will be used here
+	mqlGcpProjectBigqueryServiceInternal
 	ProjectId plugin.TValue[string]
 	Datasets plugin.TValue[[]interface{}]
 }
@@ -14683,7 +14683,7 @@ func (c *mqlGcpProjectBigqueryServiceRoutine) GetType() *plugin.TValue[string] {
 type mqlGcpProjectDnsService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGcpProjectDnsServiceInternal it will be used here
+	mqlGcpProjectDnsServiceInternal
 	ProjectId plugin.TValue[string]
 	ManagedZones plugin.TValue[[]interface{}]
 	Policies plugin.TValue[[]interface{}]
@@ -15047,7 +15047,7 @@ func (c *mqlGcpProjectDnsServicePolicy) GetNetworks() *plugin.TValue[[]interface
 type mqlGcpProjectGkeService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlGcpProjectGkeServiceInternal it will be used here
+	mqlGcpProjectGkeServiceInternal
 	ProjectId plugin.TValue[string]
 	Clusters plugin.TValue[[]interface{}]
 }

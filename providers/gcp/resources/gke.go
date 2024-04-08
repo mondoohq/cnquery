@@ -21,6 +21,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectGkeServiceInternal struct {
+	serviceEnabled bool
+}
+
 func (g *mqlGcpProjectGkeService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -41,7 +45,16 @@ func (g *mqlGcpProject) gke() (*mqlGcpProjectGkeService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectGkeService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_gke)
+	if err != nil {
+		return nil, err
+	}
+
+	gkeService := res.(*mqlGcpProjectGkeService)
+	gkeService.serviceEnabled = serviceEnabled
+
+	return gkeService, nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) id() (string, error) {
@@ -175,6 +188,11 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
 }
 
 func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
