@@ -6,6 +6,7 @@ package snapshot
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -106,4 +107,18 @@ func TestGetRootBlockEntryRhelNoLabels(t *testing.T) {
 	rootFsInfo, err = blockEntries.GetUnnamedBlockEntry()
 	require.NoError(t, err)
 	require.Equal(t, fsInfo{fstype: "ext4", name: "/dev/sdb1"}, *rootFsInfo)
+}
+
+func TestAttachedBlockEntry(t *testing.T) {
+	data, err := os.ReadFile("./testdata/alma_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := blockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	info, err := blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, "xfs", info.fstype)
+	require.True(t, strings.Contains(info.name, "xvdh"))
 }
