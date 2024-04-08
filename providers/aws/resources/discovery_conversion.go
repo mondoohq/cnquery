@@ -67,7 +67,7 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, conn *connection.AwsC
 	return &inventory.Asset{
 		PlatformIds: platformIds,
 		Name:        mqlObject.name,
-		Platform:    connection.GetPlatformForObject(platformName),
+		Platform:    connection.GetPlatformForObject(platformName, account),
 		Labels:      mqlObject.labels,
 		Connections: []*inventory.Config{t.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(t.Id))},
 		Options:     conn.ConnectionOptions(),
@@ -206,7 +206,7 @@ func accountAsset(conn *connection.AwsConnection, awsAccount *mqlAwsAccount) *in
 	return &inventory.Asset{
 		PlatformIds: []string{id},
 		Name:        name,
-		Platform:    connection.GetPlatformForObject(""),
+		Platform:    connection.GetPlatformForObject("", accountId),
 		Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 		Options:     conn.ConnectionOptions(),
 	}

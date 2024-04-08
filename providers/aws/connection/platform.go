@@ -6,23 +6,25 @@ package connection
 import "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 
 func (a *AwsConnection) PlatformInfo() *inventory.Platform {
-	return GetPlatformForObject(a.PlatformOverride)
+	return GetPlatformForObject(a.PlatformOverride, a.accountId)
 }
 
-func GetPlatformForObject(platformName string) *inventory.Platform {
+func GetPlatformForObject(platformName string, accountId string) *inventory.Platform {
 	if platformName != "aws" && platformName != "" {
 		return &inventory.Platform{
-			Name:    platformName,
-			Title:   getTitleForPlatformName(platformName),
-			Kind:    "aws-object",
-			Runtime: "aws",
+			Name:                  platformName,
+			Title:                 getTitleForPlatformName(platformName),
+			Kind:                  "aws-object",
+			Runtime:               "aws",
+			TechnologyUrlSegments: []string{"aws", accountId, "account"},
 		}
 	}
 	return &inventory.Platform{
-		Name:    "aws",
-		Title:   "AWS Account",
-		Kind:    "api",
-		Runtime: "aws",
+		Name:                  "aws",
+		Title:                 "AWS Account",
+		Kind:                  "api",
+		Runtime:               "aws",
+		TechnologyUrlSegments: []string{"aws", accountId, "account"},
 	}
 }
 
