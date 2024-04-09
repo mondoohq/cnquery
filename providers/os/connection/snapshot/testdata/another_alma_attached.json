@@ -1,0 +1,111 @@
+{
+
+  "blockdevices": [
+    {
+       "name": "zram0",
+       "fstype": null,
+       "fsver": null,
+       "label": null,
+       "uuid": null,
+       "fsavail": null,
+       "fsuse%": null,
+       "mountpoints": [
+           "[SWAP]"
+       ]
+    },{
+       "name": "nvme0n1",
+       "fstype": null,
+       "fsver": null,
+       "label": null,
+       "uuid": null,
+       "fsavail": null,
+       "fsuse%": null,
+       "mountpoints": [
+           null
+       ],
+       "children": [
+          {
+             "name": "nvme0n1p1",
+             "fstype": "xfs",
+             "fsver": null,
+             "label": "/",
+             "uuid": "ff20f197-ffa7-403f-b746-72395ee51a0d",
+             "fsavail": "6.2G",
+             "fsuse%": "21%",
+             "mountpoints": [
+                 "/"
+             ]
+          },{
+             "name": "nvme0n1p128",
+             "fstype": "vfat",
+             "fsver": "FAT16",
+             "label": null,
+             "uuid": "0E68-4A00",
+             "fsavail": "8.6M",
+             "fsuse%": "14%",
+             "mountpoints": [
+                 "/boot/efi"
+             ]
+          }
+       ]
+    },{
+       "name": "nvme1n1",
+       "fstype": null,
+       "fsver": null,
+       "label": null,
+       "uuid": null,
+       "fsavail": null,
+       "fsuse%": null,
+       "mountpoints": [
+           null
+       ],
+       "children": [
+          {
+             "name": "nvme1n1p1",
+             "fstype": null,
+             "fsver": null,
+             "label": null,
+             "uuid": null,
+             "fsavail": null,
+             "fsuse%": null,
+             "mountpoints": [
+                 null
+             ]
+          },{
+             "name": "nvme1n1p2",
+             "fstype": "vfat",
+             "fsver": "FAT16",
+             "label": null,
+             "uuid": "C8BB-FC87",
+             "fsavail": null,
+             "fsuse%": null,
+             "mountpoints": [
+                 null
+             ]
+          },{
+             "name": "nvme1n1p3",
+             "fstype": "xfs",
+             "fsver": null,
+             "label": null,
+             "uuid": "31f80bf2-f73c-4350-bd3e-1dfe82e691f9",
+             "fsavail": null,
+             "fsuse%": null,
+             "mountpoints": [
+                 null
+             ]
+          },{
+             "name": "nvme1n1p4",
+             "fstype": "xfs",
+             "fsver": null,
+             "label": null,
+             "uuid": "b6b03ca5-4431-4db9-a1fb-f13c8566f779",
+             "fsavail": null,
+             "fsuse%": null,
+             "mountpoints": [
+                 null
+             ]
+          }
+       ]
+    }
+ ]
+}

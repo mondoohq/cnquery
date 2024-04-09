@@ -1,0 +1,92 @@
+{
+  "blockdevices": [
+    {
+      "name": "xvda",
+      "fstype": null,
+      "fsver": null,
+      "label": null,
+      "uuid": null,
+      "fsavail": null,
+      "fsuse%": null,
+      "mountpoints": [
+        null
+      ],
+      "children": [
+        {
+          "name": "xvda1",
+          "fstype": "xfs",
+          "fsver": null,
+          "label": "/",
+          "uuid": "3d668946-b9eb-4d6b-acbd-da437d796ee8",
+          "fsavail": "6.4G",
+          "fsuse%": "19%",
+          "mountpoints": [
+            "/"
+          ]
+        },
+        {
+          "name": "xvda127",
+          "fstype": null,
+          "fsver": null,
+          "label": null,
+          "uuid": null,
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvda128",
+          "fstype": "vfat",
+          "fsver": "FAT16",
+          "label": null,
+          "uuid": "1753-28B3",
+          "fsavail": "8.7M",
+          "fsuse%": "13%",
+          "mountpoints": [
+            "/boot/efi"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xvdh",
+      "fstype": null,
+      "fsver": null,
+      "label": null,
+      "uuid": null,
+      "fsavail": null,
+      "fsuse%": null,
+      "mountpoints": [
+        null
+      ],
+      "children": [
+        {
+          "name": "xvdh1",
+          "fstype": "xfs",
+          "fsver": null,
+          "label": "/",
+          "uuid": "8912f503-0393-46e9-ac20-cf4907701485",
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvdh128",
+          "fstype": null,
+          "fsver": null,
+          "label": null,
+          "uuid": null,
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}
