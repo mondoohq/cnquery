@@ -47,7 +47,6 @@ var Config = plugin.Provider{
 							Key:   "repository",
 							Title: "Repository",
 							Values: map[string]*inventory.AssetUrlBranch{
-								// any valid version for the OS
 								"*": nil,
 							},
 						},

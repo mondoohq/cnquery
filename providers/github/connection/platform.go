@@ -20,28 +20,25 @@ const (
 
 var (
 	GithubRepoPlatform = inventory.Platform{
-		Name:                  "github-repo",
-		Title:                 "GitHub Repository",
-		Family:                []string{"github"},
-		Kind:                  "api",
-		Runtime:               "github",
-		TechnologyUrlSegments: []string{"github", "repo"},
+		Name:    "github-repo",
+		Title:   "GitHub Repository",
+		Family:  []string{"github"},
+		Kind:    "api",
+		Runtime: "github",
 	}
 	GithubUserPlatform = inventory.Platform{
-		Name:                  "github-user",
-		Title:                 "GitHub User",
-		Family:                []string{"github"},
-		Kind:                  "api",
-		Runtime:               "github",
-		TechnologyUrlSegments: []string{"github", "user"},
+		Name:    "github-user",
+		Title:   "GitHub User",
+		Family:  []string{"github"},
+		Kind:    "api",
+		Runtime: "github",
 	}
 	GithubOrgPlatform = inventory.Platform{
-		Name:                  "github-org",
-		Title:                 "GitHub Organization",
-		Family:                []string{"github"},
-		Kind:                  "api",
-		Runtime:               "github",
-		TechnologyUrlSegments: []string{"github", "org"},
+		Name:    "github-org",
+		Title:   "GitHub Organization",
+		Family:  []string{"github"},
+		Kind:    "api",
+		Runtime: "github",
 	}
 )
 
