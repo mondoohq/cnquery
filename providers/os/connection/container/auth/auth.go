@@ -8,7 +8,6 @@ import (
 
 	"github.com/awslabs/amazon-ecr-credential-helper/ecr-login"
 	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/acr"
 )
 
@@ -25,12 +24,7 @@ func getKeychains(name string) []authn.Keychain {
 		kcs = append(kcs, authn.NewKeychainFromHelper(ecr.NewECRHelper()))
 	}
 	if strings.Contains(name, acrIndicator) {
-		acr, err := acr.NewAcrAuthHelper()
-		if err == nil {
-			kcs = append(kcs, authn.NewKeychainFromHelper(acr))
-		} else {
-			log.Debug().Err(err).Msg("failed to create ACR auth helper")
-		}
+		kcs = append(kcs, authn.NewKeychainFromHelper(acr.NewAcrAuthHelper()))
 	}
 	return kcs
 }

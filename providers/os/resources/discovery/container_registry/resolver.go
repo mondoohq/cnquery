@@ -31,7 +31,6 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{"auto", "all"}
 }
 
-// func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*inventory.Asset, error) {
 func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inventory.Config, credsResolver vault.Resolver) ([]*inventory.Asset, error) {
 	resolved := []*inventory.Asset{}
 

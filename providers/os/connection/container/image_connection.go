@@ -37,6 +37,7 @@ func NewImageConnection(id uint32, conf *inventory.Config, asset *inventory.Asse
 
 	return tar.NewConnection(id, conf, asset,
 		tar.WithFetchFn(func() (string, error) {
+			log.Debug().Msg("tar> starting image extract to temporary file")
 			err = tar.StreamToTmpFile(mutate.Extract(img), f)
 			if err != nil {
 				_ = os.Remove(f.Name())
