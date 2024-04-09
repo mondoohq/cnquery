@@ -4,12 +4,8 @@
 package container_registry
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net"
-	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -30,49 +26,8 @@ func NewContainerRegistryResolver(opts ...remote.Option) *DockerRegistryImages {
 }
 
 type DockerRegistryImages struct {
-	opts                []remote.Option
-	Insecure            bool
-	DisableKeychainAuth bool
-}
-
-func (a *DockerRegistryImages) DefaultAuth(name string) remote.Option {
-	kcs := auth.ConstructKeychain(name)
-	return remote.WithAuthFromKeychain(kcs)
-}
-
-func (a *DockerRegistryImages) InsecureTransportOpt() remote.Option {
-	// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
-	tr := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	}
-	return remote.WithTransport(tr)
-}
-
-func (a *DockerRegistryImages) DefaultOpts(name string) []remote.Option {
-	options := []remote.Option{}
-	// does not work with bearer auth, therefore it need to be disabled when other remote auth options are used
-	// TODO: we should implement this a bit differently
-	if !a.DisableKeychainAuth {
-		options = append(options, a.DefaultAuth(name))
-	}
-	if a.Insecure {
-		options = append(options, a.InsecureTransportOpt())
-	}
-
-	return options
+	opts     []remote.Option
+	Insecure bool
 }
 
 func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
@@ -80,7 +35,8 @@ func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
 	if len(a.opts) > 0 {
 		return a.opts
 	}
-	return a.DefaultOpts(name)
+	log.Debug().Str("name", name).Msg("using default remote options")
+	return auth.DefaultOpts(name, a.Insecure)
 }
 
 func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error) {
@@ -150,7 +106,8 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Ass
 	}
 
 	// fetch tags
-	tags, err := remote.List(repo, a.remoteOptions(repo.Name())...)
+	opts := a.remoteOptions(repo.Name())
+	tags, err := remote.List(repo, opts...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, repo.Name())
 	}
@@ -164,7 +121,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*inventory.Ass
 			return nil, fmt.Errorf("parsing reference %q: %v", repoWithTag, err)
 		}
 
-		a, err := a.toAsset(ref, nil)
+		a, err := a.toAsset(ref, nil, opts...)
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +162,7 @@ func (a *DockerRegistryImages) GetImage(ref name.Reference, creds []*vault.Crede
 }
 
 func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Credential, opts ...remote.Option) (*inventory.Asset, error) {
-	desc, err := image.GetImageDescriptor(ref, image.AuthOption(creds)...)
+	desc, err := image.GetImageDescriptor(ref, opts...)
 	if err != nil {
 		return nil, handleUnauthorizedError(err, ref.Name())
 	}
