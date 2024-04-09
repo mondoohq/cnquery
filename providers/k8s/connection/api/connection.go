@@ -197,14 +197,15 @@ func (c *Connection) SupportedResourceTypes() (*resources.ApiResourceIndex, erro
 func (c *Connection) Platform() *inventory.Platform {
 	v := c.ServerVersion()
 	return &inventory.Platform{
-		Name:    "k8s-cluster",
-		Build:   v.BuildDate,
-		Version: v.GitVersion,
-		Arch:    v.Platform,
-		Family:  []string{"k8s"},
-		Kind:    "api",
-		Runtime: c.Runtime(),
-		Title:   "Kubernetes Cluster",
+		Name:                  "k8s-cluster",
+		Build:                 v.BuildDate,
+		Version:               v.GitVersion,
+		Arch:                  v.Platform,
+		Family:                []string{"k8s"},
+		Kind:                  "api",
+		Runtime:               c.Runtime(),
+		Title:                 "Kubernetes Cluster",
+		TechnologyUrlSegments: []string{"k8s", "k8s-cluster"},
 	}
 }
 

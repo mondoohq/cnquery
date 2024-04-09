@@ -108,11 +108,12 @@ func (c *Connection) Runtime() string {
 
 func (c *Connection) Platform() *inventory.Platform {
 	return &inventory.Platform{
-		Name:    "k8s-manifest",
-		Family:  []string{"k8s"},
-		Kind:    "code",
-		Runtime: c.Runtime(),
-		Title:   "Kubernetes Manifest",
+		Name:                  "k8s-manifest",
+		Family:                []string{"k8s"},
+		Kind:                  "code",
+		Runtime:               c.Runtime(),
+		Title:                 "Kubernetes Manifest",
+		TechnologyUrlSegments: []string{"k8s", "k8s-manifest"},
 	}
 }
 

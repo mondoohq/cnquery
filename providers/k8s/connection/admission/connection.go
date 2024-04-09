@@ -94,11 +94,12 @@ func (c *Connection) Name() string {
 
 func (c *Connection) Platform() *inventory.Platform {
 	return &inventory.Platform{
-		Name:    "k8s-admission",
-		Family:  []string{"k8s"},
-		Kind:    "code",
-		Runtime: c.Runtime(),
-		Title:   "Kubernetes Admission",
+		Name:                  "k8s-admission",
+		Family:                []string{"k8s"},
+		Kind:                  "code",
+		Runtime:               c.Runtime(),
+		Title:                 "Kubernetes Admission",
+		TechnologyUrlSegments: []string{"k8s"},
 	}
 }
 

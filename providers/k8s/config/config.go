@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/k8s/provider"
 	"go.mondoo.com/cnquery/v10/providers/k8s/resources"
@@ -57,6 +58,16 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Only include Kubernetes object in the matching namespaces.",
 				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=k8s"},
+			Key:          "platform",
+			Title:        "Platform",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"*": nil,
 			},
 		},
 	},
