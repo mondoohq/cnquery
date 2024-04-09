@@ -19,21 +19,21 @@ const (
 )
 
 var (
-	GithubRepoPlatform = &inventory.Platform{
+	GithubRepoPlatform = inventory.Platform{
 		Name:    "github-repo",
 		Title:   "GitHub Repository",
 		Family:  []string{"github"},
 		Kind:    "api",
 		Runtime: "github",
 	}
-	GithubUserPlatform = &inventory.Platform{
+	GithubUserPlatform = inventory.Platform{
 		Name:    "github-user",
 		Title:   "GitHub User",
 		Family:  []string{"github"},
 		Kind:    "api",
 		Runtime: "github",
 	}
-	GithubOrgPlatform = &inventory.Platform{
+	GithubOrgPlatform = inventory.Platform{
 		Name:    "github-org",
 		Title:   "GitHub Organization",
 		Family:  []string{"github"},
@@ -58,18 +58,38 @@ type RepositoryId struct {
 func (c *GithubConnection) PlatformInfo() (*inventory.Platform, error) {
 	conf := c.asset.Connections[0]
 	if orgId := conf.Options["organization"]; orgId != "" {
-		return GithubOrgPlatform, nil
+		return NewGithubOrgPlatform(orgId), nil
 	}
 
 	if userId := conf.Options["user"]; userId != "" {
-		return GithubUserPlatform, nil
+
+		return NewGithubUserPlatform(userId), nil
 	}
 
 	if repo := conf.Options["repository"]; repo != "" {
-		return GithubRepoPlatform, nil
+		owner := conf.Options["owner"]
+		return NewGitHubRepoPlatform(owner, repo), nil
 	}
 
 	return nil, errors.New("could not detect GitHub asset type")
+}
+
+func NewGithubOrgPlatform(orgId string) *inventory.Platform {
+	pf := GithubOrgPlatform
+	pf.TechnologyUrlSegments = []string{"github", "organization", orgId, "organization"}
+	return &pf
+}
+
+func NewGithubUserPlatform(userId string) *inventory.Platform {
+	pf := GithubUserPlatform
+	pf.TechnologyUrlSegments = []string{"github", "user"}
+	return &pf
+}
+
+func NewGitHubRepoPlatform(owner, repo string) *inventory.Platform {
+	pf := GithubRepoPlatform
+	pf.TechnologyUrlSegments = []string{"github", "organization", owner, "repository"}
+	return &pf
 }
 
 func NewGithubOrgIdentifier(orgId string) string {

@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v10/providers/github/provider"
 )
@@ -27,6 +28,36 @@ var Config = plugin.Provider{
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "Provide GitHub personal access token.",
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=github"},
+			Key:          "organization",
+			Title:        "Organization",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"organization": {
+					Key:   "organization",
+					Title: "Organization",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"organization": nil,
+						"*": {
+							Key:   "repository",
+							Title: "Repository",
+							Values: map[string]*inventory.AssetUrlBranch{
+								"*": nil,
+							},
+						},
+					},
+				},
+				"user": {
+					Key:   "user",
+					Title: "User",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"*": nil,
+					},
 				},
 			},
 		},
