@@ -23,46 +23,64 @@ import (
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
 )
 
-func NewContainerRegistryResolver() *DockerRegistryImages {
-	return &DockerRegistryImages{}
+func NewContainerRegistryResolver(opts ...remote.Option) *DockerRegistryImages {
+	return &DockerRegistryImages{
+		opts: opts,
+	}
 }
 
 type DockerRegistryImages struct {
+	opts                []remote.Option
 	Insecure            bool
 	DisableKeychainAuth bool
 }
 
-func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
-	options := []remote.Option{}
+func (a *DockerRegistryImages) DefaultAuth(name string) remote.Option {
+	kcs := auth.ConstructKeychain(name)
+	return remote.WithAuthFromKeychain(kcs)
+}
 
+func (a *DockerRegistryImages) InsecureTransportOpt() remote.Option {
+	// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
+	tr := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	return remote.WithTransport(tr)
+}
+
+func (a *DockerRegistryImages) DefaultOpts(name string) []remote.Option {
+	options := []remote.Option{}
 	// does not work with bearer auth, therefore it need to be disabled when other remote auth options are used
 	// TODO: we should implement this a bit differently
 	if !a.DisableKeychainAuth {
-		kcs := auth.ConstructKeychain(name)
-		options = append(options, remote.WithAuthFromKeychain(kcs))
+		options = append(options, a.DefaultAuth(name))
 	}
 	if a.Insecure {
-		// NOTE: config to get remote running with an insecure registry, we need to override the TLSClientConfig
-		tr := &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		}
-		options = append(options, remote.WithTransport(tr))
+		options = append(options, a.InsecureTransportOpt())
 	}
 
 	return options
+}
+
+func (a *DockerRegistryImages) remoteOptions(name string) []remote.Option {
+	// either use the provided options or the default options
+	if len(a.opts) > 0 {
+		return a.opts
+	}
+	return a.DefaultOpts(name)
 }
 
 func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error) {

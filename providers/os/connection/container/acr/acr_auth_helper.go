@@ -28,24 +28,23 @@ const (
 // implemented according to https://github.com/Azure/acr/blob/main/docs/AAD-OAuth.md
 type acrAuthHelper struct {
 	httpClient *http.Client
-	aadToken   azcore.TokenCredential
+	tokenFn    func() (azcore.TokenCredential, error)
 	cache      map[string]string
 }
 
-func newAcrAuthHelperFromToken(token azcore.TokenCredential) *acrAuthHelper {
+func NewAcrAuthHelperFromToken(tokenFn func() (azcore.TokenCredential, error)) *acrAuthHelper {
 	return &acrAuthHelper{
 		httpClient: http.DefaultClient,
-		aadToken:   token,
+		tokenFn:    tokenFn,
 		cache:      make(map[string]string),
 	}
 }
 
-func NewAcrAuthHelper() (*acrAuthHelper, error) {
-	token, err := azauth.GetChainedToken(nil)
-	if err != nil {
-		return nil, err
+func NewAcrAuthHelper() *acrAuthHelper {
+	fn := func() (azcore.TokenCredential, error) {
+		return azauth.GetChainedToken(nil)
 	}
-	return newAcrAuthHelperFromToken(token), nil
+	return NewAcrAuthHelperFromToken(fn)
 }
 
 func (a *acrAuthHelper) getRefreshUrl(serverUrl string) string {
@@ -58,7 +57,11 @@ func (a *acrAuthHelper) getRefreshToken(ctx context.Context, serverUrl string) (
 		log.Debug().Str("server", serverUrl).Msg("using cached acr refresh token")
 		return refreshToken, nil
 	}
-	rawAadToken, err := a.aadToken.GetToken(ctx, policy.TokenRequestOptions{
+	t, err := a.tokenFn()
+	if err != nil {
+		return "", err
+	}
+	rawAadToken, err := t.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: []string{msScope},
 	})
 	if err != nil {
