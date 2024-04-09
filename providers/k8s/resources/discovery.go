@@ -962,6 +962,9 @@ func createPlatformData(objectKind, runtime string) (*inventory.Platform, error)
 	default:
 		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}
+
+	platformData.TechnologyUrlSegments = []string{"k8s", platformData.Name}
+
 	return platformData, nil
 }
 
