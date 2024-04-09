@@ -92,7 +92,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 	assetList = append(assetList, &inventory.Asset{
 		PlatformIds: []string{connection.NewGithubOrgIdentifier(org.Login.Data)},
 		Name:        org.Name.Data,
-		Platform:    connection.GithubOrgPlatform,
+		Platform:    connection.NewGithubOrgPlatform(org.Login.Data),
 		Labels:      map[string]string{},
 		Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 	})
@@ -107,7 +107,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGitHubRepoIdentifier(org.Login.Data, repo.Name.Data)},
 				Name:        org.Login.Data + "/" + repo.Name.Data,
-				Platform:    connection.GithubRepoPlatform,
+				Platform:    connection.NewGitHubRepoPlatform(org.Login.Data, repo.Name.Data),
 				Labels:      make(map[string]string),
 				Connections: []*inventory.Config{cfg},
 			})
@@ -125,7 +125,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			assetList = append(assetList, &inventory.Asset{
 				PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 				Name:        user.Name.Data,
-				Platform:    connection.GithubUserPlatform,
+				Platform:    connection.NewGithubUserPlatform(user.Login.Data),
 				Labels:      make(map[string]string),
 				Connections: []*inventory.Config{cfg},
 			})
@@ -155,7 +155,7 @@ func repo(runtime *plugin.Runtime, repoName string, owner string, conn *connecti
 	assetList = append(assetList, &inventory.Asset{
 		PlatformIds: []string{connection.NewGitHubRepoIdentifier(owner, repo.Name.Data)},
 		Name:        owner + "/" + repo.Name.Data,
-		Platform:    connection.GithubRepoPlatform,
+		Platform:    connection.NewGitHubRepoPlatform(owner, repo.Name.Data),
 		Labels:      make(map[string]string),
 		Connections: []*inventory.Config{cfg},
 	})
@@ -185,7 +185,7 @@ func user(runtime *plugin.Runtime, userName string, conn *connection.GithubConne
 	assetList = append(assetList, &inventory.Asset{
 		PlatformIds: []string{connection.NewGithubUserIdentifier(user.Login.Data)},
 		Name:        user.Name.Data,
-		Platform:    connection.GithubUserPlatform,
+		Platform:    connection.NewGithubUserPlatform(user.Login.Data),
 		Labels:      make(map[string]string),
 		Connections: []*inventory.Config{cfg},
 	})
