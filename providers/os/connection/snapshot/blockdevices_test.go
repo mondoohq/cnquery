@@ -122,3 +122,59 @@ func TestAttachedBlockEntry(t *testing.T) {
 	require.Equal(t, "xfs", info.fstype)
 	require.True(t, strings.Contains(info.name, "xvdh"))
 }
+
+func TestAttachedBlockEntryAWS(t *testing.T) {
+	data, err := os.ReadFile("./testdata/aws_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := blockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	info, err := blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, "xfs", info.fstype)
+	require.True(t, strings.Contains(info.name, "xvdh"))
+}
+
+func TestAnotherAttachedBlockEntryAlma(t *testing.T) {
+	data, err := os.ReadFile("./testdata/another_alma_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := blockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	info, err := blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, "xfs", info.fstype)
+	require.True(t, strings.Contains(info.name, "nvme1n1"))
+}
+
+func TestAttachedBlockEntryOracle(t *testing.T) {
+	data, err := os.ReadFile("./testdata/oracle_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := blockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	info, err := blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, "ext4", info.fstype)
+	require.True(t, strings.Contains(info.name, "xvdb"))
+}
+
+func TestAttachedBlockEntryRhel(t *testing.T) {
+	data, err := os.ReadFile("./testdata/rhel_attached.json")
+	require.NoError(t, err)
+
+	blockEntries := blockDevices{}
+	err = json.Unmarshal(data, &blockEntries)
+	require.NoError(t, err)
+
+	info, err := blockEntries.GetUnnamedBlockEntry()
+	require.NoError(t, err)
+	require.Equal(t, "xfs", info.fstype)
+	require.True(t, strings.Contains(info.name, "nvme1n1"))
+}

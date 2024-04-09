@@ -21,6 +21,7 @@ type blockDevice struct {
 	Uuid       string        `json:"uuid,omitempty"`
 	MountPoint string        `json:"mountpoint,omitempty"`
 	Children   []blockDevice `json:"children,omitempty"`
+	FsUse      string        `json:"fsuse%,omitempty"`
 }
 
 type fsInfo struct {
@@ -112,7 +113,7 @@ func (blockEntries blockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 }
 
 func (entry blockDevice) IsNoBootVolume() bool {
-	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot" && entry.Label != "/"
+	return entry.Uuid != "" && entry.FsType != "" && entry.FsType != "vfat" && entry.Label != "EFI" && entry.Label != "boot" && entry.FsUse == ""
 }
 
 func (entry blockDevice) IsNoBootVolumeAndUnmounted() bool {
