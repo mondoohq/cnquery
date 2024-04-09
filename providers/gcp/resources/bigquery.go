@@ -234,7 +234,7 @@ func initGcpProjectBigqueryServiceDataset(runtime *plugin.Runtime, args map[stri
 			return nil, nil, projectId.Error
 		}
 
-		if id == args["id"].Value && projectId == args["projectId"].Value && location == args["location"].Value {
+		if id.Data == args["id"].Value && projectId.Data == args["projectId"].Value && location.Data == args["location"].Value {
 			return args, dataset, nil
 		}
 	}
