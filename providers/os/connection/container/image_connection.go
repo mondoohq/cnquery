@@ -11,10 +11,12 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
 	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
 	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
@@ -61,10 +63,7 @@ func NewRegistryImage(id uint32, conf *inventory.Config, asset *inventory.Asset)
 	}
 	log.Debug().Str("ref", ref.Name()).Msg("found valid container registry reference")
 
-	registryOpts := []image.Option{image.WithInsecure(conf.Insecure)}
-	remoteOpts := image.AuthOption(conf.Credentials)
-	registryOpts = append(registryOpts, remoteOpts...)
-
+	registryOpts := []remote.Option{auth.TransportOption(conf.Insecure), auth.AuthOption(ref.Name(), conf.Credentials)}
 	img, err := image.LoadImageFromRegistry(ref, registryOpts...)
 	if err != nil {
 		return nil, err

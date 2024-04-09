@@ -7,13 +7,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/logger"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
 )
 
 type Resolver struct {
@@ -35,8 +34,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 	resolved := []*inventory.Asset{}
 
 	imageFetcher := NewContainerRegistryResolver()
-	// to support self-signed certs
-	imageFetcher.Insecure = conf.Insecure
 
 	// check if the reference is an image
 	// NOTE: we use strict validation here otherwise urls like cr://index.docker.io/mondoo/client are converted
@@ -50,12 +47,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 	if err == nil {
 		log.Debug().Str("image", conf.Host).Msg("detected container image in container registry")
 
-		remoteOpts := AuthOption(conf.Credentials, credsResolver)
-		// we need to disable default keychain auth if an auth method was found
-		if len(remoteOpts) > 0 {
-			imageFetcher.DisableKeychainAuth = true
+		remoteOpts := []remote.Option{
+			auth.AuthOption(ref.Name(), conf.Credentials),
+			// to support self-signed certs
+			auth.TransportOption(conf.Insecure),
 		}
-
 		a, err := imageFetcher.GetImage(ref, conf.Credentials, remoteOpts...)
 		if err != nil {
 			return nil, err
@@ -104,38 +100,4 @@ func (r *Resolver) Resolve(ctx context.Context, root *inventory.Asset, conf *inv
 	}
 
 	return resolved, nil
-}
-
-func AuthOption(credentials []*vault.Credential, credsResolver vault.Resolver) []remote.Option {
-	remoteOpts := []remote.Option{}
-	for i := range credentials {
-		cred := credentials[i]
-
-		// NOTE: normally the motor connection is resolving the credentials but here we need the credential earlier
-		// we probably want to write some mql resources to support the query of registries itself
-		resolvedCredential, err := credsResolver.GetCredential(cred)
-		if err != nil {
-			log.Warn().Err(err).Msg("could not resolve credential")
-		}
-		switch resolvedCredential.Type {
-		case vault.CredentialType_password:
-			log.Debug().Msg("add password authentication")
-			cfg := authn.AuthConfig{
-				Username: resolvedCredential.User,
-				Password: string(resolvedCredential.Secret),
-			}
-			remoteOpts = append(remoteOpts, remote.WithAuth(authn.FromConfig(cfg)))
-		case vault.CredentialType_bearer:
-			log.Debug().Str("token", string(resolvedCredential.Secret)).Msg("add bearer authentication")
-			cfg := authn.AuthConfig{
-				Username:      resolvedCredential.User,
-				RegistryToken: string(resolvedCredential.Secret),
-			}
-			remoteOpts = append(remoteOpts, remote.WithAuth(authn.FromConfig(cfg)))
-		default:
-			log.Warn().Msg("unknown credentials for container image")
-			logger.DebugJSON(credentials)
-		}
-	}
-	return remoteOpts
 }
