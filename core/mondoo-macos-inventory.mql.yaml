@@ -4,7 +4,7 @@
 packs:
   - uid: mondoo-macos-inventory
     name: macOS Inventory Pack
-    version: 1.4.0
+    version: 1.4.1
     license: BUSL-1.1
     authors:
       - name: Mondoo, Inc
@@ -129,3 +129,6 @@ packs:
         title: Configuration Profile Data
         mql: |
           parse.json(content: command('system_profiler SPConfigurationProfileDataType -json').stdout).params
+      - uid: mondoo-macos-logged-in-users
+        title: Logged-in users
+        mql: command('users').stdout
