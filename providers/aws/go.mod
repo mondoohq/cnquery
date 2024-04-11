@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.51.16
+	github.com/aws/aws-sdk-go v1.51.19
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.76.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.4
