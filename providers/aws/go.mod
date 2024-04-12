@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.51.16
+	github.com/aws/aws-sdk-go v1.51.20
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -18,11 +18,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/backup v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.4
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
@@ -38,14 +38,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/iam v1.31.4
+	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.76.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.4
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.135.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.2
