@@ -16306,7 +16306,7 @@ func (c *mqlAwsCloudtrail) GetTrails() *plugin.TValue[[]interface{}] {
 type mqlAwsCloudtrailTrail struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsCloudtrailTrailInternal it will be used here
+	mqlAwsCloudtrailTrailInternal
 	Arn plugin.TValue[string]
 	Name plugin.TValue[string]
 	KmsKey plugin.TValue[*mqlAwsKmsKey]
