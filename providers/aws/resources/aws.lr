@@ -2375,6 +2375,67 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   iops int
 }
 
+aws.inspector {
+  // List of coverage results for the AWS account
+	coverages() []aws.inspector.coverage
+}
+
+private aws.inspector.coverage {
+  // AccountId for the coverage finding
+	accountId string
+  // Resource Id for the coverage finding
+	resourceId string
+  // Resource type, e.g. AWS_EC2_INSTANCE
+	resourceType string
+  // Time when the coverage finding was last scanned
+	lastScannedAt time
+  // Reason for the coverage finding status
+  statusReason string
+  // Code for the coverage finding status
+  statusCode string
+  // Type of coverage finding
+  scanType string
+  // Region where it was found
+  region string
+  // Details about the ec2 instance associated with the finding
+	ec2Instance() aws.inspector.coverage.instance
+  // Details about the ecr image associated with the finding
+	ecrImage() aws.inspector.coverage.image
+  // Details about the ecr repo associated with the finding
+	ecrRepo() aws.inspector.coverage.repository
+  // Details about the lambda function associated with the finding
+	lambda() aws.lambda.function
+}
+
+private aws.inspector.coverage.instance {
+  // Platform for the ec2 instance
+  platform string
+  // Tags associated with the ec2 instance
+  tags map[string]string
+  // Image associated with the ec2 instance
+  image aws.ec2.image
+  // Region where the ec2 instance is found
+  region string
+}
+
+private aws.inspector.coverage.image {
+  // Time when the image was scanned
+  imagePulledAt time
+  // Tags associated with the image
+  tags map[string]string
+  // Region where the image is found
+  region string
+}
+
+private aws.inspector.coverage.repository {
+  // Name of the ECR repository
+  name string
+  // Scan frequency of the ECR repo
+  scanFrequency string
+  // Region where the ecr repo is found
+  region string
+}
+
 // Amazon EC2 instance
 private aws.ec2.instance @defaults("instanceId region state instanceType architecture platformDetails") {
   // ARN for the instance

@@ -594,6 +594,26 @@ func init() {
 			Init: initAwsEc2Volume,
 			Create: createAwsEc2Volume,
 		},
+		"aws.inspector": {
+			// to override args, implement: initAwsInspector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspector,
+		},
+		"aws.inspector.coverage": {
+			// to override args, implement: initAwsInspectorCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorCoverage,
+		},
+		"aws.inspector.coverage.instance": {
+			// to override args, implement: initAwsInspectorCoverageInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorCoverageInstance,
+		},
+		"aws.inspector.coverage.image": {
+			// to override args, implement: initAwsInspectorCoverageImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorCoverageImage,
+		},
+		"aws.inspector.coverage.repository": {
+			// to override args, implement: initAwsInspectorCoverageRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsInspectorCoverageRepository,
+		},
 		"aws.ec2.instance": {
 			Init: initAwsEc2Instance,
 			Create: createAwsEc2Instance,
@@ -3382,6 +3402,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.volume.iops": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Volume).GetIops()).ToDataRes(types.Int)
+	},
+	"aws.inspector.coverages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspector).GetCoverages()).ToDataRes(types.Array(types.Resource("aws.inspector.coverage")))
+	},
+	"aws.inspector.coverage.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.lastScannedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetLastScannedAt()).ToDataRes(types.Time)
+	},
+	"aws.inspector.coverage.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.statusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetStatusCode()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.scanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetScanType()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.ec2Instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetEc2Instance()).ToDataRes(types.Resource("aws.inspector.coverage.instance"))
+	},
+	"aws.inspector.coverage.ecrImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetEcrImage()).ToDataRes(types.Resource("aws.inspector.coverage.image"))
+	},
+	"aws.inspector.coverage.ecrRepo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetEcrRepo()).ToDataRes(types.Resource("aws.inspector.coverage.repository"))
+	},
+	"aws.inspector.coverage.lambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverage).GetLambda()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.inspector.coverage.instance.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageInstance).GetPlatform()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.inspector.coverage.instance.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageInstance).GetImage()).ToDataRes(types.Resource("aws.ec2.image"))
+	},
+	"aws.inspector.coverage.instance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.image.imagePulledAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageImage).GetImagePulledAt()).ToDataRes(types.Time)
+	},
+	"aws.inspector.coverage.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageImage).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.inspector.coverage.image.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageImage).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.repository.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageRepository).GetName()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.repository.scanFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageRepository).GetScanFrequency()).ToDataRes(types.String)
+	},
+	"aws.inspector.coverage.repository.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsInspectorCoverageRepository).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.ec2.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetArn()).ToDataRes(types.String)
@@ -7845,6 +7934,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.volume.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Volume).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsInspector).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.inspector.coverages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspector).Coverages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsInspectorCoverage).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.inspector.coverage.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.lastScannedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).LastScannedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.statusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).StatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).ScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.ec2Instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).Ec2Instance, ok = plugin.RawToTValue[*mqlAwsInspectorCoverageInstance](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.ecrImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).EcrImage, ok = plugin.RawToTValue[*mqlAwsInspectorCoverageImage](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.ecrRepo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).EcrRepo, ok = plugin.RawToTValue[*mqlAwsInspectorCoverageRepository](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.lambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverage).Lambda, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsInspectorCoverageInstance).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.inspector.coverage.instance.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageInstance).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageInstance).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.instance.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageInstance).Image, ok = plugin.RawToTValue[*mqlAwsEc2Image](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.instance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsInspectorCoverageImage).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.inspector.coverage.image.imagePulledAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageImage).ImagePulledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageImage).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.image.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageImage).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.repository.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsInspectorCoverageRepository).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.inspector.coverage.repository.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageRepository).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.repository.scanFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageRepository).ScanFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.inspector.coverage.repository.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsInspectorCoverageRepository).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20452,6 +20653,401 @@ func (c *mqlAwsEc2Volume) GetSize() *plugin.TValue[int64] {
 
 func (c *mqlAwsEc2Volume) GetIops() *plugin.TValue[int64] {
 	return &c.Iops
+}
+
+// mqlAwsInspector for the aws.inspector resource
+type mqlAwsInspector struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsInspectorInternal it will be used here
+	Coverages plugin.TValue[[]interface{}]
+}
+
+// createAwsInspector creates a new instance of this resource
+func createAwsInspector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspector) MqlName() string {
+	return "aws.inspector"
+}
+
+func (c *mqlAwsInspector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspector) GetCoverages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Coverages, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector", c.__id, "coverages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.coverages()
+	})
+}
+
+// mqlAwsInspectorCoverage for the aws.inspector.coverage resource
+type mqlAwsInspectorCoverage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsInspectorCoverageInternal
+	AccountId plugin.TValue[string]
+	ResourceId plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	LastScannedAt plugin.TValue[*time.Time]
+	StatusReason plugin.TValue[string]
+	StatusCode plugin.TValue[string]
+	ScanType plugin.TValue[string]
+	Region plugin.TValue[string]
+	Ec2Instance plugin.TValue[*mqlAwsInspectorCoverageInstance]
+	EcrImage plugin.TValue[*mqlAwsInspectorCoverageImage]
+	EcrRepo plugin.TValue[*mqlAwsInspectorCoverageRepository]
+	Lambda plugin.TValue[*mqlAwsLambdaFunction]
+}
+
+// createAwsInspectorCoverage creates a new instance of this resource
+func createAwsInspectorCoverage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorCoverage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.coverage", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorCoverage) MqlName() string {
+	return "aws.inspector.coverage"
+}
+
+func (c *mqlAwsInspectorCoverage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorCoverage) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsInspectorCoverage) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsInspectorCoverage) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsInspectorCoverage) GetLastScannedAt() *plugin.TValue[*time.Time] {
+	return &c.LastScannedAt
+}
+
+func (c *mqlAwsInspectorCoverage) GetStatusReason() *plugin.TValue[string] {
+	return &c.StatusReason
+}
+
+func (c *mqlAwsInspectorCoverage) GetStatusCode() *plugin.TValue[string] {
+	return &c.StatusCode
+}
+
+func (c *mqlAwsInspectorCoverage) GetScanType() *plugin.TValue[string] {
+	return &c.ScanType
+}
+
+func (c *mqlAwsInspectorCoverage) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsInspectorCoverage) GetEc2Instance() *plugin.TValue[*mqlAwsInspectorCoverageInstance] {
+	return plugin.GetOrCompute[*mqlAwsInspectorCoverageInstance](&c.Ec2Instance, func() (*mqlAwsInspectorCoverageInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector.coverage", c.__id, "ec2Instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsInspectorCoverageInstance), nil
+			}
+		}
+
+		return c.ec2Instance()
+	})
+}
+
+func (c *mqlAwsInspectorCoverage) GetEcrImage() *plugin.TValue[*mqlAwsInspectorCoverageImage] {
+	return plugin.GetOrCompute[*mqlAwsInspectorCoverageImage](&c.EcrImage, func() (*mqlAwsInspectorCoverageImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector.coverage", c.__id, "ecrImage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsInspectorCoverageImage), nil
+			}
+		}
+
+		return c.ecrImage()
+	})
+}
+
+func (c *mqlAwsInspectorCoverage) GetEcrRepo() *plugin.TValue[*mqlAwsInspectorCoverageRepository] {
+	return plugin.GetOrCompute[*mqlAwsInspectorCoverageRepository](&c.EcrRepo, func() (*mqlAwsInspectorCoverageRepository, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector.coverage", c.__id, "ecrRepo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsInspectorCoverageRepository), nil
+			}
+		}
+
+		return c.ecrRepo()
+	})
+}
+
+func (c *mqlAwsInspectorCoverage) GetLambda() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.Lambda, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.inspector.coverage", c.__id, "lambda")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambda()
+	})
+}
+
+// mqlAwsInspectorCoverageInstance for the aws.inspector.coverage.instance resource
+type mqlAwsInspectorCoverageInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsInspectorCoverageInstanceInternal
+	Platform plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Image plugin.TValue[*mqlAwsEc2Image]
+	Region plugin.TValue[string]
+}
+
+// createAwsInspectorCoverageInstance creates a new instance of this resource
+func createAwsInspectorCoverageInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorCoverageInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.coverage.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorCoverageInstance) MqlName() string {
+	return "aws.inspector.coverage.instance"
+}
+
+func (c *mqlAwsInspectorCoverageInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorCoverageInstance) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlAwsInspectorCoverageInstance) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsInspectorCoverageInstance) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
+	return &c.Image
+}
+
+func (c *mqlAwsInspectorCoverageInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsInspectorCoverageImage for the aws.inspector.coverage.image resource
+type mqlAwsInspectorCoverageImage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsInspectorCoverageImageInternal it will be used here
+	ImagePulledAt plugin.TValue[*time.Time]
+	Tags plugin.TValue[map[string]interface{}]
+	Region plugin.TValue[string]
+}
+
+// createAwsInspectorCoverageImage creates a new instance of this resource
+func createAwsInspectorCoverageImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorCoverageImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.coverage.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorCoverageImage) MqlName() string {
+	return "aws.inspector.coverage.image"
+}
+
+func (c *mqlAwsInspectorCoverageImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorCoverageImage) GetImagePulledAt() *plugin.TValue[*time.Time] {
+	return &c.ImagePulledAt
+}
+
+func (c *mqlAwsInspectorCoverageImage) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsInspectorCoverageImage) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsInspectorCoverageRepository for the aws.inspector.coverage.repository resource
+type mqlAwsInspectorCoverageRepository struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsInspectorCoverageRepositoryInternal it will be used here
+	Name plugin.TValue[string]
+	ScanFrequency plugin.TValue[string]
+	Region plugin.TValue[string]
+}
+
+// createAwsInspectorCoverageRepository creates a new instance of this resource
+func createAwsInspectorCoverageRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsInspectorCoverageRepository{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.inspector.coverage.repository", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsInspectorCoverageRepository) MqlName() string {
+	return "aws.inspector.coverage.repository"
+}
+
+func (c *mqlAwsInspectorCoverageRepository) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsInspectorCoverageRepository) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsInspectorCoverageRepository) GetScanFrequency() *plugin.TValue[string] {
+	return &c.ScanFrequency
+}
+
+func (c *mqlAwsInspectorCoverageRepository) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsEc2Instance for the aws.ec2.instance resource

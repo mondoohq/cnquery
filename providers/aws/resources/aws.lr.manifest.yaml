@@ -1881,6 +1881,69 @@ resources:
     platform:
       name:
       - aws
+  aws.inspector:
+    fields:
+      coverage: {}
+      coverages: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.inspector.coverage:
+    fields:
+      accountId: {}
+      ec2Instance: {}
+      ec2Instances: {}
+      ecrImage: {}
+      ecrImages: {}
+      ecrRepo: {}
+      ecrRepos: {}
+      lambda: {}
+      lambdas: {}
+      lastScannedAt: {}
+      region: {}
+      resourceId: {}
+      resourceType: {}
+      scanStatus: {}
+      scanType: {}
+      statusCode: {}
+      statusReason: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.inspector.coverage.image:
+    fields:
+      imagePulledAt: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.inspector.coverage.instance:
+    fields:
+      image: {}
+      platform: {}
+      region: {}
+      tags: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
+  aws.inspector.coverage.repository:
+    fields:
+      name: {}
+      region: {}
+      scanFrequency: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - aws
   aws.kms:
     docs:
       desc: "Use the `aws.kms` resource to assess the configuration of AWS KMS keys.
