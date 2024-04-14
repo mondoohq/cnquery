@@ -19,6 +19,7 @@ message Asset {
   string mrn = 1;
   string name = 2;
   string platform_name = 20;
+  string trace_id = 21;
 }
 
 message DataValues {

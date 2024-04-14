@@ -28,9 +28,10 @@ const (
 	Summary
 	Full
 	YAML
-	JSON
+	JSONv1
 	JUnit
 	CSV
+	JSONv2
 )
 
 // Formats that are supported by the reporter
@@ -41,7 +42,9 @@ var Formats = map[string]Format{
 	"":        Compact,
 	"yaml":    YAML,
 	"yml":     YAML,
-	"json":    JSON,
+	"json-v1": JSONv1,
+	"json-v2": JSONv2,
+	"json":    JSONv1,
 	"csv":     CSV,
 }
 
@@ -108,9 +111,21 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 			data:      data,
 		}
 		return rr.print()
-	case JSON:
+	case JSONv1:
 		w := shared.IOWriter{Writer: out}
 		return ConvertToJSON(data, &w)
+	case JSONv2:
+		r, err := ConvertToProto(data)
+		if err != nil {
+			return err
+		}
+
+		data, err := r.ToJSON()
+		if err != nil {
+			return err
+		}
+		_, err = out.Write(data)
+		return err
 	case CSV:
 		w := shared.IOWriter{Writer: out}
 		return ConvertToCSV(data, &w)
@@ -122,11 +137,11 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 			return err
 		}
 
-		json, err := yaml.JSONToYAML(raw.Bytes())
+		data, err := yaml.JSONToYAML(raw.Bytes())
 		if err != nil {
 			return err
 		}
-		_, err = out.Write(json)
+		_, err = out.Write(data)
 		return err
 	default:
 		return errors.New("unknown reporter type, don't recognize this Format")

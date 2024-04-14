@@ -396,6 +396,7 @@ message Report {
 message Asset {
   string mrn = 1;
   string name = 18;
+  string trace_id = 19;
 }
 
 message ReportCollection {
