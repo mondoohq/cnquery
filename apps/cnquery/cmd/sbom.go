@@ -116,7 +116,7 @@ var sbomCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *pl
 	for i := range boms {
 		bom := boms[i]
 		output := bytes.Buffer{}
-		err := exporter.Render(&output, &bom)
+		err := exporter.Render(&output, bom)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to render SBOM")
 		}

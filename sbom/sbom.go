@@ -9,12 +9,12 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"strings"
 	"time"
 
 	"github.com/mitchellh/hashstructure/v2"
 	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v10/cli/reporter"
 	"go.mondoo.com/cnquery/v10/explorer"
 	"go.mondoo.com/cnquery/v10/mrn"
 )
@@ -31,12 +31,12 @@ func QueryPack() (*explorer.Bundle, error) {
 }
 
 // NewBom creates a BOM from a json report collection
-func NewBom(report *reporter.Report) ([]Sbom, error) {
+func NewBom(report *reporter.Report) ([]*Sbom, error) {
 	return GenerateBom(report)
 }
 
 // GenerateBom generates a BOM from a cnspec json report collection
-func GenerateBom(r *reporter.Report) ([]Sbom, error) {
+func GenerateBom(r *reporter.Report) ([]*Sbom, error) {
 	if r == nil {
 		return nil, nil
 	}
@@ -49,11 +49,11 @@ func GenerateBom(r *reporter.Report) ([]Sbom, error) {
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	boms := []Sbom{}
+	boms := []*Sbom{}
 	for mrn := range r.Assets {
 		asset := r.Assets[mrn]
 
-		bom := Sbom{
+		bom := &Sbom{
 			Generator: generator,
 			Timestamp: now,
 			Status:    Status_STATUS_SUCCEEDED,
@@ -65,6 +65,7 @@ func GenerateBom(r *reporter.Report) ([]Sbom, error) {
 			Platform:    &Platform{},
 			Labels:      map[string]string{},
 			ExternalIds: []*ExternalID{},
+			TraceId:     asset.TraceId,
 		}
 
 		bom.Packages = []*Package{}

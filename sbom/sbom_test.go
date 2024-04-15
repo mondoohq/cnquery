@@ -4,12 +4,13 @@
 package sbom
 
 import (
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v10/cli/reporter"
-	"os"
 	"sigs.k8s.io/yaml"
-	"testing"
 )
 
 func loadTestReport(t *testing.T) *reporter.Report {
@@ -30,6 +31,7 @@ func TestSbomParsing(t *testing.T) {
 	selectedBom := sboms[0]
 
 	assert.Equal(t, "alpine:latest", selectedBom.Asset.Name)
+	assert.Equal(t, "trace-alpine", selectedBom.Asset.TraceId)
 	assert.Equal(t, "aarch64", selectedBom.Asset.Platform.Arch)
 	assert.Equal(t, "alpine", selectedBom.Asset.Platform.Name)
 	assert.Equal(t, "3.19.0", selectedBom.Asset.Platform.Version)

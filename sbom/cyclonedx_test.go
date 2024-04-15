@@ -5,10 +5,11 @@ package sbom
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCycloneDX(t *testing.T) {
@@ -24,7 +25,7 @@ func TestCycloneDX(t *testing.T) {
 	exporter = &CycloneDX{
 		Format: cyclonedx.BOMFileFormatJSON,
 	}
-	err = exporter.Render(&output, &selectedBom)
+	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 
 	data := output.String()
