@@ -8,6 +8,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v10/llx"
@@ -89,6 +91,10 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	return args, nil, errors.New("cloudtrail trail does not exist")
 }
 
+type mqlAwsCloudtrailTrailInternal struct {
+	trailCache types.Trail
+}
+
 func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
 	regions, err := conn.Regions()
@@ -113,7 +119,6 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 				}
 				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
 			}
-
 			for i := range trailsResp.TrailList {
 				trail := trailsResp.TrailList[i]
 
@@ -135,58 +140,13 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 					"region":                     llx.StringDataPtr(trail.HomeRegion),
 				}
 
-				// trail.S3BucketName
-				if trail.S3BucketName != nil {
-					mqlAwsS3Bucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
-						map[string]*llx.RawData{"name": llx.StringDataPtr(trail.S3BucketName)},
-					)
-					if err != nil {
-						args["s3bucket"] = llx.NilData
-					} else {
-						args["s3bucket"] = llx.ResourceData(mqlAwsS3Bucket, mqlAwsS3Bucket.MqlName())
-					}
-				} else {
-					args["s3bucket"] = llx.NilData
-				}
-
-				// add kms key if there is one
-				if trail.KmsKeyId != nil {
-					mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
-						map[string]*llx.RawData{"arn": llx.StringDataPtr(trail.KmsKeyId)},
-					)
-					// means the key does not exist or we have no access to it
-					// dont err out, just assign nil
-					if err != nil {
-						args["kmsKey"] = llx.NilData
-					} else {
-						mqlKey := mqlKeyResource.(*mqlAwsKmsKey)
-						args["kmsKey"] = llx.ResourceData(mqlKey, mqlKey.MqlName())
-					}
-				} else {
-					args["kmsKey"] = llx.NilData
-				}
-				if trail.CloudWatchLogsLogGroupArn != nil {
-					mqlLoggroup, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
-						map[string]*llx.RawData{"arn": llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn)},
-					)
-					// means the log group does not exist or we have no access to it
-					// dont err out, just assign nil
-					if err != nil {
-						args["logGroup"] = llx.NilData
-					} else {
-						mqlLog := mqlLoggroup.(*mqlAwsCloudwatchLoggroup)
-						args["logGroup"] = llx.ResourceData(mqlLog, mqlLog.MqlName())
-					}
-				} else {
-					args["logGroup"] = llx.NilData
-				}
-
-				mqlAwsCloudtrailTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
+				mqlTrail, err := CreateResource(a.MqlRuntime, "aws.cloudtrail.trail", args)
 				if err != nil {
 					return nil, err
 				}
+				mqlTrail.(*mqlAwsCloudtrailTrail).trailCache = trail
 
-				res = append(res, mqlAwsCloudtrailTrail)
+				res = append(res, mqlTrail)
 			}
 			return jobpool.JobResult(res), nil
 		}
@@ -196,15 +156,49 @@ func (a *mqlAwsCloudtrail) getTrails(conn *connection.AwsConnection) []*jobpool.
 }
 
 func (a *mqlAwsCloudtrailTrail) s3bucket() (*mqlAwsS3Bucket, error) {
-	return a.S3bucket.Data, nil
+	if a.trailCache.S3BucketName != nil {
+		mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+			map[string]*llx.RawData{"name": llx.StringDataPtr(a.trailCache.S3BucketName)},
+		)
+		if err == nil {
+			return mqlBucket.(*mqlAwsS3Bucket), nil
+		} else {
+			log.Error().Err(err).Msg("cannot get s3 bucket")
+		}
+	}
+	a.S3bucket.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
-	return a.LogGroup.Data, nil
+	if a.trailCache.CloudWatchLogsLogGroupArn != nil {
+		mqlLoggroup, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
+			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.CloudWatchLogsLogGroupArn)},
+		)
+		if err == nil {
+			return mqlLoggroup.(*mqlAwsCloudwatchLoggroup), nil
+		} else {
+			log.Error().Err(err).Msg("cannot get log group")
+		}
+	}
+	a.LogGroup.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) kmsKey() (*mqlAwsKmsKey, error) {
-	return &mqlAwsKmsKey{}, nil // TODO: @Dom help why do i get a stack overflow if i make this anything other than this empty object what am i doing wrong
+	// add kms key if there is one
+	if a.trailCache.KmsKeyId != nil {
+		mqlKeyResource, err := NewResource(a.MqlRuntime, "aws.kms.key",
+			map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.KmsKeyId)},
+		)
+		if err == nil {
+			return mqlKeyResource.(*mqlAwsKmsKey), nil
+		} else {
+			log.Error().Err(err).Msg("cannot get key")
+		}
+	}
+	a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (a *mqlAwsCloudtrailTrail) id() (string, error) {
