@@ -167,6 +167,11 @@ message Asset {
   // These labels are sourced from the system that is the asset owner. For
   // example, labels for EC2 instance are populated from the EC2 metadata tags.
   map<string, string> labels = 18;
+
+  // 'trace_id' is used to link the asset to a specific identifier
+  // that is passed in by the user. if the user provides no value, 
+  // this will be empty.
+  string trace_id = 19;
 }
 
 // Platform describes the technical platform or environment of an asset. This

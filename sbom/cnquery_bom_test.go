@@ -23,7 +23,7 @@ func TestSimpleBom(t *testing.T) {
 
 	output := bytes.Buffer{}
 	exporter = &CnqueryBOM{}
-	err = exporter.Render(&output, &selectedBom)
+	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 
 	data := output.String()

@@ -2,7 +2,8 @@
   "assets": {
     "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw": {
       "mrn": "//explorer.api.mondoo.com/assets/2cNOBxIv7117UjcqsDBvKUgwkKw",
-      "name": "alpine:latest"
+      "name": "alpine:latest",
+      "trace_id": "trace-alpine"
     }
   },
   "data": {

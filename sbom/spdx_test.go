@@ -5,9 +5,10 @@ package sbom
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestSpdx(t *testing.T) {
@@ -24,7 +25,7 @@ func TestSpdx(t *testing.T) {
 		Version: "2.3",
 		Format:  FormatSpdxJSON,
 	}
-	err = exporter.Render(&output, &selectedBom)
+	err = exporter.Render(&output, selectedBom)
 	require.NoError(t, err)
 
 	data := output.String()
