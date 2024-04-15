@@ -230,6 +230,11 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		cliRes.Asset.Name = assetName
 	}
 
+	traceId := viper.GetString("trace-id")
+	if traceId != "" && cliRes.Asset != nil {
+		cliRes.Asset.TraceId = traceId
+	}
+
 	inv, err := inventoryloader.ParseOrUse(cliRes.Asset, viper.GetBool("insecure"), optAnnotations)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse inventory")

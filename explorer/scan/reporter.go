@@ -39,7 +39,11 @@ func NewAggregateReporter() *AggregateReporter {
 }
 
 func (r *AggregateReporter) AddReport(asset *inventory.Asset, results *AssetReport) {
-	r.assets[asset.Mrn] = &explorer.Asset{Name: asset.Name, Mrn: asset.Mrn}
+	r.assets[asset.Mrn] = &explorer.Asset{
+		Name:    asset.Name,
+		Mrn:     asset.Mrn,
+		TraceId: asset.TraceId,
+	}
 	r.assetReports[asset.Mrn] = results.Report
 	r.resolved[asset.Mrn] = results.Resolved
 }

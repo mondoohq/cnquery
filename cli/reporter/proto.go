@@ -42,8 +42,9 @@ func ConvertToProto(data *explorer.ReportCollection) (*Report, error) {
 	// fill in assets
 	for assetMrn, a := range data.Assets {
 		pAsset := &Asset{
-			Mrn:  a.Mrn,
-			Name: a.Name,
+			Mrn:     a.Mrn,
+			Name:    a.Name,
+			TraceId: a.TraceId,
 		}
 		protoReport.Assets[assetMrn] = pAsset
 	}

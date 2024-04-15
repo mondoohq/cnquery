@@ -82,6 +82,7 @@ message Asset {
 
   string kind_string = 36;
   string fqdn = 37;
+  string trace_id = 38;
 }
 
 // AssetUrlBranch defines the hierarchy into which an asset can be placed. It
