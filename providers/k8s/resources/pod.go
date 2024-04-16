@@ -25,21 +25,6 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "pods.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
-		podSpec, err := resources.GetPodSpec(resource)
-		if err != nil {
-			return nil, err
-		}
-
-		podSpecDict, err := convert.JsonToDict(podSpec)
-		if err != nil {
-			return nil, err
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.pod", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -49,8 +34,6 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 			"apiVersion":      llx.StringData(objT.GetAPIVersion()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"podSpec":         llx.DictData(podSpecDict),
-			"manifest":        llx.DictData(manifest),
 		})
 		if err != nil {
 			return nil, err
@@ -63,6 +46,26 @@ func (k *mqlK8s) pods() ([]interface{}, error) {
 		r.(*mqlK8sPod).obj = p
 		return r, nil
 	})
+}
+
+func (k *mqlK8sPod) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
+}
+
+func (k *mqlK8sPod) podSpec() (map[string]interface{}, error) {
+	podSpec, err := resources.GetPodSpec(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	dict, err := convert.JsonToDict(podSpec)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
 }
 
 func (k *mqlK8sPod) id() (string, error) {

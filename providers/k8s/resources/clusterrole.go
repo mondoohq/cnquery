@@ -24,12 +24,6 @@ type mqlK8sRbacClusterroleInternal struct {
 func (k *mqlK8s) clusterroles() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "clusterroles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
-
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		clusterRole, ok := resource.(*rbacv1.ClusterRole)
 		if !ok {
 			return nil, errors.New("not a k8s clusterrole")
@@ -52,7 +46,6 @@ func (k *mqlK8s) clusterroles() ([]interface{}, error) {
 			"name":            llx.StringData(obj.GetName()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"rules":           llx.ArrayData(rules, types.Dict),
 			"aggregationRule": llx.DictData(aggregationRule),
 		})
@@ -62,6 +55,14 @@ func (k *mqlK8s) clusterroles() ([]interface{}, error) {
 		r.(*mqlK8sRbacClusterrole).obj = clusterRole
 		return r, nil
 	})
+}
+
+func (k *mqlK8sRbacClusterrole) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sRbacClusterrole) id() (string, error) {

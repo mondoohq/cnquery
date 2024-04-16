@@ -25,21 +25,6 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "replicasets", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
-		podSpec, err := resources.GetPodSpec(resource)
-		if err != nil {
-			return nil, err
-		}
-
-		podSpecDict, err := convert.JsonToDict(podSpec)
-		if err != nil {
-			return nil, err
-		}
-
 		r, err := CreateResource(k.MqlRuntime, "k8s.replicaset", map[string]*llx.RawData{
 			"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 			"uid":             llx.StringData(string(obj.GetUID())),
@@ -48,8 +33,6 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
-			"podSpec":         llx.DictData(podSpecDict),
 		})
 		if err != nil {
 			return nil, err
@@ -62,6 +45,26 @@ func (k *mqlK8s) replicasets() ([]interface{}, error) {
 		r.(*mqlK8sReplicaset).obj = rs
 		return r, nil
 	})
+}
+
+func (k *mqlK8sReplicaset) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
+}
+
+func (k *mqlK8sReplicaset) podSpec() (map[string]interface{}, error) {
+	podSpec, err := resources.GetPodSpec(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	dict, err := convert.JsonToDict(podSpec)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
 }
 
 func (k *mqlK8sReplicaset) id() (string, error) {

@@ -44,12 +44,6 @@ func (k *mqlK8s) customresources() ([]interface{}, error) {
 		mqlResources, err := k8sResourceToMql(k.MqlRuntime, crd.GetName(), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 			ts := obj.GetCreationTimestamp()
 
-			manifest, err := convert.JsonToDict(resource)
-			if err != nil {
-				log.Error().Err(err).Msg("couldn't convert resource to json dict")
-				return nil, err
-			}
-
 			r, err := CreateResource(k.MqlRuntime, "k8s.customresource", map[string]*llx.RawData{
 				"id":              llx.StringData(objIdFromK8sObj(obj, objT)),
 				"uid":             llx.StringData(string(obj.GetUID())),
@@ -58,7 +52,6 @@ func (k *mqlK8s) customresources() ([]interface{}, error) {
 				"namespace":       llx.StringData(obj.GetNamespace()),
 				"kind":            llx.StringData(objT.GetKind()),
 				"created":         llx.TimeData(ts.Time),
-				"manifest":        llx.DictData(manifest),
 			})
 			if err != nil {
 				log.Error().Err(err).Msg("couldn't create resource")
@@ -70,6 +63,14 @@ func (k *mqlK8s) customresources() ([]interface{}, error) {
 		resp = append(resp, mqlResources...)
 	}
 	return resp, nil
+}
+
+func (k *mqlK8sCustomresource) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sCustomresource) id() (string, error) {

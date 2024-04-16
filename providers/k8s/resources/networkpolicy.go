@@ -24,11 +24,6 @@ func (k *mqlK8s) networkPolicies() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "networkpolicies", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		networkPolicy, ok := resource.(*networkingv1.NetworkPolicy)
 		if !ok {
 			return nil, errors.New("not a k8s networkpolicy")
@@ -47,7 +42,6 @@ func (k *mqlK8s) networkPolicies() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"spec":            llx.DictData(spec),
 		})
 		if err != nil {
@@ -56,6 +50,22 @@ func (k *mqlK8s) networkPolicies() ([]interface{}, error) {
 		r.(*mqlK8sNetworkpolicy).obj = networkPolicy
 		return r, nil
 	})
+}
+
+func (k *mqlK8sNetworkpolicy) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
+}
+
+func (k *mqlK8sNetworkpolicy) spec() (map[string]interface{}, error) {
+	dict, err := convert.JsonToDict(k.obj.Spec)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
 }
 
 func (k *mqlK8sNetworkpolicy) id() (string, error) {

@@ -25,11 +25,6 @@ func (k *mqlK8s) rolebindings() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "rolebinding", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		roleBinding, ok := resource.(*rbacv1.RoleBinding)
 		if !ok {
 			return nil, errors.New("not a k8s rolebinding")
@@ -53,7 +48,6 @@ func (k *mqlK8s) rolebindings() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"subjects":        llx.ArrayData(subjects, types.Dict),
 			"roleRef":         llx.DictData(roleRef),
 		})
@@ -63,6 +57,14 @@ func (k *mqlK8s) rolebindings() ([]interface{}, error) {
 		r.(*mqlK8sRbacRolebinding).obj = roleBinding
 		return r, nil
 	})
+}
+
+func (k *mqlK8sRbacRolebinding) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sRbacRolebinding) id() (string, error) {
