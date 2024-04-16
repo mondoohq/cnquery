@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 )
 
 var (
@@ -57,14 +57,56 @@ func TestBundleLoad(t *testing.T) {
 	})
 }
 
-func TestFilterQueriesWontCompile(t *testing.T) {
-	b2, err := BundleFromYAML([]byte(failingVariant))
+func testBundleCompiles(t *testing.T, raw string) error {
+	b, err := BundleFromYAML([]byte(raw))
 	require.NoError(t, err)
-	_, err2 := b2.CompileExt(context.Background(), BundleCompileConf{
+	_, err2 := b.CompileExt(context.Background(), BundleCompileConf{
 		CompilerConfig: conf,
 		RemoveFailing:  false,
 	})
-	require.Error(t, err2)
+	return err2
+}
+
+func TestPackWithoutQueries(t *testing.T) {
+	err := testBundleCompiles(t, packWithoutQueries)
+	assert.NoError(t, err)
+}
+
+func TestMissingUidMrnWontCompile(t *testing.T) {
+	t.Run("missing pack UID/MRN", func(t *testing.T) {
+		err := testBundleCompiles(t, missingPackUidMrn)
+		assert.Equal(t, "failed to refresh mrn for querypack hello world: cannot refresh MRN with an empty UID", err.Error())
+	})
+
+	t.Run("missing query UID/MRN", func(t *testing.T) {
+		err := testBundleCompiles(t, missingQueryUidMrn)
+		assert.Equal(t, "failed to refresh mrn for query query-title: cannot refresh MRN with an empty UID", err.Error())
+	})
+}
+
+const missingPackUidMrn = `
+packs:
+- name: hello world
+`
+
+const missingQueryUidMrn = `
+packs:
+- name: hello world
+  uid: test-pack
+  queries:
+  - mql: return true
+    title: query-title
+`
+
+const packWithoutQueries = `
+packs:
+- name: hello world
+  uid: test-pack
+`
+
+func TestFilterQueriesWontCompile(t *testing.T) {
+	err := testBundleCompiles(t, failingVariant)
+	assert.Error(t, err)
 }
 
 func TestFilterQueriesIgnoreError(t *testing.T) {

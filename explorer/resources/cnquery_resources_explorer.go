@@ -9,7 +9,7 @@ package resources
 import (
 	"net/http"
 
-	"go.mondoo.com/cnquery/v10/explorer/transport"
+	"go.mondoo.com/cnquery/v11/explorer/transport"
 	ranger "go.mondoo.com/ranger-rpc"
 )
 

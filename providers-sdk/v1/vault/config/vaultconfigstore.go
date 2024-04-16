@@ -10,14 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/awsparameterstore"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/awssecretsmanager"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/gcpberglas"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/gcpsecretmanager"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/hashivault"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/inmemory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault/keyring"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/awsparameterstore"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/awssecretsmanager"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/gcpberglas"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/gcpsecretmanager"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/hashivault"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/inmemory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault/keyring"
 )
 
 func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers/os/id/azcompute"
+	"go.mondoo.com/cnquery/v11/providers/os/id/azcompute"
 )
 
 func (c *AzureSnapshotConnection) identifyDisk(lun int32) (mountInfo, error) {

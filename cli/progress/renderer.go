@@ -11,7 +11,7 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/ansi"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v10/cli/theme/colors"
+	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 )
 
 var color func(string) termenv.Color = colors.Profile.Color

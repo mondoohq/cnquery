@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v10/logger"
+	"go.mondoo.com/cnquery/v11/logger"
 	"sigs.k8s.io/yaml"
 )
 
@@ -136,8 +136,8 @@ func genBuiltinGo(conf ProvidersConf) ([]byte, error) {
 	for _, provider := range conf.Builtin {
 		// imports cannot contain dashes
 		trimProvider := strings.Replace(provider, "-", "", -1)
-		imports += fmt.Sprintf("\t%sconf \"go.mondoo.com/cnquery/v10/providers/%s/config\"\n", trimProvider, provider)
-		imports += fmt.Sprintf("\t%s \"go.mondoo.com/cnquery/v10/providers/%s/provider\"\n", trimProvider, provider)
+		imports += fmt.Sprintf("\t%sconf \"go.mondoo.com/cnquery/v11/providers/%s/config\"\n", trimProvider, provider)
+		imports += fmt.Sprintf("\t%s \"go.mondoo.com/cnquery/v11/providers/%s/provider\"\n", trimProvider, provider)
 		infos += fmt.Sprintf(
 			"//go:embed %s.resources.json\n"+
 				"var %sInfo []byte\n",
@@ -170,8 +170,8 @@ package providers
 
 import (
 	_ "embed"
-	// osconf "go.mondoo.com/cnquery/v10/providers/os/config"
-	// os "go.mondoo.com/cnquery/v10/providers/os/provider"
+	// osconf "go.mondoo.com/cnquery/v11/providers/os/config"
+	// os "go.mondoo.com/cnquery/v11/providers/os/provider"
 %s)
 
 // //go:embed os/resources/os.resources.json
@@ -218,8 +218,8 @@ func buildProviders(providers []string) {
 }
 
 var (
-	reBuiltinReplace = regexp.MustCompile(`replace go.mondoo.com/cnquery/v10/providers/.* => ./providers/.*`)
-	reBuiltinDep     = regexp.MustCompile(`go.mondoo.com/cnquery/v10/providers/.*`)
+	reBuiltinReplace = regexp.MustCompile(`replace go.mondoo.com/cnquery/v11/providers/.* => ./providers/.*`)
+	reBuiltinDep     = regexp.MustCompile(`go.mondoo.com/cnquery/v11/providers/.*`)
 )
 
 func rewireDependencies(providers []string) {
@@ -245,12 +245,12 @@ func rewireDependencies(providers []string) {
 			}
 		}
 		// we don't care about the specific version for dev
-		deps += "\n\tgo.mondoo.com/cnquery/v10/providers/" + provider + " v0.0.0"
-		replace += "\nreplace go.mondoo.com/cnquery/v10/providers/" + provider + " => ./providers/" + provider
+		deps += "\n\tgo.mondoo.com/cnquery/v11/providers/" + provider + " v0.0.0"
+		replace += "\nreplace go.mondoo.com/cnquery/v11/providers/" + provider + " => ./providers/" + provider
 	}
 	if deps != "" {
 		raws = strings.Replace(raws, "require (", "require ("+deps, 1)
-		raws = strings.Replace(raws, "module go.mondoo.com/cnquery/v10", "module go.mondoo.com/cnquery/v10\n"+replace, 1)
+		raws = strings.Replace(raws, "module go.mondoo.com/cnquery/v11", "module go.mondoo.com/cnquery/v11\n"+replace, 1)
 	}
 
 	err = os.WriteFile("go.mod", []byte(raws), 0o644)

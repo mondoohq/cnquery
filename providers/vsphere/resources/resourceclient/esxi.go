@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"

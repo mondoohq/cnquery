@@ -3,7 +3,7 @@
 
 package gql
 
-import "go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream/mvd"
+import "go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream/mvd"
 
 func ConvertToMvdVulnReport(vulnReport *VulnReport) *mvd.VulnReport {
 	if vulnReport == nil {

@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/cli/config"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/cli/config"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
 	"runtime/debug"
 )

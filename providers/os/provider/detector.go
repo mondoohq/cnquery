@@ -8,16 +8,16 @@ import (
 	"slices"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/os/detector"
-	"go.mondoo.com/cnquery/v10/providers/os/id/aws"
-	"go.mondoo.com/cnquery/v10/providers/os/id/azure"
-	"go.mondoo.com/cnquery/v10/providers/os/id/gcp"
-	"go.mondoo.com/cnquery/v10/providers/os/id/hostname"
-	"go.mondoo.com/cnquery/v10/providers/os/id/ids"
-	"go.mondoo.com/cnquery/v10/providers/os/id/machineid"
-	"go.mondoo.com/cnquery/v10/providers/os/id/sshhostkey"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/detector"
+	"go.mondoo.com/cnquery/v11/providers/os/id/aws"
+	"go.mondoo.com/cnquery/v11/providers/os/id/azure"
+	"go.mondoo.com/cnquery/v11/providers/os/id/gcp"
+	"go.mondoo.com/cnquery/v11/providers/os/id/hostname"
+	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
+	"go.mondoo.com/cnquery/v11/providers/os/id/machineid"
+	"go.mondoo.com/cnquery/v11/providers/os/id/sshhostkey"
 )
 
 // default id detectors

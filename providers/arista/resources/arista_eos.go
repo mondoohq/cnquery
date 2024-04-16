@@ -7,12 +7,12 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers/arista/connection"
-	"go.mondoo.com/cnquery/v10/providers/arista/resources/eos"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers/arista/connection"
+	"go.mondoo.com/cnquery/v11/providers/arista/resources/eos"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func aristaClient(runtime *plugin.Runtime) *eos.Eos {

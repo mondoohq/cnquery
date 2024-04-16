@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package cnquery.llx;
 
-option go_package = "go.mondoo.com/cnquery/v10/llx";
+option go_package = "go.mondoo.com/cnquery/v11/llx";
 
 message Primitive {
   string type = 1;
@@ -49,7 +49,6 @@ message AssertionMessage {
   string template = 1;
   repeated uint64 refs = 2;
   repeated string checksums = 3;
-  repeated int32 deprecated_v5_datapoint = 20;
   bool decode_block = 21;
 }
 

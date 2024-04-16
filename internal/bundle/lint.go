@@ -6,8 +6,8 @@ package bundle
 import (
 	"context"
 	"fmt"
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/providers"
 	"strconv"
 )
 

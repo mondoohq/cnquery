@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/mock"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/users"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/users"
 )
 
 func TestParseDsclListResult(t *testing.T) {

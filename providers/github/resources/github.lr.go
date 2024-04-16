@@ -9,9 +9,9 @@ import (
 	"errors"
 	"time"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -706,9 +706,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.branch.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranch).GetName()).ToDataRes(types.String)
-	},
-	"github.branch.protected": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubBranch).GetProtected()).ToDataRes(types.Bool)
 	},
 	"github.branch.isProtected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubBranch).GetIsProtected()).ToDataRes(types.Bool)
@@ -1691,10 +1688,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"github.branch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"github.branch.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubBranch).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.branch.isProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3924,7 +3917,6 @@ type mqlGithubBranch struct {
 	__id string
 	// optional: if you define mqlGithubBranchInternal it will be used here
 	Name plugin.TValue[string]
-	Protected plugin.TValue[bool]
 	IsProtected plugin.TValue[bool]
 	HeadCommit plugin.TValue[*mqlGithubCommit]
 	ProtectionRules plugin.TValue[*mqlGithubBranchprotection]
@@ -3972,10 +3964,6 @@ func (c *mqlGithubBranch) MqlID() string {
 
 func (c *mqlGithubBranch) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlGithubBranch) GetProtected() *plugin.TValue[bool] {
-	return &c.Protected
 }
 
 func (c *mqlGithubBranch) GetIsProtected() *plugin.TValue[bool] {

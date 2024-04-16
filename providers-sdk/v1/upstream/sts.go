@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"go.mondoo.com/cnquery/v10/providers/os/connection/ssh/signers"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh/signers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/crypto/ssh"
 )

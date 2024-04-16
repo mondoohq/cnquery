@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/go-github/v59/github"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
 
 func TestGithub(t *testing.T) {

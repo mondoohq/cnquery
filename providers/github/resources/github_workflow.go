@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v59/github"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers/github/connection"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers/github/connection"
 	"sigs.k8s.io/yaml"
 )
 

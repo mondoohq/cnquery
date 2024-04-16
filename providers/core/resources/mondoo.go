@@ -6,8 +6,8 @@ package resources
 import (
 	"runtime"
 
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/cli/execruntime"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/cli/execruntime"
 )
 
 func (m *mqlMondoo) version() (string, error) {

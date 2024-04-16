@@ -3,7 +3,7 @@
 
 package mvd
 
-import "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+import "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 
 //go:generate protoc --proto_path=../../../../:../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. mvd.proto
 

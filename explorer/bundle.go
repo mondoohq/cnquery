@@ -12,13 +12,12 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"github.com/segmentio/ksuid"
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/checksums"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/mrn"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/checksums"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/mrn"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -147,7 +146,6 @@ func bundleFromSingleFile(path string) (*Bundle, error) {
 func BundleFromYAML(data []byte) (*Bundle, error) {
 	var res Bundle
 	err := yaml.Unmarshal(data, &res)
-	res.DeprecatedV9_EnsureUIDs()
 	return &res, err
 }
 
@@ -264,7 +262,7 @@ func (bundle *Bundle) CompileExt(ctx context.Context, conf BundleCompileConf) (*
 
 		err := pack.RefreshMRN(ownerMrn)
 		if err != nil {
-			return nil, multierr.Wrap(err, "failed to refresh query pack "+pack.Mrn)
+			return nil, err
 		}
 
 		if err = pack.Filters.Compile(ownerMrn, conf.CompilerConfig); err != nil {
@@ -350,8 +348,10 @@ func (c *bundleCache) error() error {
 
 	var msg strings.Builder
 	for i := range c.errors {
+		if i != 0 {
+			msg.WriteString("\n")
+		}
 		msg.WriteString(c.errors[i].Error())
-		msg.WriteString("\n")
 	}
 	return errors.New(msg.String())
 }
@@ -393,7 +393,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	// ensure the correct mrn is set
 	uid := query.Uid
 	if err := query.RefreshMRN(c.ownerMrn); err != nil {
-		c.errors = append(c.errors, errors.New("failed to refresh MRN for query "+query.Uid))
+		c.errors = append(c.errors, err)
 		return
 	}
 	if uid != "" {
@@ -543,37 +543,6 @@ func (p *Bundle) FilterQueryPacks(IDs []string) bool {
 	p.Packs = res
 
 	return len(res) == 0
-}
-
-// DeprecatedV9_EnsureUIDs makes sure every query in the bundle and every query pack has a UID set,
-// IF the MRN is empty. Otherwise MRNs suffice.
-// FIXME: DEPRECATED, remove in v10.0. Users must either set UIDs or MRNs
-func (p *Bundle) DeprecatedV9_EnsureUIDs() {
-	for i := range p.Packs {
-		p.Packs[i].DeprecatedV9_ensureUIDs()
-	}
-}
-
-// DeprecatedV9_ensureUIDs makes sure every query in this query pack has a UID set,
-// IF the MRN is empty. Otherwise MRNs suffice.
-// FIXME: DEPRECATED, remove in v10.0. Users must either set UIDs or MRNs
-func (p *QueryPack) DeprecatedV9_ensureUIDs() {
-	if p.Mrn == "" && p.Uid == "" {
-		log.Warn().
-			Str("name", p.Name).
-			Msg("QueryPack is missing a UID in bundle. Please set one, by v10+ it will be mandatory to have it")
-		p.Uid = ksuid.New().String()
-	}
-
-	for j := range p.Queries {
-		query := p.Queries[j]
-		if query.Mrn == "" && query.Uid == "" {
-			log.Warn().
-				Str("title", query.Title).
-				Msg("Query is missing a UID in bundle. Please set one, by v10+ it will be mandatory to have it")
-			query.Uid = ksuid.New().String()
-		}
-	}
 }
 
 // Filters retrieves the aggregated filters for all querypacks in this bundle.

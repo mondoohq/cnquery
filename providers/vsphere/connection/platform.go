@@ -15,7 +15,7 @@ import (
 	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v11/mrn"
 )
 
 const (

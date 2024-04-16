@@ -9,9 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/internal/bundle"
-	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/internal/bundle"
+	"go.mondoo.com/cnquery/v11/providers"
 )
 
 func ensureProviders(ids []string) error {

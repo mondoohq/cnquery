@@ -8,7 +8,7 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 type AixServiceManager struct {

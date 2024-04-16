@@ -6,7 +6,7 @@ package proto;
 
 import "providers-sdk/v1/inventory/inventory.proto";
 
-option go_package = "go.mondoo.com/cnquery/v10/shared/proto";
+option go_package = "go.mondoo.com/cnquery/v11/shared/proto";
 
 message RunQueryConfig {
   string command = 1;

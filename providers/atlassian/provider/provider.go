@@ -9,13 +9,13 @@ import (
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/resources"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/resources"
 )
 
 const (

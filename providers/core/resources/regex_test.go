@@ -6,7 +6,7 @@ package resources_test
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 )
 
 var emojiTestString = []rune("☀⛺➿🌀🎂👍🔒😀🙈🚵🛼🤌🤣🥳🧡🧿🩰🫖")

@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 // LinuxIdProvider read the following files to extract the machine id

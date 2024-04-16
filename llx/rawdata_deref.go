@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func dereferenceDict(raw interface{}) (*RawData, error) {

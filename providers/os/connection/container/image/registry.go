@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/container/auth"
 )
 
 func GetImageDescriptor(ref name.Reference, opts ...remote.Option) (*remote.Descriptor, error) {

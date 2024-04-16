@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
-	"go.mondoo.com/cnquery/v10/providers/ms365/connection"
+	"go.mondoo.com/cnquery/v11/providers/ms365/connection"
 )
 
 func (a *mqlMicrosoft) tenantDomainName() (string, error) {

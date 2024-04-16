@@ -6,9 +6,9 @@ package explorer
 import (
 	"net/http"
 
-	"go.mondoo.com/cnquery/v10/explorer/resources"
-	"go.mondoo.com/cnquery/v10/explorer/transport"
-	llx "go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v11/explorer/resources"
+	"go.mondoo.com/cnquery/v11/explorer/transport"
+	llx "go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/ranger-rpc"
 )
 

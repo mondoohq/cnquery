@@ -23,11 +23,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
-	"go.mondoo.com/cnquery/v10/cli/config"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/semver"
+	"go.mondoo.com/cnquery/v11/cli/config"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/semver"
 	"golang.org/x/exp/slices"
 )
 
@@ -327,7 +327,7 @@ func (e *ProviderNotFoundError) Error() string {
 
 // EnsureProvider makes sure that a given provider exists and returns it.
 // You can supply providers either via:
-//  1. providerID, which universally identifies it, e.g. "go.mondoo.com/cnquery/v10/providers/os"
+//  1. providerID, which universally identifies it, e.g. "go.mondoo.com/cnquery/v11/providers/os"
 //  2. connectorName, which is what you see in the CLI e.g. "local", "ssh", ...
 //  3. connectorType, which is how assets define the connector type when
 //     they are moved between discovery and execution, e.g. "registry-image".

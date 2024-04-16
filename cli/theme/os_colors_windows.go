@@ -8,8 +8,8 @@ import (
 
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v10/cli/printer"
-	"go.mondoo.com/cnquery/v10/cli/theme/colors"
+	"go.mondoo.com/cnquery/v11/cli/printer"
+	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 )
 
 // OperatingSystemTheme for windows shell

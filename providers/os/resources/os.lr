@@ -20,7 +20,7 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
-  // Deprecated; will be removed in version 10.0
+  // Deprecated; will be removed in version 12.0
   // use vulnmgmt instead
   vulnerabilityReport() dict
 }
@@ -44,7 +44,7 @@ private mondoo.eol {
   date() time
 }
 
-// Deprecated; will be removed in version 10.0
+// Deprecated; will be removed in version 12.0
 // Use asset.eol instead.
 platform.eol @defaults("date") {
   // Documentation URL
@@ -56,7 +56,7 @@ platform.eol @defaults("date") {
 }
 
 platform {
-  // Deprecated; will be removed in version 10.0
+  // Deprecated; will be removed in version 12.0
   // use vulnmgmt instead
   vulnerabilityReport() dict
 }

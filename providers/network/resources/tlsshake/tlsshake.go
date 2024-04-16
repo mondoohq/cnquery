@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"golang.org/x/crypto/ocsp"
 )
 

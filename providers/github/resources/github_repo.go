@@ -12,11 +12,11 @@ import (
 
 	"github.com/google/go-github/v59/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers/github/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers/github/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*mqlGithubRepository, error) {
@@ -418,10 +418,7 @@ func (g *mqlGithubRepository) branches() ([]interface{}, error) {
 		}
 
 		mqlBranch, err := CreateResource(g.MqlRuntime, "github.branch", map[string]*llx.RawData{
-			"name": llx.StringData(branch.GetName()),
-			// FIXME: DEPRECATED, remove in v10.0 vv
-			"protected": llx.BoolData(branch.GetProtected()),
-			// ^^ deprecated
+			"name":        llx.StringData(branch.GetName()),
 			"isProtected": llx.BoolData(branch.GetProtected()),
 			"headCommit":  llx.AnyData(mqlCommit),
 			"repoName":    llx.StringData(repoName),

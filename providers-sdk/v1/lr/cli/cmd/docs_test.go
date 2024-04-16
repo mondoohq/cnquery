@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr/docs"
 	"testing"
 )
 

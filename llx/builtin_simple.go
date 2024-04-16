@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode"
 
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 // run an operation that returns true/false on a bind data vs a chunk call.

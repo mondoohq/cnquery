@@ -6,9 +6,9 @@ package reporter
 import (
 	"encoding/json"
 	"errors"
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/shared"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/shared"
 )
 
 func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {

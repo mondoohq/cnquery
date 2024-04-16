@@ -12,7 +12,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 )
 
 // This package contains shared components for plugin generation.

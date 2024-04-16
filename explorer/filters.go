@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/checksums"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
-	"go.mondoo.com/cnquery/v10/utils/sortx"
+	"go.mondoo.com/cnquery/v11/checksums"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets
@@ -87,7 +87,7 @@ func (s *Filters) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// FIXME: DEPRECATED, remove in v9.0 vv
+	// FIXME: DEPRECATED, remove in v12.0 vv
 	// This old style of specifying filters is going to be removed, we
 	// have an alternative with list and keys
 	var arr []string
@@ -97,6 +97,7 @@ func (s *Filters) UnmarshalJSON(data []byte) error {
 		for i := range arr {
 			s.Items[strconv.Itoa(i)] = &Mquery{Mql: arr[i]}
 		}
+		log.Warn().Msg("Found an old use of filters (as a list of strings). This will be removed in the next major version. Please migrate to:\n- mql: filter 1\n- mql: filter 2")
 		return nil
 	}
 	// ^^

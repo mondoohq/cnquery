@@ -5,7 +5,7 @@ package python
 
 import (
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 	"strings"
 )
 

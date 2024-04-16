@@ -6,7 +6,7 @@ package providers
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/test"
+	"go.mondoo.com/cnquery/v11/test"
 	"log"
 	"os"
 	"os/exec"

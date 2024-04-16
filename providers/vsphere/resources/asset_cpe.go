@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/facebookincubator/nvdtools/wfn"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers/vsphere/connection"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers/vsphere/connection"
 )
 
 func (a *mqlAsset) cpes() ([]interface{}, error) {
