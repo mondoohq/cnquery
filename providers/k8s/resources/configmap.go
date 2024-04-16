@@ -25,11 +25,6 @@ func (k *mqlK8s) configmaps() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "configmaps", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		cm, ok := resource.(*corev1.ConfigMap)
 		if !ok {
 			return nil, errors.New("not a k8s configmap")
@@ -43,7 +38,6 @@ func (k *mqlK8s) configmaps() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"data":            llx.MapData(convert.MapToInterfaceMap(cm.Data), types.String),
 		})
 		if err != nil {
@@ -52,6 +46,14 @@ func (k *mqlK8s) configmaps() ([]interface{}, error) {
 		r.(*mqlK8sConfigmap).obj = cm
 		return r, nil
 	})
+}
+
+func (k *mqlK8sConfigmap) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sConfigmap) id() (string, error) {

@@ -13,7 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type mqlK8sServiceaccountInternal struct {
@@ -24,11 +24,6 @@ type mqlK8sServiceaccountInternal struct {
 func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "serviceaccounts", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
-
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
 
 		serviceAccount, ok := resource.(*corev1.ServiceAccount)
 		if !ok {
@@ -50,7 +45,7 @@ func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
 		// As discussed here, this behavior will not change for core/v1:
 		// https://github.com/kubernetes/kubernetes/issues/57601
 		if serviceAccount.AutomountServiceAccountToken == nil && objT.GetAPIVersion() == "v1" {
-			serviceAccount.AutomountServiceAccountToken = pointer.Bool(true)
+			serviceAccount.AutomountServiceAccountToken = ptr.To(true)
 		}
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.serviceaccount", map[string]*llx.RawData{
@@ -61,7 +56,6 @@ func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
 			"namespace":                    llx.StringData(obj.GetNamespace()),
 			"kind":                         llx.StringData(objT.GetKind()),
 			"created":                      llx.TimeData(ts.Time),
-			"manifest":                     llx.DictData(manifest),
 			"secrets":                      llx.DictData(secrets),
 			"imagePullSecrets":             llx.DictData(imagePullSecrets),
 			"automountServiceAccountToken": llx.BoolData(*serviceAccount.AutomountServiceAccountToken),
@@ -72,6 +66,14 @@ func (k *mqlK8s) serviceaccounts() ([]interface{}, error) {
 		r.(*mqlK8sServiceaccount).obj = serviceAccount
 		return r, nil
 	})
+}
+
+func (k *mqlK8sServiceaccount) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sServiceaccount) id() (string, error) {

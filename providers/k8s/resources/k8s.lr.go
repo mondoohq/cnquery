@@ -3453,7 +3453,9 @@ func (c *mqlK8sNamespace) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sNamespace) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sNamespace) GetKind() *plugin.TValue[string] {
@@ -3660,11 +3662,15 @@ func (c *mqlK8sPod) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sPod) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sPod) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sPod) GetEphemeralContainers() *plugin.TValue[[]interface{}] {
@@ -3829,11 +3835,15 @@ func (c *mqlK8sDeployment) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sDeployment) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sDeployment) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sDeployment) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -3966,11 +3976,15 @@ func (c *mqlK8sDaemonset) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sDaemonset) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sDaemonset) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sDaemonset) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -4103,11 +4117,15 @@ func (c *mqlK8sStatefulset) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sStatefulset) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sStatefulset) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sStatefulset) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -4240,11 +4258,15 @@ func (c *mqlK8sReplicaset) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sReplicaset) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sReplicaset) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sReplicaset) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -4377,11 +4399,15 @@ func (c *mqlK8sJob) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sJob) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sJob) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sJob) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -4514,11 +4540,15 @@ func (c *mqlK8sCronjob) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sCronjob) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sCronjob) GetPodSpec() *plugin.TValue[interface{}] {
-	return &c.PodSpec
+	return plugin.GetOrCompute[interface{}](&c.PodSpec, func() (interface{}, error) {
+		return c.podSpec()
+	})
 }
 
 func (c *mqlK8sCronjob) GetInitContainers() *plugin.TValue[[]interface{}] {
@@ -5063,7 +5093,9 @@ func (c *mqlK8sSecret) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sSecret) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sSecret) GetType() *plugin.TValue[string] {
@@ -5182,7 +5214,9 @@ func (c *mqlK8sConfigmap) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sConfigmap) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sConfigmap) GetData() *plugin.TValue[map[string]interface{}] {
@@ -5285,11 +5319,15 @@ func (c *mqlK8sService) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sService) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sService) GetSpec() *plugin.TValue[interface{}] {
-	return &c.Spec
+	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
+		return c.spec()
+	})
 }
 
 // mqlK8sIngressresourceref for the k8s.ingressresourceref resource
@@ -5758,7 +5796,9 @@ func (c *mqlK8sIngress) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sIngress) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]interface{}] {
@@ -5879,7 +5919,9 @@ func (c *mqlK8sServiceaccount) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sServiceaccount) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sServiceaccount) GetSecrets() *plugin.TValue[[]interface{}] {
@@ -5986,7 +6028,9 @@ func (c *mqlK8sRbacClusterrole) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sRbacClusterrole) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sRbacClusterrole) GetRules() *plugin.TValue[[]interface{}] {
@@ -6089,7 +6133,9 @@ func (c *mqlK8sRbacClusterrolebinding) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sRbacClusterrolebinding) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sRbacClusterrolebinding) GetSubjects() *plugin.TValue[[]interface{}] {
@@ -6196,7 +6242,9 @@ func (c *mqlK8sRbacRole) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sRbacRole) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sRbacRole) GetRules() *plugin.TValue[[]interface{}] {
@@ -6300,7 +6348,9 @@ func (c *mqlK8sRbacRolebinding) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sRbacRolebinding) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sRbacRolebinding) GetSubjects() *plugin.TValue[[]interface{}] {
@@ -6402,11 +6452,15 @@ func (c *mqlK8sPodsecuritypolicy) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sPodsecuritypolicy) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sPodsecuritypolicy) GetSpec() *plugin.TValue[interface{}] {
-	return &c.Spec
+	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
+		return c.spec()
+	})
 }
 
 // mqlK8sNetworkpolicy for the k8s.networkpolicy resource
@@ -6505,11 +6559,15 @@ func (c *mqlK8sNetworkpolicy) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sNetworkpolicy) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 func (c *mqlK8sNetworkpolicy) GetSpec() *plugin.TValue[interface{}] {
-	return &c.Spec
+	return plugin.GetOrCompute[interface{}](&c.Spec, func() (interface{}, error) {
+		return c.spec()
+	})
 }
 
 // mqlK8sCustomresource for the k8s.customresource resource
@@ -6607,7 +6665,9 @@ func (c *mqlK8sCustomresource) GetCreated() *plugin.TValue[*time.Time] {
 }
 
 func (c *mqlK8sCustomresource) GetManifest() *plugin.TValue[interface{}] {
-	return &c.Manifest
+	return plugin.GetOrCompute[interface{}](&c.Manifest, func() (interface{}, error) {
+		return c.manifest()
+	})
 }
 
 // mqlK8sAdmissionreview for the k8s.admissionreview resource

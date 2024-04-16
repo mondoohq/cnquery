@@ -25,11 +25,6 @@ func (k *mqlK8s) secrets() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "secrets.v1.", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		s, ok := resource.(*corev1.Secret)
 		if !ok {
 			return nil, errors.New("not a k8s secret")
@@ -43,7 +38,6 @@ func (k *mqlK8s) secrets() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"type":            llx.StringData(string(s.Type)),
 		})
 		if err != nil {
@@ -53,6 +47,14 @@ func (k *mqlK8s) secrets() ([]interface{}, error) {
 		r.(*mqlK8sSecret).metaObj = obj
 		return r, nil
 	})
+}
+
+func (k *mqlK8sSecret) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sSecret) id() (string, error) {

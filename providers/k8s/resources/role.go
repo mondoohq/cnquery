@@ -25,11 +25,6 @@ func (k *mqlK8s) roles() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "roles", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		role, ok := resource.(*rbacv1.Role)
 		if !ok {
 			return nil, errors.New("not a k8s role")
@@ -48,7 +43,6 @@ func (k *mqlK8s) roles() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"rules":           llx.ArrayData(rules, types.Dict),
 		})
 		if err != nil {
@@ -57,6 +51,14 @@ func (k *mqlK8s) roles() ([]interface{}, error) {
 		r.(*mqlK8sRbacRole).obj = role
 		return r, nil
 	})
+}
+
+func (k *mqlK8sRbacRole) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sRbacRole) id() (string, error) {

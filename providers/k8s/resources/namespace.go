@@ -38,11 +38,6 @@ func (k *mqlK8s) namespaces() ([]interface{}, error) {
 	for _, ns := range nss {
 		ts := ns.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(ns)
-		if err != nil {
-			return nil, err
-		}
-
 		objT, err := meta.TypeAccessor(&ns)
 		if err != nil {
 			log.Error().Err(err).Msg("could not access object attributes")
@@ -50,12 +45,11 @@ func (k *mqlK8s) namespaces() ([]interface{}, error) {
 		}
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.namespace", map[string]*llx.RawData{
-			"id":       llx.StringData(objIdFromK8sObj(&ns.ObjectMeta, objT)),
-			"uid":      llx.StringData(string(ns.UID)),
-			"name":     llx.StringData(ns.Name),
-			"created":  llx.TimeData(ts.Time),
-			"manifest": llx.DictData(manifest),
-			"kind":     llx.StringData(ns.Kind),
+			"id":      llx.StringData(objIdFromK8sObj(&ns.ObjectMeta, objT)),
+			"uid":     llx.StringData(string(ns.UID)),
+			"name":    llx.StringData(ns.Name),
+			"created": llx.TimeData(ts.Time),
+			"kind":    llx.StringData(ns.Kind),
 		})
 		if err != nil {
 			return nil, err
@@ -65,6 +59,14 @@ func (k *mqlK8s) namespaces() ([]interface{}, error) {
 		resp = append(resp, r)
 	}
 	return resp, nil
+}
+
+func (k *mqlK8sNamespace) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sNamespace) id() (string, error) {

@@ -29,11 +29,6 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "ingresses", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
 
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		ingress, ok := resource.(*networkingv1.Ingress)
 		if !ok {
 			return nil, errors.New("not a k8s ingress")
@@ -54,7 +49,6 @@ func (k *mqlK8s) ingresses() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
 			"rules":           llx.ArrayData(rules, types.Resource("k8s.ingressrule")),
 		})
 		if err != nil {
@@ -79,6 +73,14 @@ func (k *mqlK8sIngress) tls() ([]interface{}, error) {
 	}
 
 	return tls, nil
+}
+
+func (k *mqlK8sIngress) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
 }
 
 func (k *mqlK8sIngress) id() (string, error) {

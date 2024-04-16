@@ -23,20 +23,9 @@ type mqlK8sServiceInternal struct {
 func (k *mqlK8s) services() ([]interface{}, error) {
 	return k8sResourceToMql(k.MqlRuntime, "services", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error) {
 		ts := obj.GetCreationTimestamp()
-
-		manifest, err := convert.JsonToDict(resource)
-		if err != nil {
-			return nil, err
-		}
-
 		srv, ok := resource.(*corev1.Service)
 		if !ok {
 			return nil, errors.New("not a k8s service")
-		}
-
-		spec, err := convert.JsonToDict(srv.Spec)
-		if err != nil {
-			return nil, err
 		}
 
 		r, err := CreateResource(k.MqlRuntime, "k8s.service", map[string]*llx.RawData{
@@ -47,8 +36,6 @@ func (k *mqlK8s) services() ([]interface{}, error) {
 			"namespace":       llx.StringData(obj.GetNamespace()),
 			"kind":            llx.StringData(objT.GetKind()),
 			"created":         llx.TimeData(ts.Time),
-			"manifest":        llx.DictData(manifest),
-			"spec":            llx.DictData(spec),
 		})
 		if err != nil {
 			return nil, err
@@ -56,6 +43,22 @@ func (k *mqlK8s) services() ([]interface{}, error) {
 		r.(*mqlK8sService).obj = srv
 		return r, nil
 	})
+}
+
+func (k *mqlK8sService) manifest() (map[string]interface{}, error) {
+	manifest, err := convert.JsonToDict(k.obj)
+	if err != nil {
+		return nil, err
+	}
+	return manifest, nil
+}
+
+func (k *mqlK8sService) spec() (map[string]interface{}, error) {
+	dict, err := convert.JsonToDict(k.obj.Spec)
+	if err != nil {
+		return nil, err
+	}
+	return dict, nil
 }
 
 func (k *mqlK8sService) id() (string, error) {

@@ -88,7 +88,7 @@ private k8s.namespace @defaults("name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Kubernetes object type
   kind string
   // Kubernetes labels
@@ -138,9 +138,9 @@ private k8s.pod @defaults("namespace name created"){
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Ephemeral containers
   ephemeralContainers() []k8s.ephemeralContainer
   // Init containers
@@ -172,9 +172,9 @@ private k8s.deployment @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -202,9 +202,9 @@ private k8s.daemonset @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -232,9 +232,9 @@ private k8s.statefulset @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -262,9 +262,9 @@ private k8s.replicaset @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -292,9 +292,9 @@ private k8s.job @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -322,9 +322,9 @@ private k8s.cronjob @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Pod description
-  podSpec dict
+  podSpec() dict
   // Init containers
   initContainers() []k8s.initContainer
   // Contained containers
@@ -462,7 +462,7 @@ private k8s.secret @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Secret type
   type string
   // Secret certificates
@@ -490,7 +490,7 @@ private k8s.configmap @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Configuration data
   data map[string]string
 }
@@ -516,9 +516,9 @@ private k8s.service @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Service Spec
-  spec dict
+  spec() dict
 }
 
 // Kubernetes Ingress resource backend
@@ -608,7 +608,7 @@ private k8s.ingress @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Ingress rules
   rules []k8s.ingressrule
   // Ingress TLS data
@@ -636,7 +636,7 @@ private k8s.serviceaccount @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // List of secrets that Pods running using this service account are allowed to use
   secrets []dict
   // List of references to secrets in the same namespace to use for pulling any images
@@ -664,7 +664,7 @@ private k8s.rbac.clusterrole @defaults("name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // ClusterRole rules
   rules []dict
   // ClusterRole aggregation rule
@@ -690,7 +690,7 @@ private k8s.rbac.clusterrolebinding @defaults("name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // References to the objects the role applies to
   subjects []dict
   // ClusterRole in the global namespace
@@ -718,7 +718,7 @@ private k8s.rbac.role @defaults("name namespace") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Cluster Role Rules
   rules []dict
 }
@@ -744,7 +744,7 @@ private k8s.rbac.rolebinding @defaults("name namespace created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Subjects holds references to the objects the role applies to
   subjects []dict
   // RoleRef can only reference a ClusterRole in the global namespace
@@ -770,9 +770,9 @@ private k8s.podsecuritypolicy {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Policy Spec
-  spec dict
+  spec() dict
 }
 
 // Kubernetes Network Policy
@@ -796,9 +796,9 @@ private k8s.networkpolicy @defaults("namespace name created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
   // Network policy spec
-  spec dict
+  spec() dict
 }
 
 // Kubernetes CustomResource
@@ -822,7 +822,7 @@ private k8s.customresource @defaults("name namespace created") {
   // Kubernetes object creation timestamp
   created time
   // Full resource manifest
-  manifest dict
+  manifest() dict
 }
 
 // Kubernetes AdmissionReview
