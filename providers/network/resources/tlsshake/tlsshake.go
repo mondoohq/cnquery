@@ -182,7 +182,8 @@ func (s *Tester) Test(conf ScanConfig) error {
 						SNIsupported:              conf.SNIsupported,
 						SecureClientRenegotiation: conf.SecureClientRenegotiation,
 					}
-					s.testTLS(s.proto, s.target, curConf)
+					// we don't record separate per-version errors for now
+					_, _ = s.testTLS(s.proto, s.target, curConf)
 				}
 
 				if conf.FakeSNI {
@@ -191,7 +192,8 @@ func (s *Tester) Test(conf ScanConfig) error {
 						ciphersFilter: supportedCiphers,
 						FakeSNI:       conf.FakeSNI,
 					}
-					s.testTLS(s.proto, s.target, curConf)
+					// we don't record separate per-version errors for now
+					_, _ = s.testTLS(s.proto, s.target, curConf)
 				}
 			}
 		}()

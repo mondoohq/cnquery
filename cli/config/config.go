@@ -80,7 +80,10 @@ func InitViperConfig() {
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not parse base64 ")
 		}
-		viper.ReadConfig(bytes.NewBuffer(decodedData))
+		err = viper.ReadConfig(bytes.NewBuffer(decodedData))
+		if err != nil {
+			log.Fatal().Err(err).Msg("")
+		}
 	} else if len(Path) == 0 && len(os.Getenv("MONDOO_CONFIG_PATH")) > 0 {
 		// fallback to env variable if provided, but only if --config is not used
 		Source = "$MONDOO_CONFIG_PATH"

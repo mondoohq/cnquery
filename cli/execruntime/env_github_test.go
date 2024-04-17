@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGithubRuntimeEnv(t *testing.T) {
 	// set mock provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("CI", "1")
-	environmentProvider.Setenv("GITHUB_ACTION", "action")
-	environmentProvider.Setenv("GITHUB_SHA", "1234")
-	environmentProvider.Setenv("GITHUB_REF", "example-project")
-	environmentProvider.Setenv("GITHUB_ACTOR", "johndoe")
-	environmentProvider.Setenv("GITHUB_RUN_NUMBER", "23")
+	require.NoError(t, environmentProvider.Setenv("CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("GITHUB_ACTION", "action"))
+	require.NoError(t, environmentProvider.Setenv("GITHUB_SHA", "1234"))
+	require.NoError(t, environmentProvider.Setenv("GITHUB_REF", "example-project"))
+	require.NoError(t, environmentProvider.Setenv("GITHUB_ACTOR", "johndoe"))
+	require.NoError(t, environmentProvider.Setenv("GITHUB_RUN_NUMBER", "23"))
 
 	env := Detect()
 	assert.True(t, env.IsAutomatedEnv())

@@ -33,11 +33,11 @@ func (bw *BufferedWriter) Resume() {
 	bw.lock.Lock()
 	defer bw.lock.Unlock()
 
-	if bw.paused == false {
+	if !bw.paused {
 		return
 	}
 	bw.paused = false
-	bw.out.Write(bw.buf.Bytes())
+	_, _ = bw.out.Write(bw.buf.Bytes())
 	bw.buf = bytes.Buffer{}
 }
 

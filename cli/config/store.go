@@ -22,7 +22,10 @@ func StoreConfig() error {
 	if _, err := osFs.Stat(path); os.IsNotExist(err) {
 		log.Info().Str("path", path).Msg("config file does not exist, create a new one")
 		// create the directory if it does not exist
-		osFs.MkdirAll(filepath.Dir(path), 0o755)
+		err = osFs.MkdirAll(filepath.Dir(path), 0o755)
+		if err != nil {
+			return errors.Wrap(err, "failed to save mondoo config")
+		}
 
 		// write file
 		err = os.WriteFile(path, []byte{}, 0o644)

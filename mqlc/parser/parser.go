@@ -356,10 +356,10 @@ func (p *parser) parseArg() (*Arg, error) {
 
 	if p.token.Type == Ident {
 		name := p.token
-		p.nextToken()
+		_ = p.nextToken()
 
 		if p.token.Value == ":" {
-			p.nextToken()
+			_ = p.nextToken()
 			res.Name = name.Value
 		} else {
 			p.rewind(name)
@@ -383,7 +383,7 @@ func (p *parser) parseArg() (*Arg, error) {
 func (p *parser) parseArray() (*Value, error) {
 	res := Value{Array: []*Expression{}}
 
-	p.nextToken()
+	_ = p.nextToken()
 	if p.token.Value == "]" {
 		return &res, nil
 	}
@@ -405,7 +405,7 @@ func (p *parser) parseArray() (*Value, error) {
 			return nil, p.expected(", or ]", "parseOperand")
 		}
 
-		p.nextToken()
+		_ = p.nextToken()
 
 		// catch trailing commas, ie: [a, b, c, ]
 		if p.token.Value == "]" {
@@ -421,7 +421,7 @@ func (p *parser) parseMap() (*Value, error) {
 		Map: map[string]*Expression{},
 	}
 
-	p.nextToken()
+	_ = p.nextToken()
 	if p.token.Value == "}" {
 		return &res, nil
 	}
@@ -438,12 +438,12 @@ func (p *parser) parseMap() (*Value, error) {
 			return nil, p.expected("string", "map key")
 		}
 
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value != ":" || p.token.Type != Op {
 			return nil, p.expected(":", "after map key")
 		}
 
-		p.nextToken()
+		_ = p.nextToken()
 		exp, err := p.parseExpression()
 		if exp == nil {
 			return nil, p.expected("expression", "parseOperand-map")
@@ -460,7 +460,7 @@ func (p *parser) parseMap() (*Value, error) {
 			return nil, p.expected(", or }", "parseOperand")
 		}
 
-		p.nextToken()
+		_ = p.nextToken()
 
 		// catch trailing commas, ie: {a: 1,}
 		if p.token.Value == "}" {
@@ -498,7 +498,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 		// glob all fields of a resource
 		// ie: resource { * }
 		if p.token.Value == "*" {
-			p.nextToken()
+			_ = p.nextToken()
 			star := "*"
 			return &Operand{
 				Value: &Value{
@@ -513,7 +513,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 	}
 
 	if value.Ident != nil && *value.Ident == "return" {
-		p.nextToken()
+		_ = p.nextToken()
 		return &Operand{Value: value}, true, nil
 	}
 
@@ -521,12 +521,12 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 		Comments: p.flushComments(),
 		Value:    value,
 	}
-	p.nextToken()
+	_ = p.nextToken()
 
 	for {
 		switch p.token.Value {
 		case ".":
-			p.nextToken()
+			_ = p.nextToken()
 
 			// everything else must be an identifier
 			if p.token.Type != Ident {
@@ -546,11 +546,11 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 				Ident:    &v,
 				Comments: p.flushComments(),
 			})
-			p.nextToken()
+			_ = p.nextToken()
 
 		case "(":
 			p.indent++
-			p.nextToken()
+			_ = p.nextToken()
 			args := []*Arg{}
 
 			for {
@@ -564,7 +564,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 				args = append(args, arg)
 
 				if p.token.Value == "," {
-					p.nextToken()
+					_ = p.nextToken()
 				}
 			}
 
@@ -577,11 +577,11 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			p.indent--
 			res.Calls = append(res.Calls, &Call{Function: args})
-			p.nextToken()
+			_ = p.nextToken()
 
 		case "[":
 			p.indent++
-			p.nextToken()
+			_ = p.nextToken()
 
 			exp, err := p.parseExpression()
 			if err != nil {
@@ -602,12 +602,12 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			res.Calls = append(res.Calls, &Call{
 				Accessor: exp,
 			})
-			p.nextToken()
+			_ = p.nextToken()
 
 		case "{":
 			p.indent++
 			if res.Value.Ident != nil && *res.Value.Ident == "switch" {
-				p.nextToken()
+				_ = p.nextToken()
 
 				for {
 					ident := p.token.Value
@@ -618,7 +618,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 					if ident != "case" && ident != "default" {
 						return nil, false, errors.New("expected `case` or `default` statements in `switch` call, got `" + ident + "`")
 					}
-					p.nextToken()
+					_ = p.nextToken()
 
 					if ident == "case" {
 						exp, err := p.parseExpression()
@@ -643,7 +643,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 					if p.token.Value != ":" {
 						return nil, false, errors.New("expected `:` in `" + ident + "` statement")
 					}
-					p.nextToken()
+					_ = p.nextToken()
 
 					block := Expression{
 						Operand: &Operand{
@@ -673,11 +673,11 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 					res.Block = append(res.Block, &block)
 				}
 
-				p.nextToken()
+				_ = p.nextToken()
 				continue
 			}
 
-			p.nextToken()
+			_ = p.nextToken()
 			block := []*Expression{}
 
 			for {
@@ -701,7 +701,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			}
 
 			p.indent--
-			p.nextToken()
+			_ = p.nextToken()
 
 		default:
 			return &res, false, nil
@@ -721,74 +721,74 @@ func (p *parser) parseOperation() (*Operation, error) {
 	case ":":
 		return nil, nil
 	case "&":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "&" {
 			res.Operator = OpAnd
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			return nil, p.expected("&&", "parseOperation")
 		}
 	case "|":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "|" {
 			res.Operator = OpOr
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			return nil, p.expected("||", "parseOperation")
 		}
 	case "=":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "=" {
 			res.Operator = OpEqual
-			p.nextToken()
+			_ = p.nextToken()
 		} else if p.token.Value == "~" {
 			res.Operator = OpCmp
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			res.Operator = OpAssignment
 		}
 	case "!":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "=" {
 			res.Operator = OpNotEqual
-			p.nextToken()
+			_ = p.nextToken()
 		} else if p.token.Value == "~" {
 			res.Operator = OpNotCmp
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			return nil, p.expected("!= or !~", "parseOperation")
 		}
 	case "<":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "=" {
 			res.Operator = OpSmallerEqual
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			res.Operator = OpSmaller
 		}
 	case ">":
-		p.nextToken()
+		_ = p.nextToken()
 		if p.token.Value == "=" {
 			res.Operator = OpGreaterEqual
-			p.nextToken()
+			_ = p.nextToken()
 		} else {
 			res.Operator = OpGreater
 		}
 	case "+":
 		res.Operator = OpAdd
-		p.nextToken()
+		_ = p.nextToken()
 	case "-":
 		res.Operator = OpSubtract
-		p.nextToken()
+		_ = p.nextToken()
 	case "*":
 		res.Operator = OpMultiply
-		p.nextToken()
+		_ = p.nextToken()
 	case "/":
 		res.Operator = OpDivide
-		p.nextToken()
+		_ = p.nextToken()
 	case "%":
 		res.Operator = OpRemainder
-		p.nextToken()
+		_ = p.nextToken()
 	default:
 		return nil, errors.New("found unexpected operation '" + p.token.Value + "'")
 	}
@@ -853,7 +853,7 @@ func (p *parser) parseExpression() (*Expression, error) {
 	}
 
 	for p.token.Value == ";" {
-		p.nextToken()
+		_ = p.nextToken()
 	}
 
 	return &res, err

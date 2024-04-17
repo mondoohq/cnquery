@@ -34,10 +34,10 @@ func getHomeDir() string {
 	return home
 }
 
-func resetAppFsToMemFs() {
+func resetAppFsToMemFs(t *testing.T) {
 	AppFs = afero.NewMemMapFs()
-	AppFs.MkdirAll(homeConfigDir, 0o755)
-	AppFs.MkdirAll(systemConfigDir, 0o755)
+	require.NoError(t, AppFs.MkdirAll(homeConfigDir, 0o755))
+	require.NoError(t, AppFs.MkdirAll(systemConfigDir, 0o755))
 }
 
 func Test_autodetectConfig(t *testing.T) {
@@ -46,26 +46,26 @@ func Test_autodetectConfig(t *testing.T) {
 	}()
 
 	t.Run("test homeConfig returned if exists", func(t *testing.T) {
-		resetAppFsToMemFs()
-		afero.WriteFile(AppFs, homeConfig, configBody, 0o644)
+		resetAppFsToMemFs(t)
+		require.NoError(t, afero.WriteFile(AppFs, homeConfig, configBody, 0o644))
 
 		config := autodetectConfig()
 		assert.Equal(t, homeConfig, config)
 	})
 
 	t.Run("test homeConfig returned even if systemConfig exists", func(t *testing.T) {
-		resetAppFsToMemFs()
-		afero.WriteFile(AppFs, homeConfig, configBody, 0o644)
-		afero.WriteFile(AppFs, oldConfig, configBody, 0o644)
-		afero.WriteFile(AppFs, systemConfig, configBody, 0o644)
+		resetAppFsToMemFs(t)
+		require.NoError(t, afero.WriteFile(AppFs, homeConfig, configBody, 0o644))
+		require.NoError(t, afero.WriteFile(AppFs, oldConfig, configBody, 0o644))
+		require.NoError(t, afero.WriteFile(AppFs, systemConfig, configBody, 0o644))
 
 		config := autodetectConfig()
 		assert.Equal(t, homeConfig, config)
 	})
 
 	t.Run("test systemConfig returned", func(t *testing.T) {
-		resetAppFsToMemFs()
-		afero.WriteFile(AppFs, systemConfig, configBody, 0o644)
+		resetAppFsToMemFs(t)
+		require.NoError(t, afero.WriteFile(AppFs, systemConfig, configBody, 0o644))
 
 		config := autodetectConfig()
 		assert.Equal(t, systemConfig, config)
@@ -77,8 +77,8 @@ func Test_probeConfigMemFs(t *testing.T) {
 		AppFs = afero.NewOsFs()
 	}()
 
-	resetAppFsToMemFs()
-	afero.WriteFile(AppFs, homeConfig, configBody, 0o644)
+	resetAppFsToMemFs(t)
+	require.NoError(t, afero.WriteFile(AppFs, homeConfig, configBody, 0o644))
 
 	assert.False(t, ProbeFile(homeConfigDir))
 	assert.True(t, ProbeDir(homeConfigDir))
@@ -89,15 +89,15 @@ func Test_probeConfigMemFs(t *testing.T) {
 func Test_probeConfigOsFs(t *testing.T) {
 	dir := t.TempDir()
 	tmpConfig := filepath.Join(dir, DefaultConfigFile)
-	afero.WriteFile(AppFs, tmpConfig, configBody, 0o000)
+	require.NoError(t, afero.WriteFile(AppFs, tmpConfig, configBody, 0o000))
 
 	assert.Equal(t, false, ProbeFile(tmpConfig))
 }
 
 func Test_inventoryPath(t *testing.T) {
-	resetAppFsToMemFs()
-	afero.WriteFile(AppFs, systemConfig, configBody, 0o644)
-	afero.WriteFile(AppFs, systemInventory, []byte("---"), 0o644)
+	resetAppFsToMemFs(t)
+	require.NoError(t, afero.WriteFile(AppFs, systemConfig, configBody, 0o644))
+	require.NoError(t, afero.WriteFile(AppFs, systemInventory, []byte("---"), 0o644))
 
 	path, ok := InventoryPath(systemConfig)
 	assert.Equal(t, systemInventory, path)
@@ -105,7 +105,6 @@ func Test_inventoryPath(t *testing.T) {
 }
 
 func TestConfigParsing(t *testing.T) {
-
 	t.Run("test config with space_mrn", func(t *testing.T) {
 		data := `
 agent_mrn: //agents.api.mondoo.app/spaces/musing-saha-952142/agents/1zDY7auR20SgrFfiGUT5qZWx6mE
@@ -165,7 +164,6 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 	})
 
 	t.Run("test org service account with scope_mrn", func(t *testing.T) {
-
 		data := `
 {
   "mrn": "//agents.api.mondoo.app/spaces/my-space-id/serviceaccounts/2bUj407V4GF4IKxg3Qn6NhWCr6x",
@@ -191,5 +189,4 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 		assert.Equal(t, "//captain.api.mondoo.app/spaces/my-space-id", cfg.GetScopeMrn())
 		assert.Equal(t, "//captain.api.mondoo.app/spaces/my-space-id", cfg.GetParentMrn())
 	})
-
 }

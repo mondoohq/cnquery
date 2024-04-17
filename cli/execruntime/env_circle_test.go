@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCircleCIRuntimeEnv(t *testing.T) {
 	// set mock provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("CI", "1")
-	environmentProvider.Setenv("CIRCLECI", "1")
-	environmentProvider.Setenv("CIRCLE_REPOSITORY_URL", "https://example.com/project")
-	environmentProvider.Setenv("CIRCLE_PROJECT_REPONAME", "example-project")
-	environmentProvider.Setenv("CIRCLE_BUILD_NUM", "1")
-	environmentProvider.Setenv("CIRCLE_USERNAME", "johndoe")
+	require.NoError(t, environmentProvider.Setenv("CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("CIRCLECI", "1"))
+	require.NoError(t, environmentProvider.Setenv("CIRCLE_REPOSITORY_URL", "https://example.com/project"))
+	require.NoError(t, environmentProvider.Setenv("CIRCLE_PROJECT_REPONAME", "example-project"))
+	require.NoError(t, environmentProvider.Setenv("CIRCLE_BUILD_NUM", "1"))
+	require.NoError(t, environmentProvider.Setenv("CIRCLE_USERNAME", "johndoe"))
 
 	env := Detect()
 	assert.True(t, env.IsAutomatedEnv())
