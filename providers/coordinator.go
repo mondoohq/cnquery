@@ -203,17 +203,9 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 		}
 	}
 
-	// Analyze the providers that are still being used by active runtimes
-	usedProviders := map[string]struct{}{}
-	for _, r := range c.runtimes {
-		for _, p := range r.providers {
-			usedProviders[p.Instance.ID] = struct{}{}
-		}
-	}
-
 	// Shutdown any providers that are not being used anymore
-	for id, p := range c.runningByID {
-		if _, ok := usedProviders[id]; !ok {
+	if len(c.runtimes) == 0 {
+		for _, p := range c.runningByID {
 			log.Debug().Msg("shutting down unused provider " + p.Name)
 			if err := c.stop(p); err != nil {
 				log.Warn().Err(err).Str("provider", p.Name).Msg("failed to shut down provider")
