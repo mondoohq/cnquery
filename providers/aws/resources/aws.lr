@@ -2402,7 +2402,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   // List of devices attached to the instance (such as EBS volume)
   deviceMappings []aws.ec2.instance.device
   // List of security groups (IDs) associated with the instance
-  securityGroups []aws.ec2.securitygroup
+  securityGroups() []aws.ec2.securitygroup
   // Platform details
   platformDetails string
   // Public DNS name for the instance
@@ -2422,7 +2422,7 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   // Tags on the instance
   tags map[string]string
   // Image that was used for the instance
-  image aws.ec2.image
+  image() aws.ec2.image
   // Launch time of the instance
   launchTime time
   // Private IP address for the instance

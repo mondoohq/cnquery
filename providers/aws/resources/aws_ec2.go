@@ -692,15 +692,6 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				}
 				mqlDevices = append(mqlDevices, mqlInstanceDevice)
 			}
-			sgs := []interface{}{}
-			for i := range instance.SecurityGroups {
-				mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
-					map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.SecurityGroups[i].GroupId)))})
-				if err != nil {
-					return nil, err
-				}
-				sgs = append(sgs, mqlSg)
-			}
 
 			stateReason, err := convert.JsonToDict(instance.StateReason)
 			if err != nil {
@@ -738,25 +729,11 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				"region":                llx.StringData(regionVal),
 				"rootDeviceName":        llx.StringDataPtr(instance.RootDeviceName),
 				"rootDeviceType":        llx.StringData(string(instance.RootDeviceType)),
-				"securityGroups":        llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
 				"state":                 llx.StringData(string(instance.State.Name)),
 				"stateReason":           llx.MapData(stateReason, types.Any),
 				"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 				"stateTransitionTime":   llx.TimeData(stateTransitionTime),
 				"tags":                  llx.MapData(Ec2TagsToMap(instance.Tags), types.String),
-			}
-
-			if instance.ImageId != nil {
-				mqlImage, err := NewResource(a.MqlRuntime, "aws.ec2.image",
-					map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, regionVal, conn.AccountId(), convert.ToString(instance.ImageId)))})
-				if err == nil {
-					args["image"] = llx.ResourceData(mqlImage, mqlImage.MqlName())
-				} else {
-					// this is a common case, logging the error here only creates confusion
-					args["image"] = llx.NilData
-				}
-			} else {
-				args["image"] = llx.NilData
 			}
 
 			// add vpc if there is one
@@ -767,31 +744,67 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Reservation, imdsvVe
 				args["vpcArn"] = llx.NilData
 			}
 
-			// only add a keypair if the ec2 instance has one attached
-			if instance.KeyName != nil {
-				mqlKeyPair, err := NewResource(a.MqlRuntime, "aws.ec2.keypair",
-					map[string]*llx.RawData{
-						"region": llx.StringData(regionVal),
-						"name":   llx.StringData(convert.ToString(instance.KeyName)),
-					})
-				if err == nil {
-					args["keypair"] = llx.ResourceData(mqlKeyPair, mqlKeyPair.MqlName())
-				} else {
-					log.Error().Err(err).Msg("cannot find keypair")
-					args["keypair"] = llx.NilData
-				}
-			} else {
-				args["keypair"] = llx.NilData
-			}
-
 			mqlEc2Instance, err := CreateResource(a.MqlRuntime, "aws.ec2.instance", args)
 			if err != nil {
 				return nil, err
 			}
+			mqlEc2Instance.(*mqlAwsEc2Instance).instanceCache = instance
 			res = append(res, mqlEc2Instance)
 		}
 	}
 	return res, nil
+}
+
+type mqlAwsEc2InstanceInternal struct {
+	instanceCache ec2types.Instance
+}
+
+func (i *mqlAwsEc2Instance) securityGroups() ([]interface{}, error) {
+	if i.instanceCache.SecurityGroups != nil {
+		sgs := []interface{}{}
+		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+
+		for j := range i.instanceCache.SecurityGroups {
+			mqlSg, err := NewResource(i.MqlRuntime, "aws.ec2.securitygroup",
+				map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, i.Region.Data, conn.AccountId(), convert.ToString(i.instanceCache.SecurityGroups[j].GroupId)))})
+			if err != nil {
+				return nil, err
+			}
+			sgs = append(sgs, mqlSg)
+		}
+		return sgs, nil
+	}
+	i.SecurityGroups.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (i *mqlAwsEc2Instance) image() (*mqlAwsEc2Image, error) {
+	if i.instanceCache.ImageId != nil {
+		conn := i.MqlRuntime.Connection.(*connection.AwsConnection)
+
+		mqlImage, err := NewResource(i.MqlRuntime, "aws.ec2.image",
+			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(imageArnPattern, i.Region.Data, conn.AccountId(), convert.ToString(i.instanceCache.ImageId)))})
+		if err == nil {
+			return mqlImage.(*mqlAwsEc2Image), nil
+		}
+	}
+	i.Image.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (i *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
+	if i.instanceCache.KeyName != nil {
+		mqlKeyPair, err := NewResource(i.MqlRuntime, "aws.ec2.keypair",
+			map[string]*llx.RawData{
+				"region": llx.StringData(i.Region.Data),
+				"name":   llx.StringData(convert.ToString(i.instanceCache.KeyName)),
+			})
+		if err == nil {
+			return mqlKeyPair.(*mqlAwsEc2Keypair), nil
+		}
+	}
+	i.Keypair.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (i *mqlAwsEc2Image) id() (string, error) {
@@ -924,10 +937,6 @@ func (a *mqlAwsEc2Instance) vpc() (*mqlAwsVpc, error) {
 		}
 		return res.(*mqlAwsVpc), nil
 	}
-}
-
-func (a *mqlAwsEc2Instance) keypair() (*mqlAwsEc2Keypair, error) {
-	return a.Keypair.Data, nil
 }
 
 func (a *mqlAwsEc2Instance) ssm() (interface{}, error) {
