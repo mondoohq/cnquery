@@ -113,6 +113,7 @@ func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
 
 	// Setup another provider with another runtime
 	mockPlugin2 := NewMockProviderPlugin(ctrl)
+	mockPlugin2.EXPECT().Shutdown(gomock.Any()).Times(1).Return(nil, nil)
 	p2 := &RunningProvider{
 		ID:     "provider2",
 		Plugin: mockPlugin2,
@@ -140,12 +141,12 @@ func TestRemoveRuntime_StopUnusedProvider(t *testing.T) {
 		},
 	}
 
-	// Remove the first runtime
+	// Remove all runtimes
 	c.RemoveRuntime(r1)
+	c.RemoveRuntime(r2)
 
-	// Verify that the first provider is stopped
-	assert.NotContains(t, c.runningByID, "provider1")
-	assert.Contains(t, c.runningByID, "provider2")
+	// Verify that all provider are stopped
+	assert.Empty(t, c.runningByID)
 }
 
 func TestRemoveRuntime_UsedProvider(t *testing.T) {
