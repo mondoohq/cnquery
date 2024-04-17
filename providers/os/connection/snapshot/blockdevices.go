@@ -101,15 +101,23 @@ func (blockEntries blockDevices) GetUnmountedBlockEntry() (*fsInfo, error) {
 		if d.MountPoint != "" { // empty string means it is not mounted
 			continue
 		}
-		for i := range d.Children {
-			entry := d.Children[i]
-			if entry.IsNoBootVolumeAndUnmounted() {
-				devFsName := "/dev/" + entry.Name
-				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
-			}
+		if fsinfo := findVolume(d.Children); fsinfo != nil {
+			return fsinfo, nil
 		}
 	}
 	return nil, errors.New("target volume not found on instance")
+}
+
+func findVolume(children []blockDevice) *fsInfo {
+	var fs *fsInfo
+	for i := range children {
+		entry := children[i]
+		if entry.IsNoBootVolumeAndUnmounted() {
+			devFsName := "/dev/" + entry.Name
+			fs = &fsInfo{name: devFsName, fstype: entry.FsType}
+		}
+	}
+	return fs
 }
 
 func (entry blockDevice) IsNoBootVolume() bool {

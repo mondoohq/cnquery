@@ -1,0 +1,116 @@
+{
+  "blockdevices": [
+    {
+      "name": "xvda",
+      "fstype": null,
+      "fsver": null,
+      "label": null,
+      "uuid": null,
+      "fsavail": null,
+      "fsuse%": null,
+      "mountpoints": [
+        null
+      ],
+      "children": [
+        {
+          "name": "xvda1",
+          "fstype": "xfs",
+          "fsver": null,
+          "label": "/",
+          "uuid": "3d668946-b9eb-4d6b-acbd-da437d796ee8",
+          "fsavail": "6.4G",
+          "fsuse%": "19%",
+          "mountpoints": [
+            "/"
+          ]
+        },
+        {
+          "name": "xvda127",
+          "fstype": null,
+          "fsver": null,
+          "label": null,
+          "uuid": null,
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvda128",
+          "fstype": "vfat",
+          "fsver": "FAT16",
+          "label": null,
+          "uuid": "1753-28B3",
+          "fsavail": "8.7M",
+          "fsuse%": "13%",
+          "mountpoints": [
+            "/boot/efi"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xvdh",
+      "fstype": null,
+      "fsver": null,
+      "label": null,
+      "uuid": null,
+      "fsavail": null,
+      "fsuse%": null,
+      "mountpoints": [
+        null
+      ],
+      "children": [
+        {
+          "name": "xvdh1",
+          "fstype": null,
+          "fsver": null,
+          "label": null,
+          "uuid": null,
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvdh2",
+          "fstype": "vfat",
+          "fsver": "FAT16",
+          "label": null,
+          "uuid": "C8BB-FC87",
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvdh3",
+          "fstype": "xfs",
+          "fsver": null,
+          "label": null,
+          "uuid": "31f80bf2-f73c-4350-bd3e-1dfe82e691f9",
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        },
+        {
+          "name": "xvdh4",
+          "fstype": "xfs",
+          "fsver": null,
+          "label": null,
+          "uuid": "b6b03ca5-4431-4db9-a1fb-f13c8566f779",
+          "fsavail": null,
+          "fsuse%": null,
+          "mountpoints": [
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}
