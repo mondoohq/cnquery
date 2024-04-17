@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/cnquery/v9/providers/github"
-option go_package = "go.mondoo.com/cnquery/v10/providers/github/resources"
+option go_package = "go.mondoo.com/cnquery/v11/providers/github/resources"
 
 private github {}
 
