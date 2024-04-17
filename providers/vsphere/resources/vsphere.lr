@@ -4,7 +4,7 @@
 import "../../core/resources/core.lr"
 
 option provider = "go.mondoo.com/cnquery/v9/providers/vsphere"
-option go_package = "go.mondoo.com/cnquery/v10/providers/vsphere/resources"
+option go_package = "go.mondoo.com/cnquery/v11/providers/vsphere/resources"
 
 // vSphere asset resource
 extend asset {
