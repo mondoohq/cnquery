@@ -20458,7 +20458,7 @@ func (c *mqlAwsEc2Volume) GetIops() *plugin.TValue[int64] {
 type mqlAwsEc2Instance struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlAwsEc2InstanceInternal it will be used here
+	mqlAwsEc2InstanceInternal
 	Arn plugin.TValue[string]
 	InstanceId plugin.TValue[string]
 	DetailedMonitoring plugin.TValue[string]
@@ -20597,7 +20597,19 @@ func (c *mqlAwsEc2Instance) GetDeviceMappings() *plugin.TValue[[]interface{}] {
 }
 
 func (c *mqlAwsEc2Instance) GetSecurityGroups() *plugin.TValue[[]interface{}] {
-	return &c.SecurityGroups
+	return plugin.GetOrCompute[[]interface{}](&c.SecurityGroups, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
 }
 
 func (c *mqlAwsEc2Instance) GetPlatformDetails() *plugin.TValue[string] {
@@ -20639,7 +20651,19 @@ func (c *mqlAwsEc2Instance) GetTags() *plugin.TValue[map[string]interface{}] {
 }
 
 func (c *mqlAwsEc2Instance) GetImage() *plugin.TValue[*mqlAwsEc2Image] {
-	return &c.Image
+	return plugin.GetOrCompute[*mqlAwsEc2Image](&c.Image, func() (*mqlAwsEc2Image, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.instance", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Image), nil
+			}
+		}
+
+		return c.image()
+	})
 }
 
 func (c *mqlAwsEc2Instance) GetLaunchTime() *plugin.TValue[*time.Time] {
