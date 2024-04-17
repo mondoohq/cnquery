@@ -12,8 +12,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/logger"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/logger"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
 func TransportOption(insecure bool) remote.Option {

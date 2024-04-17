@@ -14,12 +14,12 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/auth"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/container/image"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/tar"
-	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/container/auth"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/container/image"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/tar"
+	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
 )
 
 // NewImageConnection uses a container image reference as input and creates a tar connection

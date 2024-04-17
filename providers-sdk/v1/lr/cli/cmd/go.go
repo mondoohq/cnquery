@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/lr"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/lr/docs"
 	"sigs.k8s.io/yaml"
 )
 

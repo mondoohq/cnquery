@@ -7,13 +7,13 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/providers/google-workspace/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/providers/google-workspace/connection"
+	"go.mondoo.com/cnquery/v11/types"
 	"google.golang.org/api/groupssettings/v1"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	directory "google.golang.org/api/admin/directory/v1"
 	"google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/option"

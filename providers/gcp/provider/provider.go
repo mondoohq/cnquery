@@ -10,16 +10,16 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 	"os"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection/gcpinstancesnapshot"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/gcp/resources"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v11/providers/gcp/connection/gcpinstancesnapshot"
+	"go.mondoo.com/cnquery/v11/providers/gcp/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/gcp/resources"
 )
 
 const (

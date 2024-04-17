@@ -10,8 +10,8 @@ import (
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (p *mqlDocker) images() ([]interface{}, error) {

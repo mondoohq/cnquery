@@ -29,8 +29,8 @@ ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/v10.Version=${VERSION} -X go.mondoo.com/cnquery/v10.Build=${TAG}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/v10.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery/v10.Build=${TAG} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${VERSION} -X go.mondoo.com/cnquery/v11.Build=${TAG}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/cnquery/v11.Version=${LATEST_VERSION_TAG} -X go.mondoo.com/cnquery/v11.Build=${TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
@@ -601,7 +601,7 @@ test/lint: test/lint/golangci-lint/run
 test: test/go test/lint
 
 benchmark/go:
-	go test -bench=. -benchmem go.mondoo.com/cnquery/v10/explorer/scan/benchmark
+	go test -bench=. -benchmem go.mondoo.com/cnquery/v11/explorer/scan/benchmark
 
 test/generate: prep/tools/mockgen
 	go generate ./providers

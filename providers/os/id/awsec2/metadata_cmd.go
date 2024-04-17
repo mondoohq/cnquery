@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
 
 const (

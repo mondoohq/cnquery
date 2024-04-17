@@ -4,10 +4,10 @@
 package config
 
 import (
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/k8s/provider"
-	"go.mondoo.com/cnquery/v10/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/k8s/provider"
+	"go.mondoo.com/cnquery/v11/providers/k8s/resources"
 )
 
 var Config = plugin.Provider{

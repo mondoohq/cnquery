@@ -9,9 +9,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	sshconn "go.mondoo.com/cnquery/v10/providers/os/connection/ssh"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	sshconn "go.mondoo.com/cnquery/v11/providers/os/connection/ssh"
 	"golang.org/x/crypto/ssh"
 )
 

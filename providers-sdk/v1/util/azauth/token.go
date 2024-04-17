@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 )
 
 // sometimes we run into a 'managed identity timed out' error when using a managed identity.

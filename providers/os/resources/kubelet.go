@@ -13,9 +13,9 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 )
 
 const defaultKubeletConfig = "/var/lib/kubelet/config.yaml"

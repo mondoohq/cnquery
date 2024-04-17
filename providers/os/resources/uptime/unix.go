@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day[s]*),)*(?:\s*(\d+)\s(min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)

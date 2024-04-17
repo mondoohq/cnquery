@@ -1,6 +1,6 @@
-module go.mondoo.com/cnquery/v10/providers/terraform
+module go.mondoo.com/cnquery/v11/providers/terraform
 
-replace go.mondoo.com/cnquery/v10 => ../..
+replace go.mondoo.com/cnquery/v11 => ../..
 
 go 1.22
 
@@ -9,7 +9,7 @@ toolchain go1.22.0
 require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/hashicorp/hcl/v2 v2.20.1
-	go.mondoo.com/cnquery/v10 v10.11.1
+	go.mondoo.com/cnquery/v11 v11.0.0
 )
 
 require (

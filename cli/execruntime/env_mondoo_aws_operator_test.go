@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMondooOperatorRuntimeEnv(t *testing.T) {
@@ -19,7 +20,7 @@ func TestMondooOperatorRuntimeEnv(t *testing.T) {
 
 	// set mondoo provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("AWS_LAMBDA_RUNTIME_API", "http://localhost:124")
+	require.NoError(t, environmentProvider.Setenv("AWS_LAMBDA_RUNTIME_API", "http://localhost:124"))
 
 	// TODO: use Detect() here and see if it's the "mondoo-aws-operator"
 	assert.True(t, mondooAwsOperatorEnv.Detect())

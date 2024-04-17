@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 var GROUP_OSX_DSCACHEUTIL_REGEX = regexp.MustCompile(`^(\S+):\s(.*?)$`)

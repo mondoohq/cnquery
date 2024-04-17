@@ -8,12 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/network/connection"
-	"go.mondoo.com/cnquery/v10/providers/network/resources"
-	"go.mondoo.com/cnquery/v10/utils/syncx"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/network/connection"
+	"go.mondoo.com/cnquery/v11/providers/network/resources"
+	"go.mondoo.com/cnquery/v11/utils/syncx"
 )
 
 func TestResource_DNS(t *testing.T) {

@@ -6,9 +6,9 @@ package mqlc
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mqlc/parser"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mqlc/parser"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func compileDictQuery(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
@@ -154,7 +154,7 @@ func compileDictContains(c *compiler, typ types.Type, ref uint64, id string, cal
 	})
 	lengthRef := c.tailRef()
 
-	// FIXME: DEPRECATED, replace in v10.0 wit the use of != empty vv
+	// FIXME: DEPRECATED, replace in v12.0 with the use of != empty vv
 	// != 0
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,

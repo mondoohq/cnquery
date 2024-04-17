@@ -10,7 +10,7 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/discovery/docker_engine"
 )
 
 func resetEnv(env []string) {

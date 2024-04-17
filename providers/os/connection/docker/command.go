@@ -13,7 +13,7 @@ import (
 
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 type Command struct {

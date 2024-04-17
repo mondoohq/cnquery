@@ -27,7 +27,8 @@ func TestCredentialParser(t *testing.T) {
 `
 
 	v := []*Credential{}
-	yaml.Unmarshal([]byte(content), &v)
+	err := yaml.Unmarshal([]byte(content), &v)
+	require.NoError(t, err)
 
 	assert.Equal(t, 4, len(v))
 	assert.Equal(t, CredentialType_password, v[0].Type)
@@ -54,6 +55,7 @@ func TestSecretEncoding(t *testing.T) {
 `
 
 	v := []*Credential{}
-	yaml.Unmarshal([]byte(content), &v)
+	err := yaml.Unmarshal([]byte(content), &v)
+	require.NoError(t, err)
 	assert.Equal(t, 2, len(v))
 }

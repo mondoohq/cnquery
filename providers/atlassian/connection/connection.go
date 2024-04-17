@@ -5,12 +5,12 @@ package connection
 
 import (
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/admin"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/confluence"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/jira"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/scim"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/admin"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/confluence"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/jira"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/scim"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/shared"
 )
 
 const (

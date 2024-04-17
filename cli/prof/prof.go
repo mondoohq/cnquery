@@ -113,6 +113,9 @@ func setupProfiler(opts profilerOpts) {
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	go func() {
-		http.ListenAndServe(opts.Listen, mux)
+		err := http.ListenAndServe(opts.Listen, mux)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to start http server")
+		}
 	}()
 }

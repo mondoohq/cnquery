@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v10/providers/os/resources"
-	"go.mondoo.com/cnquery/v10/utils/syncx"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v11/providers/os/resources"
+	"go.mondoo.com/cnquery/v11/utils/syncx"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash

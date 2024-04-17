@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers/azure/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers/azure/connection"
+	"go.mondoo.com/cnquery/v11/types"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"

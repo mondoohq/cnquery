@@ -6,9 +6,9 @@ package mqlc
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mqlc/parser"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mqlc/parser"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func compileArrayWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

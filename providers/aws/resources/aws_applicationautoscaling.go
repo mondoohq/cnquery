@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/types"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v10/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection"
 )
 
 func (a *mqlAwsApplicationAutoscaling) id() (string, error) {

@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/apk"
-	"go.mondoo.com/cnquery/v10/providers/core/resources/versions/generic"
+	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/apk"
+	"go.mondoo.com/cnquery/v11/providers/core/resources/versions/generic"
 )
 
 const (

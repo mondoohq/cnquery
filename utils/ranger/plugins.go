@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"go.mondoo.com/cnquery/v10"
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )

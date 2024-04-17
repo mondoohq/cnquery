@@ -8,11 +8,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v10/providers/os/id/awsecs"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/smbios"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
+	"go.mondoo.com/cnquery/v11/providers/os/id/awsecs"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/smbios"
 )
 
 func readValue(conn shared.Connection, fPath string) string {

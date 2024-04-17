@@ -11,8 +11,8 @@ import (
 	sync "sync"
 	"time"
 
-	llx "go.mondoo.com/cnquery/v10/llx"
-	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	llx "go.mondoo.com/cnquery/v11/llx"
+	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
 
 const DISABLE_DELAYED_DISCOVERY_OPTION = "disable-delayed-discovery"

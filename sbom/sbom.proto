@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package mondoo.sbom.v1;
 
-option go_package = "go.mondoo.com/cnquery/v10/sbom";
+option go_package = "go.mondoo.com/cnquery/v11/sbom";
 
 // Status represents the possible states of processing or generation for a
 // Bill of Materials (BOM). Each status indicates a different stage or outcome

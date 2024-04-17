@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 )
 
 type AssignedPlan struct {

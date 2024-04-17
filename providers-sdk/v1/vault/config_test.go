@@ -28,7 +28,8 @@ func TestVaultTypeParser(t *testing.T) {
 `
 
 	v := []VaultType{}
-	yaml.Unmarshal([]byte(content), &v)
+	err := yaml.Unmarshal([]byte(content), &v)
+	require.NoError(t, err)
 
 	assert.Equal(t, 11, len(v))
 	assert.Equal(t, VaultType_None, v[0])

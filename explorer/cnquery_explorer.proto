@@ -9,7 +9,7 @@ import "google/protobuf/any.proto";
 import "llx/llx.proto";
 import "providers-sdk/v1/inventory/inventory.proto";
 
-option go_package = "go.mondoo.com/cnquery/v10/explorer";
+option go_package = "go.mondoo.com/cnquery/v11/explorer";
 
 message Bundle {
   string owner_mrn = 1; 
@@ -32,17 +32,7 @@ message QueryGroup {
 }
 
 message QueryPack {
-  reserved 20;
-
-  // FIXME: DEPRECATED, remove in v9.0 vv and reserve number
-  // This is replaced by the field "filters"
-  map<string,Mquery> asset_filters = 7; // key == checksum
-  // ^^
-
-  // FIXME: DEPRECATED, remove in v9.0 vv and reserve number
-  // This is replaced by the field "filters"
-  repeated string deprecated_filters = 43;
-  // ^^
+  reserved 7, 20, 43;
   
   // user-defined UID, which is used to generate the MRN
   string uid = 36;
@@ -141,7 +131,7 @@ enum Action {
 
 // Mquery represents the MQL and metadata that form a query
 message Mquery {
-  // FIXME: DEPRECATED, remove in v9.0 vv
+  // FIXME: DEPRECATED, remove in v12.0 vv
   // This is replaced by the field "mql"
   string query = 40;
   // This is moved into docs.refs

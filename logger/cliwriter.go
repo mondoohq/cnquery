@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/cnquery/v10/cli/theme/colors"
+	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

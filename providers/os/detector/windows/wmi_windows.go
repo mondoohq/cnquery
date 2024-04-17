@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 const wmiOSQuery = "SELECT Name, Caption, Manufacturer, OSArchitecture, Version, BuildNumber, Description, OSType, ProductType, SerialNumber FROM Win32_OperatingSystem"

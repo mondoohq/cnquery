@@ -9,8 +9,8 @@ import (
 	"os"
 	"path"
 
-	"go.mondoo.com/cnquery/v10/logger"
-	"go.mondoo.com/cnquery/v10/mrn"
+	"go.mondoo.com/cnquery/v11/logger"
+	"go.mondoo.com/cnquery/v11/mrn"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -126,7 +126,7 @@ func (s *LocalServices) setQuery(ctx context.Context, mrn string, query *Mquery)
 	}
 
 	if query.Title == "" {
-		query.Title = query.Query
+		query.Title = query.Mql
 	}
 
 	return s.DataLake.SetQuery(ctx, mrn, query)

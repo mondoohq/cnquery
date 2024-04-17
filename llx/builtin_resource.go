@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 type Resource interface {

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
 
 func TestPowershellEncoding(t *testing.T) {

@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGitlabRuntimeEnv(t *testing.T) {
 	// set mock provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("CI", "1")
-	environmentProvider.Setenv("GITLAB_CI", "1")
-	environmentProvider.Setenv("CI_PROJECT_URL", "https://example.com/project")
-	environmentProvider.Setenv("CI_PROJECT_NAME", "example-project")
-	environmentProvider.Setenv("CI_JOB_ID", "123456")
-	environmentProvider.Setenv("GITLAB_USER_ID", "johndoe")
+	require.NoError(t, environmentProvider.Setenv("CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("GITLAB_CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("CI_PROJECT_URL", "https://example.com/project"))
+	require.NoError(t, environmentProvider.Setenv("CI_PROJECT_NAME", "example-project"))
+	require.NoError(t, environmentProvider.Setenv("CI_JOB_ID", "123456"))
+	require.NoError(t, environmentProvider.Setenv("GITLAB_USER_ID", "johndoe"))
 
 	env := Detect()
 	assert.True(t, env.IsAutomatedEnv())

@@ -5,7 +5,7 @@ package packages
 
 import (
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
 type PkgFilesAvailable int

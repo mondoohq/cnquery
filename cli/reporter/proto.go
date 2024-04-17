@@ -10,8 +10,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/shared"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/shared"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

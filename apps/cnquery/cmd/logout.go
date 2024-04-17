@@ -11,11 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/v10/cli/config"
-	cli_errors "go.mondoo.com/cnquery/v10/cli/errors"
-	cnquery_providers "go.mondoo.com/cnquery/v10/providers"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
-	rangerUtils "go.mondoo.com/cnquery/v10/utils/ranger"
+	"go.mondoo.com/cnquery/v11/cli/config"
+	cli_errors "go.mondoo.com/cnquery/v11/cli/errors"
+	cnquery_providers "go.mondoo.com/cnquery/v11/providers"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	rangerUtils "go.mondoo.com/cnquery/v11/utils/ranger"
 	"sigs.k8s.io/yaml"
 )
 

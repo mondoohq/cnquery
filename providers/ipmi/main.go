@@ -6,8 +6,8 @@ package main
 import (
 	"os"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/ipmi/provider"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/ipmi/provider"
 )
 
 // This is the entry point for the IPMI provider.

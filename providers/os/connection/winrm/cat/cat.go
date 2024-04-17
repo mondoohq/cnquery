@@ -12,8 +12,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/v10/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/powershell"
 )
 
 type CommandRunner interface {

@@ -12,14 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/providers/aws/connection"
-	"go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn"
-	awsec2ebstypes "go.mondoo.com/cnquery/v10/providers/aws/connection/awsec2ebsconn/types"
-	"go.mondoo.com/cnquery/v10/providers/os/id/awsec2"
-	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
-	"go.mondoo.com/cnquery/v10/providers/os/id/ids"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn"
+	awsec2ebstypes "go.mondoo.com/cnquery/v11/providers/aws/connection/awsec2ebsconn/types"
+	"go.mondoo.com/cnquery/v11/providers/os/id/awsec2"
+	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v11/providers/os/id/ids"
 )
 
 type mqlObject struct {

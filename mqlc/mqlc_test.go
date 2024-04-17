@@ -11,13 +11,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/logger"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/logger"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/types"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
 )
 
 var (
@@ -1262,7 +1262,6 @@ func TestCompiler_ArrayResource(t *testing.T) {
 		})
 	})
 
-	// FIXME: DEPRECATED, remove in v8.0 vv
 	compileT(t, "packages.list[123]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
 			Binding: (1 << 32) | 2,
@@ -1281,7 +1280,6 @@ func TestCompiler_ArrayResource(t *testing.T) {
 			Type:    string(types.Int),
 		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
-	// ^^
 }
 
 func TestCompiler_ResourceFieldGlob(t *testing.T) {

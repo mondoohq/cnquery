@@ -9,9 +9,9 @@ import (
 	"sort"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/checksums"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
-	"go.mondoo.com/cnquery/v10/utils/sortx"
+	"go.mondoo.com/cnquery/v11/checksums"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
+	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
 
 func (p *QueryPack) InvalidateAllChecksums() {
@@ -25,7 +25,7 @@ func (p *QueryPack) RefreshMRN(ownerMRN string) error {
 	nu, err := RefreshMRN(ownerMRN, p.Mrn, MRN_RESOURCE_QUERYPACK, p.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
-		return multierr.Wrap(err, "failed to refresh mrn for query "+p.Name)
+		return multierr.Wrap(err, "failed to refresh mrn for querypack "+p.Name)
 	}
 
 	p.Mrn = nu

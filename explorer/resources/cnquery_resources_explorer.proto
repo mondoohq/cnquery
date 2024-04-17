@@ -6,7 +6,7 @@ syntax = "proto3";
 package cnquery.explorer.resources;
 import "llx/llx.proto";
 
-option go_package = "go.mondoo.com/cnquery/v10/explorer/resources";
+option go_package = "go.mondoo.com/cnquery/v11/explorer/resources";
 
 service ResourcesExplorer {
   rpc GetResourcesData(EntityResourcesReq) returns (EntityResourcesRes) {}

@@ -13,8 +13,8 @@ package providers
 import (
 	_ "embed"
 
-	coreconf "go.mondoo.com/cnquery/v10/providers/core/config"
-	core "go.mondoo.com/cnquery/v10/providers/core/provider"
+	coreconf "go.mondoo.com/cnquery/v11/providers/core/config"
+	core "go.mondoo.com/cnquery/v11/providers/core/provider"
 )
 
 //go:embed core/resources/core.resources.json

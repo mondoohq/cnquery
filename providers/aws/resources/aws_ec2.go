@@ -20,12 +20,12 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v10/providers/aws/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (e *mqlAwsEc2) id() (string, error) {

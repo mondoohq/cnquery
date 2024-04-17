@@ -6,8 +6,8 @@ package main
 import (
 	"os"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/k8s/provider"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/k8s/provider"
 )
 
 func main() {

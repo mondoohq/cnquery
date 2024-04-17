@@ -10,17 +10,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/providers"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
-	k8s_conf "go.mondoo.com/cnquery/v10/providers/k8s/config"
-	"go.mondoo.com/cnquery/v10/providers/k8s/connection/manifest"
-	"go.mondoo.com/cnquery/v10/providers/k8s/connection/shared"
-	k8s_provider "go.mondoo.com/cnquery/v10/providers/k8s/provider"
-	"go.mondoo.com/cnquery/v10/providers/k8s/resources"
-	"go.mondoo.com/cnquery/v10/utils/syncx"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/providers"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	k8s_conf "go.mondoo.com/cnquery/v11/providers/k8s/config"
+	"go.mondoo.com/cnquery/v11/providers/k8s/connection/manifest"
+	"go.mondoo.com/cnquery/v11/providers/k8s/connection/shared"
+	k8s_provider "go.mondoo.com/cnquery/v11/providers/k8s/provider"
+	"go.mondoo.com/cnquery/v11/providers/k8s/resources"
+	"go.mondoo.com/cnquery/v11/utils/syncx"
 )
 
 func K8s() *providers.Runtime {

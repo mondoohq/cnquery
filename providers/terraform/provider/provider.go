@@ -10,12 +10,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/upstream"
-	"go.mondoo.com/cnquery/v10/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v10/providers/terraform/resources"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v11/providers/terraform/resources"
 )
 
 const (

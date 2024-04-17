@@ -7,15 +7,15 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v11/types"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
-	"go.mondoo.com/cnquery/v10/llx"
+	"go.mondoo.com/cnquery/v11/llx"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )

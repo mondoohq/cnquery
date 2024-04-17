@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAzureRuntimeEnv(t *testing.T) {
 	// set mock provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("CI", "1")
-	environmentProvider.Setenv("TF_BUILD", "1")
-	environmentProvider.Setenv("BUILD_REPOSITORY_NAME", "example-project")
-	environmentProvider.Setenv("BUILD_BUILDID", "1")
-	environmentProvider.Setenv("BUILD_SOURCEVERSION", "897248974893749873894789374")
-	environmentProvider.Setenv("BUILD_SOURCEVERSIONAUTHOR", "vj")
+	require.NoError(t, environmentProvider.Setenv("CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("TF_BUILD", "1"))
+	require.NoError(t, environmentProvider.Setenv("BUILD_REPOSITORY_NAME", "example-project"))
+	require.NoError(t, environmentProvider.Setenv("BUILD_BUILDID", "1"))
+	require.NoError(t, environmentProvider.Setenv("BUILD_SOURCEVERSION", "897248974893749873894789374"))
+	require.NoError(t, environmentProvider.Setenv("BUILD_SOURCEVERSIONAUTHOR", "vj"))
 
 	env := Detect()
 	assert.True(t, env.IsAutomatedEnv())

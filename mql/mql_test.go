@@ -11,11 +11,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mql"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mql"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/testutils"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 var features cnquery.Features

@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/providers/vsphere/connection/vsimulator"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/providers/vsphere/connection/vsimulator"
 )
 
 func newTestService() (*vsimulator.VsphereSimulator, *Service, *plugin.ConnectRes) {

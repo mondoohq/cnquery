@@ -6,7 +6,7 @@ package reporter
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/explorer"
+	"go.mondoo.com/cnquery/v11/explorer"
 	"google.golang.org/protobuf/encoding/protojson"
 	"os"
 	"sigs.k8s.io/yaml"

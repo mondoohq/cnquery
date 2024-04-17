@@ -4,10 +4,10 @@
 package executor
 
 import (
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/providers"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/providers"
 )
 
 func MustCompile(code string) *llx.CodeBundle {

@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestJenkinsRuntimeEnv(t *testing.T) {
 	// set mock provider
 	environmentProvider = newMockEnvProvider()
-	environmentProvider.Setenv("CI", "1")
-	environmentProvider.Setenv("JENKINS_URL", "1")
-	environmentProvider.Setenv("GIT_URL", "https://example.com/project")
-	environmentProvider.Setenv("JOB_NAME", "example-project")
-	environmentProvider.Setenv("BUILD_ID", "1")
-	environmentProvider.Setenv("GIT_COMMIT", "12378349271489723489")
+	require.NoError(t, environmentProvider.Setenv("CI", "1"))
+	require.NoError(t, environmentProvider.Setenv("JENKINS_URL", "1"))
+	require.NoError(t, environmentProvider.Setenv("GIT_URL", "https://example.com/project"))
+	require.NoError(t, environmentProvider.Setenv("JOB_NAME", "example-project"))
+	require.NoError(t, environmentProvider.Setenv("BUILD_ID", "1"))
+	require.NoError(t, environmentProvider.Setenv("GIT_COMMIT", "12378349271489723489"))
 
 	env := Detect()
 	assert.True(t, env.IsAutomatedEnv())

@@ -9,7 +9,7 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/providers/os/resources/cpe"
+	"go.mondoo.com/cnquery/v11/providers/os/resources/cpe"
 )
 
 type Parser interface {

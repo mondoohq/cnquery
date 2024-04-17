@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 

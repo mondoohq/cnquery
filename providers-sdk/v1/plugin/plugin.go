@@ -3,7 +3,7 @@
 
 package plugin
 
-import llx "go.mondoo.com/cnquery/v10/llx"
+import llx "go.mondoo.com/cnquery/v11/llx"
 
 //go:generate protoc --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative plugin.proto
 

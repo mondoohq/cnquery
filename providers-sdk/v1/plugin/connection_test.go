@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	inventory "go.mondoo.com/cnquery/v10/providers-sdk/v1/inventory"
+	inventory "go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 )
 
 func TestConnection_ID(t *testing.T) {

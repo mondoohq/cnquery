@@ -415,8 +415,6 @@ private github.workflow @defaults("id name") {
 private github.branch @defaults("name") {
   // Repository branch name
   name string
-  // Deprecated; use isProtected instead
-  protected bool
   // Whether branch protection is enabled
   isProtected bool
   // Repository branch HEAD commit

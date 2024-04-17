@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10"
-	llx "go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mqlc"
-	"go.mondoo.com/cnquery/v10/mrn"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v11"
+	llx "go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mqlc"
+	"go.mondoo.com/cnquery/v11/mrn"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -300,7 +300,7 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schem
 		if _, ok := supported[cur.CodeId]; ok {
 			curCopy := proto.Clone(cur).(*Mquery)
 			curCopy.Mrn = entityMrn + "/assetfilter/" + cur.CodeId
-			curCopy.Title = curCopy.Query
+			curCopy.Title = curCopy.Mql
 			matching = append(matching, curCopy)
 		}
 	}

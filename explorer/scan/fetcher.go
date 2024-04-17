@@ -9,10 +9,10 @@ import (
 	"io"
 	"net/http"
 
-	"go.mondoo.com/cnquery/v10"
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/v10/utils/multierr"
+	"go.mondoo.com/cnquery/v11"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
 
 type fetcher struct {

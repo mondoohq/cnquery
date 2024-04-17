@@ -10,10 +10,10 @@ import (
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/cnquery/v10/providers/aws/connection"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (a *mqlAwsAccessanalyzerAnalyzer) id() (string, error) {

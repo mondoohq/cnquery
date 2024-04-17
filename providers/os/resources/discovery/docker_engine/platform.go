@@ -5,8 +5,8 @@ package docker_engine
 
 import (
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.com/cnquery/v10/providers/os/fsutil"
-	"go.mondoo.com/cnquery/v10/providers/os/id/containerid"
+	"go.mondoo.com/cnquery/v11/providers/os/fsutil"
+	"go.mondoo.com/cnquery/v11/providers/os/id/containerid"
 )
 
 func platformID(filename string) (string, error) {

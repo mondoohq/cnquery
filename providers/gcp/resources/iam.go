@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/gcp/connection"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
 	"google.golang.org/api/iterator"

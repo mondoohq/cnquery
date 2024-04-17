@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"encoding/csv"
 
-	"go.mondoo.com/cnquery/v10/explorer"
-	"go.mondoo.com/cnquery/v10/llx"
-	"go.mondoo.com/cnquery/v10/mrn"
-	"go.mondoo.com/cnquery/v10/shared"
+	"go.mondoo.com/cnquery/v11/explorer"
+	"go.mondoo.com/cnquery/v11/llx"
+	"go.mondoo.com/cnquery/v11/mrn"
+	"go.mondoo.com/cnquery/v11/shared"
 )
 
 type csvStruct struct {

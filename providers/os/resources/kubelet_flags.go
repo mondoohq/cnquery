@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 )
 
 // mergeFlagsIntoConfig adds flags to the kubelet config

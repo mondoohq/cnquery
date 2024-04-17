@@ -4,8 +4,8 @@
 package main
 
 import (
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/cnquery/v10/providers/atlassian/config"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin/gen"
+	"go.mondoo.com/cnquery/v11/providers/atlassian/config"
 )
 
 func main() {

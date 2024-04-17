@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/v10/types"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 // Collector provides helpers for go files inside a context

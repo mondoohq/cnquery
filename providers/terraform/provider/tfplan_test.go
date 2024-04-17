@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/v10/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v10/providers/terraform/connection"
-	"go.mondoo.com/cnquery/v10/providers/terraform/resources"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v11/providers/terraform/resources"
 )
 
 func TestResource_Tfplan(t *testing.T) {
