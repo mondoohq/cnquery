@@ -109,7 +109,7 @@ packs:
               name
               branches.
                 where( isDefault ) {
-                  protected
+                  isProtected
                 }
             }
       - uid: mondoo-incident-response-github-packages
