@@ -7,7 +7,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/aws/aws-sdk-go v1.51.21
+	github.com/aws/aws-sdk-go v1.51.22
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -61,7 +61,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.0.0
-	k8s.io/client-go v0.29.3
+	k8s.io/client-go v0.29.4
 )
 
 require (
