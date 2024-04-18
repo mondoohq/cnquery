@@ -2377,18 +2377,18 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
 
 aws.inspector {
   // List of coverage results for the AWS account
-	coverages() []aws.inspector.coverage
+  coverages() []aws.inspector.coverage
 }
 
 private aws.inspector.coverage {
   // AccountId for the coverage finding
-	accountId string
+  accountId string
   // Resource Id for the coverage finding
-	resourceId string
+  resourceId string
   // Resource type, e.g. AWS_EC2_INSTANCE
-	resourceType string
+  resourceType string
   // Time when the coverage finding was last scanned
-	lastScannedAt time
+  lastScannedAt time
   // Reason for the coverage finding status
   statusReason string
   // Code for the coverage finding status
@@ -2398,13 +2398,13 @@ private aws.inspector.coverage {
   // Region where it was found
   region string
   // Details about the ec2 instance associated with the finding
-	ec2Instance() aws.inspector.coverage.instance
+  ec2Instance() aws.inspector.coverage.instance
   // Details about the ecr image associated with the finding
-	ecrImage() aws.inspector.coverage.image
+  ecrImage() aws.inspector.coverage.image
   // Details about the ecr repo associated with the finding
-	ecrRepo() aws.inspector.coverage.repository
+  ecrRepo() aws.inspector.coverage.repository
   // Details about the lambda function associated with the finding
-	lambda() aws.lambda.function
+  lambda() aws.lambda.function
 }
 
 private aws.inspector.coverage.instance {
