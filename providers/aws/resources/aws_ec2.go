@@ -101,13 +101,27 @@ func (a *mqlAwsEc2) getNetworkACLs(conn *connection.AwsConnection) []*jobpool.Jo
 
 				for i := range networkAcls.NetworkAcls {
 					acl := networkAcls.NetworkAcls[i]
+					assoc := []interface{}{}
+					for i := range acl.Associations {
+						association := acl.Associations[i]
+						mqlNetworkAclAssoc, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl.association",
+							map[string]*llx.RawData{
+								"associationId": llx.StringDataPtr(association.NetworkAclAssociationId),
+								"networkAclId":  llx.StringDataPtr(association.NetworkAclId),
+								"subnetId":      llx.StringDataPtr(association.SubnetId),
+							})
+						if err == nil {
+							assoc = append(assoc, mqlNetworkAclAssoc)
+						}
+					}
 					mqlNetworkAcl, err := CreateResource(a.MqlRuntime, "aws.ec2.networkacl",
 						map[string]*llx.RawData{
-							"arn":       llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToString(acl.NetworkAclId))),
-							"id":        llx.StringDataPtr(acl.NetworkAclId),
-							"region":    llx.StringData(regionVal),
-							"isDefault": llx.BoolDataPtr(acl.IsDefault),
-							"tags":      llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
+							"arn":          llx.StringData(fmt.Sprintf(networkAclArnPattern, regionVal, conn.AccountId(), convert.ToString(acl.NetworkAclId))),
+							"id":           llx.StringDataPtr(acl.NetworkAclId),
+							"region":       llx.StringData(regionVal),
+							"isDefault":    llx.BoolDataPtr(acl.IsDefault),
+							"tags":         llx.MapData(Ec2TagsToMap(acl.Tags), types.String),
+							"associations": llx.ArrayData(assoc, "aws.ec2.networkacl.association"),
 						})
 					if err != nil {
 						return nil, err

@@ -1060,6 +1060,8 @@ resources:
         The `aws.ec2.networkacl` resource provides fields for assessing the configuration of VPC network ACLs within an AWS account. For usage, see `aws.ec2` resource documentation.
     fields:
       arn: {}
+      associations:
+        min_mondoo_version: latest
       entries: {}
       id: {}
       isDefault:
@@ -1069,6 +1071,16 @@ resources:
         min_mondoo_version: 9.0.0
     is_private: true
     min_mondoo_version: 5.15.0
+    platform:
+      name:
+      - aws
+  aws.ec2.networkacl.association:
+    fields:
+      associationId: {}
+      networkAclId: {}
+      subnetId: {}
+    is_private: true
+    min_mondoo_version: latest
     platform:
       name:
       - aws

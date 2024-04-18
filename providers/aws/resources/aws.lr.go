@@ -566,6 +566,10 @@ func init() {
 			// to override args, implement: initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2Networkacl,
 		},
+		"aws.ec2.networkacl.association": {
+			// to override args, implement: initAwsEc2NetworkaclAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2NetworkaclAssociation,
+		},
 		"aws.ec2.networkacl.entry": {
 			// to override args, implement: initAwsEc2NetworkaclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2NetworkaclEntry,
@@ -3253,6 +3257,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.networkacl.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkacl).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.networkacl.associations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Networkacl).GetAssociations()).ToDataRes(types.Array(types.Resource("aws.ec2.networkacl.association")))
+	},
+	"aws.ec2.networkacl.association.associationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclAssociation).GetAssociationId()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkacl.association.networkAclId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclAssociation).GetNetworkAclId()).ToDataRes(types.String)
+	},
+	"aws.ec2.networkacl.association.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2NetworkaclAssociation).GetSubnetId()).ToDataRes(types.String)
 	},
 	"aws.ec2.networkacl.entry.egress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2NetworkaclEntry).GetEgress()).ToDataRes(types.Bool)
@@ -7645,6 +7661,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.ec2.networkacl.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Networkacl).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.associations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Networkacl).Associations, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEc2NetworkaclAssociation).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ec2.networkacl.association.associationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclAssociation).AssociationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.association.networkAclId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclAssociation).NetworkAclId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.networkacl.association.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2NetworkaclAssociation).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.networkacl.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19842,6 +19878,7 @@ type mqlAwsEc2Networkacl struct {
 	Entries plugin.TValue[[]interface{}]
 	IsDefault plugin.TValue[bool]
 	Tags plugin.TValue[map[string]interface{}]
+	Associations plugin.TValue[[]interface{}]
 }
 
 // createAwsEc2Networkacl creates a new instance of this resource
@@ -19915,6 +19952,64 @@ func (c *mqlAwsEc2Networkacl) GetIsDefault() *plugin.TValue[bool] {
 
 func (c *mqlAwsEc2Networkacl) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsEc2Networkacl) GetAssociations() *plugin.TValue[[]interface{}] {
+	return &c.Associations
+}
+
+// mqlAwsEc2NetworkaclAssociation for the aws.ec2.networkacl.association resource
+type mqlAwsEc2NetworkaclAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsEc2NetworkaclAssociationInternal it will be used here
+	AssociationId plugin.TValue[string]
+	NetworkAclId plugin.TValue[string]
+	SubnetId plugin.TValue[string]
+}
+
+// createAwsEc2NetworkaclAssociation creates a new instance of this resource
+func createAwsEc2NetworkaclAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2NetworkaclAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.networkacl.association", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2NetworkaclAssociation) MqlName() string {
+	return "aws.ec2.networkacl.association"
+}
+
+func (c *mqlAwsEc2NetworkaclAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2NetworkaclAssociation) GetAssociationId() *plugin.TValue[string] {
+	return &c.AssociationId
+}
+
+func (c *mqlAwsEc2NetworkaclAssociation) GetNetworkAclId() *plugin.TValue[string] {
+	return &c.NetworkAclId
+}
+
+func (c *mqlAwsEc2NetworkaclAssociation) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
 }
 
 // mqlAwsEc2NetworkaclEntry for the aws.ec2.networkacl.entry resource
