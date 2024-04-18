@@ -2259,6 +2259,17 @@ private aws.ec2.networkacl @defaults("id region") {
   isDefault bool
   // Tags for the network ACL
   tags map[string]string
+  // Associations for the network ACL
+  associations []aws.ec2.networkacl.association
+}
+
+private aws.ec2.networkacl.association {
+  // Id for the association
+  associationId string
+  // Network ACL id for the association
+  networkAclId string
+  // Subnet id for the association
+  subnetId string
 }
 
 // Amazon EC2 network ACL entry
