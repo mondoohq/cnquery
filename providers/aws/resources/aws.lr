@@ -2264,7 +2264,7 @@ private aws.ec2.networkacl @defaults("id region") {
 }
 
 private aws.ec2.networkacl.association {
-  // Id for the association
+  // ID for the association
   associationId string
   // Network ACL id for the association
   networkAclId string
@@ -2392,9 +2392,9 @@ aws.inspector {
 }
 
 private aws.inspector.coverage {
-  // AccountId for the coverage finding
+  // Account ID for the coverage finding
   accountId string
-  // Resource Id for the coverage finding
+  // Resource ID for the coverage finding
   resourceId string
   // Resource type, e.g. AWS_EC2_INSTANCE
   resourceType string
