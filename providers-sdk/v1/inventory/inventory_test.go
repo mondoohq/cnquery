@@ -4,6 +4,7 @@
 package inventory
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -138,6 +139,36 @@ func TestPreprocess(t *testing.T) {
 		require.NoError(t, err)
 		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
 		assert.Equal(t, vault.CredentialType_pkcs12, v1inventory.Spec.Credentials[secretid].Type)
+	})
+
+	t.Run("preprocess env", func(t *testing.T) {
+		secret := "secretdata"
+		os.Setenv("MY_CUSTOM_ENV", secret)
+		v1inventory := &Inventory{
+			Spec: &InventorySpec{
+				Assets: []*Asset{
+					{
+						Name: "test",
+						Connections: []*Config{
+							{
+								Type: "slack",
+								Credentials: []*vault.Credential{
+									{
+										Type: vault.CredentialType_env,
+										Env:  "MY_CUSTOM_ENV",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
+		assert.Equal(t, vault.CredentialType_password, v1inventory.Spec.Credentials[secretid].Type)
+		assert.Equal(t, secret, string(v1inventory.Spec.Credentials[secretid].Secret))
 	})
 }
 
