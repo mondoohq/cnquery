@@ -5,7 +5,7 @@ packs:
   - uid: mondoo-sbom
     name: Mondoo SBOM
     filters:
-      - asset.family.contains("unix")
+      - mql: asset.family.contains("unix")
     queries:
       - uid: mondoo-sbom-asset
         title: Retrieve information about the Platform
@@ -21,7 +21,7 @@ packs:
         mql: npm.packages { name version purl cpes.map(uri) files.map(path) }
       - uid: mondoo-sbom-kernel-installed
         filters:
-          - asset.family.contains('linux')
-          - asset.runtime != 'container' && asset.kind != 'container' && asset.kind != 'container-image'
+          - mql: asset.family.contains('linux')
+          - mql: asset.runtime != 'container' && asset.kind != 'container' && asset.kind != 'container-image'
         title: Retrieve information about the installed kernel
         mql: kernel.installed
