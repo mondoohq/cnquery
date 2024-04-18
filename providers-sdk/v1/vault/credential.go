@@ -29,6 +29,13 @@ func (cred *Credential) PreProcess() {
 		cred.Password = ""
 		cred.Type = CredentialType_password
 	}
+
+	if cred.Type == CredentialType_env {
+		envVar := strings.TrimSpace(cred.Env)
+		val := os.Getenv(envVar)
+		cred.Secret = []byte(val)
+		cred.Type = CredentialType_password
+	}
 }
 
 // UnmarshalJSON parses either an int or a string representation of

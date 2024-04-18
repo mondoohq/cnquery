@@ -46,6 +46,8 @@ enum CredentialType {
   aws_ec2_ssm_session = 8;
   // protolint:disable:next ENUM_FIELD_NAMES_UPPER_SNAKE_CASE
   pkcs12 = 9;
+  // protolint:disable:next ENUM_FIELD_NAMES_UPPER_SNAKE_CASE
+  env = 10;
 }
 
 // protolint:disable:next ENUM_FIELD_NAMES_PREFIX 
@@ -93,6 +95,10 @@ message Credential {
   // for user convenience we define private_key_path which loads a local file 
   // into the secret
   string private_key_path = 23;
+
+  // for user convenience we define env_var name which loads the secret from
+  // the variable
+  string env = 24;
 }
 
 // protolint:disable:next ENUM_FIELD_NAMES_PREFIX 
