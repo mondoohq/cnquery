@@ -46,7 +46,7 @@ asset @defaults("name platform version") {
   build string
   // Optional platform information
   labels map[string]string
-  // Custom annotiations (tags) on the asset
+  // Custom annotations (tags) on the asset
   annotations map[string]string
 }
 
