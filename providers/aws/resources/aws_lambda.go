@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -113,6 +114,16 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
+func getLambdaArn(name string, region string, accountId string) string {
+	return arn.ARN{
+		Region:    region,
+		Partition: "aws",
+		Service:   "lambda",
+		AccountID: accountId,
+		Resource:  "function:" + name,
+	}.String()
+}
+
 func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -124,9 +135,14 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 			args["arn"] = llx.StringData(ids.arn)
 		}
 	}
-
+	var arnVal string
 	if args["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch lambda function")
+		arnVal = getLambdaArn(args["name"].String(), args["region"].String(), "")
+		if arnVal == "" {
+			return nil, nil, errors.New("arn required to fetch lambda function")
+		}
+	} else {
+		arnVal = args["arn"].Value.(string)
 	}
 
 	// load all rds db instances
@@ -141,7 +157,6 @@ func initAwsLambdaFunction(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return nil, nil, rawResources.Error
 	}
 
-	arnVal := args["arn"].Value.(string)
 	for i := range rawResources.Data {
 		dbInstance := rawResources.Data[i].(*mqlAwsLambdaFunction)
 		if dbInstance.Arn.Data == arnVal {
