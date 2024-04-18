@@ -10,7 +10,7 @@ spec:
     # option 1 use aws scan in combination with a secret
     - name: aws
       connections:
-        - backend: aws
+        - type: aws
           discover:
             targets:
             - all

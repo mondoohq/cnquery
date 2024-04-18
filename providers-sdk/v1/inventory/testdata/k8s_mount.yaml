@@ -9,4 +9,4 @@ spec:
     - id: host
       connections:
         - host: /mnt/host
-          backend: fs
+          type: fs

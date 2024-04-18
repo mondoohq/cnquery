@@ -9,7 +9,7 @@ spec:
   assets:
     - name: azure
       connections:
-        - backend: az
+        - type: azure
           insecure: true # to allow missing host-keys
           discover:
             targets:

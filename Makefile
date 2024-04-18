@@ -76,7 +76,7 @@ prep/tools/mockgen:
 
 cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate sbom/generate reporter/generate
 
-cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core explorer/generate sbom/generate
+cnquery/generate/core: clean/proto llx/generate shared/generate providers/proto providers/build/mock providers/build/core explorer/generate sbom/generate reporter/generate
 
 define buildProvider
 	$(eval $@_HOME = $(1))
