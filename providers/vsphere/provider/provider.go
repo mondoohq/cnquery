@@ -177,13 +177,14 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.VsphereConnect
 
 	vSphereInfo := conn.Info()
 	asset.Platform = &inventory.Platform{
-		Name:    connection.VspherePlatform,
-		Family:  []string{connection.Family},
-		Title:   "VMware vSphere " + vSphereInfo.Version,
-		Version: vSphereInfo.Version,
-		Build:   vSphereInfo.Build,
-		Kind:    "api",
-		Runtime: "vsphere",
+		Name:                  connection.VspherePlatform,
+		Family:                []string{connection.Family},
+		Title:                 "VMware vSphere " + vSphereInfo.Version,
+		Version:               vSphereInfo.Version,
+		Build:                 vSphereInfo.Build,
+		Kind:                  "api",
+		Runtime:               "vsphere",
+		TechnologyUrlSegments: []string{"vsphere", "vsphere", vSphereInfo.Version + "-" + vSphereInfo.Build},
 	}
 
 	id, err := conn.Identifier()
