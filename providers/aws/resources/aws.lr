@@ -1287,7 +1287,7 @@ private aws.ecs.container {
   command []string
   // ARN for the task used to create the container
   taskArn string
-  // Runtime id for the container
+  // Runtime ID for the container
   runtimeId string
   // Name of the ECS container
   containerName string
@@ -2170,7 +2170,7 @@ private aws.apigateway.stage @defaults("arn") {
 
 // AWS Lambda
 aws.lambda {
-  // List of lambda functions across all regions in the account
+  // List of Lambda functions across all regions in the account
   functions() []aws.lambda.function
 }
 
@@ -2188,7 +2188,7 @@ private aws.lambda.function @defaults("arn") {
   dlqTargetArn string
   // Policy for the function
   policy() dict
-  // VPC configuration for the lambda function
+  // VPC configuration for the Lambda function
   vpcConfig dict
   // Region where the function exists
   region string
@@ -2229,7 +2229,7 @@ aws.ec2 {
   securityGroups() []aws.ec2.securitygroup
   // List of instances across the AWS account (all regions)
   instances() []aws.ec2.instance
-  // map[region]boolean used to denote if ebs encryption is on by default per region
+  // map[region]boolean used to denote if EBS encryption is on by default per region
   ebsEncryptionByDefault() map[string]bool
   // List of volumes across the AWS account
   volumes() []aws.ec2.volume
@@ -2264,7 +2264,7 @@ private aws.ec2.networkacl @defaults("id region") {
 }
 
 private aws.ec2.networkacl.association {
-  // Id for the association
+  // ID for the association
   associationId string
   // Network ACL id for the association
   networkAclId string
@@ -2392,9 +2392,9 @@ aws.inspector {
 }
 
 private aws.inspector.coverage {
-  // AccountId for the coverage finding
+  // Account ID for the coverage finding
   accountId string
-  // Resource Id for the coverage finding
+  // Resource ID for the coverage finding
   resourceId string
   // Resource type, e.g. AWS_EC2_INSTANCE
   resourceType string
@@ -2408,24 +2408,24 @@ private aws.inspector.coverage {
   scanType string
   // Region where it was found
   region string
-  // Details about the ec2 instance associated with the finding
+  // Details about the EC2 instance associated with the finding
   ec2Instance() aws.inspector.coverage.instance
-  // Details about the ecr image associated with the finding
+  // Details about the ECR image associated with the finding
   ecrImage() aws.inspector.coverage.image
-  // Details about the ecr repo associated with the finding
+  // Details about the ECR repo associated with the finding
   ecrRepo() aws.inspector.coverage.repository
-  // Details about the lambda function associated with the finding
+  // Details about the Lambda function associated with the finding
   lambda() aws.lambda.function
 }
 
 private aws.inspector.coverage.instance {
-  // Platform for the ec2 instance
+  // Platform for the EC2 instance
   platform string
-  // Tags associated with the ec2 instance
+  // Tags associated with the EC2 instance
   tags map[string]string
-  // Image associated with the ec2 instance
+  // Image associated with the EC2 instance
   image aws.ec2.image
-  // Region where the ec2 instance is found
+  // Region where the EC2 instance is found
   region string
 }
 
@@ -2443,7 +2443,7 @@ private aws.inspector.coverage.repository {
   name string
   // Scan frequency of the ECR repo
   scanFrequency string
-  // Region where the ecr repo is found
+  // Region where the ECR repo is found
   region string
 }
 
@@ -2559,7 +2559,7 @@ private aws.ec2.instance.device {
   deleteOnTermination bool
   // Status of the device
   status string
-  // Volume id for the device
+  // Volume ID for the device
   volumeId string
   // Name for the device
   deviceName string
