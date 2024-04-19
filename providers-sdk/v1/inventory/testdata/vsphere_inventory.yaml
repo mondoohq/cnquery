@@ -9,7 +9,7 @@ spec:
   assets:
     - name: vsphere
       connections:
-        - backend: vsphere
+        - type: vsphere
           host: 192.168.178.147
           credentials:
             - type: password

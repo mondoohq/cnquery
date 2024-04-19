@@ -5,7 +5,7 @@ spec:
     - id: linux-with-password
       connections:
         - host: 192.168.178.20
-          backend: ssh
+          type: ssh
           credentials:
             - user: chris
               password: password1!
