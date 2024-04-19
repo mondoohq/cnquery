@@ -249,6 +249,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 	pkgList, err := db.ListPackages()
 	if err != nil {
 		return nil, err
