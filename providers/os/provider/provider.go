@@ -69,30 +69,30 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	containerID := ""
 	switch req.Connector {
 	case "local":
-		conf.Type = "local"
+		conf.Type = shared.Type_Local.String()
 	case "ssh":
-		conf.Type = "ssh"
+		conf.Type = shared.Type_SSH.String()
 		port = 22
 	case "winrm":
-		conf.Type = "winrm"
+		conf.Type = shared.Type_Winrm.String()
 		port = 5985
 	case "vagrant":
-		conf.Type = "vagrant"
+		conf.Type = shared.Type_Vagrant.String()
 	case "docker":
 		if len(req.Args) > 1 {
 			switch req.Args[0] {
 			case "image":
-				conf.Type = "docker-image"
+				conf.Type = shared.Type_DockerImage.String()
 				conf.Host = req.Args[1]
 			case "registry":
-				conf.Type = "docker-registry"
+				conf.Type = shared.Type_DockerRegistry.String()
 				conf.Host = req.Args[1]
 				conf.DelayDiscovery = true
 			case "tar":
-				conf.Type = "docker-snapshot"
+				conf.Type = shared.Type_DockerSnapshot.String()
 				conf.Path = req.Args[1]
 			case "container":
-				conf.Type = "docker-container"
+				conf.Type = shared.Type_DockerContainer.String()
 				conf.Host = req.Args[1]
 			}
 		} else {
@@ -107,17 +107,17 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		if len(req.Args) > 1 {
 			switch req.Args[0] {
 			case "image":
-				conf.Type = "docker-image"
+				conf.Type = shared.Type_DockerImage.String()
 				conf.Host = req.Args[1]
 			case "registry":
-				conf.Type = "docker-registry"
+				conf.Type = shared.Type_DockerRegistry.String()
 				conf.Host = req.Args[1]
 				conf.DelayDiscovery = true
 			case "tar":
-				conf.Type = "docker-snapshot"
+				conf.Type = shared.Type_DockerSnapshot.String()
 				conf.Path = req.Args[1]
 			case "container":
-				conf.Type = "docker-container"
+				conf.Type = shared.Type_DockerContainer.String()
 				conf.Host = req.Args[1]
 			}
 		} else {
@@ -126,7 +126,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			containerID = req.Args[0]
 		}
 	case "filesystem", "fs":
-		conf.Type = "filesystem"
+		conf.Type = shared.Type_FileSystem.String()
 	}
 
 	user := ""
