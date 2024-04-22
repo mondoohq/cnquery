@@ -122,6 +122,50 @@ resources:
       state: {}
       status: {}
     min_mondoo_version: 5.15.0
+  docker.file:
+    fields:
+      file: {}
+      instructions: {}
+      os: {}
+      stages: {}
+    min_mondoo_version: latest
+  docker.file.add:
+    fields:
+      chmod: {}
+      chown: {}
+      dst: {}
+      src: {}
+    min_mondoo_version: latest
+  docker.file.copy:
+    fields:
+      chmod: {}
+      chown: {}
+      dst: {}
+      src: {}
+    min_mondoo_version: latest
+  docker.file.from:
+    fields:
+      digest: {}
+      image: {}
+      name: {}
+      platform: {}
+      tag: {}
+    min_mondoo_version: latest
+  docker.file.run:
+    fields:
+      script: {}
+    min_mondoo_version: latest
+  docker.file.stage:
+    fields:
+      add: {}
+      cmd: {}
+      copy: {}
+      entrypoint: {}
+      env: {}
+      file: {}
+      from: {}
+      run: {}
+    min_mondoo_version: latest
   docker.image:
     fields:
       id: {}

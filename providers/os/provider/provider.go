@@ -94,6 +94,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 			case "container":
 				conf.Type = shared.Type_DockerContainer.String()
 				conf.Host = req.Args[1]
+			case "file":
+				conf.Type = shared.Type_DockerFile.String()
+				conf.Path = req.Args[1]
 			}
 		} else {
 			connType, err := docker.FindDockerObjectConnectionType(req.Args[0])
@@ -375,11 +378,14 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 				return nil, err
 			}
 
+		case shared.Type_DockerContainer.String():
+			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)
+
 		case shared.Type_DockerImage.String():
 			conn, err = docker.NewContainerImageConnection(connId, conf, asset)
 
-		case shared.Type_DockerContainer.String():
-			conn, err = docker.NewDockerEngineContainer(connId, conf, asset)
+		case shared.Type_DockerFile.String():
+			conn, err = docker.NewDockerfile(connId, conf, asset)
 
 		case shared.Type_DockerRegistry.String(), shared.Type_ContainerRegistry.String():
 			conn, err = container.NewRegistryConnection(connId, asset)

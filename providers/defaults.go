@@ -264,7 +264,7 @@ var DefaultProviders Providers = map[string]*Provider{
 		Provider: &plugin.Provider{
 			Name:            "os",
 			ID:              "go.mondoo.com/cnquery/v9/providers/os",
-			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-image", "docker-container", "docker-registry", "container-registry", "registry-image", "filesystem"},
+			ConnectionTypes: []string{"local", "ssh", "tar", "docker-snapshot", "vagrant", "docker-image", "docker-container", "docker-file", "docker-registry", "container-registry", "registry-image", "filesystem"},
 			Connectors: []plugin.Connector{
 				{
 					Name:  "local",

@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers/terraform/connection"
+	"go.mondoo.com/cnquery/v11/utils/urlx"
 )
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) error {
@@ -53,7 +53,7 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.Connection) er
 	// we always prefer the git url since it is more reliable
 	url, ok := asset.Connections[0].Options["ssh-url"]
 	if ok {
-		domain, org, repo, err := parseSSHURL(url)
+		domain, org, repo, err := urlx.ParseGitSshUrl(url)
 		if err != nil {
 			return err
 		}
@@ -110,27 +110,4 @@ func parseNameFromPath(file string) string {
 	}
 
 	return name
-}
-
-func parseSSHURL(url string) (string, string, string, error) {
-	parts := strings.Split(url, "@")
-	if len(parts) != 2 {
-		return "", "", "", fmt.Errorf("malformed URL")
-	}
-
-	// Get the provider
-	providerParts := strings.Split(parts[1], ":")
-	if len(providerParts) != 2 {
-		return "", "", "", fmt.Errorf("malformed URL")
-	}
-	provider := providerParts[0]
-
-	// Now split the second part at the slash to separate the org and repo
-	orgRepoParts := strings.Split(providerParts[1], "/")
-
-	// The repo name is the last part after the split. It includes .git,
-	// so we remove that
-	repo := strings.TrimSuffix(orgRepoParts[len(orgRepoParts)-1], ".git")
-
-	return provider, orgRepoParts[0], repo, nil
 }

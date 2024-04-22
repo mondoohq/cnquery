@@ -8,6 +8,7 @@ package docker
 // - docker containers
 // - docker images
 // - docker snapshots
+// - dockerfiles
 //
 // Each of these types of connections is implemented as a separate connection type, since the data format is different.
 // All of these connections are based on the tar connection, which is a generic connection type that can handle tar

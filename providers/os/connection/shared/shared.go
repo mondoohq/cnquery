@@ -33,12 +33,13 @@ const (
 	Type_SSH               ConnectionType = "ssh"
 	Type_Tar               ConnectionType = "tar"
 	Type_FileSystem        ConnectionType = "filesystem"
-	Type_DockerSnapshot    ConnectionType = "docker-snapshot"
 	Type_Winrm             ConnectionType = "winrm"
 	Type_Vagrant           ConnectionType = "vagrant"
-	Type_DockerImage       ConnectionType = "docker-image"
 	Type_DockerContainer   ConnectionType = "docker-container"
+	Type_DockerImage       ConnectionType = "docker-image"
+	Type_DockerFile        ConnectionType = "docker-file"
 	Type_DockerRegistry    ConnectionType = "docker-registry"
+	Type_DockerSnapshot    ConnectionType = "docker-snapshot"
 	Type_ContainerRegistry ConnectionType = "container-registry"
 	Type_RegistryImage     ConnectionType = "registry-image"
 )
@@ -73,6 +74,7 @@ type Command struct {
 type Capabilities byte
 
 const (
+	Capability_None       Capabilities = 0
 	Capability_RunCommand Capabilities = 1 << iota
 	Capability_File
 	Capability_FindFile
