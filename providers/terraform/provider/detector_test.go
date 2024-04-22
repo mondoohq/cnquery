@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/v11/utils/urlx"
 )
 
 func TestDetectNameFromFile_Directory(t *testing.T) {
@@ -22,7 +23,7 @@ func TestDetectNameFromFile_File(t *testing.T) {
 
 func TestDetectNameFromSsh(t *testing.T) {
 	url := "git@gitlab.com:exampleorg/example-gitlab.git"
-	domain, org, repo, err := parseSSHURL(url)
+	domain, org, repo, err := urlx.ParseGitSshUrl(url)
 	require.NoError(t, err)
 	assert.Equal(t, "gitlab.com", domain)
 	assert.Equal(t, "exampleorg", org)
@@ -31,7 +32,7 @@ func TestDetectNameFromSsh(t *testing.T) {
 
 func TestDetectNameFromSsh_GitlabSubgroups(t *testing.T) {
 	url := "git@gitlab.example.com:exampleorg/group/example-gitlab.git"
-	domain, org, repo, err := parseSSHURL(url)
+	domain, org, repo, err := urlx.ParseGitSshUrl(url)
 	require.NoError(t, err)
 	assert.Equal(t, "gitlab.example.com", domain)
 	assert.Equal(t, "exampleorg", org)
