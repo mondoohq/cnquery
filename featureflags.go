@@ -66,7 +66,8 @@ const (
 	// MQLAssetContext feature flag
 	//
 	// start: v7.0
-	// end:   v8.0
+	// updated: v11.0  We default to embed flags and re-use this feature for actual asset context
+	// end:   v12.0
 	MQLAssetContext
 
 	// ErrorsAsFailures feature flag
