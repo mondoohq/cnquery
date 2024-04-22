@@ -5,7 +5,6 @@ package mqlc
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -919,11 +918,7 @@ func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string)
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
 func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
-	if c.UseAssetContext {
-		return c.compileBoundIdentifierWithMqlCtx(id, binding, call)
-	} else {
-		return c.compileBoundIdentifierWithoutMqlCtx(id, binding, call)
-	}
+	return c.compileBoundIdentifierWithMqlCtx(id, binding, call)
 }
 
 func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
@@ -1004,72 +999,6 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 				lastRef = c.tailRef()
 			}
 
-			return true, typ, nil
-		}
-	}
-
-	h, _ := builtinFunction(typ, id)
-	if h != nil {
-		call = filterTrailingNullArgs(call)
-		typ, err := c.compileBuiltinFunction(h, id, binding, call)
-		return true, typ, err
-	}
-
-	return false, types.Nil, nil
-}
-
-// compileBoundIdentifierWithoutMqlCtx will compile a bound identifier without being able
-// create implicit resources with context attached. The reason this is needed is because
-// that feature requires use of a new global function 'createResource'. We cannot start
-// automatically adding that to compiled queries without breaking existing clients
-func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
-	typ := binding.typ
-
-	if typ.IsResource() {
-		resource, fieldinfo := c.Schema.LookupField(typ.ResourceName(), id)
-		if resource == nil {
-			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
-		}
-
-		if fieldinfo != nil {
-			c.CompilerConfig.Stats.CallField(resource.Name, fieldinfo)
-
-			if call != nil && len(call.Function) > 0 {
-				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
-			}
-
-			if fieldinfo.IsEmbedded {
-				return true, types.Nil, fmt.Errorf("field '%s' on '%s' requires the MQLAssetContext feature", id, typ.Label())
-			}
-
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, resource.Name, id)
-
-			// this only happens when we call a field of a bridging resource,
-			// in which case we don't call the field (since there is nothing to do)
-			// and instead we call the resource directly:
-			typ := types.Type(fieldinfo.Type)
-			if fieldinfo.IsImplicitResource {
-				name := typ.ResourceName()
-				c.addChunk(&llx.Chunk{
-					Call: llx.Chunk_FUNCTION,
-					Id:   name,
-				})
-
-				// the new ID is now the full resource call, which is not what the
-				// field is originally labeled when we get it, so we have to fix it
-				checksum := c.Result.CodeV2.Checksums[c.tailRef()]
-				c.Result.Labels.Labels[checksum] = id
-				return true, typ, nil
-			}
-
-			c.addChunk(&llx.Chunk{
-				Call: llx.Chunk_FUNCTION,
-				Id:   id,
-				Function: &llx.Function{
-					Type:    fieldinfo.Type,
-					Binding: binding.ref,
-				},
-			})
 			return true, typ, nil
 		}
 	}

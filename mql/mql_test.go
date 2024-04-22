@@ -150,7 +150,7 @@ func TestResourceAliases(t *testing.T) {
 				"_":   llx.ResourceData(&llx.MockResource{Name: "sshd"}, "os.unix.sshd"),
 				"__s": llx.NilData,
 				"__t": llx.BoolData(true),
-				"k6rlXoYpV48Qd19gKeNl+/IiPnkI5VNQBiqZBca3gDKsIRiLcpXQUlDv52x9sscIWiqOMpC7+x/aBpY0IUq0ww==": llx.StringData("/etc/ssh/sshd_config"),
+				"SM/iGp+gb6JBt0bBm5RWqTtPLKzx6ebI+nUm4Q6LCQDuEu1QSRsWqEI3Tl/oK+u0b0eit+nTLhNdjlsOdIIDJQ==": llx.StringData("/etc/ssh/sshd_config"),
 			},
 		},
 	})

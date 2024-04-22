@@ -693,15 +693,17 @@ func pargs2argmap(b *blockExecutor, ref uint64, args []*Primitive) (map[string]*
 
 func (b *blockExecutor) createResource(name string, binding uint64, f *Function, ref uint64) (*RawData, uint64, error) {
 	runtime := b.ctx.runtime
-	if binding != 0 {
-		panic("NOT SURE HOW TO RESOLVE THIS")
-		// res, dref, err := b.resolveRef(binding, ref)
-		// if dref != 0 || err != nil {
-		// 	return res, dref, err
-		// }
-		// mqlResource := res.Value.(resourceInterface).MqlResource()
-		// runtime = mqlResource.MqlRuntime
-	}
+	// if binding != 0 {
+	// // This happens with aliases, like:
+	// // > os.unix.sshd.config.file.path
+	// // TODO: Re-connect cross-provider resource calls in this part
+	// res, dref, err := b.resolveRef(binding, ref)
+	// if dref != 0 || err != nil {
+	// 	return res, dref, err
+	// }
+	// mqlResource := res.Value.(resourceInterface).MqlResource()
+	// // runtime = mqlResource.MqlRuntime
+	// }
 
 	args, rref, err := pargs2argmap(b, ref, f.Args)
 	if err != nil || rref != 0 {
