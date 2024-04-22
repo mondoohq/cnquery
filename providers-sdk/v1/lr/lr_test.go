@@ -168,7 +168,12 @@ func TestParse(t *testing.T) {
 		embed os.any
 	}`)
 		fields := []*Field{
-			{BasicField: &BasicField{isEmbedded: true, ID: "os", Type: Type{SimpleType: &SimpleType{Type: "os.any"}}, Args: &FieldArgs{}}},
+			{BasicField: &BasicField{
+				isEmbedded: true,
+				ID:         "os",
+				Type:       Type{SimpleType: &SimpleType{Type: "os.any"}},
+				Args:       &FieldArgs{},
+			}},
 		}
 
 		assert.Equal(t, "name.no", res.Resources[0].ID)
@@ -182,7 +187,12 @@ func TestParse(t *testing.T) {
 		embed os.any as testx
 	}`)
 		fields := []*Field{
-			{BasicField: &BasicField{isEmbedded: true, ID: "testx", Type: Type{SimpleType: &SimpleType{Type: "os.any"}}, Args: &FieldArgs{}}},
+			{BasicField: &BasicField{
+				isEmbedded: true,
+				ID:         "testx",
+				Type:       Type{SimpleType: &SimpleType{Type: "os.any"}},
+				Args:       &FieldArgs{},
+			}},
 		}
 
 		assert.Equal(t, "name.no", res.Resources[0].ID)

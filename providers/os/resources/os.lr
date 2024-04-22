@@ -757,6 +757,50 @@ docker {
   containers() []docker.container
 }
 
+docker.file @defaults("file.path instructions.length stages.length") {
+  init(path string)
+  // File information about this Dockerfile
+  embed file
+  // List of instructions in the order they appear
+  instructions(file) dict
+  // All stages included in this Dockerfile
+  stages(file) []docker.file.stage
+}
+
+docker.file.stage @defaults("from.name") {
+  // The source of this stage, specified via `FROM` in Dockerfiles
+  from docker.file.from
+  // Contains the reference to the Dockerfile this stage belongs to
+  file docker.file
+  // Environment variables configured in the Dockerfile
+  env map[string]string
+  // Run instructions in this Dockerfile
+  run []docker.file.run
+  cmd docker.file.run
+  entrypoint docker.file.run
+  add []docker.file.addcopy
+  copy []docker.file.addcopy
+}
+
+docker.file.from @defaults("name image tag") {
+  platform string
+  image string
+  tag string
+  digest string
+  name string
+}
+
+docker.file.run @defaults("script") {
+  script string
+}
+
+docker.file.addcopy @defaults("src dst") {
+  src []string
+  dst string
+  chown string
+  chmod string
+}
+
 // Docker image
 docker.image {
   // Image ID
