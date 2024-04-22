@@ -307,21 +307,18 @@ func (a *mqlAwsS3Bucket) acl() ([]interface{}, error) {
 	for i := range acl.Grants {
 		grant := acl.Grants[i]
 
-		grantee := map[string]interface{}{
-			"id":           llx.StringDataPtr(grant.Grantee.ID),
-			"name":         llx.StringDataPtr(grant.Grantee.DisplayName),
-			"emailAddress": llx.StringDataPtr(grant.Grantee.EmailAddress),
-			"type":         llx.StringData(string(grant.Grantee.Type)),
-			"uri":          llx.StringDataPtr(grant.Grantee.URI),
-		}
-		if err != nil {
-			return nil, err
-		}
-
 		// NOTE: not all grantees have URI and IDs, canonical users have id, groups have URIs and the
 		// display name may not be unique
 		if grant.Grantee == nil || (grant.Grantee.URI == nil && grant.Grantee.ID == nil) {
 			return nil, fmt.Errorf("unsupported grant: %v", grant)
+		}
+
+		grantee := map[string]interface{}{
+			"id":           convert.ToString(grant.Grantee.ID),
+			"name":         convert.ToString(grant.Grantee.DisplayName),
+			"emailAddress": convert.ToString(grant.Grantee.EmailAddress),
+			"type":         string(grant.Grantee.Type),
+			"uri":          convert.ToString(grant.Grantee.URI),
 		}
 
 		id := bucketname + "/" + string(grant.Permission)
