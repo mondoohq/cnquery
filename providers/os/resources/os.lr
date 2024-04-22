@@ -778,8 +778,8 @@ docker.file.stage @defaults("from.name") {
   run []docker.file.run
   cmd docker.file.run
   entrypoint docker.file.run
-  add []docker.file.addcopy
-  copy []docker.file.addcopy
+  add []docker.file.add
+  copy []docker.file.copy
 }
 
 docker.file.from @defaults("name image tag") {
@@ -794,7 +794,14 @@ docker.file.run @defaults("script") {
   script string
 }
 
-docker.file.addcopy @defaults("src dst") {
+docker.file.add @defaults("src dst") {
+  src []string
+  dst string
+  chown string
+  chmod string
+}
+
+docker.file.copy @defaults("src dst") {
   src []string
   dst string
   chown string

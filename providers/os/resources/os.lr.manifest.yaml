@@ -129,7 +129,14 @@ resources:
       os: {}
       stages: {}
     min_mondoo_version: latest
-  docker.file.addcopy:
+  docker.file.add:
+    fields:
+      chmod: {}
+      chown: {}
+      dst: {}
+      src: {}
+    min_mondoo_version: latest
+  docker.file.copy:
     fields:
       chmod: {}
       chown: {}

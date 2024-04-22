@@ -205,7 +205,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			for i := range v.SourcesAndDest.SourcePaths {
 				src[i] = v.SourcesAndDest.SourcePaths[i]
 			}
-			resource, err := CreateResource(p.MqlRuntime, "docker.file.addcopy", map[string]*llx.RawData{
+			resource, err := CreateResource(p.MqlRuntime, "docker.file.copy", map[string]*llx.RawData{
 				"src": llx.ArrayData(src, types.String),
 				"dst": llx.StringData(v.SourcesAndDest.DestPath),
 			})
@@ -219,7 +219,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			for i := range v.SourcesAndDest.SourcePaths {
 				src[i] = v.SourcesAndDest.SourcePaths[i]
 			}
-			resource, err := CreateResource(p.MqlRuntime, "docker.file.addcopy", map[string]*llx.RawData{
+			resource, err := CreateResource(p.MqlRuntime, "docker.file.add", map[string]*llx.RawData{
 				"src":   llx.ArrayData(src, types.String),
 				"dst":   llx.StringData(v.SourcesAndDest.DestPath),
 				"chown": llx.StringData(v.Chown),
@@ -247,8 +247,8 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 		"file": llx.ResourceData(p, "docker.file"),
 		"env":  llx.MapData(env, types.String),
 		"run":  llx.ArrayData(runs, types.Resource("docker.file.run")),
-		"add":  llx.ArrayData(add, types.Resource("docker.file.addcopy")),
-		"copy": llx.ArrayData(copy, types.Resource("docker.file.addcopy")),
+		"add":  llx.ArrayData(add, types.Resource("docker.file.add")),
+		"copy": llx.ArrayData(copy, types.Resource("docker.file.copy")),
 	}
 
 	if entrypointRaw != nil {
