@@ -82,16 +82,23 @@ const (
 	// start: v10.x
 	// end:   tbd (candidate: v11.0)
 	StoreResourcesData
+
+	// FineGrainedCloudAssets feature flag
+	// desc:  Enables fine grained asset discovery for AWS, Azure and GCP account scans
+	// start: v11.x
+	// end:   v12.0
+	FineGrainedCloudAssets
 )
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():        MassQueries,
-	PiperCode.String():          PiperCode,
-	BoolAssertions.String():     BoolAssertions,
-	MQLAssetContext.String():    MQLAssetContext,
-	ErrorsAsFailures.String():   ErrorsAsFailures,
-	StoreResourcesData.String(): StoreResourcesData,
+	MassQueries.String():            MassQueries,
+	PiperCode.String():              PiperCode,
+	BoolAssertions.String():         BoolAssertions,
+	MQLAssetContext.String():        MQLAssetContext,
+	ErrorsAsFailures.String():       ErrorsAsFailures,
+	StoreResourcesData.String():     StoreResourcesData,
+	FineGrainedCloudAssets.String(): FineGrainedCloudAssets,
 }
 
 // DefaultFeatures are a set of default flags that are active

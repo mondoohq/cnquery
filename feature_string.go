@@ -15,11 +15,12 @@ func _() {
 	_ = x[MQLAssetContext-5]
 	_ = x[ErrorsAsFailures-6]
 	_ = x[StoreResourcesData-7]
+	_ = x[FineGrainedCloudAssets-8]
 }
 
-const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesData"
+const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContextErrorsAsFailuresStoreResourcesDataFineGrainedCloudAssets"
 
-var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99}
+var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65, 81, 99, 121}
 
 func (i Feature) String() string {
 	i -= 1

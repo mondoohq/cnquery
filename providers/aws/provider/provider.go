@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strings"
 
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -166,7 +167,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		if req.Asset.Platform != nil {
 			c.PlatformOverride = req.Asset.Platform.Name
 		}
-		inventory, err = s.discover(c)
+		inventory, err = s.discover(c, req.Features)
 		if err != nil {
 			return nil, err
 		}
@@ -254,7 +255,7 @@ func (s *Service) detect(asset *inventory.Asset, conn plugin.Connection) error {
 	return nil
 }
 
-func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory, error) {
+func (s *Service) discover(conn *connection.AwsConnection, features cnquery.Features) (*inventory.Inventory, error) {
 	if conn.Conf.Discover == nil {
 		return nil, nil
 	}
@@ -264,5 +265,5 @@ func (s *Service) discover(conn *connection.AwsConnection) (*inventory.Inventory
 		return nil, err
 	}
 
-	return resources.Discover(runtime, conn.Filters)
+	return resources.Discover(runtime, conn.Filters, features)
 }

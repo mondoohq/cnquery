@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -66,7 +67,7 @@ func MondooAzureInstanceID(instanceID string) string {
 	return "//platformid.api.mondoo.app/runtime/azure" + instanceID
 }
 
-func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime, rootConf *inventory.Config, features cnquery.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AzureConnection)
 	assets := []*inventory.Asset{}
 	targets := rootConf.GetDiscover().GetTargets()
@@ -89,6 +90,11 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 	for i := range subs {
 		sub := subs[i]
 		subsWithConfigs[i] = subWithConfig{sub: sub, conf: getSubConfig(conn.Conf, sub)}
+	}
+
+	if features.IsActive(cnquery.FineGrainedCloudAssets) {
+		// if the feature flag is enabled, we want to discover all api resources + the account resource
+		targets = append(targets, DiscoveryAll)
 	}
 
 	if stringx.ContainsAnyOf(targets, DiscoverySubscriptions, DiscoveryAll, DiscoveryAuto) {

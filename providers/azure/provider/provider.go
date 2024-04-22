@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -172,7 +173,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}
 
 	// discovery assets for further scanning
-	inventory, err := s.discover(conn)
+	inventory, err := s.discover(conn, req.Features)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +241,7 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.AzureConnection) er
 	return nil
 }
 
-func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, error) {
+func (s *Service) discover(conn shared.AzureConnection, features cnquery.Features) (*inventory.Inventory, error) {
 	if conn.Config().Discover == nil {
 		return nil, nil
 	}
@@ -250,5 +251,5 @@ func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, e
 		return nil, err
 	}
 
-	return resources.Discover(runtime, conn.Config())
+	return resources.Discover(runtime, conn.Config(), features)
 }

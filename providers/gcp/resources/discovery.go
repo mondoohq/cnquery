@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/gcp/connection"
@@ -34,12 +35,16 @@ const (
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 )
 
-func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime, features cnquery.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.GcpConnection)
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
 		Assets: []*inventory.Asset{},
 	}}
+
+	if features.IsActive(cnquery.FineGrainedCloudAssets) {
+		conn.Conf.Discover.Targets = append(conn.Conf.Discover.Targets, DiscoveryAll)
+	}
 
 	if conn.ResourceType() == connection.Organization {
 		res, err := NewResource(runtime, "gcp.organization", nil)

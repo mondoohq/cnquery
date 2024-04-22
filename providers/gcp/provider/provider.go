@@ -6,10 +6,12 @@ package provider
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/ranger-rpc/codes"
-	"go.mondoo.com/ranger-rpc/status"
 	"os"
 
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
+
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -190,7 +192,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	// discovery assets for further scanning
 	if conn.Config().Discover != nil {
 		// detection of the platform is done in the discovery phase
-		inventory, err = s.discover(conn)
+		inventory, err = s.discover(conn, req.Features)
 		if err != nil {
 			return nil, err
 		}
@@ -256,7 +258,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.GcpConnection), nil
 }
 
-func (s *Service) discover(conn shared.GcpConnection) (*inventory.Inventory, error) {
+func (s *Service) discover(conn shared.GcpConnection, features cnquery.Features) (*inventory.Inventory, error) {
 	if conn.Config().Discover == nil {
 		return nil, nil
 	}
@@ -266,5 +268,5 @@ func (s *Service) discover(conn shared.GcpConnection) (*inventory.Inventory, err
 		return nil, err
 	}
 
-	return resources.Discover(runtime)
+	return resources.Discover(runtime, features)
 }

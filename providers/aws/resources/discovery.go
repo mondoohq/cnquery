@@ -6,6 +6,7 @@ package resources
 import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -182,7 +183,7 @@ func discoveredAssetMatchesGeneralFilters(asset *inventory.Asset, filters connec
 	return true
 }
 
-func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*inventory.Inventory, error) {
+func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters, features cnquery.Features) (*inventory.Inventory, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	in := &inventory.Inventory{Spec: &inventory.InventorySpec{
@@ -196,7 +197,7 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 
 	awsAccount := res.(*mqlAwsAccount)
 
-	targets := handleTargets(conn.Conf.Discover.Targets)
+	targets := handleTargets(conn.Conf.Discover.Targets, features)
 	for i := range targets {
 		target := targets[i]
 		list, err := discover(runtime, awsAccount, target, filters)
@@ -218,9 +219,13 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 	return in, nil
 }
 
-func handleTargets(targets []string) []string {
+func handleTargets(targets []string, features cnquery.Features) []string {
 	if len(targets) == 0 || stringx.Contains(targets, DiscoveryAuto) {
 		// default to auto if none defined
+		if features.IsActive(cnquery.FineGrainedCloudAssets) {
+			// if the feature flag is enabled, we want to discover all api resources + the account resource
+			return append(AllAPIResources, DiscoveryAccounts)
+		}
 		return Auto
 	}
 
