@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ParseGitSshUrl retrieves the
+// ParseGitSshUrl retrieves the provider, org, and repo of a git/ssh-url
 func ParseGitSshUrl(url string) (string, string, string, error) {
 	parts := strings.Split(url, "@")
 	if len(parts) != 2 {
