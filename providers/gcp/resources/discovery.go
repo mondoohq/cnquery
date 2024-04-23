@@ -17,6 +17,8 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v3"
 )
 
+var ENABLE_FINE_GRAINED_ASSETS = false
+
 const (
 	// Discovery flags
 	DiscoveryAuto               = "auto"
@@ -271,7 +273,11 @@ func discoverFolder(conn *connection.GcpConnection, gcpFolder *mqlGcpFolder) ([]
 
 func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) ([]*inventory.Asset, error) {
 	assetList := []*inventory.Asset{}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryInstances) {
+	targets := []string{DiscoveryAll}
+	if ENABLE_FINE_GRAINED_ASSETS {
+		targets = append(targets, DiscoveryAuto)
+	}
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryInstances)...) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -319,7 +325,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeImages) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeImages)...) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -353,7 +359,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeNetworks) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeNetworks)...) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -382,7 +388,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeSubnetworks) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeSubnetworks)...) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -415,7 +421,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryComputeFirewalls) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryComputeFirewalls)...) {
 		compute := gcpProject.GetCompute()
 		if compute.Error != nil {
 			return nil, compute.Error
@@ -444,7 +450,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryGkeClusters) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryGkeClusters)...) {
 		gke := gcpProject.GetGke()
 		if gke.Error != nil {
 			return nil, gke.Error
@@ -473,7 +479,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryStorageBuckets) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryStorageBuckets)...) {
 		storage := gcpProject.GetStorage()
 		if storage.Error != nil {
 			return nil, storage.Error
@@ -502,7 +508,7 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject) 
 			})
 		}
 	}
-	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryBigQueryDatasets) {
+	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, append(targets, DiscoveryBigQueryDatasets)...) {
 		bq := gcpProject.GetBigquery()
 		if bq.Error != nil {
 			return nil, bq.Error
