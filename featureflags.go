@@ -82,6 +82,12 @@ const (
 	// start: v10.x
 	// end:   tbd (candidate: v11.0)
 	StoreResourcesData
+
+	// FineGrainedAssets feature flag
+	// desc:  Enables fine-grained assets discovery
+	// start: v11.x
+	// end:   tbd (candidate: v12.0)
+	FineGrainedAssets
 )
 
 // FeaturesValue is a map from feature name to feature flag
@@ -92,6 +98,7 @@ var FeaturesValue = map[string]Feature{
 	MQLAssetContext.String():    MQLAssetContext,
 	ErrorsAsFailures.String():   ErrorsAsFailures,
 	StoreResourcesData.String(): StoreResourcesData,
+	FineGrainedAssets.String():  FineGrainedAssets,
 }
 
 // DefaultFeatures are a set of default flags that are active

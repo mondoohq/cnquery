@@ -17,6 +17,8 @@ import (
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
+var ENABLE_FINE_GRAINED_ASSETS = false
+
 const (
 	SubscriptionLabel = "azure.mondoo.com/subscription"
 	LocationLabel     = "mondoo.com/location"
@@ -97,70 +99,74 @@ func Discover(runtime *plugin.Runtime, rootConf *inventory.Config) (*inventory.I
 			assets = append(assets, subToAsset(s.sub, s.conf))
 		}
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryInstances, DiscoveryAll) {
+	matchingTargets := []string{DiscoveryAll}
+	if ENABLE_FINE_GRAINED_ASSETS {
+		matchingTargets = append(matchingTargets, DiscoveryAuto)
+	}
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryInstances)...) {
 		vms, err := discoverInstances(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryInstancesApi, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryInstancesApi)...) {
 		vms, err := discoverInstancesApi(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vms...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoverySqlServers, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoverySqlServers)...) {
 		sqlServers, err := discoverSqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, sqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMySqlServers, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMySqlServers)...) {
 		mySqlServers, err := discoverMySqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, mySqlServers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryPostgresServers, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryPostgresServers)...) {
 		postgresServers, err := discoverPostgresqlServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, postgresServers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryMariaDbServers, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryMariaDbServers)...) {
 		mariaDbServers, err := discoverMariadbServers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, mariaDbServers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryStorageAccounts, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryStorageAccounts)...) {
 		accs, err := discoverStorageAccounts(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, accs...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryStorageContainers, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryStorageContainers)...) {
 		containers, err := discoverStorageAccountsContainers(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, containers...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoverySecurityGroups, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoverySecurityGroups)...) {
 		secGrps, err := discoverSecurityGroups(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, secGrps...)
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryKeyVaults, DiscoveryAll) {
+	if stringx.ContainsAnyOf(targets, append(matchingTargets, DiscoveryKeyVaults)...) {
 		kvs, err := discoverVaults(runtime, subsWithConfigs)
 		if err != nil {
 			return nil, err

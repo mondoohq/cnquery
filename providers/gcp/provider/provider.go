@@ -6,10 +6,12 @@ package provider
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/ranger-rpc/codes"
-	"go.mondoo.com/ranger-rpc/status"
 	"os"
 
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
+
+	"go.mondoo.com/cnquery/v11"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 
 	"go.mondoo.com/cnquery/v11/llx"
@@ -179,6 +181,11 @@ func (s *Service) MockConnect(req *plugin.ConnectReq, callback plugin.ProviderCa
 func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
 	if req == nil || req.Asset == nil {
 		return nil, errors.New("no connection data provided")
+	}
+
+	// If we get 1 connection that enables fine-grained assets, enable it globally for the provider
+	if cnquery.Features(req.Features).IsActive(cnquery.FineGrainedAssets) {
+		resources.ENABLE_FINE_GRAINED_ASSETS = true
 	}
 
 	conn, err := s.connect(req, callback)
