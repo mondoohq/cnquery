@@ -13,6 +13,8 @@ import (
 	"go.mondoo.com/cnquery/v11/utils/stringx"
 )
 
+var ENABLE_FINE_GRAINED_ASSETS = false
+
 // Discovery Flags
 const (
 	DiscoveryInstances    = "instances"
@@ -221,6 +223,9 @@ func Discover(runtime *plugin.Runtime, filters connection.DiscoveryFilters) (*in
 func handleTargets(targets []string) []string {
 	if len(targets) == 0 || stringx.Contains(targets, DiscoveryAuto) {
 		// default to auto if none defined
+		if ENABLE_FINE_GRAINED_ASSETS {
+			return AllAPIResources
+		}
 		return Auto
 	}
 
