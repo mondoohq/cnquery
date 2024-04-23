@@ -2386,11 +2386,13 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
   iops int
 }
 
+// Amazon Inspector
 aws.inspector {
   // List of coverage results for the AWS account
   coverages() []aws.inspector.coverage
 }
 
+// Amazon Inspector environment coverage
 private aws.inspector.coverage {
   // Account ID for the coverage finding
   accountId string
@@ -2418,6 +2420,7 @@ private aws.inspector.coverage {
   lambda() aws.lambda.function
 }
 
+// Amazon Inspector instance coverage group
 private aws.inspector.coverage.instance {
   // Platform for the EC2 instance
   platform string
@@ -2429,6 +2432,7 @@ private aws.inspector.coverage.instance {
   region string
 }
 
+// Amazon Inspector container image coverage group
 private aws.inspector.coverage.image {
   // Time when the image was scanned
   imagePulledAt time
@@ -2438,6 +2442,7 @@ private aws.inspector.coverage.image {
   region string
 }
 
+// Amazon Inspector container registry coverage group
 private aws.inspector.coverage.repository {
   // Name of the ECR repository
   name string
