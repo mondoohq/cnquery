@@ -757,6 +757,7 @@ docker {
   containers() []docker.container
 }
 
+// Dockerfile resource
 docker.file @defaults("file.path instructions.length stages.length") {
   init(path string)
   // File information about this Dockerfile
@@ -767,6 +768,7 @@ docker.file @defaults("file.path instructions.length stages.length") {
   stages(file) []docker.file.stage
 }
 
+// Dockerfile stages
 docker.file.stage @defaults("from.name") {
   // The source of this stage, specified via `FROM` in Dockerfiles
   from docker.file.from
@@ -774,14 +776,19 @@ docker.file.stage @defaults("from.name") {
   file docker.file
   // Environment variables configured in the Dockerfile
   env map[string]string
-  // Run instructions in this Dockerfile
+  // RUN instructions in this Dockerfile
   run []docker.file.run
+  // CMD instructions in this Dockerfile
   cmd docker.file.run
+  // ENTRYPOINT instructions in this Dockerfile
   entrypoint docker.file.run
+  // ADD instructions in this Dockerfile
   add []docker.file.add
+  // COPY instructions in this Dockerfile
   copy []docker.file.copy
 }
 
+// Dockerfile from instructions
 docker.file.from @defaults("name image tag") {
   platform string
   image string
@@ -790,10 +797,12 @@ docker.file.from @defaults("name image tag") {
   name string
 }
 
+// Dockerfile RUN instructions
 docker.file.run @defaults("script") {
   script string
 }
 
+// Dockerfile ADD instructions
 docker.file.add @defaults("src dst") {
   src []string
   dst string
@@ -801,10 +810,15 @@ docker.file.add @defaults("src dst") {
   chmod string
 }
 
+// Dockerfile COPY instructions
 docker.file.copy @defaults("src dst") {
+  // Optional source to copy file(s) from when not using the default build context
   src []string
+  // The destination in the image for the file(s)
   dst string
+  // Ownership of the file(s)
   chown string
+  // Octal permissions of the file(s)
   chmod string
 }
 
