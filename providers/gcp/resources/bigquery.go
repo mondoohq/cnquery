@@ -76,7 +76,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	client, err := conn.Client()
+	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +248,7 @@ func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
 func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := conn.Client()
+	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +383,7 @@ func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
 func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := conn.Client()
+	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +469,7 @@ func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
 func (g *mqlGcpProjectBigqueryServiceDataset) routines() ([]interface{}, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := conn.Client()
+	client, err := conn.Client("https://www.googleapis.com/auth/bigquery")
 	if err != nil {
 		return nil, err
 	}
