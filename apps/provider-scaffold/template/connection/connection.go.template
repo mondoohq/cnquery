@@ -2,10 +2,11 @@ package connection
 
 import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 )
 
 type {{ .CamelcaseProviderID }}Connection struct {
-	id       uint32
+	plugin.Connection
 	Conf     *inventory.Config
 	asset    *inventory.Asset
 	// Add custom connection fields here
@@ -13,8 +14,8 @@ type {{ .CamelcaseProviderID }}Connection struct {
 
 func New{{ .CamelcaseProviderID }}Connection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*{{ .CamelcaseProviderID }}Connection, error) {
 	conn := &{{ .CamelcaseProviderID }}Connection{
+		Connection: plugin.NewConnection(id, asset),
 		Conf:  conf,
-		id:    id,
 		asset: asset,
 	}
 
@@ -25,10 +26,6 @@ func New{{ .CamelcaseProviderID }}Connection(id uint32, asset *inventory.Asset, 
 
 func (c *{{ .CamelcaseProviderID }}Connection) Name() string {
 	return "{{ .ProviderID }}"
-}
-
-func (c *{{ .CamelcaseProviderID }}Connection) ID() uint32 {
-	return c.id
 }
 
 func (c *{{ .CamelcaseProviderID }}Connection) Asset() *inventory.Asset {
