@@ -1,0 +1,37 @@
+# Copyright (c) Mondoo, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+resources:
+  cloudformation:
+    fields:
+      field: {}
+      types: {}
+    min_mondoo_version: latest
+  cloudformation.output:
+    fields:
+      name: {}
+      properties: {}
+    min_mondoo_version: latest
+  cloudformation.resource:
+    fields:
+      attributes: {}
+      condition: {}
+      documentation: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: latest
+  cloudformation.template:
+    fields:
+      conditions: {}
+      description: {}
+      globals: {}
+      mappings: {}
+      metadata: {}
+      outputs: {}
+      parameters: {}
+      resources: {}
+      transform: {}
+      types: {}
+      version: {}
+    min_mondoo_version: latest

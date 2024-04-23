@@ -203,7 +203,8 @@ providers/build: \
 	providers/build/azure \
 	providers/build/ms365 \
 	providers/build/aws \
-	providers/build/atlassian
+	providers/build/atlassian \
+	providers/build/cloudformation
 
 .PHONY: providers/install
 # Note we need \ to escape the target line into multiple lines
@@ -228,7 +229,8 @@ providers/install: \
 	providers/install/azure \
 	providers/install/ms365 \
 	providers/install/atlassian \
-	providers/install/aws
+	providers/install/aws \
+    providers/install/cloudformation
 
 providers/build/mock: providers/lr
 	./lr go providers-sdk/v1/testutils/mockprovider/resources/mockprovider.lr
@@ -341,6 +343,11 @@ providers/build/ms365: providers/lr
 providers/install/ms365:
 	@$(call installProvider, providers/ms365)
 
+providers/build/cloudformation: providers/lr
+	@$(call buildProvider, providers/cloudformation)
+providers/install/cloudformation:
+	@$(call installProvider, providers/cloudformation)
+
 providers/dist:
 	@$(call buildProviderDist, providers/network)
 	@$(call buildProviderDist, providers/os)
@@ -363,6 +370,7 @@ providers/dist:
 	@$(call buildProviderDist, providers/ms365)
 	@$(call buildProviderDist, providers/aws)
 	@$(call buildProviderDist, providers/atlassian)
+	@$(call buildProviderDist, providers/cloudformation)
 
 providers/bundle:
 	@$(call bundleProvider, providers/network)
@@ -386,6 +394,7 @@ providers/bundle:
 	@$(call bundleProvider, providers/ms365)
 	@$(call bundleProvider, providers/aws)
 	@$(call bundleProvider, providers/atlassian)
+	@$(call bundleProvider, providers/cloudformation)
 
 providers/test:
 	@$(call testProvider, providers/core)
@@ -410,6 +419,7 @@ providers/test:
 	@$(call testGoModProvider, providers/ms365)
 	@$(call testGoModProvider, providers/aws)
 	@$(call testGoModProvider, providers/atlassian)
+	@$(call testGoModProvider, providers/cloudformation)
 
 lr/test:
 	go test ./resources/lr/...
@@ -434,7 +444,7 @@ lr/docs/markdown: providers/lr
 		--docs-file providers/atlassian/resources/atlassian.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/atlassian-pack
 	./lr markdown providers/aws/resources/aws.lr \
-    --pack-name "Amazon Web Services (AWS)" \
+    	--pack-name "Amazon Web Services (AWS)" \
 		--description "The Amazon Web Services (AWS) resource pack lets you use MQL to query and assess the security of your AWS cloud services." \
 		--docs-file providers/aws/resources/aws.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/aws-pack
@@ -443,6 +453,11 @@ lr/docs/markdown: providers/lr
 		--description "The Azure resource pack lets you use MQL to query and assess the security of your Azure cloud services." \
 		--docs-file providers/azure/resources/azure.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/azure-pack
+	./lr markdown providers/cloudformation/resources/cloudformation.lr \
+		--pack-name "AWS CloudFormation" \
+		--description "The AWS CloudFormation resource pack lets you use MQL to query and assess the security of your AWS CloudFormation." \
+		--docs-file providers/cloudformation/resources/cloudformation.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/cloudformation-pack
 	./lr markdown providers/core/resources/core.lr \
 		--pack-name "Core" \
 		--description "The Core pack provides basic MQL resources that let you query and assess the security of assets in your infrastructure." \
