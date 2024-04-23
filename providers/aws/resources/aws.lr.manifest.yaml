@@ -1427,12 +1427,18 @@ resources:
       name:
       - aws
   aws.eks:
+    docs:
+      desc: |
+        Use the `aws.eks` resource to assess the configuration of Amazon Elastic Kubernetes Service (EKS).
     fields:
       clusters: {}
     min_mondoo_version: 5.31.0
     platform:
       name:
       - aws
+    refs:
+    - title: Amazon Elastic Kubernetes Service
+      url: https://aws.amazon.com/eks/
   aws.eks.cluster:
     fields:
       arn: {}
@@ -1455,8 +1461,8 @@ resources:
       - aws
   aws.elasticache:
     docs:
-      desc: "Use the `aws.elasticache` resource to assess the configuration of Amazon
-        ElastiCache. \n"
+      desc: |
+        Use the `aws.elasticache` resource to assess the configuration of Amazon ElastiCache.
     fields:
       cacheClusters: {}
       clusters: {}
@@ -1639,7 +1645,7 @@ resources:
   aws.es.domain:
     docs:
       desc: |
-        The `aws.es.domain` provides fields for assessing the configuration of individual Amazon Elasticsearch domains. For usage, read the `aws.es` resource documentation
+        The `aws.es.domain` resource provides fields for assessing the configuration of individual Amazon Elasticsearch domains. For usage, read the `aws.es` resource documentation
     fields:
       arn: {}
       domainId:
@@ -1670,6 +1676,8 @@ resources:
       name:
       - aws
     refs:
+    - title: Amazon GuardDuty User Guide
+      url: https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html
     - title: Security in Amazon GuardDuty
       url: https://docs.aws.amazon.com/guardduty/latest/ug/security.html
     snippets:
@@ -1689,7 +1697,7 @@ resources:
   aws.guardduty.detector:
     docs:
       desc: |
-        The `aws.guardduty.detector` provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage, read the `aws.guardduty` resource documentation
+        The `aws.guardduty.detector` resource provides fields for assessing the configuration of individual Amazon GuardDuty Detectors. For usage, read the `aws.guardduty` resource documentation
     fields:
       findingPublishingFrequency: {}
       id: {}
@@ -1721,6 +1729,8 @@ resources:
       name:
       - aws
     refs:
+    - title: AWS Identity and Access Management User Guide
+      url: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
     - title: Security in IAM and AWS STS
       url: https://docs.aws.amazon.com/IAM/latest/UserGuide/security.html
     snippets:
@@ -1749,7 +1759,7 @@ resources:
   aws.iam.group:
     docs:
       desc: |
-        The `aws.iam.group` provides fields for assessing the configuration of IAM Groups. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.group` resource provides fields for assessing the configuration of IAM Groups. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
       createDate: {}
@@ -1772,7 +1782,7 @@ resources:
   aws.iam.policy:
     docs:
       desc: |
-        The `aws.iam.policy` provides fields for assessing the configuration of individual IAM Policies. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.policy` resource provides fields for assessing the configuration of individual IAM Policies. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
       attachedGroups: {}
@@ -1796,7 +1806,7 @@ resources:
   aws.iam.policyversion:
     docs:
       desc: |
-        The `aws.iam.policyversion` provides fields for assessing the metadata for IAM Policy versions. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.policyversion` resource provides fields for assessing the metadata for IAM Policy versions. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
       createDate: {}
@@ -1811,7 +1821,7 @@ resources:
   aws.iam.role:
     docs:
       desc: |
-        The `aws.iam.role` provides fields for assessing the configuration of individual IAM Roles. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.role` resource provides fields for assessing the configuration of individual IAM Roles. For usage, read the `aws.iam` resource documentation.
     fields:
       arn: {}
       assumeRolePolicyDocument: {}
@@ -1828,7 +1838,7 @@ resources:
   aws.iam.user:
     docs:
       desc: |
-        The `aws.iam.user` provides fields for assessing the configuration of individual IAM users. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.user` resource provides fields for assessing the configuration of individual IAM users. For usage, read the `aws.iam` resource documentation.
     fields:
       accessKeys: {}
       arn: {}
@@ -1850,7 +1860,7 @@ resources:
   aws.iam.usercredentialreportentry:
     docs:
       desc: |
-        The `aws.iam.credentialreportentry` provides fields for assessing the metadata for individual IAM Credential Report entries. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.credentialreportentry` resource provides fields for assessing the metadata for individual IAM Credential Report entries. For usage, read the `aws.iam` resource documentation.
     fields:
       accessKey1Active: {}
       accessKey1LastRotated: {}
@@ -1883,7 +1893,7 @@ resources:
   aws.iam.virtualmfadevice:
     docs:
       desc: |
-        The `aws.iam.virtualmfadevice` provides fields for assessing the metadata for individual virtual MFA devices associated with IAM users. For usage, read the `aws.iam` resource documentation.
+        The `aws.iam.virtualmfadevice` resource provides fields for assessing the metadata for individual virtual MFA devices associated with IAM users. For usage, read the `aws.iam` resource documentation.
     fields:
       enableDate: {}
       serialNumber: {}
@@ -1894,13 +1904,21 @@ resources:
       name:
       - aws
   aws.inspector:
+    docs:
+      desc: |
+        The `aws.inspector` resource provides fields for assessing the configuration of Amazon Inspector.
     fields:
       coverage: {}
       coverages: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
+    refs:
+    - title: Amazon Inspector
+      url: https://docs.aws.amazon.com/inspector/
+    - title: Amazon Inspector Getting Started Tutorial
+      url: https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html
   aws.inspector.coverage:
     fields:
       accountId: {}
@@ -1921,7 +1939,7 @@ resources:
       statusCode: {}
       statusReason: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -1931,7 +1949,7 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -1942,7 +1960,7 @@ resources:
       region: {}
       tags: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - aws
@@ -1973,7 +1991,7 @@ resources:
   aws.kms.key:
     docs:
       desc: |
-        The `aws.kms.key` provides fields for assessing the configuration of individual KMS keys. For usage, read the `aws.kms` resource documentation.
+        The `aws.kms.key` resource provides fields for assessing the configuration of individual KMS keys. For usage, read the `aws.kms` resource documentation.
     fields:
       arn: {}
       id: {}
@@ -1998,7 +2016,7 @@ resources:
   aws.lambda.function:
     docs:
       desc: |
-        The `aws.lambda.function` provides fields for assessing the configuration of individual AWS Lambda functions. For usage, read the `aws.lambda` resource documentation.
+        The `aws.lambda.function` resource provides fields for assessing the configuration of individual AWS Lambda functions. For usage, read the `aws.lambda` resource documentation.
     fields:
       arn: {}
       concurrency: {}
@@ -2051,7 +2069,7 @@ resources:
   aws.rds.dbcluster:
     docs:
       desc: |
-        The `aws.rds.dbcluster` provides fields for assessing the configuration of AWS RDS Clusters.
+        The `aws.rds.dbcluster` resource provides fields for assessing the configuration of AWS RDS Clusters.
     fields:
       arn: {}
       autoMinorVersionUpgrade:
@@ -2109,7 +2127,7 @@ resources:
   aws.rds.dbinstance:
     docs:
       desc: |
-        The `aws.rds.dbinstance` provides fields for assessing the configuration of RDS instances. For usage, read the `aws.rds` resource documentation.
+        The `aws.rds.dbinstance` resource provides fields for assessing the configuration of RDS instances. For usage, read the `aws.rds` resource documentation.
     fields:
       arn: {}
       autoMinorVersionUpgrade:
@@ -2164,7 +2182,7 @@ resources:
   aws.rds.snapshot:
     docs:
       desc: |
-        The `aws.rds.snapshot` provides fields for assessing the configuration of RDS snapshots. For usage, read the `aws.rds` resource documentation.
+        The `aws.rds.snapshot` resource provides fields for assessing the configuration of RDS snapshots. For usage, read the `aws.rds` resource documentation.
     fields:
       allocatedStorage:
         min_mondoo_version: 9.0.0
