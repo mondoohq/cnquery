@@ -1100,6 +1100,8 @@ private aws.elb.loadbalancer @defaults("arn name") {
   availabilityZones []string
   // VPC security groups for the load balancer
   securityGroups []aws.ec2.securitygroup
+  // The ID of the Amazon Route 53 hosted zone associated with the load balancer
+  hostedZoneId string
 }
 
 // AWS CodeBuild for building and testing code

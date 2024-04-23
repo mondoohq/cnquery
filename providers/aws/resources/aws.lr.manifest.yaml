@@ -1572,6 +1572,8 @@ resources:
       createdTime:
         min_mondoo_version: 9.0.0
       dnsName: {}
+      hostedZoneId:
+        min_mondoo_version: 9.0.0
       listenerDescriptions: {}
       name: {}
       scheme: {}

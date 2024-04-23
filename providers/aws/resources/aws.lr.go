@@ -1934,6 +1934,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetHostedZoneId()).ToDataRes(types.String)
+	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
@@ -5704,6 +5707,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14225,6 +14232,7 @@ type mqlAwsElbLoadbalancer struct {
 	CreatedTime plugin.TValue[*time.Time]
 	AvailabilityZones plugin.TValue[[]interface{}]
 	SecurityGroups plugin.TValue[[]interface{}]
+	HostedZoneId plugin.TValue[string]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -14306,6 +14314,10 @@ func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]interfac
 
 func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]interface{}] {
 	return &c.SecurityGroups
+}
+
+func (c *mqlAwsElbLoadbalancer) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource

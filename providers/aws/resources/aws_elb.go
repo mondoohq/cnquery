@@ -171,6 +171,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 							"availabilityZones": llx.ArrayData(availabilityZones, types.String),
 							"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":           llx.StringDataPtr(lb.DNSName),
+							"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
 							"name":              llx.StringDataPtr(lb.LoadBalancerName),
 							"scheme":            llx.StringData(string(lb.Scheme)),
 							"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
