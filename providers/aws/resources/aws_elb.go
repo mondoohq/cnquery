@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/cnquery/v11/providers/aws/connection"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func (a *mqlAwsElb) id() (string, error) {
@@ -146,14 +147,34 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {
+					availabilityZones := []interface{}{}
+					for _, zone := range lb.AvailabilityZones {
+						availabilityZones = append(availabilityZones, convert.ToString(zone.ZoneName))
+					}
+
+					sgs := []interface{}{}
+					for i := range lb.SecurityGroups {
+						sg := lb.SecurityGroups[i]
+						mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, regionVal, conn.AccountId(), sg)),
+							})
+						if err != nil {
+							return nil, err
+						}
+						sgs = append(sgs, mqlSg)
+					}
+
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
-							"arn":         llx.StringDataPtr(lb.LoadBalancerArn),
-							"dnsName":     llx.StringDataPtr(lb.DNSName),
-							"name":        llx.StringDataPtr(lb.LoadBalancerName),
-							"scheme":      llx.StringData(string(lb.Scheme)),
-							"vpcId":       llx.StringDataPtr(lb.VpcId),
-							"createdTime": llx.TimeDataPtr(lb.CreatedTime),
+							"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
+							"availabilityZones": llx.ArrayData(availabilityZones, types.String),
+							"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
+							"dnsName":           llx.StringDataPtr(lb.DNSName),
+							"name":              llx.StringDataPtr(lb.LoadBalancerName),
+							"scheme":            llx.StringData(string(lb.Scheme)),
+							"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+							"vpcId":             llx.StringDataPtr(lb.VpcId),
 						})
 					if err != nil {
 						return nil, err

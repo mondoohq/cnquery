@@ -1567,12 +1567,16 @@ resources:
     fields:
       arn: {}
       attributes: {}
+      availabilityZones:
+        min_mondoo_version: 9.0.0
       createdTime:
         min_mondoo_version: 9.0.0
       dnsName: {}
       listenerDescriptions: {}
       name: {}
       scheme: {}
+      securityGroups:
+        min_mondoo_version: 9.0.0
       vpcId:
         min_mondoo_version: 9.0.0
     is_private: true

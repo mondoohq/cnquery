@@ -1928,6 +1928,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetCreatedTime()).ToDataRes(types.Time)
 	},
+	"aws.elb.loadbalancer.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
@@ -5690,6 +5696,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elb.loadbalancer.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).SecurityGroups, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14209,6 +14223,8 @@ type mqlAwsElbLoadbalancer struct {
 	Attributes plugin.TValue[[]interface{}]
 	VpcId plugin.TValue[string]
 	CreatedTime plugin.TValue[*time.Time]
+	AvailabilityZones plugin.TValue[[]interface{}]
+	SecurityGroups plugin.TValue[[]interface{}]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -14282,6 +14298,14 @@ func (c *mqlAwsElbLoadbalancer) GetVpcId() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetCreatedTime() *plugin.TValue[*time.Time] {
 	return &c.CreatedTime
+}
+
+func (c *mqlAwsElbLoadbalancer) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]interface{}] {
+	return &c.SecurityGroups
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource
