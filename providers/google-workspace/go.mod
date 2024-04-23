@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.0.2
 	golang.org/x/oauth2 v0.19.0
-	google.golang.org/api v0.175.0
+	google.golang.org/api v0.176.0
 )
 
 require (
