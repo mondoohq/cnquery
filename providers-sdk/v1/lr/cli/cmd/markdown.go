@@ -26,8 +26,8 @@ import (
 func init() {
 	markdownCmd.Flags().String("pack-name", "", "name of the resource pack")
 	markdownCmd.Flags().String("description", "", "description of the resource pack")
-	markdownCmd.Flags().String("docs-file", "", "optional docs yaml to enrich the resource information")
-	markdownCmd.Flags().StringP("output", "o", ".build", "optional docs yaml to enrich the resource information")
+	markdownCmd.Flags().String("docs-file", "", "docs yaml to enrich the resource information")
+	markdownCmd.Flags().StringP("output", "o", ".build", "local path to the resource pack in the docs repo")
 	rootCmd.AddCommand(markdownCmd)
 }
 
@@ -70,21 +70,17 @@ var markdownCmd = &cobra.Command{
 
 		var lrDocsData docs.LrDocs
 		docsFilepath, _ := cmd.Flags().GetString("docs-file")
-		_, err = os.Stat(docsFilepath)
-		if err == nil {
-			content, err := os.ReadFile(docsFilepath)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
-			}
-			err = yaml.Unmarshal(content, &lrDocsData)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not load yaml data")
-			}
 
-			log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
-		} else {
-			log.Info().Msg("no docs file provided")
+		content, err := os.ReadFile(docsFilepath)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
 		}
+		err = yaml.Unmarshal(content, &lrDocsData)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not load yaml data")
+		}
+
+		log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
 
 		// to ensure we generate the same markdown, we sort the resources first
 		sort.SliceStable(res.Resources, func(i, j int) bool {
@@ -175,7 +171,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, description string, resour
 
 	// render content
 	builder.WriteString("# Mondoo " + packName + " Resource Pack Reference\n\n")
-	builder.WriteString("In this pack:\n\n")
+	builder.WriteString("Resources included in this pack:\n\n")
 	rows := [][]string{}
 
 	for i := range resources {
