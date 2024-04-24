@@ -6,13 +6,13 @@ package resources
 import (
 	"context"
 	"errors"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
-	"go.mondoo.com/cnquery/v11/types"
 	"time"
 
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/v11/providers/atlassian/connection/admin"
+	"go.mondoo.com/cnquery/v11/types"
 )
 
 func initAtlassianAdminOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -148,8 +148,13 @@ func (a *mqlAtlassianAdminOrganization) domains() ([]interface{}, error) {
 	}
 	admin := conn.Client()
 	orgId := a.Id.Data
-	domains, _, err := admin.Organization.Domains(context.Background(), orgId, "")
-	if err != nil {
+	domains, resp, err := admin.Organization.Domains(context.Background(), orgId, "")
+	if err != nil && resp.StatusCode != 404 {
+		a.Domains.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	} else if resp.StatusCode == 404 {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 	res := []interface{}{}
