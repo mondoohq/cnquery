@@ -786,6 +786,16 @@ docker.file.stage @defaults("from.name") {
   add []docker.file.add
   // COPY instructions in this Dockerfile
   copy []docker.file.copy
+  // EXPOSE instructions in this Dockerfile
+  expose []docker.file.expose
+}
+
+// Dockerfile expose instruction
+docker.file.expose @defaults("port protocol") {
+  // Port that is exposed
+  port int
+  // Protocol that is exposed (evaluates to `tcp` if not specified)
+  protocol string
 }
 
 // Dockerfile from instructions
