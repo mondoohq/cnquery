@@ -1086,9 +1086,9 @@ private aws.elb.loadbalancer @defaults("arn name") {
   dnsName string
   // List of listener configurations for the load balancer
   listenerDescriptions() []dict
-  // User specified name for the load balancer
+  // User-specified name for the load balancer
   name string
-  // Scheme for the lb: internet-facing or internal
+  // Scheme for the load balancer: internet-facing or internal
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
