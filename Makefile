@@ -250,7 +250,7 @@ providers/build/ipmi: providers/lr
 	@$(call buildProvider, providers/ipmi)
 providers/install/ipmi:
 	@$(call installProvider, providers/ipmi)
-	
+
 providers/build/oci: providers/lr
 	@$(call buildProvider, providers/oci)
 providers/install/oci:
@@ -325,7 +325,7 @@ providers/build/azure: providers/lr
 	@$(call buildProvider, providers/azure)
 providers/install/azure:
 	@$(call installProvider, providers/azure)
-	
+
 providers/build/aws: providers/lr
 	@$(call buildProvider, providers/aws)
 providers/install/aws:
@@ -486,7 +486,7 @@ lr/docs/markdown: providers/lr
 	./lr markdown providers/ms365/resources/ms365.lr \
 		--pack-name "Microsoft 365 (MS365)" \
 		--description "The Microsoft 365 (MS365) resource pack lets you use MQL to query and assess the security of your Microsoft 365 identities and configuration." \
-		--docs-file providers/ms365/ms365.lr.manifest.yaml \
+		--docs-file providers/ms365/resources/ms365.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ms365-pack
 	./lr markdown providers/network/resources/network.lr \
 		--pack-name "Network" \
@@ -511,7 +511,7 @@ lr/docs/markdown: providers/lr
 	./lr markdown providers/os/resources/os.lr \
 		--pack-name "Operating Systems (OS)" \
 		--description "The Operating Systems (OS) resource pack lets you use MQL to query and assess the security of your operating system packages and configuration." \
-		--docs-file providers/os/os.lr.manifest.yaml \
+		--docs-file providers/os/resources/os.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/os-pack
 	./lr markdown providers/slack/resources/slack.lr \
 		--pack-name "Slack" \
