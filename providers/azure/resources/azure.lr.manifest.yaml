@@ -9,9 +9,11 @@ resources:
       name:
       - azure
   azure.subscription:
+    refs:
+    - title: Subscriptions, licenses, accounts, and tenants for Microsoft's cloud offerings
+      url: https://learn.microsoft.com/en-us/microsoft-365/enterprise/subscriptions-licenses-accounts-and-tenants-for-microsoft-cloud-offerings
     docs:
-      desc: Use the `azure.subscription` resource to assess the configuration of Azure
-        subscriptions.
+      desc: Use the `azure.subscription` resource to assess the configuration of Azure subscriptions.
     fields:
       advisor: {}
       aks: {}
@@ -48,8 +50,7 @@ resources:
       title: Return the subscription ID and a list of tenants that manage the subscription
   azure.subscription.advisor:
     docs:
-      desc: Use the `azure.subscription.advisor` resource to retrieve scoring and
-        recommendations from Microsoft Azure Advisor.
+      desc: Use the `azure.subscription.advisor` resource to retrieve scoring and recommendations from Microsoft Azure Advisor.
     fields:
       recommendations: {}
       subscriptionId: {}
@@ -188,12 +189,19 @@ resources:
       name:
       - azure
     refs:
-    - title: What is Azure Kubernetes Service?
-      url: https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes
+    - title: What is Azure Kubernetes Service (AKS)?
+      url: https://learn.microsoft.com/en-us/azure/aks/what-is-aks
+    - title: Azure Kubernetes Service (AKS) documentation
+      url: https://learn.microsoft.com/en-us/azure/aks/
     snippets:
     - query: "azure.subscription.aks.clusters {\n  id \n createdAt \n powerState \n}\n"
       title: Return the ID, date and time created, and current power state of clusters
   azure.subscription.aksService:
+    refs:
+    - title: What is Azure Kubernetes Service (AKS)?
+      url: https://learn.microsoft.com/en-us/azure/aks/what-is-aks
+    - title: Azure Kubernetes Service (AKS) documentation
+      url: https://learn.microsoft.com/en-us/azure/aks/
     fields:
       clusters: {}
       subscriptionId: {}
@@ -203,6 +211,11 @@ resources:
       name:
       - azure
   azure.subscription.aksService.cluster:
+    refs:
+    - title: What is Azure Kubernetes Service (AKS)?
+      url: https://learn.microsoft.com/en-us/azure/aks/what-is-aks
+    - title: Azure Kubernetes Service (AKS) documentation
+      url: https://learn.microsoft.com/en-us/azure/aks/
     fields:
       addonProfiles: {}
       agentPoolProfiles: {}
@@ -379,6 +392,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Compute
+      url: https://azure.microsoft.com/en-us/products/category/compute
   azure.subscription.compute.disk:
     fields:
       id: {}
@@ -395,6 +411,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Introduction to Azure managed disks
+      url: https://learn.microsoft.com/en-us/azure/virtual-machines/managed-disks-overview
   azure.subscription.compute.vm:
     fields:
       dataDisks: {}
@@ -424,6 +443,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Virtual machines in Azure
+      url: https://learn.microsoft.com/en-us/azure/virtual-machines/
   azure.subscription.computeService.disk:
     fields:
       id: {}
@@ -440,6 +462,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Introduction to Azure managed disks
+      url: https://learn.microsoft.com/en-us/azure/virtual-machines/managed-disks-overview
   azure.subscription.computeService.vm:
     fields:
       dataDisks: {}
@@ -833,7 +858,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.activityLog:
     fields:
@@ -844,7 +869,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.activityLog.alert:
     fields:
@@ -878,7 +903,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.diagnosticsetting:
     fields:
@@ -893,7 +918,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitor.logprofile:
     fields:
@@ -909,6 +934,9 @@ resources:
     platform:
       name:
       - azure
+    refs:
+    - title: Azure Monitor documentation
+      url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService:
     fields:
       activityLog: {}
@@ -922,7 +950,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.activityLog:
     fields:
@@ -934,7 +962,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.activityLog.alert:
     fields:
@@ -953,7 +981,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.applicationInsight:
     fields:
@@ -970,7 +998,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.diagnosticsetting:
     fields:
@@ -986,7 +1014,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Azure Database for MariaDB documentation
+    - title: Azure Monitor documentation
       url: https://learn.microsoft.com/en-us/azure/azure-monitor/
   azure.subscription.monitorService.logprofile:
     fields:
@@ -1277,25 +1305,25 @@ resources:
       applicationFirewallPolicies: {}
       applicationGateways: {}
       applicationSecurityGroups:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       appplicationFirewallPolicies: {}
       bastionHosts: {}
       firewallPolicies:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       firewalls:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       interfaces: {}
       loadBalancers:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       natGateways:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       publicIpAddresses: {}
       securityGroups: {}
       subscriptionId: {}
       virtualNetworkGateways:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       virtualNetworks:
-        min_mondoo_version: 9.0.3
+        min_mondoo_version: 9.0.0
       watchers: {}
     is_private: true
     min_mondoo_version: latest
@@ -1314,7 +1342,7 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1363,7 +1391,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1395,7 +1423,7 @@ resources:
       id: {}
       peerWeight: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1410,7 +1438,7 @@ resources:
       ipConfigurationId: {}
       tunnelIpAddresses: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1436,7 +1464,7 @@ resources:
       tags: {}
       threatIntelMode: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1447,7 +1475,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1464,7 +1492,7 @@ resources:
       publicIpAddress: {}
       subnet: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1478,7 +1506,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1492,7 +1520,7 @@ resources:
       name: {}
       properties: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1512,7 +1540,7 @@ resources:
       provisioningState: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1528,7 +1556,7 @@ resources:
       type: {}
       zones: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1543,7 +1571,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1558,7 +1586,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1615,7 +1643,7 @@ resources:
       sku: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1630,7 +1658,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1649,7 +1677,7 @@ resources:
       tags: {}
       type: {}
       zones: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1664,7 +1692,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1679,7 +1707,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1733,7 +1761,7 @@ resources:
       natGateway: {}
       properties: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1770,7 +1798,7 @@ resources:
       subnets: {}
       tags: {}
       type: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1814,7 +1842,7 @@ resources:
       vpnClientConfiguration: {}
       vpnGatewayGeneration: {}
       vpnType: {}
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1829,7 +1857,7 @@ resources:
       properties: {}
       type: {}
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1846,7 +1874,7 @@ resources:
       publicIpAddress:
         min_mondoo_version: latest
     is_private: true
-    min_mondoo_version: 9.0.3
+    min_mondoo_version: 9.0.0
     platform:
       name:
       - azure
@@ -1906,7 +1934,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
+    - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSql.database:
     fields:
@@ -1920,7 +1948,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
+    - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSql.server:
     fields:
@@ -1938,7 +1966,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
+    - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSqlService:
     fields:
@@ -1962,7 +1990,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
+    - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.postgreSqlService.server:
     fields:
@@ -1981,7 +2009,7 @@ resources:
       name:
       - azure
     refs:
-    - title: Virtual Network documentation
+    - title: Azure Database for PostgreSQL - Flexible Server documentation
       url: https://learn.microsoft.com/en-us/azure/postgresql/
   azure.subscription.resource:
     fields:
