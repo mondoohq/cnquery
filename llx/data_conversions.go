@@ -286,7 +286,7 @@ func stringmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(map[int32]interface{})
+	m, ok := value.(map[int64]interface{})
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
@@ -294,7 +294,7 @@ func intmap2result(value interface{}, typ types.Type) (*Primitive, error) {
 	ct := typ.Child()
 	var err error
 	for k, v := range m {
-		res[strconv.FormatInt(int64(k), 10)], err = raw2primitive(v, ct)
+		res[strconv.FormatInt(k, 10)], err = raw2primitive(v, ct)
 		if err != nil {
 			return nil, err
 		}
