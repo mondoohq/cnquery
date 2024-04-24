@@ -165,20 +165,34 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						sgs = append(sgs, mqlSg)
 					}
 
-					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
+					args := map[string]*llx.RawData{
+						"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
+						"availabilityZones": llx.ArrayData(availabilityZones, types.String),
+						"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
+						"dnsName":           llx.StringDataPtr(lb.DNSName),
+						"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
+						"name":              llx.StringDataPtr(lb.LoadBalancerName),
+						"scheme":            llx.StringData(string(lb.Scheme)),
+						"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
+						"vpcId":             llx.StringDataPtr(lb.VpcId),
+						"elbType":           llx.StringData(string(lb.Type)),
+						"region":            llx.StringData(regionVal),
+					}
+
+					mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
 						map[string]*llx.RawData{
-							"arn":               llx.StringDataPtr(lb.LoadBalancerArn),
-							"availabilityZones": llx.ArrayData(availabilityZones, types.String),
-							"createdTime":       llx.TimeDataPtr(lb.CreatedTime),
-							"dnsName":           llx.StringDataPtr(lb.DNSName),
-							"hostedZoneId":      llx.StringDataPtr(lb.CanonicalHostedZoneId),
-							"name":              llx.StringDataPtr(lb.LoadBalancerName),
-							"region":            llx.StringData(regionVal),
-							"scheme":            llx.StringData(string(lb.Scheme)),
-							"securityGroups":    llx.ArrayData(sgs, types.Resource("aws.ec2.securitygroup")),
-							"vpcId":             llx.StringDataPtr(lb.VpcId),
-							"elbType":           llx.StringData(string(lb.Type)),
+							"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.VpcId))),
 						})
+					if err != nil {
+						return nil, err
+					}
+					if mqlVpc != nil {
+						args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
+					} else {
+						args["vpc"] = llx.NilData
+					}
+
+					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer", args)
 					if err != nil {
 						return nil, err
 					}

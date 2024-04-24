@@ -1943,6 +1943,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.elbType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetElbType()).ToDataRes(types.String)
 	},
+	"aws.elb.loadbalancer.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
@@ -5725,6 +5728,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elb.loadbalancer.elbType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).ElbType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14249,6 +14256,7 @@ type mqlAwsElbLoadbalancer struct {
 	HostedZoneId plugin.TValue[string]
 	Region plugin.TValue[string]
 	ElbType plugin.TValue[string]
+	Vpc plugin.TValue[*mqlAwsVpc]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -14342,6 +14350,10 @@ func (c *mqlAwsElbLoadbalancer) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetElbType() *plugin.TValue[string] {
 	return &c.ElbType
+}
+
+func (c *mqlAwsElbLoadbalancer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return &c.Vpc
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource
