@@ -5,7 +5,7 @@ packs:
   - uid: sshd-config-collector
     name: SSH Server Configuration
     filters:
-      - asset.family.contains("unix")
+      - mql: asset.family.contains("unix")
     queries:
       - uid: mondoo-openssh-platform
         title: Retrieve information about the Platform
