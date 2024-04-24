@@ -322,7 +322,7 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 			}
 
 		case types.Int:
-			m := data.(map[int]interface{})
+			m := data.(map[int64]interface{})
 			for _, v := range m {
 				t1, f1 := isTruthy(v, typ.Child())
 				if f1 {
