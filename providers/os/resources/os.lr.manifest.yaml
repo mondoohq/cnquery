@@ -147,7 +147,7 @@ resources:
     fields:
       port: {}
       protocol: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.file.from:
     fields:
       digest: {}
