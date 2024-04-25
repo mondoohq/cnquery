@@ -69,18 +69,19 @@ var markdownCmd = &cobra.Command{
 		}
 
 		var lrDocsData docs.LrDocs
+
 		docsFilepath, _ := cmd.Flags().GetString("docs-file")
-
-		content, err := os.ReadFile(docsFilepath)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
+		if docsFilepath != "" { // as soon as a path has been provided, we try to load the file
+			content, err := os.ReadFile(docsFilepath)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not read file " + docsFilepath)
+			}
+			err = yaml.Unmarshal(content, &lrDocsData)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not load yaml data")
+			}
+			log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
 		}
-		err = yaml.Unmarshal(content, &lrDocsData)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load yaml data")
-		}
-
-		log.Info().Int("resources", len(lrDocsData.Resources)).Msg("loaded docs from " + docsFilepath)
 
 		// to ensure we generate the same markdown, we sort the resources first
 		sort.SliceStable(res.Resources, func(i, j int) bool {
