@@ -254,6 +254,10 @@ func init() {
 			// to override args, implement: initDockerFileStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileStage,
 		},
+		"docker.file.expose": {
+			// to override args, implement: initDockerFileExpose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerFileExpose,
+		},
 		"docker.file.from": {
 			// to override args, implement: initDockerFileFrom(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDockerFileFrom,
@@ -1323,6 +1327,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"docker.file.stage.copy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetCopy()).ToDataRes(types.Array(types.Resource("docker.file.copy")))
+	},
+	"docker.file.stage.expose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetExpose()).ToDataRes(types.Array(types.Resource("docker.file.expose")))
+	},
+	"docker.file.expose.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileExpose).GetPort()).ToDataRes(types.Int)
+	},
+	"docker.file.expose.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileExpose).GetProtocol()).ToDataRes(types.String)
 	},
 	"docker.file.from.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileFrom).GetPlatform()).ToDataRes(types.String)
@@ -3471,6 +3484,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"docker.file.stage.copy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Copy, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.expose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Expose, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.file.expose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDockerFileExpose).__id, ok = v.Value.(string)
+			return
+		},
+	"docker.file.expose.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileExpose).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.file.expose.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileExpose).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"docker.file.from.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9476,6 +9505,7 @@ type mqlDockerFileStage struct {
 	Entrypoint plugin.TValue[*mqlDockerFileRun]
 	Add plugin.TValue[[]interface{}]
 	Copy plugin.TValue[[]interface{}]
+	Expose plugin.TValue[[]interface{}]
 }
 
 // createDockerFileStage creates a new instance of this resource
@@ -9540,6 +9570,59 @@ func (c *mqlDockerFileStage) GetAdd() *plugin.TValue[[]interface{}] {
 
 func (c *mqlDockerFileStage) GetCopy() *plugin.TValue[[]interface{}] {
 	return &c.Copy
+}
+
+func (c *mqlDockerFileStage) GetExpose() *plugin.TValue[[]interface{}] {
+	return &c.Expose
+}
+
+// mqlDockerFileExpose for the docker.file.expose resource
+type mqlDockerFileExpose struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDockerFileExposeInternal it will be used here
+	Port plugin.TValue[int64]
+	Protocol plugin.TValue[string]
+}
+
+// createDockerFileExpose creates a new instance of this resource
+func createDockerFileExpose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerFileExpose{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.file.expose", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerFileExpose) MqlName() string {
+	return "docker.file.expose"
+}
+
+func (c *mqlDockerFileExpose) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerFileExpose) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlDockerFileExpose) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
 }
 
 // mqlDockerFileFrom for the docker.file.from resource

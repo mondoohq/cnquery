@@ -152,6 +152,11 @@ resources:
       dst: {}
       src: {}
     min_mondoo_version: 9.0.0
+  docker.file.expose:
+    fields:
+      port: {}
+      protocol: {}
+    min_mondoo_version: 9.0.0
   docker.file.from:
     fields:
       digest: {}
@@ -171,6 +176,7 @@ resources:
       copy: {}
       entrypoint: {}
       env: {}
+      expose: {}
       file: {}
       from: {}
       run: {}

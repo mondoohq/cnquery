@@ -35,7 +35,7 @@ atlassian.scim.group @defaults("name") {
 }
 
 // Organization
-atlassian.admin.organization @defaults("name") { 
+atlassian.admin.organization @defaults("name") {
   // Organization ID
   id string
   // Name
@@ -44,7 +44,7 @@ atlassian.admin.organization @defaults("name") {
   type string
   // Policies
   policies() []atlassian.admin.organization.policy
-  // Domains 
+  // Domains
   domains() []atlassian.admin.organization.domain
   // Managed users
   managedUsers() []atlassian.admin.organization.managedUser
@@ -64,7 +64,7 @@ atlassian.admin.organization.managedUser @defaults("name") {
   status string
   // Last active
   lastActive time
-	// Product access
+  // Product access
   productAccess []dict
 }
 
@@ -93,7 +93,7 @@ atlassian.admin.organization.domain @defaults("name") {
 }
 
 // Jira
-atlassian.jira { 
+atlassian.jira {
   // Jira users
   users() []atlassian.jira.user
   // Jira projects
@@ -121,7 +121,7 @@ atlassian.jira.issue @defaults("id") {
 // Jira server info
 atlassian.jira.serverInfo @defaults("serverTitle") {
   // BaseUrl
-  baseUrl string 
+  baseUrl string
   // Build number
   buildNumber int
   // Server title
@@ -131,7 +131,7 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
 }
 
 // Jira user
-atlassian.jira.user @defaults("name") { 
+atlassian.jira.user @defaults("name") {
   // Account ID
   id string
   // Name
@@ -146,7 +146,6 @@ atlassian.jira.user @defaults("name") {
   applicationRoles() []atlassian.jira.applicationRole
 }
 
-
 // Jira application role
 atlassian.jira.applicationRole @defaults("name") {
   // Role ID
@@ -156,24 +155,24 @@ atlassian.jira.applicationRole @defaults("name") {
 }
 
 // Jira project
-atlassian.jira.project @defaults("name") { 
+atlassian.jira.project @defaults("name") {
   // Project ID
   id string
   // Project name
   name string
-  // UUID 
+  // UUID
   uuid string
-  // Key 
+  // Key
   key string
-  // URL 
+  // URL
   url string
-  // Email 
+  // Email
   email string
-  // Whether the group is private 
+  // Whether the group is private
   private bool
-  // Whether the group has been deleted 
+  // Whether the group has been deleted
   deleted bool
-  // Whether the group has been archived 
+  // Whether the group has been archived
   archived bool
   // Properties
   properties() []atlassian.jira.project.property
@@ -186,7 +185,7 @@ atlassian.jira.project.property @defaults("id") {
 }
 
 // Jira group
-atlassian.jira.group @defaults("name") { 
+atlassian.jira.group @defaults("name") {
   // Group ID
   id string
   // Group name
@@ -194,17 +193,17 @@ atlassian.jira.group @defaults("name") {
 }
 
 // Confluence
-atlassian.confluence { 
+atlassian.confluence {
   // Confluence users
   users() []atlassian.confluence.user
 }
 
 // Confluence user
-atlassian.confluence.user @defaults("name") { 
+atlassian.confluence.user @defaults("name") {
   // Account ID
   id string
   // Account name
   name string
   // Account type
-	type string
+  type string
 }

@@ -170,6 +170,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	}
 
 	env := map[string]any{}
+	var expose []any
 	var runs []any
 	var copy []any
 	var add []any
@@ -206,8 +207,9 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 				src[i] = v.SourcesAndDest.SourcePaths[i]
 			}
 			resource, err := CreateResource(p.MqlRuntime, "docker.file.copy", map[string]*llx.RawData{
-				"src": llx.ArrayData(src, types.String),
-				"dst": llx.StringData(v.SourcesAndDest.DestPath),
+				"__id": llx.StringData(p.locationID(v.Location())),
+				"src":  llx.ArrayData(src, types.String),
+				"dst":  llx.StringData(v.SourcesAndDest.DestPath),
 			})
 			if err != nil {
 				return nil, err
@@ -220,6 +222,7 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 				src[i] = v.SourcesAndDest.SourcePaths[i]
 			}
 			resource, err := CreateResource(p.MqlRuntime, "docker.file.add", map[string]*llx.RawData{
+				"__id":  llx.StringData(p.locationID(v.Location())),
 				"src":   llx.ArrayData(src, types.String),
 				"dst":   llx.StringData(v.SourcesAndDest.DestPath),
 				"chown": llx.StringData(v.Chown),
@@ -230,6 +233,30 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 			}
 			add = append(add, resource)
 
+		case *instructions.ExposeCommand:
+			for _, port := range v.Ports {
+				arr := strings.Split(port, "/")
+				var protocol string
+				if len(arr) < 2 {
+					protocol = "tcp"
+				} else {
+					protocol = arr[1]
+				}
+				portNum, _ := strconv.Atoi(arr[0])
+				id := arr[0] + "/" + protocol
+
+				resource, err := CreateResource(p.MqlRuntime, "docker.file.expose", map[string]*llx.RawData{
+					"__id":     llx.StringData(id),
+					"port":     llx.IntData(portNum),
+					"protocol": llx.StringData(protocol),
+				})
+				if err != nil {
+					return nil, err
+				}
+				expose = append(expose, resource)
+
+			}
+
 		default:
 			cmd := stage.Commands[i]
 			unsupported = append(unsupported, cmd.Name())
@@ -238,17 +265,18 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 
 	if len(unsupported) != 0 {
 		slices.Sort(unsupported)
-		log.Warn().Strs("commands", slices.Compact(unsupported)).Msg("unsuppoprted dockerfile commands")
+		log.Debug().Strs("commands", slices.Compact(unsupported)).Msg("unsuppoprted dockerfile commands")
 	}
 
 	args := map[string]*llx.RawData{
-		"__id": llx.StringData(stageID),
-		"from": llx.ResourceData(rawFrom, "docker.file.from"),
-		"file": llx.ResourceData(p, "docker.file"),
-		"env":  llx.MapData(env, types.String),
-		"run":  llx.ArrayData(runs, types.Resource("docker.file.run")),
-		"add":  llx.ArrayData(add, types.Resource("docker.file.add")),
-		"copy": llx.ArrayData(copy, types.Resource("docker.file.copy")),
+		"__id":   llx.StringData(stageID),
+		"from":   llx.ResourceData(rawFrom, "docker.file.from"),
+		"file":   llx.ResourceData(p, "docker.file"),
+		"env":    llx.MapData(env, types.String),
+		"run":    llx.ArrayData(runs, types.Resource("docker.file.run")),
+		"add":    llx.ArrayData(add, types.Resource("docker.file.add")),
+		"copy":   llx.ArrayData(copy, types.Resource("docker.file.copy")),
+		"expose": llx.ArrayData(expose, types.Resource("docker.file.expose")),
 	}
 
 	if entrypointRaw != nil {

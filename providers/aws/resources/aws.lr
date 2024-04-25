@@ -1079,23 +1079,35 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancing load balancer
-private aws.elb.loadbalancer @defaults("arn name") {
+private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName") {
   // ARN for the load balancer
   arn string
   // DNS name for the load balancer
   dnsName string
   // List of listener configurations for the load balancer
   listenerDescriptions() []dict
-  // User specified name for the load balancer
+  // User-specified name for the load balancer
   name string
-  // Scheme for the lb: internet-facing or internal
+  // Scheme for the load balancer: internet-facing or internal
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
-  // The ID of the VPC where the load balancer is located
+  // Deprecated. Use vpc instead
   vpcId string
   // Date and time when the load balancer was created
   createdTime time
+  // Availability zone where the load balancer runs
+  availabilityZones []string
+  // VPC security groups for the load balancer
+  securityGroups []aws.ec2.securitygroup
+  // The ID of the Amazon Route 53 hosted zone associated with the load balancer
+  hostedZoneId string
+  // Region where the load balancer exists
+  region string
+  // The type of ELB. Possible values are `network`, `application`, or `gateway`
+  elbType string
+  // VPC where the load balancer is located
+  vpc aws.vpc
 }
 
 // AWS CodeBuild for building and testing code
