@@ -1092,7 +1092,7 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   scheme string
   // A list of attributes for the load balancer
   attributes() []dict
-  // The ID of the VPC where the load balancer is located
+  // Deprecated. Use vpc instead
   vpcId string
   // Date and time when the load balancer was created
   createdTime time
@@ -1106,6 +1106,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   region string
   // The type of ELB. Possible values are `network`, `application`, or `gateway`
   elbType string
+  // VPC where the load balancer is located
+  vpc aws.vpc
 }
 
 // AWS CodeBuild for building and testing code
