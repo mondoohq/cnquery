@@ -790,7 +790,7 @@ docker.file.stage @defaults("from.name") {
   expose []docker.file.expose
 }
 
-// Dockerfile expose instruction
+// Dockerfile EXPOSE instruction
 docker.file.expose @defaults("port protocol") {
   // Port that is exposed
   port int
@@ -798,7 +798,7 @@ docker.file.expose @defaults("port protocol") {
   protocol string
 }
 
-// Dockerfile from instructions
+// Dockerfile FROM instructions
 docker.file.from @defaults("name image tag") {
   platform string
   image string
