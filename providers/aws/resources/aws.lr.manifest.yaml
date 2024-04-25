@@ -1572,10 +1572,14 @@ resources:
       createdTime:
         min_mondoo_version: 9.0.0
       dnsName: {}
+      elbType:
+        min_mondoo_version: 9.0.0
       hostedZoneId:
         min_mondoo_version: 9.0.0
       listenerDescriptions: {}
       name: {}
+      region:
+        min_mondoo_version: 9.0.0
       scheme: {}
       securityGroups:
         min_mondoo_version: 9.0.0
