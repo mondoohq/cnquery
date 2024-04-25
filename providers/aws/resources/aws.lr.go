@@ -830,6 +830,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.subnet.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcSubnet).GetState()).ToDataRes(types.String)
 	},
+	"aws.vpc.subnet.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcSubnet).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.vpc.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcEndpoint).GetId()).ToDataRes(types.String)
 	},
@@ -3980,6 +3983,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.subnet.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpcSubnet).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.subnet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcSubnet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9033,6 +9040,7 @@ type mqlAwsVpcSubnet struct {
 	DefaultForAvailabilityZone plugin.TValue[bool]
 	AssignIpv6AddressOnCreation plugin.TValue[bool]
 	State plugin.TValue[string]
+	Region plugin.TValue[string]
 }
 
 // createAwsVpcSubnet creates a new instance of this resource
@@ -9102,6 +9110,10 @@ func (c *mqlAwsVpcSubnet) GetAssignIpv6AddressOnCreation() *plugin.TValue[bool] 
 
 func (c *mqlAwsVpcSubnet) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAwsVpcSubnet) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsVpcEndpoint for the aws.vpc.endpoint resource

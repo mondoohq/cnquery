@@ -279,6 +279,7 @@ func (a *mqlAwsVpc) subnets() ([]interface{}, error) {
 					"defaultForAvailabilityZone":  llx.BoolDataPtr(subnet.DefaultForAz),
 					"id":                          llx.StringDataPtr(subnet.SubnetId),
 					"mapPublicIpOnLaunch":         llx.BoolDataPtr(subnet.MapPublicIpOnLaunch),
+					"region":                      llx.StringData(a.Region.Data),
 					"state":                       llx.StringData(string(subnet.State)),
 				})
 			if err != nil {

@@ -76,7 +76,7 @@ private aws.vpc.routetable @defaults("id routes.length") {
 }
 
 // Amazon Virtual Private Cloud (VPC) subnet
-private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabilityZone") {
+private aws.vpc.subnet @defaults("id cidrs region availabilityZone defaultForAvailabilityZone") {
   // ARN of the subnet
   arn string
   // Unique ID of the subnet
@@ -93,6 +93,8 @@ private aws.vpc.subnet @defaults("id cidrs availabilityZone defaultForAvailabili
   assignIpv6AddressOnCreation bool
   // The state of the subnet: pending or available
   state string
+  // Region in which the VPC subnet exists
+  region string
 }
 
 // Amazon Virtual Private Cloud (VPC) endpoint
@@ -103,7 +105,7 @@ private aws.vpc.endpoint @defaults("id type region") {
   type string
   // VPC in which the endpoint exists
   vpc string
-  // Region in which the VPC exists
+  // Region in which the VPC endpoint exists
   region string
   // The name of the endpoint service
   serviceName string
@@ -125,7 +127,7 @@ private aws.vpc.flowlog @defaults("id region status") {
   id string
   // VPC in which the flow log exists
   vpc string
-  // Region in which the flow log exists
+  // Region in which the VPC flow log exists
   region string
   // Status of the flow log
   status string
