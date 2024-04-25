@@ -28,6 +28,12 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Slack API token",
 				},
+				{
+					Long:    "team-id",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Team ID (required for org token)",
+				},
 			},
 		},
 	},

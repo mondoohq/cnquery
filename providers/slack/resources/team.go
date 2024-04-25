@@ -23,11 +23,7 @@ func initSlackTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		return nil, nil, errors.New("cannot retrieve new data while using a mock connection")
 	}
 
-	teamInfo, err := client.GetTeamInfo()
-	if err != nil {
-		return nil, nil, err
-	}
-
+	teamInfo := conn.TeamInfo()
 	args["id"] = llx.StringData(teamInfo.ID)
 	args["name"] = llx.StringData(teamInfo.Name)
 	args["domain"] = llx.StringData(teamInfo.Domain)
