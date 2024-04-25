@@ -137,3 +137,9 @@ packs:
         title: Logged-in users
         mql: |
           parse.json(content: powershell("Get-Process -IncludeUserName explorer | Select-Object Username | ConvertTo-Json").stdout).params
+      - uid: mondoo-windows-exchange-server-version
+        title: Exchange Server Version
+        filters: |
+          package('Microsoft Exchange Server').installed
+        mql: |
+         powershell('(Get-Command ExSetup.exe | ForEach-Object { $_.FileVersionInfo } | Select-Object -First 1).FileVersion').stdout
