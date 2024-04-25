@@ -166,7 +166,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]interface{}, error) {
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
