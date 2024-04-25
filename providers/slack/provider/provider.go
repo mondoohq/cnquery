@@ -36,7 +36,16 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 
 	conf := &inventory.Config{
-		Type: req.Connector,
+		Type:    req.Connector,
+		Options: map[string]string{},
+	}
+
+	teamID := ""
+	if x, ok := flags["team-id"]; ok && len(x.Value) != 0 {
+		teamID = string(x.Value)
+	}
+	if teamID != "" {
+		conf.Options["team-id"] = teamID
 	}
 
 	token := ""
@@ -162,7 +171,9 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 }
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.SlackConnection) error {
-	asset.Name = "Slack team " + conn.TeamName()
+	teamInfo := conn.TeamInfo()
+
+	asset.Name = "Slack team " + teamInfo.Name
 	asset.Platform = &inventory.Platform{
 		Name:    "slack-team",
 		Family:  []string{"slack"},
@@ -170,6 +181,6 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.SlackConnectio
 		Title:   "Slack Team",
 		Runtime: "slack",
 	}
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/slack/team/" + conn.TeamID()}
+	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/slack/team/" + teamInfo.ID}
 	return nil
 }

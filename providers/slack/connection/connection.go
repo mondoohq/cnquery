@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -61,9 +62,23 @@ func NewSlackConnection(id uint32, asset *inventory.Asset, conf *inventory.Confi
 	retryClient.RetryMax = 5
 	retryClient.Logger = &zeroLogAdapter{}
 	client := slack.New(token, slack.OptionHTTPClient(retryClient.StandardClient()))
-	teamInfo, err := client.GetTeamInfo()
+
+	teamID := conf.Options["team-id"]
+	ctx := context.Background()
+
+	var teamInfo *slack.TeamInfo
+	var err error
+	if teamID != "" {
+		teamInfo, err = client.GetOtherTeamInfoContext(ctx, teamID)
+	} else {
+		teamInfo, err = client.GetTeamInfoContext(ctx)
+	}
 	if err != nil {
 		return nil, err
+	}
+
+	if teamInfo == nil {
+		return nil, errors.New("could not retrieve team info")
 	}
 
 	sc.client = client
@@ -84,12 +99,8 @@ func (s *SlackConnection) Client() *slack.Client {
 	return s.client
 }
 
-func (p *SlackConnection) TeamID() string {
-	return p.teamInfo.ID
-}
-
-func (p *SlackConnection) TeamName() string {
-	return p.teamInfo.Name
+func (p *SlackConnection) TeamInfo() *slack.TeamInfo {
+	return p.teamInfo
 }
 
 // zeroLogAdapter is the adapter for retryablehttp is outputting debug messages
