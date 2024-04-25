@@ -110,6 +110,9 @@ resources:
       images: {}
     min_mondoo_version: 5.15.0
   docker.container:
+    docs:
+      desc: |
+        The `docker.container` resource provides fields for assessing running Docker containers.
     fields:
       command: {}
       id: {}
@@ -123,26 +126,32 @@ resources:
       status: {}
     min_mondoo_version: 5.15.0
   docker.file:
+    docs:
+      desc: |
+        The `docker.file` resource provides fields for assessing Dockerfiles.
     fields:
       file: {}
       instructions: {}
       os: {}
       stages: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile Reference
+      url: https://docs.docker.com/reference/dockerfile/
   docker.file.add:
     fields:
       chmod: {}
       chown: {}
       dst: {}
       src: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.file.copy:
     fields:
       chmod: {}
       chown: {}
       dst: {}
       src: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.file.expose:
     fields:
       port: {}
@@ -155,11 +164,11 @@ resources:
       name: {}
       platform: {}
       tag: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.file.run:
     fields:
       script: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.file.stage:
     fields:
       add: {}
@@ -171,7 +180,7 @@ resources:
       file: {}
       from: {}
       run: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 9.0.0
   docker.image:
     fields:
       id: {}
