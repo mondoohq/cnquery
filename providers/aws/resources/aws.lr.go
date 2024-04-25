@@ -1937,6 +1937,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetHostedZoneId()).ToDataRes(types.String)
 	},
+	"aws.elb.loadbalancer.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elb.loadbalancer.elbType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetElbType()).ToDataRes(types.String)
+	},
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
@@ -5711,6 +5717,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.elb.loadbalancer.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.elbType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).ElbType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.codebuild.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14233,6 +14247,8 @@ type mqlAwsElbLoadbalancer struct {
 	AvailabilityZones plugin.TValue[[]interface{}]
 	SecurityGroups plugin.TValue[[]interface{}]
 	HostedZoneId plugin.TValue[string]
+	Region plugin.TValue[string]
+	ElbType plugin.TValue[string]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -14318,6 +14334,14 @@ func (c *mqlAwsElbLoadbalancer) GetSecurityGroups() *plugin.TValue[[]interface{}
 
 func (c *mqlAwsElbLoadbalancer) GetHostedZoneId() *plugin.TValue[string] {
 	return &c.HostedZoneId
+}
+
+func (c *mqlAwsElbLoadbalancer) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElbLoadbalancer) GetElbType() *plugin.TValue[string] {
+	return &c.ElbType
 }
 
 // mqlAwsCodebuild for the aws.codebuild resource

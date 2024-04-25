@@ -1079,7 +1079,7 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancing load balancer
-private aws.elb.loadbalancer @defaults("arn name") {
+private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName") {
   // ARN for the load balancer
   arn string
   // DNS name for the load balancer
@@ -1102,6 +1102,10 @@ private aws.elb.loadbalancer @defaults("arn name") {
   securityGroups []aws.ec2.securitygroup
   // The ID of the Amazon Route 53 hosted zone associated with the load balancer
   hostedZoneId string
+  // Region where the load balancer exists
+  region string
+  // The type of ELB. Possible values are `network`, `application`, or `gateway`
+  elbType string
 }
 
 // AWS CodeBuild for building and testing code
