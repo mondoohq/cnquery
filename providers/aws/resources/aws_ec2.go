@@ -851,6 +851,7 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["architecture"] = llx.NilData
 		args["ownerId"] = llx.NilData
 		args["ownerAlias"] = llx.NilData
+		args["createdAt"] = llx.NilData
 		return args, nil, nil
 	}
 
@@ -862,6 +863,12 @@ func initAwsEc2Image(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["architecture"] = llx.StringData(string(image.Architecture))
 		args["ownerId"] = llx.StringData(convert.ToString(image.OwnerId))
 		args["ownerAlias"] = llx.StringData(convert.ToString(image.ImageOwnerAlias))
+		t, err := time.Parse(time.RFC3339, *image.CreationDate)
+		if err == nil {
+			args["createdAt"] = llx.TimeData(t)
+		} else {
+			args["createdAt"] = llx.NilData
+		}
 		return args, nil, nil
 	}
 
