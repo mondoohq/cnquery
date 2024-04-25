@@ -177,19 +177,19 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"vpcId":             llx.StringDataPtr(lb.VpcId),
 						"elbType":           llx.StringData(string(lb.Type)),
 						"region":            llx.StringData(regionVal),
+						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
 					}
 
-					mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
-						map[string]*llx.RawData{
-							"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.VpcId))),
-						})
-					if err != nil {
-						return nil, err
-					}
-					if mqlVpc != nil {
+					if lb.VpcId != nil {
+						mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+							map[string]*llx.RawData{
+								"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.VpcId))),
+							})
+						if err != nil {
+							return nil, err
+						}
+						// update the vpc setting
 						args["vpc"] = llx.ResourceData(mqlVpc, mqlVpc.MqlName())
-					} else {
-						args["vpc"] = llx.NilData
 					}
 
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer", args)
