@@ -109,6 +109,9 @@ resources:
       containers: {}
       images: {}
     min_mondoo_version: 5.15.0
+    refs:
+    - title: Docker overview
+      url: https://docs.docker.com/get-started/overview/
   docker.container:
     docs:
       desc: |
@@ -125,6 +128,9 @@ resources:
       state: {}
       status: {}
     min_mondoo_version: 5.15.0
+    refs:
+    - title: What is a container?
+      url: https://docs.docker.com/guides/walkthroughs/what-is-a-container/
   docker.file:
     docs:
       desc: |
@@ -145,6 +151,9 @@ resources:
       dst: {}
       src: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile ADD reference
+      url: https://docs.docker.com/reference/dockerfile/#add
   docker.file.copy:
     fields:
       chmod: {}
@@ -152,11 +161,17 @@ resources:
       dst: {}
       src: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile COPY reference
+      url: https://docs.docker.com/reference/dockerfile/#copy
   docker.file.expose:
     fields:
       port: {}
       protocol: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile EXPOSE reference
+      url: https://docs.docker.com/reference/dockerfile/#expose
   docker.file.from:
     fields:
       digest: {}
@@ -165,10 +180,16 @@ resources:
       platform: {}
       tag: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile FROM reference
+      url: https://docs.docker.com/reference/dockerfile/#from
   docker.file.run:
     fields:
       script: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile RUN reference
+      url: https://docs.docker.com/reference/dockerfile/#run
   docker.file.stage:
     fields:
       add: {}
@@ -181,6 +202,11 @@ resources:
       from: {}
       run: {}
     min_mondoo_version: 9.0.0
+    refs:
+    - title: Dockerfile Reference
+      url: https://docs.docker.com/reference/dockerfile/
+    - title: Multi-stage builds
+      url: https://docs.docker.com/build/building/multi-stage/
   docker.image:
     fields:
       id: {}
@@ -189,6 +215,9 @@ resources:
       tags: {}
       virtualsize: {}
     min_mondoo_version: 5.15.0
+    refs:
+    - title: What is an image?
+      url: https://docs.docker.com/guides/docker-concepts/the-basics/what-is-an-image/
   equinix.metal.device:
     fields:
       billingCycle: {}
