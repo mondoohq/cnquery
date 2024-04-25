@@ -75,13 +75,14 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					mqlLb, err := CreateResource(a.MqlRuntime, "aws.elb.loadbalancer",
 						map[string]*llx.RawData{
 							"arn":                  llx.StringData(fmt.Sprintf(elbv1LbArnPattern, regionVal, conn.AccountId(), convert.ToString(lb.LoadBalancerName))),
-							"listenerDescriptions": llx.AnyData(jsonListeners),
+							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
 							"dnsName":              llx.StringDataPtr(lb.DNSName),
+							"elbType":              llx.StringData("classic"),
+							"listenerDescriptions": llx.AnyData(jsonListeners),
 							"name":                 llx.StringDataPtr(lb.LoadBalancerName),
+							"region":               llx.StringData(regionVal),
 							"scheme":               llx.StringDataPtr(lb.Scheme),
 							"vpcId":                llx.StringDataPtr(lb.VPCId),
-							"createdTime":          llx.TimeDataPtr(lb.CreatedTime),
-							"region":               llx.StringData(regionVal),
 						})
 					if err != nil {
 						return nil, err
