@@ -183,6 +183,12 @@ func discoverOrganization(conn *connection.GcpConnection, gcpOrg *mqlGcpOrganiza
 				Labels:      map[string]string{},
 				Connections: []*inventory.Config{projectConf}, // pass-in the parent connection config
 			})
+
+			projectAssets, err := discoverProject(conn, project)
+			if err != nil {
+				return nil, err
+			}
+			assetList = append(assetList, projectAssets...)
 		}
 	}
 	if stringx.ContainsAnyOf(conn.Conf.Discover.Targets, DiscoveryAll, DiscoveryAuto, DiscoveryFolders) {
