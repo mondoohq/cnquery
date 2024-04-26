@@ -2570,6 +2570,8 @@ private aws.ec2.image @defaults("arn") {
   ownerId string
   // Alias for the image owner
   ownerAlias string
+  // Date the image was created
+  createdAt time
 }
 
 // Amazon EC2 instance device
