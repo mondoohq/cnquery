@@ -676,12 +676,12 @@ sshd.config {
   file() file
   // A list of lexically sorted files making up the SSH server configuration
   files(file) []file
-  // Raw content of this SSH server config
-  content(files) string
+  // Deprecated: Please use file.content or files{content} instead. Will be removed in v12.
+  content(file) string
   // Configuration values of this SSH server
-  params(content) map[string]string
+  params(file) map[string]string
   // Blocks with match conditions in this SSH server config
-  blocks(content) []sshd.config.matchBlock
+  blocks(file) []sshd.config.matchBlock
   // Ciphers configured for this SSH server
   ciphers(params) []string
   // MACs configured for this SSH server

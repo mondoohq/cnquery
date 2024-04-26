@@ -15,7 +15,7 @@ func TestResource_SSHD(t *testing.T) {
 		{
 			Code:        "sshd.config('nopath').params['2'] == '3'",
 			ResultIndex: 0,
-			Expectation: "sshd config does not exist in nopath",
+			Expectation: "file '/etc/ssh/nopath' not found",
 		},
 	})
 
@@ -75,7 +75,7 @@ func TestResource_SSHD(t *testing.T) {
 		res := x.TestQuery(t, "sshd.config.permitRootLogin")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{"no", "no"}, res[0].Data.Value)
+		assert.Equal(t, []interface{}{"no"}, res[0].Data.Value)
 	})
 
 	t.Run("parse blocks", func(t *testing.T) {

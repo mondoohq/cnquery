@@ -5,6 +5,8 @@ package sshd
 
 import (
 	"strings"
+
+	"go.mondoo.com/cnquery/v11/utils/sortx"
 )
 
 type MatchBlock struct {
@@ -14,7 +16,27 @@ type MatchBlock struct {
 	Params map[string]any
 }
 
+func setParam(m map[string]any, key string, value string) {
+	v, ok := m[key]
+	if !ok {
+		m[key] = value
+	} else if isMultiParam[key] {
+		m[key] = v.(string) + "," + value
+	}
+}
+
 type MatchBlocks []*MatchBlock
+
+var isMultiParam = map[string]bool{
+	"AllowGroups":   true,
+	"AllowUsers":    true,
+	"DenyGroups":    true,
+	"DenyUsers":     true,
+	"ListenAddress": true,
+	"Port":          true,
+	"AcceptEnv":     true,
+	"HostKey":       true,
+}
 
 func (m MatchBlocks) Flatten() map[string]any {
 	if len(m) == 0 {
@@ -38,11 +60,7 @@ func (m MatchBlocks) Flatten() map[string]any {
 		}
 
 		for k, v := range cur.Params {
-			if x, ok := res[k]; ok {
-				res[k] = x.(string) + "," + v.(string)
-			} else {
-				res[k] = v
-			}
+			setParam(res, k, v.(string))
 		}
 	}
 
@@ -56,18 +74,50 @@ func (m MatchBlocks) Flatten() map[string]any {
 	return res
 }
 
-func ParseBlocks(content string) (MatchBlocks, error) {
-	lines := strings.Split(content, "\n")
+func mergeIncludedBlocks(matchConditions map[string]*MatchBlock, blocks MatchBlocks, curBlock string) {
+	for _, block := range blocks {
+		// meaning:
+		// 1. curBlock == "", we can always add all subblocks
+		// 2. if block == "", we can add it to whatever current block is
+		// 3. in all other cases the block criteria must match, or we move on
+		if block.Criteria != curBlock && curBlock != "" && block.Criteria != "" {
+			continue
+		}
+
+		var existing *MatchBlock
+		if block.Criteria == "" {
+			existing = matchConditions[curBlock]
+		} else {
+			existing := matchConditions[block.Criteria]
+			if existing == nil {
+				matchConditions[block.Criteria] = block
+				continue
+			}
+		}
+
+		for k, v := range block.Params {
+			if _, ok := existing.Params[k]; !ok {
+				existing.Params[k] = v
+			}
+		}
+	}
+}
+
+func ParseBlocks(rootPath string, globPathContent func(string) (string, error)) (MatchBlocks, error) {
+	content, err := globPathContent(rootPath)
+	if err != nil {
+		return nil, err
+	}
 
 	curBlock := &MatchBlock{
 		Criteria: "",
 		Params:   map[string]any{},
 	}
-	res := []*MatchBlock{curBlock}
 	matchConditions := map[string]*MatchBlock{
 		"": curBlock,
 	}
 
+	lines := strings.Split(content, "\n")
 	for _, textLine := range lines {
 		l, err := ParseLine([]rune(textLine))
 		if err != nil {
@@ -84,6 +134,20 @@ func ParseBlocks(content string) (MatchBlocks, error) {
 			key = sshKey
 		}
 
+		if key == "Include" {
+			// FIXME: parse multi-keys properly
+			paths := strings.Split(l.args, " ")
+
+			for _, path := range paths {
+				subBlocks, err := ParseBlocks(path, globPathContent)
+				if err != nil {
+					return nil, err
+				}
+				mergeIncludedBlocks(matchConditions, subBlocks, curBlock.Criteria)
+			}
+			continue
+		}
+
 		if key == "Match" {
 			// This key is the only that we don't add to any params. It is stored
 			// in the condition of each block and can be accessed there.
@@ -96,16 +160,19 @@ func ParseBlocks(content string) (MatchBlocks, error) {
 					Params:   map[string]any{},
 				}
 				matchConditions[condition] = curBlock
-				res = append(res, curBlock)
 			}
 			continue
 		}
 
-		if x, ok := curBlock.Params[key]; ok {
-			curBlock.Params[key] = x.(string) + "," + l.args
-		} else {
-			curBlock.Params[key] = l.args
-		}
+		setParam(curBlock.Params, key, l.args)
+	}
+
+	keys := sortx.Keys(matchConditions)
+	res := make([]*MatchBlock, len(keys))
+	i := 0
+	for _, key := range keys {
+		res[i] = matchConditions[key]
+		i++
 	}
 
 	return res, nil
