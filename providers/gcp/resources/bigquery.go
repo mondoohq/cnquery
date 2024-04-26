@@ -69,6 +69,11 @@ func (g *mqlGcpProject) bigquery() (*mqlGcpProjectBigqueryService, error) {
 }
 
 func (g *mqlGcpProjectBigqueryService) datasets() ([]interface{}, error) {
+	// when the service is not enabled, we return nil
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	if g.ProjectId.Error != nil {
