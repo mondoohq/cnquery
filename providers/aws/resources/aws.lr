@@ -1106,7 +1106,7 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme vpcId dnsName
   hostedZoneId string
   // Region where the load balancer exists
   region string
-  // The type of ELB. Possible values are `network`, `application`, or `gateway`
+  // The type of ELB. Possible values are `network`, `application`, `gateway`, or `classic`
   elbType string
   // VPC where the load balancer is located
   vpc aws.vpc
