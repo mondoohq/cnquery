@@ -8908,23 +8908,23 @@ func (c *mqlSshdConfig) GetFiles() *plugin.TValue[[]interface{}] {
 
 func (c *mqlSshdConfig) GetContent() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
-		vargFiles := c.GetFiles()
-		if vargFiles.Error != nil {
-			return "", vargFiles.Error
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
 		}
 
-		return c.content(vargFiles.Data)
+		return c.content(vargFile.Data)
 	})
 }
 
 func (c *mqlSshdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
-		vargContent := c.GetContent()
-		if vargContent.Error != nil {
-			return nil, vargContent.Error
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
 		}
 
-		return c.params(vargContent.Data)
+		return c.params(vargFile.Data)
 	})
 }
 
@@ -8940,12 +8940,12 @@ func (c *mqlSshdConfig) GetBlocks() *plugin.TValue[[]interface{}] {
 			}
 		}
 
-		vargContent := c.GetContent()
-		if vargContent.Error != nil {
-			return nil, vargContent.Error
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
 		}
 
-		return c.blocks(vargContent.Data)
+		return c.blocks(vargFile.Data)
 	})
 }
 

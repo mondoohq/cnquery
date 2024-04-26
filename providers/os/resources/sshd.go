@@ -6,10 +6,12 @@ package resources
 
 import (
 	"errors"
-	"fmt"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
@@ -63,66 +65,6 @@ func (s *mqlSshdConfig) file() (*mqlFile, error) {
 	return f.(*mqlFile), nil
 }
 
-func (s *mqlSshdConfig) files(file *mqlFile) ([]interface{}, error) {
-	if !file.GetExists().Data {
-		return nil, errors.New("sshd config does not exist in " + file.GetPath().Data)
-	}
-
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	allFiles, err := sshd.GetAllSshdIncludedFiles(file.Path.Data, conn)
-	if err != nil {
-		return nil, err
-	}
-
-	// Return a list of lumi files
-	lumiFiles := make([]interface{}, len(allFiles))
-	for i, path := range allFiles {
-		lumiFile, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
-			"path": llx.StringData(path),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		lumiFiles[i] = lumiFile.(*mqlFile)
-	}
-
-	return lumiFiles, nil
-}
-
-func (s *mqlSshdConfig) content(files []interface{}) (string, error) {
-	// TODO: this can be heavily improved once we do it right, since this is constantly
-	// re-registered as the file changes
-
-	// files is in the "dependency" order that files were discovered while
-	// parsing the base/root config file. We will essentially re-parse the
-	// config and insert the contents of those dependent files in-place where
-	// they appear in the base/root config.
-	if len(files) < 1 {
-		return "", fmt.Errorf("no base sshd config file to read")
-	}
-
-	lumiFiles := make([]*mqlFile, len(files))
-	for i, file := range files {
-		lumiFile, ok := file.(*mqlFile)
-		if !ok {
-			return "", fmt.Errorf("failed to type assert list of files to File interface")
-		}
-		lumiFiles[i] = lumiFile
-	}
-
-	// The first entry in our list is the base/root of the sshd configuration tree
-	baseConfigFilePath := lumiFiles[0].Path.Data
-
-	conn := s.MqlRuntime.Connection.(shared.Connection)
-	fullContent, err := sshd.GetSshdUnifiedContent(baseConfigFilePath, conn)
-	if err != nil {
-		return "", err
-	}
-
-	return fullContent, nil
-}
-
 func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID string) ([]any, error) {
 	res := make([]any, len(m))
 	for i := range m {
@@ -140,32 +82,151 @@ func matchBlocks2Resources(m sshd.MatchBlocks, runtime *plugin.Runtime, ownerID 
 	return res, nil
 }
 
-func (s *mqlSshdConfig) parse(content string) error {
+var reGlob = regexp.MustCompile(`.*\*.*`)
+
+func (s *mqlSshdConfig) expandGlob(glob string) ([]string, error) {
+	if !reGlob.MatchString(glob) {
+		if !filepath.IsAbs(glob) {
+			glob = filepath.Join("/etc/ssh", glob)
+		}
+		return []string{glob}, nil
+	}
+
+	var paths []string
+	segments := strings.Split(glob, "/")
+	if segments[0] == "" {
+		paths = []string{"/"}
+	} else {
+		// https://man7.org/linux/man-pages/man5/sshd_config.5.html
+		// Relative files are always expanded from `/ssh`
+		paths = []string{"/etc/ssh"}
+	}
+
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+
+	for _, segment := range segments[1:] {
+		if !reGlob.MatchString(segment) {
+			for i := range paths {
+				paths[i] = filepath.Join(paths[i], segment)
+			}
+			continue
+		}
+
+		var nuPaths []string
+		for _, path := range paths {
+			files, err := afs.ReadDir(path)
+			if err != nil {
+				return nil, err
+			}
+
+			for j := range files {
+				file := files[j]
+				name := file.Name()
+				if match, err := filepath.Match(segment, name); err != nil {
+					return nil, err
+				} else if match {
+					nuPaths = append(nuPaths, filepath.Join(path, name))
+				}
+			}
+		}
+		paths = nuPaths
+	}
+
+	return paths, nil
+}
+
+func (s *mqlSshdConfig) parse(file *mqlFile) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	params, err := sshd.ParseBlocks(content)
+	if file == nil {
+		return errors.New("no base sshd config file to read")
+	}
+
+	filesIdx := map[string]*mqlFile{
+		file.Path.Data: file,
+	}
+	var allContents strings.Builder
+	globPathContent := func(glob string) (string, error) {
+		paths, err := s.expandGlob(glob)
+		if err != nil {
+			return "", err
+		}
+
+		var content strings.Builder
+		for _, path := range paths {
+			file, ok := filesIdx[path]
+			if !ok {
+				raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+					"path": llx.StringData(path),
+				})
+				if err != nil {
+					return "", err
+				}
+				file = raw.(*mqlFile)
+				filesIdx[path] = file
+			}
+
+			fileContent := file.GetContent()
+			if fileContent.Error != nil {
+				return "", fileContent.Error
+			}
+
+			content.WriteString(fileContent.Data)
+			content.WriteString("\n")
+		}
+
+		res := content.String()
+		allContents.WriteString(res)
+		return res, nil
+	}
+
+	matchBlocks, err := sshd.ParseBlocks(file.Path.Data, globPathContent)
+	// TODO: check if not ready on I/O
 	if err != nil {
 		s.Params = plugin.TValue[map[string]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
 		s.Blocks = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		s.Content = plugin.TValue[string]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+		s.Files = plugin.TValue[[]any]{Error: err, State: plugin.StateIsSet | plugin.StateIsNull}
+
 	} else {
-		blocks, err := matchBlocks2Resources(params, s.MqlRuntime, s.__id)
+		s.Params = plugin.TValue[map[string]any]{Data: matchBlocks.Flatten(), State: plugin.StateIsSet}
+
+		blocks, err := matchBlocks2Resources(matchBlocks, s.MqlRuntime, s.__id)
 		if err != nil {
 			return err
 		}
-		s.Params = plugin.TValue[map[string]any]{Data: params.Flatten(), State: plugin.StateIsSet}
 		s.Blocks = plugin.TValue[[]any]{Data: blocks, State: plugin.StateIsSet}
+
+		s.Content = plugin.TValue[string]{Data: allContents.String(), State: plugin.StateIsSet}
+
+		files := make([]any, len(filesIdx))
+		i := 0
+		for _, v := range filesIdx {
+			files[i] = v
+			i++
+		}
+		s.Files = plugin.TValue[[]any]{Data: files, State: plugin.StateIsSet}
 	}
 
 	return err
 }
 
-func (s *mqlSshdConfig) params(content string) (map[string]any, error) {
-	return nil, s.parse(content)
+func (s *mqlSshdConfig) files(file *mqlFile) ([]any, error) {
+	return nil, s.parse(file)
 }
 
-func (s *mqlSshdConfig) blocks(content string) ([]any, error) {
-	return nil, s.parse(content)
+func (s *mqlSshdConfig) content(file *mqlFile) (string, error) {
+	return "", s.parse(file)
+}
+
+func (s *mqlSshdConfig) params(file *mqlFile) (map[string]any, error) {
+	return nil, s.parse(file)
+}
+
+func (s *mqlSshdConfig) blocks(file *mqlFile) ([]any, error) {
+	return nil, s.parse(file)
 }
 
 func (s *mqlSshdConfig) parseConfigEntrySlice(raw interface{}) ([]interface{}, error) {
