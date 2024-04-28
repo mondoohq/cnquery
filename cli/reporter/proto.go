@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"google.golang.org/protobuf/encoding/protojson"
 	"strings"
 
 	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/utils/iox"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -68,7 +68,7 @@ func ConvertToProto(data *explorer.ReportCollection) (*Report, error) {
 			queryID := prettyPrintString(printID)
 
 			buf := &bytes.Buffer{}
-			w := shared.IOWriter{Writer: buf}
+			w := iox.IOWriter{Writer: buf}
 			err := CodeBundleToJSON(query.Code, results, &w)
 			if err != nil {
 				return nil, err

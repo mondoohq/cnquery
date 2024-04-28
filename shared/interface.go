@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/shared/proto"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -24,14 +25,9 @@ var PluginMap = map[string]plugin.Plugin{
 	"cnquery": &CNQueryPlugin{},
 }
 
-type OutputHelper interface {
-	WriteString(string) error
-	Write([]byte) (int, error)
-}
-
 // CNQuery is the interface that we're exposing as a plugin.
 type CNQuery interface {
-	RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out OutputHelper) error
+	RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out iox.OutputHelper) error
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.
