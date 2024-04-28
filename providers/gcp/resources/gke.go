@@ -311,6 +311,20 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 				}
 			}
 
+			var gcsFuseCsiDriverConfig map[string]interface{}
+			if c.AddonsConfig.GcsFuseCsiDriverConfig != nil {
+				gcsFuseCsiDriverConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GcsFuseCsiDriverConfig.Enabled,
+				}
+			}
+
+			var statefulHaConfig map[string]interface{}
+			if c.AddonsConfig.StatefulHaConfig != nil {
+				statefulHaConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.StatefulHaConfig.Enabled,
+				}
+			}
+
 			addonsConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.addonsConfig", map[string]*llx.RawData{
 				"id":                               llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id)),
 				"httpLoadBalancing":                llx.DictData(httpLoadBalancing),
@@ -323,6 +337,8 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 				"gcePersistentDiskCsiDriverConfig": llx.DictData(gcePersistentDiskCsiDriverConfig),
 				"gcpFilestoreCsiDriverConfig":      llx.DictData(gcpFilestoreCsiDriverConfig),
 				"gkeBackupAgentConfig":             llx.DictData(gkeBackupAgentConfig),
+				"gcsFuseCsiDriverConfig":           llx.DictData(gcsFuseCsiDriverConfig),
+				"statefulHaConfig":                 llx.DictData(statefulHaConfig),
 			})
 			if err != nil {
 				return nil, err

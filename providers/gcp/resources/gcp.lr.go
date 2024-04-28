@@ -2476,6 +2476,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGkeBackupAgentConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetGcsFuseCsiDriverConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetStatefulHaConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterIpAllocationPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -6764,6 +6770,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.gkeBackupAgentConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GkeBackupAgentConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.gcsFuseCsiDriverConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GcsFuseCsiDriverConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).StatefulHaConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.ipAllocationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15329,6 +15343,8 @@ type mqlGcpProjectGkeServiceClusterAddonsConfig struct {
 	GcePersistentDiskCsiDriverConfig plugin.TValue[interface{}]
 	GcpFilestoreCsiDriverConfig plugin.TValue[interface{}]
 	GkeBackupAgentConfig plugin.TValue[interface{}]
+	GcsFuseCsiDriverConfig plugin.TValue[interface{}]
+	StatefulHaConfig plugin.TValue[interface{}]
 }
 
 // createGcpProjectGkeServiceClusterAddonsConfig creates a new instance of this resource
@@ -15410,6 +15426,14 @@ func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcpFilestoreCsiDriverCon
 
 func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGkeBackupAgentConfig() *plugin.TValue[interface{}] {
 	return &c.GkeBackupAgentConfig
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetGcsFuseCsiDriverConfig() *plugin.TValue[interface{}] {
+	return &c.GcsFuseCsiDriverConfig
+}
+
+func (c *mqlGcpProjectGkeServiceClusterAddonsConfig) GetStatefulHaConfig() *plugin.TValue[interface{}] {
+	return &c.StatefulHaConfig
 }
 
 // mqlGcpProjectGkeServiceClusterIpAllocationPolicy for the gcp.project.gkeService.cluster.ipAllocationPolicy resource

@@ -1471,12 +1471,14 @@ resources:
       dnsCacheConfig: {}
       gcePersistentDiskCsiDriverConfig: {}
       gcpFilestoreCsiDriverConfig: {}
+      gcsFuseCsiDriverConfig: {}
       gkeBackupAgentConfig: {}
       horizontalPodAutoscaling: {}
       httpLoadBalancing: {}
       id: {}
       kubernetesDashboard: {}
       networkPolicyConfig: {}
+      statefulHaConfig: {}
     is_private: true
     min_mondoo_version: latest
     platform:
