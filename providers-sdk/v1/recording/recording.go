@@ -199,18 +199,10 @@ func (r *recording) refreshCache() {
 	r.assets = make(map[uint32]*Asset, len(r.Assets))
 	for i := range r.Assets {
 		asset := r.Assets[i]
-		asset.resources = make(map[string]*Resource, len(asset.Resources))
-		asset.connections = make(map[string]*connection, len(asset.Connections))
+		asset.RefreshCache()
 
-		for j := range asset.Resources {
-			resource := &asset.Resources[j]
-			asset.resources[resource.Resource+"\x00"+resource.ID] = resource
-		}
-
-		for j := range asset.Connections {
-			conn := &asset.Connections[j]
-			asset.connections[conn.Url] = conn
-
+		for i := range asset.Connections {
+			conn := asset.Connections[i]
 			// only connection ID's != 0 are valid IDs. We get lots of 0 when we
 			// initially load this object, so we won't know yet which asset belongs
 			// to which connection.
