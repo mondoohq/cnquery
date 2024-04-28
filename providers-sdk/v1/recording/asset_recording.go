@@ -76,3 +76,18 @@ func (asset *Asset) GetResource(name string, id string) (*Resource, bool) {
 	r, ok := asset.resources[name+"\x00"+id]
 	return r, ok
 }
+
+func (asset *Asset) RefreshCache() {
+	asset.resources = make(map[string]*Resource, len(asset.Resources))
+	asset.connections = make(map[string]*connection, len(asset.Connections))
+
+	for j := range asset.Resources {
+		resource := &asset.Resources[j]
+		asset.resources[resource.Resource+"\x00"+resource.ID] = resource
+	}
+
+	for j := range asset.Connections {
+		conn := &asset.Connections[j]
+		asset.connections[conn.Url] = conn
+	}
+}
