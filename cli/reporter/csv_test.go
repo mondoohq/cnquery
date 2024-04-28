@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 	"sigs.k8s.io/yaml"
 )
 
@@ -20,7 +20,7 @@ func TestCSVExport(t *testing.T) {
 	var report *explorer.ReportCollection
 	err = yaml.Unmarshal(data, &report)
 	require.NoError(t, err)
-	w := shared.IOWriter{Writer: os.Stdout}
+	w := iox.IOWriter{Writer: os.Stdout}
 	err = ConvertToCSV(report, &w)
 	require.NoError(t, err)
 }

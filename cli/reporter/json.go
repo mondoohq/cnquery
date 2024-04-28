@@ -6,12 +6,13 @@ package reporter
 import (
 	"encoding/json"
 	"errors"
+
 	"go.mondoo.com/cnquery/v11/explorer"
 	"go.mondoo.com/cnquery/v11/llx"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 )
 
-func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
+func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, out iox.OutputHelper) error {
 	var checksums []string
 	eps := code.CodeV2.Entrypoints()
 	checksums = make([]string, len(eps))
@@ -43,7 +44,7 @@ func CodeBundleToJSON(code *llx.CodeBundle, results map[string]*llx.RawResult, o
 	return nil
 }
 
-func ConvertToJSON(data *explorer.ReportCollection, out shared.OutputHelper) error {
+func ConvertToJSON(data *explorer.ReportCollection, out iox.OutputHelper) error {
 	if data == nil {
 		return nil
 	}

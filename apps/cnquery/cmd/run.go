@@ -12,8 +12,8 @@ import (
 	"go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/shared"
 	"go.mondoo.com/cnquery/v11/shared/proto"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 )
 
 func init() {
@@ -82,7 +82,7 @@ var RunCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 	conf.Incognito, _ = cmd.Flags().GetBool("incognito")
 
 	x := cnqueryPlugin{}
-	w := shared.IOWriter{Writer: os.Stdout}
+	w := iox.IOWriter{Writer: os.Stdout}
 	err = x.RunQuery(&conf, runtime, &w)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run query")

@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/v11/shared"
 	run "go.mondoo.com/cnquery/v11/shared/proto"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -52,7 +53,7 @@ func init() {
 
 type cnqueryPlugin struct{}
 
-func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtime, out shared.OutputHelper) error {
+func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtime, out iox.OutputHelper) error {
 	if conf.Command == "" && conf.Input == "" {
 		return errors.New("No command provided, nothing to do.")
 	}

@@ -4,12 +4,11 @@
 package shared
 
 import (
-	"io"
-
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
 	"go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/shared/proto"
+	"go.mondoo.com/cnquery/v11/utils/iox"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -25,21 +24,8 @@ type GRPCClient struct {
 	client proto.CNQueryClient
 }
 
-type IOWriter struct {
-	io.Writer
-}
-
-func (i *IOWriter) Write(x []byte) (int, error) {
-	return i.Writer.Write(x)
-}
-
-func (i *IOWriter) WriteString(x string) error {
-	_, err := i.Writer.Write([]byte(x))
-	return err
-}
-
-func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out OutputHelper) error {
-	helper := &GRPCOutputHelperServer{Impl: &IOWriter{out}}
+func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out iox.OutputHelper) error {
+	helper := &GRPCOutputHelperServer{Impl: &iox.IOWriter{out}}
 
 	var s *grpc.Server
 	serverFunc := func(opts []grpc.ServerOption) *grpc.Server {
@@ -113,7 +99,7 @@ func (m *GRPCOutputHelperClient) WriteString(s string) error {
 // Here is the gRPC server that GRPCClient talks to.
 type GRPCOutputHelperServer struct {
 	// This is the real implementation
-	Impl OutputHelper
+	Impl iox.OutputHelper
 	proto.UnsafeOutputHelperServer
 }
 

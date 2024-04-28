@@ -12,13 +12,12 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/cnquery/v11/logger"
-	"sigs.k8s.io/yaml"
-
 	"go.mondoo.com/cnquery/v11/cli/printer"
 	"go.mondoo.com/cnquery/v11/cli/theme/colors"
 	"go.mondoo.com/cnquery/v11/explorer"
-	"go.mondoo.com/cnquery/v11/shared"
+	"go.mondoo.com/cnquery/v11/logger"
+	"go.mondoo.com/cnquery/v11/utils/iox"
+	"sigs.k8s.io/yaml"
 )
 
 type Format byte
@@ -112,7 +111,7 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 		}
 		return rr.print()
 	case JSONv1:
-		w := shared.IOWriter{Writer: out}
+		w := iox.IOWriter{Writer: out}
 		return ConvertToJSON(data, &w)
 	case JSONv2:
 		r, err := ConvertToProto(data)
@@ -127,11 +126,11 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 		_, err = out.Write(data)
 		return err
 	case CSV:
-		w := shared.IOWriter{Writer: out}
+		w := iox.IOWriter{Writer: out}
 		return ConvertToCSV(data, &w)
 	case YAML:
 		raw := bytes.Buffer{}
-		writer := shared.IOWriter{Writer: &raw}
+		writer := iox.IOWriter{Writer: &raw}
 		err := ConvertToJSON(data, &writer)
 		if err != nil {
 			return err
