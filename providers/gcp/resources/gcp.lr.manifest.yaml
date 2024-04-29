@@ -1427,6 +1427,8 @@ resources:
       autopilotEnabled: {}
       binaryAuthorization: {}
       clusterIpv4Cidr: {}
+      confidentialNodesConfig: {}
+      costManagementConfig: {}
       created: {}
       currentMasterVersion: {}
       databaseEncryption:
@@ -1436,6 +1438,7 @@ resources:
       endpoint: {}
       expirationTime: {}
       id: {}
+      identityServiceConfig: {}
       initialClusterVersion: {}
       ipAllocationPolicy: {}
       legacyAbac: {}
@@ -1452,6 +1455,7 @@ resources:
       privateClusterConfig: {}
       projectId: {}
       resourceLabels: {}
+      shieldedNodesConfig: {}
       status: {}
       subnetwork: {}
       workloadIdentityConfig: {}

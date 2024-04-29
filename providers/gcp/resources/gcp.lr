@@ -1405,7 +1405,7 @@ private gcp.project.gkeService {
 }
 
 // Google Kubernetes Engine (GKE) cluster
-private gcp.project.gkeService.cluster @defaults("name") {
+private gcp.project.gkeService.cluster @defaults("name description zone status currentMasterVersion") {
   // Project ID
   projectId string
   // Unique identifier for the cluster
@@ -1470,6 +1470,14 @@ private gcp.project.gkeService.cluster @defaults("name") {
   privateClusterConfig dict
   // Etcd encryption configuration
   databaseEncryption dict
+  // Configuration for Shielded Nodes feature
+  shieldedNodesConfig dict
+  // Configuration for the fine-grained cost management feature
+  costManagementConfig dict
+  // Configuration of Confidential Nodes
+  confidentialNodesConfig dict
+  // Configuration for Identity Service component
+  identityServiceConfig dict
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
