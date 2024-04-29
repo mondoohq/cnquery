@@ -2551,6 +2551,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.networkConfig.serviceExternalIpsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).GetServiceExternalIpsConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.networkConfig.enableMultiNetworking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).GetEnableMultiNetworking()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.networkConfig.enableFqdnNetworkPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).GetEnableFqdnNetworkPolicy()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.networkConfig.enableCiliumClusterwideNetworkPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).GetEnableCiliumClusterwideNetworkPolicy()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeService.cluster.nodepool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNodepool).GetId()).ToDataRes(types.String)
 	},
@@ -6872,6 +6881,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.networkConfig.serviceExternalIpsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).ServiceExternalIpsConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.networkConfig.enableMultiNetworking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).EnableMultiNetworking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.networkConfig.enableFqdnNetworkPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).EnableFqdnNetworkPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.networkConfig.enableCiliumClusterwideNetworkPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterNetworkConfig).EnableCiliumClusterwideNetworkPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.nodepool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15538,6 +15559,9 @@ type mqlGcpProjectGkeServiceClusterNetworkConfig struct {
 	PrivateIpv6GoogleAccess plugin.TValue[string]
 	DnsConfig plugin.TValue[interface{}]
 	ServiceExternalIpsConfig plugin.TValue[interface{}]
+	EnableMultiNetworking plugin.TValue[bool]
+	EnableFqdnNetworkPolicy plugin.TValue[bool]
+	EnableCiliumClusterwideNetworkPolicy plugin.TValue[bool]
 }
 
 // createGcpProjectGkeServiceClusterNetworkConfig creates a new instance of this resource
@@ -15647,6 +15671,18 @@ func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetDnsConfig() *plugin.TVa
 
 func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetServiceExternalIpsConfig() *plugin.TValue[interface{}] {
 	return &c.ServiceExternalIpsConfig
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableMultiNetworking() *plugin.TValue[bool] {
+	return &c.EnableMultiNetworking
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableFqdnNetworkPolicy() *plugin.TValue[bool] {
+	return &c.EnableFqdnNetworkPolicy
+}
+
+func (c *mqlGcpProjectGkeServiceClusterNetworkConfig) GetEnableCiliumClusterwideNetworkPolicy() *plugin.TValue[bool] {
+	return &c.EnableCiliumClusterwideNetworkPolicy
 }
 
 // mqlGcpProjectGkeServiceClusterNodepool for the gcp.project.gkeService.cluster.nodepool resource

@@ -1554,6 +1554,12 @@ private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
   dnsConfig dict
   // Configuration specifying whether services with externalIPs field are blocked
   serviceExternalIpsConfig dict
+  // Whether multi-networking is enabled for this cluster.
+  enableMultiNetworking bool
+  // Whether FQDN Network Policy is enabled on this cluster.
+  enableFqdnNetworkPolicy bool
+  // Whether CiliumClusterwideNetworkPolicy is enabled on this cluster.
+  enableCiliumClusterwideNetworkPolicy bool
 }
 
 // Google Kubernetes Engine (GKE) cluster node pool

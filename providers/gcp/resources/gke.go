@@ -382,16 +382,19 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 				}
 			}
 			networkConfig, err = CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkConfig", map[string]*llx.RawData{
-				"id":                        llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id)),
-				"networkPath":               llx.StringData(c.NetworkConfig.Network),
-				"subnetworkPath":            llx.StringData(c.NetworkConfig.Subnetwork),
-				"enableIntraNodeVisibility": llx.BoolData(c.NetworkConfig.EnableIntraNodeVisibility),
-				"defaultSnatStatus":         llx.DictData(defaultSnatStatus),
-				"enableL4IlbSubsetting":     llx.BoolData(c.NetworkConfig.EnableL4IlbSubsetting),
-				"datapathProvider":          llx.StringData(c.NetworkConfig.DatapathProvider.String()),
-				"privateIpv6GoogleAccess":   llx.StringData(c.NetworkConfig.PrivateIpv6GoogleAccess.String()),
-				"dnsConfig":                 llx.DictData(dnsConfig),
-				"serviceExternalIpsConfig":  llx.DictData(serviceExternalIpsConfig),
+				"id":                                   llx.StringData(fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id)),
+				"networkPath":                          llx.StringData(c.NetworkConfig.Network),
+				"subnetworkPath":                       llx.StringData(c.NetworkConfig.Subnetwork),
+				"enableIntraNodeVisibility":            llx.BoolData(c.NetworkConfig.EnableIntraNodeVisibility),
+				"defaultSnatStatus":                    llx.DictData(defaultSnatStatus),
+				"enableL4IlbSubsetting":                llx.BoolData(c.NetworkConfig.EnableL4IlbSubsetting),
+				"datapathProvider":                     llx.StringData(c.NetworkConfig.DatapathProvider.String()),
+				"privateIpv6GoogleAccess":              llx.StringData(c.NetworkConfig.PrivateIpv6GoogleAccess.String()),
+				"dnsConfig":                            llx.DictData(dnsConfig),
+				"serviceExternalIpsConfig":             llx.DictData(serviceExternalIpsConfig),
+				"enableMultiNetworking":                llx.BoolData(c.NetworkConfig.EnableMultiNetworking),
+				"enableFqdnNetworkPolicy":              llx.BoolDataPtr(c.NetworkConfig.EnableFqdnNetworkPolicy),
+				"enableCiliumClusterwideNetworkPolicy": llx.BoolDataPtr(c.NetworkConfig.EnableCiliumClusterwideNetworkPolicy),
 			})
 			if err != nil {
 				return nil, err
