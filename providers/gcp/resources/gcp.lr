@@ -1478,6 +1478,8 @@ private gcp.project.gkeService.cluster @defaults("name description zone status c
   confidentialNodesConfig dict
   // Configuration for Identity Service component
   identityServiceConfig dict
+  // Configuration options for the NetworkPolicy feature
+  networkPolicyConfig dict
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config

@@ -1451,6 +1451,7 @@ resources:
       name: {}
       network: {}
       networkConfig: {}
+      networkPolicyConfig: {}
       nodePools: {}
       privateClusterConfig: {}
       projectId: {}

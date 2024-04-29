@@ -502,6 +502,14 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
+		var networkPolicyConfig map[string]interface{}
+		if c.NetworkPolicy != nil {
+			networkPolicyConfig = map[string]interface{}{
+				"enabled":  c.NetworkPolicy.Enabled,
+				"provider": c.NetworkPolicy.Provider,
+			}
+		}
+
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
 			"projectId":                      llx.StringData(projectId),
 			"id":                             llx.StringData(c.Id),
@@ -539,6 +547,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			"costManagementConfig":           llx.DictData(costManagementConfig),
 			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
 			"identityServiceConfig":          llx.DictData(identityServiceConfig),
+			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
 		})
 		if err != nil {
 			return nil, err
