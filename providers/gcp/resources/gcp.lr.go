@@ -2443,6 +2443,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryption()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetShieldedNodesConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.costManagementConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetCostManagementConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.confidentialNodesConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetConfidentialNodesConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.identityServiceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetIdentityServiceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.networkPolicyConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetNetworkPolicyConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.gkeService.cluster.addonsConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetId()).ToDataRes(types.String)
 	},
@@ -6716,6 +6731,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).DatabaseEncryption, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.shieldedNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ShieldedNodesConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.costManagementConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).CostManagementConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.confidentialNodesConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ConfidentialNodesConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.identityServiceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).IdentityServiceConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.networkPolicyConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).NetworkPolicyConfig, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15146,6 +15181,11 @@ type mqlGcpProjectGkeServiceCluster struct {
 	MasterAuthorizedNetworksConfig plugin.TValue[interface{}]
 	PrivateClusterConfig plugin.TValue[interface{}]
 	DatabaseEncryption plugin.TValue[interface{}]
+	ShieldedNodesConfig plugin.TValue[interface{}]
+	CostManagementConfig plugin.TValue[interface{}]
+	ConfidentialNodesConfig plugin.TValue[interface{}]
+	IdentityServiceConfig plugin.TValue[interface{}]
+	NetworkPolicyConfig plugin.TValue[interface{}]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -15311,6 +15351,26 @@ func (c *mqlGcpProjectGkeServiceCluster) GetPrivateClusterConfig() *plugin.TValu
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[interface{}] {
 	return &c.DatabaseEncryption
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetShieldedNodesConfig() *plugin.TValue[interface{}] {
+	return &c.ShieldedNodesConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetCostManagementConfig() *plugin.TValue[interface{}] {
+	return &c.CostManagementConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetConfidentialNodesConfig() *plugin.TValue[interface{}] {
+	return &c.ConfidentialNodesConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetIdentityServiceConfig() *plugin.TValue[interface{}] {
+	return &c.IdentityServiceConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetNetworkPolicyConfig() *plugin.TValue[interface{}] {
+	return &c.NetworkPolicyConfig
 }
 
 // mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource

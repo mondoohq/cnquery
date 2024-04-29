@@ -474,6 +474,42 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			}
 		}
 
+		var shieldedNodesConfig map[string]interface{}
+		if c.ShieldedNodes != nil {
+			shieldedNodesConfig = map[string]interface{}{
+				"enabled": c.ShieldedNodes.Enabled,
+			}
+		}
+
+		var costManagementConfig map[string]interface{}
+		if c.CostManagementConfig != nil {
+			costManagementConfig = map[string]interface{}{
+				"enabled": c.CostManagementConfig.Enabled,
+			}
+		}
+
+		var confidentialNodesConfig map[string]interface{}
+		if c.ConfidentialNodes != nil {
+			confidentialNodesConfig = map[string]interface{}{
+				"enabled": c.ConfidentialNodes.Enabled,
+			}
+		}
+
+		var identityServiceConfig map[string]interface{}
+		if c.IdentityServiceConfig != nil {
+			identityServiceConfig = map[string]interface{}{
+				"enabled": c.IdentityServiceConfig.Enabled,
+			}
+		}
+
+		var networkPolicyConfig map[string]interface{}
+		if c.NetworkPolicy != nil {
+			networkPolicyConfig = map[string]interface{}{
+				"enabled":  c.NetworkPolicy.Enabled,
+				"provider": c.NetworkPolicy.Provider,
+			}
+		}
+
 		mqlCluster, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster", map[string]*llx.RawData{
 			"projectId":                      llx.StringData(projectId),
 			"id":                             llx.StringData(c.Id),
@@ -507,6 +543,11 @@ func (g *mqlGcpProjectGkeService) clusters() ([]interface{}, error) {
 			"masterAuthorizedNetworksConfig": llx.DictData(masterAuthorizedNetworksCfg),
 			"privateClusterConfig":           llx.DictData(privateClusterCfg),
 			"databaseEncryption":             llx.DictData(databaseEncryption),
+			"shieldedNodesConfig":            llx.DictData(shieldedNodesConfig),
+			"costManagementConfig":           llx.DictData(costManagementConfig),
+			"confidentialNodesConfig":        llx.DictData(confidentialNodesConfig),
+			"identityServiceConfig":          llx.DictData(identityServiceConfig),
+			"networkPolicyConfig":            llx.DictData(networkPolicyConfig),
 		})
 		if err != nil {
 			return nil, err
