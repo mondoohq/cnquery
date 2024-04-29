@@ -16,7 +16,7 @@ func GetPlatformForObject(platformName string, accountId string) *inventory.Plat
 			Title:                 getTitleForPlatformName(platformName),
 			Kind:                  "aws-object",
 			Runtime:               "aws",
-			TechnologyUrlSegments: []string{"aws", accountId, "account"},
+			TechnologyUrlSegments: getTechnologyUrlSegments(accountId, platformName),
 		}
 	}
 	return &inventory.Platform{
@@ -26,6 +26,64 @@ func GetPlatformForObject(platformName string, accountId string) *inventory.Plat
 		Runtime:               "aws",
 		TechnologyUrlSegments: []string{"aws", accountId, "account"},
 	}
+}
+
+func getTechnologyUrlSegments(accountId string, platformName string) []string {
+	return []string{"aws", accountId, getServiceName(platformName)}
+}
+
+func getServiceName(platformName string) string {
+	switch platformName {
+	case "aws-s3-bucket":
+		return "s3"
+	case "aws-cloudtrail-trail":
+		return "cloudtrail"
+	case "aws-rds-dbinstance":
+		return "rds"
+	case "aws-rds-dbcluster":
+		return "rds"
+	case "aws-dynamodb-table":
+		return "dynamodb"
+	case "aws-redshift-cluster":
+		return "redshift"
+	case "aws-vpc":
+		return "vpc"
+	case "aws-security-group":
+		return "ec2"
+	case "aws-ebs-volume":
+		return "ec2"
+	case "aws-ebs-snapshot":
+		return "ec2"
+	case "aws-iam-user":
+		return "iam"
+	case "aws-iam-group":
+		return "iam"
+	case "aws-cloudwatch-loggroup":
+		return "cloudwatch"
+	case "aws-lambda-function":
+		return "lambda"
+	case "aws-ecs-container":
+		return "ecs"
+	case "aws-efs-filesystem":
+		return "efs"
+	case "aws-gateway-restapi":
+		return "apigateway"
+	case "aws-elb-loadbalancer":
+		return "elb"
+	case "aws-es-domain":
+		return "es"
+	case "aws-kms-key":
+		return "kms"
+	case "aws-sagemaker-notebookinstance":
+		return "sagemaker"
+	case "aws-ec2-instance":
+		return "ec2"
+	case "aws-ssm-instance":
+		return "ec2"
+	case "aws-ecr-image":
+		return "ecr"
+	}
+	return "other"
 }
 
 func getTitleForPlatformName(name string) string {
