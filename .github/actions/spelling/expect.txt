@@ -26,6 +26,7 @@ ekm
 elbv
 exo
 gcfs
+gcs
 geomatchstatement
 gistfile
 gpu

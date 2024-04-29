@@ -1506,6 +1506,10 @@ private gcp.project.gkeService.cluster.addonsConfig {
   gcpFilestoreCsiDriverConfig dict
   // Configuration for the backup for GKE agent addon
   gkeBackupAgentConfig dict
+  // Configuration for the Cloud Storage Fuse CSI driver
+  gcsFuseCsiDriverConfig dict
+  // Configuration for the StatefulHA add-on.
+  statefulHaConfig dict
 }
 
 // Google Kubernetes Engine (GKE) cluster IP allocation policy
