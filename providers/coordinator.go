@@ -204,7 +204,7 @@ func (c *coordinator) RemoveRuntime(runtime *Runtime) {
 	}
 
 	// Shutdown any providers that are not being used anymore
-	if len(c.runtimes) == 0 {
+	if len(c.runtimes) == 0 && len(c.unprocessedRuntimes) == 0 {
 		for _, p := range c.runningByID {
 			log.Debug().Msg("shutting down unused provider " + p.Name)
 			if err := c.stop(p); err != nil {
