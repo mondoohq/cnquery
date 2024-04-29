@@ -1515,8 +1515,11 @@ resources:
       datapathProvider: {}
       defaultSnatStatus: {}
       dnsConfig: {}
+      enableCiliumClusterwideNetworkPolicy: {}
+      enableFqdnNetworkPolicy: {}
       enableIntraNodeVisibility: {}
       enableL4IlbSubsetting: {}
+      enableMultiNetworking: {}
       id: {}
       network: {}
       networkPath: {}
