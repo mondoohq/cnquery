@@ -9,7 +9,7 @@ toolchain go1.22.0
 require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/hashicorp/hcl/v2 v2.20.1
-	go.mondoo.com/cnquery/v11 v11.1.0
+	go.mondoo.com/cnquery/v11 v11.1.1
 )
 
 require (
@@ -47,7 +47,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.6.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
-	github.com/aws/aws-sdk-go v1.51.28 // indirect
+	github.com/aws/aws-sdk-go v1.51.30 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11 // indirect
@@ -299,7 +299,7 @@ require (
 	honnef.co/go/tools v0.4.7 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	mvdan.cc/gofumpt v0.6.0 // indirect
-	mvdan.cc/unparam v0.0.0-20240104100049-c549a3470d14 // indirect
+	mvdan.cc/unparam v0.0.0-20240427195214-063aff900ca1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
