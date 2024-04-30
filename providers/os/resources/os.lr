@@ -776,7 +776,7 @@ docker.file.stage @defaults("from.name") {
   file docker.file
   // Environment variables configured in the Dockerfile
   env map[string]string
-  // Labels configured in the Dockerfile
+  // LABEL instructions in the Dockerfile
   labels map[string]string
   // RUN instructions in this Dockerfile
   run []docker.file.run
