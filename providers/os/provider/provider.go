@@ -200,6 +200,13 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		asset.IdDetector = []string{idDetector}
 	}
 
+	if disableCache, ok := flags["disable-cache"]; ok {
+		if conf.Options == nil {
+			conf.Options = map[string]string{}
+		}
+		conf.Options["disable-cache"] = strconv.FormatBool(disableCache.RawData().Value.(bool))
+	}
+
 	res := plugin.ParseCLIRes{
 		Asset: asset,
 	}
