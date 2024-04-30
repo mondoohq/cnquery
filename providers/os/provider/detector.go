@@ -77,7 +77,10 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 		log.Debug().Msg("run cloud platform detector")
 		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
-			asset.Name = name
+			if name != "" {
+				// if we weren't able to detect a name for this asset, don't update to an empty value
+				asset.Name = name
+			}
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(related)...)
 		}
 
