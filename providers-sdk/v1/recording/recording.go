@@ -135,6 +135,7 @@ func NewWithFile(path string, opts RecordingOptions) (llx.Recording, error) {
 				Path:            path,
 				prettyPrintJSON: opts.PrettyPrintJSON,
 				doNotSave:       opts.DoNotSave,
+				assets:          map[uint32]*Asset{},
 			}
 			res.refreshCache() // only for initialization
 			return res, nil
@@ -355,6 +356,10 @@ func (r *recording) findAssetConnID(asset *inventory.Asset) (int, string) {
 func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, connectionID uint32, conf *inventory.Config) {
 	found, _ := r.findAssetConnID(asset)
 
+	if asset.Platform == nil {
+		log.Warn().Msg("cannot store asset in recording, asset has no platform")
+		return
+	}
 	if found == -1 {
 		id := asset.Mrn
 		if id == "" {
@@ -363,6 +368,7 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, providerID string, conne
 		if id == "" {
 			id = asset.Platform.Title
 		}
+
 		r.Assets = append(r.Assets, &Asset{
 			Asset: assetInfo{
 				ID:          id,
