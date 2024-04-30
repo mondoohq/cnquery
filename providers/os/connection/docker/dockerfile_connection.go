@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/v11/providers/os/connection/fs"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 	"go.mondoo.com/cnquery/v11/utils/urlx"
@@ -20,11 +20,11 @@ import (
 var _ shared.Connection = &DockerfileConnection{}
 
 type DockerfileConnection struct {
-	*fs.FileSystemConnection
+	*local.LocalConnection
 	Filename string
 }
 
-func NewDockerfile(id uint32, conf *inventory.Config, asset *inventory.Asset) (*DockerfileConnection, error) {
+func NewDockerfileConnection(id uint32, conf *inventory.Config, asset *inventory.Asset, localConn *local.LocalConnection, localFamily []string) (*DockerfileConnection, error) {
 	if conf == nil {
 		return nil, errors.New("missing configuration to create dockerfile connection")
 	}
@@ -53,11 +53,6 @@ func NewDockerfile(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 		conf.Path = absSrc
 	}
 
-	fsconn, err := fs.NewConnection(id, conf, asset)
-	if err != nil {
-		return nil, err
-	}
-
 	asset.Platform = &inventory.Platform{
 		Name:    "dockerfile",
 		Title:   "Dockerfile",
@@ -65,9 +60,10 @@ func NewDockerfile(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 		Kind:    "code",
 		Runtime: "docker",
 	}
+	// this helps with running commands against the local connection
+	asset.Platform.Family = append(asset.Platform.Family, localFamily...)
 
-	url, ok := asset.Connections[0].Options["ssh-url"]
-	if ok {
+	if url, ok := asset.Connections[0].Options["ssh-url"]; ok {
 		domain, org, repo, err := urlx.ParseGitSshUrl(url)
 		if err != nil {
 			return nil, err
@@ -88,8 +84,10 @@ func NewDockerfile(id uint32, conf *inventory.Config, asset *inventory.Asset) (*
 		asset.Name = "Dockerfile analysis " + filename
 	}
 
-	return &DockerfileConnection{
-		FileSystemConnection: fsconn,
-		Filename:             filename,
-	}, nil
+	conn := &DockerfileConnection{
+		LocalConnection: localConn,
+		Filename:        filename,
+	}
+
+	return conn, nil
 }
