@@ -200,6 +200,8 @@ resources:
       expose: {}
       file: {}
       from: {}
+      labels:
+        min_mondoo_version: 9.0.0
       run: {}
     min_mondoo_version: 9.0.0
     refs:

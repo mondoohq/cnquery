@@ -1313,6 +1313,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"docker.file.stage.env": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetEnv()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"docker.file.stage.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerFileStage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"docker.file.stage.run": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDockerFileStage).GetRun()).ToDataRes(types.Array(types.Resource("docker.file.run")))
 	},
@@ -3464,6 +3467,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"docker.file.stage.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDockerFileStage).Env, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.file.stage.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerFileStage).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 	"docker.file.stage.run": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9500,6 +9507,7 @@ type mqlDockerFileStage struct {
 	From plugin.TValue[*mqlDockerFileFrom]
 	File plugin.TValue[*mqlDockerFile]
 	Env plugin.TValue[map[string]interface{}]
+	Labels plugin.TValue[map[string]interface{}]
 	Run plugin.TValue[[]interface{}]
 	Cmd plugin.TValue[*mqlDockerFileRun]
 	Entrypoint plugin.TValue[*mqlDockerFileRun]
@@ -9550,6 +9558,10 @@ func (c *mqlDockerFileStage) GetFile() *plugin.TValue[*mqlDockerFile] {
 
 func (c *mqlDockerFileStage) GetEnv() *plugin.TValue[map[string]interface{}] {
 	return &c.Env
+}
+
+func (c *mqlDockerFileStage) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
 }
 
 func (c *mqlDockerFileStage) GetRun() *plugin.TValue[[]interface{}] {
