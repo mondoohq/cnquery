@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -19,6 +20,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/shared"
 )
 
@@ -77,7 +79,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	c := &AwsConnection{
 		awsConfigOptions: []func(*config.LoadOptions) error{},
 	}
-	opts := parseFlagsForConnectionOptions(asset.Options)
+	opts := parseFlagsForConnectionOptions(asset.Options, conf.Options, conf.GetCredentials())
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -150,7 +152,12 @@ func parseOptsToFilters(opts map[string]string) DiscoveryFilters {
 	return d
 }
 
-func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
+func parseFlagsForConnectionOptions(m1 map[string]string, m2 map[string]string, creds []*vault.Credential) []ConnectionOption {
+	// merge the options to make sure we dont miss anything
+	m := m1
+	for k, v := range m2 {
+		m[k] = v
+	}
 	o := make([]ConnectionOption, 0)
 	if apiEndpoint, ok := m["endpoint-url"]; ok {
 		o = append(o, WithEndpoint(apiEndpoint))
@@ -171,6 +178,11 @@ func parseFlagsForConnectionOptions(m map[string]string) []ConnectionOption {
 		cfg, _ := config.LoadDefaultConfig(context.Background())
 		externalId := m["external-id"]
 		o = append(o, WithAssumeRole(cfg, role, externalId))
+	}
+
+	if len(creds) > 0 {
+		cred := creds[0]
+		o = append(o, WithStaticCredentials(m["access-key-id"], string(cred.Secret), m["session-token"]))
 	}
 	return o
 }
@@ -206,6 +218,12 @@ func WithRegion(region string) ConnectionOption {
 func WithProfile(profile string) ConnectionOption {
 	return func(a *AwsConnection) {
 		a.awsConfigOptions = append(a.awsConfigOptions, config.WithSharedConfigProfile(profile))
+	}
+}
+
+func WithStaticCredentials(key string, secret string, token string) ConnectionOption {
+	return func(a *AwsConnection) {
+		a.awsConfigOptions = append(a.awsConfigOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(key, secret, token)))
 	}
 }
 
