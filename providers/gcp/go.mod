@@ -30,9 +30,9 @@ require (
 	go.mondoo.com/cnquery/v11 v11.1.1
 	go.mondoo.com/ranger-rpc v0.6.0
 	golang.org/x/oauth2 v0.19.0
-	google.golang.org/api v0.176.1
+	google.golang.org/api v0.177.0
 	google.golang.org/genproto v0.0.0-20240415180920-8c6c420018be
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.0
 )
 
 require (
@@ -327,7 +327,7 @@ require (
 	golang.org/x/tools v0.20.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240415180920-8c6c420018be // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6 // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
