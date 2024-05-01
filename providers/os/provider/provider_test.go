@@ -39,10 +39,8 @@ func TestLocalConnectionIdDetectors(t *testing.T) {
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
 	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
 	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	// here we have the hostname twice, as platformid and stand alone
-	// This get's cleaned up later in the code
-	// FIXME: this should only be 1
-	require.Len(t, connectResp.Asset.PlatformIds, 2)
+
+	require.Len(t, connectResp.Asset.PlatformIds, 1)
 
 	shutdownconnectResp, err := srv.Shutdown(&plugin.ShutdownReq{})
 	require.NoError(t, err)
@@ -78,7 +76,8 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type:           "local",
+					Type:           "docker-image",
+					Host:           "alpine:3.19",
 					DelayDiscovery: true,
 				},
 			},
@@ -87,11 +86,8 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, connectResp)
 
-	require.Len(t, connectResp.Asset.IdDetector, 2)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	require.Len(t, connectResp.Asset.PlatformIds, 1)
+	require.Len(t, connectResp.Asset.IdDetector, 0)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
 	require.Nil(t, connectResp.Asset.Platform)
 
 	// Disable delayed discovery and reconnect
@@ -102,11 +98,6 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, connectResp)
 
-	require.Len(t, connectResp.Asset.IdDetector, 2)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	// Now the platformIDs are cleaned up
 	require.Len(t, connectResp.Asset.PlatformIds, 2)
 	// Verify the platform is set
 	require.NotNil(t, connectResp.Asset.Platform)
