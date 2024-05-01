@@ -78,6 +78,9 @@
 # s.b. email
 \be-mail\b
 
+# s.b. APIs
+\bapis\b
+
 #
 # Product Names
 #
@@ -197,6 +200,29 @@
 # s.b. CrowdStrike
 \bCrowd Strike\b
 \b[Cc]rowdstrike\b
+
+#
+# Kubernetes Terms
+#
+
+# s.b. DaemonSet
+\bDaemonset\b
+
+# s.b. Dockershim
+\bDockerShim\b
+\bdockershim\b
+
+# s.b. LimitRange
+\bLimitrange\b
+
+# s.b. Minikube
+\bMiniKube\b
+
+# s.b. ReplicaSet
+\bReplicaset\b
+
+# s.b. StatefulSet
+\bStatefulset\b
 
 #
 # HashiCorp Products
