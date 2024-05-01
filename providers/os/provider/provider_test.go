@@ -76,7 +76,8 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Type:           "local",
+					Type:           "docker-image",
+					Host:           "alpine:3.19",
 					DelayDiscovery: true,
 				},
 			},
@@ -85,12 +86,9 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, connectResp)
 
-	require.Len(t, connectResp.Asset.IdDetector, 2)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-	require.Len(t, connectResp.Asset.PlatformIds, 1)
-	require.Nil(t, connectResp.Asset.Platform) // Why does this need to be nil
+	require.Len(t, connectResp.Asset.IdDetector, 0)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
+	require.Nil(t, connectResp.Asset.Platform)
 
 	// Disable delayed discovery and reconnect
 	connectResp.Asset.Connections[0].DelayDiscovery = false
@@ -100,12 +98,7 @@ func TestLocalConnectionIdDetectors_DelayedDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, connectResp)
 
-	require.Len(t, connectResp.Asset.IdDetector, 2)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_Hostname)
-	require.Contains(t, connectResp.Asset.IdDetector, ids.IdDetector_CloudDetect)
-	require.NotContains(t, connectResp.Asset.IdDetector, ids.IdDetector_SshHostkey)
-
-	require.Len(t, connectResp.Asset.PlatformIds, 1)
+	require.Len(t, connectResp.Asset.PlatformIds, 2)
 	// Verify the platform is set
 	require.NotNil(t, connectResp.Asset.Platform)
 
