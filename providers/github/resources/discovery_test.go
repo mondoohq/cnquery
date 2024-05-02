@@ -32,3 +32,15 @@ func TestReposFilter_Exclude(t *testing.T) {
 	assert.True(t, reposFilter.skipRepo("repo2"))
 	assert.False(t, reposFilter.skipRepo("repo3"))
 }
+
+func TestReposFilter_Both(t *testing.T) {
+	reposFilter := NewReposFilter(&inventory.Config{
+		Options: map[string]string{
+			connection.OPTION_REPOS:         "repo3,repo1",
+			connection.OPTION_REPOS_EXCLUDE: "repo1,repo2",
+		},
+	})
+	assert.False(t, reposFilter.skipRepo("repo1")) // include takes precedence
+	assert.True(t, reposFilter.skipRepo("repo2"))
+	assert.False(t, reposFilter.skipRepo("repo3"))
+}

@@ -230,7 +230,7 @@ func (f *ReposFilter) skipRepo(namespace string) bool {
 		for _, ns := range f.include {
 			g, err := glob.Compile(ns)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to compile glob")
+				log.Error().Err(err).Msg("failed to compile repos glob")
 				return false
 			}
 			if g.Match(namespace) {
@@ -248,7 +248,7 @@ func (f *ReposFilter) skipRepo(namespace string) bool {
 	for _, ns := range f.exclude {
 		g, err := glob.Compile(ns)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to compile glob")
+			log.Error().Err(err).Msg("failed to compile repos exclude glob")
 			return false
 		}
 		if g.Match(namespace) {
