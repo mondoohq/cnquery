@@ -21,7 +21,6 @@ import (
 	"go.mondoo.com/cnquery/v11/providers"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/v11/providers-sdk/v1/recording"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/upstream"
 )
 
@@ -107,7 +106,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	discoveredAssets, err := scan.DiscoverAssets(ctx,
 		inventory.New(inventory.WithAssets(conf.Asset)),
 		conf.UpstreamConfig,
-		recording.Null{})
+		runtime.Recording())
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not process assets")
 	}
@@ -155,7 +154,6 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
-		runtime.Close()
 		connectAsset.Runtime.Close()
 		providers.Coordinator.Shutdown()
 	}
