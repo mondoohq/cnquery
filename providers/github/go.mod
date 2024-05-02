@@ -8,6 +8,7 @@ toolchain go1.22.0
 
 require (
 	github.com/cockroachdb/errors v1.11.1
+	github.com/gobwas/glob v0.2.3
 	github.com/google/go-github/v59 v59.0.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
@@ -146,7 +147,6 @@ require (
 	github.com/go-toolsmith/typep v1.1.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 // indirect
 	github.com/go-xmlfmt/xmlfmt v1.1.2 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect

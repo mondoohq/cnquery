@@ -4,6 +4,10 @@
 package resources
 
 import (
+	"strings"
+
+	"github.com/gobwas/glob"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
@@ -84,6 +88,7 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 
 func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {
 	conf := conn.Asset().Connections[0]
+	reposFilter := NewReposFilter(conf)
 	assetList := []*inventory.Asset{}
 	org, err := getMqlGithubOrg(runtime, orgName)
 	if err != nil {
@@ -96,12 +101,13 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 		Labels:      map[string]string{},
 		Connections: []*inventory.Config{conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))},
 	})
-	if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) || stringx.Contains(targets, connection.DiscoveryAll) || stringx.Contains(targets, connection.DiscoveryAuto) {
-		if stringx.Contains(targets, connection.DiscoveryRepos) || stringx.Contains(targets, connection.DiscoveryRepository) {
-			assetList = []*inventory.Asset{}
-		}
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryRepos, connection.DiscoveryRepository, connection.DiscoveryAll, connection.DiscoveryAuto) {
+		assetList = []*inventory.Asset{}
 		for i := range org.GetRepositories().Data {
 			repo := org.GetRepositories().Data[i].(*mqlGithubRepository)
+			if reposFilter.skipRepo(repo.Name.Data) {
+				continue
+			}
 			cfg := conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.ID()))
 			cfg.Options["repository"] = repo.Name.Data
 			assetList = append(assetList, &inventory.Asset{
@@ -113,7 +119,7 @@ func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnect
 			})
 		}
 	}
-	if stringx.Contains(targets, connection.DiscoveryUsers) || stringx.Contains(targets, connection.DiscoveryUser) {
+	if stringx.ContainsAnyOf(targets, connection.DiscoveryUsers, connection.DiscoveryUser) {
 		assetList = []*inventory.Asset{}
 		for i := range org.GetMembers().Data {
 			user := org.GetMembers().Data[i].(*mqlGithubUser)
@@ -199,4 +205,56 @@ func getMqlGithubUser(runtime *plugin.Runtime, userName string) (*mqlGithubUser,
 	}
 
 	return res.(*mqlGithubUser), nil
+}
+
+type ReposFilter struct {
+	include []string
+	exclude []string
+}
+
+func NewReposFilter(cfg *inventory.Config) ReposFilter {
+	nsFilter := ReposFilter{}
+	if include, ok := cfg.Options[connection.OPTION_REPOS]; ok && len(include) > 0 {
+		nsFilter.include = strings.Split(include, ",")
+	}
+
+	if exclude, ok := cfg.Options[connection.OPTION_REPOS_EXCLUDE]; ok && len(exclude) > 0 {
+		nsFilter.exclude = strings.Split(exclude, ",")
+	}
+	return nsFilter
+}
+
+func (f *ReposFilter) skipRepo(namespace string) bool {
+	// anything explicitly specified in the list of includes means accept only from that list
+	if len(f.include) > 0 {
+		for _, ns := range f.include {
+			g, err := glob.Compile(ns)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to compile glob")
+				return false
+			}
+			if g.Match(namespace) {
+				// stop looking, we found our match
+				return false
+			}
+		}
+
+		// didn't find it, so it must be skipped
+		return true
+	}
+
+	// if nothing explicitly meant to be included, then check whether
+	// it should be excluded
+	for _, ns := range f.exclude {
+		g, err := glob.Compile(ns)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to compile glob")
+			return false
+		}
+		if g.Match(namespace) {
+			return true
+		}
+	}
+
+	return false
 }

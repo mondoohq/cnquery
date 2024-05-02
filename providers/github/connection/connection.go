@@ -17,6 +17,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	OPTION_REPOS         = "repos"
+	OPTION_REPOS_EXCLUDE = "repos-exclude"
+)
+
 type GithubConnection struct {
 	plugin.Connection
 	asset  *inventory.Asset

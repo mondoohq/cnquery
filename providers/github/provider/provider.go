@@ -82,6 +82,14 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		return nil, errors.New("invalid GitHub sub-command, supported are: org, user, or repo")
 	}
 
+	if repos, ok := req.Flags[connection.OPTION_REPOS]; ok {
+		conf.Options[connection.OPTION_REPOS] = string(repos.Value)
+	}
+
+	if repos, ok := req.Flags[connection.OPTION_REPOS_EXCLUDE]; ok {
+		conf.Options[connection.OPTION_REPOS_EXCLUDE] = string(repos.Value)
+	}
+
 	asset := inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}

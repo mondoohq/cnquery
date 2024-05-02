@@ -29,6 +29,18 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "Provide GitHub personal access token.",
 				},
+				{
+					Long:    "repos-exclude",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Filter out repositories matching these names.",
+				},
+				{
+					Long:    "repos",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Only include repositories with matching names.",
+				},
 			},
 		},
 	},
