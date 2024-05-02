@@ -31,7 +31,7 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 	if g.memoize == nil {
 		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
 	}
-	res, err, _ := g.memoize.Memoize("user", func() (interface{}, error) {
+	res, err, _ := g.memoize.Memoize("user-"+user, func() (interface{}, error) {
 		log.Debug().Msgf("fetching user %s", user)
 		user, _, err := conn.Client().Users.Get(ctx, user)
 		return user, err
@@ -40,6 +40,26 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 		return nil, err
 	}
 	return res.(*github.User), nil
+}
+
+func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.GithubConnection, name string) (*github.Organization, error) {
+	obj, err := CreateResource(runtime, "github-", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	g := obj.(*mqlGithub)
+	if g.memoize == nil {
+		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
+	}
+	res, err, _ := g.memoize.Memoize("org"+name, func() (interface{}, error) {
+		log.Debug().Msgf("fetching organization %s", name)
+		user, _, err := conn.Client().Organizations.Get(ctx, name)
+		return user, err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*github.Organization), nil
 }
 
 func githubTimestamp(ts *github.Timestamp) *time.Time {

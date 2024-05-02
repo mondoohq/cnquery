@@ -43,7 +43,7 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		}
 	}
 
-	org, _, err := conn.Client().Organizations.Get(context.Background(), name)
+	org, err := getOrg(context.Background(), runtime, conn, name)
 	if err != nil {
 		return args, nil, err
 	}
