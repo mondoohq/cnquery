@@ -43,7 +43,7 @@ func getUser(ctx context.Context, runtime *plugin.Runtime, conn *connection.Gith
 }
 
 func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.GithubConnection, name string) (*github.Organization, error) {
-	obj, err := CreateResource(runtime, "github-", map[string]*llx.RawData{})
+	obj, err := CreateResource(runtime, "github", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func getOrg(ctx context.Context, runtime *plugin.Runtime, conn *connection.Githu
 	if g.memoize == nil {
 		g.memoize = memoize.NewMemoizer(30*time.Minute, 1*time.Hour)
 	}
-	res, err, _ := g.memoize.Memoize("org"+name, func() (interface{}, error) {
+	res, err, _ := g.memoize.Memoize("org-"+name, func() (interface{}, error) {
 		log.Debug().Msgf("fetching organization %s", name)
 		user, _, err := conn.Client().Organizations.Get(ctx, name)
 		return user, err
