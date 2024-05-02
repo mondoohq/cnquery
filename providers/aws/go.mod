@@ -7,7 +7,7 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/aws/aws-sdk-go v1.51.32
+	github.com/aws/aws-sdk-go v1.52.0
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7
@@ -49,11 +49,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.138.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.48.2
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.48.3
 	github.com/aws/smithy-go v1.20.2
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/uuid v1.6.0
