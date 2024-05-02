@@ -136,7 +136,7 @@ func initGithubRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	var err error
 	orgId, err := conn.Organization()
 	if err == nil {
-		obj, err := CreateResource(runtime, "github.organization", map[string]*llx.RawData{
+		obj, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{
 			"login": llx.StringData(orgId.Name),
 		})
 		if err != nil {
@@ -584,7 +584,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 		}
 	}
 
-	if rc.Author != nil {
+	if rc.Author != nil && rc.Author.ID != nil && rc.Author.Login != nil {
 		githubAuthor, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(rc.Author.ID),
 			"login": llx.StringDataPtr(rc.Author.Login),
@@ -594,7 +594,7 @@ func newMqlGithubCommit(runtime *plugin.Runtime, rc *github.RepositoryCommit, ow
 		}
 	}
 	var githubCommitter interface{}
-	if rc.Committer != nil {
+	if rc.Committer != nil && rc.Committer.ID != nil && rc.Committer.Login != nil {
 		githubCommitter, err = NewResource(runtime, "github.user", map[string]*llx.RawData{
 			"id":    llx.IntDataPtr(rc.Committer.ID),
 			"login": llx.StringDataPtr(rc.Committer.Login),
