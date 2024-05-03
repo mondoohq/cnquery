@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/azure/connection/azureinstancesnapshot"
 	"go.mondoo.com/cnquery/v11/providers/azure/provider"
@@ -117,6 +118,48 @@ var Config = plugin.Provider{
 					Default: "",
 					Desc:    "The logical unit number of the attached disk that should be scanned. Use together with --skip-snapshot-setup.",
 					Option:  plugin.FlagOption_Hidden,
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=azure"},
+			Key:          "tenant",
+			Title:        "Tenant",
+			Values: map[string]*inventory.AssetUrlBranch{
+				"*": {
+					Key:   "subscription",
+					Title: "Subscription",
+					Values: map[string]*inventory.AssetUrlBranch{
+						"*": {
+							Key: "service",
+							Values: map[string]*inventory.AssetUrlBranch{
+								"account":  nil,
+								"compute":  nil,
+								"mysql":    nil,
+								"postgres": nil,
+								"mariadb":  nil,
+								"sql":      nil,
+								"storage": {
+									Key: "object",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"account":   nil,
+										"container": nil,
+										"other":     nil,
+									},
+								},
+								"network": {
+									Key: "object",
+									Values: map[string]*inventory.AssetUrlBranch{
+										"security-group": nil,
+										"other":          nil,
+									},
+								},
+								"keyvault": nil,
+							},
+						},
+					},
 				},
 			},
 		},
