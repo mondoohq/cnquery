@@ -7,20 +7,20 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	cloud.google.com/go/accessapproval v1.7.6
+	cloud.google.com/go/accessapproval v1.7.7
 	cloud.google.com/go/bigquery v1.61.0
-	cloud.google.com/go/compute v1.25.1
-	cloud.google.com/go/container v1.35.0
-	cloud.google.com/go/functions v1.16.1
-	cloud.google.com/go/iam v1.1.7
-	cloud.google.com/go/kms v1.15.8
+	cloud.google.com/go/compute v1.26.0
+	cloud.google.com/go/container v1.35.1
+	cloud.google.com/go/functions v1.16.2
+	cloud.google.com/go/iam v1.1.8
+	cloud.google.com/go/kms v1.15.9
 	cloud.google.com/go/logging v1.9.0
-	cloud.google.com/go/longrunning v0.5.6
-	cloud.google.com/go/monitoring v1.18.2
+	cloud.google.com/go/longrunning v0.5.7
+	cloud.google.com/go/monitoring v1.19.0
 	cloud.google.com/go/pubsub v1.37.0
-	cloud.google.com/go/recommender v1.12.2
-	cloud.google.com/go/run v1.3.6
-	cloud.google.com/go/serviceusage v1.8.5
+	cloud.google.com/go/recommender v1.12.3
+	cloud.google.com/go/run v1.3.7
+	cloud.google.com/go/serviceusage v1.8.6
 	github.com/aws/smithy-go v1.20.2
 	github.com/cockroachdb/errors v1.11.1
 	github.com/google/go-containerregistry v0.19.1
