@@ -303,7 +303,7 @@ func init() {
 			Create: createAwsElb,
 		},
 		"aws.elb.loadbalancer": {
-			// to override args, implement: initAwsElbLoadbalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initAwsElbLoadbalancer,
 			Create: createAwsElbLoadbalancer,
 		},
 		"aws.codebuild": {
