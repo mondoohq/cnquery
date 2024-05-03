@@ -562,6 +562,30 @@ func init() {
 			// to override args, implement: initAwsEc2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2,
 		},
+		"aws.ec2.eip": {
+			Init: initAwsEc2Eip,
+			Create: createAwsEc2Eip,
+		},
+		"aws.vpc.natgateway": {
+			// to override args, implement: initAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcNatgateway,
+		},
+		"aws.vpc.natgateway.address": {
+			// to override args, implement: initAwsVpcNatgatewayAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcNatgatewayAddress,
+		},
+		"aws.vpc.serviceEndpoint": {
+			// to override args, implement: initAwsVpcServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcServiceEndpoint,
+		},
+		"aws.vpc.peeringConnection": {
+			// to override args, implement: initAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcPeeringConnection,
+		},
+		"aws.vpc.peeringConnection.peeringVpc": {
+			// to override args, implement: initAwsVpcPeeringConnectionPeeringVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVpcPeeringConnectionPeeringVpc,
+		},
 		"aws.ec2.networkacl": {
 			// to override args, implement: initAwsEc2Networkacl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2Networkacl,
@@ -796,6 +820,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.vpc.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.natGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetNatGateways()).ToDataRes(types.Array(types.Resource("aws.vpc.natgateway")))
+	},
+	"aws.vpc.serviceEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetServiceEndpoints()).ToDataRes(types.Array(types.Resource("aws.vpc.serviceEndpoint")))
+	},
+	"aws.vpc.peeringConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetPeeringConnections()).ToDataRes(types.Array(types.Resource("aws.vpc.peeringConnection")))
 	},
 	"aws.vpc.routetable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpcRoutetable).GetId()).ToDataRes(types.String)
@@ -3281,6 +3314,153 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.keypairs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetKeypairs()).ToDataRes(types.Array(types.Resource("aws.ec2.keypair")))
 	},
+	"aws.ec2.eips": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetEips()).ToDataRes(types.Array(types.Resource("aws.ec2.eip")))
+	},
+	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
+	},
+	"aws.ec2.eip.attached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetAttached()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.eip.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetInstance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
+	"aws.ec2.eip.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"aws.ec2.eip.networkInterfaceOwnerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetNetworkInterfaceOwnerId()).ToDataRes(types.String)
+	},
+	"aws.ec2.eip.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetPrivateIpAddress()).ToDataRes(types.String)
+	},
+	"aws.ec2.eip.publicIpv4Pool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetPublicIpv4Pool()).ToDataRes(types.String)
+	},
+	"aws.ec2.eip.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.eip.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Eip).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.vpc.natgateway.natGatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetNatGatewayId()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetState()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.natgateway.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.vpc.natgateway.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgateway).GetAddresses()).ToDataRes(types.Array(types.Resource("aws.vpc.natgateway.address")))
+	},
+	"aws.vpc.natgateway.address.allocationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetAllocationId()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.address.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.address.privateIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetPrivateIp()).ToDataRes(types.String)
+	},
+	"aws.vpc.natgateway.address.publicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetPublicIp()).ToDataRes(types.Resource("aws.ec2.eip"))
+	},
+	"aws.vpc.natgateway.address.isPrimary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcNatgatewayAddress).GetIsPrimary()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.serviceEndpoint.acceptanceRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetAcceptanceRequired()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.serviceEndpoint.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.serviceEndpoint.dnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetDnsNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.serviceEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.managesVpcEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetManagesVpcEndpoints()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.serviceEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetOwner()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.payerResponsibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetPayerResponsibility()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.privateDnsNameVerificationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetPrivateDnsNameVerificationState()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.privateDnsNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetPrivateDnsNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.serviceEndpoint.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.serviceEndpoint.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetType()).ToDataRes(types.String)
+	},
+	"aws.vpc.serviceEndpoint.vpcEndpointPolicySupported": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcServiceEndpoint).GetVpcEndpointPolicySupported()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.peeringConnection.acceptorVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetAcceptorVpc()).ToDataRes(types.Resource("aws.vpc.peeringConnection.peeringVpc"))
+	},
+	"aws.vpc.peeringConnection.expirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetExpirationTime()).ToDataRes(types.Time)
+	},
+	"aws.vpc.peeringConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetId()).ToDataRes(types.String)
+	},
+	"aws.vpc.peeringConnection.requestorVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetRequestorVpc()).ToDataRes(types.Resource("aws.vpc.peeringConnection.peeringVpc"))
+	},
+	"aws.vpc.peeringConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.vpc.peeringConnection.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnection).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.vpc.peeringConnection.peeringVpc.allowDnsResolutionFromRemoteVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowDnsResolutionFromRemoteVpc()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalClassicLinkToRemoteVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowEgressFromLocalClassicLinkToRemoteVpc()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalVpcToRemoteClassicLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetAllowEgressFromLocalVpcToRemoteClassicLink()).ToDataRes(types.Bool)
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ipv4CiderBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetIpv4CiderBlocks()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ipv6CiderBlocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetIpv6CiderBlocks()).ToDataRes(types.Array(types.String))
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ownerID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetOwnerID()).ToDataRes(types.String)
+	},
+	"aws.vpc.peeringConnection.peeringVpc.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.vpc.peeringConnection.peeringVpc.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.vpc.peeringConnection.peeringVpc.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpcPeeringConnectionPeeringVpc).GetVpcId()).ToDataRes(types.String)
+	},
 	"aws.ec2.networkacl.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Networkacl).GetArn()).ToDataRes(types.String)
 	},
@@ -3934,6 +4114,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"aws.vpc.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).NatGateways, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).ServiceEndpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).PeeringConnections, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.routetable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7776,6 +7968,226 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAwsEc2).Keypairs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.eips": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).Eips, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.ec2.eip.publicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).PublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.attached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).Attached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.networkInterfaceOwnerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).NetworkInterfaceOwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.publicIpv4Pool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).PublicIpv4Pool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.eip.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Eip).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcNatgateway).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.natgateway.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.natGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).NatGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgateway).Addresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcNatgatewayAddress).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.natgateway.address.allocationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).AllocationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.address.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.address.privateIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).PrivateIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.address.publicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).PublicIp, ok = plugin.RawToTValue[*mqlAwsEc2Eip](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.natgateway.address.isPrimary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcNatgatewayAddress).IsPrimary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcServiceEndpoint).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.serviceEndpoint.acceptanceRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).AcceptanceRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).AvailabilityZones, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.dnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).DnsNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.managesVpcEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).ManagesVpcEndpoints, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.payerResponsibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).PayerResponsibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.privateDnsNameVerificationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).PrivateDnsNameVerificationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.privateDnsNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).PrivateDnsNames, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.serviceEndpoint.vpcEndpointPolicySupported": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcServiceEndpoint).VpcEndpointPolicySupported, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcPeeringConnection).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.peeringConnection.acceptorVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).AcceptorVpc, ok = plugin.RawToTValue[*mqlAwsVpcPeeringConnectionPeeringVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.requestorVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).RequestorVpc, ok = plugin.RawToTValue[*mqlAwsVpcPeeringConnectionPeeringVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnection).Tags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAwsVpcPeeringConnectionPeeringVpc).__id, ok = v.Value.(string)
+			return
+		},
+	"aws.vpc.peeringConnection.peeringVpc.allowDnsResolutionFromRemoteVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowDnsResolutionFromRemoteVpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalClassicLinkToRemoteVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowEgressFromLocalClassicLinkToRemoteVpc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.allowEgressFromLocalVpcToRemoteClassicLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).AllowEgressFromLocalVpcToRemoteClassicLink, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ipv4CiderBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv4CiderBlocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ipv6CiderBlocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Ipv6CiderBlocks, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.ownerID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).OwnerID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.peeringConnection.peeringVpc.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpcPeeringConnectionPeeringVpc).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.networkacl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlAwsEc2Networkacl).__id, ok = v.Value.(string)
 			return
@@ -8840,6 +9252,9 @@ type mqlAwsVpc struct {
 	RouteTables plugin.TValue[[]interface{}]
 	Subnets plugin.TValue[[]interface{}]
 	Tags plugin.TValue[map[string]interface{}]
+	NatGateways plugin.TValue[[]interface{}]
+	ServiceEndpoints plugin.TValue[[]interface{}]
+	PeeringConnections plugin.TValue[[]interface{}]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -8973,6 +9388,54 @@ func (c *mqlAwsVpc) GetSubnets() *plugin.TValue[[]interface{}] {
 
 func (c *mqlAwsVpc) GetTags() *plugin.TValue[map[string]interface{}] {
 	return &c.Tags
+}
+
+func (c *mqlAwsVpc) GetNatGateways() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.NatGateways, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "natGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.natGateways()
+	})
+}
+
+func (c *mqlAwsVpc) GetServiceEndpoints() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.ServiceEndpoints, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "serviceEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.serviceEndpoints()
+	})
+}
+
+func (c *mqlAwsVpc) GetPeeringConnections() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.PeeringConnections, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc", c.__id, "peeringConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.peeringConnections()
+	})
 }
 
 // mqlAwsVpcRoutetable for the aws.vpc.routetable resource
@@ -19986,6 +20449,7 @@ type mqlAwsEc2 struct {
 	VpnConnections plugin.TValue[[]interface{}]
 	NetworkAcls plugin.TValue[[]interface{}]
 	Keypairs plugin.TValue[[]interface{}]
+	Eips plugin.TValue[[]interface{}]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -20157,6 +20621,598 @@ func (c *mqlAwsEc2) GetKeypairs() *plugin.TValue[[]interface{}] {
 
 		return c.keypairs()
 	})
+}
+
+func (c *mqlAwsEc2) GetEips() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Eips, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "eips")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.eips()
+	})
+}
+
+// mqlAwsEc2Eip for the aws.ec2.eip resource
+type mqlAwsEc2Eip struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsEc2EipInternal
+	PublicIp plugin.TValue[string]
+	Attached plugin.TValue[bool]
+	Instance plugin.TValue[*mqlAwsEc2Instance]
+	NetworkInterfaceId plugin.TValue[string]
+	NetworkInterfaceOwnerId plugin.TValue[string]
+	PrivateIpAddress plugin.TValue[string]
+	PublicIpv4Pool plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Region plugin.TValue[string]
+}
+
+// createAwsEc2Eip creates a new instance of this resource
+func createAwsEc2Eip(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2Eip{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.eip", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2Eip) MqlName() string {
+	return "aws.ec2.eip"
+}
+
+func (c *mqlAwsEc2Eip) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2Eip) GetPublicIp() *plugin.TValue[string] {
+	return &c.PublicIp
+}
+
+func (c *mqlAwsEc2Eip) GetAttached() *plugin.TValue[bool] {
+	return &c.Attached
+}
+
+func (c *mqlAwsEc2Eip) GetInstance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.eip", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlAwsEc2Eip) GetNetworkInterfaceId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsEc2Eip) GetNetworkInterfaceOwnerId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceOwnerId
+}
+
+func (c *mqlAwsEc2Eip) GetPrivateIpAddress() *plugin.TValue[string] {
+	return &c.PrivateIpAddress
+}
+
+func (c *mqlAwsEc2Eip) GetPublicIpv4Pool() *plugin.TValue[string] {
+	return &c.PublicIpv4Pool
+}
+
+func (c *mqlAwsEc2Eip) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2Eip) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsVpcNatgateway for the aws.vpc.natgateway resource
+type mqlAwsVpcNatgateway struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsVpcNatgatewayInternal
+	CreatedAt plugin.TValue[*time.Time]
+	NatGatewayId plugin.TValue[string]
+	State plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+	Vpc plugin.TValue[*mqlAwsVpc]
+	Addresses plugin.TValue[[]interface{}]
+}
+
+// createAwsVpcNatgateway creates a new instance of this resource
+func createAwsVpcNatgateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcNatgateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.natgateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcNatgateway) MqlName() string {
+	return "aws.vpc.natgateway"
+}
+
+func (c *mqlAwsVpcNatgateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcNatgateway) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsVpcNatgateway) GetNatGatewayId() *plugin.TValue[string] {
+	return &c.NatGatewayId
+}
+
+func (c *mqlAwsVpcNatgateway) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsVpcNatgateway) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsVpcNatgateway) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.natgateway", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsVpcNatgateway) GetAddresses() *plugin.TValue[[]interface{}] {
+	return &c.Addresses
+}
+
+// mqlAwsVpcNatgatewayAddress for the aws.vpc.natgateway.address resource
+type mqlAwsVpcNatgatewayAddress struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsVpcNatgatewayAddressInternal
+	AllocationId plugin.TValue[string]
+	NetworkInterfaceId plugin.TValue[string]
+	PrivateIp plugin.TValue[string]
+	PublicIp plugin.TValue[*mqlAwsEc2Eip]
+	IsPrimary plugin.TValue[bool]
+}
+
+// createAwsVpcNatgatewayAddress creates a new instance of this resource
+func createAwsVpcNatgatewayAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcNatgatewayAddress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.natgateway.address", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) MqlName() string {
+	return "aws.vpc.natgateway.address"
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetAllocationId() *plugin.TValue[string] {
+	return &c.AllocationId
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetNetworkInterfaceId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetPrivateIp() *plugin.TValue[string] {
+	return &c.PrivateIp
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetPublicIp() *plugin.TValue[*mqlAwsEc2Eip] {
+	return plugin.GetOrCompute[*mqlAwsEc2Eip](&c.PublicIp, func() (*mqlAwsEc2Eip, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.natgateway.address", c.__id, "publicIp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Eip), nil
+			}
+		}
+
+		return c.publicIp()
+	})
+}
+
+func (c *mqlAwsVpcNatgatewayAddress) GetIsPrimary() *plugin.TValue[bool] {
+	return &c.IsPrimary
+}
+
+// mqlAwsVpcServiceEndpoint for the aws.vpc.serviceEndpoint resource
+type mqlAwsVpcServiceEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcServiceEndpointInternal it will be used here
+	AcceptanceRequired plugin.TValue[bool]
+	AvailabilityZones plugin.TValue[[]interface{}]
+	DnsNames plugin.TValue[[]interface{}]
+	Id plugin.TValue[string]
+	ManagesVpcEndpoints plugin.TValue[bool]
+	Name plugin.TValue[string]
+	Owner plugin.TValue[string]
+	PayerResponsibility plugin.TValue[string]
+	PrivateDnsNameVerificationState plugin.TValue[string]
+	PrivateDnsNames plugin.TValue[[]interface{}]
+	Tags plugin.TValue[map[string]interface{}]
+	Type plugin.TValue[string]
+	VpcEndpointPolicySupported plugin.TValue[bool]
+}
+
+// createAwsVpcServiceEndpoint creates a new instance of this resource
+func createAwsVpcServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcServiceEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.serviceEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcServiceEndpoint) MqlName() string {
+	return "aws.vpc.serviceEndpoint"
+}
+
+func (c *mqlAwsVpcServiceEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetAcceptanceRequired() *plugin.TValue[bool] {
+	return &c.AcceptanceRequired
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetAvailabilityZones() *plugin.TValue[[]interface{}] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetDnsNames() *plugin.TValue[[]interface{}] {
+	return &c.DnsNames
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetManagesVpcEndpoints() *plugin.TValue[bool] {
+	return &c.ManagesVpcEndpoints
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetPayerResponsibility() *plugin.TValue[string] {
+	return &c.PayerResponsibility
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNameVerificationState() *plugin.TValue[string] {
+	return &c.PrivateDnsNameVerificationState
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetPrivateDnsNames() *plugin.TValue[[]interface{}] {
+	return &c.PrivateDnsNames
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsVpcServiceEndpoint) GetVpcEndpointPolicySupported() *plugin.TValue[bool] {
+	return &c.VpcEndpointPolicySupported
+}
+
+// mqlAwsVpcPeeringConnection for the aws.vpc.peeringConnection resource
+type mqlAwsVpcPeeringConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlAwsVpcPeeringConnectionInternal
+	AcceptorVpc plugin.TValue[*mqlAwsVpcPeeringConnectionPeeringVpc]
+	ExpirationTime plugin.TValue[*time.Time]
+	Id plugin.TValue[string]
+	RequestorVpc plugin.TValue[*mqlAwsVpcPeeringConnectionPeeringVpc]
+	Status plugin.TValue[string]
+	Tags plugin.TValue[map[string]interface{}]
+}
+
+// createAwsVpcPeeringConnection creates a new instance of this resource
+func createAwsVpcPeeringConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcPeeringConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.peeringConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcPeeringConnection) MqlName() string {
+	return "aws.vpc.peeringConnection"
+}
+
+func (c *mqlAwsVpcPeeringConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetAcceptorVpc() *plugin.TValue[*mqlAwsVpcPeeringConnectionPeeringVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpcPeeringConnectionPeeringVpc](&c.AcceptorVpc, func() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.peeringConnection", c.__id, "acceptorVpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcPeeringConnectionPeeringVpc), nil
+			}
+		}
+
+		return c.acceptorVpc()
+	})
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTime
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetRequestorVpc() *plugin.TValue[*mqlAwsVpcPeeringConnectionPeeringVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpcPeeringConnectionPeeringVpc](&c.RequestorVpc, func() (*mqlAwsVpcPeeringConnectionPeeringVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.peeringConnection", c.__id, "requestorVpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcPeeringConnectionPeeringVpc), nil
+			}
+		}
+
+		return c.requestorVpc()
+	})
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsVpcPeeringConnection) GetTags() *plugin.TValue[map[string]interface{}] {
+	return &c.Tags
+}
+
+// mqlAwsVpcPeeringConnectionPeeringVpc for the aws.vpc.peeringConnection.peeringVpc resource
+type mqlAwsVpcPeeringConnectionPeeringVpc struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAwsVpcPeeringConnectionPeeringVpcInternal it will be used here
+	AllowDnsResolutionFromRemoteVpc plugin.TValue[bool]
+	AllowEgressFromLocalClassicLinkToRemoteVpc plugin.TValue[bool]
+	AllowEgressFromLocalVpcToRemoteClassicLink plugin.TValue[bool]
+	Ipv4CiderBlocks plugin.TValue[[]interface{}]
+	Ipv6CiderBlocks plugin.TValue[[]interface{}]
+	OwnerID plugin.TValue[string]
+	Region plugin.TValue[string]
+	Vpc plugin.TValue[*mqlAwsVpc]
+	VpcId plugin.TValue[string]
+}
+
+// createAwsVpcPeeringConnectionPeeringVpc creates a new instance of this resource
+func createAwsVpcPeeringConnectionPeeringVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVpcPeeringConnectionPeeringVpc{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.vpc.peeringConnection.peeringVpc", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) MqlName() string {
+	return "aws.vpc.peeringConnection.peeringVpc"
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowDnsResolutionFromRemoteVpc() *plugin.TValue[bool] {
+	return &c.AllowDnsResolutionFromRemoteVpc
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowEgressFromLocalClassicLinkToRemoteVpc() *plugin.TValue[bool] {
+	return &c.AllowEgressFromLocalClassicLinkToRemoteVpc
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetAllowEgressFromLocalVpcToRemoteClassicLink() *plugin.TValue[bool] {
+	return &c.AllowEgressFromLocalVpcToRemoteClassicLink
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv4CiderBlocks() *plugin.TValue[[]interface{}] {
+	return &c.Ipv4CiderBlocks
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetIpv6CiderBlocks() *plugin.TValue[[]interface{}] {
+	return &c.Ipv6CiderBlocks
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetOwnerID() *plugin.TValue[string] {
+	return &c.OwnerID
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.vpc.peeringConnection.peeringVpc", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsVpcPeeringConnectionPeeringVpc) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
 }
 
 // mqlAwsEc2Networkacl for the aws.ec2.networkacl resource
