@@ -4,6 +4,7 @@
 package config
 
 import (
+	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/provider"
 	"go.mondoo.com/cnquery/v11/providers/vsphere/resources"
@@ -42,6 +43,24 @@ var Config = plugin.Provider{
 					Desc:        "Set the connection password",
 					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
+				},
+			},
+		},
+	},
+	AssetUrlTrees: []*inventory.AssetUrlBranch{
+		{
+			PathSegments: []string{"technology=vsphere"},
+			Key:          "platform",
+			Title:        "Platform",
+			Values: map[string]*inventory.AssetUrlBranch{
+				// redhat, arch, ...
+				"*": {
+					Key:   "version",
+					Title: "Version",
+					Values: map[string]*inventory.AssetUrlBranch{
+						// any valid version for the OS
+						"*": nil,
+					},
 				},
 			},
 		},
