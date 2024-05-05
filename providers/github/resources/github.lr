@@ -129,9 +129,9 @@ github.organization @defaults("login name") {
   // List of packages
   packages() []github.package
   // Whether the organization has projects
-	hasOrganizationProjects bool
+  hasOrganizationProjects bool
   // Whether projects in the organization have projects
-	hasRepositoryProjects bool
+  hasRepositoryProjects bool
 }
 
 // GitHub user
