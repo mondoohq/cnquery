@@ -344,6 +344,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.packages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetPackages()).ToDataRes(types.Array(types.Resource("github.package")))
 	},
+	"github.organization.hasOrganizationProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetHasOrganizationProjects()).ToDataRes(types.Bool)
+	},
+	"github.organization.hasRepositoryProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetHasRepositoryProjects()).ToDataRes(types.Bool)
+	},
 	"github.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubUser).GetId()).ToDataRes(types.Int)
 	},
@@ -1160,6 +1166,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"github.organization.packages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).Packages, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"github.organization.hasOrganizationProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).HasOrganizationProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.organization.hasRepositoryProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).HasRepositoryProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2308,6 +2322,8 @@ type mqlGithubOrganization struct {
 	Installations plugin.TValue[[]interface{}]
 	Webhooks plugin.TValue[[]interface{}]
 	Packages plugin.TValue[[]interface{}]
+	HasOrganizationProjects plugin.TValue[bool]
+	HasRepositoryProjects plugin.TValue[bool]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -2589,6 +2605,14 @@ func (c *mqlGithubOrganization) GetPackages() *plugin.TValue[[]interface{}] {
 
 		return c.packages()
 	})
+}
+
+func (c *mqlGithubOrganization) GetHasOrganizationProjects() *plugin.TValue[bool] {
+	return &c.HasOrganizationProjects
+}
+
+func (c *mqlGithubOrganization) GetHasRepositoryProjects() *plugin.TValue[bool] {
+	return &c.HasRepositoryProjects
 }
 
 // mqlGithubUser for the github.user resource

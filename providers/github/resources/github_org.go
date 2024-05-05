@@ -76,6 +76,9 @@ func initGithubOrganization(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	args["twoFactorRequirementEnabled"] = llx.BoolData(convert.ToBool(org.TwoFactorRequirementEnabled))
 	args["isVerified"] = llx.BoolData(convert.ToBool(org.IsVerified))
 
+	args["hasOrganizationProjects"] = llx.BoolData(convert.ToBool(org.HasOrganizationProjects))
+	args["hasRepositoryProjects"] = llx.BoolData(convert.ToBool(org.HasRepositoryProjects))
+
 	args["defaultRepositoryPermission"] = llx.StringDataPtr(org.DefaultRepoPermission)
 	args["membersCanCreateRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreateRepos))
 	args["membersCanCreatePublicRepositories"] = llx.BoolData(convert.ToBool(org.MembersCanCreatePublicRepos))

@@ -128,6 +128,10 @@ github.organization @defaults("login name") {
   webhooks() []github.webhook
   // List of packages
   packages() []github.package
+  // Whether the organization has projects
+  hasOrganizationProjects bool
+  // Whether projects in the organization have projects
+  hasRepositoryProjects bool
 }
 
 // GitHub user

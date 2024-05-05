@@ -203,6 +203,10 @@ resources:
         min_mondoo_version: 7.14.0
       following:
         min_mondoo_version: 7.14.0
+      hasOrganizationProjects:
+        min_mondoo_version: 9.0.0
+      hasRepositoryProjects:
+        min_mondoo_version: 9.0.0
       id: {}
       installations:
         min_mondoo_version: 5.31.0
