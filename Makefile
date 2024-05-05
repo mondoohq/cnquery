@@ -465,7 +465,7 @@ lr/docs/markdown: providers/lr
 		--output ../docs/docs/mql/resources/github-pack
 	./lr markdown providers/gitlab/resources/gitlab.lr \
 		--pack-name "GitLab" \
-		--description "The GitLab resource pack lets you use MQL to query and assess the security of your GitLab organizations and repositories." \
+		--description "The GitLab resource pack lets you use MQL to query and assess the security of your GitLab groups and projects." \
 		--docs-file providers/gitlab/resources/gitlab.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/gitlab-pack
 	./lr markdown providers/google-workspace/resources/google-workspace.lr \
