@@ -9,7 +9,7 @@ toolchain go1.22.0
 require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-github/v59 v59.0.0
+	github.com/google/go-github/v61 v61.0.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	go.mondoo.com/cnquery/v11 v11.2.0
