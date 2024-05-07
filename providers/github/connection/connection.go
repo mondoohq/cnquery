@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v59/github"
+	"github.com/google/go-github/v61/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
