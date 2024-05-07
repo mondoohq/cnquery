@@ -17,7 +17,7 @@ require (
 	cloud.google.com/go/logging v1.9.0
 	cloud.google.com/go/longrunning v0.5.7
 	cloud.google.com/go/monitoring v1.19.0
-	cloud.google.com/go/pubsub v1.37.0
+	cloud.google.com/go/pubsub v1.38.0
 	cloud.google.com/go/recommender v1.12.3
 	cloud.google.com/go/run v1.3.7
 	cloud.google.com/go/serviceusage v1.8.6
@@ -32,7 +32,7 @@ require (
 	golang.org/x/oauth2 v0.20.0
 	google.golang.org/api v0.177.0
 	google.golang.org/genproto v0.0.0-20240429193739-8cf5692501f6
-	google.golang.org/protobuf v1.34.0
+	google.golang.org/protobuf v1.34.1
 )
 
 require (
