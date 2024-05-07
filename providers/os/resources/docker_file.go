@@ -16,11 +16,23 @@ import (
 	"go.mondoo.com/cnquery/v11/llx"
 	"go.mondoo.com/cnquery/v11/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/v11/providers/os/connection/docker"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/local"
+	"go.mondoo.com/cnquery/v11/providers/os/connection/ssh"
 	"go.mondoo.com/cnquery/v11/types"
 	"go.mondoo.com/cnquery/v11/utils/multierr"
 )
 
 func initDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// the dockerfile connection is a wrapper around the local one
+	// NOTE: we might have to extend this in the future if we start supporting docker files from other connections (e.g. tar)
+	_, isDockerConn := runtime.Connection.(*docker.DockerfileConnection)
+	_, isSshConn := runtime.Connection.(*ssh.Connection)
+	_, isLocalConn := runtime.Connection.(*local.LocalConnection)
+	// if neither, we set the file to nil.
+	if !isDockerConn && !isSshConn && !isLocalConn {
+		return args, nil, nil
+	}
+
 	// if users supply a file, we don't have to run any fancy initialization,
 	// since most of this function deals with trying to find the dockerfile
 	if _, ok := args["file"]; ok {
